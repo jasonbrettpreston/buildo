@@ -600,3 +600,162 @@ describe('the appended exports do not touch the existing ones', () => {
     expect(typeof F.checkCountFloors).toBe('function');
   });
 });
+
+// ---- MB-79 (Q-L18-5 a, item 2): the owed-baseline arm of floors-write, over the pure setOwedBaseline door --------------------------
+// `floors-write --owed-baseline "<line>" <value> --ruling <RULED id> --quote "<the operator's verbatim words>"` sets ONE existing OWED
+// baseline of an EXISTING floors file through setOwedBaseline (M-330, O68-11): the history only grows, the new entry keeps the old value
+// (`from`) beside the new one (`to`) and carries the quote, and the file is written only when checkFloorEdit (the gate's own check of
+// this edit) is clean. It never runs the scorer and never touches a count line.
+describe('floorsWriteCommand --owed-baseline: one OWED baseline set through the door (MB-79, Q-L18-5 a)', () => {
+  const FLOORS_REL = 'mcbylaws/loop/floors-172.json';
+  const OWED_LINE = 'article 10.5.40 accuracy';
+  const RULING = 'M-435';
+  const QUOTE = '"Q-L18-2 a" - honest truth - that what we need"';
+  type Entry = { ruling: string; quote?: string; lines: { line: string; from: number | null; to: number }[] };
+  type FloorsFile = { schema: string; lines: Record<string, number>; owed_baseline: Record<string, number>; rulings: Entry[] };
+  // the committed round-0 file's shape (mcbylaws/loop/floors-172.json): two count lines and one OWED baseline, three entries
+  const roundZero = (): FloorsFile => ({
+    schema: 'loop-floors-v1',
+    lines: { 'coa172 cases': 698, 'coa4d cases': 496 },
+    owed_baseline: { [OWED_LINE]: 91.7 },
+    rulings: [
+      { ruling: 'M-330', lines: [{ line: 'coa172 cases', from: null, to: 698 }] },
+      { ruling: 'M-330', lines: [{ line: 'coa4d cases', from: null, to: 496 }] },
+      { ruling: 'M-372', lines: [{ line: `owed_baseline ${OWED_LINE}`, from: null, to: 91.7 }] },
+    ],
+  });
+  const authority = (): Map<string, string> => new Map([[RULING, 'RULED'], ['M-330', 'RULED'], ['M-372', 'RULED'], ['M-999', 'PROPOSED']]);
+  // the arm never runs the scorer: a computeRun that is called fails the test
+  const noRun = (): RunOut | null => {
+    throw new Error('the owed-baseline arm must not run the scorer');
+  };
+  const repoWithFloors = (name: string, floors: FloorsFile | null = roundZero()): { root: string; before: string } => {
+    const root = makeRepo(name);
+    if (floors) writeFileAt(root, FLOORS_REL, `${JSON.stringify(floors, null, 2)}\n`);
+    const file = path.join(root, FLOORS_REL);
+    return { root, before: fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '' };
+  };
+  const owedParsed = (root: string, over: Record<string, unknown> = {}): Parsed =>
+    ({
+      ...parsedFor(root, { command: 'floors-write', ruling: RULING }),
+      owedBaseline: true,
+      owedBaselineLine: OWED_LINE,
+      owedBaselineValue: '90.2',
+      quote: QUOTE,
+      ...over,
+    }) as unknown as Parsed;
+  const textOf = (root: string): string => fs.readFileSync(path.join(root, FLOORS_REL), 'utf8');
+
+  it('sets the one baseline: the old value kept as `from`, the ruling and the quote recorded, nothing else changed', async () => {
+    const { root } = repoWithFloors('owed-set');
+    resetLines();
+    const res = await floorsWriteCmd()(owedParsed(root), capture(), { computeRun: noRun, rulings: authority() });
+    expect(res.violations).toEqual([]);
+    const file = readJsonAt(root, FLOORS_REL) as FloorsFile;
+    const base = roundZero();
+    expect(file.owed_baseline).toEqual({ [OWED_LINE]: 90.2 });
+    expect(file.lines).toEqual(base.lines);
+    expect(file.schema).toBe(base.schema);
+    // the history only grows: the three round-0 entries are unchanged and one entry is appended
+    expect(file.rulings.slice(0, 3)).toEqual(base.rulings);
+    expect(file.rulings[3]).toEqual({ ruling: RULING, lines: [{ line: `owed_baseline ${OWED_LINE}`, from: 91.7, to: 90.2 }], quote: QUOTE });
+    // the door's own entry fields come first, in the door's order, and the quote is added after them
+    expect(Object.keys(file.rulings[3] ?? {})).toEqual(['ruling', 'lines', 'quote']);
+    expect(file.rulings).toHaveLength(4);
+    // the gate's own check of this edit is clean, and the ratchet reads the new baseline
+    expect(F.checkFloorEdit(base, file, authority())).toEqual([]);
+    expect(F.checkOwedRatchet(file.owed_baseline, [{ line: OWED_LINE, measured: 90.1667 }])).toEqual([]);
+    expect(F.checkOwedRatchet(file.owed_baseline, [{ line: OWED_LINE, measured: 90.0 }])).toEqual([`owed_line_fell_further:${OWED_LINE}`]);
+    expect(lines.join('\n')).toContain(`${OWED_LINE}: 91.7 -> 90.2 under ${RULING}`);
+  });
+
+  it('refuses without --ruling, without --quote, or without both, and writes nothing', async () => {
+    for (const [over, missing] of [
+      [{ ruling: '' }, 'ruling'],
+      [{ quote: '' }, 'quote'],
+      [{ quote: '   ' }, 'quote'],
+      [{ ruling: '', quote: '' }, 'ruling|quote'],
+    ] as const) {
+      const { root, before } = repoWithFloors('owed-needs');
+      const res = await floorsWriteCmd()(owedParsed(root, over), capture(), { computeRun: noRun, rulings: authority() });
+      expect(res.violations).toEqual([`floors_write_needs:${missing}`]);
+      expect(textOf(root)).toBe(before);
+    }
+  });
+
+  it('refuses a line the file holds no OWED baseline for (a count line, a near name, a new line), and writes nothing', async () => {
+    for (const line of ['article 10.5.40 answered', 'article 10.5.40', 'coa172 cases', 'overall accuracy', `owed_baseline ${OWED_LINE}`]) {
+      const { root, before } = repoWithFloors('owed-unknown');
+      const res = await floorsWriteCmd()(owedParsed(root, { owedBaselineLine: line }), capture(), { computeRun: noRun, rulings: authority() });
+      expect(res.violations).toEqual([`owed_baseline_line_unknown:${line}`]);
+      expect(textOf(root)).toBe(before);
+    }
+  });
+
+  it('refuses a ruling that is not RULED or RATIFIED, and one the register does not hold, and writes nothing', async () => {
+    for (const ruling of ['M-999', 'M-404', 'Q-L18-2 a']) {
+      const { root, before } = repoWithFloors('owed-forged');
+      const res = await floorsWriteCmd()(owedParsed(root, { ruling }), capture(), { computeRun: noRun, rulings: authority() });
+      expect(res.violations).toEqual([`ruling_not_authority:${ruling}`]);
+      expect(textOf(root)).toBe(before);
+    }
+  });
+
+  it('refuses when no floors file exists (round 0 is the only writer of a new file)', async () => {
+    const { root } = repoWithFloors('owed-nofile', null);
+    const res = await floorsWriteCmd()(owedParsed(root), capture(), { computeRun: noRun, rulings: authority() });
+    expect(res.violations).toEqual(['floors_file_missing']);
+    expect(fs.existsSync(path.join(root, FLOORS_REL))).toBe(false);
+  });
+
+  it('refuses a value that is not a number, not at the printed precision, or unchanged, and writes nothing', async () => {
+    for (const [value, code] of [
+      ['abc', 'owed_baseline_value_not_a_number:abc'],
+      ['', 'owed_baseline_value_not_a_number:'],
+      ['90.2x', 'owed_baseline_value_not_a_number:90.2x'],
+      ['Infinity', 'owed_baseline_value_not_a_number:Infinity'],
+      ['90.25', 'owed_baseline_value_not_printed_precision:90.25'],
+      ['-5', 'owed_baseline_value_out_of_range:-5'],
+      ['100.1', 'owed_baseline_value_out_of_range:100.1'],
+      ['91.7', 'owed_baseline_unchanged'],
+    ] as const) {
+      const { root, before } = repoWithFloors('owed-value');
+      const res = await floorsWriteCmd()(owedParsed(root, { owedBaselineValue: value }), capture(), { computeRun: noRun, rulings: authority() });
+      expect(res.violations, value).toEqual([code]);
+      expect(textOf(root)).toBe(before);
+    }
+  });
+
+  it('refuses a floors file that does not parse or is not loop-floors-v1, and leaves it as it was', async () => {
+    for (const [text, code] of [
+      ['{ "schema": "loop-floors-v1", ', 'floors_file_unreadable'],
+      ['', 'floors_file_unreadable'],
+      [`${JSON.stringify({ ...roundZero(), schema: 'loop-floors-v2' })}\n`, 'floors_schema_unknown:loop-floors-v2'],
+      ['[]\n', 'floors_schema_unknown:undefined'],
+    ] as const) {
+      const root = makeRepo('owed-bad-file');
+      writeFileAt(root, FLOORS_REL, text);
+      const res = await floorsWriteCmd()(owedParsed(root), capture(), { computeRun: noRun, rulings: authority() });
+      expect(res.violations, text).toEqual([code]);
+      expect(textOf(root)).toBe(text);
+    }
+  });
+
+  it('refuses --owed-ruling beside --owed-baseline (one ruling names the one line)', async () => {
+    const { root, before } = repoWithFloors('owed-two-rulings');
+    const res = await floorsWriteCmd()(owedParsed(root, { owedRuling: 'M-372' }), capture(), { computeRun: noRun, rulings: authority() });
+    expect(res.violations).toEqual(['floors_write_owed_baseline_takes_ruling_only']);
+    expect(textOf(root)).toBe(before);
+  });
+
+  it('the round-0 arm is unchanged: without --owed-baseline an existing file still refuses', async () => {
+    const { root, before } = repoWithFloors('owed-round0');
+    const res = await floorsWriteCmd()(
+      parsedFor(root, { command: 'floors-write', ruling: 'M-330', owedRuling: 'M-372' }),
+      capture(),
+      { computeRun: noRun, rulings: authority() },
+    );
+    expect(res.violations).toEqual(['floors_file_exists']);
+    expect(textOf(root)).toBe(before);
+  });
+});

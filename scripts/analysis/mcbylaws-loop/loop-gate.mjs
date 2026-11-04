@@ -15,22 +15,39 @@ export const MODES = ['commit', 'push', 'ci'];
 export const USAGE = 'usage: loop-gate [check|run|verify|regression-remove|floors-write] --mode <commit|push|ci> [--root <dir>] [--tip <rev>] [--json]';
 
 const BOOL_FLAGS = { json: true, write: true, 'write-ids': true };
-const VALUE_FLAGS = ['mode', 'root', 'ruling', 'group', 'ids', 'increment', 'decision', 'reason', 'base', 'findings', 'target', 'owed-ruling', 'tip'];
+const VALUE_FLAGS = ['mode', 'root', 'ruling', 'group', 'ids', 'increment', 'decision', 'reason', 'base', 'findings', 'target', 'owed-ruling', 'tip', 'quote'];
 
 /** argv without node and script -> the full argument object. `error` is a plain string ('' when the arguments are well formed). */
 export function parseArgs(argv) {
   const a = {
     command: '', mode: '', root: '.', json: false, write: false, writeIds: false, ruling: '', owedRuling: '', group: '', ids: '',
     increment: '', decision: '', reason: '', base: '', findings: '', target: '', tip: '', error: '',
+    owedBaseline: false, owedBaselineLine: '', owedBaselineValue: '', quote: '',
   };
   const list = Array.isArray(argv) ? argv.map(String) : [];
   let tipSeen = false;
+  let quoteSeen = false;
   for (let i = 0; i < list.length; i++) {
     const tok = list[i];
     if (tok.startsWith('--')) {
       const eq = tok.indexOf('=');
       const name = eq < 0 ? tok.slice(2) : tok.slice(2, eq);
       const inline = eq < 0 ? null : tok.slice(eq + 1);
+      // MB-79 (Q-L18-5 a): `--owed-baseline "<line>" <value>` takes exactly the next two tokens (no inline form; a flag is no value).
+      if (name === 'owed-baseline') {
+        if (a.owedBaseline && !a.error) a.error = 'owed_baseline_twice'; // one run sets one line
+        a.owedBaseline = true;
+        const line = inline === null ? nextValue(list, i) : '';
+        const value = inline === null && line ? nextValue(list, i + 1) : '';
+        if (!line || !value) {
+          if (!a.error) a.error = 'owed_baseline_needs:line|value';
+        } else {
+          a.owedBaselineLine = line;
+          a.owedBaselineValue = value;
+          i += 2;
+        }
+        continue;
+      }
       if (BOOL_FLAGS[name]) {
         if (inline === null) a[toKey(name)] = true;
         else a[toKey(name)] = !(inline === 'false' || inline === '0' || inline === '');
@@ -41,6 +58,7 @@ export function parseArgs(argv) {
         if (inline === null) i += 1;
         a[toKey(name)] = v;
         if (name === 'tip') tipSeen = true;
+        if (name === 'quote') quoteSeen = true;
         continue;
       }
       if (!a.error) a.error = `unknown_flag:--${name}`;
@@ -62,6 +80,9 @@ export function parseArgs(argv) {
     else if (!MODES.includes(a.mode)) a.error = `bad_mode:${a.mode}`;
   }
   if (!a.error && a.command === 'regression-remove' && !a.ruling && !a.group && !a.ids) a.error = 'removal_needs:ruling|group|ids';
+  // MB-79 (Q-L18-5 a): --owed-baseline is read only by floors-write, and --quote only beside it (the quote is that entry's words).
+  if (!a.error && a.owedBaseline && a.command !== 'floors-write') a.error = 'owed_baseline_not_allowed';
+  if (!a.error && quoteSeen && !a.owedBaseline) a.error = 'quote_not_allowed';
   // MB-79 (o) (R-KP, R-LF): --tip names the pushed sha; it is read only by check at push and ci, and never as an empty or flag-like value.
   if (!a.error && tipSeen) {
     const allowed = a.command === 'check' && (a.mode === 'push' || a.mode === 'ci');

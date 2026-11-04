@@ -4,6 +4,7 @@
 // One honest ctx factory; every red test mutates ONE thing in a fresh clone of it and expects the named code.
 import { describe, expect, it } from 'vitest';
 import path from 'node:path';
+import fs from 'node:fs';
 
 const ROOT = path.resolve(__dirname, '../..');
 const M = await import(path.join(ROOT, 'scripts/analysis/mcbylaws-loop/loop-gate-eval.mjs'));
@@ -1433,5 +1434,140 @@ describe('R-LZ MB-79 (x) E8-E11: order, the twins that must not move, the record
     expect(moveCodes(movingCtx({ ruling: 'M-777', entries: landing }))).toEqual([]);
     expect(moveCodes(movingCtx({ ruling: 'M-777', entries: [{ status: 'A', path: MOVE_LOCK }] }))).toEqual(['move_ruling_not_ruled:0:"10.20.40.70":"M-777"']);
     expect(moveCodes(movingCtx({ ruling: 'M-777' }))).toEqual(['move_ruling_not_ruled:0:"10.20.40.70":"M-777"']);
+  });
+});
+
+// ---- MB-79 (Q-L18-5 a, item 1): the loop gate honours accepted findings in record_differs_from_run ---------------------------------
+// The ruling: a record case whose status is `accepted` and which a named accepted finding covers (findingCases) is consistent with a
+// fresh run where that case is `fail`: recordFor (loop-gate-run.mjs) writes exactly that status for exactly that case, and
+// acceptedNotFailing (O68-12) already requires the fresh run to say `fail`. Nothing else is excused: a case no finding names, any other
+// status pair, a got_sha that differs, or a case the run does not carry is still record_differs_from_run.
+// The findings are lane L's own --findings file for MB-18 (l), copied byte for byte (fixtures/mcbylaws-gate/findings-mb18l.json).
+const LANE_L_FINDINGS = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'src/tests/fixtures/mcbylaws-gate/findings-mb18l.json'), 'utf8'),
+) as AcceptedFinding[];
+const L_A0251 = 'coa172|A0251/26TEY|3';
+const L_A0486 = 'coa172|A0486/26TEY|3';
+// the third case that moves the same way in MB-18 (l) and that lane L's file does not name (Q-L18-5 a: "MB-18 (l)'s findings add" it)
+const L_4D_A0251 = 'coa4d|A0251/26TEY|3';
+
+type LaneCase = { id: string; rec: string; run: string | null; recSha?: string };
+/** The honest factory, with its cases replaced by `cases` (record status, run status or null = absent) under `findings`. */
+const laneLCtx = (cases: LaneCase[], findings: AcceptedFinding[]): Ctx =>
+  withCtx((c) => {
+    const ids = cases.map((x) => x.id);
+    // lane L's findings name M-435, which is RULED in the register (69a:572)
+    c.rulings = new Map([...RULINGS, ['M-435', 'RULED']]);
+    const groups = (): Group[] => [{ id: 'g-a', introduced_in: 'baseline', ids, ids_sha256: G.idsSha(ids) }];
+    c.regression = { base: { groups: groups(), pending: [], removals: [] }, cur: { groups: groups(), pending: [], removals: [] } };
+    const recCases: RecCase[] = cases.map((x, i) => ({ id: x.id, status: x.rec, got_sha: x.recSha ?? sha(31 + i) }));
+    const rec = goodRecord({
+      decision: 'revert',
+      reason: 'MB-18 (l): the two value moves are registered as accepted findings (Q-L18-3 a)',
+      accepted_findings: findings,
+      cases: recCases,
+    });
+    c.latest = { path: RECORD_FILE, rec };
+    c.newRecords = [{ path: RECORD_FILE, rec }];
+    // the previous round's values were different (the cases moved), each under a status the record no longer holds
+    c.prevCases = Object.fromEntries(cases.map((x, i) => [x.id, { status: 'fail', got_sha: sha(61 + i) }]));
+    const run = runOrThrow(c);
+    run.cases = cases
+      .map((x, i) => (x.run === null ? null : { id: x.id, status: x.run, got_sha: sha(31 + i), group: 'g-1' }))
+      .filter((x): x is RunCase & { group: string } => x !== null);
+    run.canary = { id: nx(ids[0]), observed: 'fail' };
+  });
+
+const diffCodes = (v: Verdict): string[] =>
+  v.violations.filter((x) => x.startsWith('record_differs_from_run:') || x.startsWith('accepted_case_was_not_failing:'));
+
+describe('MB-79 (Q-L18-5 a) item 1: a covered accepted case is consistent with a failing fresh run', () => {
+  it('red on the pre-fix code, green after: lane L\'s two findings make the whole verdict clean', () => {
+    expect(LANE_L_FINDINGS.map((f) => f.case)).toEqual([L_A0251, L_A0486]);
+    const v = M.evaluateGate(
+      laneLCtx([{ id: L_A0251, rec: 'accepted', run: 'fail' }, { id: L_A0486, rec: 'accepted', run: 'fail' }], LANE_L_FINDINGS),
+    ) as Verdict;
+    expect(v.violations).toEqual([]);
+  });
+
+  it('a printed class that maps to fail (DIFFER) is the same fresh fail', () => {
+    const v = M.evaluateGate(
+      laneLCtx([{ id: L_A0251, rec: 'accepted', run: 'DIFFER' }, { id: L_A0486, rec: 'accepted', run: 'DIFFER' }], LANE_L_FINDINGS),
+    ) as Verdict;
+    expect(v.violations).toEqual([]);
+  });
+
+  it('mutation: an accepted case that no finding names is still refused (coa4d|A0251/26TEY|3 is not in lane L\'s file)', () => {
+    const v = M.evaluateGate(
+      laneLCtx(
+        [
+          { id: L_A0251, rec: 'accepted', run: 'fail' },
+          { id: L_A0486, rec: 'accepted', run: 'fail' },
+          { id: L_4D_A0251, rec: 'accepted', run: 'fail' },
+        ],
+        LANE_L_FINDINGS,
+      ),
+    ) as Verdict;
+    expect(diffCodes(v)).toEqual([`record_differs_from_run:${L_4D_A0251}`]);
+  });
+
+  it('mutation: with no findings at all, every accepted case is refused', () => {
+    const v = M.evaluateGate(
+      laneLCtx([{ id: L_A0251, rec: 'accepted', run: 'fail' }, { id: L_A0486, rec: 'accepted', run: 'fail' }], []),
+    ) as Verdict;
+    expect(diffCodes(v)).toEqual([`record_differs_from_run:${L_A0251}`, `record_differs_from_run:${L_A0486}`]);
+  });
+
+  it('mutation: a finding names one case only; the other accepted case is refused', () => {
+    const one = LANE_L_FINDINGS.filter((f) => f.case === L_A0251);
+    const v = M.evaluateGate(
+      laneLCtx([{ id: L_A0251, rec: 'accepted', run: 'fail' }, { id: L_A0486, rec: 'accepted', run: 'fail' }], one),
+    ) as Verdict;
+    expect(diffCodes(v)).toEqual([`record_differs_from_run:${L_A0486}`]);
+  });
+
+  it('mutation: a covered case whose status pair is not fail -> accepted is still refused (each pair)', () => {
+    // [record status, fresh run status] pairs other than ['accepted', 'fail']; every one of them is a covered case
+    const pairs: [string, string][] = [
+      ['accepted', 'pass'],
+      ['pass', 'fail'],
+      ['fail', 'pass'],
+      ['pass', 'accepted'],
+      ['fail', 'accepted'],
+      // a run status no class maps (statusOf gives no gate status for it) is not a fail
+      ['accepted', 'NOT-A-CLASS'],
+    ];
+    for (const [rec, run] of pairs) {
+      const v = M.evaluateGate(
+        laneLCtx([{ id: L_A0251, rec, run }, { id: L_A0486, rec: 'accepted', run: 'fail' }], LANE_L_FINDINGS),
+      ) as Verdict;
+      expect(v.violations, `${rec} in the record, ${run} in the run`).toContain(`record_differs_from_run:${L_A0251}`);
+      expect(v.violations, `${rec} in the record, ${run} in the run`).not.toContain(`record_differs_from_run:${L_A0486}`);
+    }
+  });
+
+  it('mutation: a covered accepted case whose got_sha differs from the run is still refused', () => {
+    const v = M.evaluateGate(
+      laneLCtx(
+        [{ id: L_A0251, rec: 'accepted', run: 'fail', recSha: sha(99) }, { id: L_A0486, rec: 'accepted', run: 'fail' }],
+        LANE_L_FINDINGS,
+      ),
+    ) as Verdict;
+    expect(diffCodes(v)).toEqual([`record_differs_from_run:${L_A0251}`]);
+  });
+
+  it('a covering finding whose finding_id is not RULED or RATIFIED leaves the verdict red (the finding authority is unchanged)', () => {
+    const forged = LANE_L_FINDINGS.map((f) => ({ ...f, finding_id: 'M-300' })); // PROPOSED in the fixture register
+    const v = M.evaluateGate(
+      laneLCtx([{ id: L_A0251, rec: 'accepted', run: 'fail' }, { id: L_A0486, rec: 'accepted', run: 'fail' }], forged),
+    ) as Verdict;
+    expect(v.violations).toEqual([`finding_id_not_in_register:${L_A0251}`, `finding_id_not_in_register:${L_A0486}`]);
+  });
+
+  it('mutation: a covered accepted case the run of its group does not carry is still refused', () => {
+    const v = M.evaluateGate(
+      laneLCtx([{ id: L_A0251, rec: 'accepted', run: null }, { id: L_A0486, rec: 'accepted', run: 'fail' }], LANE_L_FINDINGS),
+    ) as Verdict;
+    expect(diffCodes(v)).toEqual([`record_differs_from_run:${L_A0251}`]);
   });
 });

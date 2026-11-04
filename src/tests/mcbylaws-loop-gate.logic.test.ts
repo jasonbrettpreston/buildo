@@ -37,6 +37,11 @@ type Parsed = {
   findings: string;
   target: string;
   tip: string;
+  // MB-79 (Q-L18-5 a): the owed-baseline arm of floors-write
+  owedBaseline: boolean;
+  owedBaselineLine: string;
+  owedBaselineValue: string;
+  quote: string;
   error: string;
 };
 type GateModule = {
@@ -625,5 +630,52 @@ describe('main fails closed on a bad verdict (O68-16)', () => {
     });
     expect(code).toBe(0);
     expect(sink.out).toEqual(['loop-gate commit: ok']);
+  });
+});
+
+// ---- MB-79 (Q-L18-5 a, item 2): the --owed-baseline arm of floors-write is parsed, and only there ---------------------------------
+describe('parseArgs: floors-write --owed-baseline "<line>" <value> --ruling <id> --quote "<words>" (MB-79, Q-L18-5 a)', () => {
+  it('reads the line, the value, the ruling and the quote (space form; the line may hold spaces)', async () => {
+    const { parseArgs } = await load();
+    const a = parseArgs([
+      'floors-write', '--owed-baseline', 'article 10.5.40 accuracy', '90.2', '--ruling', 'M-435', '--quote', '"Q-L18-2 a" - honest truth',
+    ]);
+    expect(a.error).toBe('');
+    expect(a.command).toBe('floors-write');
+    expect(a.owedBaseline).toBe(true);
+    expect(a.owedBaselineLine).toBe('article 10.5.40 accuracy');
+    expect(a.owedBaselineValue).toBe('90.2');
+    expect(a.ruling).toBe('M-435');
+    expect(a.quote).toBe('"Q-L18-2 a" - honest truth');
+    const omitted = parseArgs(['floors-write', '--ruling=M-330', '--owed-ruling=M-372']);
+    expect(omitted.owedBaseline).toBe(false);
+    expect(omitted.owedBaselineLine).toBe('');
+    expect(omitted.owedBaselineValue).toBe('');
+    expect(omitted.quote).toBe('');
+    expect(omitted.error).toBe('');
+  });
+
+  it('a missing line or value, an inline form, or a flag in their place is owed_baseline_needs:line|value', async () => {
+    const { parseArgs } = await load();
+    for (const argv of [
+      ['floors-write', '--owed-baseline'],
+      ['floors-write', '--owed-baseline', 'article 10.5.40 accuracy'],
+      ['floors-write', '--owed-baseline', 'article 10.5.40 accuracy', '--ruling', 'M-435'],
+      ['floors-write', '--owed-baseline', '--ruling', 'M-435'],
+      ['floors-write', '--owed-baseline=article 10.5.40 accuracy', '90.2'],
+    ]) {
+      expect(parseArgs(argv).error, argv.join(' ')).toBe('owed_baseline_needs:line|value');
+    }
+  });
+
+  it('--owed-baseline or --quote on any other command is refused', async () => {
+    const { parseArgs } = await load();
+    expect(parseArgs(['run', '--owed-baseline', 'l', '1']).error).toBe('owed_baseline_not_allowed');
+    expect(parseArgs(['--mode=commit', '--owed-baseline', 'l', '1']).error).toBe('owed_baseline_not_allowed');
+    expect(parseArgs(['floors-write', '--quote', 'q', '--ruling', 'M-330', '--owed-ruling', 'M-372']).error).toBe('quote_not_allowed');
+    expect(parseArgs(['run', '--quote', 'q']).error).toBe('quote_not_allowed');
+    // one run sets one line: a second --owed-baseline is refused, never last-wins
+    expect(parseArgs(['floors-write', '--owed-baseline', 'a', '1', '--owed-baseline', 'b', '2', '--ruling', 'M-435', '--quote', 'q']).error)
+      .toBe('owed_baseline_twice');
   });
 });

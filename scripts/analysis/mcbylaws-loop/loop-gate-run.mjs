@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { checkPercentFloors, setCountFloor, setOwedBaseline, atPrintedPrecision } from './loop-floors.mjs';
+import { checkPercentFloors, setCountFloor, setOwedBaseline, atPrintedPrecision, checkFloorEdit } from './loop-floors.mjs';
 import { runCanary, roundsSinceThresholds } from './loop-decide.mjs';
 import { canon, gotSha, bindRecord, writeRecordExclusive, checkBound, nextRound, recordPath, sha256, RECORD_RE, CLASS_STATUS, statusOf } from './loop-record.mjs';
 import { loadRegression, saveRegression, removeCases } from './loop-regression.mjs';
@@ -924,6 +924,7 @@ function writeJsonAtomic(file, value) {
  * -> { violations, notes }. IO (spawns the scorer, writes the file).
  */
 export async function floorsWriteCommand(parsed, write, deps = {}) {
+  if (parsed && parsed.owedBaseline === true) return owedBaselineCommand(parsed, write, deps);
   const say = typeof write === 'function' ? write : () => {};
   const root = str(parsed && parsed.root) || '.';
   const ruling = str(parsed && parsed.ruling);
@@ -966,6 +967,71 @@ export async function floorsWriteCommand(parsed, write, deps = {}) {
   writeJsonAtomic(file, next);
   say(`floors written ${FLOORS_FILE_REL}: ${Object.keys(next.lines).length} line(s), ${Object.keys(next.owed_baseline).length} OWED baseline(s)`);
   say(`floors-write: ${next.rulings.length} ruling entr(ies) recorded (counts under ${ruling}, OWED baselines under ${owedRuling})`);
+  return { violations: [], notes: [] };
+}
+
+const BASELINE_VALUE_RE = /^-?\d+(?:\.\d+)?$/;
+
+/**
+ * MB-79 (Q-L18-5 a): `floors-write --owed-baseline "<line>" <value> --ruling <id> --quote "<words>"` sets ONE OWED baseline that the
+ * EXISTING floors file already holds, through the pure door setOwedBaseline (M-330, O68-11), under a RATIFIED or RULED ruling. The new
+ * history entry keeps the old value (`from`) beside the new one (`to`) and carries the operator's verbatim words (`quote`); every
+ * earlier entry is kept. The file is written only when checkFloorEdit, the gate's own check of this edit, is clean. It never runs the
+ * scorer and never touches a count line. Refusals (nothing written): floors_write_needs:<ruling|quote>,
+ * floors_write_owed_baseline_takes_ruling_only, owed_baseline_value_not_a_number:<v>, owed_baseline_value_not_printed_precision:<v>,
+ * owed_baseline_value_out_of_range:<v> (an OWED line is a percent, 0..100), floors_file_missing, floors_file_unreadable,
+ * floors_schema_unknown:<schema>, owed_baseline_line_unknown:<line>, owed_baseline_unchanged, ruling_not_authority:<id>, and any code of
+ * checkFloorEdit. -> { violations, notes }. IO.
+ */
+async function owedBaselineCommand(parsed, write, deps = {}) {
+  const say = typeof write === 'function' ? write : () => {};
+  const root = str(parsed.root) || '.';
+  const ruling = str(parsed.ruling);
+  const quote = typeof parsed.quote === 'string' ? parsed.quote : '';
+  const missing = [];
+  if (!ruling) missing.push('ruling');
+  if (!quote.trim()) missing.push('quote');
+  if (missing.length) return { violations: [`floors_write_needs:${missing.join('|')}`], notes: [] };
+  if (str(parsed.owedRuling)) return { violations: ['floors_write_owed_baseline_takes_ruling_only'], notes: [] };
+  const raw = typeof parsed.owedBaselineValue === 'string' ? parsed.owedBaselineValue : '';
+  const value = BASELINE_VALUE_RE.test(raw) ? Number(raw) : NaN;
+  if (!Number.isFinite(value)) return { violations: [`owed_baseline_value_not_a_number:${raw}`], notes: [] };
+  // the ratchet compares at the scorer's printed precision (atPrintedPrecision), so a baseline is recorded at that precision only
+  if (atPrintedPrecision(value) !== value) return { violations: [`owed_baseline_value_not_printed_precision:${raw}`], notes: [] };
+  if (value < 0 || value > 100) return { violations: [`owed_baseline_value_out_of_range:${raw}`], notes: [] };
+  const file = path.join(root, FLOORS_FILE_REL);
+  if (!fs.existsSync(file)) return { violations: ['floors_file_missing'], notes: [] };
+  let base;
+  try {
+    base = readJson(file);
+  } catch {
+    return { violations: ['floors_file_unreadable'], notes: [] }; // a file that does not parse is never rewritten
+  }
+  const schema = base && typeof base === 'object' ? base.schema : undefined;
+  if (schema !== 'loop-floors-v1') return { violations: [`floors_schema_unknown:${String(schema)}`], notes: [] };
+  const line = typeof parsed.owedBaselineLine === 'string' ? parsed.owedBaselineLine : '';
+  const owed = base && base.owed_baseline && typeof base.owed_baseline === 'object' ? base.owed_baseline : {};
+  if (!Object.prototype.hasOwnProperty.call(owed, line) || typeof owed[line] !== 'number') {
+    return { violations: [`owed_baseline_line_unknown:${line}`], notes: [] };
+  }
+  const from = owed[line];
+  if (from === value) return { violations: ['owed_baseline_unchanged'], notes: [] };
+  const rulings = await rulingsOf(root, deps);
+  let next;
+  try {
+    next = setOwedBaseline(base, line, value, ruling, rulings);
+  } catch (err) {
+    const message = err && typeof err === 'object' && typeof err.message === 'string' ? err.message : String(err);
+    if (message.startsWith('ruling_not_authority:')) return { violations: [message], notes: [] };
+    throw err;
+  }
+  // the door appended exactly one entry; it keeps every field the door wrote and adds the operator's words (the door's own deep copy)
+  const entry = next.rulings[next.rulings.length - 1];
+  next.rulings[next.rulings.length - 1] = { ...entry, quote };
+  const edit = checkFloorEdit(base, next, rulings);
+  if (edit.length) return { violations: edit, notes: [] };
+  writeJsonAtomic(file, next);
+  say(`owed baseline set ${FLOORS_FILE_REL}: ${line}: ${from} -> ${value} under ${ruling}`);
   return { violations: [], notes: [] };
 }
 

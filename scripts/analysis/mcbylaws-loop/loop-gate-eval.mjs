@@ -320,7 +320,12 @@ function stageRun(ctx, rec) {
     }
     const ran = byId.get(item.id);
     // The run case is compared on the same gate status (O68-01): a raw scorer class is never compared with a record status.
-    if (!ran || statusOf(ran.status) !== status || ran.got_sha !== item.got_sha) {
+    const ranStatus = ran ? statusOf(ran.status) : undefined;
+    // MB-79 (Q-L18-5 a): a case the record marks `accepted` and a named accepted finding covers is consistent with a fresh `fail`:
+    // recordFor writes exactly that status for exactly that case (the intent of acceptedNotFailing). Only that pair, only a covered
+    // case; the got_sha is still compared.
+    const acceptedByFinding = status === 'accepted' && ranStatus === 'fail' && covered.has(item.id);
+    if (!ran || (ranStatus !== status && !acceptedByFinding) || ran.got_sha !== item.got_sha) {
       out.push(`record_differs_from_run:${item.id}`);
     }
   }

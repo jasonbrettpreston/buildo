@@ -1,0 +1,4 @@
+[
+ {"case": "coa172|A0251/26TEY|3", "finding_id": "M-435", "reason": "MB-18 (l): with the 10.10.40.70(4) reduction no longer taken (M-435) both (3)(A) and (3)(B) apply to the townhouse and 7.5 m wins against City 0.76; the townhouse qualifiers are not keyed, defect RB-D12; registered by operator O-l2 \"0-12 1\"; the 10.5.40 owed-line fall accepted by Q-L18-2 a"},
+ {"case": "coa172|A0486/26TEY|3", "finding_id": "M-435", "reason": "MB-18 (l): the stored R side yard is 0.9 m at 10.10.40.70(3)(A) (M-435), so our value moves 0.45 -> 0.9 and the row stays DIFFER against City 1.8; registered by operator O-l2 \"0-12 1\""}
+]
