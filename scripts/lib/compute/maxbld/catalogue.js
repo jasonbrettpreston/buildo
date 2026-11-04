@@ -7,6 +7,8 @@ const dsl = require('../../../analysis/bylaw/dsl.mjs');
 
 const SCHEMA = 'layer3-catalogue-v1';
 const LITERALS = [0, 1, 2];
+// M-481 (Q-CONF a): the closed confidence list of a switchboard reading row
+const CONFIDENCE = Object.freeze(['high', 'medium', 'medium-low', 'low']);
 
 function toList(x) {
   return Array.isArray(x) ? x : [];
@@ -161,12 +163,32 @@ function validateCatalogue(seeds, increments) {
   for (const bt of entities(s.buildingTypes, 'rows')) {
     if (!switches.has(bt.switch)) out.push(`building_type ${bt.id}: switch ${bt.switch} is not in the switchboard`);
   }
+  out.push(...confidenceViolations(s.switchboard));
   out.push(...nameSpaceViolations(catalogue, targets));
   out.push(...rowViolations(catalogue, U, rowIds, increments));
   try {
     topoOrder(catalogue);
   } catch (e) {
     out.push('cycle: catalogue row order is not acyclic');
+  }
+  return out;
+}
+
+/**
+ * M-481 (Q-CONF a, amends M-378): every `reading` row carries a confidence from the closed list and a non-empty evidence
+ * pointer; a row of another kind carries neither. Fails closed: a missing or unknown value is a violation naming the row.
+ */
+function confidenceViolations(switchboard) {
+  const out = [];
+  for (const r of entities(switchboard, 'rows')) {
+    const at = `switch ${r.id}: `;
+    if (r.kind === 'reading') {
+      if (!CONFIDENCE.includes(r.confidence)) out.push(`${at}confidence ${r.confidence} is not one of ${CONFIDENCE.join(', ')}`);
+      if (typeof r.evidence !== 'string' || !r.evidence.trim()) out.push(`${at}evidence is empty`);
+    } else {
+      if (Object.prototype.hasOwnProperty.call(r, 'confidence')) out.push(`${at}confidence is only for a reading row`);
+      if (Object.prototype.hasOwnProperty.call(r, 'evidence')) out.push(`${at}evidence is only for a reading row`);
+    }
   }
   return out;
 }

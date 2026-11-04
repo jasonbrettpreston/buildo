@@ -62,6 +62,46 @@ function switchesOf(consulted, env) {
   return out;
 }
 
+/**
+ * M-481 (Q-CONF a; amends M-378 "every result lists the switches on its path"): the reading switches a row rests on, each
+ * with its effective state and the SWITCHBOARD's confidence and evidence (a caller may override a state, never a
+ * confidence). They come, in consultation order, from the row's own setting reads (a trace `lv` entry with a guard state,
+ * whose guard was consulted and whose declared `switch` is a reading row) and from every catalogue row it reads (that row's own reading entries).
+ */
+function readingSwitches(env, seeds, state, run) {
+  const board = toList(isObject(seeds.switchboard) ? seeds.switchboard.rows : null);
+  const rowIds = new Set(toList(env.rowIds));
+  const out = [];
+  const seen = new Set();
+  const add = (s) => {
+    if (!isObject(s) || typeof s.id !== 'string' || seen.has(s.id)) return;
+    seen.add(s.id);
+    out.push(s);
+  };
+  for (const t of toList(env.trace)) {
+    if (!isObject(t)) continue;
+    if (t.kind === 'lv' && (typeof t.guard_state === 'string' || t.status === 'applies')) { // the guard was consulted (off, on unfitted, or on)
+      const decl = isObject(env.settingDecls) ? env.settingDecls[t.id] : null;
+      const sw = isObject(decl) ? findById(board, decl.switch) : null;
+      if (sw && sw.kind === 'reading') add({ id: sw.id, state: has(state, sw.id) ? state[sw.id] : t.guard_state, confidence: has(sw, 'confidence') ? sw.confidence : null, evidence: has(sw, 'evidence') ? sw.evidence : null });
+    } else if (t.kind === 'row' && rowIds.has(t.id)) {
+      const read = run(t.id);
+      for (const s of toList(read && read.switches)) {
+        const sw = isObject(s) ? findById(board, s.id) : null;
+        if (sw && sw.kind === 'reading') add(s);
+      }
+    }
+  }
+  return out;
+}
+
+/** The switches of a computed row: the evaluator's own (clause switches), then the readings it rests on (M-481). */
+function pathSwitches(env, seeds, state, run) {
+  const own = switchesOf([], env);
+  const ids = new Set(own.map((s) => s.id));
+  return [...own, ...readingSwitches(env, seeds, state, run).filter((s) => !ids.has(s.id))];
+}
+
 function result(row, status, extra) {
   const e = extra || {};
   return {
@@ -122,8 +162,8 @@ function notEvaluated(row, reason, extra) {
   return result(row, 'not_evaluated', { reason, value: null, undecided: e.undecided, flags: e.flags, trace: e.trace, switches: e.switches, clauses: e.clauses });
 }
 
-function shape(value, row, consulted, env, flags) {
-  const base = { flags, switches: switchesOf(consulted, env), trace: env.trace, undecided: value.undecided };
+function shape(value, row, switches, env, flags) {
+  const base = { flags, switches, trace: env.trace, undecided: value.undecided };
   switch (value.k) {
     case 'num': return result(row, 'computed', { ...base, value: value.v });
     case 'unlimited': return result(row, 'unlimited', { ...base, clauses: value.clause ? [value.clause] : [] });
@@ -187,7 +227,7 @@ function exprResult(row, inputs, state, memo, run) {
   const v = res ? res.l3 : undefined;
   if (!v || typeof v.k !== 'string') return notEvaluated(row, HOOKS_MISSING, { trace: env.trace, switches: switchesOf([], env) });
   const flags = v.flags;
-  const switched = switchesOf([], env);
+  const switched = pathSwitches(env, inputs.seeds, state, run); // M-481: the readings it rests on, with their confidence
   if (row.envelope === true && v.k === 'num' && v.v <= 0) {
     const read = env.trace.filter((t) => t && t.kind === 'l2' && typeof t.clause === 'string').map((t) => t.clause);
     return result(row, 'not_buildable', { clauses: [...read, ...toList(row.clauses)], switches: switched, trace: env.trace, flags });
@@ -196,7 +236,7 @@ function exprResult(row, inputs, state, memo, run) {
     return notEvaluated(row, 'terminal_not_allowed', { switches: switched, trace: env.trace, flags });
   }
   if (!unitOk(v, row)) return notEvaluated(row, 'expression_error:unit_mismatch', { switches: switched, trace: env.trace, flags });
-  return shape(v, row, [], env, flags);
+  return shape(v, row, switched, env, flags);
 }
 
 /** One row's result, given the run function of the call's own memo. */

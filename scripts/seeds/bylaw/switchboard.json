@@ -1,6 +1,6 @@
 {
-  "$comment": "MB-31, copied from the stage 2 draft: scripts/seeds/bylaw/switchboard.json (M-378): rows {id, kind, state, ruling, reason}; default on except where the switch own ruling sets it off; off beats on.",
-  "schema": "switchboard-v1",
+  "$comment": "MB-31, copied from the stage 2 draft: scripts/seeds/bylaw/switchboard.json (M-378): rows {id, kind, state, ruling, reason}; default on except where the switch own ruling sets it off; off beats on. v2 (M-481, Q-CONF a): every reading row also carries confidence (high, medium, medium-low, low) and an evidence pointer; no other kind carries either; the reading rows C1-C7 are the increment-2 confidence register readings; the increment-3 readings join when their rows are authored (M-481).",
+  "schema": "switchboard-v2",
   "rows": [
     {"id":"building_type:detached_house","kind":"building_type","state":"on","ruling":"LC-16; M-377","reason":"increment 1 building type"},
     {"id":"formula:permitted","kind":"formula","state":"on","ruling":"M-378","reason":"increment 1 row permitted"},
@@ -13,6 +13,13 @@
     {"id":"formula:storeys_max","kind":"formula","state":"on","ruling":"M-378","reason":"increment 1 row storeys_max"},
     {"id":"formula:gfa_max_m2","kind":"formula","state":"on","ruling":"M-378","reason":"increment 1 row gfa_max_m2"},
     {"id":"formula:units_max","kind":"formula","state":"on","ruling":"M-378","reason":"increment 1 row units_max"},
-    {"id":"reading:shape_calibration","kind":"reading","state":"off","ruling":"LC-69; M-392; M-418","reason":"box shape assumed; no fitted footprint_shape_factor exists (R3-10)"}
+    {"id":"reading:shape_calibration","kind":"reading","state":"off","ruling":"LC-69; M-392; M-418","reason":"box shape assumed; no fitted footprint_shape_factor exists (R3-10)","confidence":"low","evidence":"R3-10: no fitted footprint_shape_factor exists, the box shape is assumed (LC-69); a fit would raise it"},
+    {"id":"reading:attic_share_over_1_4m","kind":"reading","state":"on","ruling":"M-464","reason":"the \"80 % of the area\" attic test reads the attic floor over 1.4 m clearance, reading (i)","confidence":"low","evidence":"confidence register C1: text supports both readings; 0 of 137 attic applications give figures; strengthen with plan facts (attic areas on drawings), examiner Q1"},
+    {"id":"reading:flat_roof_despite_releases_wall_pair","kind":"reading","state":"on","ruling":"M-471","reason":"\"despite (2)\" switches off the held wall pair for a flat roof (R, RS, RM)","confidence":"medium","evidence":"confidence register C2: text reads that way; RD (4)(A) analogy: 0 of 203 applications cite both; strengthen with CoA-wide notices citing R (11)/(12), RS/RM (6), examiner Q2"},
+    {"id":"reading:r_free_share_setback_union_not_taken","kind":"reading","state":"on","ruling":"M-200; M-471","reason":"in R the union of the free share and the set-back storey is not taken","confidence":"low","evidence":"confidence register C3: City data silent (0 lines); strengthen with plan facts, examiner Q3"},
+    {"id":"reading:r_pitched_cap_whole_roof","kind":"reading","state":"on","ruling":"M-461","reason":"R 10.10.40.10(4): the 5:3 slope cap is on the whole roof of a house of 2 or more storeys","confidence":"medium","evidence":"confidence register C4: text clear; only 2 R (4) lines (2017), no values; strengthen with CoA-wide notices, examiner Q4"},
+    {"id":"reading:rd_flat_roof_exceptions_zone_slope","kind":"reading","state":"on","ruling":"M-218 (its dated note 2026-10-19, validation defect D1, 69a:365)","reason":"the four RD \"flat roof\" exceptions (x18, x21, x28, x37) use the zone's 1:10 flat-roof test","confidence":"medium-low","evidence":"confidence register C5: 9 lines (2017) vary the flat limit, none states a slope; strengthen with CoA-wide notices (slope on drawings), plan facts, examiner Q5"},
+    {"id":"reading:free_share_one_end_block","kind":"reading","state":"on","ruling":"M-470","reason":"the free share of the held pair is one full-height end block","confidence":"medium-low","evidence":"confidence register C6: 2026 notices state shares of wall width (A0446/26TEY), silent on shape; strengthen with plan facts (elevations), examiner Q6"},
+    {"id":"reading:rd_mechanical_attic_note_only","kind":"reading","state":"on","ruling":"M-473","reason":"RD 10.20.40.10(8): a mechanical attic up to 20 m2 is not a storey, shown as a note only","confidence":"low","evidence":"confidence register C7: low impact; 0 lines cite (8); strengthen with plan facts, examiner Q7"}
   ]
 }

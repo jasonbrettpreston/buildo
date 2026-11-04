@@ -32,7 +32,8 @@ const PINNED_SHA: Record<string, string> = {
   // re-pinned 2026-11-03 (MB-27 sqrt, operator RP-5 'Rp- 5 and RP-6 approved'): the lexicon gained root, sqrt and expression_error_sqrt_negative (M-466).
   // re-pinned 2026-11-04 (MB-27 Layer 3 forms, operator RP-10 'RP-10 approved, switchboard pin approved, shape low yes'): the lexicon gained refuse, best_of, ceiling, headline_, headline_lower_bound_, dropped_, unknown_reason, semi, syntax and three best_of syntax phrases, and the catalogue gained the declared lists refuse_reasons, drop_reasons, flag_words and flag_params (M-480, with its Q-K5 a dated note).
   catalogue: '4e1172c30cba1678833cbae0daaddc9539602b9666c350fd5a6d0e41ab7b0cc2',
-  switchboard: 'a64dde7ec125b5e0a95c39656dd6a468b3c0000b66f31ba94ed92392bab486a1',
+  // re-pinned 2026-11-04 (MB-27 switchboard confidence, operator Q-CONF a 'Q CONF a' and 'RP-10 approved, switchboard pin approved, shape low yes'): schema switchboard-v2; every reading row gained confidence and evidence; the seven increment-2 register readings C1-C7 joined as reading rows (M-481).
+  switchboard: 'e6441b3956019a56a77ef5f7b4578bc348c4f43227349249f1ff0a7f953bef92',
   buildingTypes: '1a10625b9c7821b7db5642ffaa64b1f9b2118eb3285163cce61e3747c09b2e39',
 };
 const ROW_IDS = [

@@ -2,7 +2,7 @@
 //
 // MB-31 · E31-01 oracle-only brief B0c. RED FIRST: `scripts/seeds/bylaw/switchboard.json` and
 // `scripts/lib/compute/maxbld/rows.js` do not exist yet.
-//   M-378 the switchboard is DATA: twelve rows, one per live switch, provably unique, exactly one `off`.
+//   M-378 the switchboard is DATA: one row per live switch (nineteen since Q-CONF a), provably unique, exactly one `off`.
 //   B9    `runRow` honours it: a switched-off formula or building type makes the row `not_evaluated` with a
 //         `switched_off:` reason and a NULL value (never 0); the permission row reports its switches; the clause
 //         switch (waits B5) refuses a cell by its own clause id.
@@ -36,9 +36,9 @@ describe('MB-31 switchboard data (M-378)', () => {
     CAT = readJson('scripts/seeds/bylaw/layer3-catalogue.json');
   });
 
-  it('schema, twelve rows, unique ids, closed kind/state vocabularies', () => {
-    expect(SW.schema).toBe('switchboard-v1');
-    expect(SW.rows).toHaveLength(12);
+  it('schema, nineteen rows, unique ids, closed kind/state vocabularies', () => {
+    expect(SW.schema).toBe('switchboard-v2'); // Q-CONF a (switchboard confidence): was 'switchboard-v1'
+    expect(SW.rows).toHaveLength(19); // Q-CONF a: the seven increment-2 register readings C1-C7 added; was 12
     const ids = SW.rows.map((r: Json) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const row of SW.rows) {

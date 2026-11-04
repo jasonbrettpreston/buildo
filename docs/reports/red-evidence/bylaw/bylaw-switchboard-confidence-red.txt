@@ -1,0 +1,46 @@
+== MB-27 (switchboard confidence) red: M-481 lock src/tests/bylaw-switchboard-confidence.logic.test.ts (new) and the Q-CONF a edit of switchboard.logic.test.ts:39-41, run on the base tree = the Layer 3 forms code commit as staged on 523cdc9c1 (switchboard.json v1; rows.js and catalogue.js without confidence). Increment-2 readings C1-C7 only (M-481: increment-3 readings join when their rows are authored). Guards green on base by design: D2, R4, R6, V1, P2, P3 (no reading listed where nothing was read); the switchboard.logic.test.ts schema/row-count test is red, its other 7 tests green
+ × src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 switchboard data (M-378) > schema, nineteen rows, unique ids, closed kind/state vocabularies
+   → expected 'switchboard-v1' to be 'switchboard-v2' // Object.is equality
+ ✓ src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 switchboard data (M-378) > the only off row is reading:shape_calibration
+ ✓ src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 switchboard data (M-378) > one formula switch per catalogue row plus the detached_house building type
+ ✓ src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 switchboard behaviour (B9) > S1 a switched-off formula is not_evaluated with a switched_off reason and a null value
+ ✓ src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 switchboard behaviour (B9) > S2 a switched-off building type refuses the row the same way
+ ✓ src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 switchboard behaviour (B9) > S4 permitted: the switch list, the gate and every permission code
+ ✓ src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 clause switch (waits B5) > a clause switched off in the switchboard refuses the row that read it
+ ✓ src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts > MB-31 clause switch (waits B5) > the same row with no switch override computes its value
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a switchboard data > D1 schema switchboard-v2; every reading row has a closed-list confidence and a non-empty evidence pointer
+   → expected 'switchboard-v1' to be 'switchboard-v2' // Object.is equality
+ ✓ src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a switchboard data > D2 no other kind carries confidence or evidence (confidence is a property of a reading)
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a switchboard data > D3 every increment-2 register reading C1-C7 is a reading row with the register confidence, its evidence naming the C id
+   → expected [ …(3) ] to deeply equal [ …(3) ]
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a switchboard data > D5 no reading row cites an increment-3 register reading (C8 onward): they join when their rows are authored (M-481)
+   → expected [ { …(5) } ] to have a length of 8 but got 1
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a switchboard data > D4 shape_calibration keeps its state and ruling and gains a confidence and evidence
+   → expected undefined to be 'low' // Object.is equality
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every result shows confidence beside each reading it rests on > R1 footprint_max_m2 (switch off by default) lists shape_calibration with its state, confidence and evidence
+   → expected [] to deeply equal [ { …(4) } ]
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every result shows confidence beside each reading it rests on > R2 a caller override changes the state shown, never the confidence (FOOT-17 and the fitted case)
+   → expected [] to deeply equal [ { …(4) } ]
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every result shows confidence beside each reading it rests on > R3 a row that reads footprint_max_m2 rests on the same reading and lists it once (gfa_max_m2)
+   → expected [] to deeply equal [ [ …(3) ] ]
+ ✓ src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every result shows confidence beside each reading it rests on > R4 a row that rests on no reading lists none (height_max_m)
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every result shows confidence beside each reading it rests on > R5 the confidence shown is the switchboard's: a changed switchboard confidence changes the result
+   → expected [] to deeply equal [ 'high' ]
+ ✓ src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every result shows confidence beside each reading it rests on > R6 a switch entry of any other kind keeps exactly {id, state}
+ ✓ src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a validation fails closed > V1 validateCatalogue accepts the seeds as they stand
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a validation fails closed > V2 a reading row with no confidence, an unknown confidence, or no evidence is refused
+   → expected [ 'no confidence', false ] to deeply equal [ 'no confidence', true ]
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a validation fails closed > V3 a confidence on a non-reading row is refused
+   → expected false to be true // Object.is equality
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every path of the runner (panel F3-F6, F9) > P1 the not_buildable (envelope) and unit-mismatch returns still list the reading the row rests on
+   → expected [ 'not_buildable', [] ] to deeply equal [ 'not_buildable', [ { …(4) } ] ]
+ ✓ src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every path of the runner (panel F3-F6, F9) > P2 a setting read that never reached its guard (no stored value) lists no reading
+ ✓ src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every path of the runner (panel F3-F6, F9) > P3 an injected row and a switched-off formula list no reading (nothing was read)
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every path of the runner (panel F3-F6, F9) > P4 a reading reached twice (its own setting and two reads of a row resting on it) is listed once
+   → expected [] to deeply equal [ { …(4) } ]
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every path of the runner (panel F3-F6, F9) > P5 an unknown name (readName pushes a row-kind trace entry for it) adds no reading and does not throw
+   → expected [] to deeply equal [ { …(4) } ]
+ × src/tests/bylaw-switchboard-confidence.logic.test.ts > Q-CONF a every path of the runner (panel F3-F6, F9) > V4 evidence on a non-reading row is refused; a confidence in another case is refused
+   → expected false to be true // Object.is equality
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  15 failed | 13 passed (28)

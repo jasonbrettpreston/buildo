@@ -1,23 +1,25 @@
 {
   "task": "MB-27",
-  "item": "the Layer 3 forms item: the Layer 3 grammar gains refuse, flag and best_of (M-480)",
+  "item": "the switchboard confidence item: every reading row of the switchboard carries a confidence and an evidence pointer, and every result shows the confidence beside each reading it rests on (M-481)",
   "class": "E",
   "stage": 8,
   "date": "2026-11-04",
-  "head": "0033cfbd7",
+  "head": "23deb2e53",
   "commits_reviewed": [
-    "staged code commit over 0033cfbd7 (prereg-MB-27-3 alone, on f58048c9a)"
+    "staged code commit over 23deb2e53 (prereg-MB-27-4 alone, on 40fcc4504, the Layer 3 forms code commit)"
   ],
   "cards": [
-    "~/Buildo-scratch/p2close/CARD-l3-schema-forms.md (L3-F1 \"3-F1 approved\"; L3-F3 and L3-F4 \"approved provided that itts complaint\")"
+    "~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md (\"Q CONF a\"; Q14 a); the re-pin and the shape_calibration confidence: \"RP-10 approved, switchboard pin approved, shape low yes\" (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, end)"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-l3-forms.md (folded to the M-480 row text: the ceiling is last and optional; all candidates not_evaluated return the first one's reason) and ~/Buildo-scratch/mcbylaws/laneE/build-plan.md (Build A); the row text is the contract",
-  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/laneE/panel-forms/output-panel.md (stage 8, one grounded seat on the index copies): PASS, 0 BLOCKER, 1 MAJOR, 5 MINOR, 4 NOTE. O-1 MAJOR resolved in code by the M-480 dated note (operator \"Q-K5 a\"): flag(headline_lower_bound: <reason>; <expr>), the reason from the declared flag_params list, locked by K0-K3; the delta re-reviewed in ~/Buildo-scratch/mcbylaws/laneE/panel-forms/output-panel-k5.md. O-10 applied (the commit field re-stamped to the prereg on the landing tip). O-2 to O-6 (lock-strengthening cases) are follow-ups. Delta seat on the Q-K5 a addition: PASS, 0 BLOCKER, 0 MAJOR (K5-4, K5-5 optional MINOR).",
+  "plan": "~/Buildo-scratch/mcbylaws/laneE/build-plan.md (Build B), with the orchestrator correction: the increment-2 readings C1-C7 only, since M-481 says the increment-3 readings join when their rows are authored; the row text is the contract",
+  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/laneE/panel-conf/output-panel.md (stage 8, one grounded seat): no BLOCKER. F2 MAJOR (a circular scratch-path evidence pointer) fixed: the evidence strings are self-contained. F3 MAJOR (untested early-return paths) and F4-F6, F9 fixed: lock vectors P1-P5 and V4 added, and four rows.js mutations (early-return switches, dedupe, guard condition, rowIds filter) each fail the lock. F1 MAJOR (the C readings reach no result until a row reads a setting they guard) accepted as data now, wired when a row reads them (build-plan open item 6). F10/F11 (ruling cells) settled by the orchestrator: C8-C12 removed; C5 points at the M-218 dated note (69a:365). F12: shape_calibration \"low\" approved by the operator.",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "O-2: a second declared drop reason is a catalogue edit plus a ruling (data, never code); no test until one exists",
-    "O-3 to O-6: add best_of lock cases (an absent candidate; a 9-place near tie in both orders; every evaluated candidate 0 with one missing; an unlimited winner with a missing candidate and a ceiling; nb mixed with ne) in the increment-2 rows round"
+    "F1: a row-level link from a catalogue row to the reading rows it rests on (a later item, not in Q-CONF a)",
+    "F7: validateCatalogue does not yet check that a setting's declared switch exists on the switchboard",
+    "F8: the HOOKS_MISSING return in rows.js lists no reading (believed unreachable)",
+    "C8 onward join as reading rows when their increment-3 rows are authored (M-481; Q14 a)"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/laneE/panel-forms/output-panel.md"
+  "evidence": "~/Buildo-scratch/mcbylaws/laneE/panel-conf/output-panel.md"
 }
