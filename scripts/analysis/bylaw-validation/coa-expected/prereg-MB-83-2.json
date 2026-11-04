@@ -1,0 +1,100 @@
+{
+ "$comment": "M-321 pre-registration, task MB-83, prereg 2 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-83-1.json is batch part 1), the loop round that lands decision batch 2026-11-03-batch-ax (CHAT-225), part 2: sixteen new Spec 69a rows (M-465 and M-467..M-481: the increment-2 operator answers of 2026-11-03, the M-72 Layer 3 forms row and the switchboard confidence row) and six dated notes, with ONE named Layer 2 re-pin (operator 'RP-2 approved', with 'RP-2 covers M-480' and Q-RP2X 'approved': version/hash/commit fields only; any other change stops the landing and returns to the operator). Each new row adds one rule to Spec 133 and the rule map, hashed into the Layer 2 table_version. Re-made on the MB-79 (f) tip (round 49; prereg-MB-79-5 took round 48), committed alone directly under the batch commit (R-LZ, R-MA). It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the totals equal prereg-MB-79-5.json's totals, the floors file is unchanged and the floors check stays OK. One existing test assertion changes: the decision-log decisions count 751 to 769 (the eighteen new decisions). rules[] names only rules the registers read as RULED with no OWED marker.",
+ "schema": "coa-round-prereg-v1",
+ "round": 49,
+ "task": "MB-83",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-IL"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-83; ~/Buildo-scratch/mcbylaws/R-batch-inc2/drafts-part2.md (fold 3; verify-part2-1, -recheck-1, -recheck-2); ~/Buildo-scratch/mcbylaws/R-batch-inc2/drafts-m72-forms.md (M-480); ~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md (M-481); ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (operator answers, RP-2, \"M-471 a\", Q-RP2X, Q-M475); ~/Buildo-scratch/mcbylaws/inc3/open-questions.md (\"Q-LC18 a\": the LC-18 note waits for the Spec 131 split)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "expected-172.json and expected-4d.json: inputs.table_version and commit only; maxbld-amendment-index.json layer2_table_version; bylaw-layer2-input.json table_version",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 751,
+   "to": 769,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "the batch 2026-11-03-batch-ax decisions CHAT-225.* (eighteen; operator answers in ~/Buildo-scratch/mcbylaws/inc2/open-questions.md, ~/Buildo-scratch/p2close/CARD-l3-schema-forms.md and ~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md, and \"RP-2 approved\")"
+  }
+ ]
+}
