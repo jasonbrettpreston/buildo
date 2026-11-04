@@ -1,26 +1,62 @@
 {
   "task": "MB-79",
-  "item": "(f) record: batch 2026-11-03-batch-aw (the oracle-first door R-MC and its two dated notes on R-LI and R-LH; decision CHAT-224.O-29)",
-  "class": "R",
+  "item": "(f) build: the oracle-first door (R-MC = PR-79f-1)",
+  "class": "G",
   "stage": 8,
-  "date": "2026-11-03",
-  "head": "404653635",
+  "date": "2026-11-04",
+  "head": "31af690f1ed89da12d617fd1e7273adb618b3717",
   "commits_reviewed": [
-    "the staged recording commit on 404653635 (9 files)"
+    "7da011f92",
+    "7fef743b3",
+    "fbcdec43d",
+    "31af690f1"
   ],
   "cards": [
     "CARD-o26-loop-arm",
-    "CARD-o28-prereg-name",
     "CARD-o29-door-pushed",
-    "CARD-o30-m180-note"
+    "CARD-o30-m180-note",
+    "CARD-mb79f-F4-exact-lines (operator \"Q-f4 b\": the door lands trimmed, as R-MC clause (3) reads)"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-79/f/laneR-record-list.md; ~/Buildo-scratch/mcbylaws/MB-79/f/pr79f1-redraft.v9.1.md (Draft 1, sha256 1556a424); ~/Buildo-scratch/mcbylaws/R-batch-ao/drafts.md (Drafts 1a, 1b)",
-  "output": "Record OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-79/f/record-output-panel.md: PASS. Checks 1-7 PASS (R-MC equals Draft 1 apart from the placeholder fills, \"(= R-MC)\" and the verdict words; the two notes byte-exact before each Conflict check; quotes verbatim; arm K stagedRowConflictProblems []; decision-log clean, 751 decisions; ceiling 99->100; message ids all ruled; scope 9 files). Item 4: M-358 \"no conflict\" stands. One advisory (the added \"(no conflict)\" on the M-180/RATIFIED sentence) is covered by the message.",
+  "plan": "Buildo-scratch/mcbylaws/MB-79/f/plan.v9.1.md (fold check PASS, fold-check-v9.md); v9.2 adds the panel plan edits F-2 (case token of the first consumer) and F-4 (deferred by \"Q-f4 b\"). Commits: prereg-MB-79-5.json alone (coa round 48, rules M-321, R-MA and R-MC, zero moves, totals equal prereg-MB-26-2.json), then the code commit directly on it with loop record round-16 (revert, increment 1, zero scorer moves: 1194 cases equal round-15), then this record. Reviewed at 7da011f92/7fef743b3 on b31ca6845; rebased onto a1c2858fe with the prereg re-made as an add and the code tree unchanged apart from the F-3 wording of red.txt.",
+  "output": "OUTPUT panel PASS on code and tests (Buildo-scratch/mcbylaws/MB-79/f/output-panel.md, lenses 1-8). F-1 (round collision) fixed: the prereg is re-made at round 48 on the landing tip. F-2 (the case token of the first consumer) fixed in plan v9.2 section 8 (c) and status-1103 section 5. F-3 (red wording) fixed: red.txt and the code message name the D1/D2 and D3 reds module-absent and the D4, D5a-0, D5a and D5b reds assertion reds. F-4 (trim hides whitespace-only lines) deferred by the operator, \"Q-f4 b\"; the door compares trimmed lines as R-MC clause (3) reads; the amend is archived as a patch. No path found around R-MC; joinArgsFor parity 75/75 byte-identical. Green on the rebased tree: the 7 door files 197/197, the 25 loop and gate suites 948/948.",
+  "seats": [
+    "output-panel (lenses 1-8, Buildo-scratch/mcbylaws/MB-79/f/output-panel.md)"
+  ],
   "verdict": "PASS",
   "blockers": [],
-  "followups": [],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-79/f/record-output-panel.md",
+  "followups": [
+    "F-4 (deferred, operator \"Q-f4 b\"): exact-line compare needs a dated note on R-MC clause (3) and its assertion changes; card CARD-mb79f-F4-exact-lines, patch Buildo-scratch/mcbylaws/MB-79/f/build/F4-amend.patch",
+    "4a: the plan 2.2 row order (empty_diff before the header refusal) is a plan wording fix",
+    "4c: fileText is collected and never read; drop or print it in a later item",
+    "5: the case-token stem is taken up to the first dot (bylaw-eval-perf); a one-line dated note on R-MC or a T2 comment",
+    "lens 3: run the first real consumer (MB-18 item a or MB-27.L2 item 1) as a commit-mode dry run with a --write record before its push",
+    "until MB-79 (i) lands, the orchestrator shows the operator the door entries in chat before each door-using push"
+  ],
+  "evidence": "Buildo-scratch/mcbylaws/MB-79/f/output-panel.md; Buildo-scratch/mcbylaws/MB-79/f/build/green-door-r48.txt; Buildo-scratch/mcbylaws/MB-79/f/build/green-loop-suites-r48.txt",
   "previous": [
+    {
+      "task": "MB-79",
+      "item": "(f) record: batch 2026-11-03-batch-aw (the oracle-first door R-MC and its two dated notes on R-LI and R-LH; decision CHAT-224.O-29)",
+      "class": "R",
+      "stage": 8,
+      "date": "2026-11-03",
+      "head": "404653635",
+      "commits_reviewed": [
+        "the staged recording commit on 404653635 (9 files)"
+      ],
+      "cards": [
+        "CARD-o26-loop-arm",
+        "CARD-o28-prereg-name",
+        "CARD-o29-door-pushed",
+        "CARD-o30-m180-note"
+      ],
+      "plan": "~/Buildo-scratch/mcbylaws/MB-79/f/laneR-record-list.md; ~/Buildo-scratch/mcbylaws/MB-79/f/pr79f1-redraft.v9.1.md (Draft 1, sha256 1556a424); ~/Buildo-scratch/mcbylaws/R-batch-ao/drafts.md (Drafts 1a, 1b)",
+      "output": "Record OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-79/f/record-output-panel.md: PASS. Checks 1-7 PASS (R-MC equals Draft 1 apart from the placeholder fills, \"(= R-MC)\" and the verdict words; the two notes byte-exact before each Conflict check; quotes verbatim; arm K stagedRowConflictProblems []; decision-log clean, 751 decisions; ceiling 99->100; message ids all ruled; scope 9 files). Item 4: M-358 \"no conflict\" stands. One advisory (the added \"(no conflict)\" on the M-180/RATIFIED sentence) is covered by the message.",
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [],
+      "evidence": "~/Buildo-scratch/mcbylaws/MB-79/f/record-output-panel.md"
+    },
     {
       "task": "MB-79",
       "item": "v (K-4)",
