@@ -1,0 +1,99 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 3 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-27-1.json is the sqrt item, prereg-MB-27-2.json the 1:4 re-key), the revert round of increment 1 that lands the M-480 Layer 3 forms item (refuse, flag and best_of; the Layer 3 grammar and evaluator only; no catalogue row uses the forms; with its dated note, operator 'Q-K5 a', flag() also takes the parameterised word headline_lower_bound: <reason>, the reason from the declared flag_params list, so the interim headline_lower_bound: main_wall_shares_not_resolved is raised with flag()). Committed alone directly under the code commit (R-MA). It touches no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets; totals equal prereg-MB-83-4.json after-totals (the prereg below it on f58048c9a); floors unchanged. Re-pin (named, RP-10, an operator approval at landing): the layer3-catalogue.json sha in layer3-catalogue.logic.test.ts; expected-172.json and expected-4d.json inputs.table_version, inputs.evaluator_version and commit; maxbld-amendment-index.json layer2_table_version; bylaw-layer2-input.json table_version and evaluator_version; version fields only, any other change stops the landing and returns to the operator. rules[] names only rules RULED, or OWED with the lock landing in the code commit (R-KG arm C).",
+ "schema": "coa-round-prereg-v1",
+ "round": 53,
+ "task": "MB-27",
+ "rules": [
+  "M-480",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-l3-forms.md (folded to the M-480 row text: the ceiling is last and optional; every candidate not_evaluated returns the first one's reason); ~/Buildo-scratch/mcbylaws/laneE/build-plan.md (Build A); ~/Buildo-scratch/p2close/CARD-l3-schema-forms.md (operator answers L3-F1, L3-F3, L3-F4)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "RP-10 (a named operator approval at landing): expected-172.json and expected-4d.json inputs.table_version, inputs.evaluator_version and commit; maxbld-amendment-index.json layer2_table_version (the same table_version change); version fields only, totals equal, scorer_sha unchanged. Generated alongside: bylaw-layer2-input.json table_version and evaluator_version. The layer3-catalogue.json sha in layer3-catalogue.logic.test.ts (see expected_assertion_changes).",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": 33,
+   "row": "PINNED_SHA.catalogue",
+   "from": "60ba5dc6aeafe9fe58bacc7c5aab5188dc47a03e6d7aad212e162f4ca8f7dcb0",
+   "to": "4e1172c30cba1678833cbae0daaddc9539602b9666c350fd5a6d0e41ab7b0cc2",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "RP-10, operator \"RP-10 approved, switchboard pin approved, shape low yes\" (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, end; the M-480 row: \"its version re-pins are named approvals at landing\"; L3-F1 \"3-F1 approved\", ~/Buildo-scratch/p2close/CARD-l3-schema-forms.md, end)"
+  }
+ ]
+}
