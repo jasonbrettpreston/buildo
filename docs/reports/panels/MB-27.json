@@ -1,22 +1,24 @@
 {
   "task": "MB-27",
-  "item": "the sqrt item: the Layer 3 grammar gains sqrt for unitless arguments only (M-466; the vertical roof thickness of M-463)",
+  "item": "the 1:4 re-key: five RD exception height clauses worded with the 1:4 roof test carry the flat_or_shallow_roof condition; 900.3.10(971)(B) keyed with its storey condition; 900.3.10(70)(C) keyed as a 9.5 m height limit in the 69(C) form (M-484, M-485, M-486)",
   "class": "E",
   "stage": 8,
-  "date": "2026-11-03",
-  "head": "cb1c6f6f4",
+  "date": "2026-11-04",
+  "head": "57c047ab8",
   "commits_reviewed": [
-    "staged code commit over cb1c6f6f4 (prereg-MB-27-1 alone, on cb361d7af, on e67b80546)"
+    "staged code commit over 57c047ab8 (prereg-MB-27-2 alone, round 51, on 4cbe95892)"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (OP-2 \"Op-2 approved\"; Q-SLOPE \"Q-slope confirmed\"; plan approval \"confirmed as long as they are complaint\"; \"Rp- 5 and RP-6 approved\")"
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (\"D-RK a\"; \"f-1 a\"; \"F-2 a\"; \"accepted recommendation provided its compliant\"; \"RP-9 approved\")"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-sqrt.v3.md (FINAL FOR BUILD); PLAN panel ~/Buildo-scratch/mcbylaws/MB-27L2/panel-1.md, re-checks panel-recheck-1.md and panel-recheck-2.md: plan-sqrt PASS",
-  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-27L2/build/output-panel.md (stage 8): PASS, 0 BLOCKER, 0 MAJOR. F-1 MINOR applied (the code commit Operator-Ruling trailer adds \"Op-2 approved\"); F-2 MINOR noted (expected-172/4d commit field is the prereg sha; the pin is live through the inputs match, as RP-1).",
+  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-1in4-rekey.md (operator answers D-RK a, F-1 a, F-2 a; reading (ii) approved)",
+  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-27L2/rekey/output-panel.md (stage 8) with Re-check 1: PASS on code and tests. F-3 (K9, the 971(B) storey condition) and F-4 (K4c; the (4)(C) gap disclosed) fixed and closed in Re-check 1; F-1 (loop record bound before the seeds and test were staged) fixed by re-running the record over the full staged set; F-5 (this record staged) fixed; F-2 (generated renders beyond the RP-9 field list) returned to the operator before landing; F-6 and R1-2 (fresh full suite and a green run of the 13-test file) owed before push; F-7 pre-existing (golden25 --check drift on the base, recompute identical).",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "F-2: none needed (pinned through inputs, coa-scorecard.mjs:565)"
+    "F-2: operator answer on the generated renders outside the RP-9 list (bylaw-provisions.json/.md feeds 2986 to 2987 and principal/envelope 306 to 307; vocab.json input sha in bylaw-code-findings.md and maxbld-report-field-inventory.md/.json; the pre-existing stale logic_variables.json sha in bylaw-code-findings.md)",
+    "F-6, R1-2: full suite and the 13-test file green before push",
+    "F-7: golden25-inputs --check drift on the base tip (building_depth_m, building_length_m), not this commit"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-27L2/build/output-panel.md"
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-27L2/rekey/output-panel.md"
 }

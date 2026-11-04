@@ -114591,6 +114591,448 @@
           "reason": "threshold_used_in_application"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(69)#(69)[SSP](C)/condition",
+      "kind": "correction",
+      "reason": "D-RK a: the clause applies only \"If a detached house has a roof with a slope of less than 1.0 vertical units for every 4.0 horizontal units, for more than 50% of the total horizontal roof area\"; keyed without the roof condition it capped a pitched roof as well (the M-218 D1 class). The roof form is the design option flat_or_shallow_roof (M-400, M-465): the flat option takes this clause, the pitched option does not.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(69)#(69)[SSP](C)",
+      "value": {
+        "if": "height_storeys ≥ 3 storeys",
+        "tokens": [
+          "storey_count_band",
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(69)#(69)[SSP](C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "D-RK: the condition tokens are licensed by the clause words.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(69)#(69)[SSP](C)",
+      "value": [
+        "storey_count_band",
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(69)#(69)[SSP](C)/application.evidence",
+      "kind": "correction",
+      "reason": "D-RK: the clause words that license the tokens.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(69)#(69)[SSP](C)",
+      "value": {
+        "RD": "Exception RD 69",
+        "detached_house": "a detached house has",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 4.0 horizontal units",
+        "storey_count_band": "3 storeys is permitted"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(69)#(69)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "D-RK: the roof-slope (and storey) literals are now thresholds used in the application (the token and its condition), not an unmodelled arm.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(69)#(69)[SSP](C)",
+      "value": [
+        {
+          "clause": "(69)[SSP](C)",
+          "literal": "1.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(69)[SSP](C)",
+          "literal": "4.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(69)[SSP](C)",
+          "literal": "50%",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(975)#(975)[SSP](C)/condition",
+      "kind": "correction",
+      "reason": "D-RK a: the clause applies only \"If a detached house has a roof with a slope of less than 1.0 vertical units for every 4.0 horizontal units, for more than 50% of the total horizontal roof area\"; keyed without the roof condition it capped a pitched roof as well (the M-218 D1 class). The roof form is the design option flat_or_shallow_roof (M-400, M-465): the flat option takes this clause, the pitched option does not.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(975)#(975)[SSP](C)",
+      "value": {
+        "if": "height_storeys ≥ 3 storeys",
+        "tokens": [
+          "storey_count_band",
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(975)#(975)[SSP](C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "D-RK: the condition tokens are licensed by the clause words.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(975)#(975)[SSP](C)",
+      "value": [
+        "storey_count_band",
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(975)#(975)[SSP](C)/application.evidence",
+      "kind": "correction",
+      "reason": "D-RK: the clause words that license the tokens.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(975)#(975)[SSP](C)",
+      "value": {
+        "RD": "Exception RD 975",
+        "detached_house": "a detached house",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 4.0 horizontal units",
+        "storey_count_band": "3 storeys is permitted"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(975)#(975)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "D-RK: the roof-slope (and storey) literals are now thresholds used in the application (the token and its condition), not an unmodelled arm.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(975)#(975)[SSP](C)",
+      "value": [
+        {
+          "clause": "(975)[SSP](C)",
+          "literal": "1.0 vertical units",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(975)[SSP](C)",
+          "literal": "4.0 horizontal units",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(975)[SSP](C)",
+          "literal": "50%",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(893)#(893)[SSP](F)/condition",
+      "kind": "correction",
+      "reason": "D-RK a: the clause applies only \"If a detached house has a roof with a slope of less than 1.0 vertical units for every 4.0 horizontal units, for more than 50% of the total horizontal roof area\"; keyed without the roof condition it capped a pitched roof as well (the M-218 D1 class). The roof form is the design option flat_or_shallow_roof (M-400, M-465): the flat option takes this clause, the pitched option does not.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(893)#(893)[SSP](F)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(893)#(893)[SSP](F)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "D-RK: the condition tokens are licensed by the clause words.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(893)#(893)[SSP](F)",
+      "value": [
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(893)#(893)[SSP](F)/application.evidence",
+      "kind": "correction",
+      "reason": "D-RK: the clause words that license the tokens.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(893)#(893)[SSP](F)",
+      "value": {
+        "RD": "Exception RD 893",
+        "detached_house": "detached house",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 4.0 horizontal units"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(893)#(893)[SSP](F)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "D-RK: the roof-slope (and storey) literals are now thresholds used in the application (the token and its condition), not an unmodelled arm.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(893)#(893)[SSP](F)",
+      "value": [
+        {
+          "clause": "(893)[SSP](F)",
+          "literal": "1.0 vertical units",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(893)[SSP](F)",
+          "literal": "4.0 horizontal units",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(893)[SSP](F)",
+          "literal": "50%",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(971)#(971)[SSP](B)/condition",
+      "kind": "correction",
+      "reason": "D-RK a and F-1 a (its \"if 3 storeys is permitted\" condition keyed, as 69(C) and 975(C)): the clause applies only \"If a detached house has a roof with a slope of less than 1.0 vertical units for every 4.0 horizontal units, for more than 50% of the total horizontal roof area\"; keyed without the roof condition it capped a pitched roof as well (the M-218 D1 class). The roof form is the design option flat_or_shallow_roof (M-400, M-465): the flat option takes this clause, the pitched option does not.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(971)#(971)[SSP](B)",
+      "value": {
+        "if": "height_storeys ≥ 3 storeys",
+        "tokens": [
+          "storey_count_band",
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(971)#(971)[SSP](B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "D-RK: the condition tokens are licensed by the clause words.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(971)#(971)[SSP](B)",
+      "value": [
+        "storey_count_band",
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(971)#(971)[SSP](B)/application.evidence",
+      "kind": "correction",
+      "reason": "D-RK: the clause words that license the tokens.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(971)#(971)[SSP](B)",
+      "value": {
+        "RD": "Exception RD 971",
+        "detached_house": "a detached house",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 4.0 horizontal units",
+        "storey_count_band": "3 storeys is permitted"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(971)#(971)[SSP](B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "D-RK: the roof-slope (and storey) literals are now thresholds used in the application (the token and its condition), not an unmodelled arm.",
+      "rule": "Spec 69a D-RK (MB-27.L2 1:4 sub-task, operator \"D-RK a\"), M-218, M-75; Spec 68 §6 condition",
+      "unit": "900.3.10(971)#(971)[SSP](B)",
+      "value": [
+        {
+          "clause": "(971)[SSP](B)",
+          "literal": "1.0 vertical units",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(971)[SSP](B)",
+          "literal": "4.0 horizontal units",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(971)[SSP](B)",
+          "literal": "50%",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(971)[SSP](B)",
+          "literal": "3 storeys",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/archetype",
+      "kind": "correction",
+      "reason": "F-2 a (operator \"F-2 a\"): keyed as a 9.5 m height limit in the 69(C) form, with the storey and roof conditions; it was an UNUSUAL unit with no target",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/target",
+      "kind": "correction",
+      "reason": "F-2 a (operator \"F-2 a\"): keyed as a 9.5 m height limit in the 69(C) form, with the storey and roof conditions; it was an UNUSUAL unit with no target",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": "height_m"
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/bound",
+      "kind": "correction",
+      "reason": "F-2 a (operator \"F-2 a\"): keyed as a 9.5 m height limit in the 69(C) form, with the storey and roof conditions; it was an UNUSUAL unit with no target",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/numeric_expression",
+      "kind": "correction",
+      "reason": "F-2 a (operator \"F-2 a\"): keyed as a 9.5 m height limit in the 69(C) form, with the storey and roof conditions; it was an UNUSUAL unit with no target",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": [
+        "height_m = 9.5 m @(70)[SSP](C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/condition",
+      "kind": "correction",
+      "reason": "F-2 a (operator \"F-2 a\"): keyed as a 9.5 m height limit in the 69(C) form, with the storey and roof conditions; it was an UNUSUAL unit with no target. the clause applies only \"If a detached house has a roof with a slope of less than 1.0 vertical units for every 4.0 horizontal units, for more than 50% of the total horizontal roof area\"; keyed without the roof condition it capped a pitched roof as well (the M-218 D1 class). The roof form is the design option flat_or_shallow_roof (M-400, M-465): the flat option takes this clause, the pitched option does not.",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": {
+        "if": "height_storeys ≥ 3 storeys",
+        "tokens": [
+          "storey_count_band",
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "F-2 a: the condition tokens are licensed by the clause words.",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": [
+        "storey_count_band",
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/application.evidence",
+      "kind": "correction",
+      "reason": "F-2 a: the clause words that license the tokens.",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": {
+        "RD": "Exception RD 70",
+        "detached_house": "a detached house has",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 4.0 horizontal units",
+        "storey_count_band": "3 storeys is permitted"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "F-2 a: 9.5 is now expressed; the slope, area and storey literals are thresholds used in the application.",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": [
+        {
+          "clause": "(70)[SSP](C)",
+          "literal": "1.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(70)[SSP](C)",
+          "literal": "4.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(70)[SSP](C)",
+          "literal": "50%",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(70)[SSP](C)",
+          "literal": "3",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(70)#(70)[SSP](C)/calculation_handling",
+      "kind": "correction",
+      "reason": "F-2 a: modelled in the 69(C) form.",
+      "rule": "Spec 69a D-RK, F-2 a (MB-27.L2 1:4 sub-task), M-218, M-75; Spec 68 §6",
+      "unit": "900.3.10(70)#(70)[SSP](C)",
+      "value": {
+        "description": "For a detached house whose roof has a slope under 1.0 vertical to 4.0 horizontal over more than 50% of the total horizontal roof area, the maximum building height is 9.5 m where 3 storeys are permitted on the lot; otherwise regulation 10.20.40.10(4) applies.",
+        "gaps": "The 'otherwise' arm defers to 10.20.40.10(4).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "roof_type"
+        ]
+      }
     }
   ]
 }

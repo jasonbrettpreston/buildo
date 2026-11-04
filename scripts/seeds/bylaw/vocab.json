@@ -377,7 +377,7 @@
     "two_abutting_buildings_within_15_m": {},
     "has_secondary_suite": { "user_input": "has_secondary_suite" },
     "ancillary_contains_parking_space": { "user_input": "ancillary_contains_parking_space", "patterns": ["containing a parking space", "with a parking space"] },
-    "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units"] },
+    "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units", "slope of less than 1.0 vertical units for every 4.0 horizontal units"] },
     "suite_wall_openings": { "user_input": "suite_wall_openings", "patterns": ["openings such as"] },
     "blank_side_wall": { "user_input": "blank_side_wall", "patterns": ["no windows or doors in that side"] },
     "main_wall_openings": { "user_input": "main_wall_openings", "patterns": ["openings to dwelling units"] },

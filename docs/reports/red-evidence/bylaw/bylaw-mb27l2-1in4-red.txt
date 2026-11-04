@@ -1,0 +1,27 @@
+== MB-27 (1:4 re-key) red: src/tests/bylaw-mb27l2-1in4.logic.test.ts (new), run on the base tree 4cbe95892 (adjudications.json and vocab.json without the re-key corrections and the 1:4 pattern); K0 (G-AGREE holds) is green on base by design
+ ✓ src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — G-AGREE holds with the new corrections > K0 no agreement violation (every correction names a unit and a field the keyers carry)
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — the keying (D-RK a, F-1 a, F-2 a) > K1 each re-keyed 1:4 unit carries the flat_or_shallow_roof condition
+   → AssertionError: expected [ '900.3.10(69)#(69)[SSP](C)', …(1) ] to deeply equal [ '900.3.10(69)#(69)[SSP](C)', …(1) ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — the keying (D-RK a, F-1 a, F-2 a) > K1b the storey condition is kept on 69(C), 975(C) and keyed on 971(B) and 70(C) (F-1 a, F-2 a)
+   → TypeError: Cannot read properties of undefined (reading 'includes')
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — the keying (D-RK a, F-1 a, F-2 a) > K2 the evidence quotes the 1:4 words, and those words are in the clause text
+   → AssertionError: expected [ '900.3.10(69)#(69)[SSP](C)', …(1) ] to deeply equal [ '900.3.10(69)#(69)[SSP](C)', …(1) ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — the keying (D-RK a, F-1 a, F-2 a) > K3 the token licence holds both slope wordings
+   → AssertionError: expected [ Array(1) ] to deeply equal [ …(2) ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — the keying (D-RK a, F-1 a, F-2 a) > K7 70(C) is a 9.5 m height limit in the 69(C) form (F-2 a)
+   → AssertionError: expected [ 'UNUSUAL', 'none', 'none' ] to deeply equal [ 'LIMIT', 'height_m', 'max' ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — applicability follows the roof option > K4 a pitched roof (token false) never applies the 1:4 clause
+   → AssertionError: expected [ '900.3.10(69)#(69)[SSP](C)', null ] to deeply equal [ '900.3.10(69)#(69)[SSP](C)', false ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — applicability follows the roof option > K4b an undecided roof form leaves the clause undecided, never applied silently
+   → AssertionError: expected [ '900.3.10(70)#(70)[SSP](C)', true ] to deeply equal [ '900.3.10(70)#(70)[SSP](C)', null ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — applicability follows the roof option > K4c with 3 storeys permitted (the storey test holds), an undecided roof form is what leaves the height undecided
+   → AssertionError: expected [ '900.3.10(69)#(69)[SSP](C)', …(2) ] to deeply equal [ '900.3.10(69)#(69)[SSP](C)', …(2) ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — applicability follows the roof option > K5 893(F): with a shallow roof its 11.0 m applies despite 10.20.40.10(4)(A); with a pitched roof it does not
+   → AssertionError: expected [ 'value', true ] to deeply equal [ 'value', false ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — applicability follows the roof option > K8 70(C) (F-2 a): with 3 storeys permitted, a shallow roof caps the height at 9.5 m; a pitched roof does not take the cap
+   → AssertionError: expected [ Array(3) ] to deeply equal [ 'value', 9.5, …(1) ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — 971(B) storey condition (F-1 a, operator-confirmed upward move) > K9 with 2 storeys permitted the 9.5 m cap does not apply in either roof form; with 3 storeys a shallow roof takes it
+   → AssertionError: expected [ true, 'value', true ] to deeply equal [ true, 'value', false ]
+ × src/tests/bylaw-mb27l2-1in4.logic.test.ts > MB-27.L2 (1:4) — nothing else is corrected > K6 the 2026-11-03 D-RK corrections name only the five re-keyed units
+   → AssertionError: expected [] to deeply equal [ '900.3.10(69)#(69)[SSP](C)', …(4) ]
+ Tests  12 failed | 1 passed (13)
