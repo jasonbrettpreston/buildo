@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 511** (442 M-rows, 69 LC-rows): 508 in force (203 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: its line id, which names the rule (m.N is M-N in Spec 69a, lc.N is LC-N in Spec 131), the reading headline, then the register's status, its "Enforced by" cell and the number of dated notes under the row.
+**Rules rendered: 517** (448 M-rows, 69 LC-rows): 514 in force (209 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: its line id, which names the rule (m.N is M-N in Spec 69a, lc.N is LC-N in Spec 131), the reading headline, then the register's status, its "Enforced by" cell and the number of dated notes under the row.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -182,6 +182,12 @@ First clause cited: 10.40.40.10, 10.60.40.10, x.40.10, 10.10.40.10, 10.80.40.10,
 
 - **m.473** Increment 2 discloses RD 10.20.40.10(8) (a qualifying attic of 20 m² or less used for mechanical equipment is not a storey) and keeps 382.494 on A0182, A0203, A0205, A0229 and A0277.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the disclosure word and the five golden cells, locked by layer3-catalogue.logic.test.ts and…
+
+- **m.482** Phase 2 stores principal roof_slope_max as unregulated by absence in RD, RS, RM and RT for every class, and in R for detached_houseplex, semi_detached_house and semi_detached_houseplex; R detached_house and house_with_secondary_suite keep 5:3 (10.10.40.10(4)).
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27.L2 (lane E): the red-first lock src/tests/bylaw-mb27l2-roof-slope.logic.test.ts (new,…
+
+- **m.484** The 1:4 roof test of the RD Chapter 900 exceptions is keyed as the design-choice token flat_or_shallow_roof (the 1:4 re-key, its own MB-27.L2 sub-task before the axis night); on those lots the pitched option is taken at a slope of at least 1:4 and the 1:10 to 1:4 band is shown not evaluated.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2 (1:4) (lane E): the red-first lock src/tests/bylaw-mb27l2-1in4.logic.test.ts (new,…
 
 - **lc.59** Review-page rulings, batch 4 (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-evaluator-fixes.logic.test.ts (1); INV-21 (2)
@@ -748,6 +754,12 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6, 900.4.
 
 - **m.478** Where a roof row's stored height is below its main-wall limit, the wall limit is not binding and the walls are bounded by the height; disclosed main_wall_limit_above_height.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the reading and the disclosure word in the Phase 2 build, locked red-first by a test lane…
+
+- **m.485** 900.3.10(971)(B)'s "if 3 storeys is permitted" condition is keyed with its 1:4 token in the 1:4 re-key (F-1).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2 (1:4) (lane E): the lock src/tests/bylaw-mb27l2-1in4.logic.test.ts, every moving lot in its…
+
+- **m.486** 900.3.10(70)(C) is keyed as a 9.5 m height limit in the 69(C) form, with its 1:4 token, in the 1:4 re-key (F-2).
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2 (1:4) (lane E): the lock src/tests/bylaw-mb27l2-1in4.logic.test.ts, every moving lot in its…
 
 ### General / cross-cutting
 
@@ -1545,6 +1557,12 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **m.481** Each reading row of the switchboard carries a confidence (high, medium, medium-low or low) and an evidence pointer, and every result shows the confidence beside each reading it rests on (dated amendment to M-378, as a row, the M-466 form).
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27 (the switchboard confidence item, lane E, red first, with the M-72 forms build):…
 
+- **m.483** Spec 134 type amendment: row_sha, table_version and evaluator_version on bylaw_resolution_lots are stored as bytea(32) at the database boundary (migration 295) and read as hex through the view bylaw_resolution_lot_stamps; the values are unchanged and JavaScript stays hex.
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27.L2 P3 (lane E, the last code push before the axis night): migration 295 (the retype, the three…
+
+- **m.487** The Layer 3 catalogue gains the increment-2 row gfa_pitched_m2 = best_of(gfa_pitched_a_m2; gfa_pitched_b_m2; ceiling: min(storeys_max × footprint_max_m2; l2(fsi) × lot_area_m2; l2(gfa_m2))) (the M-480 form, with the ceiling of gfa_max_m2): the larger pitched arm, the report's one "Pitched, max"…
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27 (lane E, after the M-480 forms build lands): the row in …
+
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
 
@@ -1719,7 +1737,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **lc.69** Box shape disclosed; footprint_shape_factor hook with the switch off.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
 
-## 3. Rows with an OWED marker (203 in force)
+## 3. Rows with an OWED marker (209 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -1892,6 +1910,12 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-479 | m.479 | RULED 2026-11-03 · OWED |
 | M-480 | m.480 | RULED 2026-11-03 · OWED |
 | M-481 | m.481 | RULED 2026-11-03 · OWED |
+| M-482 | m.482 | RULED 2026-11-04 · OWED |
+| M-483 | m.483 | RULED 2026-11-04 · OWED |
+| M-484 | m.484 | RULED 2026-11-03 · OWED |
+| M-485 | m.485 | RULED 2026-11-03 · OWED |
+| M-486 | m.486 | RULED 2026-11-03 · OWED |
+| M-487 | m.487 | RULED 2026-11-04 · OWED |
 | LC-2 | lc.2 | RULED · OWED |
 | LC-3 | lc.3 | RULED · OWED |
 | LC-14 | lc.14 | RULED 2026-10-07 · OWED |

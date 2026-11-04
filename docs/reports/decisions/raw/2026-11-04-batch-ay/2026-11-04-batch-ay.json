@@ -1,0 +1,87 @@
+{
+  "source": "operator chat 2026-11-04",
+  "operator_quote": "V8-Q4a",
+  "context": "Recorded by lane R (MB-83, McBylaws queue, lane R), stage 9: decision batch 2026-11-04-batch-ay, part 3 of the increment-2 answers: rows M-482 (Q-RSM, with the RD reading V8-Q3 a) , M-483 (the Spec 134 type amendment, Q-STOR a), M-487 (the gfa_pitched_m2 catalogue row, Q-MF8 a with its ceiling, D1 a) and M-484..M-486 (the 1:4 re-key rulings D-RK a with reading (ii) (a), f-1 a and F-2 a, with measured dated notes from ~/Buildo-scratch/mcbylaws/MB-27L2/rekey/stored-move-groups.json), and a dated note on M-475 (V8-Q1 a). The plan is ~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md with its questions v8-open-questions.md. Every answer is quoted verbatim in its answer file (~/Buildo-scratch/mcbylaws/inc2/open-questions.md). The re-pin is RP-11 (operator \"V8-Q4a\": version/hash/commit fields only in the four regenerated files; any other change stops the landing).",
+  "decisions": [
+    {
+      "id": "CHAT-226.Q-RSM",
+      "subject": "M-482: Phase 2 stores principal `roof_slope_max` as `unregulated` by absence in RD, RS, RM and RT for every class, and in R for detached_houseplex, semi_detached_house and semi_detached_houseplex; R detached_house and house_with_secondary_suite keep 5:3 (10.10.40.10(4)).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-RSM\"): \"Q-RSM confirmed\". Rule text: A red-first, pre-registered MB-27.L2 item stores principal roof_slope_max as unregulated by absence: in RD, RS, RM and RT (no slope article; M-361 Q1), for every class; in R, for the classes 10.10.40.10(4) does not name: detached_houseplex, semi_detached_house, semi_detached_houseplex (Spec 68 rule 7a v2). R detached_house and house_with_secondary_suite keep 5:3. It rides the increment-2 roof-axis night with McProof item 1 (same mechanism, \"item 1 A\"). If it moves the frozen bylaw-eval-perf corpus, it waits for MB-79 (f) with item 1. Answer-key values are unchanged (they already assumed no cap). Examples reading the cell are marked \"inputs pending reload\". Not offered: an R3-01/M-461 exception path (no-exception-paths rule).",
+      "quote_ref": "q_rsm"
+    },
+    {
+      "id": "CHAT-226.V8-Q3",
+      "subject": "M-482: the RD reading of 10.20.40.11(1) for the Q-RSM absence entry (V8-Q3 a).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"V8-Q3\"; ~/Buildo-scratch/mcbylaws/MB-27L2/v8-open-questions.md, V8-Q3): \"V8-Q3a\". Rule text: The Q-RSM RD absence entry lists 10.20.40.11(1) in accounted_occurrences, with the reading \"a minimum slope for an altered roof of a lawfully existing building; it does not limit roof_slope_max\". RD stores roof_slope_max as unregulated by absence, as Q-RSM says. The reading goes on EXAMINER-QUESTIONS.md as \"reading awaiting expert check\". Data: 0 CoA notice rows cite 10.20.40.11.",
+      "quote_ref": "q_v8q3"
+    },
+    {
+      "id": "CHAT-226.Q-STOR",
+      "subject": "M-483: Spec 134 type amendment: `row_sha`, `table_version` and `evaluator_version` on `bylaw_resolution_lots` are stored as bytea(32) at the database boundary (migration 295) and read as hex through the view `bylaw_resolution_lot_stamps`; the values are unchanged and JavaScript stays hex (dated amendment to Spec 134 §3 \"Lineage\", as a row, the M-466 form).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Q-STOR\"): \"Q-STOR a\". Rule text: (a) B + F, from ~/Buildo-scratch/mcbylaws/MB-27L2/storage-headroom.md. B: migration 295 (the increment-2 axis night) retypes row_sha, table_version and evaluator_version from hex text to bytea(32). Values are unchanged. CHECKs at migrations/282_resolve_bylaws.sql:68-70 are updated, the encode(...,'hex') compare at bylaw-materialize.js:68 is dropped, and Layer 3 reads through a hex view. Measured 45-58 MiB. One Spec 134 type amendment (this answer is the ruling). Tests and goldens asserting hex text change under it (Process 1). F: the increment-3 D5 houseplex option rows are stored only where they differ from the base class (M-400 share; class_results already stores overrides only). The D5 prereg counts only differing cells. A (packed insert order) and C (class_results compaction) are in reserve. Projected: axis night about 695-715 MiB; increment-3 night about 750-770 MiB, under the 780 stop (0.60 line held). Each night's G-STOR measurement still decides.",
+      "quote_ref": "q_qstor"
+    },
+    {
+      "id": "CHAT-226.V8-Q1",
+      "subject": "M-475 (dated note): the street-side absence entries are typed by building type, and the corpus count \"88 of 140\" is replaced by the measured count (V8-Q1 a).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"V8-Q1\"; ~/Buildo-scratch/mcbylaws/MB-27L2/v8-open-questions.md, V8-Q1): \"V8-Q1a\". Rule text: M-475 is built with typed absence entries (detached_house, semi_detached_house, detached_houseplex, semi_detached_houseplex), so suite cells are untouched (150.8 has a laneway street-side article; M-361 Q1). Lane R adds a dated note on M-475 in batch part 3, replacing \"88 of 140\" with the measured corpus count (derived about 12 of 140) and the reason. The door prereg lists the measured lines. A0375's expected answers are unchanged. City-wide ceiling: 168,514 detached-house cells (R 98,058, RS 12,750, RM 51,794, RT 5,912).",
+      "quote_ref": "q_v8q1"
+    },
+    {
+      "id": "CHAT-226.D-RK",
+      "subject": "M-484: the 1:4 roof test of the RD Chapter 900 exceptions is keyed as the design-choice token flat_or_shallow_roof (the 1:4 re-key sub-task).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"D-RK\"; ~/Buildo-scratch/mcbylaws/MB-27L2/CARD-1in4-rekey.v2.md): \"D-RK a\". Rule text: The 29 RD 1:4 exceptions are re-keyed as their own MB-27.L2 (1:4) sub-task, landing before the axis night: each 1:4 unit's condition.tokens gains flat_or_shallow_roof (69(C) keeps storey_count_band); the token's patterns gain the 1:4 wording; the thresholds table gains 0.25; its own prereg; a CoA move check; an oracle-class sweep in a throwaway clone; its own push. If the sweep shows a frozen oracle moves, it goes through the MB-79 (f) door. Storage ~1 MiB. Reading (i) was settled by O-A a (the four \"flat roof\" clauses take the zone's 1:10). Reading (ii) remains open.",
+      "quote_ref": "q_drk"
+    },
+    {
+      "id": "CHAT-226.RK-II",
+      "subject": "M-484: reading (ii) of the 1:4 card: on the re-keyed lots the pitched option is taken at a slope of at least 1:4 and the middle band is not evaluated.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"1:4 card reading (ii)\", pasting option (a)): \"approved\". Rule text: Reading (ii) option (a): on the 29 re-keyed RD 1:4 exception lots, the pitched design option is taken at a slope ≥ 1:4; the middle band (1:10 to 1:4) is shown not_evaluated with its reason and the headline flagged headline_lower_bound (Q-HEAD B). No extra storage. This answer is the ruling for the departure from M-400 (one option left unstored on those lots). Never over-reports.",
+      "quote_ref": "q_rk2"
+    },
+    {
+      "id": "CHAT-226.F-1",
+      "subject": "M-485: 900.3.10(971)(B)'s \"if 3 storeys is permitted\" condition is keyed with its 1:4 token (F-1).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"F-1\"): \"f-1 a\". Rule text: 900.3.10(971)(B)'s \"if 3 storeys is permitted\" condition is keyed in the same 1:4 re-key sub-task (with the flat_or_shallow_roof token), red-first; any lot whose stored value moves is in its prereg move list.",
+      "quote_ref": "q_f1"
+    },
+    {
+      "id": "CHAT-226.F-2",
+      "subject": "M-486: 900.3.10(70)(C) is keyed as a 9.5 m height limit in the 69(C) form (F-2).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"F-2\"): \"we couldn't resolve these questions by looking at the data?  F-2 a\". Rule text: F-2 a: 900.3.10(70)(C) is keyed as a 9.5 m height limit in the 69(C) form (with the flat_or_shallow_roof token) in the 1:4 re-key sub-task; ~1,172 lots' stored height moves down to the exception's cap; red-first; every moving lot in the prereg move list.",
+      "quote_ref": "q_f2"
+    },
+    {
+      "id": "CHAT-226.Q-MF8",
+      "subject": "M-487: the Layer 3 catalogue gains the increment-2 row gfa_pitched_m2 = best_of(gfa_pitched_a_m2; gfa_pitched_b_m2) (the M-480 form), the report's one Pitched, max line.",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md, Q-MF8): \"Q-MF8 a the only thing missing is the lot card with the lot details/neighborhod details and the current goodle street view photo. The only other missing feature is the confidence level and warnings. For the gut home scenario because the confidence is low - we blur it - and prompt the user to input existing structure facts. how do we incorporate this as well. Trust is the key.\". Rule text: one \"Pitched, max\" line from a catalogue row gfa_pitched_m2 = best_of(gfa_pitched_a_m2, gfa_pitched_b_m2) (M-480 form), recorded as an increment-2 row in the next batch, with the other arm in detail.",
+      "quote_ref": "q_mf8"
+    },
+    {
+      "id": "CHAT-226.D1",
+      "subject": "M-487: the gfa_pitched_m2 row takes the gfa_max_m2 ceiling (McProof D1).",
+      "decision": "approve",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"D1 and Q-K4P\"): \"D1 and QK4p\", then \"a\" when asked to confirm the letters for both. Rule text: D1 a: the gfa_pitched_m2 row takes gfa_max_m2's ceiling: gfa_pitched_m2 = best_of(gfa_pitched_a_m2, gfa_pitched_b_m2) with ceiling min(storeys_max × footprint; FSI × lot; gfa_m2). No lower-bound flag when the result equals the ceiling (M-480; Q-FREE A default 4). Recorded in batch part 3 under RP-11 (a new M number). McProof ROOF-18 key stands (243.47, no flag).",
+      "quote_ref": "q_d1"
+    }
+  ],
+  "q_rsm": "Q-RSM confirmed",
+  "q_v8q3": "V8-Q3a",
+  "q_qstor": "Q-STOR a",
+  "q_v8q1": "V8-Q1a",
+  "q_drk": "D-RK a",
+  "q_rk2": "approved",
+  "q_f1": "f-1 a",
+  "q_f2": "we couldn't resolve these questions by looking at the data?  F-2 a",
+  "q_mf8": "Q-MF8 a the only thing missing is the lot card with the lot details/neighborhod details and the current goodle street view photo. The only other missing feature is the confidence level and warnings. For the gut home scenario because the confidence is low - we blur it - and prompt the user to input existing structure facts. how do we incorporate this as well. Trust is the key.",
+  "q_d1": "D1 and QK4p; a"
+}

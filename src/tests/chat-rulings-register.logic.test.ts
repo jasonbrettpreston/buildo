@@ -1167,3 +1167,91 @@ describe('CHAT-225 (batch 2026-11-03-batch-ax): 18 rulings recorded in 16 rows (
     }
   });
 });
+
+// CHAT-226 (batch 2026-11-04-batch-ay): the rule text is present in the register that carries it and cites its decision.
+describe('CHAT-226 (batch 2026-11-04-batch-ay): 10 rulings recorded in 6 new rows and one dated note on M-475 (increment 2, part 3); the builds are OWED to MB-27 and MB-27.L2', () => {
+  it('M-482 carries 2026-11-04-batch-ay#CHAT-226.Q-RSM and its Rule text', () => {
+    expect(M, 'CHAT-226.Q-RSM').toContain("2026-11-04-batch-ay#CHAT-226.Q-RSM");
+    expect(M, 'CHAT-226.Q-RSM rule text').toContain("A red-first, pre-registered MB-27.L2 item stores principal roof_slope_max as unregulated by absence: in RD, RS, RM and RT (no slope article; M-361 Q1), for every class; in R, for the classes 10.10.40.10(4) does not name: detached_houseplex, semi_detached_house, semi_detached_houseplex (Spec 68 rule 7a v2). R detached_house and house_with_secondary_suite keep 5:3. It rides the increment-2 roof-axis night with McProof item 1 (same mechanism, \"item 1 A\"). If it moves the frozen bylaw-eval-perf corpus, it waits for MB-79 (f) with item 1. Answer-key values are unchanged (they already assumed no cap). Examples reading the cell are marked \"inputs pending reload\". Not offered: an R3-01/M-461 exception path (no-exception-paths rule).");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-482** |')) as string;
+    expect(row, 'M-482 row').toContain("2026-11-04-batch-ay#CHAT-226.Q-RSM");
+  });
+  it('M-482 carries 2026-11-04-batch-ay#CHAT-226.V8-Q3 and its Rule text', () => {
+    expect(M, 'CHAT-226.V8-Q3').toContain("2026-11-04-batch-ay#CHAT-226.V8-Q3");
+    expect(M, 'CHAT-226.V8-Q3 rule text').toContain("The Q-RSM RD absence entry lists 10.20.40.11(1) in accounted_occurrences, with the reading \"a minimum slope for an altered roof of a lawfully existing building; it does not limit roof_slope_max\". RD stores roof_slope_max as unregulated by absence, as Q-RSM says. The reading goes on EXAMINER-QUESTIONS.md as \"reading awaiting expert check\". Data: 0 CoA notice rows cite 10.20.40.11.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-482** |')) as string;
+    expect(row, 'M-482 row').toContain("2026-11-04-batch-ay#CHAT-226.V8-Q3");
+  });
+  it('M-483 carries 2026-11-04-batch-ay#CHAT-226.Q-STOR and its Rule text', () => {
+    expect(M, 'CHAT-226.Q-STOR').toContain("2026-11-04-batch-ay#CHAT-226.Q-STOR");
+    expect(M, 'CHAT-226.Q-STOR rule text').toContain("(a) B + F, from ~/Buildo-scratch/mcbylaws/MB-27L2/storage-headroom.md. B: migration 295 (the increment-2 axis night) retypes row_sha, table_version and evaluator_version from hex text to bytea(32). Values are unchanged. CHECKs at migrations/282_resolve_bylaws.sql:68-70 are updated, the encode(...,'hex') compare at bylaw-materialize.js:68 is dropped, and Layer 3 reads through a hex view. Measured 45-58 MiB. One Spec 134 type amendment (this answer is the ruling). Tests and goldens asserting hex text change under it (Process 1). F: the increment-3 D5 houseplex option rows are stored only where they differ from the base class (M-400 share; class_results already stores overrides only). The D5 prereg counts only differing cells. A (packed insert order) and C (class_results compaction) are in reserve. Projected: axis night about 695-715 MiB; increment-3 night about 750-770 MiB, under the 780 stop (0.60 line held). Each night's G-STOR measurement still decides.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-483** |')) as string;
+    expect(row, 'M-483 row').toContain("2026-11-04-batch-ay#CHAT-226.Q-STOR");
+  });
+  it('M-475 carries 2026-11-04-batch-ay#CHAT-226.V8-Q1 and its Rule text', () => {
+    expect(M, 'CHAT-226.V8-Q1').toContain("2026-11-04-batch-ay#CHAT-226.V8-Q1");
+    expect(M, 'CHAT-226.V8-Q1 rule text').toContain("M-475 is built with typed absence entries (detached_house, semi_detached_house, detached_houseplex, semi_detached_houseplex), so suite cells are untouched (150.8 has a laneway street-side article; M-361 Q1). Lane R adds a dated note on M-475 in batch part 3, replacing \"88 of 140\" with the measured corpus count (derived about 12 of 140) and the reason. The door prereg lists the measured lines. A0375's expected answers are unchanged. City-wide ceiling: 168,514 detached-house cells (R 98,058, RS 12,750, RM 51,794, RT 5,912).");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-475** |')) as string;
+    expect(row, 'M-475 row').toContain("2026-11-04-batch-ay#CHAT-226.V8-Q1");
+  });
+  it('M-484 carries 2026-11-04-batch-ay#CHAT-226.D-RK and its Rule text', () => {
+    expect(M, 'CHAT-226.D-RK').toContain("2026-11-04-batch-ay#CHAT-226.D-RK");
+    expect(M, 'CHAT-226.D-RK rule text').toContain("The 29 RD 1:4 exceptions are re-keyed as their own MB-27.L2 (1:4) sub-task, landing before the axis night: each 1:4 unit's condition.tokens gains flat_or_shallow_roof (69(C) keeps storey_count_band); the token's patterns gain the 1:4 wording; the thresholds table gains 0.25; its own prereg; a CoA move check; an oracle-class sweep in a throwaway clone; its own push. If the sweep shows a frozen oracle moves, it goes through the MB-79 (f) door. Storage ~1 MiB. Reading (i) was settled by O-A a (the four \"flat roof\" clauses take the zone's 1:10). Reading (ii) remains open.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-484** |')) as string;
+    expect(row, 'M-484 row').toContain("2026-11-04-batch-ay#CHAT-226.D-RK");
+  });
+  it('M-484 carries 2026-11-04-batch-ay#CHAT-226.RK-II and its Rule text', () => {
+    expect(M, 'CHAT-226.RK-II').toContain("2026-11-04-batch-ay#CHAT-226.RK-II");
+    expect(M, 'CHAT-226.RK-II rule text').toContain("Reading (ii) option (a): on the 29 re-keyed RD 1:4 exception lots, the pitched design option is taken at a slope ≥ 1:4; the middle band (1:10 to 1:4) is shown not_evaluated with its reason and the headline flagged headline_lower_bound (Q-HEAD B). No extra storage. This answer is the ruling for the departure from M-400 (one option left unstored on those lots). Never over-reports.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-484** |')) as string;
+    expect(row, 'M-484 row').toContain("2026-11-04-batch-ay#CHAT-226.RK-II");
+  });
+  it('M-485 carries 2026-11-04-batch-ay#CHAT-226.F-1 and its Rule text', () => {
+    expect(M, 'CHAT-226.F-1').toContain("2026-11-04-batch-ay#CHAT-226.F-1");
+    expect(M, 'CHAT-226.F-1 rule text').toContain("900.3.10(971)(B)'s \"if 3 storeys is permitted\" condition is keyed in the same 1:4 re-key sub-task (with the flat_or_shallow_roof token), red-first; any lot whose stored value moves is in its prereg move list.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-485** |')) as string;
+    expect(row, 'M-485 row').toContain("2026-11-04-batch-ay#CHAT-226.F-1");
+  });
+  it('M-486 carries 2026-11-04-batch-ay#CHAT-226.F-2 and its Rule text', () => {
+    expect(M, 'CHAT-226.F-2').toContain("2026-11-04-batch-ay#CHAT-226.F-2");
+    expect(M, 'CHAT-226.F-2 rule text').toContain("F-2 a: 900.3.10(70)(C) is keyed as a 9.5 m height limit in the 69(C) form (with the flat_or_shallow_roof token) in the 1:4 re-key sub-task; ~1,172 lots' stored height moves down to the exception's cap; red-first; every moving lot in the prereg move list.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-486** |')) as string;
+    expect(row, 'M-486 row').toContain("2026-11-04-batch-ay#CHAT-226.F-2");
+  });
+  it('M-487 carries 2026-11-04-batch-ay#CHAT-226.Q-MF8 and its Rule text', () => {
+    expect(M, 'CHAT-226.Q-MF8').toContain("2026-11-04-batch-ay#CHAT-226.Q-MF8");
+    expect(M, 'CHAT-226.Q-MF8 rule text').toContain("one \"Pitched, max\" line from a catalogue row gfa_pitched_m2 = best_of(gfa_pitched_a_m2, gfa_pitched_b_m2) (M-480 form), recorded as an increment-2 row in the next batch, with the other arm in detail.");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-487** |')) as string;
+    expect(row, 'M-487 row').toContain("2026-11-04-batch-ay#CHAT-226.Q-MF8");
+  });
+  it('M-487 carries 2026-11-04-batch-ay#CHAT-226.D1 and its Rule text', () => {
+    expect(M, 'CHAT-226.D1').toContain("2026-11-04-batch-ay#CHAT-226.D1");
+    expect(M, 'CHAT-226.D1 rule text').toContain("D1 a: the gfa_pitched_m2 row takes gfa_max_m2's ceiling: gfa_pitched_m2 = best_of(gfa_pitched_a_m2, gfa_pitched_b_m2) with ceiling min(storeys_max × footprint; FSI × lot; gfa_m2). No lower-bound flag when the result equals the ceiling (M-480; Q-FREE A default 4). Recorded in batch part 3 under RP-11 (a new M number). McProof ROOF-18 key stands (243.47, no flag).");
+    const row = M.split('\n').find((l) => l.startsWith('| **M-487** |')) as string;
+    expect(row, 'M-487 row').toContain("2026-11-04-batch-ay#CHAT-226.D1");
+  });
+  it('M-482 names the bylaw-eval-perf corpus, its old digest and the case token A0179 (the MB-79 (f) door reads them)', () => {
+    const row = M.split('\n').find((l) => l.startsWith('| **M-482** |')) as string;
+    expect(row).toContain('bylaw-eval-perf');
+    expect(row).toContain('de34d132');
+    expect(row).toContain('A0179');
+    expect(row.split('|').map((c) => c.trim()).filter(Boolean).pop()).toMatch(/^RULED\b/);
+  });
+  it('the M-475 dated note keeps the prior status text', () => {
+    const row = M.split('\n').find((l) => l.startsWith('| **M-475** |')) as string;
+    expect(row).toContain('RULED 2026-11-03 (operator); landing waits for MB-79 (f) (Q-F); OWED MB-27.L2, MB-26 · *Dated note 2026-11-04 (M-246, prior text kept');
+  });
+  it('M-476 (D3 a), M-470 (N4 a) and M-435 (Q-L18-4, Q-L18-2 a) carry their 2026-11-04 dated notes, prior status text kept', () => {
+    for (const [id, words] of [['M-476', 'A switched-off row that has no increment-1 formula is not shown; its trace lists the switch as off.'], ['M-470', 'The generic flag covers it: gfa_flat_m2 raises the one generic'], ['M-435', 'is labelled 4D-S4e, not the retired R5-7 label 4D-S4d'], ['M-435', 'The owed line "article 10.5.40 accuracy" falls 91.7 → 90.2 %']]) {
+      const row = M.split('\n').find((l) => l.startsWith('| **' + id + '** |')) as string;
+      expect(row.split(' | ').pop() as string, id).toContain(words);
+    }
+  });
+  it('M-480 and M-481 name their lock in the status cell (lane R notes, no new ruling)', () => {
+    for (const [id, lock] of [['M-480', 'src/tests/bylaw-m72-forms.logic.test.ts'], ['M-481', 'src/tests/bylaw-switchboard-confidence.logic.test.ts']]) {
+      const row = M.split('\n').find((l) => l.startsWith('| **' + id + '** |')) as string;
+      const status = row.split(' | ').pop() as string;
+      expect(status, id).toContain('RULED 2026-11-03 (operator); OWED MB-27 · *Dated note 2026-11-04 (lane R; names the lock, no new ruling):* the lock is `' + lock + '`');
+    }
+  });
+});
