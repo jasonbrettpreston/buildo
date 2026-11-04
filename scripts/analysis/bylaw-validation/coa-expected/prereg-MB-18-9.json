@@ -1,0 +1,204 @@
+{
+ "$comment": "M-321 pre-registration, task MB-18, prereg 9 (R-MA), the loop round that lands MB-18 item (l) prep commit P (operator O-l3 \"0-13 a as long as this is compliant with the rules\"): golden-lots-cases.mjs gives the (4)(D) rows of lots 5403712 and 5377946 and the (4)(E) row of 5403712 an explicit blank_side_wall true scenario, and cases.json is regenerated. Zero scorer moves; totals and floors equal the base. expected_value_changes[] lists every changed cases.json line through the R-MC door (trimmed, blank lines skipped), each with ruling M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); the case names the path basename cases, which the M-435 row's operator quote holds. Round number provisional: assigned at landing.",
+ "schema": "coa-round-prereg-v1",
+ "round": 59,
+ "task": "MB-18",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "M-435",
+  "M-259",
+  "M-289"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-18; ~/Buildo-scratch/mcbylaws/MB-18/l/plan.v2.md (sections 2, 3.1-3.3); ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (O-l1..O-l5, O-v2-1)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK on the 172 and cumulative sets (the OWED line of 10.5.40 stays the one listed OWED line, M-372)",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class, our value and City figure",
+ "expected_value_changes": [
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": "\"building_type\": \"detached_houseplex\"",
+   "new": "\"building_type\": \"detached_houseplex\",",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "\"flags\": {",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "\"blank_side_wall\": true",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "}",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": "\"rationale\": \"detached houseplex, no windows or doors by default (M-205): 0.45 m\",",
+   "new": "\"rationale\": \"detached houseplex, a side with no windows or doors (blank_side_wall true, the arm M-435 discloses): 0.45 m\",",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": "\"building_type\": \"detached_houseplex\"",
+   "new": "\"building_type\": \"detached_houseplex\",",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "\"flags\": {",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "\"blank_side_wall\": true",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "}",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": "\"building_type\": \"semi_detached_houseplex\"",
+   "new": "\"building_type\": \"semi_detached_houseplex\",",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "\"flags\": {",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "\"blank_side_wall\": true",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": null,
+   "new": "}",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "cases: golden lots 5403712 and 5377946, 10.10.40.70(4)#(4)(D) and (4)(E), scenario blank_side_wall true (src/tests/fixtures/bylaw-golden-lots/cases.json)",
+   "old": "\"rationale\": \"semi-detached houseplex, blank side wall by default: 0.45 m\",",
+   "new": "\"rationale\": \"semi-detached houseplex, a side with no windows or doors (blank_side_wall true, the arm M-435 discloses): 0.45 m\",",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-215.SIDE-1"
+  }
+ ],
+ "increment": "1"
+}
