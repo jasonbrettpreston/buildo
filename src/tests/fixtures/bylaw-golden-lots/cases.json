@@ -2088,13 +2088,16 @@
      "unit": "10.10.40.70(4)#(4)(D)",
      "lot": "5403712",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "flags": {
+       "blank_side_wall": true
+      }
      },
      "target": "side_setback_m",
      "expect": {
       "value": 0.45
      },
-     "rationale": "detached houseplex, no windows or doors by default (M-205): 0.45 m",
+     "rationale": "detached houseplex, a side with no windows or doors (blank_side_wall true, the arm M-435 discloses): 0.45 m",
      "initial": {
       "pass": true,
       "observed": {
@@ -2118,7 +2121,10 @@
      "unit": "10.10.40.70(4)#(4)(D)",
      "lot": "5377946",
      "scenario": {
-      "building_type": "detached_houseplex"
+      "building_type": "detached_houseplex",
+      "flags": {
+       "blank_side_wall": true
+      }
      },
      "target": "side_setback_m",
      "expect": {
@@ -2167,13 +2173,16 @@
      "unit": "10.10.40.70(4)#(4)(E)",
      "lot": "5403712",
      "scenario": {
-      "building_type": "semi_detached_houseplex"
+      "building_type": "semi_detached_houseplex",
+      "flags": {
+       "blank_side_wall": true
+      }
      },
      "target": "side_setback_m",
      "expect": {
       "value": 0.45
      },
-     "rationale": "semi-detached houseplex, blank side wall by default: 0.45 m",
+     "rationale": "semi-detached houseplex, a side with no windows or doors (blank_side_wall true, the arm M-435 discloses): 0.45 m",
      "initial": {
       "pass": true,
       "observed": {
