@@ -1,0 +1,117 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 4 (R-MA), the revert round of increment 1 that lands the M-481 switchboard confidence item (every reading row of the switchboard carries confidence and evidence; every computed result lists each reading switch it rests on with its confidence; validateCatalogue fails closed on a missing or unknown confidence). Committed alone directly under the code commit (R-MA). No evaluator file moves (rows.js, catalogue.js and switchboard.json only), so evaluator_version is unchanged; switchboard.json is a Layer 1 input, so table_version moves. It touches no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets; totals equal prereg-MB-27-3.json; floors unchanged. Re-pin (named, at landing): expected-172.json and expected-4d.json inputs.table_version and commit; maxbld-amendment-index.json layer2_table_version; bylaw-layer2-input.json table_version; the switchboard sha in layer3-catalogue.logic.test.ts; version fields only. rules[] names only rules RULED, or OWED with the lock landing in the code commit (R-KG arm C).",
+ "schema": "coa-round-prereg-v1",
+ "round": 54,
+ "task": "MB-27",
+ "rules": [
+  "M-481",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/laneE/build-plan.md (Build B); ~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md (Q-CONF a, Q14 a); ~/Buildo-scratch/mcbylaws/CONFIDENCE-REGISTER.md (C1-C12)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 69,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 51,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 74,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "Named at landing: expected-172.json and expected-4d.json inputs.table_version and commit; maxbld-amendment-index.json layer2_table_version (the same change); version fields only, totals equal, scorer_sha and evaluator_version unchanged. Generated alongside: bylaw-layer2-input.json table_version. The switchboard sha in layer3-catalogue.logic.test.ts (see expected_assertion_changes).",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts",
+   "line": 40,
+   "row": "SW.schema",
+   "from": "switchboard-v1",
+   "to": "switchboard-v2",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "Q-CONF a (operator \"Q CONF a\"; ~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md: \"The switchboard schema and its lock change (Process 1: ruled here)\")"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts",
+   "line": 41,
+   "row": "SW.rows length",
+   "from": 12,
+   "to": 19,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "Q-CONF a (operator \"Q CONF a\"; ~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md: \"The switchboard schema and its lock change (Process 1: ruled here)\")"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": 35,
+   "row": "PINNED_SHA.switchboard",
+   "from": "a64dde7ec125b5e0a95c39656dd6a468b3c0000b66f31ba94ed92392bab486a1",
+   "to": "e6441b3956019a56a77ef5f7b4578bc348c4f43227349249f1ff0a7f953bef92",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "Q-CONF a (operator \"Q CONF a\"; ~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md: \"The switchboard schema and its lock change (Process 1: ruled here)\"), and the named re-pin approval \"RP-10 approved, switchboard pin approved, shape low yes\" (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, end; M-481: \"its version re-pins are named approvals at landing\")"
+  }
+ ]
+}
