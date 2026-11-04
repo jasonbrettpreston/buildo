@@ -1,39 +1,74 @@
 {
   "task": "MB-79",
-  "item": "(f) build: the oracle-first door (R-MC = PR-79f-1)",
+  "item": "(Q-L18-5 a) the loop gate honours accepted findings in record_differs_from_run; the floors-write owed-baseline arm and its one use (article 10.5.40 accuracy 91.7 -> 90.2)",
   "class": "G",
   "stage": 8,
   "date": "2026-11-04",
-  "head": "31af690f1ed89da12d617fd1e7273adb618b3717",
+  "head": "0374792b84b02bc532491a231152bef7213867e0",
   "commits_reviewed": [
-    "7da011f92",
-    "7fef743b3",
-    "fbcdec43d",
-    "31af690f1"
+    "b9af13916",
+    "7b3f9239e",
+    "03895f8dd",
+    "0374792b8"
   ],
   "cards": [
-    "CARD-o26-loop-arm",
-    "CARD-o29-door-pushed",
-    "CARD-o30-m180-note",
-    "CARD-mb79f-F4-exact-lines (operator \"Q-f4 b\": the door lands trimmed, as R-MC clause (3) reads)"
+    "operator \"Q-L18-5 a\" (Buildo-scratch/mcbylaws/inc2/open-questions.md, with the orchestrator correction above it)",
+    "operator \"Q-L18-2 a\" (the 10.5.40 OWED line fall, RB-D12)",
+    "operator \"Q-LG1 approved\" (the two realdata assertion changes, the CLI shape, rounds renumbered to 57 and 58 by the dated note 2026-11-04 (round renumber, landing order) in Buildo-scratch/mcbylaws/inc2/open-questions.md; the Q-LG1 ruled text is unchanged)"
   ],
-  "plan": "Buildo-scratch/mcbylaws/MB-79/f/plan.v9.1.md (fold check PASS, fold-check-v9.md); v9.2 adds the panel plan edits F-2 (case token of the first consumer) and F-4 (deferred by \"Q-f4 b\"). Commits: prereg-MB-79-5.json alone (coa round 48, rules M-321, R-MA and R-MC, zero moves, totals equal prereg-MB-26-2.json), then the code commit directly on it with loop record round-16 (revert, increment 1, zero scorer moves: 1194 cases equal round-15), then this record. Reviewed at 7da011f92/7fef743b3 on b31ca6845; rebased onto a1c2858fe with the prereg re-made as an add and the code tree unchanged apart from the F-3 wording of red.txt.",
-  "output": "OUTPUT panel PASS on code and tests (Buildo-scratch/mcbylaws/MB-79/f/output-panel.md, lenses 1-8). F-1 (round collision) fixed: the prereg is re-made at round 48 on the landing tip. F-2 (the case token of the first consumer) fixed in plan v9.2 section 8 (c) and status-1103 section 5. F-3 (red wording) fixed: red.txt and the code message name the D1/D2 and D3 reds module-absent and the D4, D5a-0, D5a and D5b reds assertion reds. F-4 (trim hides whitespace-only lines) deferred by the operator, \"Q-f4 b\"; the door compares trimmed lines as R-MC clause (3) reads; the amend is archived as a patch. No path found around R-MC; joinArgsFor parity 75/75 byte-identical. Green on the rebased tree: the 7 door files 197/197, the 25 loop and gate suites 948/948.",
+  "plan": "Buildo-scratch/mcbylaws/MB-79/qL185/ (build.patch; land/land.sh, make-preregs.mjs and the five messages). Commits: prereg-MB-79-6.json alone (rules M-321, R-MA, zero moves, totals equal prereg-MB-31-7.json), the gate-code commit (loop gate out of scope, no record), prereg-MB-79-7.json alone (rules M-321, R-MA, M-330, M-435), then the floors commit written by floors-write --owed-baseline with loop record round-25 (revert, increment 1, 1194 cases equal round-24).",
+  "output": "OUTPUT panel PASS. DeepSeek four lenses (spec, security, idempotency, error-paths; deepseek-reasoner) adjudicated by the lane G grounder: five findings kept and fixed before the commit (value range 0..100; the entry keeps the door fields; an unreadable or non loop-floors-v1 file is refused; a second --owed-baseline is refused; two eval tests added: an unmapped run status is not a fail, a non-RULED finding id stays red); the rest rejected with reasons (panel/adjudication-ds.md). Regression Guardian + Compliance seat (Sonnet): PASS, no BLOCKER or MAJOR; no input the old code refused is accepted beyond record accepted / run fail / covered / same got_sha; the round-0 arm is unchanged; --ruling <RULED id> + --quote is a faithful reading. Red: 19 tests red on the base code; green 190/190 on the three files; the 24 loop and gate suites 932/932; code mutants each turn a named test red.",
   "seats": [
-    "output-panel (lenses 1-8, Buildo-scratch/mcbylaws/MB-79/f/output-panel.md)"
+    "DeepSeek lens set (Buildo-scratch/mcbylaws/MB-79/qL185/panel/ds-*.md, adjudication-ds.md)",
+    "regression-guardian + compliance (Sonnet, panel/seat-regression-compliance.md)"
   ],
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "F-4 (deferred, operator \"Q-f4 b\"): exact-line compare needs a dated note on R-MC clause (3) and its assertion changes; card CARD-mb79f-F4-exact-lines, patch Buildo-scratch/mcbylaws/MB-79/f/build/F4-amend.patch",
-    "4a: the plan 2.2 row order (empty_diff before the header refusal) is a plan wording fix",
-    "4c: fileText is collected and never read; drop or print it in a later item",
-    "5: the case-token stem is taken up to the first dot (bylaw-eval-perf); a one-line dated note on R-MC or a T2 comment",
-    "lens 3: run the first real consumer (MB-18 item a or MB-27.L2 item 1) as a commit-mode dry run with a --write record before its push",
-    "until MB-79 (i) lands, the orchestrator shows the operator the door entries in chat before each door-using push"
+    "observability: a note naming each case excused as accepted-by-finding (DeepSeek spec lens MEDIUM; not ruled)",
+    "the USAGE line does not list --owed-baseline; it is pinned verbatim by mcbylaws-loop-gate.logic.test.ts (an assertion change, Process 1)",
+    "the quote is not checked against register text (seat MINOR 1)",
+    "Q-L18-2 a has no register row or dated note yet; the floors entry cites M-435 as its authority id",
+    "full suite on the stack (24210 tests): 1 failure, mcbylaws-loop-realdata.logic.test.ts:521 pins the baseline 91.7 (and :524 the allowed rulings); the floors commit changes both by operator ruling Q-LG1 (Process 1), listed in prereg-MB-79-7.json"
   ],
-  "evidence": "Buildo-scratch/mcbylaws/MB-79/f/output-panel.md; Buildo-scratch/mcbylaws/MB-79/f/build/green-door-r48.txt; Buildo-scratch/mcbylaws/MB-79/f/build/green-loop-suites-r48.txt",
+  "evidence": "Buildo-scratch/mcbylaws/MB-79/qL185/evidence/ (red-final.txt, green-final.txt, mutation-item1.txt, mutation-item2.txt, green-loop-suites.txt, cli-dryrun.txt); land/record-zero-moves.txt",
   "previous": [
+    {
+      "task": "MB-79",
+      "item": "(f) build: the oracle-first door (R-MC = PR-79f-1)",
+      "class": "G",
+      "stage": 8,
+      "date": "2026-11-04",
+      "head": "31af690f1ed89da12d617fd1e7273adb618b3717",
+      "commits_reviewed": [
+        "7da011f92",
+        "7fef743b3",
+        "fbcdec43d",
+        "31af690f1"
+      ],
+      "cards": [
+        "CARD-o26-loop-arm",
+        "CARD-o29-door-pushed",
+        "CARD-o30-m180-note",
+        "CARD-mb79f-F4-exact-lines (operator \"Q-f4 b\": the door lands trimmed, as R-MC clause (3) reads)"
+      ],
+      "plan": "Buildo-scratch/mcbylaws/MB-79/f/plan.v9.1.md (fold check PASS, fold-check-v9.md); v9.2 adds the panel plan edits F-2 (case token of the first consumer) and F-4 (deferred by \"Q-f4 b\"). Commits: prereg-MB-79-5.json alone (coa round 48, rules M-321, R-MA and R-MC, zero moves, totals equal prereg-MB-26-2.json), then the code commit directly on it with loop record round-16 (revert, increment 1, zero scorer moves: 1194 cases equal round-15), then this record. Reviewed at 7da011f92/7fef743b3 on b31ca6845; rebased onto a1c2858fe with the prereg re-made as an add and the code tree unchanged apart from the F-3 wording of red.txt.",
+      "output": "OUTPUT panel PASS on code and tests (Buildo-scratch/mcbylaws/MB-79/f/output-panel.md, lenses 1-8). F-1 (round collision) fixed: the prereg is re-made at round 48 on the landing tip. F-2 (the case token of the first consumer) fixed in plan v9.2 section 8 (c) and status-1103 section 5. F-3 (red wording) fixed: red.txt and the code message name the D1/D2 and D3 reds module-absent and the D4, D5a-0, D5a and D5b reds assertion reds. F-4 (trim hides whitespace-only lines) deferred by the operator, \"Q-f4 b\"; the door compares trimmed lines as R-MC clause (3) reads; the amend is archived as a patch. No path found around R-MC; joinArgsFor parity 75/75 byte-identical. Green on the rebased tree: the 7 door files 197/197, the 25 loop and gate suites 948/948.",
+      "seats": [
+        "output-panel (lenses 1-8, Buildo-scratch/mcbylaws/MB-79/f/output-panel.md)"
+      ],
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "F-4 (deferred, operator \"Q-f4 b\"): exact-line compare needs a dated note on R-MC clause (3) and its assertion changes; card CARD-mb79f-F4-exact-lines, patch Buildo-scratch/mcbylaws/MB-79/f/build/F4-amend.patch",
+        "4a: the plan 2.2 row order (empty_diff before the header refusal) is a plan wording fix",
+        "4c: fileText is collected and never read; drop or print it in a later item",
+        "5: the case-token stem is taken up to the first dot (bylaw-eval-perf); a one-line dated note on R-MC or a T2 comment",
+        "lens 3: run the first real consumer (MB-18 item a or MB-27.L2 item 1) as a commit-mode dry run with a --write record before its push",
+        "until MB-79 (i) lands, the orchestrator shows the operator the door entries in chat before each door-using push"
+      ],
+      "evidence": "Buildo-scratch/mcbylaws/MB-79/f/output-panel.md; Buildo-scratch/mcbylaws/MB-79/f/build/green-door-r48.txt; Buildo-scratch/mcbylaws/MB-79/f/build/green-loop-suites-r48.txt"
+    },
     {
       "task": "MB-79",
       "item": "(f) record: batch 2026-11-03-batch-aw (the oracle-first door R-MC and its two dated notes on R-LI and R-LH; decision CHAT-224.O-29)",
