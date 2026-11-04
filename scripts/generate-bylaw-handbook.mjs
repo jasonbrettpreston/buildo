@@ -129,7 +129,10 @@ export function mapFindings(map, rows, read = (rel) => fs.readFileSync(path.join
 function renderLine(row) {
   const notes = row.notes ? ` · +${row.notes} dated note${row.notes === 1 ? '' : 's'}` : '';
   const enforced = row.enforcedBy ? ` · Enforced by: ${row.enforcedBy}` : '';
-  return `- **${lineIdOf(row.id)}** ${row.headline}\n  Status: ${row.status}${enforced}\n  Rules: \`${row.id}\` (${row.spec})${notes}\n`;
+  // Q-133 3 and Q-133b (operator 2026-11-03/04, ~/Buildo-scratch/p2close/CARD-spec133-cap.md): no per-rule "Rules:" line, because
+  // it named only the row itself (the line id m.N / lc.N names it, and the id prefix names its spec); its dated-note count
+  // moves onto the Status line, so nothing the reader saw is lost. The size cap is unchanged.
+  return `- **${lineIdOf(row.id)}** ${row.headline}\n  Status: ${row.status}${enforced}${notes}\n`;
 }
 
 // Paths the static header names; each must exist (the generator's one fact lock, like Spec 132's backticked-path check).
@@ -179,7 +182,7 @@ export function render(map, rows) {
   out.push('');
   out.push(`**What is generated.** Everything below, from the two registers by \`scripts/generate-bylaw-handbook.mjs\` (reader: \`scripts/analysis/bylaw/bylaw-register.mjs\`). The rule map \`${SPEC.ruleMapRel}\` is generated from the same rows, not hand-written; \`src/tests/spec133-bylaw-handbook.logic.test.ts\` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in \`docs/specs/01-pipeline/122_split_manifest.json\` \`generated_size_caps["133"]\` (\`spec-split-check\` arm iv-b), raised only by a reviewed hand-edit.`);
   out.push('');
-  out.push(`**Rules rendered: ${rows.length}** (${rows.filter((r) => r.kind === 'M').length} M-rows, ${rows.filter((r) => r.kind === 'LC').length} LC-rows): ${inForce.length} in force (${owed.length} with an OWED marker), ${rows.length - inForce.length} history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.`);
+  out.push(`**Rules rendered: ${rows.length}** (${rows.filter((r) => r.kind === 'M').length} M-rows, ${rows.filter((r) => r.kind === 'LC').length} LC-rows): ${inForce.length} in force (${owed.length} with an OWED marker), ${rows.length - inForce.length} history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: its line id, which names the rule (m.N is M-N in Spec 69a, lc.N is LC-N in Spec 131), the reading headline, then the register's status, its "Enforced by" cell and the number of dated notes under the row.`);
   out.push('');
   out.push('**Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History');
   out.push('');

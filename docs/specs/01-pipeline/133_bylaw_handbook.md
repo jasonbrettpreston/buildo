@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 495** (426 M-rows, 69 LC-rows): 492 in force (187 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: reading headline, the register's status, its "Enforced by" cell, then the rule id and the number of dated notes under it.
+**Rules rendered: 495** (426 M-rows, 69 LC-rows): 492 in force (187 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: its line id, which names the rule (m.N is M-N in Spec 69a, lc.N is LC-N in Spec 131), the reading headline, then the register's status, its "Enforced by" cell and the number of dated notes under the row.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -33,15 +33,13 @@ First clause cited: 10.20.20.10.
 
 - **m.431** PERM reading: a residential building type is permitted only through 10.20.20.10(1) read with 10.20.20.40(1) (R zone 10.10.20.10 / 10.10.20.40) and its own lot condition.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the step reads the stored permission word with its lot condition; the PERM worked examples…
-  Rules: `M-431` (Spec 69a)
 
 ### 20.20 — Permitted Use - with Conditions
 
 First clause cited: 10.10.20.20.
 
 - **m.81** Operator rulings on the A1–A3 agreed-unit findings R1–R11 (2026-10-08 16:05).
-  Status: RATIFIED 2026-10-08 · Enforced by: G-CLAUSE, G-XREF, G-SHAPE, G-TEXT (slicer literals and defects); vocab dsl_target,…
-  Rules: `M-81` (Spec 69a) · +5 dated notes
+  Status: RATIFIED 2026-10-08 · Enforced by: G-CLAUSE, G-XREF, G-SHAPE, G-TEXT (slicer literals and defects); vocab dsl_target,… · +5 dated notes
 
 ### 20.40 — Permitted Building Types
 
@@ -49,23 +47,18 @@ First clause cited: 10.20.20.40.
 
 - **m.369** Four use-scope output findings: split RM 253/475, 600.60 units bind only the Sixplex Overlay, one description corrected, one reason precedence.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-369` (Spec 69a)
 
 - **m.401** Houseplex 5-6 units have a permission route on every relevant lot (SIX-COA, O-18).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-27.L2: A0277 route test; oracle C (MB-27/MB-31); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-401` (Spec 69a)
 
 - **m.394** Routes are Phase 2's and complete (R4-01).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-27.L2: route fixture A0277 coa_required on 10.20.20.40(1) (MB-27/MB-31); record:…
-  Rules: `M-394` (Spec 69a)
 
 - **m.395** Varied clauses are a list, per option (R4-02).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-27.L2: varied-clause list fixture (MB-27/MB-31); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-395` (Spec 69a)
 
 - **lc.17** Semi-detached houseplex only on half of an existing semi
   Status: RULED · OWED · Enforced by: P5.13 vector; O-4 sample
-  Rules: `LC-17` (Spec 131)
 
 ### 30.1 — General
 
@@ -73,27 +66,22 @@ First clause cited: x.30.1, 10.20.30.1, 10.80.30.1.
 
 - **m.180** Chapter 900 exceptions and houseplexes: the detached-house substitution and "more permissive prevails".
   Status: RATIFIED 2026-10-18 · Enforced by: vocab exception_type_alias; M-75 corrections on the 15 PROCEDURAL units; effective() rule 4 branch + red…
-  Rules: `M-180` (Spec 69a)
 
 - **m.187** Q1–Q15 dispositions. Each recommendation is adopted as written there: Q1: the three RD null verdicts (10.20.30.1(2), 10.20.40.1(6)(A), 10.20.40.1(7)) are recorded wrong → M-180; the 10.5 ones stay as ruled; the four suite notes ride the M-177 lane.
-  Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (F06, F08, F10, F22) and the keyer A + B re-keys (Q13) (OWED, keying lane); review-page…
-  Rules: `M-187` (Spec 69a) · +4 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (F06, F08, F10, F22) and the keyer A + B re-keys (Q13) (OWED, keying lane); review-page… · +4 dated notes
 
 - **m.252** An exception clause that names the building type is not displaced by "the more permissive regulation prevails"; duplex / triplex read as a 2- / 3-unit houseplex.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-8 / M-252 — …" (red first: docs/repo…
-  Rules: `M-252` (Spec 69a)
 
 ### 30.10 — Lot Area
 
 First clause cited: 10.80.30.10, 10.60.30.10.
 
 - **m.174** RM review batch (operator 2026-10-15): restrictive design choices are disclosed, not bound (applies M-172 / M-173).
-  Status: RATIFIED 2026-10-15 · Enforced by: M-75 corrections (5 applied, 5 held); vocab design_choice_disclosure.unit_sentences
-  Rules: `M-174` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-15 · Enforced by: M-75 corrections (5 applied, 5 held); vocab design_choice_disclosure.unit_sentences · +1 dated note
 
 - **m.181** The semi-detached houseplex's 50 % lot area and frontage apply; a semi-detached house on two lots stays a disclosed site fact.
-  Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (area: 3 units); keyer A + B re-key (frontage: RS/RM (A)/(B)); G-EVAL red vector, semi…
-  Rules: `M-181` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (area: 3 units); keyer A + B re-key (frontage: RS/RM (A)/(B)); G-EVAL red vector, semi… · +2 dated notes
 
 ### 30.20 — Lot Frontage
 
@@ -101,11 +89,9 @@ First clause cited: 10.20.30.20, 10.40.30.20.
 
 - **m.145** The 1.0 m-per-unit driveway reduction is a relief arm: the unit is UNUSUAL.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; G-CLAUSE
-  Rules: `M-145` (Spec 69a)
 
 - **lc.56** A share of a cited requirement displaces it (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-unfixed-keying.logic.test.ts; G-XREF
-  Rules: `LC-56` (Spec 131)
 
 ### 30.40 — Lot Coverage
 
@@ -113,15 +99,12 @@ First clause cited: x.30.40.
 
 - **m.182** "A residential building with a secondary suite" matches the suite class.
   Status: RATIFIED 2026-10-18 · Enforced by: M-75 corrections (~14 units); applies() suite match + red test (OWED, P2-10 with M-177(1)(b))
-  Rules: `M-182` (Spec 69a)
 
 - **m.191** Garden-suite coverage: (A) counts the suite's footprint, (B) excludes it, and x.30.40(1)(D) applies under both.
-  Status: RATIFIED 2026-10-18 · Enforced by: G-EVAL vector garden lot LC 35 (OWED, P2-10); Spec 78 P5.13
-  Rules: `M-191` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: G-EVAL vector garden lot LC 35 (OWED, P2-10); Spec 78 P5.13 · +1 dated note
 
 - **m.221** Keying defect: the M-182 secondary-suite release is unkeyed (reality check §5.2).
   Status: APPLIED 2026-10-18 · Enforced by: M-182 corrections: bylaw-evaluator-fixes.logic.test.ts › "M-221 / M-182 — …" (green; red at 7a782801^); the…
-  Rules: `M-221` (Spec 69a)
 
 ### 40.1 — General
 
@@ -129,11 +112,9 @@ First clause cited: 10.80.40.1.
 
 - **m.173** Three operator review rulings (2026-10-15).
   Status: RATIFIED 2026-10-15 · Enforced by: vocab scenario_class_units, lot_condition.no_individual_private_driveway,…
-  Rules: `M-173` (Spec 69a)
 
 - **m.176** MaxBLD answers the maximum-build case.
   Status: RATIFIED 2026-10-15 · Enforced by: M-172 classes (vocab.design_choice_disclosure, vocab.undetermined_condition_disclosure); main-wall model:…
-  Rules: `M-176` (Spec 69a)
 
 ### 40.10 — Height
 
@@ -141,87 +122,67 @@ First clause cited: 10.40.40.10, 10.60.40.10, x.40.10, 10.10.40.10, 10.80.40.10,
 
 - **m.184** Q-MW1: compute both roof forms and headline the larger.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 §Phase-5 roof-form arms + red vectors (RD HT 10.0 flat vs pitched; R 5:3 cap) (OWED, P2-10 / Spec 78…
-  Rules: `M-184` (Spec 69a)
 
 - **m.185** Q-MW2: the maximum takes dormers at 40 % of the wall width.
-  Status: RATIFIED 2026-10-18 · Enforced by: element_width_pct units re-keyed partially_modelled (OWED, keying lane); Spec 78 §Phase-5 red vector (OWED,…
-  Rules: `M-185` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: element_width_pct units re-keyed partially_modelled (OWED, keying lane); Spec 78 §Phase-5 red vector (OWED,… · +2 dated notes
 
 - **m.186** Q-MW3: RT has no main-wall rule.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 §Phase-5 RT vector: walls = height (OWED, Spec 78 §Phase-5 commit ①)
-  Rules: `M-186` (Spec 69a)
 
 - **m.190** The main-wall family is mapped by provision; an RM houseplex has no main-wall cap.
-  Status: RATIFIED 2026-10-18 · Enforced by: family map (OWED, keying lane); M-29 sample entries; Spec 78 P5.13 vectors (OWED, step commit ①)
-  Rules: `M-190` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: family map (OWED, keying lane); M-29 sample entries; Spec 78 P5.13 vectors (OWED, step commit ①) · +1 dated note
 
 - **m.200** R has a flat-roof set-back storey: 10.10.40.10(11) and (12).
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.2 item 5; P5.13 (OWED, ①); upper_storey_setback_m target (OWED, keying lane, M-223)
-  Rules: `M-200` (Spec 69a)
 
 - **m.201** An unlabelled RM lot gives a houseplex 12.0 m.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①); Layer 2 height_m by class (OWED, Layer 2 step)
-  Rules: `M-201` (Spec 69a)
 
 - **m.217** Evaluator defect: the zone-category scope of M-159(1) is not enforced.
   Status: APPLIED 2026-10-18 · Enforced by: INV-18: bylaw-evaluator-fixes.logic.test.ts › "INV-18 — no applied unit comes from a non-residential chapter…
-  Rules: `M-217` (Spec 69a)
 
 - **m.218** Evaluator defect: main_wall_height_m is not_evaluated:no_candidate in R/RD/RS/RM (reality check §5.2).
-  Status: APPLIED 2026-10-18 · Enforced by: INV-19 (M-218 arm): bylaw-evaluator-fixes.logic.test.ts › "INV-19 — …" › "M-218: …" (green 2026-10-20; red…
-  Rules: `M-218` (Spec 69a) · +3 dated notes
+  Status: APPLIED 2026-10-18 · Enforced by: INV-19 (M-218 arm): bylaw-evaluator-fixes.logic.test.ts › "INV-19 — …" › "M-218: …" (green 2026-10-20; red… · +3 dated notes
 
 - **m.237** M-220 absent-article arm (19 cells)
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-8 / rule 7a / M-186 — …"; bylaw-evaluator-fixes.logic.test.ts › "INV-19…
-  Rules: `M-237` (Spec 69a)
 
 - **m.260** The by-law handbook is Spec 133 — By-law Handbook, a generated reading spec.
   Status: RULED 2026-10-21 · Enforced by: spec133-bylaw-handbook.logic; generate-bylaw-handbook.mjs --check (pre-commit); spec-split-check --check…
-  Rules: `M-260` (Spec 69a)
 
 - **m.391** Storeys: Phase 2 decides the cap, S-1 only converts height (R3-08).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: houseplex fixture: storey cap not_applicable stored, S-1 used only where no cap is stored…
-  Rules: `M-391` (Spec 69a)
 
 - **m.404** S-1: storeys from height use cited logic variables (2.3 m ceiling, 212 mm floor assembly, roof allowance one assembly plus 0.3 m).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic: each S-1 variable is seeded with its value and citation (MB-31);…
-  Rules: `M-404` (Spec 69a)
 
 - **m.457** Increment 2 builds the roof forms: increment 6b's flat set-back storey and pitched roof with attic move into increment 2, with the main-wall share caps; the larger is headlined.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the increment-2 rows tagged "2", locked by src/tests/st…
-  Rules: `M-457` (Spec 69a)
 
 - **m.459** Storeys under the main-wall limit use the S-1 floor-to-floor, with no parapet deducted.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the wall-storeys row and its examples, locked by layer3-catalogue.logic.test.ts and…
-  Rules: `M-459` (Spec 69a)
 
 - **m.461** The pitched roof is taken at the steepest pitch the height limit allows, capped in R by the stored roof slope cap.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the pitch row, reading the stored roof_slope_max, locked by layer3-catalogue.logic.test.ts…
-  Rules: `M-461` (Spec 69a)
 
 - **lc.59** Review-page rulings, batch 4 (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-evaluator-fixes.logic.test.ts (1); INV-21 (2)
-  Rules: `LC-59` (Spec 131)
 
 ### 40.20 — Building Length
 
 First clause cited: 10.20.40.20, 10.40.40.20, 10.10.40.20.
 
 - **m.206** The one-storey 2.0 m extension is applied to renovations only.
-  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
-  Rules: `M-206` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +1 dated note
 
 - **m.230** RS 10.40.40.20(4): "Despite regulation 10.20.40.20(1)" is read as RS's own 10.40.40.20(1).
   Status: RULED 2026-10-20 · Enforced by: bylaw-evaluator-fixes.logic.test.ts › "M-230 — …" (red first: 2 of 3); bylaw-golden-lots.logic.test.ts…
-  Rules: `M-230` (Spec 69a)
 
 - **m.240** Rule 7a v2: absence is decided per (zone, building type, target); a definition or another type's limit is not a limit.
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "R-7a-v2 / M-240 — …" (red first: docs/rep…
-  Rules: `M-240` (Spec 69a)
 
 - **m.255** Clauses the City enforces are keyed where the text gives a value.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-13/14 / M-255 — …" (red first: docs/…
-  Rules: `M-255` (Spec 69a)
 
 ### 40.30 — Building Depth
 
@@ -229,7 +190,6 @@ First clause cited: 10.10.40.30.
 
 - **m.204** Houseplex depth and length releases.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.2 item 1, P5.10 gain_reasons (OWED, ①)
-  Rules: `M-204` (Spec 69a)
 
 ### 40.40 — Floor Area
 
@@ -237,23 +197,18 @@ First clause cited: x.40.40, 10.20.40.40, 10.10.40.40.
 
 - **m.183** An exemption that removes every candidate answers "does not apply", never "not evaluated".
   Status: RATIFIED 2026-10-18 · Enforced by: effective() rules 2/7 + regulated(); red vectors houseplex FSI and houseplex storeys (OWED, P2-0 seat)
-  Rules: `M-183` (Spec 69a)
 
 - **m.189** Max-build scenarios are a net-new V3 step, one row per parcel × scenario.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.11 / P5.13 (red vectors, checks, census row with owner_specs 78 and admin registration, all OWED…
-  Rules: `M-189` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.11 / P5.13 (red vectors, checks, census row with owner_specs 78 and admin registration, all OWED… · +2 dated notes
 
 - **m.214** Forms not modelled are disclosed.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.12, P5.14 (OWED, ①)
-  Rules: `M-214` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.12, P5.14 (OWED, ①) · +1 dated note
 
 - **m.215** Two scope statements. (1) R FSI default 0.6: 10.10.40.40(1)(B), *"if the zone label does not include a "d" value … the permitted maximum floor space index is 0.6"*; RD/RS/RT/RM say "not limited".
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
-  Rules: `M-215` (Spec 69a)
 
 - **m.455** MB-80 (2): post-signing edits to the MB-64 increment-1 key from the McProof sign-off, as one ledger row (cases PERM-10, FY-1, FY-3, FY-4, FY-5, FY-14, FY-29, FOOT-14, FOOT-16, FOOT-18, ST-5, ST-9, ST-10, ST-11, ST-12, GFA-5, GFA-8, UN-1, UN-4, LV-1, LV-3, LV-6).
-  Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): the edits of ~/Buildo-scratch/mcbylaws/MB-64/m…
-  Rules: `M-455` (Spec 69a) · +1 dated note
+  Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): the edits of ~/Buildo-scratch/mcbylaws/MB-64/m… · +1 dated note
 
 ### 40.50 — Decks and Platforms
 
@@ -261,7 +216,6 @@ First clause cited: 10.20.40.50.
 
 - **m.280** Platform area, platform height and common-wall distance are platform element targets.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-1 / M-280"; red first docs/reports/r…
-  Rules: `M-280` (Spec 69a)
 
 ### 40.70 — Setbacks
 
@@ -269,51 +223,39 @@ First clause cited: 10.20.40.70, 10.10.40.70, 10.80.40.70, x.40.70.
 
 - **m.91** lot_condition token building_length_band.
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE vocab membership; bylaw-s5 token → input check
-  Rules: `M-91` (Spec 69a)
 
 - **m.107** A LIMIT may be partly modelled when its inexpressible arm is a lot-condition branch.
-  Status: RATIFIED 2026-10-14 · Enforced by: vocab literal_not_expressed_reason; G-SHAPE (bylaw-s6g M-107 fixtures); G-CLAUSE; evaluator (Phase 3,…
-  Rules: `M-107` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-14 · Enforced by: vocab literal_not_expressed_reason; G-SHAPE (bylaw-s6g M-107 fixtures); G-CLAUSE; evaluator (Phase 3,… · +1 dated note
 
 - **m.147** "All portions of the main wall exceeding a building length of 25.0 metres" is a portion reading.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; G-CLAUSE
-  Rules: `M-147` (Spec 69a)
 
 - **m.219** Evaluator defect: the garden suite inherits the principal building's setbacks (reality check §5.2).
   Status: APPLIED 2026-10-18 · Enforced by: bylaw-evaluator-fixes.logic.test.ts › "M-219 — Article x.40 …" (the x.40 scope part, green); the…
-  Rules: `M-219` (Spec 69a)
 
 - **m.248** A dotted range "regulations X(1) to (n)" displaces every regulation in the range.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-3 / M-248 — …" (red first: docs/repo…
-  Rules: `M-248` (Spec 69a)
 
 - **m.249** RM apartment side yard on a major street is keyed in the parallel form.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-4 / M-249 — …" (red first: docs/repo…
-  Rules: `M-249` (Spec 69a)
 
 - **m.257** RD side-yard band: the City examiner's actual-frontage reading is followed only where the text supports it.
   Status: RULED 2026-10-21 · Enforced by: none (no code change)
-  Rules: `M-257` (Spec 69a)
 
 - **m.259** The 0.45 m blank-wall side-yard reduction holds only for a side wall without windows or doors: condition token blank_side_wall, taken as met by default.
   Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-5.logic.test.ts › "F-SC-5 / M-259 — …" (red first: docs/repo…
-  Rules: `M-259` (Spec 69a)
 
 - **m.283** The apartment primary-windows arm is behind a design token, primary_windows, taken as absent.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-4 / M-283"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json
-  Rules: `M-283` (Spec 69a)
 
 - **m.289** The 0.45 m versus 0.9 m side wall is the existing blank_side_wall design input.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-17 / M-289"
-  Rules: `M-289` (Spec 69a)
 
 - **m.373** OWED to Phase 3: cumulative 10.80.40 answered.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-373` (Spec 69a)
 
 - **m.435** R-zone main-building side yard: the stored maximum uses 0.9 m; the 0.45 m blank-wall reduction is a disclosure.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-18: item (l), the stored R-zone cell re-keyed 0.45 -> 0.9 with pre-registered moves…
-  Rules: `M-435` (Spec 69a)
 
 ### 40.71 — Setbacks Exemptions
 
@@ -321,7 +263,6 @@ First clause cited: 10.10.40.71.
 
 - **m.244** The Eglinton transportation-use exemption is scoped to its use.
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "D-1 / M-244 — …" (red first: docs/reports…
-  Rules: `M-244` (Spec 69a)
 
 ### 40.80 — Separation
 
@@ -329,7 +270,6 @@ First clause cited: 10.10.40.80.
 
 - **m.282** Separation between facing main walls follows the openings to dwelling units: design tokens main_wall_openings and main_wall_openings_each, taken as absent.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-3 / M-282"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json
-  Rules: `M-282` (Spec 69a)
 
 ### 60.20 — Setbacks
 
@@ -337,7 +277,6 @@ First clause cited: 10.10.60.20.
 
 - **m.241** A private-garage rule binds the ancillary building that is the garage.
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "N-2 / M-241 — …" (red first: docs/reports…
-  Rules: `M-241` (Spec 69a)
 
 ### 60.70 — Lot Coverage
 
@@ -345,11 +284,9 @@ First clause cited: 10.10.60.70.
 
 - **m.287** R-zone ancillary lot coverage stays at 5 percent: reading B.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-12 / M-287"
-  Rules: `M-287` (Spec 69a)
 
 - **lc.54** Review-page rulings (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-evaluator-fixes.logic.test.ts; INV-25; LC-52 lint
-  Rules: `LC-54` (Spec 131)
 
 ### 5.10.1.30
 
@@ -357,7 +294,6 @@ First clause cited: 5.10.1.30.
 
 - **lc.32** Renovation readings: conversion within the building, and the by-law limits that touch a basement (5.10.1.30(3), the entrance ≤ 1.2 m, 800.50(80), headroom being a Building Code matter).
   Status: RULED 2026-10-18 · Enforced by: P5.12 disclosure codes
-  Rules: `LC-32` (Spec 131)
 
 ### 5.10.40.70
 
@@ -365,11 +301,9 @@ First clause cited: 5.10.40.70.
 
 - **m.170** Triangular lots get a lot-condition token; a DEFINE unit's M-169 disclosure is a closed per-unit sentence.
   Status: RATIFIED 2026-10-15 · Enforced by: vocab lot_condition.no_rear_lot_line, undetermined_condition_disclosure.{define_effect, condition_override,…
-  Rules: `M-170` (Spec 69a)
 
 - **m.376** Phase 3 scope and model values: semis and townhouses are a recorded future build, engine choices are checked against their clause, every model value is a keyed by-law value or an externalized variable.
-  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-376` (Spec 69a) · +1 dated note
+  Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)" · +1 dated note
 
 ### 5.10.175.1
 
@@ -377,23 +311,19 @@ First clause cited: 5.10.175.1.
 
 - **m.88** vocab.requirement members. One member per distinct non-numeric obligation in the R5 card list, with the proposed merges: located_within_building, principal_residence_occupation, occupy_entire_building, regulated_or_supervised, waste_storage_in_building (also the wholly-enclosed form),…
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE shape_required_missing, G-SHAPE vocab membership
-  Rules: `M-88` (Spec 69a)
 
 - **m.90** An exemption / "unless" arm that cites no regulation is a PERMIT.
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE shape_required_missing
-  Rules: `M-90` (Spec 69a)
 
 ### 10.5.1.10 — Interpretation
 
 First clause cited: 10.5.1.10.
 
 - **m.54** unregulated value and label letter au
-  Status: RATIFIED 2026-10-07 · Enforced by: DSL parser fixtures + G-EVAL (bylaw-s6-dsl, bylaw-s6b-eval)
-  Rules: `M-54` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-07 · Enforced by: DSL parser fixtures + G-EVAL (bylaw-s6-dsl, bylaw-s6b-eval) · +2 dated notes
 
 - **lc.55** Label letters and the semi-detached houseplex (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-unfixed-keying.logic.test.ts; G-EVAL; INV-25
-  Rules: `LC-55` (Spec 131)
 
 ### 10.5.20.40 — Conversion of Lawfully Existing Buildings
 
@@ -401,31 +331,26 @@ First clause cited: 10.5.20.40.
 
 - **m.94** Disapply to an absent target is a counted disclosure; "will prevent" is a backward trigger.
   Status: RATIFIED 2026-10-13 · Enforced by: G-XREF (displaces_unresolved, refs_target_absent count, trigger_unaccounted), bylaw-rulings.logic
-  Rules: `M-94` (Spec 69a)
 
 - **m.196** Renovation readings: conversion within the building and the by-law limits that touch a basement.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vectors (OWED, step commit ①)
-  Rules: `M-196` (Spec 69a) · +3 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vectors (OWED, step commit ①) · +3 dated notes
 
 ### 10.5.30.20 — Lot Frontage
 
 First clause cited: 10.5.30.20.
 
 - **m.207** Lot viability gates the new-build rows.
-  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
-  Rules: `M-207` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +1 dated note
 
 - **m.228** Through lot: the front lot line is the street line the neighbouring lots front on.
   Status: RULED 2026-10-20 · Enforced by: keyed corrections + P5.12 code (applied; bylaw-answers-batch-5.logic.test.ts); Layer 3 lot-line…
-  Rules: `M-228` (Spec 69a)
 
 ### 10.5.30.40 — Lot Coverage
 
 First clause cited: 10.5.30.40.
 
 - **m.169** A condition no data can decide is taken as not holding, and its impact is disclosed.
-  Status: RATIFIED 2026-10-15 · Enforced by: vocab undetermined_condition_disclosure (bylaw-rulings M-169 test); M-75 corrections (10.5.40.10(4)(B));…
-  Rules: `M-169` (Spec 69a) · +4 dated notes
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab undetermined_condition_disclosure (bylaw-rulings M-169 test); M-75 corrections (10.5.40.10(4)(B));… · +4 dated notes
 
 ### 10.5.40.10 — Height
 
@@ -433,7 +358,6 @@ First clause cited: 10.5.40.10.
 
 - **m.212** Site-fact disclosures: established grade, triangular lots, shoreline.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.12 codes; triangular detector (OWED, ①)
-  Rules: `M-212` (Spec 69a)
 
 ### 10.5.40.11 — Height Exemptions
 
@@ -441,43 +365,34 @@ First clause cited: 10.5.40.11.
 
 - **m.405** S-2: first floor above established grade is 0 m, disclosed.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic: s2_first_floor_above_grade_m is seeded as 0 with the disclosure…
-  Rules: `M-405` (Spec 69a)
 
 ### 10.5.40.40 — Floor Area
 
 First clause cited: 10.5.40.40.
 
 - **m.171** A deduction from a measure that needs building facts is disclosed, never evaluated.
-  Status: RATIFIED 2026-10-15 · Enforced by: vocab measure_deduction_disclosure (bylaw-rulings M-171 test); evaluator rendering (P2-0 seat, owed)
-  Rules: `M-171` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab measure_deduction_disclosure (bylaw-rulings M-171 test); evaluator rendering (P2-0 seat, owed) · +2 dated notes
 
 - **m.203** The attic test decides inclusion in GFA; a failing attic is free floor area, not zero.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①); attic-test keying (OWED, keying lane)
-  Rules: `M-203` (Spec 69a)
 
 - **m.210** Suite GFA takes the 10.5.40.40 reductions.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
-  Rules: `M-210` (Spec 69a)
 
 - **m.229** Mechanical attic area is left out of GFA by default.
-  Status: RULED 2026-10-20 · Enforced by: keyed correction + P5.12 code (applied; bylaw-answers-batch-5.logic.test.ts); keying of 10.5.40.40(2) (OWED,…
-  Rules: `M-229` (Spec 69a) · +1 dated note
+  Status: RULED 2026-10-20 · Enforced by: keyed correction + P5.12 code (applied; bylaw-answers-batch-5.logic.test.ts); keying of 10.5.40.40(2) (OWED,… · +1 dated note
 
 - **m.239** O-7 main-wall share tiers and attic test target shape
-  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-9 / O-7 / M-223(3) — …"; bylaw-eval-perf re-pin
-  Rules: `M-239` (Spec 69a) · +1 dated note
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-9 / O-7 / M-223(3) — …"; bylaw-eval-perf re-pin · +1 dated note
 
 - **m.398** The basement is read, not assumed (R4-05).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: basement read-from-rows fixture (MB-31); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-398` (Spec 69a)
 
 - **m.463** Roof thickness is measured vertically: depth × √(1 + pitch²).
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the vertical-thickness row, locked by layer3-catalogue.logic.test.ts and…
-  Rules: `M-463` (Spec 69a)
 
 - **m.464** In 10.5.40.40(1)'s "80% of the area", the area is the attic floor with vertical clearance over 1.4 m; test (B) applies to that portion.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2: the reading lock for the Phase 1-2 attic targets (a red-first test naming this row, beside…
-  Rules: `M-464` (Spec 69a)
 
 ### 10.5.40.50 — Decks, Platforms and Amenities
 
@@ -485,75 +400,60 @@ First clause cited: 10.5.40.50.
 
 - **m.290** Platform side setback near a side wall, City 1.1 m versus ours 0.9 m (A0396/26TEY): a scorer reading, not an evaluator fault.
   Status: RULED 2026-10-21 · Enforced by: scorer copy ~/Buildo-scratch/fix-round-4d/B/scorer
-  Rules: `M-290` (Spec 69a)
 
 - **m.365** Missing rules MR-Q1 to MR-Q4: one verdict per side, both arms for unknown design facts, platform wall input, landscaping share of a base.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-365` (Spec 69a)
 
 ### 10.5.40.60 — Permitted Encroachments
 
 First clause cited: 10.5.40.60.
 
 - **m.128** lot_condition token side_yard_abuts_street.
-  Status: RATIFIED 2026-10-14 · Enforced by: vocab lot_condition (bylaw-rulings M-128 test); G-CLAUSE; G-SHAPE
-  Rules: `M-128` (Spec 69a) · +5 dated notes
+  Status: RATIFIED 2026-10-14 · Enforced by: vocab lot_condition (bylaw-rulings M-128 test); G-CLAUSE; G-SHAPE · +5 dated notes
 
 - **m.243** Encroachments: one LIMIT may carry a max projection and a min clearance; each projecting element has its own targets.
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "D-3 / M-243 — …" (red first: docs/reports…
-  Rules: `M-243` (Spec 69a)
 
 - **m.254** Platforms meet the zone setbacks; the 10.5.40.60 family takes the declared-bound form.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-11/12 / M-254 — …" (red first: docs/…
-  Rules: `M-254` (Spec 69a)
 
 ### 10.5.40.70 — Setbacks
 
 First clause cited: 10.5.40.70.
 
 - **m.205** The main building's setbacks are explicit, by-law-derived fields.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.2, P5.10 (OWED, ①); front averaging in Layer 2 (OWED, Layer 2 step)
-  Rules: `M-205` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.2, P5.10 (OWED, ①); front averaging in Layer 2 (OWED, Layer 2 step) · +2 dated notes
 
 - **m.245** No zone-default floor under the averaged front yard.
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "M-205(1)-floor / M-245 — …"; bylaw-front-setback-reliability.logic.test.ts…
-  Rules: `M-245` (Spec 69a)
 
 - **m.256** Averaging with a missing or excluded neighbour estimate answers "needs survey", never the zone default.
   Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4.logic.test.ts › "front yard / M-256 — …" (red first: docs/…
-  Rules: `M-256` (Spec 69a)
 
 - **m.387** Front-yard chain: law stays in Phases 1-2 (R3-03).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: worked examples, one per step of the chain (MB-31); record:…
-  Rules: `M-387` (Spec 69a)
 
 - **m.414** Front-yard step 2: strict reading of 10.5.40.70(1) for A0553.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: front-yard worked example for A0553 (strict reading) (MB-64); record:…
-  Rules: `M-414` (Spec 69a)
 
 - **m.423** RL-7 (a): the 10.5.40.70(1) 15.0 m is keyed into Phase 2 averaging_distance_m; decided and built with FS-SB2a as one change set.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-18 item (k): the three corrections and the read-as-if-token-held hook, built with M-422 and…
-  Rules: `M-423` (Spec 69a)
 
 - **m.456** A neighbouring house at exactly 15.0 m qualifies: "15.0 metres or less" is inclusive (10.5.40.70(1)).
   Status: RULED 2026-11-02 · OWED · Enforced by: OWED -> MB-80 (lane T): FY-5 Status and Basis cite this row (the key shows the boundary) and Part A for FY-5…
-  Rules: `M-456` (Spec 69a)
 
 ### 10.5.40.71 — Setbacks Exemptions
 
 First clause cited: 10.5.40.71.
 
 - **m.192** Renovation: 10.5.40.71(3) applies; every other lawfully-existing relief is disclosed.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vector frontage 12.0 vs 13.0 m (OWED, step commit ①); keying of 10.5.40.71(3) (OWED, keying…
-  Rules: `M-192` (Spec 69a) · +3 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vector frontage 12.0 vs 13.0 m (OWED, step commit ①); keying of 10.5.40.71(3) (OWED, keying… · +3 dated notes
 
 - **m.211** Renovation corrections. (1) Up room: 10.5.40.71(3) relieves setbacks only; the up-storey plate still meets the depth / length caps (additions must comply, 10.5.40.21(2), 10.5.40.31(2)) and, where FSI applies, also fsi × lot − existing GFA; the smaller cap binds.
-  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
-  Rules: `M-211` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +1 dated note
 
 - **m.372** OWED to Phase 3: cumulative 10.5.40 accuracy.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-372` (Spec 69a)
 
 ### 10.5.50.10 — Landscaping
 
@@ -561,11 +461,9 @@ First clause cited: 10.5.50.10.
 
 - **m.99** dsl_target front_yard_soft_landscaping_pct.
   Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE, G-SHAPE
-  Rules: `M-99` (Spec 69a)
 
 - **m.258** Rear-yard soft landscaping on lots 6.0 m wide or less stays 25 %: the text does not support the City examiner's 50 %.
   Status: RULED 2026-10-21 · Enforced by: none (no code change)
-  Rules: `M-258` (Spec 69a)
 
 ### 10.5.60.20 — Setbacks
 
@@ -573,15 +471,12 @@ First clause cited: 10.5.60.20.
 
 - **m.175** A unit scoped to an accessory-structure use never limits the principal building.
   Status: RATIFIED 2026-10-15 · Enforced by: evaluate.mjs applies() + makeContext().accessoryUses; vocab.mjs evaluatorVocab() carries…
-  Rules: `M-175` (Spec 69a)
 
 - **m.281** A ground-mounted heating or air-conditioning device has its own targets, energy_device_front_setback_m and energy_device_side_clearance_m.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-1 / M-281"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json;…
-  Rules: `M-281` (Spec 69a)
 
 - **m.291** Ancillary-building inputs (parking space, distance to residential) for non-suite buildings are out of scope: disclosure only.
   Status: RULED 2026-10-21 · Enforced by: none (no code change)
-  Rules: `M-291` (Spec 69a)
 
 ### 10.5.60.50 — Floor Area
 
@@ -589,7 +484,6 @@ First clause cited: 10.5.60.50.
 
 - **m.242** "In all other cases" takes the condition of the arm it complements.
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-3.logic.test.ts › "N-3 / M-242 — …" (red first: docs/reports…
-  Rules: `M-242` (Spec 69a)
 
 ### 10.5.75.1 — General
 
@@ -597,15 +491,12 @@ First clause cited: 10.5.75.1.
 
 - **m.87** Phrasing-variant licence patterns.
   Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE variable_unlicensed, G-SHAPE vocab_synonym (no pattern shared)
-  Rules: `M-87` (Spec 69a)
 
 - **m.92** Citation to a target absent from the pinned City text is a counted source_defect ref_target_absent.
   Status: RATIFIED 2026-10-13 · Enforced by: G-XREF (refs_target_absent count), bylaw-rulings.logic
-  Rules: `M-92` (Spec 69a)
 
 - **m.102** A LIMIT unit carrying a real limit the DSL cannot express is UNUSUAL.
-  Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE, G-SHAPE
-  Rules: `M-102` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE, G-SHAPE · +1 dated note
 
 ### 10.5.80.1 — General
 
@@ -613,15 +504,12 @@ First clause cited: 10.5.80.1.
 
 - **m.95** By-law-wide override is a PERMIT; an INCLUDE of "Chapter 900" is a phase2_exception ref.
   Status: RATIFIED 2026-10-13 · Enforced by: G-XREF trigger_unaccounted, include_unresolved, ref_unresolved; G-READ external arm
-  Rules: `M-95` (Spec 69a)
 
 - **m.98** A mixed-direction LIMIT is UNUSUAL — M-83 Q6 extended.
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE shape_must_be_none, G-CLAUSE
-  Rules: `M-98` (Spec 69a)
 
 - **m.225** Keying defect being fixed: 10.5.80.1(2)(A) leaks into the suite separation citywide.
-  Status: APPLIED 2026-10-18 · Enforced by: INV-18: bylaw-evaluator-fixes.logic.test.ts › "INV-18 — …" › "M-225: …" (green 2026-10-20; red at a0d5b41e^)
-  Rules: `M-225` (Spec 69a) · +1 dated note
+  Status: APPLIED 2026-10-18 · Enforced by: INV-18: bylaw-evaluator-fixes.logic.test.ts › "INV-18 — …" › "M-225: …" (green 2026-10-20; red at a0d5b41e^) · +1 dated note
 
 ### 10.5.100.1 — General
 
@@ -629,127 +517,97 @@ First clause cited: 10.5.100.1.
 
 - **m.366** Missing rules MR-Q5 to MR-Q9 and the ancillary floor area target.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-366` (Spec 69a)
 
 ### Chapter 150
 
 First clause cited: 150.15, 150.7, 150.50, 150.48, 150.10, 150.8.
 
 - **m.47** Page set, second application. In: the 23 residential TOC entries S0.5 found unmapped — 1.20, 1.40, 150.15, 150.20, 150.22, 150.25, 150.30, 150.45, 150.48, 150.50, 200.10, 200.15, 200.20, 200.25, Ch.220, Ch.230, 970.30, Ch.990 (the zone map, by a map rule: labels come from the zoning dataset,…
-  Status: RATIFIED 2026-10-07 · Enforced by: G-UNIVERSE
-  Rules: `M-47` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-07 · Enforced by: G-UNIVERSE · +2 dated notes
 
 - **m.63** A closed scenario catalogue; every scenario is computed for every parcel; no user choice.
   Status: RATIFIED 2026-10-07 · Enforced by: G-DRIFT (catalogue pinned; entry condition); G-UNIVERSE scenario-totality arm; step checks: one status per…
-  Rules: `M-63` (Spec 69a)
 
 - **m.66** Parking is a scenario axis K = {none, integral garage, detached garage}, applying only the rules that change buildable size.
   Status: RATIFIED 2026-10-07 · Enforced by: catalogue pin (M-63); collapse equalities (fixtures + per-parcel check); G-EVAL vectors per K value incl. a…
-  Rules: `M-66` (Spec 69a)
 
 - **m.96** driveway_width_m licence pattern "the driveway is no more than".
   Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym
-  Rules: `M-96` (Spec 69a)
 
 - **m.106** An encroachment maximum paired with a clearance minimum is UNUSUAL — M-102 "mixed bound directions" reaches the M-73 pair.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE shape_must_be_none, G-CLAUSE; the re-type card
-  Rules: `M-106` (Spec 69a)
 
 - **m.159** A unit governs only its own subject.
-  Status: RATIFIED 2026-10-15 · Enforced by: vocab zone_category_chapter, accessory_structure_use, specific_use, non_accessory_use, uses (bylaw-rulings…
-  Rules: `M-159` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab zone_category_chapter, accessory_structure_use, specific_use, non_accessory_use, uses (bylaw-rulings… · +1 dated note
 
 - **m.177** Ancillary and secondary suites: priority and max-build assumptions.
-  Status: RATIFIED 2026-10-16 · Enforced by: scenario-classes.json pin (A axis, P suite variants) in P2-10 (phase2-plan-v2 §P2-10); structure dimension…
-  Rules: `M-177` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-16 · Enforced by: scenario-classes.json pin (A axis, P suite variants) in P2-10 (phase2-plan-v2 §P2-10); structure dimension… · +2 dated notes
 
 - **m.178** The 24 July 2025 suite transition is a lawfully-existing cut-off; its permit-history arms are a site fact.
   Status: RATIFIED 2026-10-16 · Enforced by: vocab lawfully_existing_caveat.cutoff.suite_transition, lot_condition.suite_transition_permit,…
-  Rules: `M-178` (Spec 69a)
 
 - **m.179** Two suite keying rulings the review surfaced.
   Status: RATIFIED 2026-10-16 · Enforced by: vocab dsl_target.ancillary_coverage_pct; M-75 corrections (150.7.60.70(1)(A)/(B), (2)(A), 150.8.60.70(1)(B),…
-  Rules: `M-179` (Spec 69a)
 
 - **m.193** The Coxwell-area 5.0 m separation is digitized as a map area; until then 7.5 m applies, disclosed.
   Status: RATIFIED 2026-10-18 · Enforced by: map seed + migration (OWED, Spec 58 lane); re-key (OWED, keying lane)
-  Rules: `M-193` (Spec 69a)
 
 - **m.197** Suite setbacks: the openings choice defaults to none, so the smallest lawful setback leads.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 setback vectors (OWED, step commit ①)
-  Rules: `M-197` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 setback vectors (OWED, step commit ①) · +1 dated note
 
 - **m.198** Suite setbacks where a lot fact is not held.
-  Status: RATIFIED 2026-10-18 · Enforced by: lot-line classification (OWED, Spec 130 lane); P5.13 (OWED, ①)
-  Rules: `M-198` (Spec 69a) · +4 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: lot-line classification (OWED, Spec 130 lane); P5.13 (OWED, ①) · +4 dated notes
 
 - **m.199** A secondary suite may be up to 45 % of the interior floor area of the WHOLE house it sits in; the stricter reading is disclosed.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.10 suite_interior_sqm, INV-13 (OWED, step commit ①)
-  Rules: `M-199` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.10 suite_interior_sqm, INV-13 (OWED, step commit ①) · +1 dated note
 
 - **m.208** Suite soft landscaping is disclosed, not binding.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
-  Rules: `M-208` (Spec 69a)
 
 - **m.209** Laneway eligibility uses all three arms of 150.8.30.20(1), measured from the centreline.
   Status: RATIFIED 2026-10-18 · Enforced by: lane_abutting_length_m derivation (OWED, Spec 130 / enrich_centreline WF3); INV-15 (OWED, ①)
-  Rules: `M-209` (Spec 69a)
 
 - **m.216** Suite parking and bicycle rules are disclosures.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.12 code (OWED, ①)
-  Rules: `M-216` (Spec 69a)
 
 - **m.222** Evaluator defect: the Coxwell map area makes the garden-suite separation not_evaluated:map_area_not_held on every lot (reality check §5.2).
   Status: APPLIED 2026-10-18 · Enforced by: bylaw-evaluator-fixes.logic.test.ts › "M-222 / M-224 — the Coxwell area unit takes the literal reading …"…
-  Rules: `M-222` (Spec 69a)
 
 - **m.224** Coxwell area: the generous (purposive) reading of 150.7.60.30(1)(C).
   Status: RATIFIED 2026-10-18 · Enforced by: the polygon (OWED, Spec 58 lane); one written City question, which would also settle exception 900.2.10(736)…
-  Rules: `M-224` (Spec 69a)
 
 - **m.235** 150.7.60.20(6)(A) mis-citation
-  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-6 — …" (red first: docs/reports/red-…
-  Rules: `M-235` (Spec 69a) · +1 dated note
+  Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-6 — …" (red first: docs/reports/red-… · +1 dated note
 
 - **m.236** M-219 remainder: laneway suite step-back above 4.0 m
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-7 / M-198(4) / M-219 — …"; bylaw-eval-perf re-pin
-  Rules: `M-236` (Spec 69a)
 
 - **m.253** Garden-suite lots carry the 20 % ancillary cap; the 45 % all-buildings path is disclosed.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-9 / M-253 — …" (passes at base: no change needed)
-  Rules: `M-253` (Spec 69a)
 
 - **m.284** The garden suite one-storey 60 m2 arm is chosen by a design token, suite_one_storey, taken as false.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-5 / M-284"; golden 150.7.60.50(4)(A)/(B);…
-  Rules: `M-284` (Spec 69a)
 
 - **m.286** Suite separation and height use the distance to the max-build envelope (new build) or the isolated suite; a laneway suite with an EXISTING house carries a disclosure; no user-input field for distance.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-11 / M-286"
-  Rules: `M-286` (Spec 69a)
 
 - **m.288** Further clauses: the laneway platform floor level is keyed; the rest are held with a reason.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-15 / M-288"
-  Rules: `M-288` (Spec 69a)
 
 - **m.360** Floor discipline: a test never asserts a red floor, the --accept door counts RULED rows, a pool re-base for one cause, accept moves only named lines, merge order.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-360` (Spec 69a)
 
 - **lc.22** The rear suite is jointly optimized with the main building:
   Status: RULED · OWED · Enforced by: P5.11 suite_lt_main, coverage_consistent
-  Rules: `LC-22` (Spec 131)
 
 - **lc.33** With vs without. The house_with_secondary_suite row (and the houseplex rows) carry their gain over the same parcel's detached_house row on the same roof-form basis: GFA, footprint, storeys, and closed gain_reasons (fsi_not_applicable, coverage_45, storeys_not_applicable, height_houseplex,…
   Status: RULED · OWED · Enforced by: Spec 78 P5.2 item 11, P5.10; P5.13 vectors
-  Rules: `LC-33` (Spec 131)
 
 - **lc.35** Suite openings default: none. The smallest lawful setback leads: garden side 150.7.60.20(5)(B); no (2)(C) rear increase; laneway rear 150.8.60.20(2)(A) and side (3)(A) at 0.0 m where the line abuts no street or lane.
   Status: RULED · OWED · Enforced by: Spec 78 P5.5, P5.10; P5.13 vectors
-  Rules: `LC-35` (Spec 131)
 
 - **lc.36** Suite setbacks read lot facts from data; an unknown fact takes the larger setback, disclosed.
   Status: RULED 2026-10-18 · OWED · Enforced by: Spec 78 P5.5 lot-fact table; INV-9
-  Rules: `LC-36` (Spec 131)
 
 ### Chapter 800
 
@@ -757,147 +615,112 @@ First clause cited: 800.50.
 
 - **m.166** lot_area_m2 is licensed by "floor space index".
   Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE variable_unlicensed
-  Rules: `M-166` (Spec 69a)
 
 - **m.194** Houseplex cap: 4 units, 6 only inside a confirmed 600.60 area; disputed membership is not evaluated.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vectors (OWED, step commit ①)
-  Rules: `M-194` (Spec 69a)
 
 - **m.202** Houseplex unit cap, corrected.
   Status: RATIFIED 2026-10-18 · Enforced by: INV-11; P5.13 vectors (OWED, ①)
-  Rules: `M-202` (Spec 69a)
 
 - **m.313** A survey frontage measured along a CURVED front lot line is not preferred by the CoA scorer; the calculated frontage stays.
   Status: RULED 2026-10-21 · Enforced by: coa-scorecard.logic.test.ts › "CHAT-46", "A0385", "F-4D-SC-245", "the regression lock is live",…
-  Rules: `M-313` (Spec 69a)
 
 - **m.458** On a corner lot whose zone has no street-side clause, the street-side yard is the ordinary side yard.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the buildable_width_m edit and STS-n examples (only A0375 moves; through McProof first),…
-  Rules: `M-458` (Spec 69a)
 
 ### Chapter 900
 
 First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6, 900.4.
 
 - **m.29** Expert sample audit. Exactly 50 stratified rows — ≥ 20 whose verbatim contains a numeric literal, ≥ 1 per archetype present, every external row, the 900.1.10 precedence rows (the expert explicitly confirms the implicit-override reading of 900.1.10(3)), adjudicated rows eligible — by a City of…
-  Status: RATIFIED 2026-10-06 · Enforced by: G-AUDIT
-  Rules: `M-29` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: G-AUDIT · +1 dated note
 
 - **m.101** A prevailing former by-law with no fetchable official page is a counted source_defect instrument_not_published_online.
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE (PREVAILING), vocab disclosure_reason.source_defect, adjudication_kind, bylaw-rulings.logic
-  Rules: `M-101` (Spec 69a)
 
 - **m.133** A [PBS] item that states its own number and names no instrument is UNUSUAL, for now.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; G-CLAUSE
-  Rules: `M-133` (Spec 69a)
 
 - **m.134** Phrasing-variant licence patterns, W1 round 2.
   Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym (bylaw-rulings M-134 test)
-  Rules: `M-134` (Spec 69a)
 
 - **m.135** A former-by-law section cited inside a [PBS] PREVAILING item is not a 569-2013 reference.
-  Status: RATIFIED 2026-10-14 · Enforced by: G-XREF; counts.refs_target_absent (interim); extractRefs (owed, unbuilt)
-  Rules: `M-135` (Spec 69a) · +3 dated notes
+  Status: RATIFIED 2026-10-14 · Enforced by: G-XREF; counts.refs_target_absent (interim); extractRefs (owed, unbuilt) · +3 dated notes
 
 - **m.136** A setback from "the lot line that abuts \<named road\>", with no centreline measure, is UNUSUAL.
-  Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE; G-SHAPE
-  Rules: `M-136` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE; G-SHAPE · +1 dated note
 
 - **m.142** lot_condition threshold tokens storey_count_band and platform_height_band.
   Status: RATIFIED 2026-10-14 · Enforced by: vocab lot_condition (bylaw-rulings M-142 test)
-  Rules: `M-142` (Spec 69a)
 
 - **m.157** building_type.detached_house licence pattern "detached dwelling".
-  Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE evidence_pattern_mismatch (bylaw-rulings M-157 test)
-  Rules: `M-157` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE evidence_pattern_mismatch (bylaw-rulings M-157 test) · +1 dated note
 
 - **m.158** A lawfully existing building defaults to "new build"; an answer comes with a caveat, and the existing size is an optional input.
   Status: RATIFIED 2026-10-15 · Enforced by: vocab lot_condition.lawfully_existing.user_input and lawfully_existing_caveat phrase map (built 2026-10-15;…
-  Rules: `M-158` (Spec 69a)
 
 - **m.161** Street-side licence patterns, W1 round 4a.
   Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym
-  Rules: `M-161` (Spec 69a)
 
 - **m.162** rear_setback_m licence pattern "from a rear lot line".
   Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE
-  Rules: `M-162` (Spec 69a)
 
 - **m.163** A street name that spells a building type ("575-583 Duplex Ave.").
   Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE any_with_named_type
-  Rules: `M-163` (Spec 69a)
 
 - **m.164** The slicer's list-unit propagation is a follow-up WF3; 900.6.10(473) keeps both forms.
   Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE; follow-up WF3 (not built)
-  Rules: `M-164` (Spec 69a)
 
 - **m.247** Exceptions that have no units, or whose units leave the lot unauthored, are keyed.
   Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-1 / M-247 (2) — …" (red first: docs/…
-  Rules: `M-247` (Spec 69a)
 
 - **m.250** Exception RD 42's GFA takes its own FSI cap.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-6 / M-250 — …" (red first: docs/repo…
-  Rules: `M-250` (Spec 69a)
 
 - **m.251** Exception RD 70's side yard binds the residential building and keeps its storey increment.
   Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4.logic.test.ts › "F-SC-7 / M-251 — …" (red first: docs/repo…
-  Rules: `M-251` (Spec 69a)
 
 - **m.297** vocab.exception_chapter maps a zone to its Chapter 900 article.
   Status: RULED 2026-10-21 · Enforced by: bylaw-layer2-vocab.logic.test.ts › "L2-CHAPTERS" (red first: docs/repo…
-  Rules: `M-297` (Spec 69a)
 
 - **m.266** A "Despite" that restates the displaced regulation as still applying keeps its limit: RD 18 (D), 21 (B), 37 (B) keep the 19 m building depth.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-6 …"
-  Rules: `M-266` (Spec 69a)
 
 - **m.267** Exception RD 155 (D) and RD 340 (B) side yard 0.9 m bind the residential building, not a garden or laneway suite.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-SC-155 / F-4D-SC-340 …"
-  Rules: `M-267` (Spec 69a)
 
 - **m.285** abuts_named_street is joined from the parcel's primary frontage street name to the street the unit names.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-6.logic.test.ts › "F-4D-7 / M-285"; docs/reports/red-evidence/bylaw/bylaw-fix-6-4d-b-red.json
-  Rules: `M-285` (Spec 69a)
 
 - **m.306** The scorer does not read a definition distance as the City limit: "within 0.3 m of the (rear) main wall" is dropped like "within 0.3 m of a building".
   Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-13 …" (red first: docs/r…
-  Rules: `M-306` (Spec 69a)
 
 - **m.314** The type-less side-yard units of the newly keyed exceptions bind the principal building, not a garden or laneway suite.
   Status: RULED 2026-10-21 · Enforced by: bylaw-chat49-suite-side-yard.logic.test.ts (red first: docs/reports/re…
-  Rules: `M-314` (Spec 69a)
 
 - **m.315** The lane-A M-75 corrections: the six on exception 528 are ratified, the seven gate fixes are re-recorded as lane mechanical work.
   Status: RULED 2026-10-21 · Enforced by: agree.mjs correction_supersedes_unknown / correction_supersede_duplicate
-  Rules: `M-315` (Spec 69a)
 
 - **m.316** OWED: exception 1397's 0.69 pre-1953 arm waits for an existing-building input.
   Status: OWED · Enforced by: none yet (OWED)
-  Rules: `M-316` (Spec 69a)
 
 - **m.322** Accuracy floors only go up. Operator approved 2026-10-22 (chat, "y C-1...C-10 - on the ocndition that it meets the overall goal standardized approach, observable, accurate, scalable and understandable ie simple and doesnt expand scope as best as possible." evidence-rulings card C-5;…
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED: the floors file and its pin)
-  Rules: `M-322` (Spec 69a)
 
 - **m.336** Two scope decisions stay with named uses.
   Status: RULED 2026-10-22 · OWED · Enforced by: none (a scope rule)
-  Rules: `M-336` (Spec 69a)
 
 - **m.347** 900.5.10(324)(J)(i) is keyed UNUSUAL as a whole, with a disclosure (option B).
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-347` (Spec 69a)
 
 - **m.350** The 26 pending exception units are settled by 11 family readings.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-350` (Spec 69a)
 
 - **m.357** Each new CoA notice batch is scored blind first, then folded into one cumulative headline set.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED: the cumulative set and the blind-round door, built when the next batch arrives)
-  Rules: `M-357` (Spec 69a)
 
 - **m.374** OWED to Phase 3: cumulative pooled articles answered.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-374` (Spec 69a)
 
 ### General / cross-cutting
 
@@ -905,1263 +728,948 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **m.0** Simplicity. Every field, gate, file and mode names the mistake it prevents or the reader it serves; edge cases are not chased; each change says what it replaces.
   Status: RATIFIED 2026-10-06 · Enforced by: Process rule — no mechanical gate (declared). Applied at every plan panel; the plan's fold record is the…
-  Rules: `M-0` (Spec 69a)
 
 - **m.1** The single source of truth is the committed generated JSON
   Status: RATIFIED 2026-10-06 · Enforced by: G-DRIFT
-  Rules: `M-1` (Spec 69a)
 
 - **m.2** One row per slicer regulation_id; clauses are a generated clauses[] sub-array,
   Status: RATIFIED 2026-10-06 · Enforced by: G-TEXT
-  Rules: `M-2` (Spec 69a)
 
 - **m.11** Code linkage reports until Phase 3, rather than blocking.
   Status: RATIFIED 2026-10-06 · Enforced by: G-CODE (ii)
-  Rules: `M-11` (Spec 69a)
 
 - **m.14** Amendment status is tracked and shown, defaulting to not_verified,
   Status: RATIFIED 2026-10-06 · Enforced by: G-PROV, G-CHANGE
-  Rules: `M-14` (Spec 69a)
 
 - **m.15** Ch.900 exception scope: every exception binding ≥ 100 residential lots, counting INHERITED lots, built in two waves
-  Status: RATIFIED 2026-10-06 · Enforced by: Census render (Phase 1); G-UNIVERSE membership arm (Phase 2)
-  Rules: `M-15` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: Census render (Phase 1); G-UNIVERSE membership arm (Phase 2) · +1 dated note
 
 - **m.17** Double-keying with operator adjudication,
-  Status: RATIFIED 2026-10-06 · Enforced by: G-AGREE, G-PROV
-  Rules: `M-17` (Spec 69a) · +4 dated notes
+  Status: RATIFIED 2026-10-06 · Enforced by: G-AGREE, G-PROV · +4 dated notes
 
 - **m.20** Ownership across specs. Spec 68/69 own the table; Spec 58 owns ingestion; Spec 65 owns computation; Spec 67 owns methodology — its App.
-  Status: RATIFIED 2026-10-06 · Enforced by: S13 locks
-  Rules: `M-20` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: S13 locks · +1 dated note
 
 - **m.21** Seed from the page, never from prose.
-  Status: RATIFIED 2026-10-06 · Enforced by: One-time S12/S13 migration (legacy-id scan = 0, red-first)
-  Rules: `M-21` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: One-time S12/S13 migration (legacy-id scan = 0, red-first) · +1 dated note
 
 - **m.22** A code ≠ by-law disagreement is a Phase 3 input, never a table edit.
   Status: RATIFIED 2026-10-06 · Enforced by: G-CODE (ii)
-  Rules: `M-22` (Spec 69a)
 
 - **m.25** Phase boundaries and the output HOLD.
-  Status: RATIFIED 2026-10-06 · Enforced by: G-CODE (ii) report-only; Spec 68 §15 Out-of-Scope
-  Rules: `M-25` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: G-CODE (ii) report-only; Spec 68 §15 Out-of-Scope · +1 dated note
 
 - **m.26** Input fidelity is recorded rather than assumed: each Ch.800 measurement definition a DSL input maps to records matches · approximates · differs · unknown with why, our field and evidence_ref; differs/unknown forbids modelled.
   Status: RATIFIED 2026-10-06 · Enforced by: G-READ
-  Rules: `M-26` (Spec 69a)
 
 - **m.27** Who governs the lot. Parcels with no 569-2013 zone polygon (17,829 *[measured]*) are disclosed "not evaluated" rather than evaluated under 569-2013; max-build's envelopes on them are F-5.
   Status: RATIFIED 2026-10-06 · Enforced by: G-READ, G-UNIVERSE
-  Rules: `M-27` (Spec 69a)
 
 - **m.28** Risk-reference rows, kept to a handful: tree protection (Ch.813), the Ontario Building Code (spatial separation), TRCA regulated areas; heritage and ravine point to Specs 61 / 59.
   Status: RATIFIED 2026-10-06 · Enforced by: G-READ
-  Rules: `M-28` (Spec 69a)
 
 - **m.30** The faceted archetype model (Spec 68 §7), rather than one overloaded label: ⧉ archetype ∈ {LIMIT, PERMIT, PROHIBIT, REQUIRE, DEFINE, DISAPPLY, INCLUDE, PREVAILING, PROCEDURAL, UNUSUAL}; generated value_form; qualifiers displaces[], condition, applies_to.part, layer; a fixed shape per archetype;…
-  Status: RATIFIED 2026-10-06 · Enforced by: G-SHAPE; G-EXC-LIT (Phase 2); handler-registry equality (Phase 3)
-  Rules: `M-30` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: G-SHAPE; G-EXC-LIT (Phase 2); handler-registry equality (Phase 3) · +1 dated note
 
 - **m.31** Informational rows are in scope, except ~40 pure-administration rows
   Status: RATIFIED 2026-10-06 · Enforced by: G-UNIVERSE
-  Rules: `M-31` (Spec 69a)
 
 - **m.32** Pre-commit runs generate-bylaw-provisions.mjs --check,
-  Status: RATIFIED 2026-10-06 · Enforced by: .husky/pre-commit + hooks-composition.infra.test.ts (positional lock)
-  Rules: `M-32` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: .husky/pre-commit + hooks-composition.infra.test.ts (positional lock) · +1 dated note
 
 - **m.33** Sequencing: Phase 1 runs in the L lane, one committer at a time.
-  Status: RATIFIED 2026-10-06 · Enforced by: Process rule — no mechanical gate (declared).
-  Rules: `M-33` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: Process rule — no mechanical gate (declared). · +1 dated note
 
 - **m.34** Override binding is keyed on the DSL target, not on a cited regulation id.
-  Status: RATIFIED 2026-10-06 · Enforced by: precedence fixtures + G-EVAL (c); G-SHAPE on target
-  Rules: `M-34` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: precedence fixtures + G-EVAL (c); G-SHAPE on target · +1 dated note
 
 - **m.35** Prevailing former by-laws are disclosure only,
   Status: RATIFIED 2026-10-06 · Enforced by: G-SHAPE (PREVAILING shape)
-  Rules: `M-35` (Spec 69a)
 
 - **m.36** Enacted by-laws missing from our pages are captured from the enacting text,
-  Status: RATIFIED 2026-10-06 · Enforced by: G-PROV (status legal + shown; source_sha256)
-  Rules: `M-36` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-06 · Enforced by: G-PROV (status legal + shown; source_sha256) · +2 dated notes
 
 - **m.37** The page set is checked against the consolidation's own table of contents.
-  Status: RATIFIED 2026-10-06 · Enforced by: G-UNIVERSE
-  Rules: `M-37` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-06 · Enforced by: G-UNIVERSE · +2 dated notes
 
 - **m.38** Explicit displacement beats layer order.
   Status: RATIFIED 2026-10-06 · Enforced by: precedence fixture via permitted() + G-EVAL (c)
-  Rules: `M-38` (Spec 69a)
 
 - **m.39** Consolidation ≠ enacting text: the enacting text governs, the unit is flagged and adjudicated — recorded per instance, no generic comparator.
   Status: RATIFIED 2026-10-06 · Enforced by: G-CLAUSE (cited-clause rule); G-PROV (extraction sha)
-  Rules: `M-39` (Spec 69a)
 
 - **m.40** The regex classifier is a dev-tool pre-sorter only,
   Status: RATIFIED 2026-10-06 · Enforced by: reporting only
-  Rules: `M-40` (Spec 69a)
 
 - **m.41** New Phase 2 data dependencies are named, not assumed:
   Status: RATIFIED 2026-10-06 · Enforced by: G-SHAPE (applies_to.part, value_form ⇒ ≠ modelled)
-  Rules: `M-41` (Spec 69a)
 
 - **m.42** R-ZV — zone-assignment trust. McBylaw reads a parcel's parameters from its dominant 569-2013 label + exception key, never from the precedence-aggregated parcels.bylaw_* columns; a residential label's d is the zone FSI.
   Status: RATIFIED 2026-10-06 · Enforced by: Spec 68 §7.6 lot vector (Phase 1); ZV-1..ZV-4 step checks (Specs 58/65)
-  Rules: `M-42` (Spec 69a)
 
 - **m.43** Executed, not declared: the DSL evaluator and effective() ship in Phase 1
   Status: RATIFIED 2026-10-06 · Enforced by: G-EVAL; the ACCURATE line's code_linkage: declared-only
-  Rules: `M-43` (Spec 69a)
 
 - **m.44** S0.5 spike before any gate is built, with kill criteria declared up front
-  Status: RATIFIED 2026-10-06 · Enforced by: The spike report (docs/reports/mcbylaw-s05-spike.md) recording each measured value against its criterion
-  Rules: `M-44` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-06 · Enforced by: The spike report (docs/reports/mcbylaw-s05-spike.md) recording each measured value against its criterion · +1 dated note
 
 - **m.45** Absent and stale rows are pending, never failed.
   Status: RATIFIED 2026-10-06 · Enforced by: G-SHAPE; fixtures both directions
-  Rules: `M-45` (Spec 69a)
 
 - **m.46** Model heuristics are a closed row kind,
   Status: RATIFIED 2026-10-06 · Enforced by: G-CODE (iv); G-READ
-  Rules: `M-46` (Spec 69a)
 
 - **m.48** DSL grammar amendment — Spec 68 §7.4: unlimited; presence tests mapped / labelled / not; absent map arguments dropped in max/min; other in by_type; multi-token conditions; argument-level displacement; enacted(<by-law>).
   Status: RATIFIED 2026-10-07 · Enforced by: DSL parser fixtures (S6); G-EVAL
-  Rules: `M-48` (Spec 69a)
 
 - **m.49** Rule 3 tie-break: a unit that displaces a precedence rule ranks just above the highest layer that rule ranks — it wins, it does not tie into rule 4a (Spec 68 §7.5).
   Status: RATIFIED 2026-10-07 · Enforced by: precedence fixture, G-EVAL (c)
-  Rules: `M-49` (Spec 69a)
 
 - **m.50** Building type unknown: evaluate every residential building type; return a value only if all agree, else not_evaluated (needs_user_input:building_type) with the per-type values (Spec 68 §7.5).
   Status: RATIFIED 2026-10-07 · Enforced by: G-EVAL (c), V12 fixture
-  Rules: `M-50` (Spec 69a)
 
 - **m.51** Spec 67 V1–V4 and V25 (side) are corrected at or before S6b
   Status: RATIFIED 2026-10-07 · Enforced by: G-EVAL (b)
-  Rules: `M-51` (Spec 69a)
 
 - **m.52** feeds — which MaxBLD output a unit affects
   Status: RATIFIED 2026-10-07 · Enforced by: G-SHAPE, G-CODE (report), render
-  Rules: `M-52` (Spec 69a)
 
 - **m.53** Three layers, applied in order
-  Status: RATIFIED 2026-10-07 · Enforced by: Spec 68 §11; Phase 2 trial
-  Rules: `M-53` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-07 · Enforced by: Spec 68 §11; Phase 2 trial · +1 dated note
 
 - **m.55** Provincial additional residential units prevail now (closes R-9)
-  Status: RATIFIED 2026-10-07 · Enforced by: G-READ (external arm: precedence active only on a verified_primary provincial row with units); G-EVAL…
-  Rules: `M-55` (Spec 69a) · +4 dated notes
+  Status: RATIFIED 2026-10-07 · Enforced by: G-READ (external arm: precedence active only on a verified_primary provincial row with units); G-EVAL… · +4 dated notes
 
 - **m.56** S5 scope rulings, operator 2026-10-07 — all S5 recommendations accepted as listed
   Status: RATIFIED 2026-10-07 · Enforced by: G-UNIVERSE (scope + TOC arms, ruling_not_ratified); the --accept door
-  Rules: `M-56` (Spec 69a)
 
 - **m.57** The slice comes from the City page's structure; nothing is merged, nothing is missed silently
   Status: RATIFIED 2026-10-07 · Enforced by: G-TEXT (cell_set_mismatch, inline_split_undeclared, numbering_gap_unproven, unstatused_variant); G-UNIVERSE…
-  Rules: `M-57` (Spec 69a)
 
 - **m.60** Evaluator hardening rules. (a) Absence (rule 7a) returns unregulated only when no unit of any by-law layer carries the target (keyed or pending) and the lot's exception and every exception in its INCLUDE closure is authored for the target (authored / partial listing the target, every unit…
-  Status: PROPOSED · Enforced by: bylaw-harden.logic / .infra, G-EVAL
-  Rules: `M-60` (Spec 69a) · +1 dated note
+  Status: PROPOSED · Enforced by: bylaw-harden.logic / .infra, G-EVAL · +1 dated note
 
 - **m.61** Layer 3 report fields are declared formulas, run by the one evaluator.
   Status: RATIFIED 2026-10-07 · Enforced by: Spec 68 §11.1 arms (G-SHAPE, G-EVAL, G-UNIVERSE); the entry-condition gates once built; the step's…
-  Rules: `M-61` (Spec 69a)
 
 - **m.62** Formula rows are keyed like law rows:
   Status: RATIFIED 2026-10-07 · Enforced by: G-AGREE; G-PROV (keyer provenance); G-EVAL formula arm (red test: a branch with no vector fails)
-  Rules: `M-62` (Spec 69a)
 
 - **m.64** Only permitted scenarios are shown; every other scenario is recorded, counted and never displayed.
   Status: RATIFIED 2026-10-07 · Enforced by: G-SHAPE status arm (red test: an undeclared reason fails); step checks: status totality, lineage complete…
-  Rules: `M-64` (Spec 69a)
 
 - **m.65** One CoA method: CoA(s) = AOR(s) × u_form(s), a citywide pure CoA uplift per building form, fitted against the AOR of the same form
   Status: RATIFIED 2026-10-07 · Enforced by: formula rows + G-EVAL vectors; G-DRIFT (u ⇄ pinned audit, AOR(s) version); step checks: fit_basis match, u ∈…
-  Rules: `M-65` (Spec 69a)
 
 - **m.67** Builder cost is out of Phase 3.
   Status: RATIFIED 2026-10-07 · Enforced by: Spec 78 §2 Out-of-Scope; the owner-spec diff (no Spec 88 file in a Phase 3 diff); G-UNIVERSE: a cost_ref…
-  Rules: `M-67` (Spec 69a)
 
 - **m.68** Every non-law number a formula uses is an admin logic variable; nothing is hidden.
   Status: RATIFIED 2026-10-07 · Enforced by: G-SHAPE formula-literal arm; G-CODE (iv) blocking over the Phase 3 modules + an inline-literal arm (JS…
-  Rules: `M-68` (Spec 69a)
 
 - **m.69** Report-field totality: output ⇄ registry ⇄ rendered.
   Status: RATIFIED 2026-10-07 · Enforced by: G-UNIVERSE report-field arm; G-DRIFT (entry condition)
-  Rules: `M-69` (Spec 69a)
 
 - **m.70** A measured Phase 3 trial precedes the Phase 3 plan lock
   Status: RATIFIED 2026-10-07 · Enforced by: process rule; the trial's committed pre-registration (V-4 ancestry)
-  Rules: `M-70` (Spec 69a)
 
 - **m.71** No live report column moves before its shadow passes.
   Status: RATIFIED 2026-10-07 · Enforced by: the per-parcel classifier (red test: the g8-probe generic-why case FAILs); the round record (Phase 2 runner,…
-  Rules: `M-71` (Spec 69a)
 
 - **m.72** The Layer 3 grammar extension (Spec 68 §7.4 block, operator approved in principle 2026-10-07): unit algebra (m2 × storeys, storeys × m; null unit → expression_error); pct a typed quantity (÷ 100 and pct × pct caught statically; *_pct variables declare scale); lv(<id>) and l2(<target>) names and…
   Status: RATIFIED 2026-10-07 · Enforced by: the planned bylaw-p3-dsl.logic.test.ts (red on today's grammar: the 8 probes + R1–R11); G-EVAL
-  Rules: `M-72` (Spec 69a)
 
 - **m.73** An encroachment with a stated extent is a LIMIT; one without is a PERMIT
   Status: RATIFIED 2026-10-08 · Enforced by: G-SHAPE (§7.3 LIMIT shape), G-CLAUSE (every literal accounted for), G-AGREE (archetype ⧉); keying brief P1…
-  Rules: `M-73` (Spec 69a)
 
 - **m.74** A count scales a quantity in Layer 1
   Status: RATIFIED 2026-10-08 · Enforced by: dsl.mjs combineUnits (+ red-first probe: 6.0 m × dwelling_units → m, 6.0 m × 2.0 m2 still mismatch),…
-  Rules: `M-74` (Spec 69a)
 
 - **m.75** A sealed draft is corrected by an adjudication, never by editing it.
   Status: RATIFIED 2026-10-08 · Enforced by: G-AGREE (applies + orphan check), G-PROV (drafts unchanged), G-SHAPE (record schema); Spec 68 §6.5…
-  Rules: `M-75` (Spec 69a)
 
 - **m.76** Five rule decisions from the agreed-but-flagged findings.
   Status: RATIFIED 2026-10-08 · Enforced by: G-CLAUSE (A1, B4/B5), G-XREF (A2), G-SHAPE (A10), vocab + G-CLAUSE licensing (B8)
-  Rules: `M-76` (Spec 69a)
 
 - **m.77** The A1 keying conventions are ratified.
   Status: RATIFIED 2026-10-08 · Enforced by: keying brief block (bylaw-keying tests), G-AGREE
-  Rules: `M-77` (Spec 69a)
 
 - **m.79** A reference to another municipal instrument is a ref with reason other_instrument.
   Status: RATIFIED 2026-10-08 · Enforced by: G-READ (external arm, bylaw-rulings.logic reason-set lock), G-XREF (ref_unresolved)
-  Rules: `M-79` (Spec 69a)
 
 - **m.80** A sealed, B-keyed shard is re-keyed by a superseding generation, never by editing or deleting it.
   Status: RATIFIED 2026-10-08 · Enforced by: G-PROV (keyer arm, supersedes_mismatch), G-AGREE, G-SHAPE; keying-cli rekey (bylaw-keying tests)
-  Rules: `M-80` (Spec 69a)
 
 - **m.78** Ch.900 exception rows (pages ch900_2..6, in scope since adoption-4 by SR-IN-K7A) are Phase 2 work (Spec 68 §11; K7 + waves); PHASE 1: DONE is computed over the non-Ch.900 in-scope rows; the validator prints both.
   Status: RATIFIED 2026-10-08 · Enforced by: --validate five lines + PHASE 1 (bylaw-s7-render)
-  Rules: `M-78` (Spec 69a)
 
 - **m.82** T3 vocabulary and the correction supersede rule.
-  Status: RATIFIED 2026-10-08 · Enforced by: G-CLAUSE, G-SHAPE, G-AGREE; vocab.json
-  Rules: `M-82` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-08 · Enforced by: G-CLAUSE, G-SHAPE, G-AGREE; vocab.json · +1 dated note
 
 - **m.83** Table label cells and min+max rate cells.
   Status: RATIFIED 2026-10-09 · Enforced by: G-AGREE (adjudications.json), G-SHAPE
-  Rules: `M-83` (Spec 69a)
 
 - **m.84** Keyer B's out-of-boundary fields are ignored and counted in every batch.
   Status: RATIFIED 2026-10-10 · Enforced by: G-SHAPE, bylaw-s6g.logic M-84
-  Rules: `M-84` (Spec 69a)
 
 - **m.85** Per-area rate cells and "None" quantity cells.
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE, G-CLAUSE (literals stay accounted)
-  Rules: `M-85` (Spec 69a)
 
 - **m.86** Reference reason out_of_scope_section.
   Status: RATIFIED 2026-10-13 · Enforced by: G-XREF, G-READ external arm; bylaw-rulings.logic reason-set case
-  Rules: `M-86` (Spec 69a)
 
 - **m.89** Reason rate_base for a per-area rate cell's stated base.
   Status: RATIFIED 2026-10-13 · Enforced by: G-CLAUSE (literal accounted), G-SHAPE shape_must_be_none (reason set closed)
-  Rules: `M-89` (Spec 69a)
 
 - **m.93** Displacement trigger phrases "apply to prevent" and "is not subject to the regulations of".
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE displaces[], G-XREF
-  Rules: `M-93` (Spec 69a)
 
 - **m.97** dsl_target bicycle_space_wall_clearance_m.
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE vocab membership, G-CLAUSE
-  Rules: `M-97` (Spec 69a)
 
 - **m.100** A use-list PERMIT takes subject non_residential_building.
   Status: RATIFIED 2026-10-13 · Enforced by: G-SHAPE PERMIT subject, G-CLAUSE evidence
-  Rules: `M-100` (Spec 69a)
 
 - **m.103** Ch.900 [SSP] / [PBS] blocks are keyed at leaf-clause grain.
-  Status: RATIFIED 2026-10-14 · Enforced by: Keying planner unit grain (keying.mjs, built separately), G-SHAPE statement_target_mismatch, G-AGREE, G-PROV…
-  Rules: `M-103` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-14 · Enforced by: Keying planner unit grain (keying.mjs, built separately), G-SHAPE statement_target_mismatch, G-AGREE, G-PROV… · +2 dated notes
 
 - **m.104** Phase 3 entry reads the Phase 1 rows, not the PHASE 1: DONE line.
   Status: RATIFIED 2026-10-14 · Enforced by: None new: the validator's existing PHASE 1 line and pending / failed fields
-  Rules: `M-104` (Spec 69a)
 
 - **m.105** The wave-1 shard plan is generated.
   Status: RATIFIED 2026-10-14 · Enforced by: --check staleness of w1-shards.json; keying planner
-  Rules: `M-105` (Spec 69a)
 
 - **m.108** parking_rate licence pattern "rate for calculating effective parking spaces".
   Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym (bylaw-rulings M-87 test)
-  Rules: `M-108` (Spec 69a)
 
 - **m.109** K7-R class map. Prereg-0 k7r_class_map has the closed classes i · ii · i_if_planned · not_unavailable.
   Status: RATIFIED 2026-10-14 · Enforced by: Prereg-0 k7r_class_map; its totality test
-  Rules: `M-109` (Spec 69a)
 
 - **m.110** Planned keying = the W1 shard plan.
   Status: RATIFIED 2026-10-14 · Enforced by: k7r_split pin check
-  Rules: `M-110` (Spec 69a)
 
 - **m.111** needs_user_input is K7-R class (ii) until Q12.
   Status: RATIFIED 2026-10-14 · Enforced by: Prereg-0 k7r_class_map
-  Rules: `M-111` (Spec 69a)
 
 - **m.112** K3 limits. k3_a: Layer 2 storage ≤ 10 % of the DB.
   Status: RATIFIED 2026-10-14 · Enforced by: Prereg-0 K3 rows
-  Rules: `M-112` (Spec 69a)
 
 - **m.113** Held-out draw. The salt comes only from env MCBYLAW_HELDOUT_SALT (≥ 32 chars, never written).
   Status: RATIFIED 2026-10-14 · Enforced by: The draw's status field
-  Rules: `M-113` (Spec 69a)
 
 - **m.114** Oracle D is not_run. D stays not_run:oracle_unavailable on every round, disclosed.
   Status: RATIFIED 2026-10-14 · Enforced by: Round verdict cascade
-  Rules: `M-114` (Spec 69a)
 
 - **m.115** Oracle C slot. The round runner accepts an oracle-c-round-v1 record.
   Status: RATIFIED 2026-10-14 · Enforced by: Round runner sha check
-  Rules: `M-115` (Spec 69a)
 
 - **m.116** table_version. table_version = <adoption_id>:<sha256 of the LF bylaw-provisions.json>, the same sha oracle C records.
   Status: RATIFIED 2026-10-14 · Enforced by: Round records; M-115 check
-  Rules: `M-116` (Spec 69a)
 
 - **m.117** R-DET: the determinism lock is recursive.
   Status: RATIFIED 2026-10-14 · Enforced by: src/tests/bylaw-provisions.infra.test.ts determinism lock
-  Rules: `M-117` (Spec 69a)
 
 - **m.118** Oracle C comparison scope. Oracle C compares only the REQUIRED (by-law) value of an active coa_notice_variances row with cited_bylaw = 569-2013, citation_kind = chapter_regulation and parse_status = pair.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness (pre-registered round record + sha)
-  Rules: `M-118` (Spec 69a)
 
 - **m.119** The keyword target is not a tiebreak inside one unit.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness, from round 3
-  Rules: `M-119` (Spec 69a)
 
 - **m.120** Dating a change without a verified status.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness d8_basis
-  Rules: `M-120` (Spec 69a)
 
 - **m.121** A citation presumes its unit's condition, with three exceptions.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness
-  Rules: `M-121` (Spec 69a)
 
 - **m.122** Exception or former-density context is not comparable.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness, from round 3
-  Rules: `M-122` (Spec 69a)
 
 - **m.123** An end-of-regulation tag is regulation-level for law-at-date.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness D8; census line
-  Rules: `M-123` (Spec 69a)
 
 - **m.124** Oracle C not_comparable reasons, in evaluation order, first wins.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness reason set + oracle_c_version
-  Rules: `M-124` (Spec 69a)
 
 - **m.125** coa_mismatch names the wrong side.
   Status: RATIFIED 2026-10-14 · Enforced by: vocab adjudication_kind (bylaw-rulings M-125 test); record shape declared until the first record lands
-  Rules: `M-125` (Spec 69a)
 
 - **m.126** Oracle C plus an operator law-text sample is the table-accuracy evidence while D is unavailable.
   Status: RATIFIED 2026-10-14 · Enforced by: Round report lines; Phase 3 entry (4)
-  Rules: `M-126` (Spec 69a)
 
 - **m.127** D7 link and lot inputs for oracle C.
   Status: RATIFIED 2026-10-14 · Enforced by: Oracle C harness link_status
-  Rules: `M-127` (Spec 69a)
 
 - **m.129** A Ch.900 unit need not account for its own exception's header id.
   Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE; exception_header_ids count
-  Rules: `M-129` (Spec 69a)
 
 - **m.130** A LIMIT may be partly modelled when an inexpressible arm is an additional requirement on the same subject; new target aggregate_side_setback_m.
   Status: RATIFIED 2026-10-14 · Enforced by: vocab literal_not_expressed_reason, dsl_target; G-SHAPE (bylaw-s6g M-130 fixtures); G-CLAUSE
-  Rules: `M-130` (Spec 69a)
 
 - **m.131** A lead-in limit shared by several leaves is keyed on each LIMIT leaf of the same target.
   Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE; G-SHAPE
-  Rules: `M-131` (Spec 69a)
 
 - **m.132** Phrasing-variant licence patterns, W1 batch.
   Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE variable_unlicensed, vocab_synonym (bylaw-rulings M-132 test)
-  Rules: `M-132` (Spec 69a)
 
 - **m.137** W1 lead-in groups are fixed once a shard is drafted.
   Status: RATIFIED 2026-10-14 · Enforced by: keying-cli plan --batch W1 refusal w1_drafted_shard_moved
-  Rules: `M-137` (Spec 69a)
 
 - **m.138** Derived named-address fields. Beside the raw applies_to.refs[] and instrument.citation, a pure deterministic parse produces addresses[] (number, suffix, street key, range, parity with parity_basis) and citations[].
   Status: RATIFIED 2026-10-14 · Enforced by: scripts/analysis/bylaw/named-addresses.mjs tests; M-117 lock
-  Rules: `M-138` (Spec 69a)
 
 - **m.139** Named-address match_status, roll-up and precision bar.
   Status: RATIFIED 2026-10-14 · Enforced by: named-address runner; precision sample record
-  Rules: `M-139` (Spec 69a)
 
 - **m.140** An applicability oracle replaces the M-29 expert sample for condition, applies_to and application.
   Status: RATIFIED 2026-10-14 · Enforced by: Applicability oracle round record
-  Rules: `M-140` (Spec 69a)
 
 - **m.141** Applicability conventions. P6: a use is listed in application.uses only when the clause regulates that use itself.
   Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE (evidence); applicability oracle cards
-  Rules: `M-141` (Spec 69a)
 
 - **m.143** In an UNUSUAL unit, a real rate or dimension literal is limit_not_modelled.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; G-CLAUSE
-  Rules: `M-143` (Spec 69a)
 
 - **m.144** CR Development Standard Set scope.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; M-149
-  Rules: `M-144` (Spec 69a)
 
 - **m.146** Space-kind targets are planned for Phase 2.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; vocab (Phase 2)
-  Rules: `M-146` (Spec 69a)
 
 - **m.148** A permission conditioned on a measure is a PERMIT.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE
-  Rules: `M-148` (Spec 69a)
 
 - **m.149** Scope before value. A unit whose applicability turns on a fact that no token or input tests (driveway location, drive-aisle width, standard set, stacked spaces, extension, a disjunctive scope such as "a lane or a flanking street") is not a Layer 2 candidate.
   Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; triage sweeps
-  Rules: `M-149` (Spec 69a)
 
 - **m.150** One sweep per relabel rule. A ruling that relabels literals (M-102 now, as M-89 before it) is applied by one mechanical M-75 sweep over every agreed unit, e.g. measured literals under count_or_ordinal_not_a_limit / cross_reference_value on LIMIT / UNUSUAL units.
   Status: RATIFIED 2026-10-14 · Enforced by: M-75 corrections; sweep record
-  Rules: `M-150` (Spec 69a)
 
 - **m.151** Twins key alike: a report-only G-STANDARD listing.
   Status: RATIFIED 2026-10-14 · Enforced by: G-STANDARD report (report-only)
-  Rules: `M-151` (Spec 69a)
 
 - **m.152** An arm binds to its area. A statement whose arm names a map area applies only where that area holds.
-  Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; M-149
-  Rules: `M-152` (Spec 69a) · +2 dated notes
+  Status: RATIFIED 2026-10-14 · Enforced by: G-SHAPE; M-149 · +2 dated notes
 
 - **m.153** K7-R scenario grain. Under a pinned class catalogue, one K7-R item is signature × lot gate × target × permitted class, lot-weighted by the signature's lots.
   Status: RATIFIED 2026-10-14 · Enforced by: prereg-1 grain declaration; round record
-  Rules: `M-153` (Spec 69a)
 
 - **m.154** no_candidate where a rule carries the target but none applies is an answer.
-  Status: RATIFIED 2026-10-14 · Enforced by: prereg-1 k7r_class_map; round record
-  Rules: `M-154` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-14 · Enforced by: prereg-1 k7r_class_map; round record · +1 dated note
 
 - **m.155** "Existed on the day of the enactment" is a value form, never a lot condition: a standing applicability-oracle dismissal.
   Status: RATIFIED 2026-10-14 · Enforced by: Applicability-oracle harness (auto-tag + count)
-  Rules: `M-155` (Spec 69a)
 
 - **m.156** The pre-1953 rear-addition family carries its lead-in condition on every leaf.
   Status: RATIFIED 2026-10-14 · Enforced by: G-CLAUSE; G-SHAPE; applicability oracle
-  Rules: `M-156` (Spec 69a)
 
 - **m.160** Dwelling-unit counts of the Layer 2 v1 P classes.
   Status: RATIFIED 2026-10-15 · Enforced by: vocab scenario_class_units
-  Rules: `M-160` (Spec 69a)
 
 - **m.165** A permission of a non-residential use takes subject non_residential_building.
   Status: RATIFIED 2026-10-15 · Enforced by: G-SHAPE PERMIT subject; G-CLAUSE evidence
-  Rules: `M-165` (Spec 69a)
 
 - **m.167** A named-road arm under a licensed street-setback lead-in is a LIMIT.
   Status: RATIFIED 2026-10-15 · Enforced by: G-CLAUSE; G-SHAPE
-  Rules: `M-167` (Spec 69a)
 
 - **m.168** permitted() reads proposed_height_m per P class as the lot's own permitted maximum height.
-  Status: RATIFIED 2026-10-15 · Enforced by: evaluator permitted() (P2-0 seat, owed)
-  Rules: `M-168` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-15 · Enforced by: evaluator permitted() (P2-0 seat, owed) · +1 dated note
 
 - **m.172** Site facts versus design choices: MaxBLD is theoretical, so a permissive design-choice condition is taken as met and disclosed as how the answer is achieved.
-  Status: RATIFIED 2026-10-15 · Enforced by: vocab undetermined_condition_disclosure, design_choice_disclosure (bylaw-rulings M-169 / M-172 tests);…
-  Rules: `M-172` (Spec 69a) · +1 dated note
+  Status: RATIFIED 2026-10-15 · Enforced by: vocab undetermined_condition_disclosure, design_choice_disclosure (bylaw-rulings M-169 / M-172 tests);… · +1 dated note
 
 - **m.188** McBylaws Airtight is the McBylaw standard.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 68 §5a (mechanisms per part); the admission lock (OWED, keying lane)
-  Rules: `M-188` (Spec 69a)
 
 - **m.195** A house with a secondary suite reports 2 units; whether the suite counts toward 'u' is disclosed until M-177(4) rules.
   Status: RATIFIED 2026-10-18 · Enforced by: P2-10 (OWED)
-  Rules: `M-195` (Spec 69a)
 
 - **m.213** Heritage, ravine, holding and Chapter 900 gate or disclose.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
-  Rules: `M-213` (Spec 69a)
 
 - **m.220** Evaluator defect: no 'u' label gives not_evaluated:label_value_absent:u instead of no cap (reality check §5.2).
   Status: APPLIED 2026-10-18 · OWED · Enforced by: INV-19 (M-220 label arm): bylaw-evaluator-fixes.logic.test.ts › "INV-19 — …" › "M-220: …" (green); the…
-  Rules: `M-220` (Spec 69a)
 
 - **m.223** Layer 3 vocabulary gaps the reviews found (reality check §5.1 items 3, 4, 9, 10).
-  Status: APPLIED 2026-10-20 · Enforced by: vocab + bylaw-rulings tests (OWED, by-law keying/evaluator lane)
-  Rules: `M-223` (Spec 69a) · +2 dated notes
+  Status: APPLIED 2026-10-20 · Enforced by: vocab + bylaw-rulings tests (OWED, by-law keying/evaluator lane) · +2 dated notes
 
 - **m.226** Priority Retail Streets: a minimum along-frontage length before on_priority_retail is set.
   Status: RULED 2026-10-19 · Enforced by: Spec 65 enrich_parcels (deferred: PIN PR-2, residential focus)
-  Rules: `M-226` (Spec 69a)
 
 - **m.231** An unauthored exception gates the whole lot, written per target.
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic; Spec 134 I4 / I6 at ① (OWED, step lane)
-  Rules: `M-231` (Spec 69a)
 
 - **m.232** Two closed status sets joined by one declared total map.
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic; the layer2-map lock at ① (OWED, step lane)
-  Rules: `M-232` (Spec 69a)
 
 - **m.233** Layer 2 v1 resolves principal + garden suite + laneway suite; storage is measured against the §6.8 kill line.
   Status: RULED 2026-10-20 · Enforced by: P2-0 round record; Spec 134 storage check at ② (OWED, step lane); spec134-resolve-bylaws.logic
-  Rules: `M-233` (Spec 69a)
 
 - **m.234** Layer 2 v1 is narrowed to what the scenario step needs.
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic; the step's I1 check at ① (OWED, step lane)
-  Rules: `M-234` (Spec 69a)
 
 - **m.238** M-223(1) not_buildable scenario status
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-10 / M-223(1) — …"
-  Rules: `M-238` (Spec 69a)
 
 - **m.246** A dated note may be appended inside a row's status cell.
   Status: RULED 2026-10-20 · Enforced by: decision-log.logic (the record)
-  Rules: `M-246` (Spec 69a)
 
 - **m.295** effective() returns a structured losers[] beside the free-text trace.
   Status: RULED 2026-10-21 · Enforced by: bylaw-losers.logic.test.ts (red first: docs/reports/red-evidence/bylaw/l2-losers-red.json, 11 red)
-  Rules: `M-295` (Spec 69a)
 
 - **m.296** exceptionClosure(lot, candidates) is the one pure export that lists a lot's exception closure.
   Status: RULED 2026-10-21 · Enforced by: bylaw-exception-closure.logic.test.ts (red first: docs/reports/red-evidence/bylaw/l2-closure-red.json, 7 red)
-  Rules: `M-296` (Spec 69a)
 
 - **m.298** The scenario class vectors: five Spec 78 P5.1 classes, one new.
   Status: RULED 2026-10-21 · Enforced by: bylaw-layer2-vocab.logic.test.ts › "L2-CLASSES", "PIN L2-KEY-READPATHS"
-  Rules: `M-298` (Spec 69a)
 
 - **m.265** An INCLUDE to a Ch.900 exception links that exception to the lot, so a site-specific numeric limit reaches the evaluator and outranks the base-zone "no limit".
   Status: RULED 2026-10-21 · OWED · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-2 / F-4D-18 / F-4D-SC-1462 …" (red first:…
-  Rules: `M-265` (Spec 69a)
 
 - **m.268** Exceptions authored through the double-keying harness: 1389, 528, 245, 256 complete; 1437, 1436, 1434, 117, 258, 287, 199 keyed with units pending adjudication; 317 held.
   Status: RULED 2026-10-21 · Enforced by: bylaw-fix-4d-a.logic.test.ts › "F-4D-10 / F-4D-16 …" (red first: docs/…
-  Rules: `M-268` (Spec 69a)
 
 - **m.305** The CoA notice reader and scorecard tools live in scripts/analysis/bylaw-validation/coa-*; data are passed by path.
-  Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts
-  Rules: `M-305` (Spec 69a) · +1 dated note
+  Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts · +1 dated note
 
 - **m.307** A non-569 zone or an unmatched address is NOT SCORABLE, not a miss.
   Status: RULED 2026-10-21 · OWED · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-20 …"
-  Rules: `M-307` (Spec 69a)
 
 - **m.308** Survey dimensions are preferred when held, and a parcel row that disagrees with the survey by more than 5 percent is flagged: an explained data flag, no by-law change.
   Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "F-4D-9 …", "F-4D-8/9/14 …"
-  Rules: `M-308` (Spec 69a)
 
 - **m.309** 39 Kirknewton Rd is file A0428/26TEY; A0974/16EYK is an earlier file for the same lot.
   Status: RULED 2026-10-21 · Enforced by: none (data)
-  Rules: `M-309` (Spec 69a)
 
 - **m.310** A basement without underpinning is not CoA-testable.
   Status: RULED 2026-10-21 · Enforced by: none (data)
-  Rules: `M-310` (Spec 69a)
 
 - **m.311** 202 Lippincott St (A0375/26TEY) stays semi-detached, as the City notice words it.
   Status: RULED 2026-10-21 · Enforced by: src/tests/coa-scorecard.logic.test.ts › "CHAT-45 …"
-  Rules: `M-311` (Spec 69a)
 
 - **m.312** OWED: the calculator takes an optional survey override; drafted, not built.
-  Status: OWED 2026-10-21 · Enforced by: none
-  Rules: `M-312` (Spec 69a) · +1 dated note
+  Status: OWED 2026-10-21 · Enforced by: none · +1 dated note
 
 - **m.317** Building-history conditions are keyed on the existing-building route (keying rule 31), and five numeric adjudications land.
-  Status: RULED 2026-10-22 · OWED · Enforced by: bylaw-exc-w2-apply.logic.test.ts (red first: docs/reports/red-evidence/bylaw/bylaw-exc-w2-apply-red.txt)
-  Rules: `M-317` (Spec 69a) · +3 dated notes
+  Status: RULED 2026-10-22 · OWED · Enforced by: bylaw-exc-w2-apply.logic.test.ts (red first: docs/reports/red-evidence/bylaw/bylaw-exc-w2-apply-red.txt) · +3 dated notes
 
 - **m.318** One values-only answer key (oracle C) holds every CoA source.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED with the key)
-  Rules: `M-318` (Spec 69a)
 
 - **m.319** Values-only oracle C fixtures are committed to the repo; this amends M-305 clause (2).
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED: the fixtures-vs-lock test)
-  Rules: `M-319` (Spec 69a)
 
 - **m.320** Each City figure is scored against the by-law in force on its decision date.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-320` (Spec 69a)
 
 - **m.321** Each CoA fix round pre-registers the rows it expects to move.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-321` (Spec 69a)
 
 - **m.323** CoA files join the answer key through one fixed intake routine.
   Status: RULED 2026-10-22 · OWED · Enforced by: none (a routine)
-  Rules: `M-323` (Spec 69a)
 
 - **m.324** CoA findings pages go family first.
   Status: RULED 2026-10-22 · OWED · Enforced by: none (a page rule)
-  Rules: `M-324` (Spec 69a)
 
 - **m.325** Phase 3 validates against oracle C with two separate sets of floors.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-325` (Spec 69a)
 
 - **m.326** Each CoA document type has one job and an order of authority; this settles M-312.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet
-  Rules: `M-326` (Spec 69a)
 
 - **m.327** Phase 3 golden cases are keyed on one generated form.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-327` (Spec 69a)
 
 - **m.328** Every by-law rule and decision passes the five words, adds no scope, and shows its handbook ruling.
   Status: RULED 2026-10-22 · Enforced by: spec-split-check.mjs --check arm (iii-b); decision-log.logic
-  Rules: `M-328` (Spec 69a)
 
 - **m.329** The CoA-to-parcel link gate prints beside every oracle C round and blocks only the Phase 3 switch.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED with Round 0)
-  Rules: `M-329` (Spec 69a)
 
 - **m.330** Calculation floors are set at Phase 3 Round 0 and then only rise.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-330` (Spec 69a)
 
 - **m.331** "McBylaw P2 closed" and "McBylaw P3 closed" have fixed meanings.
   Status: RULED 2026-10-22 · Enforced by: none (a definition)
-  Rules: `M-331` (Spec 69a)
 
 - **m.332** The coa_notices chain ingests the new values-only CoA notice batches as soon as possible.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED with the Spec 129 amendment)
-  Rules: `M-332` (Spec 69a)
 
 - **m.333** Plan facts are ingested as values into a new table coa_plan_facts.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED with the Spec 129 amendment)
-  Rules: `M-333` (Spec 69a)
 
 - **m.334** Four G-CLAUSE licence patterns are added (pattern growth by ruling, M-132).
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-334` (Spec 69a)
 
 - **m.335** A building-type word followed by a street suffix is not a named type.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-335` (Spec 69a)
 
 - **m.337** 63 Johnston Ave is a scoped DATA flag until the parcel row is fixed.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-337` (Spec 69a)
 
 - **m.338** A garage or ancillary setback is keyed to the yard the clause names.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-338` (Spec 69a)
 
 - **m.339** Every NOT_EVALUATED code the evaluator can emit has a test fixture that produces it.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-339` (Spec 69a)
 
 - **m.340** The R-DET ban list also covers scripts/lib/bylaw-resolution.js.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-340` (Spec 69a)
 
 - **m.341** Layer 3 not-applicable reasons are a closed list.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-341` (Spec 69a)
 
 - **m.342** A Layer 2 target flat_roof_main_wall_height_m (RD 7.2 m) is keyed and pinned.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-342` (Spec 69a)
 
 - **m.343** A register row whose status starts RULED is authority for --accept --ruling.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-343` (Spec 69a)
 
 - **m.344** The houseplex lifted cap is a Layer 2 target keyed from 600.60.40(1)(A).
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-344` (Spec 69a)
 
 - **m.345** Six non-law constants of the Phase 3 modules are registered as model_heuristic.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-345` (Spec 69a)
 
 - **m.346** An absence ruling is not blocked by a unit whose lot condition is known false.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-346` (Spec 69a)
 
 - **m.348** Two Phase 3 gates are fixed: the shadow gate blocks on Layer 2 defects, the hidden-number check blocks at Phase 3 close.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-348` (Spec 69a)
 
 - **m.349** Seven G-CLAUSE licence-pattern wordings are added (pattern growth by ruling, M-132; extends M-334).
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-349` (Spec 69a)
 
 - **m.351** Rounds 9 to 13 stand as applied.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-351` (Spec 69a)
 
 - **m.352** The Phase 3 shadow classifier reads only a drafted closed fact list.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-352` (Spec 69a)
 
 - **m.353** A statement cites its clause by the full unit path.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-353` (Spec 69a)
 
 - **m.354** A two-arm storey condition may be written as a conditional expression.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-354` (Spec 69a)
 
 - **m.355** Corrected rule bases from the citation review.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `M-355` (Spec 69a)
 
 - **m.356** Phase 3 validation also checks against the plan facts, alongside the golden cases.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED: the P4 round)
-  Rules: `M-356` (Spec 69a)
 
 - **m.358** Phase 3 formulas are proven on calculator-checkable worked examples before golden-case keying is scored.
-  Status: RULED 2026-10-24 · OWED · Enforced by: none yet (OWED: the worked-example suite and its operator-checked spreadsheet)
-  Rules: `M-358` (Spec 69a) · +1 dated note
+  Status: RULED 2026-10-24 · OWED · Enforced by: none yet (OWED: the worked-example suite and its operator-checked spreadsheet) · +1 dated note
 
 - **m.359** Phase 2 closes on six items (amends the P2 meaning in M-331).
-  Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-359` (Spec 69a) · +1 dated note
+  Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)" · +1 dated note
 
 - **m.361** Maximum build edge cases: no cap only where the zone has no article, a past-date lot is today's lot, no storey limit leaves height alone.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-361` (Spec 69a)
 
 - **m.362** Phase 3 closes on the max build achieved for the case's own building type, plus fixed thresholds set before the results.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-362` (Spec 69a)
 
 - **m.363** P3-HOLD-1 ends: the engine and its 40-test lock return together at MB-14.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-363` (Spec 69a)
 
 - **m.364** The blind harness scores by six rules, fixed before any run.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-364` (Spec 69a)
 
 - **m.367** Old hard-coded zoning values are not shown until each field group is switched.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-367` (Spec 69a)
 
 - **m.368** The night restore disables triggers on the tables it restores, inside the restore transaction.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-368` (Spec 69a)
 
 - **m.370** The notice requirement figure is the number tied to the limit word.
   Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-370` (Spec 69a)
 
 - **m.371** Every product zoning number comes from a keyed by-law clause.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-371` (Spec 69a)
 
 - **m.375** P-2 scope check notes: Spec 58 §13 consumers, user inputs, in_force_basis.
   Status: RULED 2026-10-29 · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
-  Rules: `M-375` (Spec 69a)
 
 - **m.378** One switchboard turns clauses, formulas, scenarios, building types and readings on or off.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: switchboard.logic.test.ts (MB-31); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-378` (Spec 69a)
 
 - **m.379** The house with a secondary suite differs from the detached house only through LC-33 gain reasons; INV-3 is about the rear suite.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: invariant row in the loop set (MB-64); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-379` (Spec 69a)
 
 - **m.380** Expected answers are the authority and are protected.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: protected-path pre-push summary; loop record (MB-64, MB-68); record:…
-  Rules: `M-380` (Spec 69a)
 
 - **m.381** Before a ruling is recommended, the register is searched for conflicting rows.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-67: decision-log --check arm (MB-67); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
-  Rules: `M-381` (Spec 69a)
 
 - **m.382** Definition of done and the held-patch limit.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-67: mcbylaws-queue-check.mjs, once N is ruled; record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-382` (Spec 69a)
 
 - **m.383** The five objectives bind every McBylaws phase.
   Status: RULED 2026-10-30 · Enforced by: spec133-bylaw-handbook.logic.test.ts renders the row (text present); record:…
-  Rules: `M-383` (Spec 69a)
 
 - **m.384** Phase 3 is tables, not code (CARD P3-DATA-MODEL and the narrowed CARD-L3-REBUILD).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic.test.ts; record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
-  Rules: `M-384` (Spec 69a)
 
 - **m.377** The formula catalogue is M-61's formula registry (dated note on M-61 and M-72, as a row because they sit in the frozen M19 block).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: layer3-catalogue.logic.test.ts; loop-record.logic.test.ts; bylaw-p3-dsl.logic.test.ts…
-  Rules: `M-377` (Spec 69a)
 
 - **m.385** Undecided never means zero (R3-01).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: red fixture: A0067 building_depth_m not_evaluated gives footprint not_evaluated (MB-31);…
-  Rules: `M-385` (Spec 69a)
 
 - **m.386** Flags propagate (R3-02). Operator approved 2026-10-30 (chat, "0-1 approve, 0-17 approve,0-18 approve s-1 approval to find a citable one.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: shape test: no headline without its inputs' flags (MB-31); record:…
-  Rules: `M-386` (Spec 69a)
 
 - **m.388** Calibration is tested on held-out data (R3-04).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: disjointness test: the held-out half shares no lot with the fit set; record:…
-  Rules: `M-388` (Spec 69a)
 
 - **m.389** Options: a dropped option is recorded with its reason (R3-05).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: options fixture: all dropped gives not_permitted/not_evaluated (MB-31); record:…
-  Rules: `M-389` (Spec 69a)
 
 - **m.390** Ideal split breakpoints are generated (R3-06).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: dense-grid test-lane check never beats the breakpoint answer (MB-31/MB-64); record:…
-  Rules: `M-390` (Spec 69a)
 
 - **m.392** Shape switch fails closed without a fit (R3-10).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: switch test, once the bounds are ruled; record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-392` (Spec 69a)
 
 - **m.393** Unresolved classes answer not_modelled (R3-11).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: fixture: houseplex 5-6 returns not_modelled (MB-31); record:…
-  Rules: `M-393` (Spec 69a)
 
 - **m.400** Phase 2 stores one result per design option (P2-OPT, O-17).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: resolve_bylaws option-key test (MB-18); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-400` (Spec 69a)
 
 - **m.402** Show every feasible option, the largest as the headline.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: options fixtures (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
-  Rules: `M-402` (Spec 69a)
 
 - **m.403** The rear suite and main house are split at the best breakpoint.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: worked examples + oracle for two lots (MB-31/MB-64); record:…
-  Rules: `M-403` (Spec 69a)
 
 - **m.396** Precedent is classified before it is shown (R4-03).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-27.L2: precedent classification test (first sixplex increment); record:…
-  Rules: `M-396` (Spec 69a)
 
 - **m.397** Options and headline (R4-04). Operator approved 2026-10-30 (chat, "approve all recommendations"; card ~/Buildo-scratch/p2close/CARD-wave0-approval.answered.md; the amendments and queue set approved at O-1, CARD-plan-1030-approval.answered.md; 2026-10-30-batch-ak#CHAT-212.R4-04).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: options/headline fixtures (MB-31); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-397` (Spec 69a)
 
 - **m.399** S-1 direction (R4-06). Operator approved 2026-10-30 (chat, "approve all recommendations"; card ~/Buildo-scratch/p2close/CARD-wave0-approval.answered.md; the amendments and queue set approved at O-1, CARD-plan-1030-approval.answered.md; 2026-10-30-batch-ak#CHAT-212.R4-06).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: blocked on the S-1 card (no value is ruled); record: chat-rulings-register.logic.test.ts ›…
-  Rules: `M-399` (Spec 69a)
 
 - **m.406** Phase 2 stays strict (I10); "the lot is unchanged since 2013" is a disclosed site-fact assumption resolved per option.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: resolve_bylaws I10 lock: the assumption is recorded and disclosed per option (MB-18); record:…
-  Rules: `M-406` (Spec 69a)
 
 - **m.407** LC-68 clarified: 4 stored points is a triangle with no rear lot line; "flagged" is a listed count (dated pointer on LC-68).
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: lot-flag golden-lot default test: 4 stored points is a triangle with no rear lot line (MB-18,…
-  Rules: `M-407` (Spec 69a)
 
 - **m.408** A "rule-choice branch" (Spec 68 SC-14) is a zone-symbol or building-type literal in a Layer 2 closure file.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: bylaw-gexclit.logic.test.ts: report-only detector of rule-choice branches, baseline 0…
-  Rules: `M-408` (Spec 69a)
 
 - **m.409** RB-D10 is closed by dropping only value.ratio of the storage_within_budget audit row from the compared golden.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: capture-step-golden.logic.test.ts: only value.ratio of the storage_within_budget audit row is…
-  Rules: `M-409` (Spec 69a)
 
 - **m.410** The MB-18 claim edits the one lineage line for the fallback target.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-18: the layer2 lineage lock (both ways) stays green with the one added line (MB-18); record:…
-  Rules: `M-410` (Spec 69a)
 
 - **m.411** Where the increment-1 loop data and pending tests live.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: protected-paths.json lists the three globs; pending/ rule R-KI (MB-67, MB-68); record:…
-  Rules: `M-411` (Spec 69a)
 
 - **m.412** Increment 1 computes the whole front-yard chain and the corner street-side term.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 worked examples FY-1.. and the corner cases A0166, A0375, A0578 (MB-64); record:…
-  Rules: `M-412` (Spec 69a)
 
 - **m.413** Increment 1 reads building_length_m on the depth axis as G-1 is printed.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 footprint examples with building_length_m on the depth axis (MB-64); record:…
-  Rules: `M-413` (Spec 69a)
 
 - **m.415** The runRow seam and the rounding contract.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: examples-run test through the seam (MB-31 exposes runRow, MB-64 consumes it); record:…
-  Rules: `M-415` (Spec 69a)
 
 - **m.416** Which applicant notices the comparison fields score.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: compare-25 generator: type_comparable cases (MB-64); record:…
-  Rules: `M-416` (Spec 69a)
 
 - **m.417** Increment 1 reads the permission word only; permitted is provisional.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 inputs file: permitted cells tagged provisional (MB-64); record:…
-  Rules: `M-417` (Spec 69a)
 
 - **m.418** Settings seeds for increment 1 are corrected.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: settings-block drift test: every increment-1 variable is seeded with its source (MB-31);…
-  Rules: `M-418` (Spec 69a)
 
 - **m.419** An unlimited storey cap means S-1 applies; unlimited is never a GFA storeys term.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: worked example GFA-9 and the 14 unlimited-storey cases (MB-64); record:…
-  Rules: `M-419` (Spec 69a)
 
 - **m.420** An absent principal gfa_m2 target drops out of the GFA minimum.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: increment-1 GFA examples with no principal gfa_m2 term (MB-64); record:…
-  Rules: `M-420` (Spec 69a)
 
 - **m.421** The corner flag the scorer reads is the parcel's, shown beside the keyed golden flag.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-64: o13-input-findings: corner cases A0179, A0553, A0562 scored on the parcel and shown on both…
-  Rules: `M-421` (Spec 69a)
 
 - **m.422** FS-SB2a: the front-yard placeholder's street term is the mean of the ring lots beyond the abutters (amends FS-SB2).
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the catalogue row front_setback_used_m and the two variables…
-  Rules: `M-422` (Spec 69a)
 
 - **m.424** L31-13: the street a lot is on is its frontage street (primary_frontage_street_name).
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the neighbour-facts reader filters on primary_frontage_street_name; record:…
-  Rules: `M-424` (Spec 69a)
 
 - **m.425** L31-14: S-1 storey counts are a disclosed theoretical maximum; both options stay shown.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the flag storeys_from_minimum_ceiling and the invariant a + storeys x f <= height_m in the…
-  Rules: `M-425` (Spec 69a)
 
 - **m.426** Compliance condition for FS-SB2a: no code in Phase 3.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31 and MB-67: a lock that the evaluator has no front-yard branch and the reader chooses nothing;…
-  Rules: `M-426` (Spec 69a)
 
 - **m.427** Note for MB-57: the stored street_name_normalized conflicts with the frontage street on 3,336 lots and is absent on 27,680.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-57: the street-name defect; record: src/tests/chat-rulings-register.logic.test.ts › "CHAT-214…
-  Rules: `M-427` (Spec 69a)
 
 - **m.428** O-19: the reason token not_evaluated:setting_out_of_bounds joins the closed reason list.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the reason word in vocab.json and the out-of-bounds setting test; record:…
-  Rules: `M-428` (Spec 69a)
 
 - **m.429** O-20: the R3-10 shape switch states are shape_calibrated, setting_not_fitted and switched_off.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the switch states in the switchboard and the R3-10 switch test; record:…
-  Rules: `M-429` (Spec 69a)
 
 - **m.430** O-21: no cross-bound; a ring minimum above the ring depth falls back to the street median, flagged "ring not used".
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the fallback branch of the front-yard catalogue row and its worked example; record:…
-  Rules: `M-430` (Spec 69a)
 
 - **m.432** L31-15: the ring walk of FS-SB2a.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the declared ring read in the step descriptor and the ring-walk oracle…
-  Rules: `M-432` (Spec 69a)
 
 - **m.433** L31-16: fya_placeholder_ring_min_n has bounds 1..4.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the seed bounds, the explicit UPDATE of the four descriptions and the settings drift test;…
-  Rules: `M-433` (Spec 69a)
 
 - **m.434** L31-18: FS-SB2a is labelled "calibration provisional"; the pinned audit is a split-sample check, the fresh re-fit waits for newly measured lots.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-68: the split-sample audit pinned in the loop; MB-68 names the fresh measured source before the…
-  Rules: `M-434` (Spec 69a)
 
 - **m.436** McProof (MCPROOF-1): define the questions.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-436` (Spec 69a)
 
 - **m.437** McProof (MCPROOF-2): evidence sweep.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-437` (Spec 69a)
 
 - **m.438** McProof (MCPROOF-3): independence. Text home: Spec 08 §11.7.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-438` (Spec 69a)
 
 - **m.439** McProof (MCPROOF-4): regression sweep.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-439` (Spec 69a)
 
 - **m.440** McProof (MCPROOF-5): six-stage review.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-440` (Spec 69a)
 
 - **m.441** McProof (MCPROOF-6): build validation.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-441` (Spec 69a)
 
 - **m.442** McProof (MCPROOF-7): what stays with the operator.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-442` (Spec 69a)
 
 - **m.443** McProof (MCPROOF-8): after all calculations work.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-443` (Spec 69a)
 
 - **m.444** McProof (MCPROOF-10): sizing by risk.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-444` (Spec 69a)
 
 - **m.445** McProof (MCPROOF-11): the sizing decision is generated, not hand-picked.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-445` (Spec 69a)
 
 - **m.446** McProof (MCPROOF-12): record integrity.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-446` (Spec 69a)
 
 - **m.447** McProof (MCPROOF-13): Gemini tie-break and parking. Text home: Spec 08 §11.7.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-77: sub-items (a) sizing.mjs, (b) the McProof builder changes, (c) the prompt builder (lane T,…
-  Rules: `M-447` (Spec 69a)
 
 - **m.448** Block python: a Claude Code hook refuses python, python3 and pip for every session and agent.
   Status: RULED 2026-10-31 · Enforced by: Enforced outside the repo by the hook ~/.claude/hooks/block-python.sh (DONE 2026-10-31, MB-77 QUEUE-ENTRY);…
-  Rules: `M-448` (Spec 69a)
 
 - **m.449** An unseeded setting makes the run refuse to start (SB-4); no silent default.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-31: the step refuses on an unseeded setting (red test); record:…
-  Rules: `M-449` (Spec 69a)
 
 - **m.450** HT-5 and GFA-13 move to the later options increment.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-64: the two examples are moved to the options increment (MB-27); record:…
-  Rules: `M-450` (Spec 69a)
 
 - **m.451** LV-7 and LV-8 are kept, tagged for increment 5 (garden suite).
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-64: LV-7 and LV-8 tagged for increment 5; record: src/tests/chat-rulings-register.logic.test.ts ›…
-  Rules: `M-451` (Spec 69a)
 
 - **m.452** A-2: a Spec 69a row stops being OWED when a dated note in its status cell names a lock that has landed; the register generator reads the note (build owed to a new MB-79 item, lane G).
   Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-79 (a new lane G item; the queue letter is assigned by the orchestrator): the generator read in…
-  Rules: `M-452` (Spec 69a)
 
 - **m.453** MB-80: post-signing edits to the MB-64 increment-1 key, as one ledger row (cases PERM-5, FY-14, SB-3, SB-6).
   Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-80: the edits P1-P4 and the independent re-check P5 (MB-80/plan.md); OWED -> MB-31 (requested by…
-  Rules: `M-453` (Spec 69a)
 
 - **m.454** An out-of-bounds setting refuses the run before compute (follows R-G); amends M-428.
   Status: RULED 2026-11-01 · OWED · Enforced by: OWED -> MB-31: the step shell names setting_out_of_bounds in the refusal (config.js:92-93 gives below_min /…
-  Rules: `M-454` (Spec 69a)
 
 - **m.460** W, the front and rear wall width in the set-back plate, is the narrowest width that fits the footprint.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the W row, locked by layer3-catalogue.logic.test.ts and golden-25.logic.test.ts; record:…
-  Rules: `M-460` (Spec 69a)
 
 - **m.462** Roof assembly depth is the smallest Building Code rafter that spans the half-width, plus sheathing and ceiling board, from one cited settings table.
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: the settings table (RP-3), the selector row and the reason word, locked by…
-  Rules: `M-462` (Spec 69a)
 
 - **m.466** The Layer 3 grammar gains sqrt, for unitless arguments only (dated note on M-72, as a row because M-72 sits in the frozen M19 block, the M-377 form).
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> the M-72 sqrt item (lane E): src/tests/bylaw-m72-sqrt.logic.test.ts (new), red first (RP-5); record:…
-  Rules: `M-466` (Spec 69a)
 
 - **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
   Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
-  Rules: `LC-1` (Spec 131)
 
 - **lc.2** Norm window and sample floor. Norms use a 5-year permit window (BUILD_NORM_WINDOW_YEARS).
   Status: RULED · OWED · Enforced by: build-norms.logic; migration 199 partial-unique index
-  Rules: `LC-2` (Spec 131)
 
 - **lc.3** One observation per (dominant parcel, kind),
   Status: RULED · OWED · Enforced by: build-norms.logic; compute-build-norms.db
-  Rules: `LC-3` (Spec 131)
 
 - **lc.4** The existing-ratio method. The pre-reno current-home fraction is clamp(1 − addition_delta ÷ max_build_gfa, 0, 1) (p25/p50), distinct from the new-build build_ratio_p50.
   Status: RULED · Enforced by: build-norms.logic
-  Rules: `LC-4` (Spec 131)
 
 - **lc.5** Measuring the existing structure from massing is abandoned for headline answers
   Status: RULED · Enforced by: Spec 65 ES-6 locks (enrich-parcels-existing-dq.db)
-  Rules: `LC-5` (Spec 131)
 
 - **lc.6** As-of-right never exceeds the max-build envelope.
   Status: RULED · Enforced by: optimal-config.logic
-  Rules: `LC-6` (Spec 131)
 
 - **lc.7** CoA is up, not out: storeys_p90 at the same footprint.
   Status: RULED · Enforced by: optimal-config.logic
-  Rules: `LC-7` (Spec 131)
 
 - **lc.8** Garden/laneway constants (P2.1, consolidation 2025).
   Status: SUPERSEDED (in part) · Enforced by: contracts.infra (optimal_config group); optimal-config.logic
-  Rules: `LC-8` (Spec 131)
 
 - **lc.9** The 20 % all-ancillary cap is shared
   Status: RULED · Enforced by: optimal-config.logic
-  Rules: `LC-9` (Spec 131)
 
 - **lc.10** Suite fit is conservative. It is measured against the current building's rear yard; a shallow yard shrinks the suite rather than failing it.
   Status: RULED · Enforced by: optimal-config.logic
-  Rules: `LC-10` (Spec 131)
 
 - **lc.11** Confidence degradation. opt_config_confidence falls with lot-size confidence, FSI absence, a suspected existing accessory and comp count.
   Status: RULED · Enforced by: optimal-config.logic (confidence degradation)
-  Rules: `LC-11` (Spec 131)
 
 - **lc.12** Holding zone gates the as-of-right suite;
   Status: RULED · Enforced by: optimal-config.logic
-  Rules: `LC-12` (Spec 131)
 
 - **lc.13** comp_fsi_p50 uses new-build comps only,
   Status: RULED · Enforced by: enrich-parcels-comps.logic
-  Rules: `LC-13` (Spec 131)
 
 - **lc.14** The McBylaw Phase 3 report (§6): report fields as declared formulas over Layer 2; the scenario catalogue; two closed status levels; PROHIBIT wins at the same rank; the CoA axis; parking never a size constraint.
   Status: RULED 2026-10-07 · OWED · Enforced by: Spec 78 §6.9 gate table (PLANNED)
-  Rules: `LC-14` (Spec 131)
 
 - **lc.15** The step is born V3, with McBylaws Airtight inputs.
   Status: RULED · OWED · Enforced by: Spec 78 P5.11 V3 plan: step-validate V3, admin-step-registration.logic, step-validate-net-new.logic
-  Rules: `LC-15` (Spec 131)
 
 - **lc.16** The scenario set (closed): detached house; detached houseplex; semi-detached houseplex; house with a secondary suite; renovation_addition; renovation_interior; renovation_basement; a rear-suite add-on on every row.
   Status: RULED · OWED · Enforced by: P5.11 scenario_totality
-  Rules: `LC-16` (Spec 131)
 
 - **lc.18** Houseplex unit split. Count = min('u', the cap of 4 / 6, floors including the basement); per-unit area = floor area − circulation share; the basement is livable but outside GFA; bedrooms are capped per 40.1(8)/(7)/(6).
   Status: RULED · OWED · Enforced by: P5.11 units_within_cap; P5.13
-  Rules: `LC-18` (Spec 131)
 
 - **lc.19** Both roof forms are computed and the larger is headlined:
   Status: RULED · OWED · Enforced by: P5.13 vectors
-  Rules: `LC-19` (Spec 131)
 
 - **lc.20** The main-wall envelope. Walls ≤ max(7.0 m, H − 2.5 m) on one pair: the side walls for 70 %, or front and rear for 60 / 50 / 40 % by frontage tier.
   Status: RULED · OWED · Enforced by: P5.13; M-29 sample
-  Rules: `LC-20` (Spec 131)
 
 - **lc.21** Houseplex: no FSI cap and no storey cap; house with a secondary suite: no FSI cap.
   Status: RULED · OWED · Enforced by: M-183 red vectors (P2-0 seat)
-  Rules: `LC-21` (Spec 131)
 
 - **lc.23** Step decisions D-1, O-1..O-11 are recorded once, in Spec 78 P5.0.
   Status: RULED · Enforced by: Spec 78 P5.0
-  Rules: `LC-23` (Spec 131)
 
 - **lc.24** Renovation .71(3) rule. An up-addition on a lot of ≤ 12.2 m frontage keeps the existing setbacks; every other lawfully-existing relief is disclosed.
   Status: RULED · OWED · Enforced by: P5.13 vector at 12.0 vs 13.0 m
-  Rules: `LC-24` (Spec 131)
 
 - **lc.25** User-input-first renovation. The three renovations share one existing-house input (footprint box, storeys, basement).
   Status: RULED · OWED · Enforced by: P5.6; P5.13
-  Rules: `LC-25` (Spec 131)
 
 - **lc.26** Provenance precedence: user input > pipeline estimate.
   Status: RULED · OWED · Enforced by: P5.10 CHECKs; app spec (APP-RENO)
-  Rules: `LC-26` (Spec 131)
 
 - **lc.27** The low-confidence threshold. existing_confidence is built on the Spec 65 ES-6 mislink checks, the link confidence and a shared-footprint penalty.
   Status: RULED · OWED · Enforced by: P5.9 variable (R-CV seed); P5.13
-  Rules: `LC-27` (Spec 131)
 
 - **lc.28** One shared pure calculation. All renovation math lives in src/features/leads/lib/renovation-shared.js, which the step and the app both call (precedent cost-model-shared.js, Spec 83 §7.2).
   Status: RULED · OWED · Enforced by: compute-closure purity scan (G0–G13, gate E #32); JS/TS parity test
-  Rules: `LC-28` (Spec 131)
 
 - **lc.29** The ground-truth store. With consent, user-entered dimensions are stored beside the estimate snapshot (existing_house_reports) as an accuracy oracle.
   Status: RULED · OWED · Enforced by: Spec 78 P5.8
-  Rules: `LC-29` (Spec 131)
 
 - **lc.30** When the low-confidence label may drop
   Status: OWED · Enforced by: —
-  Rules: `LC-30` (Spec 131)
 
 - **lc.31** The enrich_parcels max-build columns are kept
   Status: RULED · OWED · Enforced by: §6.9 shadow classifier (PLANNED)
-  Rules: `LC-31` (Spec 131)
 
 - **lc.34** Estimate design choices: the pipeline never reads user entries (O-12); storeys take the upper value (O-13) (superseded by LC-40); basement unknown (O-14); confidence seeds 0.5 / 0.6 are uncalibrated logic variables (O-15).
   Status: RULED · OWED · Enforced by: Spec 78 P5.0, P5.9
-  Rules: `LC-34` (Spec 131)
 
 - **lc.37** Trust model. New-build rows are high trust by design (by-law + geometry); the existing house is the only low-trust input; a lawfully-existing effect on a new build is a disclosure.
   Status: RULED · Enforced by: INV-22; P5.14
-  Rules: `LC-37` (Spec 131)
 
 - **lc.38** Trust tier per field; row trust computed, never asserted.
   Status: RULED · OWED · Enforced by: INV-22 (trust_level_computed); INV-24
-  Rules: `LC-38` (Spec 131)
 
 - **lc.39** Missing-data register ML-1..ML-13: each item has its handling (larger setback, disclosure, not_evaluated) and owner.
   Status: RULED · Enforced by: trust_checks register ids; P5.13
-  Rules: `LC-39` (Spec 131)
 
 - **lc.40** existing_storeys is user input only
   Status: RULED · OWED · Enforced by: INV-20
-  Rules: `LC-40` (Spec 131)
 
 - **lc.41** The P5.10 table is generated from docs/reference/maxbld-field-lineage.json; every clause, unit, column and logic variable resolves.
   Status: RULED · Enforced by: INV-24: generate-maxbld-lineage.mjs --check; bylaw-maxbld-trace.infra
-  Rules: `LC-41` (Spec 131)
 
 - **lc.42** Every operator envelope answer has a verified disposition
   Status: RULED · Enforced by: INV-25: generate-answer-tracker.mjs --check; bylaw-maxbld-trace.infra
-  Rules: `LC-42` (Spec 131)
 
 - **lc.43** Invariants INV-1..INV-25 are enforced
   Status: RULED · OWED · Enforced by: P5.11 checks; the two generators; evaluator-lane tests (INV-18, INV-19)
-  Rules: `LC-43` (Spec 131)
 
 - **lc.44** "High trust" only when G-HT-1..G-HT-9 all hold
   Status: RULED · OWED · Enforced by: the G-HT gates
-  Rules: `LC-44` (Spec 131)
 
 - **lc.45** Forms not modelled are disclosed:
   Status: RULED 2026-10-18 · Enforced by: P5.12 codes; P5.1
-  Rules: `LC-45` (Spec 131)
 
 - **lc.47** Review corrections (R flat roof, RM 12.0 m, semi cap 4, attic GFA, houseplex 19 m, explicit setbacks, extension, landscaping, laneway arms, suite GFA reductions, renovation caps, R FSI 0.6).
   Status: RULED 2026-10-18 · OWED · Enforced by: P5.13 vectors; INV-5, INV-9, INV-11
-  Rules: `LC-47` (Spec 131)
 
 - **lc.48** Coxwell generous reading with the mandatory disclosure and a logic-variable switch.
   Status: RULED · OWED · Enforced by: INV-10; P5.13
-  Rules: `LC-48` (Spec 131)
 
 - **lc.49** CoA tier in the first release by M-65 unchanged, tier precedent_estimate.
-  Status: RULED 2026-10-18 · Enforced by: INV-23; lineage coa_status
-  Rules: `LC-49` (Spec 131) · +1 dated note
+  Status: RULED 2026-10-18 · Enforced by: INV-23; lineage coa_status · +1 dated note
 
 - **lc.50** enrich_parcels consumer gate: no max-build column switches or retires until every listed coa / permits / sources / src consumer is migrated or confirmed; value changes recapture in replay-all.
   Status: RULED · Enforced by: Spec 78 O-11 list; R-CZ / R-DQ
-  Rules: `LC-50` (Spec 131)
 
 - **lc.51** The per-lot CoA list is the one already decided; no new field.
   Status: RULED 2026-10-18 · Enforced by: lineage comparable_builds_ref, nearby_coa_builds_gfa_sqm; generate-maxbld-lineage.mjs --check
-  Rules: `LC-51` (Spec 131)
 
 - **lc.52** Disclosure wording is plain. Each P5.12 code has one template of at most 45 words in a homeowner's words.
-  Status: RULED 2026-10-18 · Enforced by: bylaw-maxbld-trace.infra.test.ts (template lint)
-  Rules: `LC-52` (Spec 131) · +1 dated note
+  Status: RULED 2026-10-18 · Enforced by: bylaw-maxbld-trace.infra.test.ts (template lint) · +1 dated note
 
 - **lc.53** Verified by named lock; no partial green.
   Status: RULED 2026-10-19 · Enforced by: INV-25; verifyLock + red arms in bylaw-maxbld-trace.infra
-  Rules: `LC-53` (Spec 131)
 
 - **lc.57** Validation (2026-10-19). (1) Q1 (y): an optional "may" variation with no value keeps the base limit, disclosed.
   Status: RULED 2026-10-19 · Enforced by: bylaw-validation-fixes.logic.test.ts; G-EVAL
-  Rules: `LC-57` (Spec 131)
 
 - **lc.58** Front averaging, floored and adjusted for porches (2026-10-19).
   Status: RULED 2026-10-19 · Enforced by: bylaw-front-setback-reliability.logic.test.ts
-  Rules: `LC-58` (Spec 131)
 
 - **lc.60** CoA u is unfitted at the first release (2026-10-20).
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); INV at ① (OWED)
-  Rules: `LC-60` (Spec 131)
 
 - **lc.61** Scenario cards may show before the shadow passes; the headline may not (2026-10-20).
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); app tests at N12 (OWED)
-  Rules: `LC-61` (Spec 131)
 
 - **lc.62** The renovation section is in v1.
   Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic (record); app tests at N12 (OWED)
-  Rules: `LC-62` (Spec 131)
 
 - **lc.63** The attic and dormer cross-section model is checked against golden cases.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `LC-63` (Spec 131)
 
 - **lc.64** Maximum bedrooms: 4 per unit at 2 units, 3 per unit at 3 or more.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `LC-64` (Spec 131)
 
 - **lc.65** houseplex_min_units = 2 is a pinned logic variable.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `LC-65` (Spec 131)
 
 - **lc.66** A row with no applicable trust checks has row_trust_level = not_applicable.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `LC-66` (Spec 131)
 
 - **lc.67** P5.2 applies the main-wall share caps only where main_wall_height_m is a number.
   Status: RULED 2026-10-22 · OWED · Enforced by: none yet (OWED)
-  Rules: `LC-67` (Spec 131)
 
 - **lc.68** Layer 2 design-choice flags follow the golden-lot defaults.
   Status: RULED 2026-10-23 · OWED · Enforced by: none yet (OWED)
-  Rules: `LC-68` (Spec 131)
 
 - **lc.69** Box shape disclosed; footprint_shape_factor hook with the switch off.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
-  Rules: `LC-69` (Spec 131)
 
 ## 3. Rows with an OWED marker (187 in force)
 
@@ -2363,15 +1871,12 @@ Rows retired, folded or superseded. Listed only so old citations resolve. Nothin
 
 - **m.19** RETIRED → P-1.
   Status: RETIRED
-  Rules: `M-19` (Spec 69a)
 
 - **m.23** RETIRED → P-2.
   Status: RETIRED
-  Rules: `M-23` (Spec 69a)
 
 - **lc.46** Gates: holding → not_permitted; lot viability (10.5.30.20(2), 10.5.30.21(3)); unauthored exception, heritage, ravine, shoreline, triangular → disclosed and the row's trust capped.
   Status: FOLDED · OWED · Enforced by: INV-21
-  Rules: `LC-46` (Spec 131)
 
 ## Operating Boundaries
 

@@ -141,12 +141,29 @@ describe('M-260 — Spec 133 is a generated reading spec', () => {
     for (const r of rows) {
       const id = r.id.toLowerCase().replace('-', '.');
       expect(text, r.id).toContain(`- **${id}** `);
-      expect(text, r.id).toContain(`Rules: \`${r.id}\``);
+      // Q-133 3 and Q-133b (operator 2026-11-03/04, ~/Buildo-scratch/p2close/CARD-spec133-cap.md): the line id already
+      // names the row, so no per-rule "Rules:" line naming only the row itself is rendered (the spec tag is the id prefix).
+      expect(text, r.id).not.toContain(`  Rules: \`${r.id}\` (`);
     }
     // No register table rows are copied in.
     expect(text).not.toMatch(/^\| \*\*(M|LC)-/m);
     // A line is a reading summary, not the ruling: no rendered line is longer than the clip.
     for (const l of lineBlocks) expect(l.length).toBeLessThanOrEqual(520);
+  });
+
+  it('Q-133b: a row with dated notes shows its count on its Status line, moved from the dropped Rules line', () => {
+    const rows = reg.readBylawRegisterRows();
+    const lines = read(SPEC_133_REL).split('\n');
+    expect(rows.filter((r) => r.notes > 0).length).toBeGreaterThan(0);
+    for (const r of rows) {
+      const id = r.id.toLowerCase().replace('-', '.');
+      const at = lines.findIndex((l) => l.startsWith(`- **${id}** `));
+      expect(at, r.id).toBeGreaterThanOrEqual(0);
+      const status = lines[at + 1]!;
+      expect(status, r.id).toMatch(/^ {2}Status: /);
+      if (r.notes > 0) expect(status, r.id).toMatch(new RegExp(` · \\+${r.notes} dated note${r.notes === 1 ? '' : 's'}$`));
+      else expect(status, r.id).not.toContain('dated note');
+    }
   });
 
   it('M-19 (struck) is listed under history, not as an in-force rule', () => {
