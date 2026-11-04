@@ -1341,7 +1341,7 @@ Its commit ① lands after them. If a runner form it needs changes shape, the ch
 | `r_pre1953_fsi_relief` | "If the house was built before 15 October 1953, a rear addition may bring the total floor area to 0.69 times the lot area (FSI 0.69)." | 10.10.40.40(2); M-211(3) |
 | `lane_centreline_original` | "The 2.5 m lane setback is measured from today's lane centreline; the by-law uses the original one." | 10.5.40.70(2), 10.5.60.20(4); M-205(5) |
 | `one_storey_extension` | "The addition includes a one-storey rear extension of up to 2.0 m beyond the length limit." | x.40.20(2); M-206 |
-| `blank_side_wall` | "Side walls are taken without windows or doors (0.45 m side yard); with them the side yard is {X} m." | 10.10.40.70(4); M-205(2) |
+| `blank_side_wall` | "Side walls are taken with windows or doors (0.9 m side yard); with no windows or doors in that side the side yard may be reduced to 0.45 m." | 10.10.40.70(3)(A), 10.10.40.70(4); M-435 (supersedes the M-205(2) default) |
 | `side_yard_shift` | "One side yard may be up to 0.3 m narrower if the other side yard is made wider by the same amount; the side yard shown is the standard one." | 10.20.40.70(4); M-205(2); Spec 68 §7.5 rule 2 (operator 2026-10-19 Q1) |
 | `deep_side_setback` | "Any part of the house more than 17.0 m behind its front wall (or 19.0 m behind the required front setback) needs a 7.5 m side yard." | 10.20.40.70(5); M-205(2) (operator 2026-10-19 Q2) |
 | `buildings_on_same_lot` | "Rules for two or more residential buildings on one lot do not apply to the house and its suite." | x.40.80(2); M-187 Q12 |

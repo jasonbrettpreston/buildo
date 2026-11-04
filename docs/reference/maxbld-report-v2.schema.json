@@ -2282,10 +2282,8 @@
       "mandatory": false
     },
     "blank_side_wall": {
-      "template": "Side walls are taken without windows or doors (0.45 m side yard); with them the side yard is {X} m.",
-      "slots": [
-        "X"
-      ],
+      "template": "Side walls are taken with windows or doors (0.9 m side yard); with no windows or doors in that side the side yard may be reduced to 0.45 m.",
+      "slots": [],
       "importance": "normal",
       "mandatory": false
     },

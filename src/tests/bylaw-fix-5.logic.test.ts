@@ -44,15 +44,15 @@ describe('F-SC-5 / M-259 — the 0.45 m blank-wall reduction holds only for a si
     for (const ch of ['ch10_20', 'ch10_40', 'ch10_60', 'ch10_80']) expect([ch, /windows or doors in that side/.test(page(ch))]).toEqual([ch, false]);
   });
 
-  it('vocab declares blank_side_wall: a user-input design choice licensed by the text, taken as met by default (M-205(2))', () => {
+  it('vocab declares blank_side_wall: a user-input design choice licensed by the text, taken as not met by default (M-435: 0.45 m is the disclosure)', () => {
     const v = I.vocab;
     expect(v.lot_condition.blank_side_wall).toEqual({ user_input: 'blank_side_wall', patterns: ['no windows or doors in that side'] });
     expect(v.user_input).toContain('blank_side_wall');
     const dc = v.design_choice_disclosure;
     expect(typeof dc.lot_condition.blank_side_wall).toBe('string');
     expect(typeof dc.user_input.blank_side_wall).toBe('string');
-    expect(dc.default_overrides.blank_side_wall.taken_as).toBe(true);
-    expect(dc.default_overrides.blank_side_wall.why).toContain('M-205(2)');
+    expect(dc.default_overrides.blank_side_wall.taken_as).toBe(false);
+    expect(dc.default_overrides.blank_side_wall.why).toContain('M-435');
   });
 
   it('every keyed unit of 10.10.40.70(4) carries the token in its condition and application, with the lead-in phrase as evidence', () => {

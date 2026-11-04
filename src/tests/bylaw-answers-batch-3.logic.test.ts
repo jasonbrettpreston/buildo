@@ -36,7 +36,7 @@ const lot = (zone: string, buildingType: string, extra: Json = {}): Json => ({
 const eff = (l: Json, t: string): Json => E.effective(l, t, E.loadCandidates(l, units).candidates, C);
 
 const T = {
- "BLANK": "Side walls are taken without windows or doors, so the side yard is 0.45 m; with windows or doors in that side the zone side yard applies.",
+ "BLANK": "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.",
  "LEN": "Parts of the building allowed to project into a setback, such as eaves, steps or a porch, are not counted in its length.",
  "VAC_A": "If this is a vacant lot that existed before the current rules, a house or detached houseplex may be built on it only if the lot frontage is at least 6.0 m.",
  "VAC_B": "If this is a vacant lot that existed before the current rules, the house or detached houseplex must also meet the rest of the by-law or have a minor variance.",
@@ -44,12 +44,12 @@ const T = {
  "R4B": "For a side or rear addition to a lawfully existing building on a lot 9.0 m to 12.2 m wide, the side yard is the larger of half the normal side yard or the existing one; this is a renovation rule and is not calculated."
 };
 
-describe('M-205(2) — the R 0.45 m side yard is taken without windows or doors, and says so (10.10.40.70(4)(A)–(E))', () => {
+describe('M-435 — the R side yard is 0.9 m and the 0.45 m blank-wall reduction is disclosed, and says so (10.10.40.70(4)(A)–(E))', () => {
   for (const id of ['10.10.40.70(4)#(4)(A)', '10.10.40.70(4)#(4)(B)', '10.10.40.70(4)#(4)(C)', '10.10.40.70(4)#(4)(D)', '10.10.40.70(4)#(4)(E)']) {
     it(`${id} carries the closed blank_side_wall sentence and names the Layer 3 default`, () => {
       const u = unitOf(id);
       expect(u.disclosure).toBe(T.BLANK);
-      expect(u.calculation_handling.gaps).toMatch(/M-205\(2\)/);
+      expect(u.calculation_handling.gaps).toMatch(/M-435/);
     });
   }
 });

@@ -115033,6 +115033,192 @@
           "roof_type"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(A)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(A)/calculation_handling~s1",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "description": "For a detached house, the side yard setback in 10.10.40.70(3) may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-435: the maximum uses the 10.10.40.70(3)(A) side yard (0.9 m), so blank_side_wall is taken as not met (vocab design_choice_disclosure.default_overrides) and this unit does not bind the stored answer; its 0.45 m is the disclosed arm (disclosure blank_side_wall). Supersedes the M-205(2) default.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(A)/disclosure",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(B)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(B)/calculation_handling~s1",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "description": "For a semi-detached house, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-435: the maximum uses the 10.10.40.70(3)(A) side yard (0.9 m), so blank_side_wall is taken as not met (vocab design_choice_disclosure.default_overrides) and this unit does not bind the stored answer; its 0.45 m is the disclosed arm (disclosure blank_side_wall). Supersedes the M-205(2) default.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(B)/disclosure~s1",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(B)/disclosure",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(C)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(C)/calculation_handling~s1",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "description": "For a townhouse whose dwelling units all front directly on a street, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-435: the maximum uses the 10.10.40.70(3)(A) side yard (0.9 m), so blank_side_wall is taken as not met (vocab design_choice_disclosure.default_overrides) and this unit does not bind the stored answer; its 0.45 m is the disclosed arm (disclosure blank_side_wall). Supersedes the M-205(2) default.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(C)/disclosure",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(D)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(D)/calculation_handling~s1",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "description": "For a detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-435: the maximum uses the 10.10.40.70(3)(A) side yard (0.9 m), so blank_side_wall is taken as not met (vocab design_choice_disclosure.default_overrides) and this unit does not bind the stored answer; its 0.45 m is the disclosed arm (disclosure blank_side_wall). Supersedes the M-205(2) default.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(D)/disclosure~s1",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(D)/disclosure",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(E)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(E)/calculation_handling~s1",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "description": "For a semi-detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-435: the maximum uses the 10.10.40.70(3)(A) side yard (0.9 m), so blank_side_wall is taken as not met (vocab design_choice_disclosure.default_overrides) and this unit does not bind the stored answer; its 0.45 m is the disclosed arm (disclosure blank_side_wall). Supersedes the M-205(2) default.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(E)/disclosure~s1",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(E)/disclosure",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
+    },
+    {
+      "adjudicated_on": "2026-11-03",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(G)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "MB-18 item l (M-435, operator 2026-10-31, card CARD-side-yard-city; O-l4 b 2026-11-03): the R side yard stored maximum is the 10.10.40.70(3)(A) 0.9 m and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the closed sentence and the gaps of the (4) units say so; the M-205(2) default they described is superseded.",
+      "rule": "Spec 69a M-435 (2026-10-31-batch-an#CHAT-215.SIDE-1); M-259; M-75",
+      "supersedes": "COR-10.10.40.70(4)#(4)(G)/calculation_handling",
+      "unit": "10.10.40.70(4)#(4)(G)",
+      "value": {
+        "description": "For an apartment building 13.0 metres or less in height, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors: the design-choice token blank_side_wall (Spec 69a M-259). M-435: the maximum uses the 10.10.40.70(3)(A) side yard (0.9 m), so blank_side_wall is taken as not met (vocab design_choice_disclosure.default_overrides) and this unit does not bind the stored answer; its 0.45 m is the disclosed arm (disclosure blank_side_wall). Supersedes the M-205(2) default.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "blank_side_wall"
+        ]
+      }
     }
   ]
 }

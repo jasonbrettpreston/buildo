@@ -245,7 +245,7 @@ for (const r of rows) {
 //             surveyed figure (Spec 130 Q-B1 open for a better estimator; 69a M-245 removed the 6.0 m floor). The averaging
 //             facts are the lot's parcel_abutments rows, pulled read-only 2026-10-20 and resolved by front-averaging.mjs.
 //   COA-F-02  (closed 2026-10-21, 69a M-259, `2026-10-21-chat-batch-h#CHAT-33`) side yard: the 0.45 m blank-wall reduction
-//             (10.10.40.70(4)) now holds only under the design-choice token blank_side_wall (default true, M-205(2)); the
+//             (10.10.40.70(4)) now holds only under the design-choice token blank_side_wall (default false since M-435, MB-18 (l): 0.9 m stored, 0.45 m disclosed); the
 //             examiner applied the 0.9 m side yard of a wall with openings, so these cases' scenario supplies
 //             blank_side_wall: false (OPENINGS) and the City figure is answered.
 const COA_FAMILY = 'CoA notices — City examiner figures (69a M-240..M-245)';

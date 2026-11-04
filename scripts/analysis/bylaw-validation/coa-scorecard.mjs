@@ -46,6 +46,9 @@ const RR_PATH = arg('read-record', path.join(ROOT, 'scripts/analysis/bylaw-valid
 const READ_RECORD = RR_PATH !== 'none' && fs.existsSync(RR_PATH) ? JSON.parse(fs.readFileSync(RR_PATH, 'utf8')) : null;
 if (READ_RECORD) { const bad = LF.checkReadRecord(READ_RECORD); if (bad.length) { console.error('read-record is invalid:\n  ' + bad.join('\n  ')); process.exit(2); } }
 // 4D-S4: openings evidence (notice text or plan facts) → take the blank_side_wall:false arm
+// 4D-S4e (MB-18 item l, M-435, operator O-l1 2026-11-03): a notice that cites 10.10.40.70(4) is the applicant's evidence of a side with no
+// windows or doors, so that row is scored on the blank_side_wall:true arm (the 0.45 m M-435 discloses); every other row reads the stored 0.9 m.
+// The label is 4D-S4e because 4D-S4d is a retired label (R5-7 reverted) that coa-scorecard-r5-7.logic.test.ts:25 locks as absent.
 const OPEN_RE = /\b(windows?|openings?|doors?)\s+(in|on)\s+(the\s+)?(\w+\s+)?(side|main)\s+walls?|(?<!no\s)openings to dwelling units|side wall (has|with) (windows|openings)/i;
 function openingsEvidence(n) {
   const txt = [n.purpose, ...n.variances.flatMap((v) => [v.requirement, v.proposal])].join(' ');
@@ -394,7 +397,7 @@ function runNotice(n, surveyOn, rows, lots) {
       row.roof_arm = hit ? (hit === flat ? 'flat' : 'pitched') : 'pitched'; r = hit || pitched;
     }
     // [blfix5 probe, read-only: M-259 arms] the design with openings, and the platform target for 10.5.40.50(2)
-    if (target === 'side_setback_m') { row.bsw_arm = evalTarget({ ...lot, flags: { ...lot.flags, blank_side_wall: false } }, target, only); const citedOpenArm = /^10\.10\.40\.70\(3\)\(A\)/.test(c.norm) ? 'notice cites 10.10.40.70(3)(A)' : null; if ((openings || citedOpenArm) && row.bsw_arm.status === 'value') { row.bsw_taken = openings || citedOpenArm; row.scorer_fix = openings ? '4D-S4' : '4D-S4b'; r = row.bsw_arm; } } if (/^10\.5\.40\.50\(2\)/.test(c.norm)) row.platform_probe = evalTarget(lot, 'platform_side_setback_m');
+    if (target === 'side_setback_m') { row.bsw_arm = evalTarget({ ...lot, flags: { ...lot.flags, blank_side_wall: false } }, target, only); const citedOpenArm = /^10\.10\.40\.70\(3\)\(A\)/.test(c.norm) ? 'notice cites 10.10.40.70(3)(A)' : null; if ((openings || citedOpenArm) && row.bsw_arm.status === 'value') { row.bsw_taken = openings || citedOpenArm; row.scorer_fix = openings ? '4D-S4' : '4D-S4b'; r = row.bsw_arm; } } if (target === 'side_setback_m' && /^10\.10\.40\.70\(4\)/.test(c.norm)) { const blank = evalTarget({ ...lot, flags: { ...lot.flags, blank_side_wall: true } }, target, only); if (blank.status === 'value') { row.bsw_taken = 'notice cites 10.10.40.70(4)'; row.scorer_fix = '4D-S4e'; r = blank; } } if (/^10\.5\.40\.50\(2\)/.test(c.norm)) row.platform_probe = evalTarget(lot, 'platform_side_setback_m');
     // 4D-S4c (A0385): a notice that cites the 11 m townhouse arm 10.10.40.80(1)(C) is itself evidence that each facing main wall has an opening (design tokens main_wall_openings / main_wall_openings_each, M-282)
     if (target === 'separation_m' && /^10\.10\.40\.80\(1\)\(C\)/.test(c.norm)) { const arm = evalTarget({ ...lot, flags: { ...lot.flags, main_wall_openings: true, main_wall_openings_each: true } }, target, only); if (arm.status === 'value') { row.openings_taken = 'notice cites 10.10.40.80(1)(C)'; row.scorer_fix = '4D-S4c'; r = arm; } }
     if (['garden_suite', 'laneway_suite'].includes(bt) && /setback/.test(target)) row.ours_arm = { flags: { suite_wall_openings: true }, ...evalTarget({ ...lot, flags: { ...lot.flags, suite_wall_openings: true } }, target, only) };

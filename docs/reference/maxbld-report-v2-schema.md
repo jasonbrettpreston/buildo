@@ -398,7 +398,7 @@ Every field has exactly one source: `lineage:` (docs/reference/maxbld-field-line
 | `basement_headroom_code` | normal |  |  | Basement headroom is set by the Building Code, not the zoning by-law. |
 | `basement_unit_grade` | normal |  |  | A basement unit may not be entirely below the ground level the City measures from (established grade). |
 | `bedroom_cap` | normal |  | {n} {u} | Bedrooms are capped at {n} for {u} units. |
-| `blank_side_wall` | normal |  | {X} | Side walls are taken without windows or doors (0.45 m side yard); with them the side yard is {X} m. |
+| `blank_side_wall` | normal |  |  | Side walls are taken with windows or doors (0.9 m side yard); with no windows or doors in that side the side yard may be reduced to 0.45 m. |
 | `building_history_permission` | normal |  | {date} {keep or rebuild a semi-detached house or duplex / add more than one secondary suite / divide the house into a semi-detached pair / build a rear addition up to FSI 0.69 (allowed floor area (FSI))} | If your house existed before {date}, you may also {keep or rebuild a semi-detached house or duplex / add more than one secondary suite / divide the house into a semi-detached pair / build a rear addition up to FSI 0.69 (allowed floor area (FSI))}. |
 | `building_history_permission_undated` | normal |  |  | If you are adding to an existing house, additions above the first storey must stay within the required setbacks. |
 | `buildings_on_same_lot` | normal |  |  | Rules for two or more residential buildings on one lot do not apply to the house and its suite. |

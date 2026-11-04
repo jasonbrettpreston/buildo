@@ -895,8 +895,8 @@
         "why": "operator 2026-10-18 (M-197): \"assume they will not put windows in doors — default is the smallest setback — rest is disclosure\"; the with-openings setback arms are disclosed, never bound"
       },
       "blank_side_wall": {
-        "taken_as": true,
-        "why": "Spec 69a M-259 (operator approved 2026-10-21, 2026-10-21-chat-batch-h#CHAT-33); M-205(2) (RATIFIED 2026-10-18): the 0.45 m side yard of 10.10.40.70(4) is taken by default, a side without windows or doors (the main-building analogue of LC-35 / M-197); with openings (blank_side_wall false) the 10.10.40.70(3) side yard applies, disclosed blank_side_wall"
+        "taken_as": false,
+        "why": "Spec 69a M-435 (operator approved 2026-10-31, 2026-10-31-batch-an#CHAT-215.SIDE-1; card CARD-side-yard-city): the R-zone main-building side yard maximum uses 0.9 m (10.10.40.70(3)(A)), and the 0.45 m blank-wall reduction of 10.10.40.70(4) is a disclosure, so the token is taken as not met; supersedes the M-205(2) default. The token stays the M-259 design choice: with blank_side_wall true the (4) units apply and the side yard is 0.45 m (the disclosed arm)"
       },
       "main_wall_openings": {
         "taken_as": false,

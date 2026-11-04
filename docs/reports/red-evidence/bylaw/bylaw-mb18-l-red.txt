@@ -1,0 +1,16 @@
+== item (l) red: the R-zone side yard stored at 0.9 m, the 0.45 m blank-wall reduction disclosed (MB-18 l, M-435); new tests src/tests/bylaw-mb18l.logic.test.ts and src/tests/bylaw-mb18l-scorer.logic.test.ts run on the tree before commit l (prep commit P 33372615 and its prereg L0 b2a7a87a, on 9f8b9af8); scorer data ~/Buildo-scratch/coa-data (values only, outside git)
+   × MB-18 l / the R side yard stores 0.9 m and discloses 0.45 m (M-435) > T-l1 (red): the design-choice default of blank_side_wall is not met, and its why cites M-435 and keeps M-259
+   × MB-18 l / the R side yard stores 0.9 m and discloses 0.45 m (M-435) > T-l2 (red): through makeEnv and materializeBatch an R lot stores side_setback_m 0.9 at 10.10.40.70(3)(A) in all five classes
+   × MB-18 l / the R side yard stores 0.9 m and discloses 0.45 m (M-435) > T-l5 (red): the five R golden lots store 0.9 at (3)(A); A0094 (159079, RD x252) stays 0.45 (r-side-yard-move.md)
+   × MB-18 l / the R side yard stores 0.9 m and discloses 0.45 m (M-435) > T-l6 (red): the (4) units carry the M-435 closed sentence (A)-(E) and gaps citing M-435 (A)-(G)
+   × MB-18 l / scorer arm 4D-S4e on the 172-notice set (M-435, O-l1) > S1 (red): A0396/26TEY #2 cites 10.10.40.70(4)(D) at 0.45 m and is scored on the blank-wall arm: MATCH 0.45, 4D-S4e
+   × MB-18 l / scorer arm 4D-S4e on the 172-notice set (M-435, O-l1) > S2 (red): every row carrying 4D-S4e cites a 10.10.40.70(4) clause on side_setback_m; exactly one row carries it
+   × MB-18 l / scorer arm 4D-S4e on the 172-notice set (M-435, O-l1) > S4 (red): a notice citing neither reads the stored 0.9 m: A0594/26TEY #6 is MATCH 0.9 with no arm
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  2 failed (2)
+      Tests  7 failed | 4 passed (11)
+== item (l) green: the same two files on the commit l tree
+ ✓ src/tests/bylaw-mb18l.logic.test.ts (6 tests)
+ ✓ src/tests/bylaw-mb18l-scorer.logic.test.ts (5 tests)
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
