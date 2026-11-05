@@ -216,7 +216,8 @@ function l3Env(seeds, row, inputs, state, memo, run) {
     rowIds: toList(cat.rows).map((r) => r.id),
     readRow: (id) => toValue(run(id)),
     inputFlags: isObject(row.input_flags) ? row.input_flags : {},
-    round9: (x) => x,
+    // the evaluator contract (evaluate-l3.mjs compare, bestOf, applyInt): "Both values are rounded at 9 places first"
+    round9: (x) => Math.round(x * 1e9) / 1e9,
     eps: 0,
   });
 }

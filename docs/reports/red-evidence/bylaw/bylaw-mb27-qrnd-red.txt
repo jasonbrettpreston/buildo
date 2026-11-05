@@ -1,0 +1,10 @@
+== MB-27 Q-RND red: lock src/tests/steps/compute_maxbld_scenarios/comparison-rounding.logic.test.ts (new, with the PITCH-9 switches line of Q-RND-SW a), run on the rows tip ea632e7c4 (lane K's increment-2 rows; rows.js round9 the identity). PITCH-9 now reaches its 1:10 gate (switch on) and is refused pitched_form_not_offered by binary noise (0.09999999999999994 < 0.1).
+   × MB-27 comparisons at 9 places in the step runner (held for a ruling) > PITCH-9: H 7.3, Hw 7.0, half-span 3: the pitch is 0.1, the 1:10 edge, so the pitched form is offered (2 x F = 200)
+     → expected [ 'not_evaluated', null ] to deeply equal [ 'computed', 200 ]
+   × MB-27 comparisons at 9 places in the step runner (held for a ruling) > ATTIC-13 arm B (A0179): block and no-block tie at 3 x F; the key takes the block, counted 0.5 x 79.1505 = 39.575
+     → expected 79.1505 to be close to 39.575, received difference is 39.57549999999999, but expected 0.0005
+   × MB-27 comparisons at 9 places in the step runner (held for a ruling) > ATTIC-15 A0354 arm A: the same tie; the key takes the block, counted 0.7 x 114.50286 = 80.152
+     → expected 114.50285714285715 to be close to 80.152, received difference is 34.35085714285715, but expected 0.0005
+      Tests  3 failed (3)
+
+Green after the round9 change (rows.js: Math.round(x * 1e9) / 1e9, the evaluator's own 9-place rounding): see the commit.

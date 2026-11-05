@@ -38,8 +38,6 @@ const cell = (c: any): Json => {
 const slot = (v: any): Json => (typeof v === 'number' ? { value: v } : v && v.not_evaluated !== undefined ? { status: 'not_evaluated', reason: v.not_evaluated } : v);
 
 const examples = readJson(FIXTURE) as unknown as Json[]; // the fixture file is a JSON array (readJson is typed for an object)
-// the 1:10-edge case whose comparison waits for the runner's 9-place rounding (Q-RND a): held here, asserted by comparison-rounding.logic.test.ts
-const ASSERTED_FROM_QRND = new Set(['PITCH-9']);
 
 describe('MB-27 increment 2 worked examples (the McProof-signed key, M-479)', () => {
   let R: Json;
@@ -60,11 +58,6 @@ describe('MB-27 increment 2 worked examples (the McProof-signed key, M-479)', ()
     if (ex.at_switch_on) {
       // operator "Q-default a": "Increment 2's examples go green on the 25 at the switch-on" (after the axis night and R2)
       it.todo(`${ex.id} (on the 25: asserted at the increment-2 switch-on, Q-DEFAULT a): ${String(ex.key_answer).slice(0, 80)}`);
-      continue;
-    }
-    if (ASSERTED_FROM_QRND.has(ex.id)) {
-      // operator Q-K-TEST a(2): "PITCH-9 is `it.todo` ("asserted from the Q-RND commit") in the rows commit and asserted again, unchanged, in the Q-RND commit"
-      it.todo(`${ex.id} (asserted from the Q-RND commit): ${String(ex.key_answer).slice(0, 80)}`);
       continue;
     }
     if (ex.pending_reload) {
