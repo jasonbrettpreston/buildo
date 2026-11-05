@@ -1,0 +1,86 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 5 (Spec 124a R-MA: the task's own number, the next free n when it is committed; R-LZ revert round of increment 1), the loop round that lands MB-27.L2 P3-0: the oracle-only commit that adds pitched_roof_slope_min (the M-465 threshold) and mechanical_attic_share_pct and mechanical_attic_area_max_m2 (the 10.5.40.40(2) mechanical-attic literals; operator \"Q-M2 a\" amends D-6) to the left-out sets of the two corpus-walking oracle tests (bylaw-eval-perf SINCE_PIN, bylaw-permission-disclosure), as MB-18 j0 (ae1d97aba) did for front_setback_fallback_m. No code, no pinned hash and no golden changes; green on the base (none of the three targets exists yet, so each entry is a no-op) and after P3 (its own cells are locked by src/tests/bylaw-mb27l2-roof.logic.test.ts). Placement approved by the operator (\"confirmed as long as they are complaint\", item 2: \"the oracle-only commit P3-0 moves to the axis night\"; ~/Buildo-scratch/mcbylaws/inc2/open-questions.md:185). Committed alone directly under that commit. Increment 1, zero moves: no scorer row, oracle row or floor moves. Round 62, assigned by the orchestrator at landing.",
+ "schema": "coa-round-prereg-v1",
+ "round": 62,
+ "task": "MB-27",
+ "rules": [
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md §5 row 8 (P3-0, D-6 as amended by Q-M2 a; v3 §5)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "increment": "1"
+}
