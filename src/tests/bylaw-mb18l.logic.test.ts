@@ -32,10 +32,11 @@ const stored = (rows: Json[]): Map<string, Json> => {
   const e = env();
   const out = mz().materializeBatch(rows, e);
   const dicts = lr().makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts });
-  const pairs = SCOPE.structures.flatMap((s: string) => SCOPE.targets[s].map((t: string) => ({ structure: s, target: t })));
+  // the lot row's layout is the env's own (the base pairs, then any option slots the scope appends), so the decode reads what was written
+  const pairs = e.pairs;
   const m = new Map<string, Json>();
   for (const lot of out.rows.lots) {
-    for (const d of lr().decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts })) m.set(`${lot.parcel_id}|${d.class}|${d.structure}|${d.target}`, d);
+    for (const d of lr().decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs: e.optionPairs })) m.set(`${lot.parcel_id}|${d.class}|${d.structure}|${d.target}`, d);
   }
   return m;
 };
