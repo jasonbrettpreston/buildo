@@ -1,0 +1,89 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 11 (R-MA): the revert round of increment 1 (R-LZ) that lands the Layer 3 runner's 9-place comparison rounding (scripts/lib/compute/maxbld/rows.js round9, the evaluator's own contract) as its own red-first commit, operator \"Q-RND a\". Locks: src/tests/steps/compute_maxbld_scenarios/comparison-rounding.logic.test.ts (PITCH-9, the exact 1:10 edge offered; ATTIC-13 and ATTIC-15, exact block/no-block ties). golden-25 unchanged. rows.js is not an evaluator_version or table_version input (evaluate.mjs, dsl.mjs; the seeds and analysis/bylaw), so no version moves and there is no re-pin. Expected: 0 scorer rows move; totals equal the rows prereg; floors unchanged. ARM C: M-415 is OWED (Spec 133 table) and its named lock comparison-rounding.logic.test.ts lands in this commit; red evidence docs/reports/red-evidence/bylaw/bylaw-mb27-qrnd-red.txt (added, from round9/). R-LZ not cited.",
+ "round": 68,
+ "rules": [
+  "M-415",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27/rows/round9/ (comparison-rounding.logic.test.ts, rows-round9.diff, red.txt, green.txt); decision 2026-11-04-batch-ba#CHAT-228.Q-RND",
+ "expected_repin": "none (rows.js moves no version field)",
+ "expected_assertion_changes": [],
+ "schema": "coa-round-prereg-v1",
+ "task": "MB-27",
+ "increment": "1",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
