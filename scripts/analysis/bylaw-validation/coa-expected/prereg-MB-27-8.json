@@ -1,0 +1,204 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 8 (Spec 124a R-MA: the task's own number, the next free n when it is committed; round 65), the revert round of increment 1 (R-LZ) that lands MB-27.L2 P3, the roof axis: M-465 (the roof form as M-400's first design option: the option slots for detached_house, the closed code shared, the pitched step-back rule, the per-clause threshold pitched_roof_slope_min (ten units named <reg>#threshold(<n>), operator Q-P3ID \"a\") with the RT absence ruling ABS-8, ROOF-5 on read) and migration 295 written once (V8-Q2 a: width 61, the Q-STOR a bytea retype of the three lot stamps, the option view and the stamps view), with the reader and writer edits (the writer binds bytes; Layer 3 reads bylaw_resolution_lot_stamps; the I14 compare is bytes). Committed alone directly under the code commit. Zero scorer moves: coa-scorecard --check on the tree gives 698 and 496 rows with totals equal to this file's expected_totals and expected_totals_4d, floors OK (the scorer reads the base rows, which do not move: the 54 base slots are byte-identical to a run with no option declared, lock R5). The stored Layer 2 rows move only at the axis night, under its own prereg.",
+ "schema": "coa-round-prereg-v1",
+ "round": 65,
+ "task": "MB-27",
+ "rules": [
+  "M-465",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md §3, §5 row 9 (v3 §6, v4 §4, v6 §2, v7 §2)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "RP-7 (operator \"RP-7 approved\"), extended by \"pushing RP-7xa\" and respelled under \"a\" (Q-P3ID): expected-172.json and expected-4d.json inputs.table_version 24dd1c9d... to e85e141f..., inputs.evaluator_version b962a0a5... to cc56a43d..., and commit (version fields only; coa-scorecard --check holds, totals equal prereg-MB-83-5: 172 MATCH 407, 4d MATCH 283; FLOORS OK). Generated alongside: bylaw-layer2-input.json (versions, body: the ten generated pitched_roof_slope_min units <reg>#threshold(<n>), ABS-8, the vocab design_options / design_option_rule) and maxbld-amendment-index.json (layer2_table_version and the ten #threshold(n) rows).",
+ "q_stor": "Q-STOR a (operator, ~/Buildo-scratch/mcbylaws/inc2/open-questions.md end): migration 295 retypes row_sha, table_version and evaluator_version to bytea(32) with USING decode(x, 'hex'); values unchanged (the sha256 input and the version file sets are unchanged); the regex CHECKs of 282 are replaced by octet_length = 32 CHECKs NOT VALID; Layer 3 reads the stamps as hex through bylaw_resolution_lot_stamps; the I14 compare is bytes. No scorer row, no Layer 2 value and no golden value moves in this commit. The stored rows move only at the axis night (D-MIG: 295 alone, dry-run first).",
+ "layer2_night": "Not in this commit: every stored lot row is rewritten at the axis night (width 61, the option slots, bytea stamps), with the night capture patch (Q-P3w a). The night prereg holds the transition counts from the dry run and the storage band from G-STOR v2 (docs/reports/storage-gates/MB-27L2-G-STOR.json: P_up 738.25 MiB, ratio 0.568, PASS against the 780 MiB stop; re-measured on the final pre-night tip).",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": 72,
+   "row": "every positional array has one slot per scope pair",
+   "from": "toHaveLength(PAIRS.length) on the arrays and codes",
+   "to": "toHaveLength(WIDTH) (54 base pairs + 7 option slots)",
+   "rule": "M-465 (1) (option slots appended after the base pairs; Spec 134 section 3)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": 296,
+   "row": "the representative fills the arrays",
+   "from": "numbers.every(v === 10)",
+   "to": "numbers.slice(0, 54).every(v === 10), and the option slots are the closed code shared",
+   "rule": "M-465 (2) (share the cell)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": 380,
+   "row": "the audit checks every Nth lot",
+   "from": "equivalence_checked 2 x 54",
+   "to": "2 x 61 (the option slots audited, I12/I15)",
+   "rule": "M-465 (1); plan v5 RR-03 (B5)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": 395,
+   "row": "a stored result that disagrees with the direct evaluator is counted",
+   "from": "54 checked, 54 disagreements",
+   "to": "61 checked, 61 disagreements",
+   "rule": "M-465 (1); plan v5 RR-03 (B5)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": 418,
+   "row": "I13: legal user-input axes",
+   "from": "roof_type is a legal axis (scenario_axis_results 0); has_secondary_suite counts 54",
+   "to": "roof_type is not a legal axis (counts 61); has_secondary_suite counts 61 (the option slots count too)",
+   "rule": "M-465 (Spec 134 I13: I13's legal needs_user_input axes lose roof_type)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": 43,
+   "row": "the decode helper",
+   "from": "decodeLotResults without optionPairs",
+   "to": "with optionPairs (a 61-wide lot decoded without them throws)",
+   "rule": "M-465 (1)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize-mb18i.logic.test.ts",
+   "line": 41,
+   "row": "the decode helper",
+   "from": "decodeLotResults without optionPairs",
+   "to": "with optionPairs",
+   "rule": "M-465 (1)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/frozen-row.logic.test.ts",
+   "line": 63,
+   "row": "the logical lot read keys",
+   "from": "[lot_gate, permission_disclosures, permitted_by_class, rows]",
+   "to": "the same plus option_rows (rows keeps its 54 x 5 frozen 11-field rows, CHAT-77.freeze)",
+   "rule": "M-465 (1) (both roof rows stored labelled; plan v2 section 7 B2)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/violations.test.ts",
+   "line": 180,
+   "row": "the e4 rows reach the runner one slot per scope pair",
+   "from": "toHaveLength(NPAIRS)",
+   "to": "toHaveLength(NPAIRS + NOPTS)",
+   "rule": "M-465 (1)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts",
+   "line": 40,
+   "row": "the I14 lot statement",
+   "from": "row_sha IS DISTINCT FROM encode(sha256(...), 'hex')",
+   "to": "row_sha IS DISTINCT FROM sha256(...) (bytes, no hex encode)",
+   "rule": "Q-STOR a (operator answer; the Spec 134 type amendment is recorded by lane R in batch part 3)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/row-sha-sql.logic.test.ts",
+   "line": 55,
+   "row": "the canonical text extraction",
+   "from": "regex ending ), 'hex')",
+   "to": "regex ending ))",
+   "rule": "Q-STOR a"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/step-closure.logic.test.ts",
+   "line": 36,
+   "row": "EXPECTED_TABLES",
+   "from": "bylaw_resolution_lots",
+   "to": "bylaw_resolution_lot_stamps",
+   "rule": "Q-STOR a (Layer 3 reads the stamps through the hex view)"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/neighbour-facts.logic.test.ts",
+   "line": 162,
+   "row": "ALLOWED read tables",
+   "from": "bylaw_resolution_lots",
+   "to": "bylaw_resolution_lot_stamps",
+   "rule": "Q-STOR a"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": 431,
+   "row": "winner_layers / results_by_status count every result",
+   "from": "the 54 base representative results only",
+   "to": "the base results plus the 7 option slots (61); winner_layers adds the option rows winners",
+   "rule": "M-465 (1) (the option slots are results written; Spec 134 I3 conflict_cells counts them; OUTPUT panel S1-02)"
+  }
+ ],
+ "increment": "1"
+}
