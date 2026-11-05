@@ -152,7 +152,8 @@ describe('M-480 the static unit rule', () => {
 });
 
 describe('M-480 refuse at run time', () => {
-  const SELECTOR = 'if(half_span_a_m > 7.66 m; refuse(no_cited_rafter_span); if(half_span_a_m > 6.52 m; 0.3082 m; if(half_span_a_m > 5.11 m; 0.2572 m; if(half_span_a_m > 3.89 m; 0.2062 m; 0.1622 m))))';
+  // fixture ids (fx_): the real catalogue has rows half_span_a_m and roof_assembly_depth_a_m since lane K's increment-2 rows (M-462)
+  const SELECTOR = 'if(fx_half_span_a_m > 7.66 m; refuse(no_cited_rafter_span); if(fx_half_span_a_m > 6.52 m; 0.3082 m; if(fx_half_span_a_m > 5.11 m; 0.2572 m; if(fx_half_span_a_m > 3.89 m; 0.2062 m; 0.1622 m))))';
 
   it('F4 refuse(<word>) is not_evaluated with that word as its reason, never 0', () => {
     const v = runWith('refuse(no_cited_rafter_span)');
@@ -162,9 +163,9 @@ describe('M-480 refuse at run time', () => {
   it('F4 the rafter selector through runRow: 7.70 m refused, 7.60 m gives 0.3082 m, 7.66 m (not more than) gives 0.3082 m', () => {
     const seedsOf = (): Json => {
       const catalogue = readJson('scripts/seeds/bylaw/layer3-catalogue.json');
-      catalogue.geometry_inputs = [...(catalogue.geometry_inputs || []), { id: 'half_span_a_m', unit: 'm' }];
+      catalogue.geometry_inputs = [...(catalogue.geometry_inputs || []), { id: 'fx_half_span_a_m', unit: 'm' }];
       catalogue.rows = [...catalogue.rows, {
-        id: 'roof_assembly_depth_a_m', building_type: 'detached_house', increment: '2', form: 'expr', unit: 'm', envelope: false,
+        id: 'fx_roof_assembly_depth_a_m', building_type: 'detached_house', increment: '2', form: 'expr', unit: 'm', envelope: false,
         expression: SELECTOR, clauses: ['fixture'], rules: ['M-480'], example_ids: [], switch: 'formula:height_max_m',
       }];
       return {
@@ -178,7 +179,7 @@ describe('M-480 refuse at run time', () => {
     };
     const R = req(path.join(ROOT, 'scripts/lib/compute/maxbld/rows.js')) as Json;
     const seeds = seedsOf();
-    const at = (s: number): Json => R.runRow('roof_assembly_depth_a_m', { seeds, geometry: { half_span_a_m: s } });
+    const at = (s: number): Json => R.runRow('fx_roof_assembly_depth_a_m', { seeds, geometry: { fx_half_span_a_m: s } });
     const refused = at(7.7);
     expect([refused.status, refused.reason, refused.value]).toEqual(['not_evaluated', 'no_cited_rafter_span', null]);
     const fits = at(7.6);
@@ -294,6 +295,10 @@ describe('M-480 best_of at run time (Q-HEAD B, the McProof cases)', () => {
 
 describe('M-480 propagation through the runner (R3-01, R3-02)', () => {
   it('F7 a missing candidate never counts as 0, and the headline row keeps its winner\'s flags', () => {
+    // fixture ids (fx_): the real catalogue has rows gfa_flat_m2, gfa_pitched_a_m2 and gfa_pitched_b_m2 since lane K's increment-2 rows
+    const FLAT = 'fx_gfa_flat_m2';
+    const PA = 'fx_gfa_pitched_a_m2';
+    const PB = 'fx_gfa_pitched_b_m2';
     const catalogue = readJson('scripts/seeds/bylaw/layer3-catalogue.json');
     const cand = (id: string): Json => ({ id, building_type: 'detached_house', increment: '2', form: 'expr', unit: 'm2', envelope: false, expression: '0 m2', clauses: ['fixture'], rules: ['M-480'], example_ids: [], switch: 'formula:gfa_max_m2' });
     catalogue.rows = [...catalogue.rows, cand(FLAT), cand(PA), cand(PB), {
