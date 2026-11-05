@@ -10158,6 +10158,86 @@
       "group": "Source Ingestion"
     }
   },
+  "compute_maxbld_scenarios_rafter_span_1_m": {
+    "default": 3.89,
+    "type": "number",
+    "min": 3.89,
+    "max": 3.89,
+    "description": "M-462 (69a:600): the maximum span of the 38x140 rafter in OBC 2024 Table 9.23.4.2.-F (SPF No.1/No.2, 400 mm o.c., 1.5 kPa column). Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_roof_assembly_depth_1_m": {
+    "default": 0.1622,
+    "type": "number",
+    "min": 0.1622,
+    "max": 0.1622,
+    "description": "M-462 (69a:600): roof assembly depth with the 38x140 rafter = rafter depth + sheathing 9.5 mm (Table 9.23.16.7.-A, edges unsupported, a disclosed choice) + ceiling board 12.7 mm (Table 9.29.5.3), the exact sum. Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_rafter_span_2_m": {
+    "default": 5.11,
+    "type": "number",
+    "min": 5.11,
+    "max": 5.11,
+    "description": "M-462 (69a:600): the maximum span of the 38x184 rafter in OBC 2024 Table 9.23.4.2.-F (SPF No.1/No.2, 400 mm o.c., 1.5 kPa column). Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_roof_assembly_depth_2_m": {
+    "default": 0.2062,
+    "type": "number",
+    "min": 0.2062,
+    "max": 0.2062,
+    "description": "M-462 (69a:600): roof assembly depth with the 38x184 rafter = rafter depth + sheathing 9.5 mm (Table 9.23.16.7.-A, edges unsupported, a disclosed choice) + ceiling board 12.7 mm (Table 9.29.5.3), the exact sum. Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_rafter_span_3_m": {
+    "default": 6.52,
+    "type": "number",
+    "min": 6.52,
+    "max": 6.52,
+    "description": "M-462 (69a:600): the maximum span of the 38x235 rafter in OBC 2024 Table 9.23.4.2.-F (SPF No.1/No.2, 400 mm o.c., 1.5 kPa column). Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_roof_assembly_depth_3_m": {
+    "default": 0.2572,
+    "type": "number",
+    "min": 0.2572,
+    "max": 0.2572,
+    "description": "M-462 (69a:600): roof assembly depth with the 38x235 rafter = rafter depth + sheathing 9.5 mm (Table 9.23.16.7.-A, edges unsupported, a disclosed choice) + ceiling board 12.7 mm (Table 9.29.5.3), the exact sum. Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_rafter_span_4_m": {
+    "default": 7.66,
+    "type": "number",
+    "min": 7.66,
+    "max": 7.66,
+    "description": "M-462 (69a:600): the maximum span of the 38x286 rafter in OBC 2024 Table 9.23.4.2.-F (SPF No.1/No.2, 400 mm o.c., 1.5 kPa column). Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_roof_assembly_depth_4_m": {
+    "default": 0.3082,
+    "type": "number",
+    "min": 0.3082,
+    "max": 0.3082,
+    "description": "M-462 (69a:600): roof assembly depth with the 38x286 rafter = rafter depth + sheathing 9.5 mm (Table 9.23.16.7.-A, edges unsupported, a disclosed choice) + ceiling board 12.7 mm (Table 9.29.5.3), the exact sum. Pinned: changes only by a ruling. CONSUMED by the catalogue rows roof_assembly_depth_a_m and roof_assembly_depth_b_m.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "footprint_shape_factor": {
     "default": 1,
     "type": "number",

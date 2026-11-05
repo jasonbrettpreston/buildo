@@ -80,12 +80,23 @@ function settingVals(catalogue, logicVariables) {
 /** Every row a catalogue row names, restricted to row ids, in catalogue order. */
 function refsOf(row, rowIds) {
   if (!row || row.form === 'status' || typeof row.expression !== 'string') return [];
-  try {
-    const refs = dsl.l3RefsOf(dsl.parseExpr(row.expression, { layer: 'l3' }));
-    return toList(refs.names).filter((id) => rowIds.has(id));
-  } catch (e) {
-    return [];
+  const out = [];
+  // M-476: a row is ordered after every row its own formula AND each of its revisions reads
+  for (const src of [row.expression, ...revisionsOf(row).map((v) => v.expression)]) {
+    if (typeof src !== 'string') continue;
+    try {
+      const refs = dsl.l3RefsOf(dsl.parseExpr(src, { layer: 'l3' }));
+      for (const id of toList(refs.names)) if (rowIds.has(id) && !out.includes(id)) out.push(id);
+    } catch (e) {
+      // a parse error is reported by exprViolations; it adds no order edge
+    }
   }
+  return out;
+}
+
+/** M-476: the increment revisions an increment-1 row carries (each {increment, switch, expression, clauses, rules}). */
+function revisionsOf(row) {
+  return toList(isObject(row) ? row.revisions : null).filter(isObject);
 }
 
 /** Row ids in dependency order (a row comes after every row it names); a cycle throws. */
@@ -159,12 +170,14 @@ function validateCatalogue(seeds, increments) {
   const rowIds = new Set(idsOf(rowsOf(catalogue)));
   for (const r of rowsOf(catalogue)) {
     if (!switches.has(r.switch)) out.push(`row ${r.id}: switch ${r.switch} is not in the switchboard`);
+    for (const v of revisionsOf(r)) if (!switches.has(v.switch)) out.push(`row ${r.id} revision ${v.increment}: switch ${v.switch} is not in the switchboard`);
   }
   for (const bt of entities(s.buildingTypes, 'rows')) {
     if (!switches.has(bt.switch)) out.push(`building_type ${bt.id}: switch ${bt.switch} is not in the switchboard`);
   }
   out.push(...confidenceViolations(s.switchboard));
   out.push(...nameSpaceViolations(catalogue, targets));
+  out.push(...designOptionViolations(catalogue, s.vocab));
   out.push(...rowViolations(catalogue, U, rowIds, increments));
   try {
     topoOrder(catalogue);
@@ -189,6 +202,34 @@ function confidenceViolations(switchboard) {
       if (Object.prototype.hasOwnProperty.call(r, 'confidence')) out.push(`${at}confidence is only for a reading row`);
       if (Object.prototype.hasOwnProperty.call(r, 'evidence')) out.push(`${at}evidence is only for a reading row`);
     }
+  }
+  return out;
+}
+
+/**
+ * R1 (MB-27; plan-reader-and-mech.md 1.4; M-465, operator "Q-r1 a"): a row's `design_option` names the run it is
+ * evaluated in. It must be an object of exactly one key, the key a `vocab.design_options` key and the value one of that
+ * key's `values[].option`. With no declared options every tag is a violation (fail closed).
+ */
+function designOptionViolations(catalogue, vocab) {
+  const out = [];
+  const declared = isObject(vocab) && isObject(vocab.design_options) ? vocab.design_options : {};
+  for (const row of rowsOf(catalogue)) {
+    if (!Object.prototype.hasOwnProperty.call(row, 'design_option')) continue;
+    const at = `row ${row.id}: `;
+    const tag = row.design_option;
+    if (!isObject(tag) || Object.keys(tag).length !== 1) {
+      out.push(`${at}design_option must be an object of exactly one vocab.design_options key`);
+      continue;
+    }
+    const [key, value] = Object.entries(tag)[0];
+    const decl = key !== '$comment' && isObject(declared[key]) ? declared[key] : null;
+    if (!decl) {
+      out.push(`${at}design_option key ${key} is not a vocab.design_options key`);
+      continue;
+    }
+    const options = toList(decl.values).filter(isObject).map((v) => v.option);
+    if (!options.includes(value)) out.push(`${at}design_option ${key} value ${value} is not an option of vocab.design_options.${key}`);
   }
   return out;
 }
@@ -223,6 +264,19 @@ function rowViolations(catalogue, U, rowIds, increments) {
     if (row.form === 'expr' && typeof row.expression === 'string') out.push(...exprViolations(row, U, at));
     out.push(...refViolations(row, U, at, rowIds));
     if (Array.isArray(increments) && !increments.includes(row.increment)) out.push(`${at}increment ${row.increment} is not a known increment`);
+    for (const v of revisionsOf(row)) {
+      const rat = `row ${row.id} revision ${v.increment}: `;
+      const rev = { ...row, ...v, id: row.id, form: row.form, unit: row.unit };
+      if (!toList(v.clauses).length) out.push(`${rat}clauses is empty`);
+      if (!toList(v.rules).length) out.push(`${rat}rules is empty`);
+      if (typeof v.expression !== 'string') out.push(`${rat}expression is missing`);
+      else {
+        out.push(...exprViolations(rev, U, rat));
+        out.push(...refViolations(rev, U, rat, rowIds));
+      }
+      if (Array.isArray(increments) && !increments.includes(v.increment)) out.push(`${rat}increment ${v.increment} is not a known increment`);
+      if (String(v.increment) === String(row.increment)) out.push(`${rat}a revision must belong to a later increment than its row`);
+    }
   }
   for (const fact of entities(catalogue, 'facts')) {
     for (const id of [...toList(fact.bounds_lv), ...toList(fact.needs_l2)]) {

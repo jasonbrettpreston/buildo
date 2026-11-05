@@ -36,9 +36,9 @@ describe('MB-31 switchboard data (M-378)', () => {
     CAT = readJson('scripts/seeds/bylaw/layer3-catalogue.json');
   });
 
-  it('schema, nineteen rows, unique ids, closed kind/state vocabularies', () => {
+  it('schema, fifty-eight rows, unique ids, closed kind/state vocabularies', () => {
     expect(SW.schema).toBe('switchboard-v2'); // Q-CONF a (switchboard confidence): was 'switchboard-v1'
-    expect(SW.rows).toHaveLength(19); // Q-CONF a: the seven increment-2 register readings C1-C7 added; was 12
+    expect(SW.rows).toHaveLength(58); // Q-K-ASSERT a (M-378, M-476): 37 increment-2 row switches and 2 revision switches; was 19 (Q-CONF a), was 12
     const ids = SW.rows.map((r: Json) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const row of SW.rows) {
@@ -47,8 +47,9 @@ describe('MB-31 switchboard data (M-378)', () => {
     }
   });
 
-  it('the only off row is reading:shape_calibration', () => {
-    expect(SW.rows.filter((r: Json) => r.state === 'off').map((r: Json) => r.id)).toEqual(['reading:shape_calibration']);
+  // Q-K-ASSERT a ("Q-default a"): the increment-2 headline revision and the three GFA form rows it reads default off
+  it('the off rows are reading:shape_calibration and the four Q-DEFAULT formula switches', () => {
+    expect(SW.rows.filter((r: Json) => r.state === 'off').map((r: Json) => r.id).sort()).toEqual(['formula:gfa_flat_m2', 'formula:gfa_max_m2:increment_2', 'formula:gfa_pitched_a_m2', 'formula:gfa_pitched_b_m2', 'reading:shape_calibration']);
   });
 
   it('one formula switch per catalogue row plus the detached_house building type', () => {

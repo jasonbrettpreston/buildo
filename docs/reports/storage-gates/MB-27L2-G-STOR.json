@@ -1,5 +1,5 @@
 {
-  "$comment": "MB-27.L2 G-STOR v2 (plan-roof-axis v5 section 2, v8 section 4; operator Q-ROOF: storage measured against the 0.60 line, 780 MiB of the 1,300 MiB budget). Exact, read-only, on the built P3 tree. The step's own pure core (materializeBatch) runs over every parcel in a default_transaction_read_only session. Each of the 440,093 lot rows is sized by lane D2's calibrated tuple model (MB-27L2/dryrun/pgsize.mjs tupleLen: exact datum sizes, alignment, short varlena, pglz and TOAST at 2,032 B). That model reproduces pg_column_size(l.*) on 440,093 of 440,093 stored rows. Sizing is done with the stamps as hex text and as bytea (Q-STOR a). The page fill is next-fit in the LIVE HEAP ORDER (dryrun/fill-order.awk over gstor-cal-full/heap-order.txt; MAXALIGN 8, 4 B line pointer, 8,168 B usable). Calibration: the stored rows fill 93,515 pages in that order against 93,519 actual. Option B saves 84.2 B per row on the built 61-wide rows (measured: 1,616.9 hex vs 1,532.7 bytea); a flat 96 B overstates it because of short-varlena headers and alignment. Reconciled with lane D2's 723 MiB: same method, different row contents. D2 sized v8's SQL model of the width-61 arrays (avg 1,544.3 B with bytea, heap 712.4 MiB). This record sizes the arrays the built tree actually writes (avg 1,546.8 B, heap 728.6 MiB); because the rows sit just above the 5-per-page line, the +2.5 B average moves the fill by +16 MiB. Measured on the landing tree (P3 staged over P3-0 d4bc32377 on origin cfbe3aafa: batch parts 3-5, the 1:4 re-key with its five 0.25 threshold units, the Layer 3 forms, the switchboard confidence and MB-18 (l)). Not in this tree, so not in the figure: the lane K rows, the M-475 and Q-RSM door items and the mechanical keying, which land after P3 (operator Q-ORDa); the final G-STOR before the night re-measures on that tip; the assertion in migration-295.logic.test.ts goes red when the versions move. Script and rows: ~/Buildo-scratch/mcbylaws/MB-27L2/gate/gstor-v2-exact.mjs and gstor-v2-exact.tsv.",
+  "$comment": "MB-27.L2 G-STOR v2, FINAL before the axis night (plan-roof-axis v5 section 2, v8 section 4; operator Q-ROOF: storage measured against the 0.60 line, 780 MiB of the 1,300 MiB budget). Exact, read-only, on the tree at 37dc530c0 (every code item that rides the night). The step's own pure core (materializeBatch) runs over every parcel in a default_transaction_read_only session; each of the 440093 lot rows is sized by lane D2's calibrated tuple model (MB-27L2/dryrun/pgsize.mjs tupleLen: exact datum sizes, alignment, short varlena, pglz and TOAST at 2,032 B; it reproduces pg_column_size(l.*) on 440,093 of 440,093 stored rows) with the stamps as hex text and as bytea (Q-STOR a). The page fill is next-fit in the LIVE HEAP ORDER (dryrun/fill-order.awk over gstor-cal-full/heap-order.txt; MAXALIGN 8, 4 B line pointer, 8,168 B usable). Calibration: the stored rows fill 93515 pages in that order against 93519 actual. Option B saves 84.2 B per row. Script and rows: ~/Buildo-scratch/mcbylaws/MB-27L2/gate/gstor-final.zsh, gstor-v2-exact.mjs and gstor-final.tsv.",
   "verdict": "PASS",
   "P_up_mib": 738.25,
   "stop_mib": 780,
@@ -23,10 +23,9 @@
   },
   "rows": 440093,
   "row_bytes": {
-    "today_avg": 1569.5,
-    "projected_hex_avg": 1616.9,
-    "projected_bytea_avg": 1532.7,
-    "option_B_saving_avg": 84.2,
+    "projected_hex_avg": 1616.91,
+    "projected_bytea_avg": 1532.68,
+    "option_B_saving_avg": 84.24,
     "max": 2032,
     "over_toast_threshold": 0
   },
@@ -36,8 +35,8 @@
     "first_estimate_ctid_order_flat96_heap_mib": 729.29,
     "first_landing_measure_heap_mib": 728.55
   },
-  "table_version": "e85e141fc6657c5446d9ed5f244eed6555e67627a2bb17e765e79529826618c4",
+  "table_version": "3c7874860c92b8e2fb642a6c7a79617df44289bfcd96b6de6781b281f1b84f8f",
   "evaluator_version": "cc56a43de6c28d04cdc8d902f5c61b5f8dc6c75e56267564db16b5f532ada1cc",
-  "parent_sha": "d4bc32377ea6e687752f4d4d4e4ace27a10859c6",
-  "measured": "2026-11-04"
+  "parent_sha": "37dc530c0a7567fe981a44de84b161a39d17aa78",
+  "measured": "2026-11-05"
 }

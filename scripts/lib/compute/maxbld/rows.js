@@ -221,8 +221,28 @@ function l3Env(seeds, row, inputs, state, memo, run) {
   });
 }
 
-function exprResult(row, inputs, state, memo, run) {
+/**
+ * M-476 (MB-27 increment 2): the formula a row runs. A row whose later increment revised it carries the revision in
+ * `revisions`, each behind its own switch; the latest revision whose switch is on is read, and a switched-off revision
+ * reverts to the formula before it (the increment-1 formula last). Every revision switch consulted is listed.
+ */
+function activeFormula(row, inputs, seeds) {
+  const revs = toList(row.revisions).filter(isObject).slice().sort((a, b) => String(b.increment).localeCompare(String(a.increment), 'en', { numeric: true }));
+  const consulted = [];
+  for (const rev of revs) {
+    const s = { id: rev.switch, state: stateOf(rev.switch, seeds.switchboard, inputs) };
+    consulted.push(s);
+    if (s.state === 'on') {
+      const formula = { ...row, expression: rev.expression, optional_targets: rev.optional_targets ?? row.optional_targets, input_flags: rev.input_flags ?? row.input_flags, clauses: rev.clauses ?? row.clauses };
+      return { formula, consulted };
+    }
+  }
+  return { formula: row, consulted };
+}
+
+function exprResult(row, inputs, state, memo, run, revisionSwitches) {
   const env = l3Env(inputs.seeds, row, inputs, state, memo, run);
+  for (const s of toList(revisionSwitches)) env.switchesRead.push(s);
   const res = evaluator.evaluate(row.expression, {}, { layer: 'l3', l3: env });
   const v = res ? res.l3 : undefined;
   if (!v || typeof v.k !== 'string') return notEvaluated(row, HOOKS_MISSING, { trace: env.trace, switches: switchesOf([], env) });
@@ -269,7 +289,8 @@ function computeRow(row, inputs, runAll) {
   }
 
   if (row.form !== 'expr' || typeof row.expression !== 'string') return notEvaluated(row, HOOKS_MISSING, { switches: consulted });
-  return exprResult(row, inputs, state, null, runAll);
+  const active = activeFormula(row, inputs, seeds);
+  return exprResult(active.formula, inputs, state, null, runAll, active.consulted);
 }
 
 function toValue(r) {
@@ -317,9 +338,13 @@ function runAllRows(inputsIn) {
     return memo.get(id);
   };
   const mine = new Set(toList(seeds.catalogue.rows).filter((r) => r.building_type === buildingType.id).map((r) => r.id));
+  // M-476 dated note (D3 a): a switched-off row that has no increment-1 formula is not shown; rows that read it still do
+  // (only the row whose OWN switch is off; a row that reads it is shown, not_evaluated with that switch as its reason)
+  const later = new Map(toList(seeds.catalogue.rows).filter((r) => isObject(r) && r.increment !== '1').map((r) => [r.id, r.switch]));
   return catalogueLib.topoOrder(seeds.catalogue)
     .filter((id) => mine.has(id))
-    .map((id) => run(id));
+    .map((id) => run(id))
+    .filter((res) => !(later.has(res.row) && res.status === 'not_evaluated' && res.reason === `switched_off:${later.get(res.row)}`));
 }
 
 module.exports = { runRow, runAllRows, toValue, NOT_MODELLED_REASON };

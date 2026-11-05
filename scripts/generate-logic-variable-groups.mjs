@@ -655,6 +655,14 @@ const GROUP_ORDER = [
       "s1_floor_assembly_m",
       "s1_parapet_m",
       "s2_first_floor_above_grade_m",
+      "compute_maxbld_scenarios_rafter_span_1_m",
+      "compute_maxbld_scenarios_roof_assembly_depth_1_m",
+      "compute_maxbld_scenarios_rafter_span_2_m",
+      "compute_maxbld_scenarios_roof_assembly_depth_2_m",
+      "compute_maxbld_scenarios_rafter_span_3_m",
+      "compute_maxbld_scenarios_roof_assembly_depth_3_m",
+      "compute_maxbld_scenarios_rafter_span_4_m",
+      "compute_maxbld_scenarios_roof_assembly_depth_4_m",
       "footprint_shape_factor",
       "compute_maxbld_scenarios_batch_size"
     ]

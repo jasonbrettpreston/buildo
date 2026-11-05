@@ -31,9 +31,11 @@ const PINNED_SHA: Record<string, string> = {
   // re-pinned 2026-11-02 (MB-31, operator D2 option 1): the catalogue gained the `lexicon` key (the Layer 3 words that arm L, R-LA, moves out of the code).
   // re-pinned 2026-11-03 (MB-27 sqrt, operator RP-5 'Rp- 5 and RP-6 approved'): the lexicon gained root, sqrt and expression_error_sqrt_negative (M-466).
   // re-pinned 2026-11-04 (MB-27 Layer 3 forms, operator RP-10 'RP-10 approved, switchboard pin approved, shape low yes'): the lexicon gained refuse, best_of, ceiling, headline_, headline_lower_bound_, dropped_, unknown_reason, semi, syntax and three best_of syntax phrases, and the catalogue gained the declared lists refuse_reasons, drop_reasons, flag_words and flag_params (M-480, with its Q-K5 a dated note).
-  catalogue: '4e1172c30cba1678833cbae0daaddc9539602b9666c350fd5a6d0e41ab7b0cc2',
+  // re-pinned 2026-11-04 (MB-27 increment-2 rows + R1, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 37 increment-2 rows (M-457..M-487), the revisions of buildable_width_m (M-458) and gfa_max_m2 (M-476), the R1 design_option tags, 8 rafter settings (M-462), the flag word attic_outside_gfa and the refuse word no_permitted_gfa_base (M-480, Q-MECH0).
+  catalogue: 'e56ad1eb60a5b289ac138b47b04ac377c20b0f6f94810b494ea813ff1ecca0d3',
   // re-pinned 2026-11-04 (MB-27 switchboard confidence, operator Q-CONF a 'Q CONF a' and 'RP-10 approved, switchboard pin approved, shape low yes'): schema switchboard-v2; every reading row gained confidence and evidence; the seven increment-2 register readings C1-C7 joined as reading rows (M-481).
-  switchboard: 'e6441b3956019a56a77ef5f7b4578bc348c4f43227349249f1ff0a7f953bef92',
+  // re-pinned 2026-11-04 (MB-27 increment-2 rows, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 39 formula switches (37 rows, 2 revisions; M-378, M-476), four off by "Q-default a".
+  switchboard: '4aa44e448b1f6990c036cb1989a70a5df19a391b315034d1113471d0229e15fb',
   buildingTypes: '1a10625b9c7821b7db5642ffaa64b1f9b2118eb3285163cce61e3747c09b2e39',
 };
 const ROW_IDS = [
@@ -86,13 +88,14 @@ describe('MB-31 catalogue invariants (B8)', () => {
     SW = SEEDS.switchboard;
   });
 
-  it('schema + ten rows in the pinned order, all detached_house increment 1', () => {
+  // Q-K-ASSERT a (M-457): the ten increment-1 rows in their pinned order, then the 37 increment-2 rows
+  it('schema + ten increment-1 rows in the pinned order, then the 37 increment-2 rows, all detached_house', () => {
     expect(CAT.schema).toBe('layer3-catalogue-v1');
-    expect(CAT.rows).toHaveLength(10);
-    expect(CAT.rows.map((r: Json) => r.id)).toEqual(ROW_IDS);
-    for (const row of CAT.rows) {
+    expect(CAT.rows).toHaveLength(47);
+    expect(CAT.rows.slice(0, 10).map((r: Json) => r.id)).toEqual(ROW_IDS);
+    for (const [i, row] of CAT.rows.entries()) {
       expect(row.building_type).toBe('detached_house');
-      expect(row.increment).toBe('1');
+      expect(row.increment).toBe(i < 10 ? '1' : '2');
       expect(row.clauses.length).toBeGreaterThan(0);
       expect(row.rules.length).toBeGreaterThan(0);
       expect(row.example_ids.length).toBeGreaterThan(0);
@@ -141,7 +144,7 @@ describe('MB-31 catalogue invariants (B8)', () => {
   });
 
   it('validateCatalogue on the real seeds: no violation', () => {
-    expect(C.validateCatalogue(SEEDS, ['1'])).toHaveLength(0);
+    expect(C.validateCatalogue(SEEDS, ['1', '2'])).toHaveLength(0); // Q-K-ASSERT a (M-457): the increment-2 rows; was ['1']
   });
 
   it('validateCatalogue rejects a renamed fact, a deleted switchboard row, a 6 ratio and a fact named fsi', () => {

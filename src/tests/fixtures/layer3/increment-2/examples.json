@@ -1,0 +1,5426 @@
+[
+ {
+  "id": "MW-21",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "2",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 2,
+    "tol": 0
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "MW-22",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "2",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.747
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 2,
+    "tol": 0
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "MW-23",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "3",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.748
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "MW-24",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "3",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 8.5
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "MW-25",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "3",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 9.5
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "MW-26",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "3",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 10.259
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "MW-27",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "4",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 10.26
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "MW-28",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "4 (Q3 a would have said 3)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 10.5
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   }
+  ],
+  "note": "Checks the Q3 b row (floor((Hw-0.212)/2.512)) only; the withdrawn Q3 a variant is not a catalogue row."
+ },
+ {
+  "id": "MW-2",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "inputs": {},
+  "checks": [],
+  "note": "Not expressible as increment-2 row inputs: depends on SYN-A (sigma 0.70, F 204.0, pitched arms A/B with arm B not_evaluated) defined outside the example row, and on the \"larger of with/without block\" item 3; no figures for the pitched-form L2 cells are given in the example text. [layer restored from the sheet: Ruling; the encoder had GAP-3]"
+ },
+ {
+  "id": "MW-20",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "wall storeys not_evaluated (reason carried); shares stay as stored but unused",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": {
+     "not_evaluated": "undecided"
+    },
+    "height_m": {
+     "not_evaluated": "undecided"
+    }
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "not_evaluated"
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "not_evaluated"
+   }
+  ],
+  "note": "Reason text is unspecified by the key (\"reason carried\"), so no reason_includes. Shares \"stay as stored but unused\": not checkable as a row output."
+ },
+ {
+  "id": "MW-29",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "k = 1",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7
+   },
+   "rows": {
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 1,
+    "tol": 0
+   }
+  ],
+  "note": "A0170 n=3 injected per example text; Hw 7.0 from the example."
+ },
+ {
+  "id": "MW-30",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "k = 0",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 8.5
+   },
+   "rows": {
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 0,
+    "tol": 0
+   }
+  ],
+  "note": " FINDING: row storeys_above_wall = max(n - n_w; 0 storeys) returns status not_buildable (value null) when the result is 0, where the key says k = 0 (computed)."
+ },
+ {
+  "id": "MW-31",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "2 wall storeys, k = 0",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.8
+   },
+   "rows": {
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 0,
+    "tol": 0
+   }
+  ],
+  "note": "The key \"2 wall storeys\" is min(n_w, n) used inside the area rows; the wall_storeys row itself yields 3 (n_w), so only k (storeys_above_wall) is checked. H=10.3 itself is not injected (n = 2 from the stored cap). FINDING: row storeys_above_wall = max(n - n_w; 0 storeys) returns status not_buildable (value null) when the result is 0, where the key says k = 0 (computed)."
+ },
+ {
+  "id": "MW-32",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "k = 1",
+  "inputs": {
+   "l2": {
+    "height_m": 12.75,
+    "main_wall_height_m": 10.25,
+    "height_storeys": {
+     "unregulated": true
+    }
+   }
+  },
+  "checks": [
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 1,
+    "tol": 0
+   }
+  ],
+  "note": "Hw = max(7.0, H-2.5) = 10.25 is the example's own arithmetic, supplied as the main_wall_height_m cell; height_storeys stored unregulated (no storey cap); H=12.75 made up."
+ },
+ {
+  "id": "MW-33",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "k = 0",
+  "inputs": {
+   "l2": {
+    "height_m": 12.76,
+    "main_wall_height_m": 10.26,
+    "height_storeys": {
+     "unregulated": true
+    }
+   }
+  },
+  "checks": [
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 0,
+    "tol": 0
+   }
+  ],
+  "note": "Hw = max(7.0, H-2.5) = 10.26 is the example's own arithmetic, supplied as the main_wall_height_m cell; height_storeys stored unregulated (no storey cap); H=12.76 made up. FINDING: row storeys_above_wall = max(n - n_w; 0 storeys) returns status not_buildable (value null) when the result is 0, where the key says k = 0 (computed)."
+ },
+ {
+  "id": "REG-9",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "increment 1 unchanged",
+  "inputs": {
+   "l2": {
+    "height_m": 10.248,
+    "main_wall_height_m": 7.748,
+    "height_storeys": {
+     "unregulated": true
+    }
+   }
+  },
+  "checks": [
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 0,
+    "tol": 0
+   }
+  ],
+  "note": "Hw = max(7.0, H-2.5) = 7.748 is the example's own arithmetic, supplied as the main_wall_height_m cell; height_storeys stored unregulated (no storey cap); H=10.248 made up. FINDING: row storeys_above_wall = max(n - n_w; 0 storeys) returns status not_buildable (value null) when the result is 0, where the key says k = 0 (computed)."
+ },
+ {
+  "id": "REG-10",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "the roof forms apply to the top storey",
+  "inputs": {
+   "l2": {
+    "height_m": 10.247,
+    "main_wall_height_m": 7.747,
+    "height_storeys": {
+     "unregulated": true
+    }
+   }
+  },
+  "checks": [
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 1,
+    "tol": 0
+   }
+  ],
+  "note": "Hw = max(7.0, H-2.5) = 7.747 is the example's own arithmetic, supplied as the main_wall_height_m cell; height_storeys stored unregulated (no storey cap); H=10.247 made up."
+ },
+ {
+  "id": "STS-1",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "5.2 m (fixture footprint width 5.2 agrees)",
+  "inputs": {
+   "l2": {
+    "side_setback_m": 1.2,
+    "side_setback_street_m": 3
+   },
+   "geometry": {
+    "lot_frontage_m": 9.4
+   },
+   "flags": {
+    "corner_lot": true
+   }
+  },
+  "checks": [
+   {
+    "row": "buildable_width_m",
+    "status": "computed",
+    "value": 5.2,
+    "tol": 0.05
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "STS-2",
+  "layer": "Ruling",
+  "pending_reload": true,
+  "key_answer": "4.09 m on the stored 0.45 (was not_evaluated); 3.19 m once M-435 reaches the fixture (MB-18 (l))",
+  "inputs": {
+   "l2": {
+    "side_setback_m": 0.45,
+    "side_setback_street_m": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_frontage_m": 4.99
+   },
+   "flags": {
+    "corner_lot": true
+   }
+  },
+  "checks": [
+   {
+    "row": "buildable_width_m",
+    "status": "computed",
+    "value": 4.09,
+    "tol": 0.005
+   }
+  ],
+  "note": "Street side encoded unregulated (typed absence per V8-Q1 a, pending reload). Key also gives 3.19 once M-435 (R side yard 0.9) reaches the fixture; that is STS-4."
+ },
+ {
+  "id": "STS-3",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "F 69.53 m2 on the stored 0.45 (54.23 after M-435); GFA 156.63 m2 either way (FSI binds)",
+  "inputs": {
+   "l2": {
+    "side_setback_m": 0.45,
+    "side_setback_street_m": {
+     "unregulated": true
+    },
+    "rear_setback_m": 7.5,
+    "building_depth_m": 17,
+    "building_length_m": {
+     "unregulated": true
+    },
+    "lot_coverage_pct": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_frontage_m": 4.99,
+    "lot_depth_m": 31.38,
+    "lot_area_m2": 156.63
+   },
+   "flags": {
+    "corner_lot": true
+   },
+   "rows": {
+    "front_setback_used_m": 2.125,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 69.53,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 156.63,
+    "tol": 0.005
+   }
+  ],
+  "note": "Width 4.09 comes from buildable_width_m computed from frontage 4.99, side 0.45 (street side unregulated); front 2.125 and n=4 injected as the example gives. Key: F 69.53 on stored 0.45 (54.23 after M-435), GFA 156.63 either way; the stored-0.45 state is encoded."
+ },
+ {
+  "id": "STS-4",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "inputs": {
+   "l2": {
+    "side_setback_m": 0.9,
+    "side_setback_street_m": {
+     "unregulated": true
+    },
+    "rear_setback_m": 7.5,
+    "building_depth_m": 17,
+    "building_length_m": {
+     "unregulated": true
+    },
+    "lot_coverage_pct": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_frontage_m": 4.99,
+    "lot_depth_m": 31.38,
+    "lot_area_m2": 156.63
+   },
+   "flags": {
+    "corner_lot": true
+   },
+   "rows": {
+    "front_setback_used_m": 2.125,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "buildable_width_m",
+    "status": "computed",
+    "value": 3.19,
+    "tol": 0.005
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 54.23,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 156.63,
+    "tol": 0.005
+   }
+  ],
+  "note": "Side yard 0.9 per the example; other A0375 inputs as STS-3. [layer restored from the sheet: Arithmetic; the encoder had GAP-19]"
+ },
+ {
+  "id": "STS-5",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "4.2 m",
+  "inputs": {
+   "l2": {
+    "side_setback_m": 0.9,
+    "side_setback_street_m": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_frontage_m": 6
+   },
+   "flags": {
+    "corner_lot": true
+   }
+  },
+  "checks": [
+   {
+    "row": "buildable_width_m",
+    "status": "computed",
+    "value": 4.2,
+    "tol": 0.05
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "STS-7",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "inputs": {
+   "l2": {
+    "side_setback_m": 1.2,
+    "side_setback_street_m": {
+     "not_evaluated": "condition_unknown"
+    }
+   },
+   "geometry": {
+    "lot_frontage_m": 10
+   },
+   "flags": {
+    "corner_lot": true
+   }
+  },
+  "checks": [
+   {
+    "row": "buildable_width_m",
+    "status": "not_evaluated"
+   }
+  ],
+  "note": "Frontage 10.0 and ordinary side 1.2 are placeholders (the example gives none); they cannot change the checked status. Reason text not checked (key: \"reason carried\"). [layer restored from the sheet: Ruling; the encoder had GAP-14]"
+ },
+ {
+  "id": "REG-1/A0182",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.5,
+    "height_m": 10,
+    "fsi": {
+     "unlimited": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 637.49
+   },
+   "rows": {
+    "footprint_max_m2": 191.247,
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 382.494,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-1/A0203",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.5,
+    "height_m": 10,
+    "fsi": {
+     "unlimited": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 649.91
+   },
+   "rows": {
+    "footprint_max_m2": 197.54,
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 395.08,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-1/A0205",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.5,
+    "height_m": 10,
+    "fsi": {
+     "unlimited": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 659.32
+   },
+   "rows": {
+    "footprint_max_m2": 194.31,
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 388.62,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-1/A0229",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.5,
+    "height_m": 10,
+    "fsi": {
+     "unlimited": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 947.38
+   },
+   "rows": {
+    "footprint_max_m2": 249.05,
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 498.1,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-1/A0277",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.5,
+    "height_m": 10,
+    "fsi": {
+     "unlimited": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 696.73
+   },
+   "rows": {
+    "footprint_max_m2": 197.37,
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 394.74,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-2",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "254.485 unchanged",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7,
+    "height_m": 9,
+    "fsi": 0.5,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 508.97
+   },
+   "rows": {
+    "footprint_max_m2": 167.9601,
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 254.485,
+    "tol": 0.0005
+   }
+  ],
+  "note": "FSI 0.5 and lot 508.97 from the A0094 golden (product = the key cap 254.485). Hw shown 7.0 (key says 7.0 / 7.2).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-3/A0289",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 8.5,
+    "fsi": 0.8,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 244.54
+   },
+   "rows": {
+    "footprint_max_m2": 88.74,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 195.632,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-3/A0457",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 8.5,
+    "fsi": 0.8,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 274.12
+   },
+   "rows": {
+    "footprint_max_m2": 88.57,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 219.296,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-3/A0461",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 8.5,
+    "fsi": 0.8,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 320.43
+   },
+   "rows": {
+    "footprint_max_m2": 88.91,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 256.344,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-3/A0562",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 8.5,
+    "fsi": 0.8,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 304.19
+   },
+   "rows": {
+    "footprint_max_m2": 144.67,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 243.352,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-4",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "147.978 unchanged",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 10.5,
+    "height_m": 13,
+    "fsi": 0.6,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 246.63
+   },
+   "rows": {
+    "footprint_max_m2": 100.81,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "storeys_above_wall",
+    "status": "computed",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 147.978,
+    "tol": 0.0005
+   }
+  ],
+  "note": " FINDING: row storeys_above_wall = max(n - n_w; 0 storeys) returns status not_buildable (value null) when the result is 0, where the key says k = 0 (computed).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-5",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "A0375 not_evaluated -> 156.63 m2 (FSI 1.0 x 156.63 binds on both forms; n_w = n = 4, no attic); the input that moves is the street side (stored unregulated by absence, item 1 A); F 69.53 (54.23 after M-435)",
+  "inputs": {
+   "l2": {
+    "side_setback_m": 0.45,
+    "side_setback_street_m": {
+     "unregulated": true
+    },
+    "rear_setback_m": 7.5,
+    "building_depth_m": 17,
+    "building_length_m": {
+     "unregulated": true
+    },
+    "lot_coverage_pct": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_frontage_m": 4.99,
+    "lot_depth_m": 31.38,
+    "lot_area_m2": 156.63
+   },
+   "flags": {
+    "corner_lot": true
+   },
+   "rows": {
+    "front_setback_used_m": 2.125,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 69.53,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 156.63,
+    "tol": 0.005
+   }
+  ],
+  "note": "Same A0375 encoding as STS-3 (stored 0.45, street side unregulated); n=4 injected. \"not_evaluated -> 156.63\" before/after comparison is not expressible; only the after state is checked.",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0170",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.5,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 486.94
+   },
+   "rows": {
+    "footprint_max_m2": 160.6902,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 243.47,
+    "tol": 0.005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0175",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.6,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 255.42
+   },
+   "rows": {
+    "footprint_max_m2": 114.07,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 153.252,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0193",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.45,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 587.44
+   },
+   "rows": {
+    "footprint_max_m2": 193.8552,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 264.348,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0354",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.45,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 327.15
+   },
+   "rows": {
+    "footprint_max_m2": 114.5025,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 147.2175,
+    "tol": 0.00005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0388",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.6,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 211.74
+   },
+   "rows": {
+    "footprint_max_m2": 84.66,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 127.044,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0399",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.6,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 521.81
+   },
+   "rows": {
+    "footprint_max_m2": 176.46,
+    "storeys_max": 3
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 313.086,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0561",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 1,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 199.33
+   },
+   "rows": {
+    "footprint_max_m2": 75.99,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 199.33,
+    "tol": 0.005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-6/A0578",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.6,
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 320.66
+   },
+   "rows": {
+    "footprint_max_m2": 88.4,
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 192.396,
+    "tol": 0.0005
+   }
+  ],
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
+  "at_switch_on": true
+ },
+ {
+  "id": "REG-7",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "237.4515 unchanged, after the Q-RSM reload. Before it: pitched arms not_evaluated (roof_slope_max no_candidate), headline flat at least 221.0715, flags headline:gfa_flat_m2, headline_lower_bound:gfa_pitched_a_m2, headline_lower_bound:gfa_pitched_b_m2 and the flat row's own headline_lower_bound: main_wall_shares_not_resolved (L3-F3 a; 221.0715 < ceiling 237.4515); G-I's free_share_union case is covered by that one generic flag, the cause staying in the free_share_union_not_taken disclosure (N4 a)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 209.75
+   },
+   "rows": {
+    "footprint_max_m2": 79.1505,
+    "storeys_max": 3,
+    "gfa_flat_m2": 221.0715,
+    "gfa_pitched_a_m2": {
+     "not_evaluated": "roof_slope_max no_candidate"
+    },
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "roof_slope_max no_candidate"
+    }
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 237.4515,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Pre-reload state encoded as the example describes (pitched arms not_evaluated; flat 221.0715; footprint 79.1505 x n 3). The key answer 237.4515 is the after-Q-RSM-reload headline; the pitched figure itself is a computed output, not injectable as an input. FINDING: with both pitched arms not_evaluated the row returns 237.4515 computed with no headline_lower_bound flags (the ceiling), whereas the key says the pre-reload headline is flat >= 221.0715 with lower-bound flags."
+ },
+ {
+  "id": "REG-8",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "stay not_evaluated with the same reason (A0553: waits for MB-18 (j))",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unregulated": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 100
+   },
+   "rows": {
+    "footprint_max_m2": {
+     "not_evaluated": "undecided"
+    },
+    "storeys_max": 2
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "not_evaluated"
+   }
+  ],
+  "note": "Single encoding for the four lots (A0067, A0097, A0553, A0166); storeys 2 and lot area 100 are placeholders that cannot change the not_evaluated outcome. Per-lot reasons (e.g. A0553 waits for MB-18 (j)) are not checked."
+ },
+ {
+  "id": "REG-11",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "increment-1 value: A0179 GFA = min(3 x 79.1505; no cap) = 237.4515; the trace lists the increment-2 switch as off (item 6)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    },
+    "gfa_m2": {
+     "unregulated": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 209.75
+   },
+   "rows": {
+    "footprint_max_m2": 79.1505,
+    "storeys_max": 3
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "off"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 237.4515,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Switch off reverts to the increment-1 formula; trace listing the switch as off is not checked."
+ },
+ {
+  "id": "REG-12",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "no example written; refused at stage 0 if added",
+  "inputs": {},
+  "checks": [],
+  "note": "No example written by design (houseplex / house with suite / structures are not in increment 2)."
+ },
+ {
+  "id": "FLAT-2",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "170.4 m2",
+  "inputs": {
+   "l2": {
+    "upper_storey_setback_m": 1.4
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 204,
+    "front_rear_wall_width_m": 12
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "setback_plate_m2",
+    "status": "computed",
+    "value": 170.4,
+    "tol": 0.05
+   }
+  ],
+  "note": "SYN-A: F 204.0, W 12.0 (W = 204/17) injected as given."
+ },
+ {
+  "id": "FLAT-3",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "578.4 m2 (increment 1 gave 3 x 204.0 = 612.0, so 33.6 less)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.2,
+    "upper_storey_setback_m": 1.4,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "front_rear_wall_width_m": 12
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "row": "setback_plate_m2",
+    "status": "computed",
+    "value": 170.4,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 578.4,
+    "tol": 0.05
+   }
+  ],
+  "note": "SYN-A, no FSI (fsi unlimited). n=3 injected (given in text). Key text states no headline flag; flag not asserted."
+ },
+ {
+  "id": "FLAT-4",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "572.24 m2 (withdrawn); the ruled 578.4 builds 6.16 m2 more",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.2,
+    "upper_storey_setback_m": 1.4,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "buildable_depth_m": 17
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "front_rear_wall_width_m",
+    "status": "computed",
+    "value": 12,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 578.4,
+    "tol": 0.05
+   }
+  ],
+  "note": "Encodes the RULED reading only (W = F / Db = 204/17 = 12.0, GFA 578.4). The withdrawn 572.24 (W = buildable width 14.2) is not encoded. SYN-A Db 17.0 from sheet section C. Hw 7.2 and n=3 from FLAT-3."
+ },
+ {
+  "id": "FLAT-5",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "540.0 m2 (increment 1: min(612.0, 540.0) = 540.0, unchanged)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.2,
+    "upper_storey_setback_m": 1.4,
+    "fsi": 0.9
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "front_rear_wall_width_m": 12
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 540,
+    "tol": 0.05
+   }
+  ],
+  "note": "SYN-A with FSI 0.9; Hw 7.2, n=3 from FLAT-3."
+ },
+ {
+  "id": "FLAT-6",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "578.4 m2 (increment 1: min(612.0, 600.0) = 600.0, so 21.6 less)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.2,
+    "upper_storey_setback_m": 1.4,
+    "fsi": 1
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "front_rear_wall_width_m": 12
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 578.4,
+    "tol": 0.05
+   }
+  ],
+  "note": "SYN-A with FSI 1.0; Hw 7.2, n=3 from FLAT-3."
+ },
+ {
+  "id": "FLAT-7",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "221.0715 m2 (increment 1: 237.4515)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7,
+    "upper_storey_setback_m": 1.4,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 79.1505,
+    "storeys_max": 3,
+    "front_rear_wall_width_m": 5.85
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 221.0715,
+    "tol": 0.00005
+   }
+  ],
+  "note": "A0179: no FSI (unlimited). lot_area_m2 is not given in the example and is irrelevant while FSI is unlimited; a placeholder 1000 is supplied only so the geometry slot exists (not read as a cap)."
+ },
+ {
+  "id": "FLAT-8",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "243.47 m2 (unchanged)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.2,
+    "upper_storey_setback_m": 1.4,
+    "fsi": 0.5
+   },
+   "geometry": {
+    "lot_area_m2": 486.94
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 160.6902,
+    "storeys_max": 3,
+    "buildable_depth_m": 16.51
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "front_rear_wall_width_m",
+    "status": "computed",
+    "value": 9.7329,
+    "tol": 0.00005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 243.47,
+    "tol": 0.005
+   }
+  ],
+  "note": "A0170: W derived from F and Db (not injected); W check is the sheet hand arithmetic (9.7329). Answer cell is the capped 243.47."
+ },
+ {
+  "id": "FLAT-9",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "199.33 m2 (unchanged)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 8.5,
+    "upper_storey_setback_m": 1.4,
+    "fsi": 1
+   },
+   "geometry": {
+    "lot_area_m2": 199.33
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 75.99,
+    "storeys_max": 4,
+    "front_rear_wall_width_m": 4.47
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 199.33,
+    "tol": 0.005
+   }
+  ],
+  "note": "A0561 R lot; F 75.99, W 4.47, n 4, Hw 8.5, FSI 1.0, lot 199.33 all from text."
+ },
+ {
+  "id": "FLAT-10",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "382.494 m2 (unchanged)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.5,
+    "upper_storey_setback_m": 1.4,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 191.247,
+    "storeys_max": 2,
+    "front_rear_wall_width_m": 11.2498
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "wall_storeys",
+    "status": "computed",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 382.494,
+    "tol": 0.0005
+   }
+  ],
+  "note": "A0182: W 11.2498 taken from PITCH-5 (same lot, F/17); it is multiplied by k=0 so does not affect the answer. lot_area placeholder (FSI unlimited)."
+ },
+ {
+  "id": "FLAT-11",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "flat form not_evaluated (reason carried); headline = the pitched form as \"at least X m2\", flag headline_lower_bound naming the flat form; flat shown not evaluated with its reason; the flag is dropped where the pitched figure equals the FSI cap or n x F (Q-FREE A default 4)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.2,
+    "upper_storey_setback_m": {
+     "not_evaluated": "upper_storey_setback_m not_evaluated on all 25 [L2]"
+    },
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "front_rear_wall_width_m": 12
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "setback_plate_m2",
+    "status": "not_evaluated"
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "not_evaluated"
+   }
+  ],
+  "note": "Uses SYN-A (k=1) with the set-back not evaluated; a missing set-back must not read as 0 (612.0). Headline/flag behaviour belongs to the headline row, not encoded."
+ },
+ {
+  "id": "FLAT-12",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "plate 0 m2: the additional storey is not built; flat form = n_w x F, disclosed (item 4)",
+  "inputs": {
+   "l2": {
+    "upper_storey_setback_m": 1.4
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 28,
+    "buildable_depth_m": 2.8
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "front_rear_wall_width_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.05
+   },
+   {
+    "row": "setback_plate_m2",
+    "status": "computed",
+    "value": 0,
+    "tol": 0,
+    "flags_include": [
+     "setback_storey_not_built"
+    ]
+   }
+  ],
+  "note": "F 28.0, Db 2.8 so W 10.0 derived. Key: plate 0; flag name setback_storey_not_built is the catalogue row's own flag."
+ },
+ {
+  "id": "FLAT-13",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "plate floored at 0 (raw -3.36): the additional storey is not built; flat form = n_w x F, disclosed (item 4; never not_buildable)",
+  "inputs": {
+   "l2": {
+    "upper_storey_setback_m": 1.4
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 28,
+    "buildable_depth_m": 2.5
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "front_rear_wall_width_m",
+    "status": "computed",
+    "value": 11.2,
+    "tol": 0.05
+   },
+   {
+    "row": "setback_plate_m2",
+    "status": "computed",
+    "value": 0,
+    "tol": 0,
+    "flags_include": [
+     "setback_storey_not_built"
+    ]
+   }
+  ],
+  "note": "F 28.0, Db 2.5 so W 11.2 derived; raw -3.36 floored at 0."
+ },
+ {
+  "id": "FLAT-14",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "plate F - 2 x 1.4 x W above Hw (union not computed); disclosed free_share_union_not_taken; flag headline_lower_bound: free_share_union only where the flat form is the headline below min(n x F; FSI cap) (none of the 25); M-29 sample item",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {},
+   "switches": {}
+  },
+  "checks": [],
+  "note": "R free-share union is not a catalogue row (disclosure flags free_share_union_not_taken / headline_lower_bound: free_share_union); cannot be expressed as row inputs/checks."
+ },
+ {
+  "id": "PITCH-2",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A p = 0.41667; arm B not_evaluated: no cited rafter span (p would be 0.29412)",
+  "inputs": {
+   "l2": {
+    "height_m": 9.6,
+    "main_wall_height_m": 7.1,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 12,
+    "buildable_depth_m": 17
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.41667,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_pitch_b",
+    "status": "computed",
+    "value": 0.29412,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "SYN-A. Arm B pitch is the \"would be\" figure; the not_evaluated is carried by the arm-B rafter-depth row."
+ },
+ {
+  "id": "PITCH-3",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A p = 0.75; arm B p = 0.3 (s 7.5, d 0.3082)",
+  "inputs": {
+   "l2": {
+    "height_m": 9.25,
+    "main_wall_height_m": 7,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 6,
+    "buildable_depth_m": 15
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.75,
+    "tol": 0.005
+   },
+   {
+    "row": "roof_pitch_b",
+    "status": "computed",
+    "value": 0.3,
+    "tol": 0.05
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "computed",
+    "value": 0.3082,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Key states p to 2 decimals as 0.75 and 0.3 (tolerances set accordingly would be exact values; 0.005/0.05 used)."
+ },
+ {
+  "id": "PITCH-4",
+  "layer": "Ruling",
+  "pending_reload": true,
+  "key_answer": "arm A p = 0.51372; arm B not_evaluated: no cited rafter span",
+  "inputs": {
+   "l2": {
+    "height_m": 9.5,
+    "main_wall_height_m": 7,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 9.7329,
+    "buildable_depth_m": 16.51
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.51372,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "A0170 with the PITCHED row's Hw 7.0 (the ruling). roof_slope_max encoded unregulated (post-reload state); today it is not_evaluated."
+ },
+ {
+  "id": "PITCH-5",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "arm A p = 0.44445; arm B p = 0.29412; no attic, so no rafter tier; both arms n × F",
+  "inputs": {
+   "l2": {
+    "height_m": 10,
+    "main_wall_height_m": 7.5,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 11.2498,
+    "buildable_depth_m": 17,
+    "footprint_max_m2": 191.247,
+    "storeys_max": 2
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.44445,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_pitch_b",
+    "status": "computed",
+    "value": 0.29412,
+    "tol": 0.000005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 382.494,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 382.494,
+    "tol": 0.0005
+   }
+  ],
+  "note": "\"both arms n x F\" encoded as 2 x 191.247 with n=2 (stored cap 2, per FLAT-10 text). lot_area placeholder (FSI unlimited)."
+ },
+ {
+  "id": "PITCH-6",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A p = 1.66667 (cap binds); arm B s 7.5, p = 0.33333",
+  "inputs": {
+   "l2": {
+    "height_m": 12,
+    "main_wall_height_m": 9.5,
+    "roof_slope_max": 1.6666666667,
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 2.8,
+    "buildable_depth_m": 15
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 1.66667,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_pitch_b",
+    "status": "computed",
+    "value": 0.33333,
+    "tol": 0.000005
+   }
+  ],
+  "note": "R cap 5/3 as roof_slope_max."
+ },
+ {
+  "id": "PITCH-7",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "p = 1.66667",
+  "inputs": {
+   "l2": {
+    "height_m": 12,
+    "main_wall_height_m": 9.5,
+    "roof_slope_max": 1.6666666667,
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 3,
+    "buildable_depth_m": 15
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 1.66667,
+    "tol": 0.000005
+   }
+  ],
+  "note": "H 12 and Hw 9.5 carried from PITCH-6 (\"the same\"); Db 15.0 not stated for PITCH-7 (only arm A checked)."
+ },
+ {
+  "id": "PITCH-8",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A p = 1.78571 (uncapped; ridge exactly 12.0); arm B s 7.5, p = 0.33333",
+  "inputs": {
+   "l2": {
+    "height_m": 12,
+    "main_wall_height_m": 9.5,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 2.8,
+    "buildable_depth_m": 15
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 1.78571,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_pitch_b",
+    "status": "computed",
+    "value": 0.33333,
+    "tol": 0.000005
+   }
+  ],
+  "note": "RD, roof_slope_max unregulated."
+ },
+ {
+  "id": "PITCH-9",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "offered (exactly 1:10 is not \"less than\"); no attic here (n = 2 = n_w), so the pitched form equals n x F",
+  "inputs": {
+   "l2": {
+    "height_m": 7.3,
+    "main_wall_height_m": 7,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 6,
+    "footprint_max_m2": 100,
+    "storeys_max": 2
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.1,
+    "tol": 0.00005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 200,
+    "tol": 0
+   }
+  ],
+  "note": "Offered at exactly 1:10 (gate: pitch not < 0.1). Key says pitched form equals n x F; F is not given, so a symbolic F=100 placeholder is injected and the check is 2 x F = 200. Exact-edge test: float (7.3-7.0)/3.0 may fall just below 0.1."
+ },
+ {
+  "id": "PITCH-10",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "not offered: below the by-law 1.0 per 10.0 threshold (M-461); the flat form only (the gate is tested even where n_w = n)",
+  "inputs": {
+   "l2": {
+    "height_m": 7.29,
+    "main_wall_height_m": 7,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 6,
+    "buildable_depth_m": 6,
+    "footprint_max_m2": 100,
+    "storeys_max": 2
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.09667,
+    "tol": 0.000005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "not_evaluated",
+    "reason_includes": "pitched_form_not_offered"
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "pitched_form_not_offered"
+   }
+  ],
+  "note": "n=2 (as PITCH-9/11, same Hw 7.0) injected; F placeholder 100 not read because the gate refuses first."
+ },
+ {
+  "id": "PITCH-11",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "pitched form offered (p 0.16667); no attic (n_w = n), so it equals the flat form, n x F",
+  "inputs": {
+   "l2": {
+    "height_m": 7.5,
+    "main_wall_height_m": 7,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 6,
+    "buildable_depth_m": 6,
+    "footprint_max_m2": 100,
+    "storeys_max": 2
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.16667,
+    "tol": 0.000005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 200,
+    "tol": 0
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 200,
+    "tol": 0
+   }
+  ],
+  "note": "Key: pitched form offered and equals n x F; F not given, symbolic F=100 placeholder, check 2 x F = 200."
+ },
+ {
+  "id": "PITCH-12",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "arm A p = 0.44541, offered; arm B not_evaluated: no cited rafter span",
+  "inputs": {
+   "l2": {
+    "height_m": 8.5,
+    "main_wall_height_m": 7,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 6.7354,
+    "buildable_depth_m": 17
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.44541,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "A0354."
+ },
+ {
+  "id": "PITCH-13-A0175",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "arm A p = 0.74516, 1.00402, 1.11857 (cap does not bind); arm B (s 8.5) not_evaluated on all three",
+  "inputs": {
+   "l2": {
+    "height_m": 11,
+    "main_wall_height_m": 8.5,
+    "roof_slope_max": 1.666666667,
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 6.71,
+    "buildable_depth_m": 17
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.74516,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "Split from PITCH-13 (one fixture per lot); W = 2 x s; arm B s 8.5 so Db 17."
+ },
+ {
+  "id": "PITCH-13-A0388",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "arm A p = 0.74516, 1.00402, 1.11857 (cap does not bind); arm B (s 8.5) not_evaluated on all three",
+  "inputs": {
+   "l2": {
+    "height_m": 11,
+    "main_wall_height_m": 8.5,
+    "roof_slope_max": 1.666666667,
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 4.98,
+    "buildable_depth_m": 17
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 1.00402,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "Split from PITCH-13 (one fixture per lot); W = 2 x s; arm B s 8.5 so Db 17."
+ },
+ {
+  "id": "PITCH-13-A0561",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "arm A p = 0.74516, 1.00402, 1.11857 (cap does not bind); arm B (s 8.5) not_evaluated on all three",
+  "inputs": {
+   "l2": {
+    "height_m": 11,
+    "main_wall_height_m": 8.5,
+    "roof_slope_max": 1.666666667,
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 4.47,
+    "buildable_depth_m": 17
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 1.11857,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "Split from PITCH-13 (one fixture per lot); W = 2 x s; arm B s 8.5 so Db 17."
+ },
+ {
+  "id": "PITCH-15",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "both pairs as labelled arms: arm A s = W/2 (sides held), arm B s = Db/2 (front and rear held); the larger is headlined, the other shown",
+  "inputs": {
+   "l2": {
+    "height_m": 9.6,
+    "main_wall_height_m": 7.1,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "front_rear_wall_width_m": 12,
+    "buildable_depth_m": 17
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.41667,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "SYN-A arms: A s 6.0 p 0.41667; B s 8.5 not evaluated. Which arm is headlined is not a row check."
+ },
+ {
+  "id": "PITCH-16",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "ridge at H; accepted as a disclosure: \"ridge placed at the height limit; chimneys, parapets and rooftop elements not modelled\" (item 10)",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {},
+   "switches": {}
+  },
+  "checks": [],
+  "note": "Disclosure wording (\"ridge placed at the height limit\"); not a row input/check."
+ },
+ {
+  "id": "PITCH-18",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "offered on both arms: arm A p = 0.22222, arm B p = 0.13333 (between 1:10 and 1:4); V8-Q3 a: 10.20.40.11(1) is not a gate for a new house",
+  "inputs": {
+   "l2": {
+    "height_m": 8,
+    "main_wall_height_m": 7,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "pitched_roof_slope_min": 0.1,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "flags": {},
+   "rows": {
+    "footprint_max_m2": 135,
+    "buildable_depth_m": 15,
+    "storeys_max": 2
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "front_rear_wall_width_m",
+    "status": "computed",
+    "value": 9,
+    "tol": 0.05
+   },
+   {
+    "row": "roof_pitch_a",
+    "status": "computed",
+    "value": 0.22222,
+    "tol": 0.000005
+   },
+   {
+    "row": "roof_pitch_b",
+    "status": "computed",
+    "value": 0.13333,
+    "tol": 0.000005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed"
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed"
+   }
+  ],
+  "note": "RD base lot; gate 0.1 (not 0.25) per sheet; \"offered\" encoded as the pitched GFA rows computing (no value asserted)."
+ },
+ {
+  "id": "SLOPE-2",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.25775 m",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.2062,
+    "roof_pitch_a": 0.75
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.25775,
+    "tol": 0.000005
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "SLOPE-3",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.278633 m",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.2572,
+    "roof_pitch_a": 0.4166666666666667
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.278633,
+    "tol": 5e-7
+   }
+  ],
+  "note": "p = 5/12 exact (text 0.41667 is its rounding)."
+ },
+ {
+  "id": "SLOPE-4",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.270333 m",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.1622,
+    "roof_pitch_a": 1.3333333333333333
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.270333,
+    "tol": 5e-7
+   }
+  ],
+  "note": "p = 4/3 exact (text 1.33333)."
+ },
+ {
+  "id": "SLOPE-5",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.315260 m; M-466 vectors 0.363736 and 0.499907",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.1622,
+    "roof_pitch_a": 1.6666666666666667
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.31526,
+    "tol": 5e-7
+   }
+  ],
+  "note": "p = 5/3 exact (text 1.66667)."
+ },
+ {
+  "id": "SLOPE-5-v1",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.315260 m; M-466 vectors 0.363736 and 0.499907",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.2572,
+    "roof_pitch_a": 1
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.363736,
+    "tol": 5e-7
+   }
+  ],
+  "note": "M-466 vector 0.2572 x sqrt(2): p = 1."
+ },
+ {
+  "id": "SLOPE-5-v2",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.315260 m; M-466 vectors 0.363736 and 0.499907",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.2572,
+    "roof_pitch_a": 1.6666666666666667
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.499907,
+    "tol": 5e-7
+   }
+  ],
+  "note": "M-466 vector 0.2572 x sqrt(1+(5/3)^2)."
+ },
+ {
+  "id": "SLOPE-6",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.163009 m at p 0.1; 0.170974 m at p 1/3",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.1622,
+    "roof_pitch_a": 0.1
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.163009,
+    "tol": 5e-7
+   }
+  ],
+  "note": "p = 0.1 case; the p = 1/3 case is SLOPE-6-b."
+ },
+ {
+  "id": "SLOPE-6-b",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "dv = 0.163009 m at p 0.1; 0.170974 m at p 1/3",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.1622,
+    "roof_pitch_a": 0.3333333333333333
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.170974,
+    "tol": 5e-7
+   }
+  ],
+  "note": "p = 1/3 case."
+ },
+ {
+  "id": "SLOPE-7",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "dv = 0.231818 m",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.2062,
+    "roof_pitch_a": 0.51372
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.231818,
+    "tol": 5e-7
+   }
+  ],
+  "note": "A0170 arm A."
+ },
+ {
+  "id": "SLOPE-8",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "the withdrawn flat depth gave 0.2062 m; vertical 0.25775 m is used (difference 0.05155 m)",
+  "inputs": {
+   "l2": {},
+   "geometry": {},
+   "flags": {},
+   "rows": {
+    "roof_assembly_depth_a_m": 0.2062,
+    "roof_pitch_a": 0.75
+   },
+   "switches": {}
+  },
+  "checks": [
+   {
+    "row": "roof_vertical_thickness_a_m",
+    "status": "computed",
+    "value": 0.25775,
+    "tol": 0.000005
+   }
+  ],
+  "note": "Encodes the ruled vertical thickness (0.25775); the withdrawn flat 0.2062 is not encoded."
+ },
+ {
+  "id": "RAFT-2",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "d = 0.1622",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 3.89,
+    "half_span_b_m": 3.89
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.1622,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.1622,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Both arms checked with the same injected half-span (arms share the tier table)."
+ },
+ {
+  "id": "RAFT-3",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "d = 0.2062",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 3.891,
+    "half_span_b_m": 3.891
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.2062,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.2062,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Both arms checked with the same injected half-span (arms share the tier table)."
+ },
+ {
+  "id": "RAFT-4",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "d = 0.2062",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 5.11,
+    "half_span_b_m": 5.11
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.2062,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.2062,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Both arms checked with the same injected half-span (arms share the tier table)."
+ },
+ {
+  "id": "RAFT-5",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "d = 0.2572",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 5.111,
+    "half_span_b_m": 5.111
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.2572,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.2572,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Both arms checked with the same injected half-span (arms share the tier table)."
+ },
+ {
+  "id": "RAFT-6",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "d = 0.2572",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 6.52,
+    "half_span_b_m": 6.52
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.2572,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.2572,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Both arms checked with the same injected half-span (arms share the tier table)."
+ },
+ {
+  "id": "RAFT-7",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "d = 0.3082",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 6.521,
+    "half_span_b_m": 6.521
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.3082,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.3082,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Both arms checked with the same injected half-span (arms share the tier table)."
+ },
+ {
+  "id": "RAFT-8",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "d = 0.3082",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 7.66,
+    "half_span_b_m": 7.66
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.3082,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.3082,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Both arms checked with the same injected half-span (arms share the tier table)."
+ },
+ {
+  "id": "RAFT-9",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "arm A not_evaluated: no cited rafter span (arm B depends on Db)",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 7.661
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": ""
+ },
+ {
+  "id": "RAFT-10",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "both pitched arms not_evaluated: no cited rafter span; headline at least 771.2 m2 (flat), flag headline_lower_bound naming the pitched arms (771.2 is below n x F, so the flag stays)",
+  "inputs": {
+   "l2": {
+    "main_wall_height_m": 7.2,
+    "upper_storey_setback_m": 1.4,
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "rows": {
+    "footprint_max_m2": 272,
+    "storeys_max": 3,
+    "front_rear_wall_width_m": 16,
+    "half_span_a_m": 8,
+    "half_span_b_m": 8.5
+   }
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_flat_m2",
+    "value": 771.2,
+    "tol": 0.05,
+    "flags_include": [
+     "headline_lower_bound:main_wall_shares_not_resolved"
+    ]
+   }
+  ],
+  "note": "lot_area_m2 is not stated; fsi is unlimited so the value is irrelevant (placeholder). Flag name is the interim row flag (the shim maps it); the headline_lower_bound naming the pitched arms is a headline-level output not covered by a row here. 7.2 and 1.4 are the flat Hw and stored set-back (sheet section B)."
+ },
+ {
+  "id": "RAFT-12/A0354",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A d = 0.1622",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 3.3677
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.1622,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Arm B of the other five (s 8.255 or 8.5, per-lot value not stated) is not encoded; the half-span is injected from the example list."
+ },
+ {
+  "id": "RAFT-12/A0170",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A d = 0.2062",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 4.8665
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.2062,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Arm B of the other five (s 8.255 or 8.5, per-lot value not stated) is not encoded; the half-span is injected from the example list."
+ },
+ {
+  "id": "RAFT-12/A0399",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A d = 0.2572",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 5.19
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.2572,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Arm B of the other five (s 8.255 or 8.5, per-lot value not stated) is not encoded; the half-span is injected from the example list."
+ },
+ {
+  "id": "RAFT-12/A0193",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A d = 0.2572",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 5.7016
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.2572,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Arm B of the other five (s 8.255 or 8.5, per-lot value not stated) is not encoded; the half-span is injected from the example list."
+ },
+ {
+  "id": "RAFT-12/A0179",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A d = 0.1622; arm B (A0179, s 6.765) d = 0.3082",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 2.925,
+    "half_span_b_m": 6.765
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.1622,
+    "tol": 0.00005
+   },
+   {
+    "row": "roof_assembly_depth_b_m",
+    "value": 0.3082,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Arm B of the other five (s 8.255 or 8.5, per-lot value not stated) is not encoded; the half-span is injected from the example list."
+ },
+ {
+  "id": "RAFT-12/A0578",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A d = 0.1622",
+  "inputs": {
+   "rows": {
+    "half_span_a_m": 2.6
+   },
+   "l2": {}
+  },
+  "checks": [
+   {
+    "row": "roof_assembly_depth_a_m",
+    "value": 0.1622,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Arm B of the other five (s 8.255 or 8.5, per-lot value not stated) is not encoded; the half-span is injected from the example list."
+ },
+ {
+  "id": "RAFT-14",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "1.5 kPa used",
+  "inputs": {
+   "l2": {}
+  },
+  "checks": [],
+  "note": "Disclosure of a choice (snow column); not a row input or output."
+ },
+ {
+  "id": "ATTIC-4",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A passes; counted attic 142.8 m2 plus free-share block 61.2 m2; pitched GFA = 2 x 204.0 + 61.2 + 142.8 = 612.0 (= n x F, no flag); arm B not_evaluated",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 7.1,
+    "height_m": 9.6,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "half_span_a_m": 6,
+    "half_span_b_m": 8.5
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 142.8,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 612,
+    "tol": 0.05
+   },
+   {
+    "row": "attic_outside_gfa_a_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated"
+   }
+  ],
+  "note": "Front/rear share 60 for arm B is the SYN-C/D frontage-16 value (SYN-A frontage 16.0); arm B is not_evaluated regardless. No FSI: fsi unlimited. Lot 600 (SYN-A)."
+ },
+ {
+  "id": "ATTIC-5",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "passes (80.000 %); counted attic 119.952 + block 71.4; pitched arm A 3 x 238 + 71.4 + 119.952 = 905.352; flat 912.8 is the headline (\"at least\", arm B not evaluated)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 8.0966,
+    "height_m": 10.5966,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60,
+    "upper_storey_setback_m": 1.4
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 238,
+    "storeys_max": 4,
+    "half_span_a_m": 7,
+    "half_span_b_m": 8.5,
+    "front_rear_wall_width_m": 14
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 119.952,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 905.352,
+    "tol": 0.0005
+   },
+   {
+    "row": "attic_outside_gfa_a_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "gfa_flat_m2",
+    "value": 912.8,
+    "tol": 0.05
+   }
+  ],
+  "note": "SYN-D H = Hw + 2.5; lot area not stated (fsi unlimited, placeholder 600). Set-back 1.4 from sheet section B. 80 % edge in exact decimals: float risk."
+ },
+ {
+  "id": "ATTIC-6",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "fails; counted 0; outside GFA 0.7 x 171.354 = 119.948; pitched arm A 714.0 + block 71.4 = 785.4; flat headline at least 912.8, flag headline_lower_bound naming pitched arm B (not evaluated)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 8.0965,
+    "height_m": 10.5965,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60,
+    "upper_storey_setback_m": 1.4
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 238,
+    "storeys_max": 4,
+    "half_span_a_m": 7,
+    "half_span_b_m": 8.5,
+    "front_rear_wall_width_m": 14
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "attic_outside_gfa_a_m2",
+    "value": 119.948,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 785.4,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_flat_m2",
+    "value": 912.8,
+    "tol": 0.05
+   }
+  ],
+  "note": "As ATTIC-5, Hw 8.0965."
+ },
+ {
+  "id": "ATTIC-7",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A passes (85.6 %): counted 70.0 + block 30.0, pitched 400.0; arm B passes (85.2 %): 398.241; headline pitched arm A 400.0",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 9.13875,
+    "height_m": 11.63875,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 100,
+    "storeys_max": 4,
+    "half_span_a_m": 3.3333333333333335,
+    "half_span_b_m": 7.5
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 70,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 400,
+    "tol": 0.05
+   },
+   {
+    "row": "attic_counted_b_m2",
+    "value": 58.241,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "value": 398.241,
+    "tol": 0.0005
+   }
+  ],
+  "note": "SYN-C heights: H = Hw + 2.5 (sheet: H 11.63875). s = 10/3 exact; arm B s 7.5 (stated in the hand arithmetic). Lot area not stated (fsi unlimited)."
+ },
+ {
+  "id": "ATTIC-8",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A passes at 100 %: counted 70.0 + block 30.0, pitched 400.0; arm B passes (97.1 %): counted 60.0 + block 40.0 = 400.0; tie, arm A shown first (default 3)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 9.73875,
+    "height_m": 12.23875,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 100,
+    "storeys_max": 4,
+    "half_span_a_m": 3.3333333333333335,
+    "half_span_b_m": 7.5
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 70,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 400,
+    "tol": 0.05
+   },
+   {
+    "row": "attic_counted_b_m2",
+    "value": 60,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "value": 400,
+    "tol": 0.05
+   }
+  ],
+  "note": "Arm B s 7.5 from ATTIC-7 (same SYN-C, same Db). Tie order is headline-level; not checked."
+ },
+ {
+  "id": "ATTIC-9",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "arm A passes; counted 10.0; pitched 40.0 (the block is left out: it builds less here, item 3); arm B (s 0.75) fails (B), 34.0 with the block; headline arm A 40.0",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 9.2385,
+    "height_m": 11.7385,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 10,
+    "storeys_max": 4,
+    "half_span_a_m": 3.3333333333333335,
+    "half_span_b_m": 0.75
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 10,
+    "tol": 0.05
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 40,
+    "tol": 0.05
+   },
+   {
+    "row": "attic_counted_b_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "value": 34,
+    "tol": 0.05
+   }
+  ],
+  "note": "Boundary test lot below 3 m (item 4). Hw 9.2385 / H 11.7385; s = 10/3 per SYN-C; arm B s 0.75. Exactly-10.0 comparison in floats."
+ },
+ {
+  "id": "ATTIC-10",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "both arms fail (B); pitched arm B 33.966 with the block (larger, item 3), arm A 32.967; outside GFA 6.993 (arm A) / 5.616 (arm B)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 9.2385,
+    "height_m": 11.7385,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 9.99,
+    "storeys_max": 4,
+    "half_span_a_m": 3.3333333333333335,
+    "half_span_b_m": 0.74925
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "attic_counted_b_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 32.967,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "value": 33.966,
+    "tol": 0.0005
+   },
+   {
+    "row": "attic_outside_gfa_a_m2",
+    "value": 6.993,
+    "tol": 0.0005
+   },
+   {
+    "row": "attic_outside_gfa_b_m2",
+    "value": 5.616,
+    "tol": 0.0005
+   }
+  ],
+  "note": "F 9.99; arm B s 0.74925 (from Db 1.4985); arm A s 10/3 (W 6.666667). Lot below 3 m."
+ },
+ {
+  "id": "ATTIC-11",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "arm A passes (83.0 %); counted attic 67.617 + block 34.221; pitched raw 444.048 -> 153.252; attic_outside_gfa 0; mechanical line X = 7.6626 (Q-MECH); arm B (s 8.5) not_evaluated, flag dropped (equals the cap)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": 1.6666666666666667,
+    "fsi": 1,
+    "main_wall_height_m": 8.5,
+    "height_m": 11,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 153.252
+   },
+   "rows": {
+    "footprint_max_m2": 114.07,
+    "storeys_max": 4,
+    "half_span_a_m": 3.355,
+    "half_span_b_m": 8.5
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 67.617,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 153.252,
+    "tol": 0.0005
+   },
+   {
+    "row": "attic_outside_gfa_a_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 7.6626,
+    "tol": 0.00005
+   }
+  ],
+  "note": "FSI cap 153.252 is stated only as a product; encoded as fsi 1 x lot_area 153.252 (the FSI and lot are not separately stated). Roof_slope_max 5/3 (R detached). Front/rear share 60 not used by arm A. s = W/2 = 3.355."
+ },
+ {
+  "id": "ATTIC-16",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "pitched arm A 444.048 m2, attic counted (67.617), attic_outside_gfa 0; the pitched form reads at least 444.048 m2, flag headline_lower_bound naming arm B (not evaluated)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": 1.6666666666666667,
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 8.5,
+    "height_m": 11,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 114.07,
+    "storeys_max": 4,
+    "half_span_a_m": 3.355,
+    "half_span_b_m": 8.5
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 67.617,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 444.048,
+    "tol": 0.0005
+   },
+   {
+    "row": "attic_outside_gfa_a_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated"
+   }
+  ],
+  "note": "SYN-B no FSI (lot area placeholder 600, fsi unlimited). The \"at least\" headline flag is a headline-level output; arm B not_evaluated checked on its row."
+ },
+ {
+  "id": "ATTIC-28",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "SYN-B arm A: dormers make the attic pass (share 0.830, cnt 96.596); with block 342.21 + 34.221 + 0.7 x 96.596 = 444.048; without block 342.21 + 96.596 = 438.806; larger 444.048",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": 1.6666666666666667,
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 8.5,
+    "height_m": 11,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 60
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 114.07,
+    "storeys_max": 4,
+    "half_span_a_m": 3.355,
+    "half_span_b_m": 8.5
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_variant_block_a_m2",
+    "value": 444.048,
+    "tol": 0.0005
+   },
+   {
+    "row": "attic_variant_noblock_a_m2",
+    "value": 438.806,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 444.048,
+    "tol": 0.0005
+   },
+   {
+    "row": "attic_counted_floor_a_m2",
+    "value": 96.596,
+    "tol": 0.0005
+   }
+  ],
+  "note": "SYN-B as ATTIC-16."
+ },
+ {
+  "id": "ATTIC-12/A0388",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "both pass (82.9 %, 82.8 %); counted attic 49.792 and 44.520 (G-I); capped 127.044 and 199.33; mechanical lines 6.3522 and 9.9665 (A0388 part)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": 1.6666666666666667,
+    "fsi": 1,
+    "main_wall_height_m": 8.5,
+    "main_wall_side_share_pct": 70
+   },
+   "geometry": {
+    "lot_area_m2": 127.044
+   },
+   "rows": {
+    "footprint_max_m2": 84.66,
+    "storeys_max": 4,
+    "half_span_a_m": 2.49,
+    "roof_pitch_a": 1.00402
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 49.792,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 127.044,
+    "tol": 0.0005
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 6.3522,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Hw 8.5 stated; storeys_max 4 assumed (n for R lots at H 11, as A0175; not stated in the example); pitch injected as stated; cap encoded as fsi 1 x lot_area = cap."
+ },
+ {
+  "id": "ATTIC-12/A0561",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "counted attic 44.520; capped 199.33; mechanical line 9.9665 (A0561 part of the ATTIC-12 answer)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": 1.6666666666666667,
+    "fsi": 1,
+    "main_wall_height_m": 8.5,
+    "main_wall_side_share_pct": 70
+   },
+   "geometry": {
+    "lot_area_m2": 199.33
+   },
+   "rows": {
+    "footprint_max_m2": 75.99,
+    "storeys_max": 4,
+    "half_span_a_m": 2.235,
+    "roof_pitch_a": 1.11857
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 44.52,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 199.33,
+    "tol": 0.005
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 9.9665,
+    "tol": 0.00005
+   }
+  ],
+  "note": "As A0388."
+ },
+ {
+  "id": "ATTIC-13",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "both arms pass; arm A counted 55.405 + block 23.745, arm B counted 39.575 + block 39.575; pitched 237.4515 on both (tie, arm A shown first)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 7,
+    "height_m": 9.5,
+    "main_wall_side_share_pct": 70,
+    "main_wall_front_rear_share_pct": 50
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 79.1505,
+    "storeys_max": 3,
+    "half_span_a_m": 2.925,
+    "half_span_b_m": 6.765
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 55.405,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 237.4515,
+    "tol": 0.00005
+   },
+   {
+    "row": "attic_counted_b_m2",
+    "value": 39.575,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "value": 237.4515,
+    "tol": 0.00005
+   }
+  ],
+  "note": "No FSI stated for A0179 in ATTIC-23 (\"no FSI\"); lot area placeholder. Roof_slope_max unregulated (RM, after the L2 night)."
+ },
+ {
+  "id": "ATTIC-14",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "arm A passes; counted attic 112.483 + block 48.207; pitched 243.47 (capped); arm B not_evaluated (flag dropped: equals the cap); mechanical line 12.1735",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "main_wall_height_m": 7,
+    "main_wall_side_share_pct": 70
+   },
+   "geometry": {
+    "lot_area_m2": 243.47
+   },
+   "rows": {
+    "footprint_max_m2": 160.6902,
+    "storeys_max": 3,
+    "half_span_a_m": 4.86645,
+    "roof_pitch_a": 0.51372
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 112.483,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 243.47,
+    "tol": 0.005
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 12.1735,
+    "tol": 0.00005
+   }
+  ],
+  "note": "Hw 7.0 derived from c0 1.976 = Hw - 2 x 2.512 (n_w 2); storeys_max 3 derived from raw 482.0706 = 3 x F; cap encoded as fsi 1 x lot area. Arm B not encoded."
+ },
+ {
+  "id": "ATTIC-15/A0193",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "pass; G-I counted attic 135.699; capped; mechanical line 13.2174",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "main_wall_height_m": 7,
+    "main_wall_side_share_pct": 70
+   },
+   "geometry": {
+    "lot_area_m2": 264.348
+   },
+   "rows": {
+    "footprint_max_m2": 193.85571428571433,
+    "storeys_max": 3,
+    "half_span_a_m": 5.7016,
+    "roof_pitch_a": 0.43847
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 135.699,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 264.348,
+    "tol": 0.005
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 13.2174,
+    "tol": 0.00005
+   }
+  ],
+  "note": "F is NOT stated in the example: derived as counted/0.7 (circular for the counted value; the pass test and the cap/mechanical values are independent of that). Hw 7.0 derived from c0 1.976 (n_w 2); storeys_max = n_w + 1 assumed; cap encoded as fsi 1 x lot area. A0578: H 12, Hw 9.5, n_w 3."
+ },
+ {
+  "id": "ATTIC-15/A0354",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "pass; G-I counted attic 80.152; capped; mechanical line 7.3609",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "main_wall_height_m": 7,
+    "main_wall_side_share_pct": 70
+   },
+   "geometry": {
+    "lot_area_m2": 147.2175
+   },
+   "rows": {
+    "footprint_max_m2": 114.50285714285715,
+    "storeys_max": 3,
+    "half_span_a_m": 3.3677,
+    "roof_pitch_a": 0.44541
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 80.152,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 147.2175,
+    "tol": 0.005
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 7.3609,
+    "tol": 0.00005
+   }
+  ],
+  "note": "F is NOT stated in the example: derived as counted/0.7 (circular for the counted value; the pass test and the cap/mechanical values are independent of that). Hw 7.0 derived from c0 1.976 (n_w 2); storeys_max = n_w + 1 assumed; cap encoded as fsi 1 x lot area. A0578: H 12, Hw 9.5, n_w 3."
+ },
+ {
+  "id": "ATTIC-15/A0399",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "pass; G-I counted attic 123.522; capped; mechanical line 15.6543",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "main_wall_height_m": 7,
+    "main_wall_side_share_pct": 70
+   },
+   "geometry": {
+    "lot_area_m2": 313.086
+   },
+   "rows": {
+    "footprint_max_m2": 176.46,
+    "storeys_max": 3,
+    "half_span_a_m": 5.19,
+    "roof_pitch_a": 0.4817
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 123.522,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 313.086,
+    "tol": 0.005
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 15.6543,
+    "tol": 0.00005
+   }
+  ],
+  "note": "F is NOT stated in the example: derived as counted/0.7 (circular for the counted value; the pass test and the cap/mechanical values are independent of that). Hw 7.0 derived from c0 1.976 (n_w 2); storeys_max = n_w + 1 assumed; cap encoded as fsi 1 x lot area. A0578: H 12, Hw 9.5, n_w 3."
+ },
+ {
+  "id": "ATTIC-15/A0578",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "pass; G-I counted attic 61.88; capped; mechanical line 9.6198",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1,
+    "main_wall_height_m": 9.5,
+    "main_wall_side_share_pct": 70
+   },
+   "geometry": {
+    "lot_area_m2": 192.396
+   },
+   "rows": {
+    "footprint_max_m2": 88.4,
+    "storeys_max": 4,
+    "half_span_a_m": 2.6,
+    "roof_pitch_a": 0.96154
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 61.88,
+    "tol": 0.0005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 192.396,
+    "tol": 0.005
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 9.6198,
+    "tol": 0.00005
+   }
+  ],
+  "note": "F is NOT stated in the example: derived as counted/0.7 (circular for the counted value; the pass test and the cap/mechanical values are independent of that). Hw 7.0 derived from c0 1.976 (n_w 2); storeys_max = n_w + 1 assumed; cap encoded as fsi 1 x lot area. A0578: H 12, Hw 9.5, n_w 3."
+ },
+ {
+  "id": "ATTIC-17",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "X = 15.0 m2 left out",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 0.5
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "attic_counted_a_m2": 204
+   }
+  },
+  "checks": [
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 15,
+    "tol": 0.05
+   }
+  ],
+  "note": "FSI 0.5 x lot 600 = 300.0 as stated."
+ },
+ {
+  "id": "ATTIC-18",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "X = 20.0 m2",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1
+   },
+   "geometry": {
+    "lot_area_m2": 500
+   },
+   "rows": {
+    "attic_counted_a_m2": 204
+   }
+  },
+  "checks": [
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 20,
+    "tol": 0.05
+   }
+  ],
+  "note": "Permitted maximum GFA 500.0 encoded as fsi 1 x lot 500 (split not stated)."
+ },
+ {
+  "id": "ATTIC-19",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "X = 20.0 m2",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1
+   },
+   "geometry": {
+    "lot_area_m2": 400
+   },
+   "rows": {
+    "attic_counted_a_m2": 204
+   }
+  },
+  "checks": [
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 20,
+    "tol": 0.05
+   }
+  ],
+  "note": "GFA 400.0 as fsi 1 x lot 400."
+ },
+ {
+  "id": "ATTIC-20",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "X = 19.95 m2",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1
+   },
+   "geometry": {
+    "lot_area_m2": 399
+   },
+   "rows": {
+    "attic_counted_a_m2": 204
+   }
+  },
+  "checks": [
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 19.95,
+    "tol": 0.005
+   }
+  ],
+  "note": "GFA 399.0 as fsi 1 x lot 399."
+ },
+ {
+  "id": "ATTIC-21",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "X = 10.0 m2",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": 1
+   },
+   "geometry": {
+    "lot_area_m2": 500
+   },
+   "rows": {
+    "attic_counted_a_m2": 10
+   }
+  },
+  "checks": [
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 10,
+    "tol": 0.05
+   }
+  ],
+  "note": "GFA 500 as fsi 1 x lot 500; counted attic 10.0."
+ },
+ {
+  "id": "ATTIC-22",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "X = 0, no sentence: no counted attic (and SYN-D has no FSI cap, so Q-MECH would not apply anyway); A0175 is no longer this case (with dormers its attic counts, X = 7.6626)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "attic_counted_a_m2": 0
+   }
+  },
+  "checks": [
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 0,
+    "tol": 0
+   }
+  ],
+  "note": "Counted attic 0 injected, no FSI (SYN-D). The disclosure sentence is not a row output."
+ },
+ {
+  "id": "ATTIC-23",
+  "layer": "Ruling",
+  "pending_reload": true,
+  "key_answer": "not applied, disclosed (Q-MECH: no FSI cap, no permitted maximum GFA base, M-229 (3) form)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "attic_counted_a_m2": 55.405,
+    "attic_counted_b_m2": 39.575
+   }
+  },
+  "checks": [
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_permitted_gfa_base"
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_permitted_gfa_base"
+   }
+  ],
+  "note": "Row returns 0 m2 when fsi is not regulated; the disclosure wording is not a row output. A0179 counted attic from the key (55.405 / 39.575). [lane K 2026-11-04: checks corrected to the key's own answer \"not applied, disclosed\" (the encoder had value 0); operator \"Q-MECH0 a\": not_evaluated:no_permitted_gfa_base]"
+ },
+ {
+  "id": "ATTIC-24",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "no attic; pitched GFA = n x F = 2 x 191.247 = 382.494; disclosed (new disclosure word naming 10.20.40.10(8))",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 191.247,
+    "storeys_max": 2,
+    "wall_storeys": 2,
+    "roof_pitch_a": 0.5
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_a_m2",
+    "value": 382.494,
+    "tol": 0.0005
+   }
+  ],
+  "note": "roof_pitch_a 0.5 is a PLACEHOLDER (not stated; the pitched row needs a pitch above the minimum to be evaluated; the n_w = n result does not depend on its value). Lot area placeholder, fsi unlimited. Disclosure word not a row output."
+ },
+ {
+  "id": "ATTIC-25",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "no attic: storeys_max bounds the attic storey (M-419, M-425; section G1)",
+  "inputs": {
+   "l2": {
+    "attic_counted_clearance_m": 1.4,
+    "attic_qualifying_clearance_m": 2,
+    "attic_qualifying_share_pct": 80,
+    "attic_qualifying_area_m2": 10,
+    "element_width_pct": 40,
+    "pitched_roof_slope_min": 0.1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20,
+    "roof_slope_max": {
+     "unregulated": true
+    },
+    "fsi": {
+     "unlimited": true
+    },
+    "main_wall_height_m": 10.5,
+    "height_m": 13
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "storeys_max": 4
+   }
+  },
+  "checks": [
+   {
+    "row": "attic_counted_a_m2",
+    "value": 0,
+    "tol": 0
+   },
+   {
+    "row": "attic_outside_gfa_a_m2",
+    "value": 0,
+    "tol": 0
+   }
+  ],
+  "note": "Hw 10.5 gives wall_storeys 4 = storeys_max 4. F not stated (not needed by these rows)."
+ },
+ {
+  "id": "ROOF-6",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "not_applicable, not read",
+  "inputs": {
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {}
+  },
+  "checks": [],
+  "note": "Ruling about the stored row upper_storey_setback_m = not_applicable on the pitched route; no catalogue row of that name exists in layer3-catalogue.json (the step-back is read via l2(upper_storey_setback_m) only in setback_plate_m2/gfa_flat_m2), so not expressible as a row check."
+ },
+ {
+  "id": "ROOF-7",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "headline flat, at least 912.8 m2, flag headline_lower_bound naming pitched arm B; other shown: pitched arm A 785.4 + 119.948 m2 outside GFA. (SYN-B: pitched arm A 444.048 at least, beats flat 437.492.)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   },
+   "rows": {
+    "footprint_max_m2": 238,
+    "storeys_max": 4,
+    "gfa_flat_m2": 912.8,
+    "gfa_pitched_a_m2": 785.4,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 912.8,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_flat_m2",
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   }
+  ],
+  "note": "Arm A injected as 785.4 (the sheet gives its figure before the attic). Lot area for SYN-D not stated; omitted (no FSI). lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-8",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "headline pitched 237.4515 (arms A and B tie, arm A shown first; increment 1 unchanged); other shown: flat 221.0715",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 79.1505,
+    "storeys_max": 3,
+    "gfa_flat_m2": 221.0715,
+    "gfa_pitched_a_m2": 237.4515,
+    "gfa_pitched_b_m2": 237.4515
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 237.4515,
+    "tol": 0.00005,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ]
+   }
+  ],
+  "note": "lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-9",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "headline pitched arm A 612.0, no \"at least\" and no flag (612.0 = n x F, Q-FREE A default 4); arm B not_evaluated (s 8.5)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "gfa_flat_m2": 578.4,
+    "gfa_pitched_a_m2": 612,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 612,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ],
+    "flags_exclude": [
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ROOF-10",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "headline flat 243.47 (tie, increment 1 unchanged); other shown: pitched arm A 243.47 with mechanical line 12.1735 outside GFA; arm B not_evaluated (flag dropped: equals the cap)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.5
+   },
+   "geometry": {
+    "lot_area_m2": 486.94
+   },
+   "rows": {
+    "footprint_max_m2": 160.6902,
+    "storeys_max": 3,
+    "gfa_flat_m2": 243.47,
+    "gfa_pitched_a_m2": 243.47,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 243.47,
+    "tol": 0.005,
+    "flags_include": [
+     "headline:gfa_flat_m2"
+    ],
+    "flags_exclude": [
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   }
+  ],
+  "note": "FSI 0.5 and lot 486.94 taken from the 0.5 x 486.94 = 243.47 stated in ROOF-18 (same lot A0170). Mechanical line 12.1735 not checked here."
+ },
+ {
+  "id": "ROOF-11",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "headline flat 540.0 (counted GFA, tie); arm B not_evaluated (flag dropped); see ROOF-16 for the mechanical line",
+  "inputs": {
+   "l2": {
+    "fsi": 0.9
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "gfa_flat_m2": 540,
+    "gfa_pitched_a_m2": 540,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 540,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_flat_m2"
+    ],
+    "flags_exclude": [
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ROOF-12",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "headline flat 382.494; other form shown: pitched 382.494 (no attic, n_w = n)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 191.247,
+    "storeys_max": 2,
+    "gfa_flat_m2": 382.494,
+    "gfa_pitched_a_m2": 382.494,
+    "gfa_pitched_b_m2": 382.494
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 382.494,
+    "tol": 0.0005,
+    "flags_include": [
+     "headline:gfa_flat_m2"
+    ]
+   }
+  ],
+  "note": "Both pitched arms injected at the single pitched figure 382.494 the sheet states (arms moot). lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-13",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "headline flat 408.0 (tie); pitched 408.0 shown (offered, no attic)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 2,
+    "gfa_flat_m2": 408,
+    "gfa_pitched_a_m2": 408,
+    "gfa_pitched_b_m2": 408
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 408,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_flat_m2"
+    ]
+   }
+  ],
+  "note": "Sheet states one pitched figure 408.0 (s 6.0 = arm A); arm B injected at the same 408.0. lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-14",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "gfa_flat_m2": 578.4,
+    "gfa_pitched_a_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    },
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 578.4,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_flat_m2",
+     "headline_lower_bound:gfa_pitched_a_m2",
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   },
+   {
+    "row": "gfa_pitched_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   }
+  ],
+  "note": "F 204 and n 3 from \"SYN-A-like lot\". lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited). [layer restored from the sheet: Ruling; the encoder had GAP-7]"
+ },
+ {
+  "id": "ROOF-16",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "inputs": {
+   "l2": {
+    "fsi": 0.9,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "gfa_flat_m2": 540,
+    "gfa_pitched_a_m2": 540,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    },
+    "attic_counted_a_m2": 204
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 540,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_flat_m2"
+    ]
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 20,
+    "tol": 0.05
+   },
+   {
+    "row": "total_floor_area_pitched_a_m2",
+    "value": 560,
+    "tol": 0.05
+   }
+  ],
+  "note": "FSI 0.9 half. Mechanical share 5 pct and cap 20 m2 are the Q-MECH rule figures. Counted attic 204.0 injected as attic_counted_a_m2. Needs --shim vocab targets (MB-27.L2). [layer restored from the sheet: Ruling; the encoder had GAP-6]"
+ },
+ {
+  "id": "ROOF-16b",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "inputs": {
+   "l2": {
+    "fsi": 1,
+    "mechanical_attic_share_pct": 5,
+    "mechanical_attic_area_max_m2": 20
+   },
+   "geometry": {
+    "lot_area_m2": 600
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "gfa_flat_m2": 578.4,
+    "gfa_pitched_a_m2": 600,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    },
+    "attic_counted_a_m2": 204
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_max_m2",
+    "value": 600,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ]
+   },
+   {
+    "row": "mechanical_attic_outside_gfa_a_m2",
+    "value": 20,
+    "tol": 0.05
+   },
+   {
+    "row": "total_floor_area_pitched_a_m2",
+    "value": 620,
+    "tol": 0.05
+   }
+  ],
+  "note": "FSI 1.0 half of ROOF-16 (cap 600.0; flat 578.4; pitched arm A 600.0). [layer restored from the sheet: Ruling; the encoder had GAP-6]"
+ },
+ {
+  "id": "ROOF-17",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "gfa_pitched_m2 = 237.4515 m2, flag headline:gfa_pitched_a_m2; arm B 237.4515 shown in detail; headline gfa_max_m2 237.4515 (pitched arm A, headline:gfa_pitched_a_m2), flat 221.0715 shown",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 79.1505,
+    "storeys_max": 3,
+    "gfa_flat_m2": 221.0715,
+    "gfa_pitched_a_m2": 237.4515,
+    "gfa_pitched_b_m2": 237.4515
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "value": 237.4515,
+    "tol": 0.00005,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ]
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 237.4515,
+    "tol": 0.00005,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ]
+   }
+  ],
+  "note": "lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-18",
+  "layer": "Ruling",
+  "pending_reload": true,
+  "key_answer": "gfa_pitched_m2 = 243.47 m2, flag headline:gfa_pitched_a_m2, no lower-bound flag (the row takes gfa_max_m2's ceiling, D1 a); arm B not_evaluated: no cited rafter span shown in detail; mechanical line 12.1735 m2 outside GFA attached to the pitched line (item 5); headline flat 243.47 (tie, flat first)",
+  "inputs": {
+   "l2": {
+    "fsi": 0.5
+   },
+   "geometry": {
+    "lot_area_m2": 486.94
+   },
+   "rows": {
+    "footprint_max_m2": 160.6902,
+    "storeys_max": 3,
+    "gfa_flat_m2": 243.47,
+    "gfa_pitched_a_m2": 243.47,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "value": 243.47,
+    "tol": 0.005,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ],
+    "flags_exclude": [
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 243.47,
+    "tol": 0.005,
+    "flags_include": [
+     "headline:gfa_flat_m2"
+    ]
+   }
+  ],
+  "note": "Mechanical line 12.1735 not checked (counted attic of A0170 not stated)."
+ },
+ {
+  "id": "ROOF-19",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "gfa_pitched_m2 = at least 444.048 m2, flags headline:gfa_pitched_a_m2 and headline_lower_bound:gfa_pitched_b_m2; arm B not_evaluated: no cited rafter span; headline gfa_max_m2 the same (pitched beats flat 437.492)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 114.07,
+    "storeys_max": 4,
+    "gfa_flat_m2": 437.492,
+    "gfa_pitched_a_m2": 444.048,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "value": 444.048,
+    "tol": 0.0005,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2",
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 444.048,
+    "tol": 0.0005,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ]
+   }
+  ],
+  "note": "lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-20",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "gfa_pitched_m2 = not_evaluated: no_cited_rafter_span (both arms; the first argument's reason); headline gfa_max_m2 = at least 742.28 m2 (flat), flags headline:gfa_flat_m2, headline_lower_bound:gfa_pitched_a_m2, headline_lower_bound:gfa_pitched_b_m2, headline_lower_bound: main_wall_shares_not_resolved (the flat row's own interim flag, L3-F3 a)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 261.8,
+    "storeys_max": 3,
+    "gfa_flat_m2": 742.28,
+    "gfa_pitched_a_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    },
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 742.28,
+    "tol": 0.005,
+    "flags_include": [
+     "headline:gfa_flat_m2",
+     "headline_lower_bound:gfa_pitched_a_m2",
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   }
+  ],
+  "note": "The flat row own interim flag main_wall_shares_not_resolved is not checked (flat row injected). lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-21",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "gfa_pitched_m2 = 216.0 m2, flags headline:gfa_pitched_b_m2 and dropped:gfa_pitched_a_m2 (no lower bound); headline gfa_max_m2 216.0 flat (tie, flat first), flags headline:gfa_flat_m2, dropped:gfa_pitched_a_m2",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 108,
+    "storeys_max": 2,
+    "gfa_flat_m2": 216,
+    "gfa_pitched_a_m2": {
+     "not_evaluated": "pitched_form_not_offered"
+    },
+    "gfa_pitched_b_m2": 216
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "value": 216,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_pitched_b_m2",
+     "dropped:gfa_pitched_a_m2"
+    ],
+    "flags_exclude": [
+     "headline_lower_bound:gfa_pitched_a_m2"
+    ]
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 216,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_flat_m2",
+     "dropped:gfa_pitched_a_m2"
+    ],
+    "flags_exclude": [
+     "headline_lower_bound:gfa_pitched_a_m2"
+    ]
+   }
+  ],
+  "note": "lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-22",
+  "layer": "Arithmetic",
+  "pending_reload": false,
+  "key_answer": "gfa_pitched_m2 = 753.990 m2 (arm B), flag headline:gfa_pitched_b_m2; arm A 748.989 shown in detail; headline gfa_max_m2 753.990 (pitched arm B), flat 744.8 shown; no lower-bound flag (both arms evaluated)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 196,
+    "storeys_max": 4,
+    "gfa_flat_m2": 744.8,
+    "gfa_pitched_a_m2": 748.988781,
+    "gfa_pitched_b_m2": 753.990384
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "value": 753.99,
+    "tol": 0.0005,
+    "flags_include": [
+     "headline:gfa_pitched_b_m2"
+    ],
+    "flags_exclude": [
+     "headline_lower_bound:gfa_pitched_a_m2",
+     "headline_lower_bound:gfa_pitched_b_m2"
+    ]
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 753.99,
+    "tol": 0.0005,
+    "flags_include": [
+     "headline:gfa_pitched_b_m2"
+    ]
+   }
+  ],
+  "note": "lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-23",
+  "layer": "Arithmetic",
+  "pending_reload": true,
+  "key_answer": "gfa_pitched_m2 = 382.494 m2, flag headline:gfa_pitched_a_m2; arm B 382.494 (evaluated: no rafter is needed without an attic); headline flat 382.494 (tie, flat first)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 191.247,
+    "storeys_max": 2,
+    "gfa_flat_m2": 382.494,
+    "gfa_pitched_a_m2": 382.494,
+    "gfa_pitched_b_m2": 382.494
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "value": 382.494,
+    "tol": 0.0005,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ]
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 382.494,
+    "tol": 0.0005,
+    "flags_include": [
+     "headline:gfa_flat_m2"
+    ]
+   }
+  ],
+  "note": "lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ },
+ {
+  "id": "ROOF-24",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "the \"Pitched, max\" line is not shown; the trace lists formula:gfa_pitched_m2 as off; the headline is unchanged, because gfa_max_m2 reads the arm rows directly (D3 a)",
+  "inputs": {
+   "l2": {
+    "fsi": {
+     "unlimited": true
+    }
+   },
+   "rows": {
+    "footprint_max_m2": 204,
+    "storeys_max": 3,
+    "gfa_flat_m2": 578.4,
+    "gfa_pitched_a_m2": 612,
+    "gfa_pitched_b_m2": {
+     "not_evaluated": "no_cited_rafter_span"
+    }
+   },
+   "switches": {
+    "formula:gfa_max_m2:increment_2": "on",
+    "formula:gfa_pitched_m2": "off"
+   },
+   "geometry": {
+    "lot_area_m2": 1000
+   }
+  },
+  "checks": [
+   {
+    "row": "gfa_pitched_m2",
+    "reason_includes": "gfa_pitched_m2"
+   },
+   {
+    "row": "gfa_max_m2",
+    "value": 612,
+    "tol": 0.05,
+    "flags_include": [
+     "headline:gfa_pitched_a_m2"
+    ]
+   }
+  ],
+  "note": "Sheet says \"any lot\"; SYN-A figures (ROOF-9) used as the lot. gfa_pitched_m2 check asserts only that the switch is named in the reason (line not shown). lot_area_m2 1000 is a placeholder (not stated by the example; the row requires it; irrelevant because FSI is unlimited)."
+ }
+]

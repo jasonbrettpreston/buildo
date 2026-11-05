@@ -1,0 +1,230 @@
+== MB-27 increment-2 rows red: locks src/tests/steps/compute_maxbld_scenarios/increment2-revisions.logic.test.ts and increment2-worked-examples.logic.test.ts (new), run on the base tree cfbe3aafa (no increment-2 rows, no revisions, no R1 tags, no Q-T61 / Q-MECH0 rows); the examples pending reload and at the switch-on are it.todo
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-21: 2
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-22: 2
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-23: 3
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-24: 3
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-25: 3
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-26: 3
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-27: 4
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-28: 4 (Q3 a would have said 3)
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-20: wall storeys not_evaluated (reason carried); shares stay as stored but unused
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-29: k = 1
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-30: k = 0
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-31: 2 wall storeys, k = 0
+     → runRow: unknown row storeys_above_wall
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-32: k = 1
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > MW-33: k = 0
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > REG-9: increment 1 unchanged
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > REG-10: the roof forms apply to the top storey
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-2: 170.4 m2
+     → runRow: unknown row setback_plate_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-3: 578.4 m2 (increment 1 gave 3 x 204.0 = 612.0, so 33.6 less)
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-4: 572.24 m2 (withdrawn); the ruled 578.4 builds 6.16 m2 more
+     → runRow: unknown row front_rear_wall_width_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-5: 540.0 m2 (increment 1: min(612.0, 540.0) = 540.0, unchanged)
+     → runRow: unknown row gfa_flat_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-6: 578.4 m2 (increment 1: min(612.0, 600.0) = 600.0, so 21.6 less)
+     → runRow: unknown row gfa_flat_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-7: 221.0715 m2 (increment 1: 237.4515)
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-8: 243.47 m2 (unchanged)
+     → runRow: unknown row front_rear_wall_width_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-10: 382.494 m2 (unchanged)
+     → runRow: unknown row wall_storeys
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-11: flat form not_evaluated (reason carried); headline = the pitched form as "at least X m2", flag headl
+     → runRow: unknown row setback_plate_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-12: plate 0 m2: the additional storey is not built; flat form = n_w x F, disclosed (item 4)
+     → runRow: unknown row front_rear_wall_width_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > FLAT-13: plate floored at 0 (raw -3.36): the additional storey is not built; flat form = n_w x F, disclosed (
+     → runRow: unknown row front_rear_wall_width_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-2: arm A p = 0.41667; arm B not_evaluated: no cited rafter span (p would be 0.29412)
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-3: arm A p = 0.75; arm B p = 0.3 (s 7.5, d 0.3082)
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-6: arm A p = 1.66667 (cap binds); arm B s 7.5, p = 0.33333
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-7: p = 1.66667
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-8: arm A p = 1.78571 (uncapped; ridge exactly 12.0); arm B s 7.5, p = 0.33333
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-9: offered (exactly 1:10 is not "less than"); no attic here (n = 2 = n_w), so the pitched form equals n
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-10: not offered: below the by-law 1.0 per 10.0 threshold (M-461); the flat form only (the gate is tested
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-11: pitched form offered (p 0.16667); no attic (n_w = n), so it equals the flat form, n x F
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-15: both pairs as labelled arms: arm A s = W/2 (sides held), arm B s = Db/2 (front and rear held); the l
+     → runRow: unknown row roof_pitch_a
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > PITCH-18: offered on both arms: arm A p = 0.22222, arm B p = 0.13333 (between 1:10 and 1:4); V8-Q3 a: 10.20.40
+     → runRow: unknown row front_rear_wall_width_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-2: dv = 0.25775 m
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-3: dv = 0.278633 m
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-4: dv = 0.270333 m
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-5: dv = 0.315260 m; M-466 vectors 0.363736 and 0.499907
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-5-v1: dv = 0.315260 m; M-466 vectors 0.363736 and 0.499907
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-5-v2: dv = 0.315260 m; M-466 vectors 0.363736 and 0.499907
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-6: dv = 0.163009 m at p 0.1; 0.170974 m at p 1/3
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-6-b: dv = 0.163009 m at p 0.1; 0.170974 m at p 1/3
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > SLOPE-8: the withdrawn flat depth gave 0.2062 m; vertical 0.25775 m is used (difference 0.05155 m)
+     → runRow: unknown row roof_vertical_thickness_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-2: d = 0.1622
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-3: d = 0.2062
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-4: d = 0.2062
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-5: d = 0.2572
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-6: d = 0.2572
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-7: d = 0.3082
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-8: d = 0.3082
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-9: arm A not_evaluated: no cited rafter span (arm B depends on Db)
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-10: both pitched arms not_evaluated: no cited rafter span; headline at least 771.2 m2 (flat), flag headl
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-12/A0354: arm A d = 0.1622
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-12/A0170: arm A d = 0.2062
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-12/A0399: arm A d = 0.2572
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-12/A0193: arm A d = 0.2572
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-12/A0179: arm A d = 0.1622; arm B (A0179, s 6.765) d = 0.3082
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > RAFT-12/A0578: arm A d = 0.1622
+     → runRow: unknown row roof_assembly_depth_a_m
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-4: arm A passes; counted attic 142.8 m2 plus free-share block 61.2 m2; pitched GFA = 2 x 204.0 + 61.2 +
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-5: passes (80.000 %); counted attic 119.952 + block 71.4; pitched arm A 3 x 238 + 71.4 + 119.952 = 905.
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-6: fails; counted 0; outside GFA 0.7 x 171.354 = 119.948; pitched arm A 714.0 + block 71.4 = 785.4; fla
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-7: arm A passes (85.6 %): counted 70.0 + block 30.0, pitched 400.0; arm B passes (85.2 %): 398.241; hea
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-8: arm A passes at 100 %: counted 70.0 + block 30.0, pitched 400.0; arm B passes (97.1 %): counted 60.0
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-9: arm A passes; counted 10.0; pitched 40.0 (the block is left out: it builds less here, item 3); arm B
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-10: both arms fail (B); pitched arm B 33.966 with the block (larger, item 3), arm A 32.967; outside GFA 
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-16: pitched arm A 444.048 m2, attic counted (67.617), attic_outside_gfa 0; the pitched form reads at lea
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-28: SYN-B arm A: dormers make the attic pass (share 0.830, cnt 96.596); with block 342.21 + 34.221 + 0.7
+     → runRow: unknown row attic_variant_block_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-17: X = 15.0 m2 left out
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-18: X = 20.0 m2
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-19: X = 20.0 m2
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-20: X = 19.95 m2
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-21: X = 10.0 m2
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-22: X = 0, no sentence: no counted attic (and SYN-D has no FSI cap, so Q-MECH would not apply anyway); A
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ATTIC-25: no attic: storeys_max bounds the attic storey (M-419, M-425; section G1)
+     → runRow: unknown row attic_counted_a_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-7: headline flat, at least 912.8 m2, flag headline_lower_bound naming pitched arm B; other shown: pitch
+     → ROOF-7/gfa_max_m2: 952 vs key 912.8: expected 39.200000000000045 to be less than or equal to 0.05
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-9: headline pitched arm A 612.0, no "at least" and no flag (612.0 = n x F, Q-FREE A default 4); arm B n
+     → ROOF-9/gfa_max_m2: flag headline:gfa_pitched_a_m2: expected [] to include 'headline:gfa_pitched_a_m2'
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-11: headline flat 540.0 (counted GFA, tie); arm B not_evaluated (flag dropped); see ROOF-16 for the mech
+     → ROOF-11/gfa_max_m2: flag headline:gfa_flat_m2: expected [] to include 'headline:gfa_flat_m2'
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-13: headline flat 408.0 (tie); pitched 408.0 shown (offered, no attic)
+     → ROOF-13/gfa_max_m2: flag headline:gfa_flat_m2: expected [] to include 'headline:gfa_flat_m2'
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-14: undefined
+     → ROOF-14/gfa_max_m2: 612 vs key 578.4: expected 33.60000000000002 to be less than or equal to 0.05
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-16: undefined
+     → ROOF-16/gfa_max_m2: flag headline:gfa_flat_m2: expected [] to include 'headline:gfa_flat_m2'
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-16b: undefined
+     → ROOF-16b/gfa_max_m2: flag headline:gfa_pitched_a_m2: expected [] to include 'headline:gfa_pitched_a_m2'
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-19: gfa_pitched_m2 = at least 444.048 m2, flags headline:gfa_pitched_a_m2 and headline_lower_bound:gfa_p
+     → runRow: unknown row gfa_pitched_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-20: gfa_pitched_m2 = not_evaluated: no_cited_rafter_span (both arms; the first argument's reason); headl
+     → runRow: unknown row gfa_pitched_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-21: gfa_pitched_m2 = 216.0 m2, flags headline:gfa_pitched_b_m2 and dropped:gfa_pitched_a_m2 (no lower bo
+     → runRow: unknown row gfa_pitched_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-22: gfa_pitched_m2 = 753.990 m2 (arm B), flag headline:gfa_pitched_b_m2; arm A 748.989 shown in detail; 
+     → runRow: unknown row gfa_pitched_m2
+   × MB-27 increment 2 worked examples (the McProof-signed key, M-479) > ROOF-24: the "Pitched, max" line is not shown; the trace lists formula:gfa_pitched_m2 as off; the headline is
+     → runRow: unknown row gfa_pitched_m2
+   × MB-27 increment 2: revisions and the switchboard (M-476, M-458) > V1 the two increment-1 rows with an increment-2 formula carry it as one revision behind its own switch; ids stay unique
+     → expected [] to deeply equal [ 'buildable_width_m', 'gfa_max_m2' ]
+   × MB-27 increment 2: revisions and the switchboard (M-476, M-458) > V2 validateCatalogue reads a revision: an unknown switch, a parse error or an unknown row in it is a violation
+     → Cannot read properties of undefined (reading '0')
+   × MB-27 increment 2: revisions and the switchboard (M-476, M-458) > STS-2 (M-458) the revision on: a corner lot whose street side is stored unregulated reads the side yard, 4.99 − 0.45 − 0.45 = 4.09 m
+     → expected 'unregulated' to be 'computed' // Object.is equality
+   × MB-27 increment 2: revisions and the switchboard (M-476, M-458) > M-476 the revision off: the increment-1 formula is read (the street side itself, unregulated, so no width) and the switch is listed as off
+     → expected [] to deep equally contain { …(2) }
+   × MB-27 increment 2: revisions and the switchboard (M-476, M-458) > REG-11 (M-476) gfa_max_m2 with its increment-2 switch off is the increment-1 value 3 × 79.1505 = 237.4515, the switch listed as off
+     → expected [] to deep equally contain { …(2) }
+   × MB-27 increment 2: revisions and the switchboard (M-476, M-458) > ROOF-24 (D3 a) gfa_pitched_m2 switched off is not shown by runAllRows, and the headline, which reads the arm rows, is unchanged
+     → expected [ 'permitted', …(9) ] to include 'gfa_pitched_m2'
+   × MB-27 R1: design_option tags on the catalogue rows (plan-reader-and-mech.md 1.4; operator "Q-r1 a") > R1-1 the flat run rows are setback_plate_m2 and gfa_flat_m2; the pitched run rows are the arm, attic, pitched GFA and mechanical rows; the rest carry no option
+     → expected [] to deeply equal [ 'setback_plate_m2', 'gfa_flat_m2' ]
+   × MB-27 R1: design_option tags on the catalogue rows (plan-reader-and-mech.md 1.4; operator "Q-r1 a") > R1-3 (OR-9) an unknown option key or value is a violation
+     → Cannot set properties of undefined (setting 'design_option')
+   × MB-27 R1: design_option tags on the catalogue rows (plan-reader-and-mech.md 1.4; operator "Q-r1 a") > R1-4 fail closed: with no vocab.design_options every tag is a violation, and a tag must be an object of one key
+     → Cannot set properties of undefined (setting 'design_option')
+   × MB-27 Q-DEFAULT (operator "Q-default a"): the increment-2 headline revision and the rows it reads default off > QD-1 the off switches are reading:shape_calibration and exactly the four Q-DEFAULT switches
+     → expected [ 'reading:shape_calibration' ] to deeply equal [ 'formula:gfa_flat_m2', …(4) ]
+   × MB-27 Q-DEFAULT (operator "Q-default a"): the increment-2 headline revision and the rows it reads default off > QD-2 with the board as seeded, gfa_max_m2 is the increment-1 value; the three switched-off GFA form rows are not shown (D3 a); gfa_pitched_m2, which reads them, is shown not evaluated with the switch as its reason
+     → expected [ undefined, undefined ] to deeply equal [ 'not_evaluated', …(1) ]
+   × MB-27 slot 61 (operator "Q-T61 (a)"): the pitched form is offered where the threshold is unregulated or not_applicable > T61 unregulated (RT, ABS-8; OR-8 (ii)): both arms compute, 2 × 100 = 200, the same as the arm with no minimum
+     → runRow: unknown row gfa_pitched_a_m2
+   × MB-27 slot 61 (operator "Q-T61 (a)"): the pitched form is offered where the threshold is unregulated or not_applicable > T61 unregulated (RT, ABS-8; OR-8 (ii)), even at a pitch of 0.05 (no threshold binds, so nothing refuses it)
+     → runRow: unknown row gfa_pitched_a_m2
+   × MB-27 slot 61 (operator "Q-T61 (a)"): the pitched form is offered where the threshold is unregulated or not_applicable > T61 not_applicable (by subject; OR-8 (iii)): both arms compute, 2 × 100 = 200, the same as the arm with no minimum
+     → runRow: unknown row gfa_pitched_a_m2
+   × MB-27 slot 61 (operator "Q-T61 (a)"): the pitched form is offered where the threshold is unregulated or not_applicable > T61 not_applicable (by subject; OR-8 (iii)), even at a pitch of 0.05 (no threshold binds, so nothing refuses it)
+     → runRow: unknown row gfa_pitched_a_m2
+   × MB-27 slot 61 (operator "Q-T61 (a)"): the pitched form is offered where the threshold is unregulated or not_applicable > T61 a stored threshold still decides (M-461): 0.05 < 0.1 is refused pitched_form_not_offered; 0.5 ≥ 0.1 is offered, 2 × 100
+     → runRow: unknown row gfa_pitched_a_m2
+   × MB-27 slot 61 (operator "Q-T61 (a)"): the pitched form is offered where the threshold is unregulated or not_applicable > T61 R3-01: an undecided threshold (not_evaluated) stays undecided, never offered and never refused
+     → runRow: unknown row gfa_pitched_a_m2
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > the reason word is declared in the closed list (the M-428 form)
+     → expected [ 'no_cited_rafter_span', …(1) ] to include 'no_permitted_gfa_base'
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > ATTIC-23 arm a: no FSI cap and a counted attic: not_evaluated:no_permitted_gfa_base, never 0
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > ATTIC-22 arm a: no counted attic gives 0 (M-229 (3)), with or without an FSI cap
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > Q-M1 b+ arm a: an FSI cap with the targets not yet stored is not_evaluated missing_input:absent_target ("not yet stored")
+     → runRow: unknown row mechanical_attic_outside_gfa_a_m2
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > ATTIC-23 arm b: no FSI cap and a counted attic: not_evaluated:no_permitted_gfa_base, never 0
+     → runRow: unknown row mechanical_attic_outside_gfa_b_m2
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > ATTIC-22 arm b: no counted attic gives 0 (M-229 (3)), with or without an FSI cap
+     → runRow: unknown row mechanical_attic_outside_gfa_b_m2
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > Q-M1 b+ arm b: an FSI cap with the targets not yet stored is not_evaluated missing_input:absent_target ("not yet stored")
+     → runRow: unknown row mechanical_attic_outside_gfa_b_m2
+   × MB-27 Q-MECH0 (operator "a"): no FSI cap gives not_evaluated:no_permitted_gfa_base, never zero (M-472; ATTIC-22, ATTIC-23) > the total floor area line carries the same reason on a no-FSI lot (shown only where an FSI cap exists, M-472)
+     → runRow: unknown row total_floor_area_pitched_a_m2
+      Tests  114 failed | 11 passed | 50 todo (175)

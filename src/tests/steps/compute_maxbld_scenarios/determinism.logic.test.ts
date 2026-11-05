@@ -70,11 +70,11 @@ describe('MB-31 determinism, G68-11 (waits B5)', () => {
     SEEDS = loadSeeds();
   });
 
-  it('two calls on the same parcel give ten equal rows', () => {
+  it('two calls on the same parcel give forty-four equal rows', () => {
     const a = S.buildParcelRows(makeParcel(false), SEEDS, META);
     const b = S.buildParcelRows(makeParcel(false), SEEDS, META);
-    expect(a).toHaveLength(10);
-    expect(b).toHaveLength(10);
+    expect(a).toHaveLength(44); // Q-K-ASSERT a (D3 a, "Q-k1a"): 47 rows less the three switched-off GFA form rows; was 10
+    expect(b).toHaveLength(44);
     const pick = (rows: Json[]) => rows.map((r) => [r.field_id, r.status, r.value, r.reason, r.content_sha]);
     expect(pick(a)).toEqual(pick(b));
   });

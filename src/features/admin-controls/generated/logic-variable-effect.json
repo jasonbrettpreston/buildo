@@ -1489,6 +1489,62 @@
       "legacy_name": null,
       "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
     },
+    "compute_maxbld_scenarios_rafter_span_1_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_rafter_span_2_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_rafter_span_3_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_rafter_span_4_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_roof_assembly_depth_1_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_roof_assembly_depth_2_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_roof_assembly_depth_3_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_roof_assembly_depth_4_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
     "enrich_permits_bylaw_max_coverage_null_warn_pct": {
       "badge": "takes_effect_at_cutover",
       "label": "Takes effect at cutover",
