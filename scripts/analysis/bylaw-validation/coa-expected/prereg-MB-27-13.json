@@ -1,0 +1,139 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 13 (R-MA): the revert round of increment 1 (R-LZ) that lands Q-RSM (M-482) as data through the MB-79 (f) oracle door: Phase 2 stores principal roof_slope_max as unregulated by absence in RD, RS, RT and RM for every class, and in R for detached_houseplex, semi_detached_house and semi_detached_houseplex, absence rulings ABS-10.1..10.5 in scripts/seeds/bylaw/absence-rulings.json. Lock: src/tests/bylaw-mb27l2-roof-slope.logic.test.ts (new, red first on the M-475 tree). The bylaw-eval-perf corpus moves 140 of 140 roof_slope_max cells (all status moves), and G5-p hashes the same corpus; both move only through the door lines in expected_value_changes (old = the lines after the M-475 data commit; operator D-s1-a; DOOR-PA). Expected: 0 scorer rows move on the 172, 4d and cumulative sets (measured: byte-identical scorecards); totals equal prereg-MB-27-11; floors unchanged. Re-pin RP-12 (with Q-RP12F a), version and hash fields only. golden-25 unchanged (roof_slope_max is not among its inputs). ARM C: M-482 is OWED and its named lock lands in this commit; red evidence docs/reports/red-evidence/bylaw/bylaw-mb27l2-roof-slope-red.txt.",
+ "round": 70,
+ "rules": [
+  "M-482",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md section 2 (row 7); ~/Buildo-scratch/mcbylaws/MB-27L2/door/ (door-entries.v2.verbatim.txt, v2/); decision 2026-11-04-batch-ay#CHAT-226.Q-RSM",
+ "expected_repin": "RP-12 with Q-RP12F a, version and hash fields only: docs/reference/bylaw-layer2-input.json table_version, body_sha256 and the generated body.absences line; docs/reference/maxbld-amendment-index.json layer2_table_version; expected-172.json and expected-4d.json commit and inputs.table_version. Any other field stops for the operator.",
+ "expected_assertion_changes": [],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0179 bylaw-eval-perf roof slope",
+   "ruling": "M-482",
+   "ruling_ref": "CHAT-226.Q-RSM",
+   "old": "expect(h.digest('hex')).toBe('8a9df58fee131ec1c19d689f15c5dd716b6b572642638ddf1c5f9c0ea2226ea1');",
+   "new": "expect(h.digest('hex')).toBe('6f87158700284aabf3ad7ff4eae65ea00b4c7e7a1d0799709e384d427d1057ec');"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0179 bylaw-eval-perf roof slope",
+   "ruling": "M-482",
+   "ruling_ref": "CHAT-226.Q-RSM",
+   "old": "expect(hLeftOut.digest('hex')).toBe('ec081f3b0c581aed162bc42ba0c652ae738689add18ab80761db8e8fd0dffb06');",
+   "new": "expect(hLeftOut.digest('hex')).toBe('cada5b36283eb70988f1a2f6f4d83b84a89d31f84d6178f0694a5b6155f936a9');"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0179 bylaw-eval-perf roof slope",
+   "ruling": "M-482",
+   "ruling_ref": "CHAT-226.Q-RSM",
+   "old": null,
+   "new": "// re-pinned 2026-11-05 (M-482, Q-RSM, roof_slope_max absence ABS-10.1..10.5): all 140 roof_slope_max cells move, no_candidate →"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0179 bylaw-eval-perf roof slope",
+   "ruling": "M-482",
+   "ruling_ref": "CHAT-226.Q-RSM",
+   "old": null,
+   "new": "// unregulated by absence (the 35 RD/RS/RT/RM lots × 4 variants, zone-wide); nothing else moved."
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0179 bylaw-permission-disclosure G5-p roof slope",
+   "ruling": "M-482",
+   "ruling_ref": "CHAT-226.Q-RSM",
+   "old": "const G5_PIN = '3f3cfa5bc78da4a05dcb91bf989d2a26f909338275c2ad6d6292ffb2fabcac61';",
+   "new": "const G5_PIN = 'bdcce3c4bb3073b4e5a765dce3d63758392b21a744cfa80014398690d80f23c1';"
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0179 bylaw-permission-disclosure G5-p roof slope",
+   "ruling": "M-482",
+   "ruling_ref": "CHAT-226.Q-RSM",
+   "old": null,
+   "new": "// re-pinned 2026-11-05 (M-482, Q-RSM, ABS-10.1..10.5): the corpus moved 140 roof_slope_max cells, as bylaw-eval-perf."
+  }
+ ],
+ "schema": "coa-round-prereg-v1",
+ "task": "MB-27",
+ "increment": "1",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
