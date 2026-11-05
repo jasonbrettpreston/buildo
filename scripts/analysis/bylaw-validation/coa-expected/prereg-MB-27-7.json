@@ -1,0 +1,98 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 7 (Spec 124a R-MA: the task's own number, the next free n when it is committed; R-LZ revert round of increment 1), the loop round that lands lane K's oracle-only fixture rename in src/tests/bylaw-m72-forms.logic.test.ts: tests F4 and F7 inject fixture rows into a clone of the real catalogue under ids that lane K's increment-2 rows make real (half_span_a_m, roof_assembly_depth_a_m, gfa_flat_m2, gfa_pitched_a_m2, gfa_pitched_b_m2), so the injected ids gain the prefix fx_ (operator Q-K-ASSERT \"a\"). No code, no pinned hash, no expected value and no assertion changes; green on the base (no fx_ id exists in the catalogue before or after the increment-2 rows) and after lane K's rows. Committed alone directly under the rename commit (R-MA). Expected: 0 scorer rows move on the 172, 4d and cumulative sets; totals equal prereg-MB-27-6.json; floors unchanged.",
+ "schema": "coa-round-prereg-v1",
+ "round": 64,
+ "task": "MB-27",
+ "rules": [
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27/rows/REPIN-AND-ASSERTIONS.md (named fixture change F4/F7); operator Q-K-ASSERT a and Q-K-TEST a (~/Buildo-scratch/mcbylaws/inc2/open-questions.md:546, :558)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": "none (a test file only: no Layer 1 input, evaluator file or pinned value moves)",
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/bylaw-m72-forms.logic.test.ts",
+   "line": 155,
+   "row": "F4 and F7 injected fixture ids",
+   "from": "half_span_a_m, roof_assembly_depth_a_m, gfa_flat_m2, gfa_pitched_a_m2, gfa_pitched_b_m2",
+   "to": "fx_half_span_a_m, fx_roof_assembly_depth_a_m, fx_gfa_flat_m2, fx_gfa_pitched_a_m2, fx_gfa_pitched_b_m2 (identifiers only; no value or assertion change)",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "Q-K-ASSERT a (operator \"a\"; ~/Buildo-scratch/mcbylaws/inc2/open-questions.md:546)"
+  }
+ ]
+}
