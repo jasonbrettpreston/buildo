@@ -100,7 +100,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     const NEW_TARGETS = new Set(['platform_side_setback_street_m']);
     // MB-18 j: a dsl_target added after the pin is left out of BOTH hashes, as the earlier re-pins argued: its cells move no
     // existing cell; its own cells are locked by bylaw-mb18j.logic.test.ts.
-    const SINCE_PIN = new Set(['front_setback_fallback_m']);
+    // MB-27.L2 P3-0 (D-6, amended by Q-M2 a): pitched_roof_slope_min, the M-465 threshold, and the two 10.5.40.40(2) mechanical-attic targets are
+    // left out the same way; the threshold's cells are locked by bylaw-mb27l2-roof.logic.test.ts, the mechanical targets' by their own Layer 1 lock.
+    const SINCE_PIN = new Set(['front_setback_fallback_m', 'pitched_roof_slope_min', 'mechanical_attic_share_pct', 'mechanical_attic_area_max_m2']);
     for (const L of lots) {
       for (const lot of [L, { ...L, building_type: null }, { ...L, flags: {} }, { ...L, building_type: null, flags: {} }]) {
         const cands = E.loadCandidates(lot, UNITS).candidates;
