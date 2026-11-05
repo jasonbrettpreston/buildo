@@ -1,31 +1,31 @@
 {
-  "$comment": "MB-27.L2 G-STOR v2, FINAL before the axis night (plan-roof-axis v5 section 2, v8 section 4; operator Q-ROOF: storage measured against the 0.60 line, 780 MiB of the 1,300 MiB budget). Exact, read-only, on the tree at 37dc530c0 (every code item that rides the night). The step's own pure core (materializeBatch) runs over every parcel in a default_transaction_read_only session; each of the 440093 lot rows is sized by lane D2's calibrated tuple model (MB-27L2/dryrun/pgsize.mjs tupleLen: exact datum sizes, alignment, short varlena, pglz and TOAST at 2,032 B; it reproduces pg_column_size(l.*) on 440,093 of 440,093 stored rows) with the stamps as hex text and as bytea (Q-STOR a). The page fill is next-fit in the LIVE HEAP ORDER (dryrun/fill-order.awk over gstor-cal-full/heap-order.txt; MAXALIGN 8, 4 B line pointer, 8,168 B usable). Calibration: the stored rows fill 93515 pages in that order against 93519 actual. Option B saves 84.2 B per row. Script and rows: ~/Buildo-scratch/mcbylaws/MB-27L2/gate/gstor-final.zsh, gstor-v2-exact.mjs and gstor-final.tsv.",
+  "$comment": "MB-27.L2 G-STOR v2, FINAL before the axis night (plan-roof-axis v5 section 2, v8 section 4; operator Q-ROOF: storage measured against the 0.60 line, 780 MiB of the 1,300 MiB budget). Exact, read-only, on the tree at 484a0ddda (every code item that rides the night). The step's own pure core (materializeBatch) runs over every parcel in a default_transaction_read_only session; each of the 440093 lot rows is sized by lane D2's calibrated tuple model (MB-27L2/dryrun/pgsize.mjs tupleLen: exact datum sizes, alignment, short varlena, pglz and TOAST at 2,032 B; it reproduces pg_column_size(l.*) on 440,093 of 440,093 stored rows) with the stamps as hex text and as bytea (Q-STOR a). The page fill is next-fit in the LIVE HEAP ORDER (dryrun/fill-order.awk over gstor-cal-full/heap-order.txt; MAXALIGN 8, 4 B line pointer, 8,168 B usable). Calibration: the stored rows fill 93515 pages in that order against 93519 actual. Option B saves 84.2 B per row. Script and rows: ~/Buildo-scratch/mcbylaws/MB-27L2/gate/gstor-final.zsh, gstor-v2-exact.mjs and gstor-door-m475.tsv.",
   "verdict": "PASS",
-  "P_up_mib": 738.25,
+  "P_up_mib": 738.34,
   "stop_mib": 780,
-  "ratio": 0.5679,
+  "ratio": 0.568,
   "T0_mib": 740.88,
   "method": "exact tuple model (pgsize.mjs) on the built core's rows; next-fit in live heap order",
   "parts_mib": {
-    "lots_heap": 726.99,
+    "lots_heap": 727.08,
     "lots_pkey_and_forks": 9.67,
     "dictionaries": 0.59,
     "delta_dict_allowance": 1
   },
   "heap_pages": {
-    "projected": 93055,
+    "projected": 93066,
     "today_simulated_heap_order": 93515,
     "today_actual": 93519
   },
   "without_option_B_mib": {
-    "lots_heap": 767.28,
-    "P_up": 778.54
+    "lots_heap": 767.45,
+    "P_up": 778.71
   },
   "rows": 440093,
   "row_bytes": {
-    "projected_hex_avg": 1616.91,
-    "projected_bytea_avg": 1532.68,
-    "option_B_saving_avg": 84.24,
+    "projected_hex_avg": 1617.75,
+    "projected_bytea_avg": 1533.52,
+    "option_B_saving_avg": 84.23,
     "max": 2032,
     "over_toast_threshold": 0
   },
@@ -35,8 +35,8 @@
     "first_estimate_ctid_order_flat96_heap_mib": 729.29,
     "first_landing_measure_heap_mib": 728.55
   },
-  "table_version": "3c7874860c92b8e2fb642a6c7a79617df44289bfcd96b6de6781b281f1b84f8f",
+  "table_version": "0bc204f21be6d8f1a22ae5aab6dac168f7742e2a22017bbf23516d6ef6bc5d8a",
   "evaluator_version": "cc56a43de6c28d04cdc8d902f5c61b5f8dc6c75e56267564db16b5f532ada1cc",
-  "parent_sha": "37dc530c0a7567fe981a44de84b161a39d17aa78",
+  "parent_sha": "484a0ddda00975d944a1c9f46979336496c79f62",
   "measured": "2026-11-05"
 }

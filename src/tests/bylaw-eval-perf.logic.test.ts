@@ -167,7 +167,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // 3440a284…3770 exactly (bylaw-permission-disclosure.logic.test.ts G5-p: 840 calls, no status, winner, reason or input moved).
     // re-pinned 2026-10-29 (MB-18, platform_side_setback_street_m, a new dsl_target): its 140 cells are not_evaluated, and with it left out the hash is
     // the previous pin 3f191431…2d66 exactly, so no existing cell moved (the platform street-side correction, MB17-Q1 setbacks and the (D) driveway move none either).
-    expect(h.digest('hex')).toBe('de34d132b277830008ee639852edc2a66c495fe16224a07ba6e053cef288a4b0');
-    expect(hLeftOut.digest('hex')).toBe('3f191431a61e72f49858998677f28b68007bc684e4b850eb1319bbc51bbf2d66');
+    // re-pinned 2026-11-05 (M-475, street-side absence typed to the house types, ABS-9.1..9.4): 88 of 140 side_setback_street_m cells move,
+    // 12 top-level (RS/RM/RT house lots, no_candidate → unregulated by absence), 76 gain building_type in inputs[]; nothing else moved.
+    expect(h.digest('hex')).toBe('8a9df58fee131ec1c19d689f15c5dd716b6b572642638ddf1c5f9c0ea2226ea1');
+    expect(hLeftOut.digest('hex')).toBe('ec081f3b0c581aed162bc42ba0c652ae738689add18ab80761db8e8fd0dffb06');
   }, 60_000);
 });

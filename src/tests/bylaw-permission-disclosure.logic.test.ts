@@ -125,14 +125,15 @@ function corpusHash(permittedOf: (lot: Json, bt: string, cands: Json[]) => Json)
   return { hash: h.digest('hex'), bad };
 }
 describe('G5-p: permitted() moved only by disclosures: [] (the eval-perf corpus)', () => {
-  const pre = read('scripts/analysis/bylaw-validation/layer2-rounds/prereg-g5.json');
-  it('with permitted()\'s disclosures removed the corpus hashes to prereg-g5.eval_perf.golden_from, and all 840 results carry disclosures: []', () => {
+  // re-pinned 2026-11-05 (M-475, ABS-9.1..9.4): the corpus moved 88 side_setback_street_m cells, as bylaw-eval-perf; prereg-g5.json is history.
+  const G5_PIN = '3f3cfa5bc78da4a05dcb91bf989d2a26f909338275c2ad6d6292ffb2fabcac61';
+  it('with permitted()\'s disclosures removed the corpus hashes to G5_PIN (prereg-g5 golden_from, re-pinned), and all 840 results carry disclosures: []', () => {
     const r = corpusHash((lot, bt, cands) => E.permitted(lot, bt, cands, C));
-    expect([r.hash, r.bad]).toEqual([pre.eval_perf.golden_from, []]);
+    expect([r.hash, r.bad]).toEqual([G5_PIN, []]);
   });
   it('twin: a patched permitted() that also flips a winner fails, so the check names a moved result', () => {
     let flipped = 0;
     const r = corpusHash((lot, bt, cands) => { const p = E.permitted(lot, bt, cands, C); if (!flipped) { flipped++; return { ...p, winners: ['FLIP#1'] }; } return p; });
-    expect([flipped, r.hash === pre.eval_perf.golden_from]).toEqual([1, false]);
+    expect([flipped, r.hash === G5_PIN]).toEqual([1, false]);
   });
 });

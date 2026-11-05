@@ -324,6 +324,176 @@
       "statement": "no flat-or-shallow roof test in 569-2013 Ch.10.60 for the RT zone: \"slope\" and \"horizontal units\" do not occur on the page, so no clause generates a pitched-roof slope threshold there; a pitched roof is not limited by one (unregulated by absence)",
       "target": "pitched_roof_slope_min",
       "zone": "RT"
+    },
+    {
+      "absent_phrases": [
+        "Minimum Side Yard Abutting a Street",
+        "for a corner lot in the R zone"
+      ],
+      "accounted_occurrences": [
+        "may not be located in the front yard or a side yard abutting a street",
+        "must be located in a front yard or side yard abutting a street",
+        "a parking space located in the front yard or side yard abutting a street is subject to regulation 10.5.80.10(3)",
+        "on a corner lot the required minimum side yard setback from a side lot line abutting a street is 3.0 metres",
+        "is set back less than 5.5 metres from a side lot line, other than a side lot line that abuts a street",
+        "1.0 metres from a rear lot line or side lot line abutting a street or lane"
+      ],
+      "building_types": [
+        "detached_house",
+        "semi_detached_house",
+        "detached_houseplex",
+        "semi_detached_houseplex"
+      ],
+      "checked_page": "ch10_10",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-9.1",
+      "occurrence_patterns": [
+        "side yard abutting a street",
+        "side lot line that abuts a street",
+        "side lot line abutting a street",
+        "street abutting the side lot line",
+        "street that abuts the side lot line",
+        "lot that flanks on a street",
+        "if the lot line abuts a street",
+        "side lot line abuts the street",
+        "side yard setback for a lot that abuts a street",
+        "side lot line abuts a street",
+        "side lot line that abuts a road"
+      ],
+      "present_phrases": [
+        "(D) for an apartment building, a side yard setback of"
+      ],
+      "ruling": "Spec 69a M-475 (McProof item 1 A, 2026-11-03-batch-ax#CHAT-225.MCPROOF-1), typed by building type (operator V8-Q1 a; rule 7a v2, M-240); M-361 Q1",
+      "statement": "no street-side (flankage) setback regulation in 569-2013 Ch.10.10 for a detached house, semi-detached house or houseplex in the R zone: the only street-side setback on the page is 10.10.40.70(5)(D)(iv), 3.0 m for an apartment building on a corner lot abutting a major street; the other street-side phrases are use rules (a private home daycare play area, an outdoor patio, a parking space), an apartment-building window setback and an ancillary-building setback (10.10.60.20); garden and laneway suites are not covered (their own street-side clauses, 150.7 and 150.8)",
+      "target": "side_setback_street_m",
+      "zone": "R"
+    },
+    {
+      "absent_phrases": [
+        "Minimum Side Yard Abutting a Street",
+        "for a corner lot in the RS zone"
+      ],
+      "accounted_occurrences": [
+        "may not be located in the front yard or a side yard abutting a street",
+        "must be located in a front yard or side yard abutting a street",
+        "a parking space located in the front yard or side yard abutting a street is subject to regulation 10.5.80.10(3)",
+        "on a corner lot the required minimum side yard setback from a side lot line abutting a street is 3.0 metres"
+      ],
+      "building_types": [
+        "detached_house",
+        "semi_detached_house",
+        "detached_houseplex",
+        "semi_detached_houseplex"
+      ],
+      "checked_page": "ch10_40",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-9.2",
+      "occurrence_patterns": [
+        "side yard abutting a street",
+        "side lot line that abuts a street",
+        "side lot line abutting a street",
+        "street abutting the side lot line",
+        "street that abuts the side lot line",
+        "lot that flanks on a street",
+        "if the lot line abuts a street",
+        "side lot line abuts the street",
+        "side yard setback for a lot that abuts a street",
+        "side lot line abuts a street",
+        "side lot line that abuts a road"
+      ],
+      "present_phrases": [
+        "(D) for an apartment building, a side yard setback of"
+      ],
+      "ruling": "Spec 69a M-475 (McProof item 1 A, 2026-11-03-batch-ax#CHAT-225.MCPROOF-1), typed by building type (operator V8-Q1 a; rule 7a v2, M-240); M-361 Q1",
+      "statement": "no street-side (flankage) setback regulation in 569-2013 Ch.10.40 for a detached house, semi-detached house or houseplex in the RS zone: the only street-side setback on the page is 10.40.40.70(4)(D)(iv), 3.0 m for an apartment building on a corner lot abutting a major street; the other street-side phrases are use rules (a private home daycare play area, an outdoor patio, a parking space); garden and laneway suites are not covered (their own street-side clauses, 150.7 and 150.8)",
+      "target": "side_setback_street_m",
+      "zone": "RS"
+    },
+    {
+      "absent_phrases": [
+        "Minimum Side Yard Abutting a Street",
+        "for a corner lot in the RT zone"
+      ],
+      "accounted_occurrences": [
+        "may not be located in the front yard or a side yard abutting a street",
+        "must be located in a front yard or side yard abutting a street",
+        "a parking space located in the front yard or side yard abutting a street is subject to regulation 10.5.80.10(3)",
+        "on a corner lot the required minimum side yard setback from a side lot line abutting a street is 3.0 metres"
+      ],
+      "building_types": [
+        "detached_house",
+        "semi_detached_house",
+        "detached_houseplex",
+        "semi_detached_houseplex"
+      ],
+      "checked_page": "ch10_60",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-9.3",
+      "occurrence_patterns": [
+        "side yard abutting a street",
+        "side lot line that abuts a street",
+        "side lot line abutting a street",
+        "street abutting the side lot line",
+        "street that abuts the side lot line",
+        "lot that flanks on a street",
+        "if the lot line abuts a street",
+        "side lot line abuts the street",
+        "side yard setback for a lot that abuts a street",
+        "side lot line abuts a street",
+        "side lot line that abuts a road"
+      ],
+      "present_phrases": [
+        "(D) for an apartment building, a side yard setback of"
+      ],
+      "ruling": "Spec 69a M-475 (McProof item 1 A, 2026-11-03-batch-ax#CHAT-225.MCPROOF-1), typed by building type (operator V8-Q1 a; rule 7a v2, M-240); M-361 Q1",
+      "statement": "no street-side (flankage) setback regulation in 569-2013 Ch.10.60 for a detached house, semi-detached house or houseplex in the RT zone: the only street-side setback on the page is 10.60.40.70(4)(D)(iv), 3.0 m for an apartment building on a corner lot abutting a major street; the other street-side phrases are use rules (a private home daycare play area, an outdoor patio, a parking space); garden and laneway suites are not covered (their own street-side clauses, 150.7 and 150.8)",
+      "target": "side_setback_street_m",
+      "zone": "RT"
+    },
+    {
+      "absent_phrases": [
+        "Minimum Side Yard Abutting a Street",
+        "for a corner lot in the RM zone"
+      ],
+      "accounted_occurrences": [
+        "may not be located in the front yard or a side yard abutting a street",
+        "must be located in a front yard or side yard abutting a street",
+        "a parking space located in the front yard or side yard abutting a street is subject to regulation 10.5.80.10(3)",
+        "on a corner lot the required minimum side yard setback from a side lot line abutting a street is 3.0 metres"
+      ],
+      "building_types": [
+        "detached_house",
+        "semi_detached_house",
+        "detached_houseplex",
+        "semi_detached_houseplex"
+      ],
+      "checked_page": "ch10_80",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-9.4",
+      "occurrence_patterns": [
+        "side yard abutting a street",
+        "side lot line that abuts a street",
+        "side lot line abutting a street",
+        "street abutting the side lot line",
+        "street that abuts the side lot line",
+        "lot that flanks on a street",
+        "if the lot line abuts a street",
+        "side lot line abuts the street",
+        "side yard setback for a lot that abuts a street",
+        "side lot line abuts a street",
+        "side lot line that abuts a road"
+      ],
+      "present_phrases": [
+        "(D) for an apartment building, a side yard setback of"
+      ],
+      "ruling": "Spec 69a M-475 (McProof item 1 A, 2026-11-03-batch-ax#CHAT-225.MCPROOF-1), typed by building type (operator V8-Q1 a; rule 7a v2, M-240); M-361 Q1",
+      "statement": "no street-side (flankage) setback regulation in 569-2013 Ch.10.80 for a detached house, semi-detached house or houseplex in the RM zone: the only street-side setback on the page is 10.80.40.70(4)(D)(iv), 3.0 m for an apartment building on a corner lot abutting a major street; the other street-side phrases are use rules (a private home daycare play area, an outdoor patio, a parking space); garden and laneway suites are not covered (their own street-side clauses, 150.7 and 150.8)",
+      "target": "side_setback_street_m",
+      "zone": "RM"
     }
   ]
 }
