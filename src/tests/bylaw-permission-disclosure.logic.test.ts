@@ -126,7 +126,8 @@ function corpusHash(permittedOf: (lot: Json, bt: string, cands: Json[]) => Json)
 }
 describe('G5-p: permitted() moved only by disclosures: [] (the eval-perf corpus)', () => {
   // re-pinned 2026-11-05 (M-475, ABS-9.1..9.4): the corpus moved 88 side_setback_street_m cells, as bylaw-eval-perf; prereg-g5.json is history.
-  const G5_PIN = '3f3cfa5bc78da4a05dcb91bf989d2a26f909338275c2ad6d6292ffb2fabcac61';
+  // re-pinned 2026-11-05 (M-482, Q-RSM, ABS-10.1..10.5): the corpus moved 140 roof_slope_max cells, as bylaw-eval-perf.
+  const G5_PIN = 'bdcce3c4bb3073b4e5a765dce3d63758392b21a744cfa80014398690d80f23c1';
   it('with permitted()\'s disclosures removed the corpus hashes to G5_PIN (prereg-g5 golden_from, re-pinned), and all 840 results carry disclosures: []', () => {
     const r = corpusHash((lot, bt, cands) => E.permitted(lot, bt, cands, C));
     expect([r.hash, r.bad]).toEqual([G5_PIN, []]);

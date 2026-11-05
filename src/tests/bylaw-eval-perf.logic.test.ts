@@ -169,7 +169,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // the previous pin 3f191431…2d66 exactly, so no existing cell moved (the platform street-side correction, MB17-Q1 setbacks and the (D) driveway move none either).
     // re-pinned 2026-11-05 (M-475, street-side absence typed to the house types, ABS-9.1..9.4): 88 of 140 side_setback_street_m cells move,
     // 12 top-level (RS/RM/RT house lots, no_candidate → unregulated by absence), 76 gain building_type in inputs[]; nothing else moved.
-    expect(h.digest('hex')).toBe('8a9df58fee131ec1c19d689f15c5dd716b6b572642638ddf1c5f9c0ea2226ea1');
-    expect(hLeftOut.digest('hex')).toBe('ec081f3b0c581aed162bc42ba0c652ae738689add18ab80761db8e8fd0dffb06');
+    // re-pinned 2026-11-05 (M-482, Q-RSM, roof_slope_max absence ABS-10.1..10.5): all 140 roof_slope_max cells move, no_candidate →
+    // unregulated by absence (the 35 RD/RS/RT/RM lots × 4 variants, zone-wide); nothing else moved.
+    expect(h.digest('hex')).toBe('6f87158700284aabf3ad7ff4eae65ea00b4c7e7a1d0799709e384d427d1057ec');
+    expect(hLeftOut.digest('hex')).toBe('cada5b36283eb70988f1a2f6f4d83b84a89d31f84d6178f0694a5b6155f936a9');
   }, 60_000);
 });

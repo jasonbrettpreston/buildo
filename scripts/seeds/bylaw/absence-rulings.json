@@ -494,6 +494,128 @@
       "statement": "no street-side (flankage) setback regulation in 569-2013 Ch.10.80 for a detached house, semi-detached house or houseplex in the RM zone: the only street-side setback on the page is 10.80.40.70(4)(D)(iv), 3.0 m for an apartment building on a corner lot abutting a major street; the other street-side phrases are use rules (a private home daycare play area, an outdoor patio, a parking space); garden and laneway suites are not covered (their own street-side clauses, 150.7 and 150.8)",
       "target": "side_setback_street_m",
       "zone": "RM"
+    },
+    {
+      "absent_phrases": [
+        "may not have a slope greater than",
+        "Roof Slope Restriction"
+      ],
+      "accounted_occurrences": [
+        "if a permitted residential building in the RD zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area",
+        "the altered roof may not have a slope less than 1.0 vertical units for every 4.0 horizontal units for more than 50 percent of the total horizontal roof area"
+      ],
+      "checked_page": "ch10_20",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-10.1",
+      "occurrence_patterns": [
+        "slope"
+      ],
+      "present_phrases": [
+        "the altered roof may not have a slope less than 1.0 vertical units for every 4.0 horizontal units"
+      ],
+      "ruling": "Spec 69a M-482 (Q-RSM, 2026-11-04-batch-ay#CHAT-226.Q-RSM); M-361 Q1, M-240; the RD reading 2026-11-04-batch-ay#CHAT-226.V8-Q3 (operator V8-Q3 a, reading awaiting expert check)",
+      "statement": "no maximum roof-slope regulation in 569-2013 Ch.10.20 for the RD zone: 10.20.40.11(1) is a minimum slope for an altered roof of a lawfully existing building (not less than 1.0 in 4.0); it does not limit roof_slope_max; the other slope phrase is the flat-or-shallow-roof threshold (less than 1.0 in 10.0) of the main-wall height rule 10.20.40.10(4)",
+      "target": "roof_slope_max",
+      "zone": "RD"
+    },
+    {
+      "absent_phrases": [
+        "may not have a slope",
+        "Roof Slope Restriction"
+      ],
+      "accounted_occurrences": [
+        "if a residential building in the RS zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area"
+      ],
+      "checked_page": "ch10_40",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-10.2",
+      "occurrence_patterns": [
+        "slope"
+      ],
+      "present_phrases": [
+        "if a residential building in the RS zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area"
+      ],
+      "ruling": "Spec 69a M-482 (Q-RSM, 2026-11-04-batch-ay#CHAT-226.Q-RSM); M-361 Q1, M-240",
+      "statement": "no roof-slope regulation in 569-2013 Ch.10.40 for the RS zone: the only slope phrase is the flat-or-shallow-roof threshold (less than 1.0 in 10.0) of the main-wall height rule 10.40.40.10(6)",
+      "target": "roof_slope_max",
+      "zone": "RS"
+    },
+    {
+      "absent_phrases": [
+        "slope"
+      ],
+      "accounted_occurrences": [],
+      "checked_page": "ch10_60",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-10.3",
+      "occurrence_patterns": [
+        "slope"
+      ],
+      "present_phrases": [
+        "10.60.40.10 Height"
+      ],
+      "ruling": "Spec 69a M-482 (Q-RSM, 2026-11-04-batch-ay#CHAT-226.Q-RSM); M-361 Q1, M-240",
+      "statement": "no roof-slope regulation in 569-2013 Ch.10.60 for the RT zone: \"slope\" does not occur on the page",
+      "target": "roof_slope_max",
+      "zone": "RT"
+    },
+    {
+      "absent_phrases": [
+        "may not have a slope",
+        "Roof Slope Restriction"
+      ],
+      "accounted_occurrences": [
+        "if a detached house or semi-detached house in the RM zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area"
+      ],
+      "checked_page": "ch10_80",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-10.4",
+      "occurrence_patterns": [
+        "slope"
+      ],
+      "present_phrases": [
+        "if a detached house or semi-detached house in the RM zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area"
+      ],
+      "ruling": "Spec 69a M-482 (Q-RSM, 2026-11-04-batch-ay#CHAT-226.Q-RSM); M-361 Q1, M-240",
+      "statement": "no roof-slope regulation in 569-2013 Ch.10.80 for the RM zone: the only slope phrase is the flat-or-shallow-roof threshold (less than 1.0 in 10.0) of the main-wall height rule 10.80.40.10(6)",
+      "target": "roof_slope_max",
+      "zone": "RM"
+    },
+    {
+      "absent_phrases": [
+        "Roof Slope Restriction for a Semi-Detached House",
+        "Roof Slope Restriction for a Detached Houseplex",
+        "on a semi-detached house may not have a slope",
+        "on a detached houseplex may not have a slope"
+      ],
+      "accounted_occurrences": [
+        "(4) Roof Slope Restriction for a Detached House In the R zone, a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units",
+        "in the R zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area",
+        "if a lawfully existing building in the R zone is a detached house, the altered roof may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units"
+      ],
+      "building_types": [
+        "detached_houseplex",
+        "semi_detached_house",
+        "semi_detached_houseplex"
+      ],
+      "checked_page": "ch10_10",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-10.5",
+      "occurrence_patterns": [
+        "slope"
+      ],
+      "present_phrases": [
+        "a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units"
+      ],
+      "ruling": "Spec 69a M-482 (Q-RSM, 2026-11-04-batch-ay#CHAT-226.Q-RSM); M-361 Q1, M-240",
+      "statement": "no roof-slope regulation in 569-2013 Ch.10.10 for a semi-detached house, detached houseplex or semi-detached houseplex in the R zone: 10.10.40.10(4) (5.0 in 3.0, above the second storey) and 10.10.40.11(1) (an altered roof of a lawfully existing building) name a detached house only; the other slope phrases are the flat-or-shallow-roof threshold (less than 1.0 in 10.0) of the main-wall height rules (Spec 68 rule 7a v2)",
+      "target": "roof_slope_max",
+      "zone": "R"
     }
   ]
 }
