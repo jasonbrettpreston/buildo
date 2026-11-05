@@ -1,0 +1,48 @@
+MB-27.L2 P3 (the roof axis, migration 295 with Q-STOR a): RED evidence. The three new locks run against the base tree origin/wf1/mb-rulings 7f04f5b6a (a throwaway detached worktree; the three files copied in, nothing else), 2026-11-04:
+  npx vitest run src/tests/bylaw-mb27l2-roof.logic.test.ts src/tests/steps/resolve_bylaws/materialize-roof-axis.logic.test.ts src/tests/steps/resolve_bylaws/migration-295.logic.test.ts
+Result on the base: Tests  31 failed | 1 passed | 16 skipped (48) (migration-295: its beforeAll fails, migrations/295_resolve_bylaws_roof_option.sql does not exist, so its 16 cases are skipped and the file fails). The one case green on the base is R5, a guard that nothing else moves (the 54 base slots equal a run with no option declared); it stays green after P3.
+
+   × B1 / B2: the slot order and a 61-wide round trip > B1: 54 base pairs (unchanged), then flat and pitched for height_m, main_wall_height_m and upper_storey_setback_m, then the threshold
+   × B1 / B2: the slot order and a 61-wide round trip > B2: a 61-wide lot decoded without the option slots, or a shared code at a base slot, throws (never decoded against the wrong positions)
+   × B1 / B2: the slot order and a 61-wide round trip > B2: rows stays 54 pairs x 5 classes; option rows are the 7 slots for the listed class only (RR-03)
+   × B3 / B4 / B6: no override at the option slots; the option flag is not a lot input; a gated lot shares nothing > B3: no class_results entry at slots 55-61 (RC-1), and an option slot listing another class is refused
+   × B3 / B4 / B6: no override at the option slots; the option flag is not a lot input; a gated lot shares nothing > B4: I10 stays 0, and an option row's inputs_used leaves out the flag the option sets (kept in the cache key)
+   × B3 / B4 / B6: no override at the option slots; the option flag is not a lot input; a gated lot shares nothing > B6: a gated lot writes every option slot in full as the gate (code not_evaluated; never shared, the I4 CHECK)
+   × B5 / B7: the I12 / I15 audit covers the option slots; traceOption > B5: the audit checks the 54 base pairs and the 7 option slots, and agrees with the uncached evaluator and itself reversed
+   × B5 / B7: the I12 / I15 audit covers the option slots; traceOption > B7: traceOption recomputes one option row on read with the stored fields the slot decodes to
+   × Q-STOR a: the stamps cross the DB boundary as 32 bytes; JavaScript stays hex > a stamp that is not a 64-hex sha256 is refused before any bind (never written loosely)
+   × Q-STOR a: the stamps cross the DB boundary as 32 bytes; JavaScript stays hex > Layer 3 reads the lot stamps through bylaw_resolution_lot_stamps (hex), never the bytea columns, and gets the input table_version text
+   × Q-STOR a: the stamps cross the DB boundary as 32 bytes; JavaScript stays hex > the I14 recompute compares bytes (sha256(...)), with no hex encode
+   × Q-STOR a: the stamps cross the DB boundary as 32 bytes; JavaScript stays hex > the writer binds row_sha, table_version and evaluator_version as 32-byte Buffers equal to the hex the core stamped
+   × R1 / R8: the option and its threshold are data (vocab.design_options, layer2-scope.json options) > R1: the option targets are the targets of every Layer 1 unit carrying the token, and equal scope options.roof_form.targets
+   × R1 / R8: the option and its threshold are data (vocab.design_options, layer2-scope.json options) > R8: a token unit whose wording matches no pattern (and is not listed) or two patterns stops the assembly (red both ways)
+   × R1 / R8: the option and its threshold are data (vocab.design_options, layer2-scope.json options) > R8: every token unit matches exactly one threshold pattern in its own wording, except the listed flat-roof clauses (which match none)
+   × R1 / R8: the option and its threshold are data (vocab.design_options, layer2-scope.json options) > the generated threshold units: one per token regulation (the flat-roof clauses generate none), bound min, no roof condition
+   × R10: the pitched step-back (M-465 (3), a dated note on M-183) > a token outside design_options known false (major_street) is unaffected: the rule reads design-option tokens only
+   × R10: the pitched step-back (M-465 (3), a dated note on M-183) > a unit out for another reason keeps today's rules: RT has no step-back unit (no_candidate), an RM houseplex is outside 10.80.40.10(6)'s subject
+   × R10: the pitched step-back (M-465 (3), a dated note on M-183) > the token absent (undecided): the row without an option is unchanged (never false, M-60)
+   × R10: the pitched step-back (M-465 (3), a dated note on M-183) > the token false: every value unit is out only because of it, so the target does not apply (not_applicable:<the first such unit>)
+   × R11 / R12: the class and ROOF-5 > R11: another class decodes no option row (R3-11: never a neighbouring class's option)
+   × R11 / R12: the class and ROOF-5 > R12: on A0166 the flat main-wall row (7.2 m) above the flat height (6.5 m) carries main_wall_limit_above_height; no other row of the 25 does
+   × R2 / R3 / R9: on the 25, every option row is decided and agrees with the row without an option where the worlds agree > R2: no option row carries condition_unknown:flat_or_shallow_roof (or needs_user_input on it)
+   × R2 / R3 / R9: on the 25, every option row is decided and agrees with the row without an option where the worlds agree > R3: a decided base row means both option rows are shared and read it; a roof-NE base row means two full rows
+   × R2 / R3 / R9: on the 25, every option row is decided and agrees with the row without an option where the worlds agree > R9: the threshold is decided on every ungated lot (a number, unregulated or not_applicable; never not_evaluated, R3-01)
+   × R4: the answer key on the 25 (McProof; plan v2 §7 R4) > A0166 (RD, exception 21): height flat 6.5 [900.3.10(21)[SSP](A)], pitched the zone height
+   × R4: the answer key on the 25 (McProof; plan v2 §7 R4) > main wall on the RD lots whose base row is roof-NE: flat 7.2 [10.20.40.10(4)(A)], pitched 7.0 [10.20.40.10(2)(A)]
+   × R4: the answer key on the 25 (McProof; plan v2 §7 R4) > the threshold is 0.1 on the 25, its winner the zone flat-or-shallow clause
+   × R4: the answer key on the 25 (McProof; plan v2 §7 R4) > upper storey set-back: flat 1.4 m by the zone flat-roof clause, pitched not_applicable:<that clause>
+   ✓ R5 / R6 / R7: nothing else moves; RT; I13 > R5: the 54 base slots are byte-identical to a run of the same tree with no option declared (the option never moves a base row)
+   × R5 / R6 / R7: nothing else moves; RT; I13 > R6: on an RT lot the options are shared and the threshold is unregulated by its absence ruling
+   × R5 / R6 / R7: nothing else moves; RT; I13 > R7 (I13): roof_type is not a legal user input; an option row undecided on its own token is counted in scenario_axis_results (0 on the 25)
+
+Green on the P3 tree: 48 of 48 (the same three files).
+
+OUTPUT panel fixes (seat 1, S1-01, S1-02, S1-05), red first on the P3 tree before the fix, 2026-11-04:
+   × the run tallies count every result written, the option slots included (I3 conflict_cells is a FAIL check): OUTPUT panel S1-02 > a not_evaluated:conflict in an option slot is counted in not_evaluated_by_reason, and results_by_status sums to all 61 slots
+   × R1 / R8: the option and its threshold are data (vocab.design_options, layer2-scope.json options) > a generated threshold unit id that an existing unit already carries stops the assembly (never two units with one id): OUTPUT panel S1-05
+   × R10: the pitched step-back (M-465 (3), a dated note on M-183) > the "only because" re-check keeps its reads in the result's inputs (hardened inputs[]; the cell cache keys on them): OUTPUT panel S1-01
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 30 passed (33)
+Green after the fix (evaluate.mjs: the re-check's reads kept; bylaw-materialize.js: the option slots counted in the run tallies; assembly.mjs: a colliding generated id throws).
+
+migration.logic.test.ts, describe "migration 295, Q-STOR a" (3 new cases, the register's named lock for the Spec 134 type amendment): red on the base cfbe3aafa, where migrations/295_resolve_bylaws_roof_option.sql does not exist (read() throws ENOENT in each case); green on the P3 tree, 35 of 35 in the file.

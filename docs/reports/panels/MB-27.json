@@ -1,25 +1,25 @@
 {
   "task": "MB-27",
-  "item": "the switchboard confidence item: every reading row of the switchboard carries a confidence and an evidence pointer, and every result shows the confidence beside each reading it rests on (M-481)",
+  "item": "MB-27.L2 P3, the roof form as a Phase 2 design option for the detached house (M-465): the option slots, the closed code shared, the pitched step-back, the per-clause threshold pitched_roof_slope_min (ten generated units <reg>#threshold(<n>)), ROOF-5 on read, and migration 295 (width 61, the option and stamps views, the Q-STOR a bytea stamps)",
   "class": "E",
   "stage": 8,
   "date": "2026-11-04",
-  "head": "23deb2e53",
+  "head": "864ae6d02",
   "commits_reviewed": [
-    "staged code commit over 23deb2e53 (prereg-MB-27-4 alone, on 40fcc4504, the Layer 3 forms code commit)"
+    "staged code commit over 864ae6d02 (prereg-MB-27-6 alone, on d4bc32377, the P3-0 oracle-only commit, on 5352efc06, prereg-MB-27-5)"
   ],
   "cards": [
-    "~/Buildo-scratch/p2close/CARD-confidence-switchboard.answered.md (\"Q CONF a\"; Q14 a); the re-pin and the shape_calibration confidence: \"RP-10 approved, switchboard pin approved, shape low yes\" (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, end)"
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (end): \"Q-STOR a\"; \"V8-Q2a\"; \"0-A-a\"; \"step-back approved. ggo work with this one\"; \"roof 5- confirmed\"; \"RP-7 approved\"; \"pushing RP-7xa\"; \"Q-P3w a\"; \"Q-r2 a\"; \"a\" (Q-P3ID)"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/laneE/build-plan.md (Build B), with the orchestrator correction: the increment-2 readings C1-C7 only, since M-481 says the increment-3 readings join when their rows are authored; the row text is the contract",
-  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/laneE/panel-conf/output-panel.md (stage 8, one grounded seat): no BLOCKER. F2 MAJOR (a circular scratch-path evidence pointer) fixed: the evidence strings are self-contained. F3 MAJOR (untested early-return paths) and F4-F6, F9 fixed: lock vectors P1-P5 and V4 added, and four rows.js mutations (early-return switches, dedupe, guard condition, rowIds filter) each fail the lock. F1 MAJOR (the C readings reach no result until a row reads a setting they guard) accepted as data now, wired when a row reads them (build-plan open item 6). F10/F11 (ruling cells) settled by the orchestrator: C8-C12 removed; C5 points at the M-218 dated note (69a:365). F12: shape_calibration \"low\" approved by the operator.",
+  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md (with v2-v7); night patch ~/Buildo-scratch/mcbylaws/MB-27L2/gate/night-patch.md",
+  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-27L2/gate/output-panel-P3.md (stage 8, two seats, then one re-check seat): first round FAIL (seat 1: 3 MAJOR; seat 2: 4 MAJOR). Fixed red first: S1-01 (the step-back re-check keeps its reads), S1-02 (the option slots count in the run tallies, conflict_cells), S1-05 (a colliding generated id throws); F1 (the resolve_bylaws scorecard regenerated without the deferred hunk, 17/17); F10 (schema.ts MANUAL PATCH header). Ruled by the operator: S1-03/F4 (the interim state, Q-P3w a confirmed), F3 (RP-7xa, the five 1:4 threshold units), the coa scorer move found at the dry fit (A0257/26NY #7, fixed by the respelled ids, Q-P3ID a). Re-check seat: PASS, every fix confirmed with executed evidence (zero scorer moves, 172 MATCH 407, 4d MATCH 283, FLOORS OK).",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "F1: a row-level link from a catalogue row to the reading rows it rests on (a later item, not in Q-CONF a)",
-    "F7: validateCatalogue does not yet check that a setting's declared switch exists on the switchboard",
-    "F8: the HOOKS_MISSING return in rows.js lists no reading (believed unreachable)",
-    "C8 onward join as reading rows when their increment-3 rows are authored (M-481; Q14 a)"
+    "the night capture patch (gate/night-patch.md): the resolve-bylaws.js writer hunk and its locks land with the recapture (Q-P3w a)",
+    "M-465 stays OWED for its spec134-resolve-bylaws I13 lock (the Spec 134 paragraph is lane R's)",
+    "the pitched_roof_slope_min lineage entry with the Layer 3 reader item (P4); the db docs after the night",
+    "INFO (re-check seat): r.rep.includes(c) in the materializeBatch tally loop is a linear search; correct, optional to index"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/laneE/panel-conf/output-panel.md"
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-27L2/gate/output-panel-P3.md"
 }

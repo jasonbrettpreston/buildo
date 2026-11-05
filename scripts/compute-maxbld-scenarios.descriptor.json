@@ -33,7 +33,7 @@
           "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "status", "value_kind", "value", "reason", "winner_unit_id"]
         },
         {
-          "table": "bylaw_resolution_lots",
+          "table": "bylaw_resolution_lot_stamps",
           "columns": ["parcel_id", "lot_gate", "permitted", "permitted_text_ids", "table_version"]
         },
         {
@@ -158,12 +158,12 @@
     "pins": [
       {
         "step": "resolve_bylaws",
-        "stamp": "bylaw_resolution_lots.table_version",
+        "stamp": "bylaw_resolution_lot_stamps.table_version",
         "why": {
           "text": "Layer 2 is the whole input (cells, lot gate, permitted classes): a new Layer 2 table_version re-derives every Layer 3 row, and the value is copied into layer2_table_version.",
           "liveness": {
             "kind": "column",
-            "ref": "bylaw_resolution_lots.table_version"
+            "ref": "bylaw_resolution_lot_stamps.table_version"
           }
         }
       },
@@ -183,7 +183,7 @@
   "guards": {
     "requires": [],
     "srid": "none",
-    "empty_source": "bylaw_resolution_lots",
+    "empty_source": "bylaw_resolution_lot_stamps",
     "schema_drift": "none"
   },
   "execution": {
@@ -202,7 +202,7 @@
       "pending": {
         "table": "parcels",
         "predicate": "every population parcel (full rescan behind the content_sha guard)",
-        "invalidated_by": "bylaw_resolution_lots.table_version"
+        "invalidated_by": "bylaw_resolution_lot_stamps.table_version"
       }
     },
     "txn_scope": "batch",

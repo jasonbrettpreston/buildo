@@ -65,7 +65,8 @@ function rowShaMismatchSql(tables) {
   return [
     `SELECT COUNT(*)::int FROM ${tables.units} WHERE unit_key IS DISTINCT FROM ${hash('unit_id')}`,
     `SELECT COUNT(*)::int FROM ${tables.texts} WHERE text_key IS DISTINCT FROM ${hash('text')}`,
-    `SELECT COUNT(*)::int FROM ${tables.lots} WHERE row_sha IS DISTINCT FROM encode(sha256(convert_to(${text}, 'UTF8')), 'hex')`,
+    // Q-STOR a (migration 295): row_sha is stored as bytea(32), so the recomputed digest is compared as bytes (no hex encode)
+    `SELECT COUNT(*)::int FROM ${tables.lots} WHERE row_sha IS DISTINCT FROM sha256(convert_to(${text}, 'UTF8'))`,
   ];
 }
 
@@ -105,9 +106,15 @@ function makeEnv({ body, map, scope, vocab, zoneList, versions, hooks = {}, audi
   }
   const unitInfo = {};
   for (const u of body.units) unitInfo[u.unit_id] = { regulation_id: u.regulation_id, layer: u.layer };
+  // M-465 (RC-1): the option slots after the base pairs, stored for the representative class only (layer2-scope.json options)
+  const optionPairs = rb.optionPairs(scope, vocab.design_options);
+  for (const p of optionPairs) if (p.classes.length !== 1 || p.classes[0] !== classes[0]) throw new Error(`makeEnv: option ${p.option_name} must list exactly the representative class ${classes[0]} (RC-1)`);
   return {
     units: body.units, unitInfo, ctx, authored: body.authored, map, scope, classes, classVectors, versions, isIn, audit,
     pairs: rb.scopePairs(scope),
+    optionPairs,
+    optionInputs: rb.optionInputPaths(optionPairs),
+    designOptions: vocab.design_options || {},
     lotEnv: { vocabZones: vocab.zone, labelLetters: Object.keys(vocab.label_letter), exceptionChapter: vocab.exception_chapter, sentinel: map.exception_number_sentinel, mapAreas: scope.map_areas, designDefaults, existingAssumption: vocab.existing_assumption },
     hooks: {
       evaluate: hooks.evaluate || ((lot, target, candidates) => cache.effective(lot, target, candidates)),
@@ -142,7 +149,7 @@ function classLotFor(row, structure, classKey, env) {
 }
 
 /** An effective() result as the logical columns (Spec 134 §3; R-IO, R-IP): the eight stored fields and the three recomputed on read. */
-function normalizeResult(r, cand, env) {
+function normalizeResult(r, cand, env, { option = false } = {}) {
   const { status, reason } = rb.layer2Status(r, env.map);
   let value = null;
   let valueKind = null;
@@ -159,7 +166,7 @@ function normalizeResult(r, cand, env) {
   const ev = status === 'applies' ? rb.evidenceOf(r, env.map, { winnerLayer: citedLayer }) : { evidence_kind: null, evidence_ref: null };
   const disclosures = sortedUnique((r.disclosures || []).map((d) => (typeof d === 'string' ? d : JSON.stringify(d))));
   const losers = (r.losers || []).map((l) => ({ unit_id: l.unit_id, dropped_by: l.dropped_by, by: l.by === undefined ? null : l.by }));
-  const inputs = sortedUnique((r.inputs || []).filter((p) => !rb.CLASS_INPUT_PATHS.includes(p)));
+  const inputs = sortedUnique((r.inputs || []).filter((p) => !rb.CLASS_INPUT_PATHS.includes(p) && !(option && env.optionInputs.includes(p))));
   return {
     status, reason, value, value_kind: valueKind, winner_unit_id: winnerId, winner_layer: winnerLayer, evidence_kind: ev.evidence_kind, evidence_ref: ev.evidence_ref,
     inputs_used: inputs, losers: losers.length ? losers : null, disclosures: disclosures.length ? disclosures : null,
@@ -179,6 +186,13 @@ function traceResult(lot, structure, target, classKey, env) {
   const cand = candidatesFor(lot, env);
   const l = rb.classLot(lot, { structure, classKey, vector: env.classVectors[classKey] });
   return normalizeResult(env.hooks.evaluateDirect(l, target, cand.candidates), cand, env);
+}
+
+/** ON READ (M-465): the full logical result of ONE option slot for a listed class, recomputed through the uncached evaluator. */
+function traceOption(lot, pair, classKey, env) {
+  const cand = candidatesFor(lot, env);
+  const l = rb.optionLot(rb.classLot(lot, { structure: pair.structure, classKey, vector: env.classVectors[classKey] }), pair);
+  return normalizeResult(env.hooks.evaluateDirect(l, pair.target, cand.candidates), cand, env, { option: true });
 }
 
 /** permitted()'s own words per class (R-IT); a status the map has no image for throws. */
@@ -214,14 +228,19 @@ function permittedCached(lot, buildingType, cand, classKey, env) {
 
 /**
  * Spec 134 I13 (Q-F): needs_user_input stays legal only for the existing-structure facts and the listed axes; any other axis a class could have
- * enumerated is a scenario axis. The list is the spec's own words (existing_*, current_stories, lawfully_existing_status, roof_type, pool,
- * suite_wall_openings).
+ * enumerated is a scenario axis. The list is the spec's own words (existing_*, current_stories, lawfully_existing_status, pool,
+ * suite_wall_openings). M-465 (I13): roof_type is no longer a legal user input; it is a design option resolved per option slot.
  */
-const LEGAL_USER_INPUT = Object.freeze(['current_stories', 'lawfully_existing_status', 'roof_type', 'pool', 'suite_wall_openings']);
+const LEGAL_USER_INPUT = Object.freeze(['current_stories', 'lawfully_existing_status', 'pool', 'suite_wall_openings']);
 function isScenarioAxisReason(reason) {
   if (typeof reason !== 'string' || !reason.startsWith('needs_user_input:')) return false;
   const axis = reason.slice('needs_user_input:'.length).split(':')[0];
   return !(axis.startsWith('existing_') || LEGAL_USER_INPUT.includes(axis));
+}
+/** M-465 (I13): an option slot left undecided on its own token (the option sets it, so it is never a legal reason there). */
+function isOptionAxisReason(reason, pair) {
+  if (isScenarioAxisReason(reason)) return true;
+  return pair.option !== null && (reason === `condition_unknown:${pair.token}` || reason === `needs_user_input:${pair.token}`);
 }
 
 const pickStored = (r) => Object.fromEntries(STORED_RESULT_FIELDS.map((f) => [f, r[f]]));
@@ -232,7 +251,7 @@ const sameFull = (a, b) => rb.stableJson(Object.fromEntries(LOGICAL_RESULT_FIELD
  * I12 and I15 (Q-N): for an audited lot, every (class, structure, target) is re-evaluated uncached and compared with what the lot row DECODES to
  * (so the encoding is audited too), and re-evaluated once more with the candidates in reversed order (order invariance). Counts pairs.
  */
-function auditLot(lot, decoded, cand, env, tally) {
+function auditLot(lot, decoded, cand, env, tally, decodedOptions = []) {
   const rep = env.classes[0];
   const at = new Map(decoded.map((d) => [`${d.class}\u0000${d.structure}\u0000${d.target}`, d]));
   for (const p of env.pairs) {
@@ -248,6 +267,20 @@ function auditLot(lot, decoded, cand, env, tally) {
     const fwd = normalizeResult(env.hooks.evaluateDirect(l0, p.target, cand.candidates), cand, env);
     const rev = normalizeResult(env.hooks.evaluateDirect(l0, p.target, [...cand.candidates].reverse()), cand, env);
     if (!sameFull(fwd, rev)) tally.order_disagreements += 1;
+  }
+  // M-465: the option slots, for their listed classes (I12 equivalence against the decoded option rows; I15 order invariance)
+  const atOpt = new Map((decodedOptions || []).map((d) => [`${d.class}\u0000${d.target}\u0000${d.option}`, d]));
+  for (const p of env.optionPairs) {
+    let disagree = false;
+    for (const c of p.classes) {
+      const l = rb.optionLot(rb.classLot(lot, { structure: p.structure, classKey: c, vector: env.classVectors[c] }), p);
+      const direct = normalizeResult(env.hooks.evaluateDirect(l, p.target, cand.candidates), cand, env, { option: true });
+      if (!sameStored(direct, atOpt.get(`${c}\u0000${p.target}\u0000${p.option}`))) disagree = true;
+      const rev = normalizeResult(env.hooks.evaluateDirect(l, p.target, [...cand.candidates].reverse()), cand, env, { option: true });
+      if (!sameFull(direct, rev)) tally.order_disagreements += 1;
+    }
+    tally.equivalence_checked += 1;
+    if (disagree) tally.equivalence_disagreements += 1;
   }
 }
 
@@ -269,7 +302,7 @@ function resolveRow(row, env) {
     const statusTextValue = gate === 'exception_not_authored' ? excStatus : `not_evaluated:${gate}`;
     const reason = statusTextValue.slice('not_evaluated:'.length);
     for (const [i, c] of env.classes.entries()) {
-      byClass[c] = i === 0 ? env.pairs.map(() => gatedResult(reason)) : null;
+      byClass[c] = i === 0 ? [...env.pairs, ...env.optionPairs].map(() => gatedResult(reason)) : null;
       words[c] = { status: 'not_evaluated', reason };
     }
   } else {
@@ -279,18 +312,26 @@ function resolveRow(row, env) {
         return normalizeResult(env.hooks.evaluate(l, p.target, cand.candidates), cand, env);
       });
     }
+    // M-465 (RC-1): the option slots, evaluated for the representative class (the slots' only listed class)
+    const rc = env.classes[0];
+    byClass[rc] = [...byClass[rc], ...env.optionPairs.map((p) => {
+      const l = rb.optionLot(rb.classLot(lot, { structure: p.structure, classKey: rc, vector: env.classVectors[rc] }), p);
+      return normalizeResult(env.hooks.evaluate(l, p.target, cand.candidates), cand, env, { option: true });
+    })];
     for (const c of env.classes) {
       const l = rb.classLot(lot, { structure: 'principal', classKey: c, vector: env.classVectors[c] });
       words[c] = permittedCached(l, env.classVectors[c].building_type, cand, c, env);
     }
   }
-  const enc = lr.encodeLotResults({ pairs: env.pairs, classes: env.classes, byClass, map: env.map, dict: env.dict, unitInfo: env.unitInfo });
+  const enc = lr.encodeLotResults({ pairs: env.pairs, classes: env.classes, byClass, map: env.map, dict: env.dict, unitInfo: env.unitInfo, optionPairs: env.optionPairs, share: gate === null });
   const perm = lr.encodePermitted({ classes: env.classes, words, map: env.map, dict: env.dict });
   if (gate === null && env.audit !== null && row.id % env.audit.everyNth === env.audit.offset) {
-    const decoded = lr.decodeLotResults({ lot: enc, pairs: env.pairs, classes: env.classes, map: env.map, dicts: env.dict.view() });
-    auditLot(lot, decoded, cand, env, audit);
+    const decoded = lr.decodeLotResults({ lot: enc, pairs: env.pairs, classes: env.classes, map: env.map, dicts: env.dict.view(), optionPairs: env.optionPairs });
+    const decodedOptions = lr.decodeOptionResults({ lot: enc, pairs: env.pairs, classes: env.classes, map: env.map, dicts: env.dict.view(), optionPairs: env.optionPairs });
+    auditLot(lot, decoded, cand, env, audit, decodedOptions);
   }
-  return { enc, perm, gate, defaulted, audit, parcelId: row.id, rep: byClass[env.classes[0]] };
+  const repAll = byClass[env.classes[0]];
+  return { enc, perm, gate, defaulted, audit, parcelId: row.id, rep: repAll.slice(0, env.pairs.length), options: repAll.slice(env.pairs.length) };
 }
 
 function stampLot(row, env) {
@@ -322,10 +363,12 @@ function materializeBatch(batch, env) {
     matched.inputs_defaulted += r.defaulted;
     for (const k of Object.keys(r.audit)) matched[k] += r.audit[k];
     if (r.gate !== null) { matched.lots_gated += 1; matched.gated_by_gate[r.gate] = (matched.gated_by_gate[r.gate] || 0) + 1; }
-    for (const c of r.rep) {
+    if (r.gate === null) r.options.forEach((c, k) => { if (isOptionAxisReason(c.reason, env.optionPairs[k])) matched.scenario_axis_results += 1; });
+    // every result written this run, the M-465 option slots included (I3 conflict_cells and the status shares read these; OUTPUT panel S1-02)
+    for (const c of [...r.rep, ...r.options]) {
       matched.results_by_status[c.status] = (matched.results_by_status[c.status] || 0) + 1;
       if (c.winner_layer !== null) matched.winner_layers[c.winner_layer] = (matched.winner_layers[c.winner_layer] || 0) + 1;
-      if (isScenarioAxisReason(c.reason)) matched.scenario_axis_results += 1;
+      if (r.rep.includes(c) && isScenarioAxisReason(c.reason)) matched.scenario_axis_results += 1; // the option slots are counted above
       if (c.status === 'not_evaluated') {
         const code = String(c.reason).split(':')[0];
         matched.not_evaluated_by_reason[code] = (matched.not_evaluated_by_reason[code] || 0) + 1;
@@ -346,16 +389,40 @@ function materializeBatch(batch, env) {
  * uncached evaluator. `parcelRow` is the parcels row (the lot vector is rebuilt from it).
  */
 function logicalRowsOf(parcelRow, storedLot, dicts, env) {
-  const decoded = lr.decodeLotResults({ lot: storedLot, pairs: env.pairs, classes: env.classes, map: env.map, dicts });
+  const decoded = lr.decodeLotResults({ lot: storedLot, pairs: env.pairs, classes: env.classes, map: env.map, dicts, optionPairs: env.optionPairs });
+  const decodedOptions = lr.decodeOptionResults({ lot: storedLot, pairs: env.pairs, classes: env.classes, map: env.map, dicts, optionPairs: env.optionPairs });
   const permitted = lr.decodePermitted({ lot: storedLot, classes: env.classes, map: env.map, dicts });
   const gate = storedLot.lot_gate === undefined ? null : storedLot.lot_gate;
-  if (gate !== null) return { lot_gate: gate, permission_disclosures: Object.fromEntries(env.classes.map((c) => [c, null])), permitted_by_class: permitted, rows: decoded.map((d) => ({ ...d, inputs_used: [], losers: null, disclosures: null })) };
+  if (gate !== null) return { lot_gate: gate, permission_disclosures: Object.fromEntries(env.classes.map((c) => [c, null])), permitted_by_class: permitted, rows: decoded.map((d) => ({ ...d, inputs_used: [], losers: null, disclosures: null })), option_rows: decodedOptions.map((d) => ({ ...d, inputs_used: [], losers: null, disclosures: null })) };
   const { lot } = rb.buildLotVector(parcelRow, env.lotEnv);
   const rows = decoded.map((d) => {
     const t = traceResult(lot, d.structure, d.target, d.class, env);
     return { ...d, inputs_used: t.inputs_used, losers: t.losers, disclosures: t.disclosures };
   });
-  return { lot_gate: null, permission_disclosures: permissionDisclosuresOf(parcelRow, storedLot, permitted, env), permitted_by_class: permitted, rows };
+  const pairOf = (d) => env.optionPairs.find((p) => p.structure === d.structure && p.target === d.target && p.option === d.option);
+  const optionRows = decodedOptions.map((d) => {
+    const t = traceOption(lot, pairOf(d), d.class, env);
+    return { ...d, inputs_used: t.inputs_used, losers: t.losers, disclosures: t.disclosures };
+  });
+  return { lot_gate: null, permission_disclosures: permissionDisclosuresOf(parcelRow, storedLot, permitted, env), permitted_by_class: permitted, rows, option_rows: withNotAbove(optionRows, env) };
+}
+
+/**
+ * ROOF-5 (operator "roof 5- confirmed"; recomputed on read, CHAT-80.QP: disclosures are not stored): an option row of a declared `not_above`
+ * target whose number exceeds the same class and option's `bound_by` number carries the closed word (the wall limit is not binding; the
+ * walls are bounded by the height). The pair is data (vocab.design_options.<option>.not_above), so no id lives in code.
+ */
+function withNotAbove(rows, env) {
+  return rows.map((r) => {
+    const rules = ((env.designOptions[r.option_name] || {}).not_above || []).filter((n) => n.target === r.target);
+    const words = [];
+    for (const n of rules) {
+      const by = rows.find((o) => o.class === r.class && o.option === r.option && o.structure === r.structure && o.target === n.bound_by);
+      if (r.option !== null && by && r.value_kind === 'number' && by.value_kind === 'number' && r.value > by.value) words.push(n.disclosure);
+    }
+    if (!words.length) return r;
+    return { ...r, disclosures: sortedUnique([...(r.disclosures || []), ...words]) };
+  });
 }
 
 /** The stored row was written by another table / evaluator version than this tree's (expected between an evaluator commit and its Layer 2 night). */
@@ -411,5 +478,7 @@ function permissionDisclosuresOf(parcelRow, storedLot, storedWords, env) {
 
 module.exports = {
   LEGAL_USER_INPUT, RESULT_COLUMNS, COLUMN_SQL, COLUMN_KINDS, STORED_RESULT_FIELDS, LOGICAL_RESULT_FIELDS, rowShaMismatchSql,
-  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, logicalRowsOf, PermissionRecomputeStaleError, PermissionRecomputeDriftError, PermissionDisclosureError,
+  // withNotAbove: ROOF-5 recomputed on read, exported for the Layer 3 reader (operator "Q-r2 a")
+  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, traceOption, logicalRowsOf, withNotAbove,
+  PermissionRecomputeStaleError, PermissionRecomputeDriftError, PermissionDisclosureError,
 };

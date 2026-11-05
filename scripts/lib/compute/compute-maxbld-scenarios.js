@@ -27,8 +27,9 @@ const READ_SQL = Object.freeze({
   FROM bylaw_resolution_results r
  WHERE r.parcel_id = ANY($1::int[]) AND r.class = $2 AND r.structure = $3
  ORDER BY r.parcel_id, r.target`,
+  // Q-STOR a (migration 295): the lot stamps are stored as bytea; Layer 3 reads them as hex through the view bylaw_resolution_lot_stamps
   lots: `SELECT l.parcel_id, l.lot_gate, l.permitted, l.permitted_text_ids, l.table_version
-  FROM bylaw_resolution_lots l
+  FROM bylaw_resolution_lot_stamps l
  WHERE l.parcel_id = ANY($1::int[])`,
   geometry: `SELECT p.id, p.lot_size_sqm, p.frontage_m, p.depth_m, p.is_corner_lot, p.zoning_class, p.primary_frontage_street_name
   FROM parcels p

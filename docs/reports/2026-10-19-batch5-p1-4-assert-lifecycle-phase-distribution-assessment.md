@@ -341,7 +341,7 @@ Every PRE runs BEFORE the ② rename migration, because the legacy code reads th
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_lifecycle_phase_distribution | PASS | min_migration=276 <= migrations count=284 |
+| 1 | assert_lifecycle_phase_distribution | PASS | min_migration=276 <= migrations count=286 |
 | 2 | assert_lifecycle_phase_distribution | PASS | 197 declared, missing from seeds: none |
 | 3 | assert_lifecycle_phase_distribution | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_lifecycle_phase_distribution | PASS | SPEC LINK header present=true |
@@ -365,7 +365,7 @@ Every PRE runs BEFORE the ② rename migration, because the legacy code reads th
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 648 definition row(s) checked, 134 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 650 definition row(s) checked, 134 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |

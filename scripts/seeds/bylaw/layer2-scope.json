@@ -77,5 +77,17 @@
       "upper_side_setback_m"
     ]
   },
-  "deferred": {}
+  "deferred": {},
+  "options": {
+    "$comment": "M-465 (M-400's first design option): option slots appended after the base pairs, in this order: for each option, for each structure and target listed, one slot per vocab.design_options value (in its order); then the option's threshold pair (option null). Stored for the listed classes only (M-465 (6), RC-1): the representative arrays hold the first listed class's results and no class override is written at these slots; another class reads no option row (R3-11). The base pairs and their positions are unchanged (M-60). Read through the view bylaw_resolution_option_results (migration 295).",
+    "roof_form": {
+      "classes": ["detached_house"],
+      "targets": {
+        "principal": ["height_m", "main_wall_height_m", "upper_storey_setback_m"]
+      },
+      "threshold": {
+        "principal": "pitched_roof_slope_min"
+      }
+    }
+  }
 }

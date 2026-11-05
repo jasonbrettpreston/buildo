@@ -113,18 +113,43 @@ function encodeOne(r, map, dict, unitInfo) {
   ];
 }
 
-/** byClass: class -> results in pair order (null = same as the representative, i.e. the first class). */
-function encodeLotResults({ pairs, classes, byClass, map, dict, unitInfo }) {
+/**
+ * M-465 (2) (share the cell): the closed storage code `shared` (layer2-map.json storage_code), numbered after the result codes. An option slot
+ * whose result equals its own base pair's result is stored as [shared, null, null, null, null, null] and decoded to that base cell.
+ */
+function sharedCode(map) {
+  const i = Array.isArray(map.storage_code) ? map.storage_code.indexOf('shared') : -1;
+  if (i < 0) throw new Error('layer2-map.json declares no storage_code shared (M-465 (2))');
+  return resultCodes(map).length + i;
+}
+
+/**
+ * byClass: class -> results in pair order (null = same as the representative, i.e. the first class). With optionPairs (M-465, RC-1), the
+ * representative's results run over the base pairs then the option slots; another class carries the base pairs only, and no class override
+ * is written at an option slot (the slots are stored for the representative class alone, layer2-scope.json options). `share` false (a gated
+ * lot) writes every option slot in full.
+ */
+function encodeLotResults({ pairs, classes, byClass, map, dict, unitInfo, optionPairs = [], share = true }) {
   for (const c of classes) if (byClass[c] === undefined) throw new Error(`encodeLotResults: missing class ${c}`);
   const rep = byClass[classes[0]];
-  if (!rep || rep.length !== pairs.length) throw new Error(`encodeLotResults: length ${rep ? rep.length : 'null'} != ${pairs.length} pairs`);
+  const width = pairs.length + optionPairs.length;
+  if (!rep || rep.length !== width) throw new Error(`encodeLotResults: length ${rep ? rep.length : 'null'} != ${width} slots`);
+  for (const p of optionPairs) if (!Array.isArray(p.classes) || p.classes.length !== 1 || p.classes[0] !== classes[0]) throw new Error(`encodeLotResults: option slot ${p.target} is stored for the representative class only (RC-1)`);
   const tuples = rep.map((r) => encodeOne(r, map, dict, unitInfo));
+  // a gated lot shares nothing: its rows are all not_evaluated (the I4 CHECK of migration 282 holds codes to not_evaluated there)
+  if (optionPairs.length && share) {
+    const SH = sharedCode(map);
+    optionPairs.forEach((p, k) => {
+      const i = pairs.length + k;
+      if (p.base_index !== null && JSON.stringify(tuples[i]) === JSON.stringify(tuples[p.base_index])) tuples[i] = [SH, null, null, null, null, null];
+    });
+  }
   const cols = [0, 1, 2, 3, 4, 5].map((j) => tuples.map((t) => t[j]));
   const overrides = {};
   for (const c of classes.slice(1)) {
     const rs = byClass[c];
     if (rs === null) continue;
-    if (rs.length !== pairs.length) throw new Error(`encodeLotResults: length ${rs.length} != ${pairs.length} pairs for ${c}`);
+    if (rs.length !== pairs.length) throw new Error(`encodeLotResults: length ${rs.length} != ${pairs.length} base pairs for ${c}`);
     const o = {};
     rs.forEach((r, i) => {
       const t = encodeOne(r, map, dict, unitInfo);
@@ -164,8 +189,53 @@ function decodeTuple(t, map, dicts) {
   };
 }
 
-function decodeLotResults({ lot, pairs, classes, map, dicts }) {
+function lotColumns(lot, n) {
+  const arr = (a, name) => {
+    if (a === null || a === undefined) return new Array(n).fill(null);
+    if (a.length !== n) throw new Error(`decodeLotResults: ${name} length ${a.length} != ${n}`);
+    return a;
+  };
+  if (!lot.codes || lot.codes.length !== n) throw new Error(`decodeLotResults: codes length ${lot.codes ? lot.codes.length : 'null'} != ${n}`);
+  return [lot.codes, arr(lot.numbers, 'numbers'), arr(lot.reason_ids, 'reason_ids'), arr(lot.winner_ids, 'winner_ids'), arr(lot.evidence_kinds, 'evidence_kinds'), arr(lot.evidence_ref_ids, 'evidence_ref_ids')];
+}
+
+/**
+ * M-465: the option slots decoded, one row per option slot per listed class: `option` (null for the threshold), `option_name` and
+ * `shared_with_base`. A shared slot reads its own class's base cell (class override first, then the representative's array). A class the
+ * slot does not list gets no row (R3-11: never a neighbouring class's option).
+ */
+function decodeOptionResults({ lot, pairs, classes, map, dicts, optionPairs }) {
   const n = pairs.length;
+  const cols = lotColumns(lot, n + optionPairs.length);
+  const at = (i) => cols.map((c) => c[i]);
+  const SH = optionPairs.length ? sharedCode(map) : null;
+  const out = [];
+  for (const cls of classes) {
+    const ov = (lot.class_results && lot.class_results[cls]) || {};
+    optionPairs.forEach((p, k) => {
+      if (!p.classes.includes(cls)) return;
+      const i = n + k;
+      if (ov[i] !== undefined) throw new Error(`decodeOptionResults: class override at option slot ${i + 1} (RC-1 writes none)`);
+      const t = at(i);
+      const shared = t[0] === SH;
+      if (shared && p.base_index === null) throw new Error(`decodeOptionResults: shared code at the threshold slot ${i + 1}`);
+      const src = shared ? (ov[p.base_index] || at(p.base_index)) : t;
+      out.push({ class: cls, structure: p.structure, target: p.target, option_name: p.option_name, option: p.option, shared_with_base: shared, ...decodeTuple(src, map, dicts) });
+    });
+  }
+  return out;
+}
+
+function decodeLotResults({ lot, pairs, classes, map, dicts, optionPairs = [] }) {
+  const n = pairs.length;
+  if (optionPairs.length) {
+    const cols = lotColumns(lot, n + optionPairs.length);
+    const SH = sharedCode(map);
+    for (let i = 0; i < n; i++) if (cols[0][i] === SH) throw new Error(`decodeLotResults: shared code at base slot ${i + 1} (closed to the option slots)`);
+    const trimmed = { ...lot };
+    for (const [j, name] of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids'].entries()) trimmed[name] = lot[name] === null || lot[name] === undefined ? lot[name] : cols[j].slice(0, n);
+    return decodeLotResults({ lot: trimmed, pairs, classes, map, dicts });
+  }
   const arr = (a, name) => {
     if (a === null || a === undefined) return new Array(n).fill(null);
     if (a.length !== n) throw new Error(`decodeLotResults: ${name} length ${a.length} != ${n}`);
@@ -211,4 +281,4 @@ function decodePermitted({ lot, classes, map, dicts }) {
   return out;
 }
 
-module.exports = { hash32, resultCodes, codeOf, splitCode, makeDict, makeDecodeDicts, encodeLotResults, decodeLotResults, encodePermitted, decodePermitted };
+module.exports = { hash32, resultCodes, codeOf, splitCode, sharedCode, makeDict, makeDecodeDicts, encodeLotResults, decodeLotResults, decodeOptionResults, encodePermitted, decodePermitted };

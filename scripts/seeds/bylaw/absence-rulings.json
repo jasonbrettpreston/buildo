@@ -304,6 +304,26 @@
       "statement": "an RM townhouse has a building-length limit only where the lot abuts a major street (10.80.40.20(3)(A), 19.0 m); (1) binds \"a detached house or a semi-detached house\". Off a major street no clause of 10.80.40.20 limits a townhouse: unregulated by absence. On a major street (3)(A) applies and wins; while the major_street flag is unknown the answer stays condition_unknown (Q-KG3: rule 7a ignores a unit whose lot condition is known false)",
       "target": "building_length_m",
       "zone": "RM"
+    },
+    {
+      "absent_phrases": [
+        "horizontal units"
+      ],
+      "accounted_occurrences": [],
+      "checked_page": "ch10_60",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-8",
+      "occurrence_patterns": [
+        "slope"
+      ],
+      "present_phrases": [
+        "10.60.40.10 Height 10.60.40.20 Building Length"
+      ],
+      "ruling": "Spec 69a M-465 (4) (the roof-form threshold, OP-1): where no clause carrying the flat-or-shallow token binds the lot, the threshold is decided by an absence ruling (plan-roof-axis v3 section 3)",
+      "statement": "no flat-or-shallow roof test in 569-2013 Ch.10.60 for the RT zone: \"slope\" and \"horizontal units\" do not occur on the page, so no clause generates a pitched-roof slope threshold there; a pitched roof is not limited by one (unregulated by absence)",
+      "target": "pitched_roof_slope_min",
+      "zone": "RT"
     }
   ]
 }

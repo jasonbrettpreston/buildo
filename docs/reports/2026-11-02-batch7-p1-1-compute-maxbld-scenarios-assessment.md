@@ -119,7 +119,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=284 |
+| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=286 |
 | 2 | compute_maxbld_scenarios | PASS | 16 declared, missing from seeds: none |
 | 3 | compute_maxbld_scenarios | PASS | retired=22 overlap-with-declared=none |
 | 7 | compute_maxbld_scenarios | PASS | SPEC LINK header present=true |
@@ -143,7 +143,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 648 definition row(s) checked, 134 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 650 definition row(s) checked, 134 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |
@@ -186,7 +186,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=30235B notes=3844B checks=7 rows records_meta=(no capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=30265B notes=3844B checks=7 rows records_meta=(no capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 

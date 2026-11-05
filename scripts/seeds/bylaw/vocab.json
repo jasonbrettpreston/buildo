@@ -267,6 +267,7 @@
       "patterns": ["measured", "from the front lot line"]
     },
     "front_setback_fallback_m": { "unit": "m", "aspect": "envelope", "bound": "min", "concept": "the zone's x.40.70(1) front yard setback, the zone value and not an exception's: front_setback_m read on the base layer as if front-yard averaging did not apply (M-245, MB-18 j)", "patterns": ["zone front yard setback fallback"] },
+    "pitched_roof_slope_min": { "unit": "ratio", "aspect": "envelope", "bound": "min", "concept": "the least roof slope, vertical units per horizontal unit, at which a roof falls outside the clause's own flat-or-shallow test: the pitched form of the roof-form design option exists only at or above it; generated per clause from the clause's own words by vocab.design_options.roof_form.thresholds, the lot taking its strictest clause (M-465 (4), OP-1)", "patterns": ["pitched roof slope threshold"] },
     "averaging_distance_m": { "unit": "m", "aspect": "measurement", "bound": "max", "concept": "the distance within which abutting buildings are counted for front-yard averaging. The by-law threshold used as a comparison operand, not a measured distance (MB-18 k, M-423).", "patterns": ["within 15.0 metres", "abutting lot"] },
     "lot_area_per_unit_min_m2": { "unit": "m2", "aspect": "lot", "concept": "required minimum lot area for each dwelling unit (label au)", "patterns": ["lot area for each dwelling unit", "lot area per dwelling unit"] }
   },
@@ -4323,6 +4324,32 @@
       "sentence": "If the lot has changed since 9 May 2013 (for example by severance or consent): the {bound} on {target} ({value} {unit}) rests on today's lot frontage standing in for the frontage on that date, so it may differ.",
       "placeholders": ["bound", "target", "value", "unit"],
       "ruling": "M-406"
+    }
+  },
+  "design_option_rule": {
+    "$comment": "M-465 (3), the pitched step-back (a dated note on M-183; operator \"step-back approved\"): a target whose by-law value units on the lot are all out only because a condition token declared in vocab.design_options is false does not apply. The closed words of that result, kept as data so no string literal enters evaluate.mjs (arm L): its status, the reason prefix before the first such unit (candidate order), the evidence kind, the three fixed parts of its trace line (before the target, between the target and the unit list, after the list) and the unit list separator.",
+    "status": "not_applicable",
+    "reason_prefix": "not_applicable:",
+    "evidence_kind": "clause",
+    "trace": ["M-465 (3): every unit for ", " (", ") is out only because a design-option token is false; does not apply"],
+    "separator": ", "
+  },
+  "design_options": {
+    "$comment": "M-465 (M-400's first design option; operator 0-A-a): a design choice resolved per option in Phase 2, keyed by option like class, never filled by data or a default (the M-172(3) class move). token: the lot_condition the option sets; values: each option with the truth it gives the token (holds) and its label; threshold_target and thresholds: the clause's own flat-or-shallow wording gives the least pitched slope (M-465 (4), OP-1); every unit carrying the token matches exactly one pattern, except no_threshold_units, the four flat-roof clauses that take the zone's 1:10 (O-A a); not_above: the ROOF-5 reading, a disclosure recomputed on read where an option row of target exceeds the same option's bound_by row. Read by evaluate.mjs (the pitched step-back rule, M-465 (3)), the Layer 1 assembly (the threshold units) and the Layer 2 option slots (layer2-scope.json options).",
+    "roof_form": {
+      "token": "flat_or_shallow_roof",
+      "values": [
+        { "option": "flat_or_shallow_roof", "holds": true, "label": "flat or shallow roof" },
+        { "option": "pitched", "holds": false, "label": "pitched roof" }
+      ],
+      "threshold_target": "pitched_roof_slope_min",
+      "thresholds": [
+        { "pattern": "slope of less than 1.0 vertical units for every 10.0 horizontal units", "value": 0.1 },
+        { "pattern": "slope of less than 1.0 vertical units for every 4.0 horizontal units", "value": 0.25 }
+      ],
+      "no_threshold_units": ["900.3.10(18)#(18)[SSP](C)", "900.3.10(21)#(21)[SSP](A)", "900.3.10(28)#(28)[SSP](A)", "900.3.10(37)#(37)[SSP](A)"],
+      "not_above": [{ "target": "main_wall_height_m", "bound_by": "height_m", "disclosure": "main_wall_limit_above_height" }],
+      "ruling": "M-465"
     }
   }
 }

@@ -301,3 +301,28 @@ describe('migration 293 (item j: one more slot)', () => {
     expect(PAIRS.length).toBe(Number((n as RegExpExecArray)[1]));
   });
 });
+
+describe('migration 295, Q-STOR a (the Spec 134 type amendment): the lot stamps are retyped to bytea(32) and read as hex through a view', () => {
+  const MIG_295 = 'migrations/295_resolve_bylaws_roof_option.sql';
+  const s295 = (): string => read(MIG_295).split('\n').filter((l) => !l.trimStart().startsWith('--')).join('\n');
+  const STAMPS = ['row_sha', 'table_version', 'evaluator_version'];
+  it('the retype keeps every value (USING decode(x, \'hex\')) after the regex CHECKs of 282 are dropped IF EXISTS', () => {
+    const s = s295();
+    for (const c of STAMPS) {
+      const drop = s.indexOf(`DROP CONSTRAINT IF EXISTS bylaw_resolution_lots_${c}_check;`);
+      const alter = s.indexOf(`ALTER COLUMN ${c} TYPE bytea USING decode(${c}, 'hex')`);
+      expect([c, drop >= 0, alter > drop]).toEqual([c, true, true]);
+    }
+  });
+  it('each stamp carries an octet_length = 32 CHECK, added NOT VALID under the 282 name, and 282 itself is not edited', () => {
+    for (const c of STAMPS) expect(s295()).toContain(`ADD CONSTRAINT bylaw_resolution_lots_${c}_check CHECK (octet_length(${c}) = 32) NOT VALID;`);
+    for (const c of STAMPS) expect(sql, c).toContain(`CHECK (${c} ~ '^[0-9a-f]{64}$')`);
+  });
+  it('bylaw_resolution_lot_stamps gives the three stamps back as hex, created after the retype', () => {
+    const s = s295();
+    const v = /CREATE OR REPLACE VIEW bylaw_resolution_lot_stamps AS([\s\S]*?);\n/.exec(s);
+    expect(v).toBeTruthy();
+    for (const c of STAMPS) expect((v as RegExpExecArray)[1]).toContain(`encode(l.${c}, 'hex') AS ${c}`);
+    expect(s.indexOf('CREATE OR REPLACE VIEW bylaw_resolution_lot_stamps')).toBeGreaterThan(s.indexOf('ALTER COLUMN row_sha TYPE bytea'));
+  });
+});

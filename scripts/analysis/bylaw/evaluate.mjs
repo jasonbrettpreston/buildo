@@ -156,6 +156,9 @@ export function makeContext(vocab, extra = {}) {
     targetBound: Object.fromEntries(Object.entries(vocab.dsl_target || {}).filter(([, t]) => t && ['min', 'max', 'exact'].includes(t.bound)).map(([k, t]) => [k, t.bound])),
     // MB-18 (k), M-423: target -> the read-as-if-token-held record (read by effective() only through fallbackRead)
     fallbackTarget: vocab.fallback_target || {},
+    // M-465 (3): the lot-condition tokens a design option sets (vocab.design_options); a unit out only because one is false does not apply
+    designOptionTokens: new Set(Object.values(vocab.design_options || {}).map((o) => o && o.token).filter(Boolean)),
+    designOptionRule: vocab.design_option_rule || null, // M-465 (3): the result's closed words, kept as data (arm L)
     existingAssumption: vocab.existing_assumption || {}, // MB-18 (i), M-406: the assumed-read entries
     // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
@@ -1061,6 +1064,7 @@ function effCore(lot, target, candidates, C, env) {
   const A = new Set(); const unknown = []; const condLosers = [];
   const knownFalse = (C.absenceIgnore && C.absenceIgnore.known_false_lot_conditions) || []; // Q-KG3
   const condFalse = new Set();
+  const optOut = []; // M-465 (3): value units out only because a design-option token is false, in candidate order
   for (const u of consideredOrdered) {
     const t = [];
     const a = applies(lot, u, C, resolveVariable, reads, t, target);
@@ -1070,6 +1074,10 @@ function effCore(lot, target, candidates, C, env) {
     else if (a.disclosure && !disclosures.includes(a.disclosure)) disclosures.push(a.disclosure); // M-224 literal reading
     if (a.ok === false && valueSet.has(u)) condLosers.push({ unit_id: u.unit_id, dropped_by: 'condition_false', by: null });
     if (a.ok === false && knownFalse.includes(a.known_false_condition)) condFalse.add(u); // Q-KG3
+    // M-465 (3) "only because": the same unit applies on the lot with that token held; every other input it reads is this lot's own value, so
+    // the re-check's reads are this result's reads (hardened inputs[]; the cell cache keys on them; OUTPUT panel S1-01)
+    if (a.ok === false && valueSet.has(u) && C.designOptionRule && C.designOptionTokens && C.designOptionTokens.has(a.known_false_condition)
+      && applies({ ...lot, flags: { ...(lot.flags || {}), [a.known_false_condition]: true } }, u, C, resolveVariable, reads, [], target).ok === true) optOut.push(u);
   }
   for (const u of prevailing) {
     const a = applies(lot, u, C, resolveVariable, reads, []);
@@ -1078,7 +1086,7 @@ function effCore(lot, target, candidates, C, env) {
   }
   // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
   const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
-  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive, condLosers, condFalse };
+  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive, condLosers, condFalse, optOut };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -1148,7 +1156,7 @@ function commonLosers(lists) {
   const key = (l) => `${l.unit_id}\u0000${l.dropped_by}\u0000${l.by}\u0000${l.arg ?? ''}`;
   return ls[0].filter((l) => ls.every((o) => o.some((m) => key(m) === key(l))));
 }
-function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [], condFalse = null }, A, trace, disclosures) {
+function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [], condFalse = null, optOut = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const losers = [...condLosers]; // L2-LOSERS: structured beside the trace; DROPPED_BY names the reasons
   const lose = (u, dropped_by, by, extra = {}) => { if (!losers.some((l) => l.unit_id === u && l.dropped_by === dropped_by && l.by === by && l.arg === extra.arg)) losers.push({ unit_id: u, dropped_by, by, ...extra }); };
@@ -1217,6 +1225,18 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
       return { status: 'not_applicable', value: null, reason: `not_applicable:${by[0]}`, unit: C.units.target[target] ?? null, bound: null, winner: null,
         evidence: { kind: 'disapply', disapplied_by: by, disapplied: disapplied.map((u) => u.unit_id) }, bounds: {}, applied: [], losers,
         trace: [...trace, `rule 2 + M-183: ${by.join(', ')} disapplies every candidate for ${target} (${disapplied.map((u) => u.unit_id).join(', ')}) — does not apply`], disclosures, inputs: ins() };
+    }
+    // M-465 (3) (the pitched step-back, a dated note on M-183): every by-law value unit for the target is out only because a
+    // design-option token is false for the run's option → "does not apply" (not_applicable:<the first such unit, candidate order>),
+    // never rule 7's no_candidate. A unit out for any other reason keeps today's rules; an undecided token is never false.
+    const byLaw = [...valueSet].filter((u) => LAYER_RANK[u.layer] !== LAYER_RANK.provincial);
+    const dr = C.designOptionRule;
+    if (dr && optOut.length && byLaw.every((u) => optOut.includes(u))) {
+      const first = optOut[0].unit_id;
+      const [t0, t1, t2] = dr.trace;
+      return { status: dr.status, value: null, reason: `${dr.reason_prefix}${first}`, unit: C.units.target[target] ?? null, bound: null, winner: null,
+        evidence: { kind: dr.evidence_kind, clause: first }, bounds: {}, applied: [], losers,
+        trace: [...trace, `${t0}${target}${t1}${optOut.map((u) => u.unit_id).join(dr.separator)}${t2}`], disclosures, inputs: ins() };
     }
     // M-220 / M-202(3): nothing applies, and the target's rule is a zone-label letter the lot does not carry → no cap
     const la = C.labelAbsence && C.labelAbsence[target];

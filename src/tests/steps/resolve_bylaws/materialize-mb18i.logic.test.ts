@@ -38,7 +38,7 @@ const row = (id: number, o: Json = {}): Json => ({
 /** Parcel 205238 (82 Kelsonia): RD, label f15.0 a557, exception x155, frontage 15.23 m. */
 const P205238 = (o: Json = {}): Json => row(205238, { zoning_zn_string: 'RD (f15.0; a557) (x155)', exception_number: 155, frontage_m: 15.23, depth_m: 38.08, lot_size_sqm: 580.13, ...o });
 /** The decoded logical results of lot `i` (arrays + the batch's own dictionaries). */
-const decoded = (o: Json, i = 0): Json[] => lr().decodeLotResults({ lot: o.rows.lots[i], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts }) }) as Json[];
+const decoded = (o: Json, i = 0): Json[] => lr().decodeLotResults({ lot: o.rows.lots[i], optionPairs: rb().optionPairs(SCOPE, VOCAB.design_options), pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts }) }) as Json[];
 /** The logical rows read back on demand (disclosures recomputed, CHAT-180). */
 const logical = (p: Json, env: Json): Json => {
   const out = mz().materializeBatch([p], env);

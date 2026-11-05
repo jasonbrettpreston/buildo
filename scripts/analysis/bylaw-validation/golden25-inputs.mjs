@@ -24,6 +24,7 @@ const ROOT = path.resolve(HERE, '../../..'); // the repository root: three level
 const require = createRequire(import.meta.url);
 const mz = require('../../lib/bylaw-materialize.js');
 const lr = require('../../lib/bylaw-lot-row.js');
+const rb = require('../../lib/bylaw-resolution.js');
 
 const DEFAULT_DIR = 'src/tests/fixtures/layer3/golden-25';
 const TOLERANCE = 0.01;
@@ -73,12 +74,15 @@ function recomputePhase2(rows) {
   });
   const out = mz.materializeBatch(rows, env);
   const dicts = lr.makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts });
-  const pairs = SCOPE.structures.flatMap((s) => SCOPE.targets[s].map((t) => ({ structure: s, target: t })));
+  // the base pairs in their array order (rb.scopePairs) and the M-465 option slots after them; the Map below keys the base rows only, so an
+  // option row (which carries `option`) never overwrites a base row of the same target (F-10)
+  const pairs = rb.scopePairs(SCOPE);
+  const optionPairs = rb.optionPairs(SCOPE, VOCAB.design_options);
   const byParcel = new Map();
   for (const lot of out.rows.lots) {
-    const decoded = lr.decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts });
+    const decoded = lr.decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs });
     // The case is the principal detached house (the representative class of the golden lot).
-    const recs = new Map(decoded.filter((d) => d.class === 'detached_house' && d.structure === 'principal').map((d) => [d.target, d]));
+    const recs = new Map(decoded.filter((d) => !d.option && d.class === 'detached_house' && d.structure === 'principal').map((d) => [d.target, d]));
     byParcel.set(lot.parcel_id, recs);
   }
   return byParcel;

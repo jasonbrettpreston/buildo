@@ -27,6 +27,9 @@ const MAP = read('scripts/seeds/bylaw/layer2-map.json');
 const SCOPE = read('scripts/seeds/bylaw/layer2-scope.json');
 const PAIRS = (SCOPE.structures as string[]).flatMap((structure) => (SCOPE.targets[structure] as string[]).map((target) => ({ structure, target })));
 const ZONES = ['R', 'RD', 'RS', 'RT', 'RM'];
+// M-465 (RC-1): the option slots appended after the base pairs (layer2-scope.json options); a lot row is WIDTH slots wide
+const OPTS = rb().optionPairs(SCOPE, VOCAB.design_options) as Json[];
+const WIDTH = PAIRS.length + OPTS.length;
 
 const mkEnv = (over: Json = {}): Json => mz().makeEnv({ body: INPUT.body, map: MAP, scope: SCOPE, vocab: VOCAB, zoneList: ZONES, versions: { table_version: INPUT.table_version, evaluator_version: INPUT.evaluator_version }, ...over });
 
@@ -37,7 +40,7 @@ const row = (id: number, o: Json = {}): Json => ({
   frontage_m: 10.5, depth_m: 35.2, lot_size_sqm: 369.6, zoning_is_ambiguous: false, in_sixplex_area: false, is_heritage_designated: false, geom_npoints: 5, ...o,
 });
 /** The logical results of lot `i` of a batch output, decoded from the arrays and the batch's own dictionaries. */
-const decoded = (o: Json, i = 0): Json[] => lr().decodeLotResults({ lot: o.rows.lots[i], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts }) }) as Json[];
+const decoded = (o: Json, i = 0): Json[] => lr().decodeLotResults({ lot: o.rows.lots[i], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts }), optionPairs: OPTS }) as Json[];
 const repOf = (o: Json, i = 0): Json[] => decoded(o, i).filter((r) => r.class === SCOPE.classes[0]);
 const chapterOf = (z: string): number => VOCAB.exception_chapter[z] as number;
 const authoredNumber = (zone: string): number => {
@@ -63,11 +66,11 @@ describe('materializeBatch (option 4): one plain lot gives ONE lot row with scop
     expect(lot.inputs_defaulted).toBe(0);
   });
 
-  it('every positional array has one slot per scope pair, in layer2-scope.json order; permitted has one slot per class', () => {
+  it('every positional array has one slot per scope pair, in layer2-scope.json order, then the M-465 option slots; permitted has one slot per class', () => {
     const lot = out.rows.lots[0];
     expect(PAIRS).toHaveLength(SCOPE.structures.reduce((n: number, s: string) => n + (SCOPE.targets[s] as string[]).length, 0));
-    for (const k of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) if (lot[k] !== null) expect(lot[k], k).toHaveLength(PAIRS.length);
-    expect(lot.codes).toHaveLength(PAIRS.length);
+    for (const k of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) if (lot[k] !== null) expect(lot[k], k).toHaveLength(WIDTH);
+    expect(lot.codes).toHaveLength(WIDTH);
     expect(lot.permitted).toHaveLength(SCOPE.classes.length);
   });
 
@@ -290,7 +293,9 @@ describe('classes by stub: a differing class stores only the positions that diff
   beforeAll(() => { out = mz().materializeBatch([row(1)], mkEnv({ hooks: { evaluate: stub, permitted: () => ({ status: 'permitted', winners: [] }) } })); });
 
   it('the representative fills the arrays; a differing class is stored as overrides keyed by pair index', () => {
-    expect(out.rows.lots[0].numbers.every((v: number) => v === 10)).toBe(true);
+    expect(out.rows.lots[0].numbers.slice(0, PAIRS.length).every((v: number) => v === 10)).toBe(true);
+    // M-465 (2): the stub answers every option slot as its base pair, so each is the closed code shared; the threshold has no base pair
+    expect(out.rows.lots[0].codes.slice(PAIRS.length, -1).every((c: number) => c === lr().sharedCode(MAP))).toBe(true);
     const cr = out.rows.lots[0].class_results;
     expect(Object.keys(cr).sort()).toEqual(['detached_houseplex', 'semi_detached_houseplex']);
     expect(Object.keys(cr.detached_houseplex)).toHaveLength(PAIRS.filter((p) => p.structure === 'principal').length); // only the principal structure carries the class vector
@@ -372,7 +377,7 @@ describe('Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in 
 
   it('lots whose id modulo N equals the offset are checked: one check per scope pair each, and the real evaluator agrees with what the lot row decodes to and with itself in reverse order', () => {
     const out = mz().materializeBatch([row(1), row(2), row(3), row(4)], real(2, 1)); // ids 1 and 3
-    expect(out.matched.equivalence_checked).toBe(2 * PAIRS.length);
+    expect(out.matched.equivalence_checked).toBe(2 * WIDTH);
     expect(out.matched.equivalence_disagreements).toBe(0);
     expect(out.matched.order_disagreements).toBe(0);
   });
@@ -387,8 +392,8 @@ describe('Q-N / I12 / I15: the audit re-evaluates every Nth lot uncached and in 
     const direct = (): Json => ({ ...cached(), value: 11 });
     const env = mkEnv({ audit: { everyNth: 1, offset: 0 }, hooks: { evaluate: cached, evaluateDirect: direct, permitted: () => ({ status: 'permitted', winners: [] }) } });
     const out = mz().materializeBatch([row(1)], env);
-    expect(out.matched.equivalence_checked).toBe(PAIRS.length);
-    expect(out.matched.equivalence_disagreements).toBe(PAIRS.length);
+    expect(out.matched.equivalence_checked).toBe(WIDTH);
+    expect(out.matched.equivalence_disagreements).toBe(WIDTH);
   });
 
   it('a result that depends on candidate order is counted (a stub that answers by the first candidate)', () => {
@@ -410,20 +415,23 @@ describe('Q-F / I13 and the winner-layer histogram: tallies the descriptor check
     ? { status: 'value', value: 1, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: [], applied: [], inputs: ['zone', 'exception'], trace: [] }
     : { status: 'not_evaluated', value: null, reason, losers: [], disclosures: [], applied: [], inputs: ['zone', 'exception'], trace: [] }), permitted: () => ({ status: 'permitted', winners: [] }) } });
 
-  it('counts a needs_user_input result on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, roof_type, pool, suite_wall_openings)', () => {
+  it('counts a needs_user_input result on a scenario axis, not on a legal axis (existing_*, current_stories, lawfully_existing_status, pool, suite_wall_openings); roof_type is a design option, not a legal axis (M-465, I13)', () => {
     const bad = mz().materializeBatch([row(1)], stubWith('needs_user_input:has_secondary_suite'));
-    expect(bad.matched.scenario_axis_results).toBe(PAIRS.length);
-    for (const axis of ['existing_footprint_sqm', 'current_stories', 'lawfully_existing_status', 'roof_type', 'pool', 'suite_wall_openings']) {
+    expect(bad.matched.scenario_axis_results).toBe(WIDTH); // the option slots count too (M-465 I13)
+    expect(mz().materializeBatch([row(1)], stubWith('needs_user_input:roof_type')).matched.scenario_axis_results).toBe(WIDTH);
+    for (const axis of ['existing_footprint_sqm', 'current_stories', 'lawfully_existing_status', 'pool', 'suite_wall_openings']) {
       expect(mz().materializeBatch([row(1)], stubWith(`needs_user_input:${axis}`)).matched.scenario_axis_results, axis).toBe(0);
     }
     expect(mz().materializeBatch([row(1)], stubWith(null)).matched.scenario_axis_results).toBe(0);
   });
 
-  it('winner_layers counts the layer of each applies winner among the batch\'s representative results; results_by_status counts every one', () => {
+  it('winner_layers counts the layer of each applies winner among the batch\'s representative results and option slots; results_by_status counts every one', () => {
     const out = mz().materializeBatch([row(1)], mkEnv());
     const total = Object.values(out.matched.winner_layers as Record<string, number>).reduce((a, b) => a + b, 0);
-    expect(total).toBe(repOf(out).filter((c) => c.winner_unit_id !== null).length);
-    expect(Object.values(out.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(PAIRS.length);
+    const opt = lr().decodeOptionResults({ lot: out.rows.lots[0], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts }), optionPairs: OPTS }) as Json[];
+    // the M-465 option slots are results written too (a shared slot carries its base pair's winner)
+    expect(total).toBe(repOf(out).filter((c) => c.winner_unit_id !== null).length + opt.filter((c) => c.winner_unit_id !== null).length);
+    expect(Object.values(out.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(WIDTH); // every result written, the M-465 option slots included
     for (const k of Object.keys(out.matched.winner_layers)) expect(['base', 'overlay', 'exception', 'provincial']).toContain(k);
   });
 });

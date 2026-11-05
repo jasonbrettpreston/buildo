@@ -431,6 +431,52 @@ function scopePairs(scope) {
   });
 }
 
+/**
+ * M-465 (M-400's first design option; Spec 134 §3): the option slots appended after the base pairs, in scope order: for each option of
+ * layer2-scope.json `options`, for each structure and target, one slot per vocab.design_options value (in its order), then the
+ * option's threshold pair (`option` null). Each slot names the base pair it shares with (`base_index`, 0-based; null for the threshold),
+ * the lot flag it sets (`token`, `holds`) and the classes it is stored for. A scope option without its vocab record, an option target
+ * that is not a base pair, or a value without a boolean `holds` throws (never defaulted).
+ */
+function optionPairs(scope, designOptions) {
+  const opts = (scope && scope.options) || {};
+  const base = scopePairs(scope);
+  const at = new Map(base.map((p, i) => [`${p.structure}\u0000${p.target}`, i]));
+  const out = [];
+  for (const name of Object.keys(opts).filter((k) => k !== '$comment')) {
+    const so = opts[name];
+    const vo = designOptions && designOptions[name];
+    if (!vo || typeof vo.token !== 'string' || !Array.isArray(vo.values) || !vo.values.length) throw new Error(`optionPairs: option ${name} has no vocab.design_options record`);
+    if (!Array.isArray(so.classes) || !so.classes.length) throw new Error(`optionPairs: option ${name} lists no classes`);
+    for (const v of vo.values) if (typeof v.option !== 'string' || typeof v.holds !== 'boolean') throw new Error(`optionPairs: option ${name} value ${JSON.stringify(v)} needs option and a boolean holds`);
+    for (const structure of scope.structures) {
+      for (const target of (so.targets && so.targets[structure]) || []) {
+        const bi = at.get(`${structure}\u0000${target}`);
+        if (bi === undefined) throw new Error(`optionPairs: option target ${structure} ${target} is not a base pair`);
+        for (const v of vo.values) out.push({ structure, target, option_name: name, option: v.option, token: vo.token, holds: v.holds, base_index: bi, classes: [...so.classes] });
+      }
+    }
+    for (const structure of scope.structures) {
+      const t = so.threshold && so.threshold[structure];
+      if (!t) continue;
+      if (t !== vo.threshold_target) throw new Error(`optionPairs: option ${name} threshold ${t} is not vocab threshold_target ${vo.threshold_target}`);
+      out.push({ structure, target: t, option_name: name, option: null, token: vo.token, holds: null, base_index: null, classes: [...so.classes] });
+    }
+  }
+  return out;
+}
+
+/** M-465 (1): the class lot evaluated under one option slot: the option's token held or not; the threshold pair takes the lot unchanged. */
+function optionLot(lot, pair) {
+  if (pair.option === null) return lot;
+  return { ...lot, flags: { ...(lot.flags || {}), [pair.token]: pair.holds } };
+}
+
+/** The lot inputs an option slot sets (so they are not lot inputs): left out of inputs_used, kept in the cell cache key. */
+function optionInputPaths(pairs) {
+  return [...new Set(pairs.filter((p) => p.option !== null).map((p) => `flags.${p.token}`))].sort();
+}
+
 const FIELD_SEP = '\u001f';
 const ITEM_SEP = '\u001e';
 
@@ -515,6 +561,9 @@ module.exports = {
   UNSET_LOT_INPUTS,
   classLot,
   scopePairs,
+  optionPairs,
+  optionLot,
+  optionInputPaths,
   jsonbText,
   canonicalText,
   rowSha,

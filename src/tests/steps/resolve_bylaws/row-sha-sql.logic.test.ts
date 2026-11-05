@@ -37,8 +37,10 @@ describe('rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS', ()
       expect(s).toContain(`FROM ${TABLES[ORDER[i] as keyof typeof TABLES]} `);
       expect(s).toMatch(/^SELECT COUNT\(\*\)::int FROM /);
     });
-    expect(q[2]).toContain("row_sha IS DISTINCT FROM encode(sha256(convert_to(");
-    expect(q[2]).toContain("'UTF8')), 'hex')");
+    // Q-STOR a (migration 295): row_sha is bytea(32), compared with the recomputed digest as bytes, with no hex encode
+    expect(q[2]).toContain('row_sha IS DISTINCT FROM sha256(convert_to(');
+    expect(q[2]).toMatch(/'UTF8'\)\)$/);
+    expect(q[2]).not.toContain("'hex'");
   });
 
   it('the dictionary statements recompute the key as the first four bytes of the sha256 of the content, as a signed int4 (hash32)', () => {
@@ -50,7 +52,7 @@ describe('rowShaMismatchSql: three scalar counts, built from RESULT_COLUMNS', ()
 
   it('the lot statement renders every result column exactly once, in RESULT_COLUMNS order, joined by chr(31)', () => {
     const q: string[] = mz().rowShaMismatchSql(TABLES);
-    const text = /convert_to\(([\s\S]*), 'UTF8'\)\), 'hex'\)/.exec(q[2] as string)![1] as string;
+    const text = /convert_to\(([\s\S]*), 'UTF8'\)\)$/.exec(q[2] as string)![1] as string;
     const parts = text.split(' || chr(31) || ');
     const cols = mz().RESULT_COLUMNS.lots as string[];
     expect(parts).toHaveLength(cols.length);

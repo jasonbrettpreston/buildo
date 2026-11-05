@@ -384,6 +384,8 @@ export function evaluatorVocab(vocab) {
     exception_type_list_closure: vocab.exception_type_list_closure, // CHAT-194.USO-Q1 (Q1e): the exception "only" type lists permitted() reads
     existing_assumption: vocab.existing_assumption, // MB-18 (i), M-406
     fallback_target: vocab.fallback_target, // MB-18 (k), M-423: the read-as-if-token-held records evaluate.mjs fallbackRead reads
+    design_options: vocab.design_options, // M-465 (3): the design-option tokens the pitched step-back rule reads
+    design_option_rule: vocab.design_option_rule, // M-465 (3): the rule's closed result words
     permission_input_basis: vocab.permission_input_basis, // CHAT-152 C (M-168): inside permitted() proposed_height_m resolves height_m
     permission_scope: vocab.permission_scope, // CHAT-152 A (M-56 dated note): permitted() reads only use-scope PERMIT / PROHIBIT units
     undetermined_condition_disclosure: vocab.undetermined_condition_disclosure, // M-169 / CHAT-180 (G5): the closed disclosure phrases, incl. permission_effect

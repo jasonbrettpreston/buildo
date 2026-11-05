@@ -33,7 +33,7 @@ const EXPECTED_LOCAL = [
 const ALLOWED_BARE = ['crypto', 'node:crypto'];
 const LAYER2_EXISTING = ['scripts/analysis/bylaw/evaluate.mjs', 'scripts/analysis/bylaw/dsl.mjs'];
 const EXPECTED_TABLES = [
-  'bylaw_resolution_lots',
+  'bylaw_resolution_lot_stamps', // Q-STOR a: the lot stamps read as hex through the view (migration 295)
   'bylaw_resolution_results',
   'bylaw_resolution_texts',
   'bylaw_resolution_units',

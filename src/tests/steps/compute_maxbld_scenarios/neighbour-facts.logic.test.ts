@@ -159,7 +159,7 @@ describe('MB-31 declared read 6 and read 5 contract (B10)', () => {
   let READ_SQL: Json;
   const ALLOWED = new Set([
     'bylaw_resolution_results',
-    'bylaw_resolution_lots',
+    'bylaw_resolution_lot_stamps', // Q-STOR a: the lot stamps read as hex through the view (migration 295)
     'bylaw_resolution_texts',
     'bylaw_resolution_units',
     'parcels',
