@@ -1,6 +1,6 @@
 {
  "schema": "golden25-refusals-v2",
- "note": "Hand-authored companion of expected.jsonl: the 13 not_evaluated cells of the 25 golden cases and the reason stem the step result must carry (the stored row keeps the first reason, not the full undecided list). Stems were lifted from the expected file's why text and confirmed once against the first real run of the step (mode A, MB-18 (k) in, (j) (i) (l) out); they are not tuned. The flag set of every cell is in expected.jsonl. See MB-31 inc1-plan.md Appendix A. A0553 accepts two stems because MB-18 (j) turns the unknown target into an absent stored cell (missing_input:absent_target) without changing the answer. Mode B (MB-31 inc1 plan 2.2, operator \"a\" on Q-G25B, 2026-11-04): the 7 cells that waited on MB-18 (i) and (j) (A0067 and A0097 footprint and GFA; A0553 front, footprint and GFA) are numbers now and leave this list; 6 remain (A0166 footprint, height, storeys, GFA; A0375 footprint, GFA).",
+ "note": "Hand-authored companion of expected.jsonl: the 13 not_evaluated cells of the 25 golden cases and the reason stem the step result must carry (the stored row keeps the first reason, not the full undecided list). Stems were lifted from the expected file's why text and confirmed once against the first real run of the step (mode A, MB-18 (k) in, (j) (i) (l) out); they are not tuned. The flag set of every cell is in expected.jsonl. See MB-31 inc1-plan.md Appendix A. A0553 accepts two stems because MB-18 (j) turns the unknown target into an absent stored cell (missing_input:absent_target) without changing the answer. Mode B (MB-31 inc1 plan 2.2, operator \"a\" on Q-G25B, 2026-11-04): the 7 cells that waited on MB-18 (i) and (j) (A0067 and A0097 footprint and GFA; A0553 front, footprint and GFA) are numbers now and leave this list; 6 remained (A0166 footprint, height, storeys, GFA; A0375 footprint, GFA). M-475 (McProof item 1; RP-8, operator \"a\" on Q-RP8, 2026-11-05): A0375's street side is stored unregulated by absence (ABS-9.1), so its footprint (69.53 m2) and GFA (156.63 m2; McProof STS-3 and REG-5) are numbers and leave this list; 4 remain (A0166 footprint, height, storeys, GFA).",
  "cells": [
   {
    "case": "A0166_26EYK",
@@ -36,24 +36,6 @@
    "moves_with": "permanent",
    "reason_stems_any": [
     "unlimited_in_arithmetic"
-   ]
-  },
-  {
-   "case": "A0375_26TEY",
-   "cell": "footprint",
-   "why": "side_setback_street_m=no_candidate",
-   "moves_with": "permanent",
-   "reason_stems_any": [
-    "no_candidate"
-   ]
-  },
-  {
-   "case": "A0375_26TEY",
-   "cell": "gfa",
-   "why": "footprint=side_setback_street_m=no_candidate",
-   "moves_with": "permanent",
-   "reason_stems_any": [
-    "no_candidate"
    ]
   }
  ]

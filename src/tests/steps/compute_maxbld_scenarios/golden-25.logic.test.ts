@@ -30,7 +30,7 @@ const loadSeeds = (): Json => ({
 });
 
 const FIX = 'src/tests/fixtures/layer3/golden-25';
-const MANIFEST_SHA = '9b55ff6384600182f4076a045cf6246aa06f0daf1dbdf92bb0ad18a455107cb8'; // mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in
+const MANIFEST_SHA = '26991c7a613261c43328184e3c4d07f7872025bd1cc959ee2f1f06308e840b48'; // mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in
 const META: Json = { layer2_table_version: 'golden-25', settings_sha: 'golden-25' };
 const MANIFESTED = ['inputs.jsonl', 'expected.jsonl', 'refusals.json', 'mcproof-e25.json', 'source-inputs.jsonl', 'parcels-rows.json', 'flag-corrections.json', 'mode-b-derivation.md'];
 /** The tolerances of the independent McProof check (front, footprint, gfa, height, storeys, units). */
@@ -106,7 +106,7 @@ describe('MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (
     expect(rows.filter((r: Json) => !r.ok), 'mcproof-e25.json: every row ok').toEqual([]);
   });
 
-  it('there are 175 cells: 25 permitted, 144 numbers, 6 refusals (mode B: the 7 cells MB-18 (i) and (j) moved are numbers)', () => {
+  it('there are 175 cells: 25 permitted, 146 numbers, 4 refusals (mode B: the 7 cells MB-18 (i) and (j) moved are numbers; M-475: A0375 footprint and GFA)', () => {
     const census = { permitted: 0, number: 0, not_evaluated: 0 };
     for (const e of expected) {
       for (const [, key] of FIELDS) {
@@ -117,11 +117,11 @@ describe('MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (
       }
     }
     expect(census.permitted, 'census: permitted cells').toBe(25);
-    expect(census.number, 'census: number cells').toBe(144);
-    expect(census.not_evaluated, 'census: not_evaluated cells').toBe(6);
+    expect(census.number, 'census: number cells').toBe(146);
+    expect(census.not_evaluated, 'census: not_evaluated cells').toBe(4);
     expect(expected.length * FIELDS.length, 'census: 175 cells in all').toBe(175);
     const listed = refusals.cells || [];
-    expect(listed.length, 'refusals.json: 6 entries').toBe(6);
+    expect(listed.length, 'refusals.json: 4 entries').toBe(4);
     for (const e of expected) {
       for (const [, key] of FIELDS) {
         if (key === 'permitted' || (e[key] || {}).s !== 'not_evaluated') continue;
