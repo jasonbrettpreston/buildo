@@ -1,0 +1,163 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 12 (R-MA): the revert round of increment 1 (R-LZ) that lands McProof item 1 (M-475) as data through the MB-79 (f) oracle door: Phase 2 stores side_setback_street_m as unregulated by absence where the zone has no street-side article, typed to the four principal house types (detached_house, semi_detached_house, detached_houseplex, semi_detached_houseplex; operator V8-Q1 a), absence rulings ABS-9.1..9.4 (R, RS, RT, RM) in scripts/seeds/bylaw/absence-rulings.json. Lock: src/tests/bylaw-mb27l2-street-side.logic.test.ts (new, red first on the base tree). The bylaw-eval-perf corpus moves 88 of 140 side_setback_street_m cells (12 status moves, 76 inputs-only), and G5-p (bylaw-permission-disclosure.logic.test.ts) hashes the same corpus; both move only through the door lines in expected_value_changes (operator D-s1-a; DOOR-PA). Expected: 0 scorer rows move on the 172, 4d and cumulative sets (measured on 4a8f55591: the scorecards are byte-identical to the base); totals equal prereg-MB-27-11; floors unchanged. Re-pin RP-12 (with Q-RP12F a), version and hash fields only. golden-25 is unchanged by this commit (its re-pin RP-8 lands on its own). ARM C: M-475 is OWED and its named lock lands in this commit; red evidence docs/reports/red-evidence/bylaw/bylaw-mb27l2-street-side-red.txt.",
+ "round": 69,
+ "rules": [
+  "M-475",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md section 2 (row 6); ~/Buildo-scratch/mcbylaws/MB-27L2/door/ (door-entries.v2.verbatim.txt, v2/); decision 2026-11-03-batch-ax#CHAT-225.MCPROOF-1",
+ "expected_repin": "RP-12 with Q-RP12F a, version and hash fields only: docs/reference/bylaw-layer2-input.json table_version, body_sha256 and the generated body.absences line; docs/reference/maxbld-amendment-index.json layer2_table_version; expected-172.json and expected-4d.json commit and inputs.table_version. Any other field stops for the operator.",
+ "expected_assertion_changes": [],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0375 bylaw-eval-perf street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": "expect(h.digest('hex')).toBe('de34d132b277830008ee639852edc2a66c495fe16224a07ba6e053cef288a4b0');",
+   "new": "expect(h.digest('hex')).toBe('8a9df58fee131ec1c19d689f15c5dd716b6b572642638ddf1c5f9c0ea2226ea1');"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0375 bylaw-eval-perf street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": "expect(hLeftOut.digest('hex')).toBe('3f191431a61e72f49858998677f28b68007bc684e4b850eb1319bbc51bbf2d66');",
+   "new": "expect(hLeftOut.digest('hex')).toBe('ec081f3b0c581aed162bc42ba0c652ae738689add18ab80761db8e8fd0dffb06');"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0375 bylaw-eval-perf street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": null,
+   "new": "// re-pinned 2026-11-05 (M-475, street-side absence typed to the house types, ABS-9.1..9.4): 88 of 140 side_setback_street_m cells move,"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0375 bylaw-eval-perf street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": null,
+   "new": "// 12 top-level (RS/RM/RT house lots, no_candidate → unregulated by absence), 76 gain building_type in inputs[]; nothing else moved."
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0375 bylaw-permission-disclosure G5-p street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": "const pre = read('scripts/analysis/bylaw-validation/layer2-rounds/prereg-g5.json');",
+   "new": "// re-pinned 2026-11-05 (M-475, ABS-9.1..9.4): the corpus moved 88 side_setback_street_m cells, as bylaw-eval-perf; prereg-g5.json is history."
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0375 bylaw-permission-disclosure G5-p street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": "it('with permitted()\\'s disclosures removed the corpus hashes to prereg-g5.eval_perf.golden_from, and all 840 results carry disclosures: []', () => {",
+   "new": "it('with permitted()\\'s disclosures removed the corpus hashes to G5_PIN (prereg-g5 golden_from, re-pinned), and all 840 results carry disclosures: []', () => {"
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0375 bylaw-permission-disclosure G5-p street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": "expect([r.hash, r.bad]).toEqual([pre.eval_perf.golden_from, []]);",
+   "new": "expect([r.hash, r.bad]).toEqual([G5_PIN, []]);"
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0375 bylaw-permission-disclosure G5-p street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": "expect([flipped, r.hash === pre.eval_perf.golden_from]).toEqual([1, false]);",
+   "new": "expect([flipped, r.hash === G5_PIN]).toEqual([1, false]);"
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0375 bylaw-permission-disclosure G5-p street side",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": null,
+   "new": "const G5_PIN = '3f3cfa5bc78da4a05dcb91bf989d2a26f909338275c2ad6d6292ffb2fabcac61';"
+  }
+ ],
+ "schema": "coa-round-prereg-v1",
+ "task": "MB-27",
+ "increment": "1",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
