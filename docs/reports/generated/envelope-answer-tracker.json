@@ -8316,7 +8316,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.5.40.40(2)#whole/disclosure, COR-10.5.40.40(2)#whole/calculation_handling"
+    "correction COR-10.5.40.40(2)#whole/disclosure, COR-10.5.40.40(2)#whole/calculation_handling, COR-10.5.40.40(2)#whole/target, COR-10.5.40.40(2)#whole/numeric_expression, COR-10.5.40.40(2)#whole/literals_not_expressed, COR-10.5.40.40(2)#whole/calculation_handling~s1"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"

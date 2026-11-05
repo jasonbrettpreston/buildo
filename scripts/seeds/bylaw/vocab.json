@@ -149,6 +149,20 @@
       "concept": "the area that share of the attic must reach (10.5.40.40(1)(B): at least 10.0 square metres); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
       "patterns": ["an area of at least"]
     },
+    "mechanical_attic_share_pct": {
+      "unit": "pct",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the share of the permitted maximum gross floor area that attic floor area meeting the attic test and used for mechanical equipment may reach and still be left out of gross floor area (10.5.40.40(2): not more than 5%); a clause literal, bound exact, keyed in Layer 1 and not stored in Layer 2 until the increment-3 night (Spec 69a M-229 (4), M-239 form; operator Q-M1 b+ 2026-11-04)",
+      "patterns": ["of the permitted maximum gross floor area of the building"]
+    },
+    "mechanical_attic_area_max_m2": {
+      "unit": "m2",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the cap on that mechanical-equipment attic area left out of gross floor area (10.5.40.40(2): to a maximum of 20 square metres); a clause literal, bound exact, keyed in Layer 1 and not stored in Layer 2 until the increment-3 night (Spec 69a M-229 (4), M-239 form; operator Q-M1 b+ 2026-11-04)",
+      "patterns": ["to a maximum of"]
+    },
     "entrance_height_m": {
       "unit": "m",
       "aspect": "envelope",

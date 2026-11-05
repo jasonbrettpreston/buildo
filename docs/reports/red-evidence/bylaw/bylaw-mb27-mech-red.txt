@@ -1,0 +1,24 @@
+== MB-27 mechanical keying (lane MK) red: src/tests/bylaw-mb27l2-mech-attic.logic.test.ts (with the Q-K-TEST a switch line in MK-2) run on the landing parent 0d1e913b2 (lane K's oracle-only fixture rename on MB-27.L2 P3; P3-0 below carries the two left-out names), the lock added alone: no vocab entries, 10.5.40.40(2)#whole still DEFINE gfa_m2 with no expression. 6 of 17 fail. Green on the parent by construction: the base-equivalence lock, the guard, the no-storage checks, the no-FSI-cap and no-attic rows (they read no mechanical target), the headline, and MK-3 (P3-0 is below).
+   × MK-1 (a): vocab declares the two targets in the CHAT-9 / M-239 form > mechanical_attic_share_pct is pct and mechanical_attic_area_max_m2 is m2; both aspect measurement, bound exact, citing 10.5.40.40(2) and M-229 4ms
+     → expected [ 'mechanical_attic_share_pct', …(3) ] to deeply equal [ 'mechanical_attic_share_pct', …(3) ]
+   × MK-1 (b): the generated Layer 1 unit and its four corrections > 10.5.40.40(2)#whole carries the two targets, the 5 pct and 20 m2 expression, no unexpressed literal, and stays partially modelled 0ms
+     → expected 'gfa_m2' to deeply equal [ 'mechanical_attic_share_pct', …(1) ]
+   × MK-1 (b): the generated Layer 1 unit and its four corrections > four corrections: target, numeric_expression, literals_not_expressed (new) and calculation_handling (~s1, superseding the 2026-10-20 record) 1ms
+     → expected [] to deeply equal [ …(4) ]
+   × MK-1 (b): the generated Layer 1 unit and its four corrections > the conflict note: the numeric_expression correction names the 2026-10-08 Q8 record it supersedes; that record stays as history 0ms
+     → Cannot read properties of undefined (reading 'reason')
+   × MK-1 (c): on the 25 golden lots, through the generated Layer 1 input and the real evaluator > every class: the share is 5 and the cap 20, winner 10.5.40.40(2)#whole 7ms
+     → expected [ Array(6) ] to deeply equal [ Array(6) ]
+   ✓ MK-1 (c): on the 25 golden lots, through the generated Layer 1 input and the real evaluator > every other target and every permitted() cell is byte-identical to the unit before the keying 8787ms
+   × MK-2: keyed but not stored, the four mechanical rows are pending and the headline is unchanged (M-472) > a counted attic and an FSI cap: the four rows are not_evaluated:missing_input:absent_target (Q-M1 b+, "not yet stored") 4ms
+     → expected [ 'A0067_26SC', …(3) ] to deeply equal [ 'A0067_26SC', …(3) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  6 failed | 11 passed (17)
+
+== MK-2 on the parent, first failing lot: the row reads expression_error:unknown_target (the targets are not in vocab); after the keying it reads missing_input:absent_target.
+    "A0067_26SC",
+    "mechanical_attic_outside_gfa_a_m2",
+    "not_evaluated",
+-   "missing_input:absent_target",
++   "expression_error:unknown_target",
+  ]

@@ -19807,7 +19807,7 @@
     },
     {
       "path": "scripts/seeds/bylaw/vocab.json",
-      "sha256": "9133d6200eca2fda"
+      "sha256": "6ec1cc3d08e168b8"
     },
     {
       "path": "scripts/seeds/lineage-meta-snapshot.json",
