@@ -30,7 +30,7 @@ const loadSeeds = (): Json => ({
 });
 
 const FIX = 'src/tests/fixtures/layer3/golden-25';
-const MANIFEST_SHA = '26991c7a613261c43328184e3c4d07f7872025bd1cc959ee2f1f06308e840b48'; // mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in
+const MANIFEST_SHA = 'bf3a58ce9ac1b3cf6f791cba633361153e0f886316cce76fb8c0097153c42235'; // mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in; RP-n (MB-27 R2): inputs.jsonl gains phase2_options
 const META: Json = { layer2_table_version: 'golden-25', settings_sha: 'golden-25' };
 const MANIFESTED = ['inputs.jsonl', 'expected.jsonl', 'refusals.json', 'mcproof-e25.json', 'source-inputs.jsonl', 'parcels-rows.json', 'flag-corrections.json', 'mode-b-derivation.md'];
 /** The tolerances of the independent McProof check (front, footprint, gfa, height, storeys, units). */
