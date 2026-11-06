@@ -1378,3 +1378,42 @@ describe('CHAT-228 (batch 2026-11-04-batch-ba): 11 rulings recorded as dated not
     expect(row).toContain("ATTIC-23's two checks are corrected from `value 0` to `not_evaluated` with reason `no_permitted_gfa_base`");
   });
 });
+
+describe("CHAT-229 (batch 2026-11-06-batch-bb): 6 rulings recorded in 6 new rows (the McIncrement recipe, Spec 08 §11.8); enforcement (b) is OWED to DR-5", () => {
+  it("M-488 carries 2026-11-06-batch-bb#CHAT-229.MCINC-1 and its Rule text", () => {
+    expect(M, "CHAT-229.MCINC-1").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-1");
+    expect(M, "CHAT-229.MCINC-1 rule text").toContain("Scope and answer key (McProof first). The increment's targets and the 25-case answer key are hand-derived from the by-law text under McProof (Spec 08 §11.7, M-436..M-447). The operator walks the disputed items one at a time. Nothing is built before this. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-488** |")) as string;
+    expect(row, "M-488 row").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-1");
+  });
+  it("M-489 carries 2026-11-06-batch-bb#CHAT-229.MCINC-2 and its Rule text", () => {
+    expect(M, "CHAT-229.MCINC-2").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-2");
+    expect(M, "CHAT-229.MCINC-2 rule text").toContain("One impact map, measured on the current origin tip. Use a throwaway sandbox worktree with the work applied and the affected tests run. It lists every file, assertion, worked example, golden and oracle file that moves; every version and pin that moves; whether a Layer 2 night is needed; every disclosure the increment produces. Anything not measured is marked UNVERIFIED. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-489** |")) as string;
+    expect(row, "M-489 row").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-2");
+  });
+  it("M-490 carries 2026-11-06-batch-bb#CHAT-229.MCINC-3 and its Rule text", () => {
+    expect(M, "CHAT-229.MCINC-3").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-3");
+    expect(M, "CHAT-229.MCINC-3 rule text").toContain("One decision list. Every ruling the map needs goes to the operator at once. For each: the rule quoted, compliant options only, a recommendation. The answers are recorded verbatim. A stop during the build that the map missed is a map defect: it is recorded and added to the map template. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-490** |")) as string;
+    expect(row, "M-490 row").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-3");
+  });
+  it("M-491 carries 2026-11-06-batch-bb#CHAT-229.MCINC-4 and its Rule text", () => {
+    expect(M, "CHAT-229.MCINC-4").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-4");
+    expect(M, "CHAT-229.MCINC-4 rule text").toContain("Build on the tip. Red tests first, then the code, through the real hooks. The full suite runs on the current origin tip before \"ready\" (existing memory rule). Never port a stale draft: re-cut it on the tip. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-491** |")) as string;
+    expect(row, "M-491 row").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-4");
+  });
+  it("M-492 carries 2026-11-06-batch-bb#CHAT-229.MCINC-5 and its Rule text", () => {
+    expect(M, "CHAT-229.MCINC-5").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-5");
+    expect(M, "CHAT-229.MCINC-5 rule text").toContain("At most one Layer 2 night per increment, from the standard checklist. The night uses the night-checklist-axis.v2 form: dry run, prereg, go, C1-C6, the night record. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-492** |")) as string;
+    expect(row, "M-492 row").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-5");
+  });
+  it("M-493 carries 2026-11-06-batch-bb#CHAT-229.MCINC-6 and its Rule text", () => {
+    expect(M, "CHAT-229.MCINC-6").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-6");
+    expect(M, "CHAT-229.MCINC-6 rule text").toContain("Close. The increment is green in the loop: every case passes or is a named, accepted finding. Every owed item has a card and a lock, and the disclosure lock is green (L3-DISC). One push per landing set. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-493** |")) as string;
+    expect(row, "M-493 row").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-6");
+  });
+});

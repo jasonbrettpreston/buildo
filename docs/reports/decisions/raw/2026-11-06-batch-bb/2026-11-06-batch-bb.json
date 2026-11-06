@@ -1,0 +1,51 @@
+{
+  "source": "operator chat 2026-11-06",
+  "decided_at": "2026-11-06",
+  "operator_quote": "a) now, so increment 3 uses the recipe from day one, and (b) with DR-5 when the freeze lifts.",
+  "context": "Recorded by lane R (McBylaws queue, lane R, stage 5, card MCINC ~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md): decision batch 2026-11-06-batch-bb, the McIncrement recipe as six new Spec 69a rows (M-488..M-493) with its text home Spec 08 §11.8 and a dated note on the queue increments table. The answer is quoted verbatim in ~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Operator answer MCINC (2026-11-06)\". Part (a) applies now; part (b) is owed to card DR-5 and waits for the freeze lift by name.",
+  "decisions": [
+    {
+      "id": "CHAT-229.MCINC-1",
+      "subject": "McIncrement: scope and answer key (McProof first) (text in Spec 08 §11.8): M-488",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: Scope and answer key (McProof first). The increment's targets and the 25-case answer key are hand-derived from the by-law text under McProof (Spec 08 §11.7, M-436..M-447). The operator walks the disputed items one at a time. Nothing is built before this. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.",
+      "quote_ref": "q_mcinc"
+    },
+    {
+      "id": "CHAT-229.MCINC-2",
+      "subject": "McIncrement: one impact map, measured on the current origin tip (text in Spec 08 §11.8): M-489",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: One impact map, measured on the current origin tip. Use a throwaway sandbox worktree with the work applied and the affected tests run. It lists every file, assertion, worked example, golden and oracle file that moves; every version and pin that moves; whether a Layer 2 night is needed; every disclosure the increment produces. Anything not measured is marked UNVERIFIED. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.",
+      "quote_ref": "q_mcinc"
+    },
+    {
+      "id": "CHAT-229.MCINC-3",
+      "subject": "McIncrement: one decision list (text in Spec 08 §11.8): M-490",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: One decision list. Every ruling the map needs goes to the operator at once. For each: the rule quoted, compliant options only, a recommendation. The answers are recorded verbatim. A stop during the build that the map missed is a map defect: it is recorded and added to the map template. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.",
+      "quote_ref": "q_mcinc"
+    },
+    {
+      "id": "CHAT-229.MCINC-4",
+      "subject": "McIncrement: build on the tip (text in Spec 08 §11.8): M-491",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: Build on the tip. Red tests first, then the code, through the real hooks. The full suite runs on the current origin tip before \"ready\" (existing memory rule). Never port a stale draft: re-cut it on the tip. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.",
+      "quote_ref": "q_mcinc"
+    },
+    {
+      "id": "CHAT-229.MCINC-5",
+      "subject": "McIncrement: at most one Layer 2 night per increment, from the standard checklist (text in Spec 08 §11.8): M-492",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: At most one Layer 2 night per increment, from the standard checklist. The night uses the night-checklist-axis.v2 form: dry run, prereg, go, C1-C6, the night record. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.",
+      "quote_ref": "q_mcinc"
+    },
+    {
+      "id": "CHAT-229.MCINC-6",
+      "subject": "McIncrement: close (text in Spec 08 §11.8): M-493",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: Close. The increment is green in the loop: every case passes or is a named, accepted finding. Every owed item has a card and a lock, and the disclosure lock is green (L3-DISC). One push per landing set. Enforcement: (a) now, the existing gates plus the second-seat check; (b) with DR-5 when the freeze lifts.",
+      "quote_ref": "q_mcinc"
+    }
+  ],
+  "q_mcinc": "a) now, so increment 3 uses the recipe from day one, and (b) with DR-5 when the freeze lifts."
+}

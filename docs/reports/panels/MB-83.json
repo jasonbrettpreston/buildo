@@ -1,29 +1,53 @@
 {
   "task": "MB-83",
-  "item": "decision batch 2026-11-04-batch-ba, part 5 (no new row: ten increment-2 answers recorded as dated notes on the mechanical-area, pitched-roof, option, runRow seam, switched-off formula, mechanical attic and blank-wall rows, with the named ATTIC-23 fixture correction and lane MK's keying note; queue notes Q-G25B a, Q9-1 a, Q9-2 a; no re-pin)",
+  "item": "decision batch 2026-11-06-batch-bb (CHAT-229, operator MCINC): the McIncrement recipe, six new Spec 69a rows with their text home Spec 08 §11.8 (MCINC-1..MCINC-6, step 1 pointing at §11.7) and a dated note on queue row 3; enforcement (a) now, (b) OWED to card DR-5; with the one named re-pin RP-MCINC (version and hash fields only)",
   "class": "R",
   "stage": 8,
-  "date": "2026-11-04",
-  "head": "f28c63981",
+  "date": "2026-11-06",
+  "head": "d74feb7f8",
   "commits_reviewed": [
-    "f28c63981",
-    "the staged batch commit (with the loop record)"
+    "d74feb7f8",
+    "the staged batch commit (with the loop record round-47)"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (Q-MECH0, Q-T61, Q-R1, Q-R2, Q-M1, Q-M2, Q-DEFAULT, Q-K1, Q-RND, Q-L18-4, Q-G25B)",
-    "~/Buildo-scratch/mcbylaws/inc3/open-questions.md (Q9-1, Q9-2)",
-    "~/Buildo-scratch/p2close/CARD-l3-schema-forms.md (L3-F2)",
-    "~/Buildo-scratch/mcbylaws/MB-27/rows/ (Q-MECH0.md, Q-T61.md, LANDING-NOTES.md)"
+    "~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md",
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (Operator answer MCINC; Operator answer RP-MCINC)"
   ],
-  "plan": "drafts ~/Buildo-scratch/mcbylaws/MB-83/part5/ (notes.mjs, build-p5.mjs, make-prereg.mjs, land-p5.sh)",
-  "output": "Stage 8 OUTPUT panel, one independent read-only seat: ~/Buildo-scratch/mcbylaws/MB-83/part5/output-panel.md. Verdict line: PASS WITH MINOR Fixed before the commit: finding 10 (decided_at set to 2026-11-04 on ten decisions, L3-F2 kept 2026-11-03) and 1b (the Q-G25B queue note labels its paraphrase a summary). Kept: 1a (the L3-F2 decision is labelled the card reading; the record test reads the Rule text prefix); INFO 3 (the locks land with their lanes), 6, 11, 12. Recorder checks: every operator quote and Rule text verbatim (containment script against the answer files); prior status text kept on every row; M-229 gains no OWED marker (the storage-half sentence sits on M-472); the commit message names only M-229, M-239 and M-64 by id (none in the Spec 133 OWED table); Spec 133, the rule map, table_version and the four pinned files byte-identical; decision-log clean (791); arm K []; queue check clean; gate --staged OK.",
+  "plan": "drafts ~/Buildo-scratch/mcbylaws/inc2/mcinc/ (build.mjs, mcinc-e67fc9e8f.patch, prereg-MB-83-6.draft.json)",
+  "output": "Stage 8 OUTPUT panel, one independent read-only seat: ~/Buildo-scratch/mcbylaws/inc2/mcinc/panel/seat-report.md (a read of mcinc-e67fc9e8f.patch). Verdict line: VERDICT: PASS; no BLOCKER or MAJOR. Sections 1-7 PASS: Spec 08 §11.8 matches the card with no added scope; the six rows in the McProof row form with the operator quote verbatim (6/6); the queue note a pure insertion; the decision batch files and the count 791 to 797; the re-pin moves only the approved fields (body_sha256, evaluator_version, totals, scorer_sha untouched); the prereg draft zero moves, round 81; hygiene. Fixed before the commit: the MINOR on the prereg $comment (the rules[] sentence now says the row status reads RULED, and that M-321 carries a build OWED marker). The commit messages cite no new row by id (the six rows read OWED in arm C).",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "the four flag-code vocab entries, the switchboard source-confidence amendment, not_modelled, the MB-44 withheld marker and ATTIC-10 (lane T): after the night"
+    "enforcement (b) of the recipe (the prereg names its impact-map file; the prereg checker fails on an unlisted moved test, golden or version): owed to card DR-5, after the freeze lift by name"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-83/part5/ (output-panel.md, log/)",
+  "evidence": "~/Buildo-scratch/mcbylaws/inc2/mcinc/ (panel/seat-report.md, msg/)",
   "previous": [
+    {
+      "task": "MB-83",
+      "item": "decision batch 2026-11-04-batch-ba, part 5 (no new row: ten increment-2 answers recorded as dated notes on the mechanical-area, pitched-roof, option, runRow seam, switched-off formula, mechanical attic and blank-wall rows, with the named ATTIC-23 fixture correction and lane MK's keying note; queue notes Q-G25B a, Q9-1 a, Q9-2 a; no re-pin)",
+      "class": "R",
+      "stage": 8,
+      "date": "2026-11-04",
+      "head": "f28c63981",
+      "commits_reviewed": [
+        "f28c63981",
+        "the staged batch commit (with the loop record)"
+      ],
+      "cards": [
+        "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (Q-MECH0, Q-T61, Q-R1, Q-R2, Q-M1, Q-M2, Q-DEFAULT, Q-K1, Q-RND, Q-L18-4, Q-G25B)",
+        "~/Buildo-scratch/mcbylaws/inc3/open-questions.md (Q9-1, Q9-2)",
+        "~/Buildo-scratch/p2close/CARD-l3-schema-forms.md (L3-F2)",
+        "~/Buildo-scratch/mcbylaws/MB-27/rows/ (Q-MECH0.md, Q-T61.md, LANDING-NOTES.md)"
+      ],
+      "plan": "drafts ~/Buildo-scratch/mcbylaws/MB-83/part5/ (notes.mjs, build-p5.mjs, make-prereg.mjs, land-p5.sh)",
+      "output": "Stage 8 OUTPUT panel, one independent read-only seat: ~/Buildo-scratch/mcbylaws/MB-83/part5/output-panel.md. Verdict line: PASS WITH MINOR Fixed before the commit: finding 10 (decided_at set to 2026-11-04 on ten decisions, L3-F2 kept 2026-11-03) and 1b (the Q-G25B queue note labels its paraphrase a summary). Kept: 1a (the L3-F2 decision is labelled the card reading; the record test reads the Rule text prefix); INFO 3 (the locks land with their lanes), 6, 11, 12. Recorder checks: every operator quote and Rule text verbatim (containment script against the answer files); prior status text kept on every row; M-229 gains no OWED marker (the storage-half sentence sits on M-472); the commit message names only M-229, M-239 and M-64 by id (none in the Spec 133 OWED table); Spec 133, the rule map, table_version and the four pinned files byte-identical; decision-log clean (791); arm K []; queue check clean; gate --staged OK.",
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "the four flag-code vocab entries, the switchboard source-confidence amendment, not_modelled, the MB-44 withheld marker and ATTIC-10 (lane T): after the night"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/MB-83/part5/ (output-panel.md, log/)"
+    },
     {
       "task": "MB-83",
       "item": "decision batch 2026-11-04-batch-az, part 4 (no new row: dated notes on M-475 and M-482 naming the second oracle case G5-p, with the measured M-475 correction; three queue dated lines, Q-P3W a, Q-K4P card owed, Q-CLASS a; a Q-K5 a dated note on M-480; no re-pin)",

@@ -1992,6 +1992,30 @@
       "section": "fam-general"
     },
     {
+      "id": "m.488",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.489",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.490",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.491",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.492",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.493",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.1",
       "section": "fam-general"
     },
@@ -7195,6 +7219,72 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-487**"
+      }
+    },
+    {
+      "id": "M-488",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.488",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-488**"
+      }
+    },
+    {
+      "id": "M-489",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.489",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-489**"
+      }
+    },
+    {
+      "id": "M-490",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.490",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-490**"
+      }
+    },
+    {
+      "id": "M-491",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.491",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-491**"
+      }
+    },
+    {
+      "id": "M-492",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.492",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-492**"
+      }
+    },
+    {
+      "id": "M-493",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.493",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-493**"
       }
     },
     {
