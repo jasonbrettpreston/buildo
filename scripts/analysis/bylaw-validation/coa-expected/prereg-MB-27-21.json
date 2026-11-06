@@ -1,0 +1,86 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 21 (Spec 124a R-MA; R-LZ revert round of increment 1), the zero-move round that lands the plan R2 item 7 harness (D-3): increment2-worked-examples runs an example that names its golden lot (case) on that lot real {base, flat_or_shallow_roof, pitched} cells through the Layer 2 pure core and the reader decoders (the OR-7 loader). examples.json: 23 examples gain case (the 20 at_switch_on, STS-3, STS-4, REG-7); STS-3, STS-4 and REG-7 are asserted (pending_reload false); STS-3 and REG-5 assert footprint 54.23 on the 25 (the key value after M-435). The 20 at_switch_on stay todo until the switch-on. No code, no version and no scorer move. Operator \"all recommended\" on D-1..D-9 (D-3; scratch record mcbylaws/inc2/open-questions.md). Committed alone directly under that commit. Increment 1, zero moves. Round 78, as assigned at landing.",
+ "schema": "coa-round-prereg-v1",
+ "round": 78,
+ "task": "MB-27",
+ "rules": [
+  "R-MA"
+ ],
+ "plan_ref": "mcbylaws/inc2/open-questions.md (SWITCH-ON decision list D-1..D-9, D-3); mcbylaws/MB-27L2/plan-reader-and-mech.md R2 item 7",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "increment": "1"
+}
