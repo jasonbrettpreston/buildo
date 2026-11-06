@@ -1,25 +1,31 @@
 {
   "task": "MB-27",
-  "item": "MB-27.L2 P3, the roof form as a Phase 2 design option for the detached house (M-465): the option slots, the closed code shared, the pitched step-back, the per-clause threshold pitched_roof_slope_min (ten generated units <reg>#threshold(<n>)), ROOF-5 on read, and migration 295 (width 61, the option and stamps views, the Q-STOR a bytea stamps)",
-  "class": "E",
+  "item": "the increment-2 roof-axis night MB27-AXIS-NIGHT-1 (2026-11-05): migration 295 alone, then a TRUNCATE-RELOAD of the three Layer 2 tables at 61 slots with bytea stamps from 41f1e2e3c plus the night patch, and the #44 witness recapture; the night itself gets an OUTPUT panel record, as the MB-26 night did",
+  "class": "D",
   "stage": 8,
-  "date": "2026-11-04",
-  "head": "864ae6d02",
+  "date": "2026-11-05",
+  "head": "41f1e2e3c",
   "commits_reviewed": [
-    "staged code commit over 864ae6d02 (prereg-MB-27-6 alone, on d4bc32377, the P3-0 oracle-only commit, on 5352efc06, prereg-MB-27-5)"
+    "the night recapture over 41f1e2e3c (both POST goldens, both witness traces, _catalog.json, explained-diffs.json, the night patch: notes slot words, resolve-bylaws.js fingerprint hunk, two test hunks), reviewed staged before commit",
+    "the night record docs/reports/nights/MB27-AXIS-NIGHT-1.md, reviewed before commit"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (end): \"Q-STOR a\"; \"V8-Q2a\"; \"0-A-a\"; \"step-back approved. ggo work with this one\"; \"roof 5- confirmed\"; \"RP-7 approved\"; \"pushing RP-7xa\"; \"Q-P3w a\"; \"Q-r2 a\"; \"a\" (Q-P3ID)"
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (the axis-night go (b) and OPERATOR-GO MB27-AXIS-NIGHT-1, Q-S6 a, Q-D4W a, Q-C3A b, Q-C3A2 b, Q-C4G b)"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-roof-axis.v8.md (with v2-v7); night patch ~/Buildo-scratch/mcbylaws/MB-27L2/gate/night-patch.md",
-  "output": "OUTPUT panel ~/Buildo-scratch/mcbylaws/MB-27L2/gate/output-panel-P3.md (stage 8, two seats, then one re-check seat): first round FAIL (seat 1: 3 MAJOR; seat 2: 4 MAJOR). Fixed red first: S1-01 (the step-back re-check keeps its reads), S1-02 (the option slots count in the run tallies, conflict_cells), S1-05 (a colliding generated id throws); F1 (the resolve_bylaws scorecard regenerated without the deferred hunk, 17/17); F10 (schema.ts MANUAL PATCH header). Ruled by the operator: S1-03/F4 (the interim state, Q-P3w a confirmed), F3 (RP-7xa, the five 1:4 threshold units), the coa scorer move found at the dry fit (A0257/26NY #7, fixed by the respelled ids, Q-P3ID a). Re-check seat: PASS, every fix confirmed with executed evidence (zero scorer moves, 172 MATCH 407, 4d MATCH 283, FLOORS OK).",
+  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/night-checklist-axis.v2.md (C1-C6, dated notes v2.1-v2.7); prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-14.json (layer2_night, the complete dry-run transition table); night evidence ~/Buildo-scratch/mcbylaws/MB-27L2/night/",
+  "output": "OUTPUT panel over ~/Buildo-scratch/mcbylaws/MB-27L2/output-panel/bundle.md: ds-spec and ds-errorpaths (deepseek-reasoner; error-paths re-run on a cut bundle after its first run returned no answer) and one grounded-reviewer + reality-check seat (Sonnet, read-only DB). The grounded seat re-derived results 440,093 x 61, every by_reason value and delta, the winner histogram and its splits, texts 2,866 and units 1,015 with the id lists against pre295.dump, the 197 x 61 audit sample, migrations 280, storage 708.508 MiB and the held notes figures: all hold except G-1. Accepted and fixed before the commits: G-1 (exception_not_authored is 39,267 gated lots plus 928 ungated lots on the option slots, not 40,195 gated), the stale notes prose listed number by number, the all-class versus detached_house basis, the 285-cell transition universe, where the five items and the bytea stamps were ruled, RC-1 by destination, the heal-test wording, the observe pass and the 295 dry-run in the timeline, the MB-18 (l) mechanism, the T3 wording, the six CHECK names, the two storage figures, the leftovers owner and migration 296. Rejected with evidence: the untracked-file numstat, the line-number drift (cites read on the night tree), the heal-versus-rerun contradiction (deliberate delete_reinsert test, restored, then T2 440,093 of 440,093), the different-state goldens, the WARN 398 (registered), the I14 substitution (dated note v2.4 before the go), and the rest as listed. G8 after the fixes: 72 diffs, 0 unexplained; step-validate resolve_bylaws 17/17, V3, #44 WITNESS PASS. Open for the operator: Q-D4W a could not be carried out as written (filling the notes figures after the capture makes both POSTs stale, #44 FAIL:STALE); the figures are measured and held for the next recapture, disclosed in the record and commit.",
+  "seats": [
+    "ds-spec",
+    "ds-errorpaths",
+    "grounded-reviewer",
+    "reality-check"
+  ],
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "the night capture patch (gate/night-patch.md): the resolve-bylaws.js writer hunk and its locks land with the recapture (Q-P3w a)",
-    "M-465 stays OWED for its spec134-resolve-bylaws I13 lock (the Spec 134 paragraph is lane R's)",
-    "the pitched_roof_slope_min lineage entry with the Layer 3 reader item (P4); the db docs after the night",
-    "INFO (re-check seat): r.rep.includes(c) in the materializeBatch tally loop is a linear search; correct, optional to index"
+    "Q-D4W execution: operator ruling pending (the notes measured figures at the next Layer 2 recapture)",
+    "the cohort backup table bylaw_resolution_lots_cohort_bak_20261105t2142z, the C2 backup and pre295.dump: operator decision",
+    "card: the forced-cohort plan prints bytea row_sha as raw bytes"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-27L2/gate/output-panel-P3.md"
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-27L2/output-panel/adjudication.md (out-spec.md, out-errorpaths.md, seat-grounded/report.md)"
 }

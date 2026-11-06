@@ -4,8 +4,7 @@
 //
 // Test B of the MB-27.L2 roof axis (plan-roof-axis v2 §7 B1-B7, v5 RR-03) plus the Q-STOR a write and read boundaries (plan v8 §3): the
 // pure core stores the option slots after the base pairs for the representative class, encodes the closed code shared, decodes it, audits
-// the option slots, and Layer 3 reads the three stamps as hex through bylaw_resolution_lot_stamps (the writer's byte binds and their locks
-// ride the axis-night capture patch, Q-P3w a).
+// the option slots, and the writer binds the three stamps as 32 bytes while Layer 3 reads them as hex through bylaw_resolution_lot_stamps.
 // RED FIRST: run against the base tree (no option slots, no stampBytes, Layer 3 reading the lots table), every case fails.
 
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -119,8 +118,22 @@ describe('the run tallies count every result written, the option slots included 
 });
 
 describe('Q-STOR a: the stamps cross the DB boundary as 32 bytes; JavaScript stays hex', () => {
-  // The writer's two locks (the 32-byte binds, the non-hex refusal) land with the resolve-bylaws.js hunk in the axis-night capture
-  // patch (operator "Q-P3w a"): that file is in the step's source fingerprint, so it changes only with the #44 witness recapture.
+  const step = (): Json => req('scripts/lib/compute/resolve-bylaws.js');
+  it('the writer binds row_sha, table_version and evaluator_version as 32-byte Buffers equal to the hex the core stamped', () => {
+    const cfg = { resolve_bylaws_population_zone_classes: ZONES, resolve_bylaws_equivalence_every_nth: 2000 };
+    const o = step().materializeRows([{ ...row(1), run_day: 0 }], { config: cfg, lookups: {} }) as Json;
+    const core = mz.materializeBatch([row(1)], env).rows.lots[0];
+    for (const c of ['row_sha', 'table_version', 'evaluator_version']) {
+      const v = o.rows.e4[0][c];
+      expect(Buffer.isBuffer(v), c).toBe(true);
+      expect([c, v.length, v.toString('hex')]).toEqual([c, 32, core[c]]);
+    }
+  });
+  it('a stamp that is not a 64-hex sha256 is refused before any bind (never written loosely)', () => {
+    expect(() => step().stampBytes('ab', 'row_sha')).toThrow(/64-hex/);
+    expect(() => step().stampBytes('A'.repeat(64), 'row_sha')).toThrow(/64-hex/);
+    expect(step().stampBytes('a'.repeat(64), 'row_sha')).toHaveLength(32);
+  });
   it('Layer 3 reads the lot stamps through bylaw_resolution_lot_stamps (hex), never the bytea columns, and gets the input table_version text', () => {
     const CM = req('scripts/lib/compute/compute-maxbld-scenarios.js');
     expect(CM.READ_SQL.lots).toContain('FROM bylaw_resolution_lot_stamps l');

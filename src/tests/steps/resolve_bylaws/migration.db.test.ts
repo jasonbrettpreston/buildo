@@ -3,7 +3,9 @@
 //
 // The DB arms of migration 282 (Spec 134 §9 "the DB arms as *.db.test.ts"): one case per CHECK, the cascade, the SQL identity recompute (the lot
 // row_sha and both dictionary keys equal what the JS emits), and the view bylaw_resolution_results decoding a batch-core lot row to the same
-// 8 stored fields the JS decode gives. Each case runs inside a transaction that is rolled back, against the disposable test database only
+// 8 stored fields the JS decode gives. Migration 295 (M-465, Q-STOR a): the rows are 61 wide (the option slots after the 54 base pairs), the
+// three stamps are bytea(32) (written as bytes; a 64-byte hex text is refused), and the views bylaw_resolution_option_results and
+// bylaw_resolution_lot_stamps decode the option slots and give the stamps back as hex. Each case runs inside a transaction that is rolled back, against the disposable test database only
 // (setup-testcontainer refuses the dev stack). NOT RUN in the lane that wrote it (no DB writes allowed there): queued in the lane report for the
 // DB night that applies migration 282.
 //
@@ -23,6 +25,9 @@ const HEX = 'a'.repeat(64);
 const MAP = rd('scripts/seeds/bylaw/layer2-map.json');
 const SCOPE = rd('scripts/seeds/bylaw/layer2-scope.json');
 const PAIRS = (SCOPE.structures as string[]).flatMap((s) => (SCOPE.targets[s] as string[]).map((t) => ({ structure: s, target: t })));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const OPTS = (require(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')) as Json).optionPairs(SCOPE, rd('scripts/seeds/bylaw/vocab.json').design_options) as Json[];
+const WIDTH = PAIRS.length + OPTS.length; // migration 295: the base pairs, then the M-465 option slots
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const NOT_EVALUATED = ((require(path.join(ROOT, 'scripts/lib/bylaw-lot-row.js')) as Json).resultCodes(MAP) as string[]).indexOf('not_evaluated');
 
@@ -45,8 +50,9 @@ describe.skipIf(!dbAvailable())('migration 282 — bylaw_resolution_* (Spec 134 
     await c.query('ROLLBACK TO SAVEPOINT s');
     throw new Error(`expected a constraint to refuse: ${sql}`);
   }
-  const codes = (v: number): number[] => Array.from({ length: PAIRS.length }, () => v);
-  const LOT = `INSERT INTO bylaw_resolution_lots (parcel_id, lot_gate, codes, winner_ids, permitted, inputs_defaulted, row_sha, table_version, evaluator_version, resolved_at) VALUES ($1, $2, $3::smallint[], $4::int[], $5::smallint[], $6, '${HEX}', '${HEX}', '${HEX}', now())`;
+  const codes = (v: number): number[] => Array.from({ length: WIDTH }, () => v);
+  // Q-STOR a (migration 295): the stamps are bytea(32), bound as bytes (decode of the 64-hex text)
+  const LOT = `INSERT INTO bylaw_resolution_lots (parcel_id, lot_gate, codes, winner_ids, permitted, inputs_defaulted, row_sha, table_version, evaluator_version, resolved_at) VALUES ($1, $2, $3::smallint[], $4::int[], $5::smallint[], $6, decode('${HEX}', 'hex'), decode('${HEX}', 'hex'), decode('${HEX}', 'hex'), now())`;
   const perm = (): number[] => (SCOPE.classes as string[]).map(() => 0);
   const parcel = async (c: PoolClient, id: string): Promise<number> => (await c.query(`INSERT INTO parcels (parcel_id, feature_type) VALUES ($1, 'TEST') RETURNING id`, [id])).rows[0].id as number;
 
@@ -68,6 +74,27 @@ describe.skipIf(!dbAvailable())('migration 282 — bylaw_resolution_* (Spec 134 
       expect(await refused(c, LOT, [p, null, codes(0), [1, 2], perm(), 0])).toMatch(/array_width/);
       expect(await refused(c, LOT, [p, null, codes(0), null, [0], 0])).toMatch(/permitted_closed/);
       expect(await refused(c, LOT, [p, null, codes(0), null, perm(), -1])).toMatch(/inputs_defaulted/);
+    });
+  });
+
+  it('Q-STOR a: a stamp that is not 32 bytes (the 64-byte hex text bound as bytes) is refused; the stamps view gives hex back', async () => {
+    await tx(async (c) => {
+      const p = await parcel(c, 'RB-FX-5');
+      const TEXT = LOT.replace(`decode('${HEX}', 'hex'), decode('${HEX}', 'hex'), decode('${HEX}', 'hex')`, `convert_to('${HEX}', 'UTF8'), decode('${HEX}', 'hex'), decode('${HEX}', 'hex')`);
+      expect(await refused(c, TEXT, [p, null, codes(0), null, perm(), 0])).toMatch(/row_sha_check/);
+      await c.query(LOT, [p, null, codes(0), null, perm(), 0]);
+      const s = (await c.query('SELECT row_sha, table_version, evaluator_version FROM bylaw_resolution_lot_stamps WHERE parcel_id = $1', [p])).rows[0] as Json;
+      expect(s).toEqual({ row_sha: HEX, table_version: HEX, evaluator_version: HEX });
+    });
+  });
+
+  it('M-465 (2): the closed code shared (5) is refused at a base slot and at the threshold slot', async () => {
+    await tx(async (c) => {
+      const p = await parcel(c, 'RB-FX-6');
+      const at = (i: number): number[] => codes(0).map((x, k) => (k === i ? 5 : x));
+      expect(await refused(c, LOT, [p, null, at(0), null, perm(), 0])).toMatch(/shared_option_slots/);
+      expect(await refused(c, LOT, [p, null, at(WIDTH - 1), null, perm(), 0])).toMatch(/shared_option_slots/);
+      await c.query(LOT, [p, null, at(PAIRS.length), null, perm(), 0]);
     });
   });
 
@@ -118,12 +145,15 @@ describe.skipIf(!dbAvailable())('migration 282 — bylaw_resolution_* (Spec 134 
       };
       await ins('bylaw_resolution_units', out.rows.units, []);
       await ins('bylaw_resolution_texts', out.rows.texts, []);
-      await ins('bylaw_resolution_lots', out.rows.lots, ['class_results']);
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const step = require(path.join(ROOT, 'scripts/lib/compute/resolve-bylaws.js')) as Json;
+      const bytes = (l: Json): Json => ({ ...l, row_sha: step.stampBytes(l.row_sha, 'row_sha'), table_version: step.stampBytes(l.table_version, 'table_version'), evaluator_version: step.stampBytes(l.evaluator_version, 'evaluator_version') });
+      await ins('bylaw_resolution_lots', out.rows.lots.map(bytes), ['class_results']); // the writer's binds (Q-STOR a)
       for (const q of mz.rowShaMismatchSql({ units: 'bylaw_resolution_units', texts: 'bylaw_resolution_texts', lots: 'bylaw_resolution_lots' }) as string[]) {
         expect(Object.values((await c.query(q)).rows[0])[0], q.slice(0, 90)).toBe(0);
       }
       const dicts = lr.makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts });
-      const want = lr.decodeLotResults({ lot: out.rows.lots[0], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts }) as Json[];
+      const want = lr.decodeLotResults({ lot: out.rows.lots[0], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts, optionPairs: OPTS }) as Json[];
       const got = (await c.query(`SELECT class, structure, target, status, value_kind, value, reason, winner_unit_id, winner_layer, evidence_kind, evidence_ref FROM bylaw_resolution_results WHERE parcel_id = $1`, [id])).rows as Json[];
       expect(got).toHaveLength(want.length);
       const key = (r: Json): string => `${r.class}/${r.structure}/${r.target}`;
@@ -133,6 +163,18 @@ describe.skipIf(!dbAvailable())('migration 282 — bylaw_resolution_* (Spec 134 
         expect({ status: g.status, kind: g.value_kind, value: g.value, reason: g.reason, winner: g.winner_unit_id, layer: g.winner_layer, ek: g.evidence_kind, ref: g.evidence_ref }, key(w))
           .toEqual({ status: w.status, kind: w.value_kind, value: w.value, reason: w.reason, winner: w.winner_unit_id, layer: w.winner_layer, ek: w.evidence_kind, ref: w.evidence_ref });
       }
+      // M-465: the option view decodes the option slots (code shared resolved to the base cell) to the JS decode
+      const wantO = lr.decodeOptionResults({ lot: out.rows.lots[0], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts, optionPairs: OPTS }) as Json[];
+      const gotO = (await c.query(`SELECT class, structure, target, option, status, value_kind, value, reason, winner_unit_id, evidence_kind, evidence_ref, shared_with_base FROM bylaw_resolution_option_results WHERE parcel_id = $1`, [id])).rows as Json[];
+      expect(gotO).toHaveLength(wantO.length);
+      const keyO = (r: Json): string => `${r.class}/${r.structure}/${r.target}/${r.option}`;
+      const byO = new Map(gotO.map((r) => [keyO(r), r]));
+      for (const w of wantO) {
+        const g = byO.get(keyO(w)) as Json;
+        expect({ status: g.status, kind: g.value_kind, value: g.value, reason: g.reason, winner: g.winner_unit_id, ek: g.evidence_kind, ref: g.evidence_ref, shared: g.shared_with_base }, keyO(w))
+          .toEqual({ status: w.status, kind: w.value_kind, value: w.value, reason: w.reason, winner: w.winner_unit_id, ek: w.evidence_kind, ref: w.evidence_ref, shared: w.shared_with_base });
+      }
+      expect((await c.query('SELECT table_version FROM bylaw_resolution_lot_stamps WHERE parcel_id = $1', [id])).rows[0].table_version).toBe(INPUT.table_version);
     });
   });
 });

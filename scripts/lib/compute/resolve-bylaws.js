@@ -77,6 +77,18 @@ function envFor(config, runDay) {
 
 /** A jsonb column is bound as its JSON text: node-pg would send a JS array as a Postgres array literal (the int2[] / float8[] columns are fine). */
 const jsonText = (v) => (v === null ? null : JSON.stringify(v));
+/**
+ * Q-STOR a (migration 295): row_sha, table_version and evaluator_version are stored as bytea(32). The compute keeps them hex everywhere and
+ * converts only here, at the write boundary: node-pg binds a Buffer as bytea. A value that is not 64 hex digits throws (never written loosely);
+ * a hex string bound to the bytea column would be 64 bytes and fail the octet_length = 32 CHECK (fail closed).
+ */
+const HEX64 = /^[0-9a-f]{64}$/;
+const STAMP_COLUMNS = Object.freeze(['row_sha', 'table_version', 'evaluator_version']);
+function stampBytes(hex, column) {
+  if (typeof hex !== 'string' || !HEX64.test(hex)) throw new TypeError(`resolve_bylaws: ${column} ${JSON.stringify(hex)} is not a 64-hex sha256`);
+  return Buffer.from(hex, 'hex');
+}
+const withStampBytes = (l) => ({ ...l, ...Object.fromEntries(STAMP_COLUMNS.map((c) => [c, stampBytes(l[c], c)])) });
 
 /**
  * One batch: parcels rows -> the target rows (R-EH (c)). Pure. `replace_keys.e3` are the parcel ids that left the population. `lookups` holds the
@@ -98,7 +110,7 @@ function materializeRows(sourceRows, { config, lookups }) {
     rows: {
       e1: r.units,
       e2: r.texts,
-      e4: r.lots.map((l) => ({ ...l, class_results: jsonText(l.class_results) })),
+      e4: r.lots.map((l) => withStampBytes({ ...l, class_results: jsonText(l.class_results) })),
     },
     replace_keys: { e3: out.retract },
     matched: out.matched,
@@ -127,7 +139,8 @@ function resultsSql() {
  */
 function buildPostSql(_descriptor, config) {
   const zones = config.resolve_bylaws_population_zone_classes;
-  const pairs = rb.scopePairs(SCOPE).length;
+  // the lot row width: the base pairs plus the M-465 option slots (layer2-scope.json options)
+  const pairs = rb.scopePairs(SCOPE).length + rb.optionPairs(SCOPE, VOCAB.design_options).length;
   const T = TABLES;
   const codes = lr.resultCodes(MAP);
   const appliesCodes = codes.map((c, i) => [c, i]).filter(([c]) => c.startsWith('applies:')).map(([, i]) => i).join(', ');
@@ -267,6 +280,7 @@ module.exports.compute = compute;
 module.exports.checks = CHECKS;
 module.exports.buildSourceSql = buildSourceSql;
 module.exports.materializeRows = materializeRows;
+module.exports.stampBytes = stampBytes;
 module.exports.finalizeMatched = finalizeMatched;
 module.exports.buildPostSql = buildPostSql;
 module.exports.TABLES = TABLES;
