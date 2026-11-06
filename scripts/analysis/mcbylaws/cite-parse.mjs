@@ -1,5 +1,8 @@
 // SPEC LINK: docs/specs/01-pipeline/124a_step_standard_policy_appendix.md R-KV (task trailer), R-KG (OWED means
 //   blocked; BOOT-1 the one exemption), R-KH (cites a RULED rule), R-LE (RULED is a closed list);
+//   docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 item 4 (dated note 2026-11-06, D-2 b): the McFrontend
+//   trailer `McFrontend-Task: MF-n` and the `FE-n` ids are read by `parseFrontendMessage` only, so `parseMessage`
+//   (ID_RE, TRAILER_RE) is byte-identical and no McBylaws verdict moves;
 //   plan arm C (MB-67): message parse, OWED set (Spec 133 section 3), register rows (69a/124a/131), sentinels (G67-06).
 //
 // PURE: no git, no fs, no env. The gate hands this module text it already read; nothing here decides a pass
@@ -22,6 +25,23 @@ export function parseMessage(text) {
   for (const m of s.matchAll(SECTION_RE)) ids.add(`M-${m[1]}`);
   const usesBoot1 = /\bBOOT-1\b/.test(s) || /\bO-1\b/.test(s);
   return { task: trailer ? trailer[1] : null, ids: [...ids].sort(), usesBoot1 };
+}
+
+const MF_TRAILER_RE = /^McFrontend-Task:\s*(MF-\d+)\s*$/m;
+const FE_ID_RE = /\b(FE-\d+)\b/g;
+
+/**
+ * Spec 128 §4.11 item 4: the frontend judgement's parse. `task` is the McFrontend trailer (never the McBylaws one);
+ * `ids` are the McBylaws ids of `parseMessage` plus every `FE-n`; `usesBoot1` as `parseMessage`.
+ * @param {string} text @returns {{task:string|null, ids:string[], usesBoot1:boolean}}
+ */
+export function parseFrontendMessage(text) {
+  const s = String(text ?? '');
+  const mb = parseMessage(s);
+  const trailer = MF_TRAILER_RE.exec(s);
+  const ids = new Set(mb.ids);
+  for (const m of s.matchAll(FE_ID_RE)) ids.add(m[1]);
+  return { task: trailer ? trailer[1] : null, ids: [...ids].sort(), usesBoot1: mb.usesBoot1 };
 }
 
 /** @param {string} spec133Text @returns {Set<string>} */

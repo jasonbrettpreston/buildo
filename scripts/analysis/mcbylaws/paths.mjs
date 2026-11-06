@@ -1,12 +1,18 @@
 // SPEC LINK: docs/specs/01-pipeline/133_bylaw_handbook.md R-KP (protected paths), R-LD (layer 2/3 scope);
 //            plan section 3 (MB-67): mcbylaws/protected-paths.json, glob semantics, dead-glob lint (H7, L10, G67-10c/E9)
 //
+// docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 (dated note 2026-11-06; opening decision list D-2 b,
+//            operator "yes. proceed"): the OPTIONAL `frontend` glob list holds the McFrontend surface paths. Arms H, C, P
+//            and Q read it through `isFrontend`; `classify` and the loop gate never read it, so `layer23` keeps meaning
+//            by-law code (R-LI) and every McBylaws verdict is unchanged.
+//
 // PURE: no git, no fs. The gate reads the BASE copy of the policy file and asks this module what it says.
 // `validatePolicy` fails closed: a malformed or partial policy is never read as an empty (permissive) one.
 
 export const POLICY_PATH = 'mcbylaws/protected-paths.json';
 
 const GLOB_LISTS = ['pending_globs', 'layer23', 'protected', 'literal_scope', 'literal_exempt'];
+const FRONTEND = 'frontend';
 const STRING_LISTS = ['held_dirs', 'worktrees'];
 const REQUIRED = [...GLOB_LISTS, ...STRING_LISTS, 'held_limit', 'boot1', 'external_arms'];
 
@@ -46,7 +52,17 @@ export function validatePolicy(obj) {
     const why = checkKey(key, obj[key]);
     if (why) return badKey(why);
   }
+  // D-2 b: `frontend` is optional (absent = no surface path); when present it is a glob list like the others.
+  if (Object.prototype.hasOwnProperty.call(obj, FRONTEND)) {
+    const v = obj[FRONTEND];
+    if (!Array.isArray(v) || !v.every(validGlob)) return badKey(FRONTEND);
+  }
   return { ok: true, policy: obj };
+}
+
+/** D-2 b: a McFrontend surface path under the policy's optional `frontend` list (absent = none). */
+export function isFrontend(policy, p) {
+  return matchesAny(Array.isArray(policy?.[FRONTEND]) ? policy[FRONTEND] : [], p);
 }
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -105,7 +121,7 @@ export function classify(policy, p) {
 }
 
 /**
- * Every `layer23` / `literal_scope` glob that matches no tracked path and is NOT pending (H7, L10, E9).
+ * Every `layer23` / `literal_scope` / `frontend` glob that matches no tracked path and is NOT pending (H7, L10, E9).
  * @param {object} policy a validated policy
  * @param {string[]} tracked repo-relative tracked paths
  * @returns {Array<{list:string, glob:string}>}
@@ -113,7 +129,7 @@ export function classify(policy, p) {
 export function deadGlobs(policy, tracked) {
   const pending = policy.pending_globs || [];
   const out = [];
-  for (const list of ['layer23', 'literal_scope']) {
+  for (const list of ['layer23', 'literal_scope', FRONTEND]) {
     for (const glob of policy[list] || []) {
       if (pending.includes(glob)) continue;
       if ((tracked || []).some((p) => globToRegExp(glob).test(p))) continue;

@@ -7,16 +7,28 @@
 // derived READY is never hand-written); Q3 wants an `@sha` on every DONE entry; Q1 wants that sha to exist and be an
 // ancestor of the tip; Q5 wants READY only when every WAITS id is DONE. Fail closed: a read that fails, a missing tip
 // or an empty text is a failure line, never a pass.
+// MF-24a (docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 item 7, dated note 2026-11-06; D-9 b, operator
+// "yes. proceed"): every function takes an optional `{queuePath, prefix}`; the defaults are the McBylaws queue and `MB`, so
+// every McBylaws call and verdict is unchanged. The McFrontend queue is `MF_QUEUE_PATH` with prefix `MF`.
 
 import { git, pathExistsAt, readAt } from './git-util.mjs';
 
 /** The queue file, relative to the repo root. */
 export const QUEUE_PATH = '.cursor/MCBYLAWS-QUEUE.md';
+/** The McFrontend queue (MF-24a). */
+export const MF_QUEUE_PATH = '.cursor/MCFRONTEND-QUEUE.md';
+
+const PREFIXES = new Set(['MB', 'MF']);
+/** The id prefix of one queue; anything but MB or MF is refused (a throw, so the caller fails closed). */
+const prefixOf = (opts) => {
+  const p = opts?.prefix ?? 'MB';
+  if (!PREFIXES.has(p)) throw new Error(`queue prefix ${String(p)}`);
+  return p;
+};
 
 /** Status words a heading may carry. READY is recognised but never legal: it is derived, not written by hand. */
 const STATUS = /\b(DONE|RUNNING|WAITS|OPERATOR|HELD|LATER|READY)\b/g;
 const CANNOT = 'FAIL:Q:cannot-decide';
-const SHA = /MB-(\d+)@([0-9a-f]{7,40})\b/g;
 
 const lines = (text) => (typeof text === 'string' ? text.split('\n') : null);
 
@@ -25,8 +37,8 @@ const lines = (text) => (typeof text === 'string' ? text.split('\n') : null);
  * (`**MB-nn`, leading spaces allowed); else `{n, body}`, where body is the rest of the LINE after the first
  * ` - ` or ` — ` separator, or `null` when the heading has no separator.
  */
-export function headingBody(line) {
-  const m = /^\s*\*\*MB-(\d+)\b/.exec(line);
+export function headingBody(line, opts) {
+  const m = new RegExp(`^\\s*\\*\\*${prefixOf(opts)}-(\\d+)\\b`).exec(line);
   if (!m) return null;
   const cut = [line.indexOf(' - '), line.indexOf(' — ')].filter((i) => i >= 0);
   return { n: m[1], body: cut.length === 0 ? null : line.slice(Math.min(...cut) + 3) };
@@ -38,37 +50,39 @@ export function headingBody(line) {
  * legal status. READY is recognised but never legal (it is derived). Judged per heading, so one bad heading never
  * hides the heading after it.
  */
-export function statusWordErrors(text) {
+export function statusWordErrors(text, opts) {
   const ls = lines(text);
   if (ls === null) return [CANNOT];
+  const px = prefixOf(opts);
   const out = [];
   for (const line of ls) {
-    const h = headingBody(line);
+    const h = headingBody(line, opts);
     if (!h) continue;
     const words = [...new Set((h.body ?? '').match(STATUS) ?? [])].filter((w) => w !== 'OPERATOR');
     const ok = h.body !== null && words.length <= 1 && !words.includes('READY');
-    if (!ok) out.push(`FAIL:Q:status-words:MB-${h.n}`);
+    if (!ok) out.push(`FAIL:Q:status-words:${px}-${h.n}`);
   }
   return out;
 }
 
 /** PURE (Q3): every DONE entry — a `- MB-nn` list id and every DONE heading — must carry `MB-nn@<hex>`. */
-export function doneWithoutCommitErrors(text) {
+export function doneWithoutCommitErrors(text, opts) {
   const ls = lines(text);
   if (ls === null) return [CANNOT];
+  const px = prefixOf(opts);
   const out = new Set();
   for (const line of ls) {
-    const list = /^- MB-(\d+)\b(.*)$/.exec(line);
+    const list = new RegExp(`^- ${px}-(\\d+)\\b(.*)$`).exec(line);
     if (list) {
-      for (const id of line.match(/MB-\d+/g) ?? []) {
+      for (const id of line.match(new RegExp(`${px}-\\d+`, 'g')) ?? []) {
         const at = new RegExp(`${id}@[0-9a-f]{7,40}\\b`).test(line);
         if (!at) out.add(`FAIL:Q:done-without-commit:${id}`);
       }
       continue;
     }
-    const h = headingBody(line);
+    const h = headingBody(line, opts);
     if (!h || !/\bDONE\b/.test(h.body ?? line)) continue;
-    if (!new RegExp(`MB-${h.n}@[0-9a-f]{7,40}\\b`).test(line)) out.add(`FAIL:Q:done-without-commit:MB-${h.n}`);
+    if (!new RegExp(`${px}-${h.n}@[0-9a-f]{7,40}\\b`).test(line)) out.add(`FAIL:Q:done-without-commit:${px}-${h.n}`);
   }
   return [...out];
 }
@@ -78,9 +92,11 @@ export function doneWithoutCommitErrors(text) {
  * `tipRev` (not-on-branch, MB-79 (q)); a tip or an ancestry answer that cannot be decided is one cannot-decide,
  * never a pass.
  */
-export function missingCommitErrors({ cwd, text, tipRev } = {}) {
+export function missingCommitErrors({ cwd, text, tipRev, prefix } = {}) {
   const ls = lines(text);
   if (ls === null || typeof tipRev !== 'string' || tipRev === '') return [CANNOT];
+  const px = prefixOf({ prefix });
+  const SHA = new RegExp(`${px}-(\\d+)@([0-9a-f]{7,40})\\b`, 'g');
   const out = new Map();
   // The tip is resolved ONCE, lazily (the first sha that exists needs it). A failed resolve is ONE cannot-decide.
   let tipSha;
@@ -99,7 +115,7 @@ export function missingCommitErrors({ cwd, text, tipRev } = {}) {
       if (out.has(n)) continue;
       const exists = git(cwd, ['cat-file', '-e', `${sha}^{commit}`]).status === 0;
       if (!exists) {
-        out.set(n, `FAIL:Q:missing-commit:MB-${n}`);
+        out.set(n, `FAIL:Q:missing-commit:${px}-${n}`);
         continue;
       }
       resolveTip();
@@ -109,7 +125,7 @@ export function missingCommitErrors({ cwd, text, tipRev } = {}) {
       }
       const ancestor = git(cwd, ['merge-base', '--is-ancestor', sha, tipSha]).status;
       if (ancestor === 0) continue;
-      if (ancestor === 1) out.set(n, `FAIL:Q:not-on-branch:MB-${n}`);
+      if (ancestor === 1) out.set(n, `FAIL:Q:not-on-branch:${px}-${n}`);
       else undecided = true;
     }
   }
@@ -118,22 +134,26 @@ export function missingCommitErrors({ cwd, text, tipRev } = {}) {
 }
 
 /** (Q4): the queue file must be tracked at `rev`. */
-export function queueTrackedErrors({ cwd, rev } = {}) {
+export function queueTrackedErrors({ cwd, rev, queuePath } = {}) {
   try {
-    return pathExistsAt(cwd, rev, QUEUE_PATH) === true ? [] : ['FAIL:Q:queue-untracked'];
+    const file = queuePath ?? QUEUE_PATH;
+    // The McBylaws verdict keeps its exact text; any other queue names its file.
+    const verdict = file === QUEUE_PATH ? 'FAIL:Q:queue-untracked' : `FAIL:Q:queue-untracked:${file}`;
+    return pathExistsAt(cwd, rev, file) === true ? [] : [verdict];
   } catch {
     return [CANNOT];
   }
 }
 
 /** (Q5): a heading saying READY while a WAITS id is not DONE — READY is derived, so it is hand-written. */
-export function readyDerivedErrors(text) {
+export function readyDerivedErrors(text, opts) {
   const ls = lines(text);
   if (ls === null) return [CANNOT];
+  const px = prefixOf(opts);
   const done = new Set();
   const headings = [];
   for (const line of ls) {
-    const h = headingBody(line);
+    const h = headingBody(line, opts);
     if (!h) continue;
     const body = h.body ?? line;
     headings.push({ n: h.n, body });
@@ -143,8 +163,8 @@ export function readyDerivedErrors(text) {
   for (const { n, body } of headings) {
     if (!/\bREADY\b/.test(body)) continue;
     const waits = /\bWAITS\b([^\n]*)/.exec(body);
-    const ids = (waits ? waits[1].match(/MB-\d+/g) : null) ?? [];
-    if (ids.some((id) => !done.has(id.slice(3)))) out.add('FAIL:Q:ready-derived');
+    const ids = (waits ? waits[1].match(new RegExp(`${px}-\\d+`, 'g')) : null) ?? [];
+    if (ids.some((id) => !done.has(id.slice(px.length + 1)))) out.add('FAIL:Q:ready-derived');
   }
   return [...out];
 }
@@ -154,20 +174,22 @@ export function readyDerivedErrors(text) {
  * The ancestry half of Q1 needs a tip the repo resolves; when `rev` is missing or unresolvable that half reports
  * `cannot-decide` instead of a pass (fail closed).
  */
-export function queueCheck({ cwd, rev } = {}) {
+export function queueCheck({ cwd, rev, queuePath, prefix } = {}) {
   try {
-    const tracked = queueTrackedErrors({ cwd, rev });
+    const opts = { prefix: prefixOf({ prefix }) };
+    const file = queuePath ?? QUEUE_PATH;
+    const tracked = queueTrackedErrors({ cwd, rev, queuePath: file });
     if (tracked.length > 0) return tracked;
-    const text = readAt(cwd, rev, QUEUE_PATH);
+    const text = readAt(cwd, rev, file);
     if (typeof text !== 'string' || text === '') return [CANNOT];
-    const missing = missingCommitErrors({ cwd, text, tipRev: rev });
+    const missing = missingCommitErrors({ cwd, text, tipRev: rev, prefix: opts.prefix });
     const tipUnresolved =
       missing.length === 0 && git(cwd, ['rev-parse', '--verify', '--quiet', `${rev}^{commit}`]).status !== 0;
     return [
-      ...statusWordErrors(text),
-      ...doneWithoutCommitErrors(text),
+      ...statusWordErrors(text, opts),
+      ...doneWithoutCommitErrors(text, opts),
       ...(tipUnresolved ? [CANNOT] : missing),
-      ...readyDerivedErrors(text),
+      ...readyDerivedErrors(text, opts),
     ];
   } catch {
     return [CANNOT];

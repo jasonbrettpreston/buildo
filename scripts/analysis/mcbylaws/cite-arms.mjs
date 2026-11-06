@@ -4,6 +4,12 @@
 //   plan arm C (MB-67), checks CT1..CT11.
 //   R-MA (amends R-KV; 2026-11-01-batch-ao#CHAT-216.O-28): CT2 reads the task's NEWEST prereg-<task>-<k>.json (integer k);
 //   a legacy-named prereg-*.json is a rules source only while the task has no file of that form (a scope condition).
+//   docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 items 1-5 (dated note 2026-11-06; opening decision list
+//   D-1 b, D-2 b, operator "yes. proceed"): a commit touching a McFrontend surface path (the policy's `frontend` list) gets a
+//   SECOND, independent judgement: `McFrontend-Task: MF-n`, the task's newest prereg-<MF-n>-<k>.json in the PARENT tree (no
+//   legacy names), every rule RULED in the rows of 69a/124a/131 plus Spec 135 (`feRows`), every cited id (FE-n included) in
+//   rules[] and not OWED unless its lock lands with red evidence. The McBylaws judgement below is unchanged and never reads
+//   `feRows`; a mixed commit must pass both. A McBylaws trailer never passes a surface path (opening map finding 3).
 //
 // HOW the citation checks are asked. A commit touching a `layer23` path must carry a `McBylaws-Task` trailer
 // (CT1/CT7); its task's newest prereg committed in the PARENT tree (R-MA: the highest k of prereg-<task>-<k>.json; a
@@ -15,9 +21,9 @@
 
 import { listTracked, readAt } from './git-util.mjs';
 import { allPaths } from './name-status.mjs';
-import { classify } from './paths.mjs';
-import { isRuled, parseMessage, sentinelsOk } from './cite-parse.mjs';
-import { byNewest, parsePreregName } from './prereg-name.mjs';
+import { classify, isFrontend } from './paths.mjs';
+import { isRuled, parseFrontendMessage, parseMessage, sentinelsOk } from './cite-parse.mjs';
+import { byNewest, parseFrontendPreregName, parsePreregName } from './prereg-name.mjs';
 
 export const PREREG_RE = /^scripts\/analysis\/bylaw-validation\/coa-expected\/prereg-[^/]+\.json$/;
 const CANNOT = 'FAIL:C:cannot-decide';
@@ -56,7 +62,8 @@ function findPrereg(cwd, rev, task) {
     return { status: 'ok', prereg: obj, file };
   }
   for (const p of tracked) {
-    if (!PREREG_RE.test(p) || formed.has(p)) continue;
+    // A McFrontend-named file (prereg-MF-...) is never a McBylaws rules source, whatever its JSON says.
+    if (!PREREG_RE.test(p) || formed.has(p) || MF_NAMED.test(p)) continue;
     const text = readAt(cwd, rev, p);
     if (text === null) continue;
     let obj;
@@ -64,6 +71,32 @@ function findPrereg(cwd, rev, task) {
     if (obj && obj.task === task && Array.isArray(obj.rules) && obj.rules.length > 0) return { status: 'ok', prereg: obj, file: p };
   }
   return { status: 'none', prereg: null, file: null };
+}
+
+const MF_NAMED = /\/prereg-MF-[^/]*$/;
+
+/**
+ * §4.11 item 5: the McFrontend task's rules source in `rev`: ONLY its newest prereg-<MF-n>-<k>.json (no legacy names, no
+ * fall-back to an older k). Same statuses as findPrereg.
+ */
+function findFrontendPrereg(cwd, rev, task) {
+  const tracked = listTracked(cwd, rev);
+  if (!Array.isArray(tracked)) return { status: 'cannot', prereg: null, file: null };
+  const mine = [];
+  for (const p of tracked) {
+    const name = parseFrontendPreregName(p);
+    if (name && name.task === task) mine.push({ p, k: name.k });
+  }
+  if (mine.length === 0) return { status: 'none', prereg: null, file: null };
+  const file = mine.sort(byNewest)[0].p;
+  const text = readAt(cwd, rev, file);
+  if (text === null) return { status: 'cannot', prereg: null, file };
+  let obj;
+  try { obj = JSON.parse(text); } catch { return { status: 'cannot', prereg: null, file }; }
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return { status: 'cannot', prereg: null, file };
+  if (obj.task !== task) return { status: 'mismatch', prereg: null, file };
+  if (!Array.isArray(obj.rules) || obj.rules.length === 0) return { status: 'none', prereg: null, file };
+  return { status: 'ok', prereg: obj, file };
 }
 
 /** R-LE(a): a sole-parsed-prereg commit with no cite is the bootstrap commit (G67-07a). */
@@ -102,8 +135,49 @@ export function landsId(id, rows, owed, entries) {
   return (owed.has(id) || rows.get(id)?.status === 'OWED') && lockLands(id, rows, entries);
 }
 
-/** @returns {string[]} every verdict string; `[]` is a pass */
-function run({ cwd, policy, entries, message, parentRev, ownRev, owed, rows, sha }) {
+/** The FE sentinel (G67-06 for Spec 135): an empty or foreign 135 parse never reads as "nothing owed". Existence only. */
+const FE_SENTINEL = 'FE-01';
+
+/**
+ * §4.11 items 1-5: the McFrontend judgement over the surface paths of one commit. `feRows` must be a Map holding the
+ * FE sentinel and the McBylaws sentinels must hold, else cannot-decide.
+ * @returns {string[]}
+ */
+function runFrontend({ cwd, entries, message, parentRev, owed, feRows, sha }) {
+  if (!(feRows instanceof Map) || !feRows.has(FE_SENTINEL) || !sentinelsOk(owed, feRows)) return [flagged(sha)];
+  const parsed = parseFrontendMessage(message);
+  if (parsed.task === null) return [`FAIL:C:no-mf-task${suffix(sha)}`];
+  // BOOT-1 is the McBylaws bootstrap exemption (boot1.tasks lists MB ids); it is never a McFrontend one. Only the id itself
+  // is refused here: a mention of the standing O-1 APPROVED record is not a use of BOOT-1 by a McFrontend task.
+  if (/\bBOOT-1\b/.test(String(message ?? ''))) return [`FAIL:C:boot1-not-allowed${suffix(sha)}`];
+  const found = findFrontendPrereg(cwd, parentRev, parsed.task);
+  if (found.status === 'cannot') return [flagged(sha)];
+  if (found.status === 'mismatch') return [`FAIL:C:prereg-task-mismatch:${found.file}${suffix(sha)}`];
+  if (found.status !== 'ok') return [`FAIL:C:no-rules${suffix(sha)}`];
+  const rules = found.prereg.rules;
+  const out = [];
+  for (const id of rules) {
+    if (!isRuled(feRows, id) && !landsId(id, feRows, owed, entries)) out.push(`FAIL:C:not-ruled:${id}${suffix(sha)}`);
+  }
+  for (const id of parsed.ids) {
+    if ((owed.has(id) || feRows.get(id)?.status === 'OWED') && !lockLands(id, feRows, entries)) {
+      out.push(`FAIL:C:owed:${id}${suffix(sha)}`);
+      continue;
+    }
+    if (!rules.includes(id)) out.push(`FAIL:C:cite-not-in-rules:${id}${suffix(sha)}`);
+  }
+  return out;
+}
+
+/** @returns {string[]} every verdict string; `[]` is a pass. The McBylaws judgement, then the McFrontend one. */
+function run(args) {
+  const paths = allPaths(args.entries);
+  const fe = paths.filter((p) => isFrontend(args.policy, p));
+  return [...runBylaws(args), ...(fe.length === 0 ? [] : runFrontend(args))];
+}
+
+/** The McBylaws judgement, unchanged: layer23 paths, the McBylaws trailer, the three registers (`rows`). */
+function runBylaws({ cwd, policy, entries, message, parentRev, ownRev, owed, rows, sha }) {
   const paths = allPaths(entries);
   const l23 = paths.filter((p) => classify(policy, p).layer23);
   if (l23.length === 0) return [];
@@ -140,7 +214,7 @@ function run({ cwd, policy, entries, message, parentRev, ownRev, owed, rows, sha
  * Arm C for ONE commit (or one staged set). `parentRev` is 'HEAD' or `<sha>^`; `ownRev` is '' (the index) or the sha.
  * @param {{cwd:string, policy:object, entries:Array<{status:string,path:string,oldPath:string|null}>,
  *          message:string, parentRev:string, ownRev:string, owed:Set<string>, rows:Map<string,{status:string}>,
- *          sha?:string}} args
+ *          feRows?:Map<string,{status:string}>|null, sha?:string}} args  (`feRows` is read only for a surface path)
  * @returns {string[]}
  */
 export function citeForCommit(args) {

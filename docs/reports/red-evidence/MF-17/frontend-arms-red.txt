@@ -1,0 +1,28 @@
+MF-17 early gate batch: RED run of src/tests/mcbylaws-frontend.logic.test.ts before any gate code, base b1bc91182 (C1 on 9fd3e1db7), 2026-11-06.
+Result: 22 failed, 4 passed (the 4 are identity checks that hold before and after).
+ × src/tests/mcbylaws-frontend.logic.test.ts > paths: the optional frontend list (D-2 b) > absent is valid and reads as no frontend path; present must be an array of valid globs
+ ✓ src/tests/mcbylaws-frontend.logic.test.ts > paths: the optional frontend list (D-2 b) > identity: classify keeps its four keys and never reads frontend
+ × src/tests/mcbylaws-frontend.logic.test.ts > paths: the optional frontend list (D-2 b) > a dead frontend glob is linted unless pending; no frontend key changes nothing
+ × src/tests/mcbylaws-frontend.logic.test.ts > cite-parse and prereg-name: item 4 trailer and FE ids, item 5 MF prereg form > the McFrontend parse reads MF-n and FE-n; the McBylaws parse is unchanged
+ × src/tests/mcbylaws-frontend.logic.test.ts > cite-parse and prereg-name: item 4 trailer and FE ids, item 5 MF prereg form > MF prereg names are read by the frontend parser only; the shared MB parser (the loop imports it) is unchanged
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > red: a surface path with no trailer, or with only a McBylaws trailer (finding 3), has no MF task
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > the newest MF prereg wins (k=2 lists the OWED FE-02, so the rules are not all RULED)
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > red: a commit citing an OWED FE row is refused (MF-17 done-condition); its lock plus red evidence lands it
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > green: the newest prereg of a task whose rules are all RULED, cites in rules
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > red: no prereg, an index-only prereg, a task mismatch, BOOT-1
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > fail closed: no feRows (Spec 135 unread), or a 135 parse without FE-01, is cannot-decide
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > mixed: a layer23 path and a surface path need both judgements; an MF trailer never passes a layer23 path
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > an MF prereg added alone is the R-LE(a) bootstrap; added beside a surface path the frontend judgement still runs
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > red (security lens): a new prereg plus a surface path under an MB trailer cannot use the R-LE(a) bootstrap
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > red: an MF prereg off the name form (leading zero) is never a rules source (no legacy fallback for MF)
+ ✓ src/tests/mcbylaws-frontend.logic.test.ts > arm C: the frontend judgement (items 1-5) > identity: with no frontend path the result is the McBylaws result, feRows never read
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm P and arm H on surface paths > red: no MF task or only an MB record is no-record; green with the MF record in the own tree
+ ✓ src/tests/mcbylaws-frontend.logic.test.ts > arm P and arm H on surface paths > mixed paths need both records; identity for MB-only paths
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm P and arm H on surface paths > fail closed: the own tree has no frontend list while the base has one
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm P and arm H on surface paths > arm H holds a surface path behind APPROVED
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm Q parameterised (MF-24a) > the MF prefix reads MF headings and MF-nn@sha; the MB defaults are unchanged
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm Q parameterised (MF-24a) > queueCheck with the MF options reads the MF file; untracked names the file
+ × src/tests/mcbylaws-frontend.logic.test.ts > arm Q parameterised (MF-24a) > the real McFrontend queue is in the heading form arm Q reads, every DONE on this branch
+ × src/tests/mcbylaws-frontend.logic.test.ts > gate CLI: a surface commit end to end (fixture repo) > red without APPROVED; green with MF trailer, MF prereg and MF record; red with an MB trailer
+ ✓ src/tests/mcbylaws-frontend.logic.test.ts > gate CLI identity: MB commits and MB-only ranges > an MB commit at a rev without Spec 135 is judged as today (GATE OK), with or without a frontend list 542ms
+ × src/tests/mcbylaws-frontend.logic.test.ts > gate CLI identity: MB commits and MB-only ranges > the MF queue is judged only for a range that touches a frontend path or the MF queue 616ms

@@ -1,5 +1,10 @@
 // SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md MB-67 (the commit gate); plan §1, §8, G67-12;
 //   R-KM (one verdict per line), R-KP (keep the pass honest), R-LF (base policy, git's own ref pairs).
+//   docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 items 1-5 and 7 (MF-17 early gate batch, MF-24a; dated
+//   note 2026-11-06, opening decision list D-1 b, D-2 b, D-9 b, operator "yes. proceed"): the McFrontend surface paths
+//   (the policy's optional `frontend` list) are held (H), judged (C, with Spec 135 in `feRows`), need an MF panel record (P)
+//   and prompt at push; arm Q also reads the McFrontend queue for a range that touches it or a surface path. Every
+//   McBylaws read below (`citeInputs`, the three registers, the McBylaws queue) is unchanged.
 //
 // HOW the gate decides. One mode per entry point (`--commit-msg`, `--staged`, `--push`, `--ci`); the arms live in
 // their own modules and this file only composes them, prints one verdict per line, and prints `GATE OK` / `GATE FAIL`.
@@ -14,7 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { git, readAt, listTracked } from './git-util.mjs';
 import { parseNameStatusZ, allPaths } from './name-status.mjs';
-import { classify, POLICY_PATH } from './paths.mjs';
+import { classify, isFrontend, POLICY_PATH, validatePolicy } from './paths.mjs';
 import { resolvePolicy } from './policy-resolve.mjs';
 import { holdForCommit, deadGlobLines } from './hold.mjs';
 import { parseOwedTable, parseRegisterRows } from './cite-parse.mjs';
@@ -24,7 +29,7 @@ import { scanScope, allowSet, deadScopeLines, RULE_FILE, ALLOW_REL } from './lit
 import { buildSummary, parseRefLines, isZeroSha } from './pre-push-summary.mjs';
 import { collectRef, heldCount, worktreeScan, pendingCount } from './summary-collect.mjs';
 import { scanDbTargetsInFiles, isDbScopePath } from './db-target.mjs';
-import { queueCheck } from './mcbylaws-queue-check.mjs';
+import { queueCheck, MF_QUEUE_PATH } from './mcbylaws-queue-check.mjs';
 
 const CANNOT = 'FAIL:X:cannot-decide';
 const DOCS = 'docs/specs/01-pipeline';
@@ -32,6 +37,8 @@ const CITE_INPUTS = {
   spec133: `${DOCS}/133_bylaw_handbook.md`,
   registers: [`${DOCS}/69a_mcbylaw_register.md`, `${DOCS}/124a_step_standard_policy_appendix.md`, `${DOCS}/131_lot_configuration_policy.md`],
 };
+// §4.11 item 1: the McFrontend register. Read for `feRows` only, so a rev without it changes nothing for a McBylaws commit.
+const FE_REGISTER = 'docs/specs/02-web-admin/135_mcfrontend_decisions_register.md';
 // G67-12: the arms that live outside the repo are a fixed table; the policy names them by `id` only.
 // O67-11: MB-68's CLI is `check --mode <commit|push|ci> [--base <rev>] [--tip <rev>]`; exit 0 green, 1 red, 2 could not run. MB-79 (o) F-10: push and ci always pass --tip (the pushed local sha; HEAD in CI).
 const EXTERNAL_ARMS = {
@@ -110,6 +117,24 @@ function citeInputs(cwd, rev) {
   const rows = new Map();
   for (const t of regs) for (const [id, v] of parseRegisterRows(t)) if (!rows.has(id)) rows.set(id, v);
   return { owed: parseOwedTable(spec), rows };
+}
+
+/**
+ * §4.11 item 1: `inputs` plus `feRows` = its rows, then Spec 135's rows at `rev` (first wins, so 135 only adds ids).
+ * `feRows` is null when 135 is missing or anything throws; arm C reads it only for a surface path and fails closed on null.
+ */
+function withFe(cwd, rev, inputs) {
+  let feRows = null;
+  try {
+    const text = at(cwd, rev, FE_REGISTER);
+    if (text !== null) {
+      feRows = new Map(inputs.rows);
+      for (const [id, v] of parseRegisterRows(text)) if (!feRows.has(id)) feRows.set(id, v);
+    }
+  } catch {
+    feRows = null;
+  }
+  return { ...inputs, feRows };
 }
 
 function externalArmLines(cwd, policy, mode, base, tip) {
@@ -195,8 +220,8 @@ function commitMsg(cwd, msgFile) {
   if (!res.ok) return ['FAIL:H:cannot-decide'];
   // MB-79 (n) both-reads rule (fold 5; R-LF): arm C runs on the PARENT register (HEAD) and on the INDEX (''); the commit fails if
   // either run fails. A staged edit can neither rescue a cite (parent read) nor hide one (index read). Empty sentinels fail closed.
-  const parentInputs = citeInputs(cwd, 'HEAD') || { owed: new Set(), rows: new Map() };
-  const indexInputs = citeInputs(cwd, '') || { owed: new Set(), rows: new Map() };
+  const parentInputs = withFe(cwd, 'HEAD', citeInputs(cwd, 'HEAD') || { owed: new Set(), rows: new Map() });
+  const indexInputs = withFe(cwd, '', citeInputs(cwd, '') || { owed: new Set(), rows: new Map() });
   const cite = [...new Set([
     ...citeForCommit({ cwd, policy: res.policy, entries, message: text, parentRev: 'HEAD', ownRev: '', ...parentInputs }),
     ...citeForCommit({ cwd, policy: res.policy, entries, message: text, parentRev: 'HEAD', ownRev: '', ...indexInputs }),
@@ -219,7 +244,7 @@ function staged(cwd) {
   const { policy } = res;
   const paths = allPaths(entries);
   // Fast path: nothing staged is Layer 2/3, in literal scope or in DB scope, and no glob list needs the tree.
-  const touches = paths.some((p) => { const c = classify(policy, p); return c.layer23 || c.literalScope || isDbScopePath(p); });
+  const touches = paths.some((p) => { const c = classify(policy, p); return c.layer23 || c.literalScope || isDbScopePath(p) || isFrontend(policy, p); });
   if (!touches) return [];
   const tracked = listTracked(cwd, 'HEAD');
   if (tracked === null) return ['FAIL:H:cannot-decide'];
@@ -266,7 +291,7 @@ function mergeArms({ cwd, base, tip, excused = new Set() }) { // `excused` = lan
     if (!res.ok) { out.push(`FAIL:H:cannot-decide:${sha}`); continue; }
     const message = git(cwd, ['log', '-1', '--format=%B', sha]);
     if (message.status !== 0) { out.push(`FAIL:C:cannot-decide:${sha}`); continue; }
-    const inputs = citeInputs(cwd, parentRev) || { owed: new Set(), rows: new Map() };
+    const inputs = withFe(cwd, parentRev, citeInputs(cwd, parentRev) || { owed: new Set(), rows: new Map() });
     out.push(
       ...holdForCommit({ cwd, policy: res.policy, entries, parentRev, sha, onDiskApproved: false }),
       ...citeForCommit({ cwd, policy: res.policy, entries, message: message.stdout, parentRev, ownRev: sha, sha, ...inputs }),
@@ -320,7 +345,7 @@ function rangeArms({ cwd, base, tip, pre = { set: new Set(), fail: [] } }) {
 
   const cache = new Map();
   const inputsFor = (rev) => {
-    if (!cache.has(rev)) cache.set(rev, citeInputs(cwd, rev) || { owed: new Set(), rows: new Map() });
+    if (!cache.has(rev)) cache.set(rev, withFe(cwd, rev, citeInputs(cwd, rev) || { owed: new Set(), rows: new Map() }));
     return cache.get(rev);
   };
   // O67-03: arm L is judged by the policies in force BEFORE each commit, never by the last one (a narrowing
@@ -437,6 +462,7 @@ function summaryInput({ cwd, refs, ci, ctx }) {
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy, pre }));
     arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b, r.localSha));
     arms.push(...queueCheck({ cwd, rev: r.localSha }));
+    arms.push(...frontendQueueLines(cwd, b, r.localSha, res.policy));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
     let tipLimit = res.policy.held_limit;
     try { tipLimit = JSON.parse(readAt(cwd, r.localSha, POLICY_PATH) ?? '{}').held_limit ?? tipLimit; } catch { arms.push(CANNOT); }
@@ -460,6 +486,24 @@ function summaryInput({ cwd, refs, ci, ctx }) {
   };
 }
 
+/**
+ * MF-24a: arm Q over the McFrontend queue, for a range `base..tip` that changes the McFrontend queue or a surface path under
+ * the base OR the tip policy's `frontend` list (a union: the tip can only add runs, never remove one). A range of McBylaws
+ * work only is judged exactly as before. A diff or tip read that fails is cannot-decide.
+ */
+function frontendQueueLines(cwd, base, tip, basePolicy) {
+  const diff = git(cwd, ['diff', '--name-only', '-z', '-M', base, tip]);
+  if (diff.status !== 0) return [CANNOT];
+  const changed = diff.stdout.split('\0').filter(Boolean);
+  let tipPolicy = null;
+  const text = readAt(cwd, tip, POLICY_PATH);
+  if (text !== null) {
+    try { tipPolicy = validatePolicy(JSON.parse(text)).policy || null; } catch { tipPolicy = null; }
+  }
+  const touches = changed.some((p) => p === MF_QUEUE_PATH || isFrontend(basePolicy, p) || (tipPolicy !== null && isFrontend(tipPolicy, p)));
+  return touches ? queueCheck({ cwd, rev: tip, queuePath: MF_QUEUE_PATH, prefix: 'MF' }) : [];
+}
+
 /** S11: what the operator (or the CI log) sees — `summary.text` unpaged, so `full list:` shows and nothing overflows. */
 const shown = (summary) => String(summary.text || '').split('\n').filter(Boolean)
   .map((l) => (l.startsWith('MCBYLAWS: ') ? l.slice('MCBYLAWS: '.length) : l));
@@ -480,7 +524,7 @@ function askTty() {
   }
 }
 
-const isProtected = (policy, p) => { const c = classify(policy, p); return c.layer23 || c.protected || c.literalScope; };
+const isProtected = (policy, p) => { const c = classify(policy, p); return c.layer23 || c.protected || c.literalScope || isFrontend(policy, p); };
 
 // A FAIL verdict whose lines carry no FAIL: prefix (a PANEL MISSING line, say) must still exit 1.
 const failClosed = (summary, lines) => (summary.verdict === 'FAIL' && !lines.some((l) => String(l).startsWith('FAIL:')) ? [...lines, 'FAIL:S:summary'] : lines);

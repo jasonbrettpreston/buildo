@@ -168,6 +168,14 @@ A change list, written now; no code lands with it.
 
 Order: Spec 135 landed first; then the gate changes; then the policy globs flip from held to layer23. Not changed: `lockLands` some/every. The pre-push summary may print the count of OWED FE rows: visibility, not a lock.
 
+> Dated note 2026-11-06 (M-246, prior text kept; operator answer to the McFrontend opening decision list D-1..D-9, verbatim "yes. proceed", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`; map `~/Buildo-scratch/mcfrontend/phase1/opening-map.md`). How items 1-7 are built (MF-17 early gate batch and MF-24a; the McBylaws verdict of every MB-trailer commit stays unchanged):
+> - **Item 6 (D-2 b).** The surface paths go in a separate, optional policy list `frontend` in `mcbylaws/protected-paths.json`, not in `layer23`. Arms H, C, P, the push prompt and arm Q read it (`paths.mjs isFrontend`); `classify` and the McBylaws loop gate (`loop-oracle.mjs loadLayer23`) do not, so `layer23` keeps meaning by-law code (R-LI). `pending_globs` only exempts a glob from the dead-glob lint (it refuses nothing); the earlier words "so a commit is refused" did not hold (opening map finding 2). The flip fills `frontend` after the gate code lands (D-1 b).
+> - **Item 1.** Spec 135 is read into a second row set (`feRows` = the three registers, then 135) used only by the McFrontend judgement; `CITE_INPUTS.registers` stays three paths, so a rev without 135 changes nothing for a McBylaws commit. A missing 135, or a 135 parse without FE-01, makes the McFrontend judgement cannot-decide.
+> - **Item 4.** `ID_RE` and `TRAILER_RE` are unchanged; `parseFrontendMessage` reads `McFrontend-Task: MF-n` and the `FE-n` ids for the McFrontend judgement only. A surface path needs the MF trailer: a McBylaws trailer never passes it (opening map finding 3); a commit with both kinds of path needs both judgements and both panel records (`docs/reports/panels/MF-n.json`, D-3).
+> - **Item 5.** `PREREG_FORM_RE` and `parsePreregName` stay McBylaws-only (the loop imports them); `MF_PREREG_FORM_RE` reads `prereg-MF-n-k.json` in the same directory, newest k only, with no legacy-name fallback. An MF prereg added alone is the R-LE(a) bootstrap commit, as for McBylaws; the McBylaws legacy scan never reads a `prereg-MF-` file.
+> - **Item 3.** Unchanged (`lockLands` some; red evidence is existence of a new file): a cite of an OWED FE row is refused unless its lock lands with red evidence in the same commit.
+> - **Item 7 (D-9 b).** MF-24a: arm Q takes a queue path and an id prefix; the McFrontend queue is in the heading form; arm Q reads it at push and CI for a range that changes it or a surface path. The OWED-FE refusal is MF-34.
+
 ---
 
 ## §5. Register of rulings

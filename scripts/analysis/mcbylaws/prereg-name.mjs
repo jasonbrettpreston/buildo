@@ -18,3 +18,17 @@ export function parsePreregName(rel) {
 export function byNewest(a, b) {
   return b.k - a.k;
 }
+
+// docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 item 5 (dated note 2026-11-06): a McFrontend task numbers its
+// preregs the same way, prereg-<MF-id>-<k>.json in the same directory. PREREG_FORM_RE and parsePreregName above stay
+// McBylaws-only (the loop gate imports parsePreregName), so the loop's prereg join and arm C's McBylaws reading are unchanged.
+
+/** The McFrontend prereg file name form. Capture 1 = the task (MF-<digits>), capture 2 = k. */
+export const MF_PREREG_FORM_RE = /^scripts\/analysis\/bylaw-validation\/coa-expected\/prereg-(MF-\d+)-([1-9]\d*)\.json$/;
+
+/** {task, k} of a repo-relative path of the McFrontend form, or null. */
+export function parseFrontendPreregName(rel) {
+  if (typeof rel !== 'string') return null;
+  const m = MF_PREREG_FORM_RE.exec(rel);
+  return m ? { task: m[1], k: Number(m[2]) } : null;
+}

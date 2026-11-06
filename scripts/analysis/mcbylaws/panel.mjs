@@ -8,18 +8,22 @@
 // ids — the bootstrap commit needs no record. Fail closed: no task, an unreadable record and any throw are failures,
 // never a pass, and an empty parse is never "nothing to check". The pre-push summary (arm S) reads the same rules
 // through `recordOk` / `isSolePrereg` / `panelForPaths`, so its panel column cannot drift from this arm.
+// docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 (dated note 2026-11-06; D-2 b, D-3 a): a McFrontend surface
+// path (the policy's `frontend` list) also needs `docs/reports/panels/<MF-n>.json`, named by `McFrontend-Task`, in the
+// own tree; the own tree's policy must still list every such path (set membership). A McBylaws record never covers a
+// surface path; a mixed commit needs both records. The McBylaws block below is unchanged.
 
 import { PREREG_RE } from './cite-arms.mjs';
-import { parseMessage } from './cite-parse.mjs';
+import { parseFrontendMessage, parseMessage } from './cite-parse.mjs';
 import { readAt } from './git-util.mjs';
 import { allPaths } from './name-status.mjs';
-import { classify, POLICY_PATH, validatePolicy } from './paths.mjs';
+import { classify, isFrontend, POLICY_PATH, validatePolicy } from './paths.mjs';
 
 const CANNOT = 'FAIL:P:cannot-decide';
 const suffix = (sha) => (typeof sha === 'string' && sha !== '' ? `:${sha}` : '');
 const nonEmpty = (s) => typeof s === 'string' && s.length > 0;
 
-/** The record a panel verdict is read from; only `MB-<n>` reaches here (the trailer pattern is that tight). */
+/** The record a panel verdict is read from; only `MB-<n>` or `MF-<n>` reaches here (the trailer patterns are that tight). */
 export const recordPath = (task) => `docs/reports/panels/${task}.json`;
 
 /** P2: the record must be JSON naming this task, with a written plan and a written output. */
@@ -59,7 +63,30 @@ export function panelForPaths(args) {
   }
 }
 
-function run({ cwd, policy, entries, message, ownRev, sha }) {
+function run(args) {
+  return [...runBylaws(args), ...runFrontend(args)];
+}
+
+/** The McFrontend block: only when a surface path is in the commit. */
+function runFrontend({ cwd, policy, entries, message, ownRev, sha }) {
+  const paths = allPaths(entries);
+  const fe = paths.filter((p) => isFrontend(policy, p));
+  if (fe.length === 0) return [];
+  const text = readAt(cwd, ownRev, POLICY_PATH);
+  if (text === null) return [`${CANNOT}${suffix(sha)}`];
+  let live;
+  try { live = validatePolicy(JSON.parse(text)).policy; } catch { live = undefined; }
+  if (!live) return [`${CANNOT}${suffix(sha)}`];
+  if (!fe.every((p) => isFrontend(live, p))) return [`${CANNOT}${suffix(sha)}`];
+  const task = parseFrontendMessage(message).task;
+  if (task === null) return [`FAIL:P:no-record${suffix(sha)}`];
+  const record = readAt(cwd, ownRev, recordPath(task));
+  if (record === null) return [`FAIL:P:no-record${suffix(sha)}`];
+  return recordOk(record, task) ? [] : [`FAIL:P:bad-record${suffix(sha)}`];
+}
+
+/** The McBylaws block, unchanged. */
+function runBylaws({ cwd, policy, entries, message, ownRev, sha }) {
   const paths = allPaths(entries);
   const l23 = paths.filter((p) => classify(policy, p).layer23);
   if (l23.length === 0) return [];

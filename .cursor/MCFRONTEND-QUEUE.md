@@ -2,7 +2,7 @@
 
 This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-34** (ids are never reused). Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b): MF-34 is taken by the MF-24 split; next free id **MF-35**.
 
-Form copied from `.cursor/MCBYLAWS-QUEUE.md`: ten stages, status words DONE · RUNNING · WAITS · OPERATOR · HELD · LATER, lanes R rulings · G gates · E one-writer build · T tests · P product, reference practice `MF-nn (item) · McFrontend queue · lane X · stage N`. Arm Q today reads the McBylaws queue only (headings `**MB-nn ... - STATUS**` with `MB-nn@sha`); converting these tables to that form, and teaching arm Q a second queue, is MF-24.
+Form copied from `.cursor/MCBYLAWS-QUEUE.md`: ten stages, status words DONE · RUNNING · WAITS · OPERATOR · HELD · LATER, lanes R rulings · G gates · E one-writer build · T tests · P product, reference practice `MF-nn (item) · McFrontend queue · lane X · stage N`. Arm Q today reads the McBylaws queue only (headings `**MB-nn ... - STATUS**` with `MB-nn@sha`); converting these tables to that form, and teaching arm Q a second queue, is MF-24. Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b; MF-24a): the tables below are now in that form: one heading `**MF-nn <task> — <STATUS>** (lane)` per task, then one bullet that keeps every table cell (the status cell as it was, WAITS, Done-condition). A DONE heading cites `MF-nn@sha`: MF-01, MF-05 and MF-07 landed in the McFrontend Phase 0 documents commit a95246407, MF-09 in the McBylaws queue note 7f04f5b6a. Arm Q reads this file (prefix MF) at push and CI for a range that changes it or a surface path. Bullets never start with `- MF-` (that is the DONE-list form).
 
 Authority: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`. Principles: Spec 126 §0a. Register: Spec 135 (`docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`). Policy rules 16-20: Spec 128 §2.2a. Procedure: Spec 127 §3.2a.
 
@@ -16,49 +16,102 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 
 ## Phase 0: specs ruled and recorded (documents only)
 
-| Id | Task | Lane | Status | WAITS | Done-condition |
-|---|---|---|---|---|---|
-| MF-01 | Spec numbers 135/136 and folder | R | DONE 2026-11-04 (Q-MF1 a) | none | FE-08, FE-16 |
-| MF-02 | Record Q-FE, Q-MFP, doc-set, Q-MFS, Q-MF1..Q-MF6 and shared inputs as Spec 135 rows FE-01..FE-26 with Lock cells | R | RUNNING (stage 9: lands in the McFrontend Phase 0 documents commit) | none | Spec 135 in the repo; one lock per row |
-| MF-03 | Land the 126/127/128 amendments (R-row move DEFERRED, MF-31) | R | RUNNING (stage 9: lands in the McFrontend Phase 0 documents commit) | none | `spec-split-check --check` clean |
-| MF-04 | Spec 136 skeleton + `surface-rule-map.json` shape (the handbook stays in scratch until its generator, MF-18) | R | LATER | MF-03 | documents only |
-| MF-05 | Binding rule (Q-MF3), `variants[]` (Q-MF2), shared inputs: rulings recorded in the card | R | DONE 2026-11-04 | none | rows written by MF-02 |
-| MF-06 | Check decision-log accepts register 135; the Spec 128 §4.11 change list is written | G | LATER | MF-02 | list written; no code |
-| MF-07 | Operator rules Q-MF4 (external embeds, user-entry conflict rule, ad targeting consent) | R | DONE 2026-11-04 (operator "Q-MF4 a (this is great work)") | none | FE-20/21/22 ruled |
-| MF-08 | Operator rules the REPORT performance numbers | R | WAITS MF-33, OPERATOR | MF-33 | FE-04 lock unblocked. Operator "QMf5 a": measure first, then set |
-| MF-09 | Q-MB44 (operator "Mb-44 a"): MB-44 delivers the report as stored data; it is displayed only through the McFrontend REPORT renderer (MF-14). The McBylaws queue note lands with the Phase 0 documents (lane R) | R | DONE 2026-11-04 | none | McBylaws queue dated note under MB-44 |
+**MF-01 Spec numbers 135/136 and folder — DONE 2026-11-04 (Q-MF1 a) (MF-01@a95246407)** (R)
+  - Lane R. Status cell (kept): DONE 2026-11-04 (Q-MF1 a). Waits on: none. Done-condition: FE-08, FE-16.
+
+**MF-02 Record Q-FE, Q-MFP, doc-set, Q-MFS, Q-MF1..Q-MF6 and shared inputs as Spec 135 rows FE-01..FE-26 with Lock cells — RUNNING (stage 9: lands in the McFrontend Phase 0 documents commit)** (R)
+  - Lane R. Status cell (kept): RUNNING (stage 9: lands in the McFrontend Phase 0 documents commit). Waits on: none. Done-condition: Spec 135 in the repo; one lock per row.
+
+**MF-03 Land the 126/127/128 amendments (R-row move DEFERRED, MF-31) — RUNNING (stage 9: lands in the McFrontend Phase 0 documents commit)** (R)
+  - Lane R. Status cell (kept): RUNNING (stage 9: lands in the McFrontend Phase 0 documents commit). Waits on: none. Done-condition: `spec-split-check --check` clean.
+
+**MF-04 Spec 136 skeleton + `surface-rule-map.json` shape (the handbook stays in scratch until its generator, MF-18) — LATER** (R)
+  - Lane R. Status cell (kept): LATER. Waits on: MF-03. Done-condition: documents only.
+
+**MF-05 Binding rule (Q-MF3), `variants[]` (Q-MF2), shared inputs: rulings recorded in the card — DONE 2026-11-04 (MF-05@a95246407)** (R)
+  - Lane R. Status cell (kept): DONE 2026-11-04. Waits on: none. Done-condition: rows written by MF-02.
+
+**MF-06 Check decision-log accepts register 135; the Spec 128 §4.11 change list is written — LATER** (G)
+  - Lane G. Status cell (kept): LATER. Waits on: MF-02. Done-condition: list written; no code.
+
+**MF-07 Operator rules Q-MF4 (external embeds, user-entry conflict rule, ad targeting consent) — DONE 2026-11-04 (operator "Q-MF4 a (this is great work)") (MF-07@a95246407)** (R)
+  - Lane R. Status cell (kept): DONE 2026-11-04 (operator "Q-MF4 a (this is great work)"). Waits on: none. Done-condition: FE-20/21/22 ruled.
+
+**MF-08 Operator rules the REPORT performance numbers — WAITS MF-33, OPERATOR** (R)
+  - Lane R. Status cell (kept): WAITS MF-33, OPERATOR. Waits on: MF-33. Done-condition: FE-04 lock unblocked. Operator "QMf5 a": measure first, then set.
+
+**MF-09 Q-MB44 (operator "Mb-44 a"): MB-44 delivers the report as stored data; it is displayed only through the McFrontend REPORT renderer (MF-14). The McBylaws queue note lands with the Phase 0 documents (lane R) — DONE 2026-11-04 (MF-09@7f04f5b6a)** (R)
+  - Lane R. Status cell (kept): DONE 2026-11-04. Waits on: none. Done-condition: McBylaws queue dated note under MB-44.
 
 ## Phase 1: the report page (WAITS increment 2 closed AND freeze lifted by name, FE-01)
 
-| Id | Task | Lane | Status | WAITS | Done-condition |
-|---|---|---|---|---|---|
-| MF-33 | Measure first (Q-MF5 a): time the current report screen and the 25 golden lots on mobile and web; propose budget numbers for the operator to rule; ruled numbers go in a protected, tighten-only file | P | LATER. Dated note 2026-11-06 (M-246, prior text kept; Q-MFGO "a"): RUNNING (lane R/P, stage 1: plan and measure, no commits) | inc 2, freeze lift | measurements written; numbers proposed to the operator (MF-08) |
-| MF-10 | Retire old lineage names from the report schema seed; every field has a `source` in the closed binding set; binding-sources protected file | E | LATER | MF-05, inc 2 | 0 lineage refs; Rule 20 check fails an invented field |
-| MF-11 | Red tests first for the generator (row with no field; field with no row; hand edit) | T | LATER | MF-10 | red evidence under `docs/reports/red-evidence/` |
-| MF-12 | Goldens: structured trees, one per state per target (mobile, web, admin, pdf), incl. user_entry, user_entry_outranked and ad slot states | T | LATER | MF-11 | states x 4 targets = files |
-| MF-13 | Catalogue-to-report generator (seed via `seed-report-v2.mjs`); emits `headline` flag and labels from `content` | E | LATER | MF-11, MF-12 | generator `--check` green |
-| MF-14 | One REPORT renderer (mobile, web, admin, pdf); reads the declaration; throws on unknown field/status; no maths | E | LATER | MF-13 | all goldens green on all targets |
-| MF-15 | `surface-validate.mjs` (first gate, FE-13): S-gen, S-golden, S-parity, binding, closed-status, budget | G | LATER | MF-12 | planted bad descriptor exits 1 |
-| MF-16 | Locks: binding, no-maths, generated-only, honest, parity, budget, variants | T | LATER | MF-14, MF-15 | each RED then GREEN |
-| MF-17 | Gate arm C wiring (Spec 128 §4.11 items 1-6): 135 landed earlier; ID_RE; trailer; prereg-name/PREREG_RE; policy globs held then layer23 | G | LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b): items 1-5 and the D-2 loop-scope item run now as the early gate batch, before MF-10; item 6 (the policy flip) follows it | MF-16, freeze lift | commit citing an OWED FE row refused; waits for the named freeze lift; McBylaws owner review |
-| MF-18 | Spec 136 generator + `--check` | G | LATER | MF-17 | second run changes nothing |
-| MF-19 | User-input flow: declare the form, bind the input contract, render shared results with provenance and confidence by source; verified outranks user, newest user entry shown, history kept (FE-20); goldens for entry states | E | LATER | MF-14, McBylaws increment 6 re-evaluation capability for live results | goldens green; McBylaws does the re-evaluation |
-| MF-20 | Ad slots: contract, R-17 disclosure, R-34 outside cards and `variants[]`, declared-key targeting, never user-entered facts without consent (FE-22); goldens present/absent | E | LATER | MF-14 | ad-slot lock RED then GREEN |
-| MF-21 | In-product error count and budget breach shown on admin | E | LATER | MF-14, MB-35, MB-38 | `error-count.db.test.ts` green in a named CI step; on-screen part manual |
-| MF-22 | Product proof run: 25 lots vs answer key, all targets | P | LATER | MF-14, MB-38, MB-44 | `answer-key-e2e.db.test.ts` green in CI. No circular wait: MB-44 delivers data only and does not wait on MF-14 (Q-MB44 a) |
-| MF-23 | Executable canaries a-f (McFront proof) | T | LATER | MF-16 | each: planted defect in a temp copy exits non-zero, clean copy exits zero |
-| MF-24 | Arm Q second queue: parameterise path and prefix; DONE needs `MF-nn@sha`; DONE refused while its FE row is OWED | G | LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-9 b): split. MF-24a (parameterise path and prefix, convert this queue, DONE needs `MF-nn@sha`) runs in the early gate batch; the OWED-FE refusal is MF-34 | MF-17, freeze lift | waits for the named freeze lift; McBylaws owner review |
-| MF-34 | MF-24b (split from MF-24, D-9 b): arm Q refuses a DONE MF task whose FE row is still OWED | G | LATER | MF-17 item 1, MF-24a | a DONE MF task with an OWED FE row fails arm Q; McBylaws owner review |
-| MF-25 | Pre-commit/CI lines: surface-validate, generator, handbook `--check`; CI step for `*.db.test.ts` | G | LATER | MF-18, freeze lift | .husky is protected: panel arm P + APPROVED |
-| MF-26 | Extend spec-split-check citation arm to Spec 136 | G | LATER | MF-18 | citation to a missing line fails |
+**MF-33 Measure first (Q-MF5 a): time the current report screen and the 25 golden lots on mobile and web; propose budget numbers for the operator to rule; ruled numbers go in a protected, tighten-only file — RUNNING (stage 1: plan and measure; dated note 2026-11-06)** (P)
+  - Lane P. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; Q-MFGO "a"): RUNNING (lane R/P, stage 1: plan and measure, no commits). Waits on: inc 2, freeze lift. Done-condition: measurements written; numbers proposed to the operator (MF-08).
+
+**MF-10 Retire old lineage names from the report schema seed; every field has a `source` in the closed binding set; binding-sources protected file — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: MF-05, inc 2. Done-condition: 0 lineage refs; Rule 20 check fails an invented field.
+
+**MF-11 Red tests first for the generator (row with no field; field with no row; hand edit) — LATER** (T)
+  - Lane T. Status cell (kept): LATER. Waits on: MF-10. Done-condition: red evidence under `docs/reports/red-evidence/`.
+
+**MF-12 Goldens: structured trees, one per state per target (mobile, web, admin, pdf), incl. user_entry, user_entry_outranked and ad slot states — LATER** (T)
+  - Lane T. Status cell (kept): LATER. Waits on: MF-11. Done-condition: states x 4 targets = files.
+
+**MF-13 Catalogue-to-report generator (seed via `seed-report-v2.mjs`); emits `headline` flag and labels from `content` — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: MF-11, MF-12. Done-condition: generator `--check` green.
+
+**MF-14 One REPORT renderer (mobile, web, admin, pdf); reads the declaration; throws on unknown field/status; no maths — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: MF-13. Done-condition: all goldens green on all targets.
+
+**MF-15 `surface-validate.mjs` (first gate, FE-13): S-gen, S-golden, S-parity, binding, closed-status, budget — LATER** (G)
+  - Lane G. Status cell (kept): LATER. Waits on: MF-12. Done-condition: planted bad descriptor exits 1.
+
+**MF-16 Locks: binding, no-maths, generated-only, honest, parity, budget, variants — LATER** (T)
+  - Lane T. Status cell (kept): LATER. Waits on: MF-14, MF-15. Done-condition: each RED then GREEN.
+
+**MF-17 Gate arm C wiring (Spec 128 §4.11 items 1-6): 135 landed earlier; ID_RE; trailer; prereg-name/PREREG_RE; policy globs held then layer23 — RUNNING (items 1-5 and the D-2 loop-scope item in the early gate batch; item 6, the policy flip, follows; dated note 2026-11-06)** (G)
+  - Lane G. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b): items 1-5 and the D-2 loop-scope item run now as the early gate batch, before MF-10; item 6 (the policy flip) follows it. Waits on: MF-16, freeze lift. Done-condition: commit citing an OWED FE row refused; waits for the named freeze lift; McBylaws owner review.
+
+**MF-18 Spec 136 generator + `--check` — LATER** (G)
+  - Lane G. Status cell (kept): LATER. Waits on: MF-17. Done-condition: second run changes nothing.
+
+**MF-19 User-input flow: declare the form, bind the input contract, render shared results with provenance and confidence by source; verified outranks user, newest user entry shown, history kept (FE-20); goldens for entry states — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: MF-14, McBylaws increment 6 re-evaluation capability for live results. Done-condition: goldens green; McBylaws does the re-evaluation.
+
+**MF-20 Ad slots: contract, R-17 disclosure, R-34 outside cards and `variants[]`, declared-key targeting, never user-entered facts without consent (FE-22); goldens present/absent — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: MF-14. Done-condition: ad-slot lock RED then GREEN.
+
+**MF-21 In-product error count and budget breach shown on admin — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: MF-14, MB-35, MB-38. Done-condition: `error-count.db.test.ts` green in a named CI step; on-screen part manual.
+
+**MF-22 Product proof run: 25 lots vs answer key, all targets — LATER** (P)
+  - Lane P. Status cell (kept): LATER. Waits on: MF-14, MB-38, MB-44. Done-condition: `answer-key-e2e.db.test.ts` green in CI. No circular wait: MB-44 delivers data only and does not wait on MF-14 (Q-MB44 a).
+
+**MF-23 Executable canaries a-f (McFront proof) — LATER** (T)
+  - Lane T. Status cell (kept): LATER. Waits on: MF-16. Done-condition: each: planted defect in a temp copy exits non-zero, clean copy exits zero.
+
+**MF-24 Arm Q second queue: parameterise path and prefix; DONE needs `MF-nn@sha`; DONE refused while its FE row is OWED — RUNNING (MF-24a in the early gate batch; the OWED-FE refusal is MF-34; dated note 2026-11-06)** (G)
+  - Lane G. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-9 b): split. MF-24a (parameterise path and prefix, convert this queue, DONE needs `MF-nn@sha`) runs in the early gate batch; the OWED-FE refusal is MF-34. Waits on: MF-17, freeze lift. Done-condition: waits for the named freeze lift; McBylaws owner review.
+
+**MF-34 MF-24b (split from MF-24, D-9 b): arm Q refuses a DONE MF task whose FE row is still OWED — LATER** (G)
+  - Lane G. Status cell (kept): LATER. Waits on: MF-17 item 1, MF-24a. Done-condition: a DONE MF task with an OWED FE row fails arm Q; McBylaws owner review.
+
+**MF-25 Pre-commit/CI lines: surface-validate, generator, handbook `--check`; CI step for `*.db.test.ts` — LATER** (G)
+  - Lane G. Status cell (kept): LATER. Waits on: MF-18, freeze lift. Done-condition: .husky is protected: panel arm P + APPROVED.
+
+**MF-26 Extend spec-split-check citation arm to Spec 136 — LATER** (G)
+  - Lane G. Status cell (kept): LATER. Waits on: MF-18. Done-condition: citation to a missing line fails.
 
 ## Later: convert-on-touch
 
-| Id | Task | Lane | Status | WAITS | Done-condition |
-|---|---|---|---|---|---|
-| MF-30 | `/admin/surfaces` generated from the descriptor set (P2b): convert-on-touch, no fixed admin pilot (operator "Q-Mf6 a") | E | LATER | a product reason, MF-22 | per-surface scorecard |
-| MF-31 | Move R-01..R-34 into 135; reconcile and generate counts (Spec 126 §2 dated note) | R | LATER | a product reason | line-set diff clean |
-| MF-32 | Convert any other screen when touched, by the Spec 127 ladder; market-metrics is DASHBOARD (FE-12) | E | LATER | a product reason | scorecard green |
+**MF-30 `/admin/surfaces` generated from the descriptor set (P2b): convert-on-touch, no fixed admin pilot (operator "Q-Mf6 a") — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: a product reason, MF-22. Done-condition: per-surface scorecard.
+
+**MF-31 Move R-01..R-34 into 135; reconcile and generate counts (Spec 126 §2 dated note) — LATER** (R)
+  - Lane R. Status cell (kept): LATER. Waits on: a product reason. Done-condition: line-set diff clean.
+
+**MF-32 Convert any other screen when touched, by the Spec 127 ladder; market-metrics is DASHBOARD (FE-12) — LATER** (E)
+  - Lane E. Status cell (kept): LATER. Waits on: a product reason. Done-condition: scorecard green.
 
 Ids MF-27..MF-29 are unused.
 

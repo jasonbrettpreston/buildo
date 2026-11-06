@@ -3,7 +3,7 @@
 //
 // PURE: no git, no fs, no tty. The caller collects refs, policy, held/worktree counts and asks the operator.
 // A missing input is a failure line, never a quiet pass. Control characters in a path are escaped (R2).
-import { classify, matchesAny } from './paths.mjs';
+import { classify, isFrontend, matchesAny } from './paths.mjs';
 
 export const HARD_FLOOR = [
   '.husky/**', 'mcbylaws/**', '.github/workflows/test.yml', 'scripts/analysis/mcbylaws/**', 'src/tests/mcbylaws-*',
@@ -50,7 +50,8 @@ const head = (ref) => {
   if (ref.approvedSince) return `APPROVED present since ${sha} ${escapePath(date)}`;
   return 'HOLD       APPROVED absent';
 };
-const isProtected = (policy, p) => classify(policy, p).protected || matchesAny(HARD_FLOOR, p) || classify(policy, p).layer23;
+// MF-17 (D-2 b): a McFrontend surface path (the policy's optional `frontend` list) is shown as protected too.
+const isProtected = (policy, p) => classify(policy, p).protected || matchesAny(HARD_FLOOR, p) || classify(policy, p).layer23 || isFrontend(policy, p);
 const row = (p, c) => `  ${escapePath(p)}   +${c.added ?? 0} -${c.deleted ?? 0}${matchesAny(EXPECTED_ANSWERS, p) ? ' ** EXPECTED ANSWERS MOVED **' : ''}`;
 /** S4: a protected side is shown; a rename fills in the other side only when it too is protected. */
 const sides = (policy, c) => {

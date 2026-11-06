@@ -9,7 +9,7 @@
 
 import { pathExistsAt, readAt, commitsInRange, changesOfCommit } from './git-util.mjs';
 import { parseNameStatusZ, allPaths } from './name-status.mjs';
-import { classify, deadGlobs } from './paths.mjs';
+import { classify, deadGlobs, isFrontend } from './paths.mjs';
 
 const APPROVED = 'mcbylaws/APPROVED';
 const APPROVED_LINE = /^O-1 APPROVED \d{4}-\d{2}-\d{2}$/;
@@ -31,7 +31,8 @@ export function holdForCommit({ cwd, policy, entries, parentRev, sha, onDiskAppr
     // H4: the record lands alone.
     if (approvedTouched && paths.length > 1) out.push(`FAIL:H:approved-not-alone${suffix(sha)}`);
     // The hold does not apply to a change with no Layer 2/3 path (the operator's sole APPROVED commit, R-LE(b)).
-    if (!paths.some((p) => classify(policy, p).layer23)) return out;
+    // Spec 128 §4.11 item 6 / D-2 b: a McFrontend surface path (the policy's `frontend` list) is held the same way.
+    if (!paths.some((p) => classify(policy, p).layer23 || isFrontend(policy, p))) return out;
     // H2: present on disk but not in the parent tree is not present.
     if (!pathExistsAt(cwd, parentRev, APPROVED)) {
       out.push(`${onDiskApproved ? 'FAIL:H:not-in-head' : 'FAIL:H:no-approved'}${suffix(sha)}`);
@@ -77,7 +78,7 @@ export function holdForRange({ cwd, policy, base, tip }) {
 }
 
 /**
- * H7: every `layer23` glob matching zero tracked path and not listed in `pending_globs`.
+ * H7: every `layer23` (and `frontend`, D-2 b) glob matching zero tracked path and not listed in `pending_globs`.
  * @param {object} policy
  * @param {string[]} tracked
  * @returns {string[]}
@@ -86,7 +87,7 @@ export function deadGlobLines(policy, tracked) {
   try {
     if (!Array.isArray(tracked)) return [CANNOT];
     return deadGlobs(policy, tracked)
-      .filter((d) => d.list === 'layer23')
+      .filter((d) => d.list === 'layer23' || d.list === 'frontend')
       .map((d) => `FAIL:H:dead-glob:${d.glob}`);
   } catch {
     return [CANNOT];
