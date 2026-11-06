@@ -134,7 +134,8 @@ describe('Q-CONF a every result shows confidence beside each reading it rests on
   });
 
   it('R3 a row that reads footprint_max_m2 rests on the same reading and lists it once (gfa_max_m2)', () => {
-    const out = R.runRow('gfa_max_m2', base());
+    // the increment-1 formula under test, pinned off: the fixture carries increment-1 inputs only (operator D-5, the switch-on list)
+    const out = R.runRow('gfa_max_m2', base({ switches: { 'formula:gfa_max_m2:increment_2': 'off' } }));
     expect(out.status).toBe('computed');
     expect(readingsOf(out).map((s: Json) => [s.id, s.state, s.confidence])).toEqual([[SHAPE, 'off', swRow(SHAPE).confidence]]);
   });
