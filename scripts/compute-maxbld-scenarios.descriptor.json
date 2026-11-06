@@ -151,6 +151,8 @@
       "scripts/lib/compute/maxbld/rows.js",
       "scripts/lib/compute/maxbld/neighbour-facts.js",
       "scripts/lib/compute/maxbld/layer2-cells.js",
+      "scripts/lib/compute/maxbld/disclosures.js",
+      "scripts/lib/compute/maxbld/disclosure-families.json",
       "scripts/analysis/bylaw/evaluate.mjs",
       "scripts/analysis/bylaw/evaluate-l3.mjs",
       "scripts/analysis/bylaw/dsl.mjs",

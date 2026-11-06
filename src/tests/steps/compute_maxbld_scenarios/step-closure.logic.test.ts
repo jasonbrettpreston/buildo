@@ -31,6 +31,8 @@ const EXPECTED_LOCAL = [
   'scripts/lib/bylaw-resolution.js',
   'scripts/lib/compute/compute-maxbld-scenarios.js',
   'scripts/lib/compute/maxbld/catalogue.js',
+  'scripts/lib/compute/maxbld/disclosure-families.json', // MB-27 D-8 (R3-02 dated note 2026-11-06): the closed disclosure-family map (data)
+  'scripts/lib/compute/maxbld/disclosures.js', // MB-27 D-8: the pure disclosure-to-word carriage
   'scripts/lib/compute/maxbld/layer2-cells.js',
   'scripts/lib/compute/maxbld/neighbour-facts.js',
   'scripts/lib/compute/maxbld/rows.js',
@@ -161,7 +163,7 @@ function cteNames(sql: string): string[] {
 const descriptor = (): Json => JSON.parse(read(DESCRIPTOR));
 
 describe('MB-31 compute closure, R-KF / R-KT', () => {
-  it('walks from the step entry to exactly the nine Layer 3 files and the five Layer 2 files of withNotAbove (MB-27 R2)', () => {
+  it('walks from the step entry to exactly the eleven Layer 3 files (MB-27 D-8: the disclosure carriage) and the five Layer 2 files of withNotAbove (MB-27 R2)', () => {
     const graph = walk(ENTRY);
     expect(graph.missing).toEqual([]);
     expect(graph.local).toEqual(EXPECTED_LOCAL);

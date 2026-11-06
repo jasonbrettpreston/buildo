@@ -479,6 +479,7 @@ function permissionDisclosuresOf(parcelRow, storedLot, storedWords, env) {
 module.exports = {
   LEGAL_USER_INPUT, RESULT_COLUMNS, COLUMN_SQL, COLUMN_KINDS, STORED_RESULT_FIELDS, LOGICAL_RESULT_FIELDS, rowShaMismatchSql,
   // withNotAbove: ROOF-5 recomputed on read, exported for the Layer 3 reader (operator "Q-r2 a")
-  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, traceOption, logicalRowsOf, withNotAbove,
+  // permissionDisclosuresOf: the M-169 permission disclosures recomputed on read, exported for the Layer 3 carriage (MB-27 D-8)
+  makeEnv, seedDictionaries, materializeBatch, classLotFor, traceResult, traceOption, logicalRowsOf, withNotAbove, permissionDisclosuresOf,
   PermissionRecomputeStaleError, PermissionRecomputeDriftError, PermissionDisclosureError,
 };

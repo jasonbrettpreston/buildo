@@ -1,0 +1,14 @@
+{
+ "$comment": "MB-27 switch-on D-8 (operator \"all recommended\" on D-1..D-9; OQ-1..OQ-3 \"all recommended\"): the closed map from a Phase 2 disclosure family to the one Layer 3 flag word it carries. A base-row disclosure (Layer 2's traceResult, recomputed on read) is matched by the start of its sentence; the first family that matches decides. carry null holds the family to the report (M-35 alternate compliance paths, OQ-2). A sentence of no listed family carries unmapped_word (fail closed, never silence). A stale stamp carries stale_word and nothing is recomputed (D-6 a, guard (i)). Permission disclosures (Layer 2's permissionDisclosuresOf) carry permission.closure_word when the sentence starts with permission.closure_starts_with, else permission.word. The sentences stay in the trace and the report.",
+ "schema": "l3-disclosure-families-v1",
+ "stale_word": "phase2_disclosures_not_current",
+ "unmapped_word": "phase2_disclosure_unmapped",
+ "families": [
+  { "id": "M-35", "starts_with": ["alternate compliance path under "], "carry": null },
+  { "id": "M-406", "starts_with": ["If the lot has changed since "], "carry": "frontage_assumed_unchanged_since_2013" },
+  { "id": "10.20.40.20(2)", "starts_with": ["On RD lots in the frontage band, the optional one-storey extension", "On RD lots needing more than "], "carry": "rd_extension_not_modelled" },
+  { "id": "10.20.40.70(4)", "starts_with": ["One side yard may be up to "], "carry": "side_yard_shift_permitted" },
+  { "id": "rear_extension", "starts_with": ["In this area the one-storey rear extension counts"], "carry": "rear_extension_not_modelled" }
+ ],
+ "permission": { "word": "permission_condition_assumed_not_holding", "closure_starts_with": "Exception ", "closure_word": "exception_type_list_closed" }
+}

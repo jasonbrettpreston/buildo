@@ -20,7 +20,10 @@ const cat = require('./maxbld/catalogue.js');
 const cellsLib = require('./maxbld/layer2-cells.js');
 const factsLib = require('./maxbld/neighbour-facts.js');
 // MB-27 R2 (operator "Q-r2 a"): ROOF-5's word is Layer 2's own rule, recomputed on read through its withNotAbove, never re-derived here
-const { withNotAbove } = require('../bylaw-materialize.js');
+const { withNotAbove, traceResult, permissionDisclosuresOf } = require('../bylaw-materialize.js');
+const { buildLotVector } = require('../bylaw-resolution.js');
+const disclosuresLib = require('./maxbld/disclosures.js');
+const DISCLOSURE_FAMILIES = require('./maxbld/disclosure-families.json');
 const { runRow, runAllRows } = rows;
 
 /** The eight standalone parameterised reads (contract C5). Bind order: $1 = parcel ids (int[]), $2 = radius / depth (cells, options: $2 = class, $3 = structure). */
@@ -168,6 +171,8 @@ function buildParcelRows(parcelInput, seeds, meta) {
     seeds,
     l2: p.l2 || {},
     l2Options: p.l2Options || {},
+    l2Flags: p.l2Flags || {},
+    permFlags: p.permFlags || [],
     perm: p.perm || {},
     geometry: p.geometry || {},
     flags: p.flags || {},
@@ -215,6 +220,29 @@ function censusOf(rows, U) {
   return counts;
 }
 
+const stamp8 = (x) => String(x || '').slice(0, 8);
+
+/**
+ * MB-27 D-8 (R3-02 dated note 2026-11-06; D-6 a, guard (i)): the closed disclosure words of one parcel and one building type.
+ * Recomputed on read by Layer 2's own functions (traceResult per read target, permissionDisclosuresOf), only when the stored
+ * stamp is this tree's Layer 1 input (`lookups.layer1Env` versions) and the parcels row is at hand; otherwise every read
+ * target carries the closed stale word and nothing is recomputed (fail closed, never silence). A gated lot discloses nothing.
+ */
+function disclosureWords(source, bt, targets, L) {
+  const lot = source.lot || {};
+  if (lot.lot_gate !== null && lot.lot_gate !== undefined) return { l2Flags: {}, permFlags: [] };
+  const env = L.layer1Env;
+  const current = Boolean(env && source.parcel && env.versions
+    && stamp8(lot.table_version) === stamp8(env.versions.table_version) && stamp8(lot.evaluator_version) === stamp8(env.versions.evaluator_version));
+  if (!current) return disclosuresLib.carriedWords({ targets, stale: true }, DISCLOSURE_FAMILIES);
+  const { lot: vector } = buildLotVector(source.parcel, env.lotEnv);
+  const base = {};
+  for (const t of targets) base[t] = traceResult(vector, bt.structure, t, bt.class, env).disclosures;
+  if (!source.permitted_by_class) throw new Error(`disclosureWords: parcel ${source.parcel_id} has no stored permission words`);
+  const permission = permissionDisclosuresOf(source.parcel, lot, source.permitted_by_class, env)[bt.class];
+  return disclosuresLib.carriedWords({ targets, base, permission }, DISCLOSURE_FAMILIES);
+}
+
 /** One source row (parcel + its eight reads; `options` from MB-27 R2) -> the parcel rows plus the census the checks read. */
 function oneParcel(source, lookups) {
   const L = lookups || {};
@@ -240,10 +268,13 @@ function oneParcel(source, lookups) {
       ? cellsLib.decodePermission(source.lot || {}, bt.class, { classes: l2Classes, permissionKeys: L.permissionKeys, texts: L.texts })
       : {};
     const g = source.geometry || {};
+    const words = l2Classes.includes(bt.class) ? disclosureWords(source, bt, Object.keys(decoded[bt.id]), L) : { l2Flags: {}, permFlags: [] };
     const parcelInput = {
       parcel_id: source.parcel_id,
       l2: decoded[bt.id],
       l2Options: options[bt.id],
+      l2Flags: words.l2Flags,
+      permFlags: words.permFlags,
       perm,
       geometry: {
         lot_frontage_m: g.frontage_m,
@@ -355,3 +386,4 @@ module.exports.CHECKS = CHECKS;
 module.exports.checks = CHECKS;
 module.exports.CLOSED_STATUSES = CLOSED_STATUSES;
 module.exports.populationIds = populationIds;
+module.exports.disclosureWords = disclosureWords;

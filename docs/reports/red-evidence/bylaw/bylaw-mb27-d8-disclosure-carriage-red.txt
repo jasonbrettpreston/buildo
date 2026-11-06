@@ -1,0 +1,9 @@
+MB-27 switch-on D-8 red evidence: src/tests/steps/compute_maxbld_scenarios/disclosure-carriage.logic.test.ts run on tip 148830f4d with the family map and the pure module present and the reader unchanged (rows.js, compute-maxbld-scenarios.js and the bylaw-materialize.js export as committed). 5 of 6 red; DC-1 data test is green on the data alone.
+   × DC-1: the closed family map (data) and the pure carriage > a stale stamp puts the stale word on every read target and on the permission row, recomputing nothing 2ms
+   × DC-2: the lock on the 25 golden cases (increment 2 is not green until this is green) > no golden disclosure is of an unlisted family, and every carried word comes from a Layer 2 sentence of its family 0ms
+   × DC-2: the lock on the 25 golden cases (increment 2 is not green until this is green) > every carried word on a target appears in the flags of every row that reads that target 0ms
+   × DC-2: the lock on the 25 golden cases (increment 2 is not green until this is green) > footprint and the headline gfa carry exactly the named-family words of the map (24 cells on 12 lots); M-35 never 0ms
+   × DC-2: the lock on the 25 golden cases (increment 2 is not green until this is green) > permission disclosures: none on the 25 for the detached house, so the permission row carries no word 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  5 failed | 1 passed (6)

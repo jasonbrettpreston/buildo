@@ -242,11 +242,16 @@ function cellsOfRun(inputs, run) {
 /**
  * The row's input flags in a run: its declared `input_flags`, plus the Phase 2 option-row disclosures of that run
  * (`inputs.l2Options.flags`, ROOF-5 from Layer 2's own withNotAbove) on the key `l2(<target>)`, so readL2 carries them
- * into the value (evaluate-l3.mjs is not edited).
+ * into the value (evaluate-l3.mjs is not edited). MB-27 D-8 (R3-02 dated note 2026-11-06): the closed words of the Phase 2
+ * base-row disclosures (`inputs.l2Flags`, target -> words, recomputed on read by Layer 2) join on the same key in EVERY run.
  */
 function inputFlagsOfRun(row, inputs, run) {
   const out = {};
   for (const [k, words] of Object.entries(isObject(row.input_flags) ? row.input_flags : {})) out[k] = toList(words).slice();
+  for (const [target, list] of Object.entries(isObject(inputs.l2Flags) ? inputs.l2Flags : {})) {
+    const key = `l2(${target})`;
+    out[key] = unique([...toList(out[key]), ...toList(list)]);
+  }
   const opts = isObject(inputs.l2Options) ? inputs.l2Options : {};
   const words = run !== BASE_RUN && isObject(opts.flags) && isObject(opts.flags[run]) ? opts.flags[run] : {};
   for (const [target, list] of Object.entries(words)) {
@@ -383,7 +388,8 @@ function computeRowIn(row, inputs, runAll, runName) {
     const code = typeof p.code === 'number' ? p.code : CODES.unknown;
     const trace = [{ kind: 'permission', code, gate: p.gate ?? null }];
     const split = splitStatus(permissionTerminated(code, p.gate, p, row.status_map));
-    return result(row, split.status, { reason: split.reason, trace, switches: consulted });
+    // MB-27 D-8: the closed words of the permission disclosures (Layer 2 permissionDisclosuresOf) travel with the permission row
+    return result(row, split.status, { reason: split.reason, trace, switches: consulted, flags: toList(inputs.permFlags) });
   }
 
   if (row.form !== 'expr' || typeof row.expression !== 'string') return notEvaluated(row, HOOKS_MISSING, { switches: consulted });
