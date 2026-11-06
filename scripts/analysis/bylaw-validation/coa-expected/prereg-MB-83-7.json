@@ -1,0 +1,114 @@
+{
+ "$comment": "M-321 pre-registration, task MB-83, prereg 7 (R-MA; prereg-MB-83-6.json is batch bb), the loop round that lands decision batch 2026-11-06-batch-bc (CHAT-230, the ONE increment-3 batch of decision list DL-1 a, re-cut on the tip after the Spec 131 split of MB-79 (u-prep)): 43 decisions (the seventeen answers Q1, Q2, Q6, Q9, Q9-1, Q9-2, Q10, Q11, Q12, Q12-S, Q-D2, Q13, Q14, Q-287E, Q-287E2, LQ-1, LQ-2; Q5 b; Q8 a with Q-LC18 a; the D-8 clause for M-435; and the decision list options DL-1..DL-22) recorded as seven new Spec 69a rows (M-494..M-500), dated notes on M-160, M-182, M-190, M-201, M-205, M-344, M-386, M-397, M-416, M-435, M-482 and M-492, the LC-18 dated note in Spec 131, and six closed flag words in scripts/lib/compute/maxbld/disclosure-families.json (DL-16 a). One named re-pin (RP-INC3R, approved by the operator 2026-11-06): the seven rows add seven rules to Spec 133 and its rule map (523 to 530), hashed into the Layer 2 table_version (bd533bfd5489 to a659c942d67e; body_sha256 and evaluator_version unchanged). Measured on the tip: coa-scorecard --check gives totals equal on the 172 and 4d sets before and after the pin. Prepared as round 83 (round 82 is prereg-MB-79-8.json). It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure unchanged, the floors file unchanged and the floors check OK. Two existing test assertions change, both named below: the decision-log decisions count 801 to 844, and the pinned candidate list of the mcbylaws-conflicts --text test (operator B-4 'yes', 2026-11-06; the Q-K4P a form). rules[] names the same three rules as prereg-MB-83-6.json.",
+ "schema": "coa-round-prereg-v1",
+ "round": 83,
+ "task": "MB-83",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-IL"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-83; ~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md (DL-1..DL-22); ~/Buildo-scratch/mcbylaws/inc3/open-questions.md (2026-11-06 ruling; B-4); ~/Buildo-scratch/p2close/CARD-x287E-parking-portion.md; ~/Buildo-scratch/mcbylaws/inc2/open-questions.md (LQ-1, LQ-2, D-8); drafts ~/Buildo-scratch/mcbylaws/inc3/R-batch/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version bd533bfd5489 -> a659c942d67e (RP-INC3R)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version bd533bfd5489 -> a659c942d67e (RP-INC3R)",
+  "expected-172.json and expected-4d.json commit and inputs.table_version bd533bfd5489 -> a659c942d67e through coa-scorecard.mjs --pin, totals equal (RP-INC3R)",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version bd533bfd5489 -> a659c942d67e, the G-STOR re-bind (RP-SW2 a)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 801,
+   "to": 844,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "the batch 2026-11-06-batch-bc decisions CHAT-230.* (43 new decisions; operator answers in ~/Buildo-scratch/mcbylaws/inc3/open-questions.md)"
+  },
+  {
+   "file": "src/tests/mcbylaws-conflicts.logic.test.ts",
+   "line": 86,
+   "row": "--text prints one candidate id per line",
+   "from": "TEN + M-482",
+   "to": "TEN + M-160, M-482, M-499, M-500 (in numeric order)",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104); the Q-K4P a form used for M-482",
+   "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer B-4 (2026-11-06)\": \"yes\"; any other change to this assertion stops"
+  }
+ ]
+}
