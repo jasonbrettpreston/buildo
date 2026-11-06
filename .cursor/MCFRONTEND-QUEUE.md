@@ -71,6 +71,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 
 **MF-17 Gate arm C wiring (Spec 128 §4.11 items 1-6): 135 landed earlier; ID_RE; trailer; prereg-name/PREREG_RE; policy globs held then layer23 — RUNNING (items 1-5 and the D-2 loop-scope item in the early gate batch; item 6, the policy flip, follows; dated note 2026-11-06)** (G)
   - Lane G. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b): items 1-5 and the D-2 loop-scope item run now as the early gate batch, before MF-10; item 6 (the policy flip) follows it. Waits on: MF-16, freeze lift. Done-condition: commit citing an OWED FE row refused; waits for the named freeze lift; McBylaws owner review.
+  - Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b, D-3 a): items 1-5 and the loop-scope item landed (407b9eaef, folds 96a481c2c); item 6, the policy flip, lands with the panel record `docs/reports/panels/MF-17.json`, whose McBylaws (MB-67 lane) owner sign-off is PENDING OPERATOR. MF-17 reads DONE only after that sign-off.
 
 **MF-18 Spec 136 generator + `--check` — LATER** (G)
   - Lane G. Status cell (kept): LATER. Waits on: MF-17. Done-condition: second run changes nothing.

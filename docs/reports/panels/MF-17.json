@@ -1,0 +1,44 @@
+{
+  "task": "MF-17",
+  "item": "Spec 128 §4.11 items 1-5, the D-2 loop-scope item, MF-24a, and item 6 (the policy flip, C2)",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-06",
+  "head": "96a481c2cb53da1d5921687247a51499cb2ef42a",
+  "commits_reviewed": [
+    "b1bc91182",
+    "407b9eaef",
+    "96a481c2c",
+    "C2 (this commit: mcbylaws/protected-paths.json frontend, pending, protected)"
+  ],
+  "cards": [
+    "Q-MFGO \"a\" (2026-11-06, ~/Buildo-scratch/mcfrontend/phase1/open-questions.md)",
+    "Opening decision list D-1..D-9 \"yes. proceed\" (2026-11-06, same file): D-1 b, D-2 b, D-3 a, D-4 a, D-9 b"
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/phase1/MF-17/plan.md on the map ~/Buildo-scratch/mcfrontend/phase1/opening-map.md; panel inputs and verdicts in ~/Buildo-scratch/mcfrontend/phase1/MF-17/plan-panel/, folds F1-F12 and refutations R1-R5 in plan-panel/fold.md. Seats: regression-guardian PASS-WITH-FOLDS, grounded-reviewer PASS-WITH-FOLDS, ds-spec PASS-WITH-FOLDS, ds-security FAIL adjudicated to PASS-WITH-FOLDS after F4-F8, ds-error-paths folded, ds-idempotency (reasoner hit its output cap; re-run --fast, no new blocker).",
+  "output": "OUTPUT (stage 8): regression-guardian PASS-WITH-FOLDS (40 McBylaws scenarios byte-identical, gate at b1bc91182 vs 407b9eaef, base and C2 policy, with and without Spec 135); grounded-reviewer PASS (F1-F12, R1-R5 verified; no MB verdict change, no frontend bypass); ds-spec, ds-security, ds-idempotency, ds-error-paths PASS-WITH-FOLDS, folded in 96a481c2c (red first). Existing McBylaws gate tests unedited: 61 files / 1662 tests green before and after; policy-reading set after C2 65 files / 2036. Re-measure after C2 (throwaway worktree): an MF-10 surface change with McFrontend-Task: MF-10, prereg-MF-10-1 (FE-13) and docs/reports/panels/MF-10.json gives GATE OK at --staged, --commit-msg and a real commit with all hooks, and GATE OK at --ci; the loop gate reports out of scope; the same change under McBylaws-Task: MB-27 gives FAIL:C:no-mf-task and FAIL:P:no-record; citing OWED FE-02 gives FAIL:C:owed:FE-02.",
+  "seats": [
+    "regression-guardian",
+    "grounded-reviewer",
+    "ds-spec",
+    "ds-security",
+    "ds-idempotency",
+    "ds-error-paths"
+  ],
+  "verdict": "PASS",
+  "mb67_owner_signoff": "PENDING OPERATOR: no MB-67 lane owner seat exists in this lane (D-3 a requires McBylaws owner sign-off; Q-MFGO a: gate items each with McBylaws owner review). The record is evidence; the gate does not read it for these commits.",
+  "blockers": [],
+  "followups": [
+    "O1 landing-exceptions.json and protected-paths.json are protected, not layer23 (MB-67 owner)",
+    "O2 loop loadLayer23 reads the working-tree policy",
+    "O3 push prompt uses the last ref policy on a multi-ref push",
+    "O4 statusOf reads an unstatused row as RULED",
+    "O5 red evidence is existence-only",
+    "O6 a revert of a surface commit is judged at push only",
+    "O7 summary panel/rules columns are layer23-only (display)",
+    "O8 MF-02/MF-03 headings read RUNNING though the Phase 0 commit landed",
+    "MF-34 (MF-24b): the OWED-FE refusal in arm Q",
+    "promises tool ROOT_SOURCE still reads the McBylaws queue only"
+  ],
+  "evidence": "~/Buildo-scratch/mcfrontend/phase1/MF-17/ (plan.md, plan-panel/, output-panel/, remeasure-after-C2.txt); docs/reports/red-evidence/MF-17/"
+}

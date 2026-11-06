@@ -419,3 +419,33 @@ describe('gate CLI identity: MB commits and MB-only ranges', () => {
     }
   });
 });
+
+describe('C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions', () => {
+  const real = JSON.parse(fs.readFileSync(path.join(REAL_ROOT, 'mcbylaws/protected-paths.json'), 'utf8'));
+  const tracked = spawnSync('git', ['ls-files', '-z'], { cwd: REAL_ROOT, encoding: 'utf8' }).stdout.split('\0').filter(Boolean);
+  it('the surface globs are frontend, never layer23; by-law code is never frontend', () => {
+    expect(validatePolicy(real).ok).toBe(true);
+    for (const p of [SURF, 'src/lib/surfaces/generated/x.ts', 'src/tests/surfaces/mcfrontend-status.infra.test.ts']) {
+      expect(isFrontend(real, p)).toBe(true);
+      expect(classify(real, p).layer23).toBe(false);
+    }
+    for (const p of [L2, 'scripts/seeds/bylaw/switchboard.json', 'src/app/page.tsx', 'docs/specs/02-web-admin/135_mcfrontend_decisions_register.md']) {
+      expect(isFrontend(real, p)).toBe(false);
+    }
+  });
+  it('Spec 135, the golden dir and the McFrontend queue are protected; the empty test dir is pending; no glob is dead', () => {
+    for (const p of ['docs/specs/02-web-admin/135_mcfrontend_decisions_register.md', 'src/tests/fixtures/surfaces/report/web.json', MF_QUEUE, '.cursor/MCBYLAWS-QUEUE.md']) {
+      expect(classify(real, p).protected).toBe(true);
+    }
+    expect(classify(real, SURF).protected).toBe(false);
+    expect(real.pending_globs).toContain('src/tests/surfaces/**');
+    expect(deadGlobLines(real, tracked)).toEqual([]);
+  });
+  it('the McBylaws loop gate does not classify a surface path (it reads layer23 only)', async () => {
+    const { makeClassifier, loadLayer23 } = await import('../../scripts/analysis/mcbylaws-loop/loop-oracle.mjs');
+    const loop = makeClassifier(loadLayer23(REAL_ROOT));
+    expect(loop(SURF)).toBeNull();
+    expect(loop('src/lib/surfaces/generated/x.ts')).toBeNull();
+    expect(loop(L2)).toBe('code');
+  });
+});

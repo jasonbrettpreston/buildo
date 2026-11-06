@@ -1,0 +1,5 @@
+C2 (MF-17 item 6, the policy flip): RED run of the real-policy locks before the policy edit, base 407b9eaef, 2026-11-06.
+Result: 2 failed, 1 passed (the loop lock holds before and after: the loop reads layer23 only).
+ × src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > the surface globs are frontend, never layer23; by-law code is never frontend
+ × src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > Spec 135, the golden dir and the McFrontend queue are protected; the empty test dir is pending; no glob is dead
+ ✓ src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > the McBylaws loop gate does not classify a surface path (it reads layer23 only)

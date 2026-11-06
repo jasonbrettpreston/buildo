@@ -1,8 +1,9 @@
 {
-  "$comment": "McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only.",
+  "$comment": "McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only. frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not.",
   "pending_globs": [
     "scripts/lib/compute/bylaw-*.js",
-    "scripts/lib/compute/maxbld-*.js"
+    "scripts/lib/compute/maxbld-*.js",
+    "src/tests/surfaces/**"
   ],
   "layer23": [
     "scripts/analysis/bylaw/**",
@@ -14,6 +15,11 @@
     "src/tests/**/bylaw*",
     "scripts/lib/compute/bylaw-*.js",
     "scripts/lib/compute/maxbld-*.js"
+  ],
+  "frontend": [
+    "scripts/surfaces/**",
+    "src/lib/surfaces/**",
+    "src/tests/surfaces/**"
   ],
   "protected": [
     "scripts/seeds/bylaw/layer3-catalogue.json",
@@ -49,7 +55,10 @@
     "src/tests/fixtures/mcbylaws-gate/**",
     "docs/reports/generated/precommit-budget.json",
     "docs/reports/loop-records/**",
-    "mcbylaws/landing-exceptions.json"
+    "mcbylaws/landing-exceptions.json",
+    "docs/specs/**/135_mcfrontend_decisions_register.md",
+    "src/tests/fixtures/surfaces/**",
+    ".cursor/MCFRONTEND-QUEUE.md"
   ],
   "literal_scope": [
     "scripts/analysis/bylaw/**/*.mjs",
