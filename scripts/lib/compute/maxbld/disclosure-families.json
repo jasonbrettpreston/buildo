@@ -1,5 +1,5 @@
 {
- "$comment": "MB-27 switch-on D-8 (operator \"all recommended\" on D-1..D-9; OQ-1..OQ-3 \"all recommended\"): the closed map from a Phase 2 disclosure family to the one Layer 3 flag word it carries. A base-row disclosure (Layer 2's traceResult, recomputed on read) is matched by the start of its sentence; the first family that matches decides. carry null holds the family to the report (M-35 alternate compliance paths, OQ-2). A sentence of no listed family carries unmapped_word (fail closed, never silence). A stale stamp carries stale_word and nothing is recomputed (D-6 a, guard (i)). Permission disclosures (Layer 2's permissionDisclosuresOf) carry permission.closure_word when the sentence starts with permission.closure_starts_with, else permission.word. The sentences stay in the trace and the report.",
+ "$comment": "MB-27 switch-on D-8 (operator \"all recommended\" on D-1..D-9; OQ-1..OQ-3 \"all recommended\"): the closed map from a Phase 2 disclosure family to the one Layer 3 flag word it carries. A base-row disclosure (Layer 2's traceResult, recomputed on read) is matched by the start of its sentence; the first family that matches decides. carry null holds the family to the report (M-35 alternate compliance paths, OQ-2). A sentence of no listed family carries unmapped_word (fail closed, never silence). A stale stamp carries stale_word and nothing is recomputed (D-6 a, guard (i)). Permission disclosures (Layer 2's permissionDisclosuresOf) carry permission.closure_word when the sentence starts with permission.closure_starts_with, else permission.word. The sentences stay in the trace and the report. Increment 3 (decision list DL-16 a, batch 2026-11-06-batch-bc): one closed word per new family, M-435, M-497, M-397, M-190, M-472 and R4-05, each starts_with the wording the ruling itself gives; the Phase 2 or Layer 3 emit of each sentence is built by MB-27.",
  "schema": "l3-disclosure-families-v1",
  "stale_word": "phase2_disclosures_not_current",
  "unmapped_word": "phase2_disclosure_unmapped",
@@ -8,7 +8,13 @@
   { "id": "M-406", "starts_with": ["If the lot has changed since "], "carry": "frontage_assumed_unchanged_since_2013" },
   { "id": "10.20.40.20(2)", "starts_with": ["On RD lots in the frontage band, the optional one-storey extension", "On RD lots needing more than "], "carry": "rd_extension_not_modelled" },
   { "id": "10.20.40.70(4)", "starts_with": ["One side yard may be up to "], "carry": "side_yard_shift_permitted" },
-  { "id": "rear_extension", "starts_with": ["In this area the one-storey rear extension counts"], "carry": "rear_extension_not_modelled" }
+  { "id": "rear_extension", "starts_with": ["In this area the one-storey rear extension counts"], "carry": "rear_extension_not_modelled" },
+  { "id": "M-435", "starts_with": ["the 0.45 m blank-wall reduction"], "carry": "blank_wall_side_yard_permitted" },
+  { "id": "M-497", "starts_with": ["a portion with a parking space may be "], "carry": "parking_space_portion_rule_not_modelled" },
+  { "id": "M-397", "starts_with": ["would need an FSI variance"], "carry": "fsi_variance_needed" },
+  { "id": "M-190", "starts_with": ["reading awaiting expert check"], "carry": "rm_reading_awaiting_expert_check" },
+  { "id": "M-472", "starts_with": ["mechanical area: not yet stored"], "carry": "mechanical_area_not_yet_stored" },
+  { "id": "R4-05", "starts_with": ["Site conditions (groundwater, depth) are not modelled"], "carry": "basement_site_conditions_not_modelled" }
  ],
  "permission": { "word": "permission_condition_assumed_not_holding", "closure_starts_with": "Exception ", "closure_word": "exception_type_list_closed" }
 }

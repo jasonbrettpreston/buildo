@@ -2016,6 +2016,34 @@
       "section": "fam-general"
     },
     {
+      "id": "m.494",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.495",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.496",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.497",
+      "section": "fam-900"
+    },
+    {
+      "id": "m.498",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.499",
+      "section": "fam-40.70"
+    },
+    {
+      "id": "m.500",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.15",
       "section": "fam-general"
     },
@@ -7285,6 +7313,83 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-493**"
+      }
+    },
+    {
+      "id": "M-494",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.494",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-494**"
+      }
+    },
+    {
+      "id": "M-495",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.495",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-495**"
+      }
+    },
+    {
+      "id": "M-496",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.496",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-496**"
+      }
+    },
+    {
+      "id": "M-497",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.497",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-497**"
+      }
+    },
+    {
+      "id": "M-498",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.498",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-498**"
+      }
+    },
+    {
+      "id": "M-499",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.499",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-499**"
+      }
+    },
+    {
+      "id": "M-500",
+      "kind": "m-row",
+      "status": "owed",
+      "handbook_line": "m.500",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-500**"
       }
     },
     {

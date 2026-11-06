@@ -1,0 +1,364 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-11-06-batch-bc/2026-11-06-batch-bc.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-11-06-batch-bc",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "Q1a",
+    "record": "operator chat 2026-11-03 to 2026-11-06 (the increment-3 answers)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-11-06-batch-bc/2026-11-06-batch-bc.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-230.Q1",
+      "question": "M-494: increment 3 adds the building type detached_houseplex; every increment-1 and increment-2 row runs on the houseplex class rows, plus the unit and bedroom rows; depends on D5.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q1 (2026-11-03)\"): \"Q1a\". Rule text: (a) Increment 3 adds the building type detached_houseplex: every increment-1 and increment-2 row runs on the houseplex class rows, plus the new unit and bedroom rows. It depends on the houseplex roof option rows (D5) on the increment-3 Layer 2 night.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q1a"
+    },
+    {
+      "id": "CHAT-230.Q2",
+      "question": "M-495: each Layer 3 catalogue row's building_type becomes a list; a class's Phase 2 rows are read through the building-types table; increment-1 results unchanged.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q2 (2026-11-03)\"): \"Q2a\". Rule text: (a) One row per field: each row's building_type becomes a list, and the class's Phase 2 rows are read through the building-types table (the houseplex row gets its own units). Increment-1 results must stay unchanged; the loop shows it.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q2a"
+    },
+    {
+      "id": "CHAT-230.Q6",
+      "question": "M-160: the houseplex envelope is evaluated at 4 units; a 2- or 3-unit exception envelope more permissive than the 4-unit one answers not_evaluated, named as a finding.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q6 (2026-11-03)\"): \"Q6 a\". Rule text: (a) as confirmed: Evaluate the envelope at 4 units: one envelope for 2-4 (M-160). The 6-unit envelope is its own class, in the sixplex increment (5-6 class, R3-11 not_modelled until then). Unit count and unit size are presentation (Q8, Q9). Where an exception makes a 2- or 3-unit houseplex more permissive than the 4-unit one, the result is not_evaluated, \"unit count below the class count Phase 2 evaluated (M-160)\", named as a finding. On the 25 that hits no lot: on A0399 (x23) the 4-unit envelope is the larger one (0.6 m side yard against 1.2 m; duplex/triplex lot minimums of 555/610 m2 against the lot's 521.81 m2).",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q6 a"
+    },
+    {
+      "id": "CHAT-230.Q9",
+      "question": "M-496: a research card for the circulation share and the minimum livable unit size, ruled before the per-unit row is built.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q9 (2026-11-03)\"): \"Q9a\". Rule text: (a) Research card (lane R, drafted at increment-3 stage 1): the circulation share from cited OBC stair and corridor minimums; a cited livable-unit minimum size; each checked against the CoA plan-fact houseplex per-unit sizes (about 73 / 91 / 97 / 98 m2, basement included, n about 5), and ruled before the per-unit row is built. Meanwhile Q8 a's \"at least N units (unit size not yet ruled)\" stands. Both values go into the confidence register (switchboard confidence per Q-CONF a). The OBC 13.5 m2 combined-space floor is reference only (operator 10-31: \"we dont want to recommend non livable building\").",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q9a"
+    },
+    {
+      "id": "CHAT-230.Q9-1",
+      "question": "M-496: the circulation share is a setting, 0.10, \"operator value, not a cited OBC figure\", confidence low; OBC 9.8 / 9.9 refit task owed.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q9-1 (2026-11-04)\"): \"Q9-1 a\". Rule text: (a) The circulation share is ruled now as a setting: 0.10, labelled \"operator value, not a cited OBC figure\", with confidence low in the confidence register (Q-CONF a / Q-G3 a). A task is owed to fetch and cite OBC 9.8 / 9.9 (stair and corridor minimums) and refit the value. It feeds the area-based unit count (Q8 a); the 2-4 houseplex count stays capped at 4.",
+      "decision": "approve",
+      "decided_at": "2026-11-04",
+      "operator_quote": "Q9-1 a"
+    },
+    {
+      "id": "CHAT-230.Q9-2",
+      "question": "M-496: the minimum livable unit size is a setting, 30 m2 net, confidence medium; OBC 13.5 m2 reference only.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q9-2 (2026-11-04)\"): \"a\". Rule text: (a) The minimum livable unit size is 30 m2 NET livable area (after the circulation share, Q9-1 a 0.10), as a setting labelled \"operator value, cited against the CoA houseplex plan facts (8 plans, tightest A0226/26EYK at 40 m2 max); OBC 13.5 m2 reference only; near the OBC one-bedroom room sum 26.8-30.3 m2 net\". Confidence medium in the confidence register (Q-CONF a / Q-G3 a). It feeds Q8 a's per-floor unit count; the cap clamp (4 / 6) is unchanged. Evidence: inc3/prep/q9-research-card.md sections 2-3. The row is authored after increment 2 closes.",
+      "decision": "approve",
+      "decided_at": "2026-11-04",
+      "operator_quote": "a"
+    },
+    {
+      "id": "CHAT-230.Q10",
+      "question": "M-190: the RM houseplex is shown with no main-wall limit, disclosed \"reading awaiting expert check\" with confidence C8.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q10 (2026-11-03)\"): \"Q10a\". Rule text: (a) Same as increment 2. The RM houseplex is shown with no main-wall limit (M-190; 10.80.40.10(2) names \"a detached house or a semi-detached house\"), disclosed \"reading awaiting expert check\", with its confidence shown beside it (confidence register C8, medium; Q-CONF a). Increment 3 may close with it open. The over-report risk is disclosed. Examiner question 8(a) stays open.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q10a"
+    },
+    {
+      "id": "CHAT-230.Q11",
+      "question": "M-482: the 5:3 cap of 10.10.40.10(4) does not reach the houseplex; its roof_slope_max is unregulated by absence.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q11 (2026-11-03)\"): \"Q11 confirmed but can you also research this again with more detail\". Rule text: Confirmed: the 5:3 cap of 10.10.40.10(4) does not reach the houseplex (it names a detached house). The R houseplex pitch is the steepest the height allows, with the OBC 1-in-3 check only. A red-first Layer 2 item re-stores the houseplex roof_slope_max as unregulated by absence (Spec 68 rule 7a v2; M-361 Q1) and is added to the Q14 night list. Detailed research follows: data-checks-1103.md section Q11-detail.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q11 confirmed but can you also research this again with more detail"
+    },
+    {
+      "id": "CHAT-230.Q12",
+      "question": "M-201: a red-first MB-27.L2 fix re-stores the RM unlabelled houseplex height at 12.0 m on the increment-3 night.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q12 (2026-11-03)\"): \"Q12 a\". Rule text: (a) A red-first MB-27.L2 fix against M-201: find why 10.80.40.10(1)(C) wins over (B)(ii) for the RM unlabelled houseplex, and re-store 12.0 m. It goes on the increment-3 Layer 2 night before the first round, with its own red test, prereg and G-STOR line. Data 2026-11-03 (post-night): A0179 and A0399 still store 10 m, winner (1)(C). The build lane counts the citywide reach.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q12 a"
+    },
+    {
+      "id": "CHAT-230.Q12-S",
+      "question": "M-201: 10.80.40.10(1)(C) gains the mapped(HT) condition; 17,730 cells pre-registered.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q12-S (2026-11-04)\"): \"Q12-S a\". Rule text: The Q12 fix is one keying correction: 10.80.40.10(1)(C) gains the `mapped(HT)` condition that (A) has, matching the text \"despite (A)\". It is one unit shared by both houseplex classes, so the prereg lists all 17,730 cells: detached_houseplex 11,434 and semi_detached_houseplex 6,296 (RM, no HT value: 10 to 12.0, winner (B)(ii)). No semi-detached Layer 3 rows are built, so nothing is pulled forward. Red test drafted in inc3/prep/q12-rm-height-diagnosis.md. Rides the increment-3 Layer 2 night (Q14 a), after the storage line is met.",
+      "decision": "approve",
+      "decided_at": "2026-11-04",
+      "operator_quote": "Q12-S a"
+    },
+    {
+      "id": "CHAT-230.Q-D2",
+      "question": "M-182: 10.20.30.40(1)#(1)(D) gains the mapped(LC) condition; on an unmapped lot (B) answers unregulated; 101,312 cells pre-registered.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q-D2 (2026-11-04)\"): \"Q-D2 a\". Rule text: (a) D2 is fixed in data: unit 10.20.30.40(1)#(1)(D) gains the `mapped(LC)` condition, so on an unmapped lot (D) does not apply and (B) answers (unregulated), as the M-182 note says. This is the same keying-correction pattern as Q12. Red test drafted (src/tests/bylaw-d2-houseplex-coverage-unmapped.logic.test.ts). Pre-registered at 101,312 cells (RD 24,643 × 4, RT 548 × 5). Rides the increment-3 Layer 2 night. The RT unit ids are read at build.",
+      "decision": "approve",
+      "decided_at": "2026-11-04",
+      "operator_quote": "Q-D2 a"
+    },
+    {
+      "id": "CHAT-230.Q13",
+      "question": "M-416: increment 3 scores A0097/26SC and A0289/26TEY against the houseplex maximum; the 5-6 class notices are not scored.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q13 (2026-11-03)\"): \"Q13a\". Rule text: (a) Score A0097/26SC (triplex, 3 units, 369.91 m2) and A0289/26TEY (duplex, 2 units, 195.99 m2). Each passes when the approved GFA is at or under the houseplex maximum and the units are within the cap. A0461/26TEY, A0277 and A0375 show not_modelled for the 5-6 class (R3-11) and are not scored.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q13a"
+    },
+    {
+      "id": "CHAT-230.Q14",
+      "question": "M-492: one increment-3 Layer 2 night carries D2, D5 and the RM 12.0 m, each red-first with its own prereg, one combined G-STOR check; every increment-3 reading row carries its confidence.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q14 (2026-11-03)\"): \"Q14a - ensure our confidence addition to phase 3 get added as well.\". Rule text: (a) One increment-3 Layer 2 night carries D2, the houseplex roof option rows (D5) and the RM houseplex 12.0 m (Q12 a). Each item has its own red test and prereg, with one combined G-STOR check (the plan v7 axis-night form). Also: the Q-CONF a switchboard confidence (p2close/CARD-confidence-switchboard.answered.md) applies to Phase 3 (Layer 3) for increment 3 too. Every increment-3 reading row carries its confidence: C8, C9, C10, C13, C14 of CONFIDENCE-REGISTER.md, plus any new reading.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q14a - ensure our confidence addition to phase 3 get added as well."
+    },
+    {
+      "id": "CHAT-230.Q-287E",
+      "question": "M-497: the parking-space portion family is re-keyed portion-scoped through the M-75 route, set aside for the whole-building setback and disclosed in the M-169 form.",
+      "recommendation": "Operator answer (~/Buildo-scratch/p2close/CARD-x287E-parking-portion.md, \"Operator answer (2026-11-04, verbatim): \"Q287e a\"\"): \"Q287e a\". Rule text: (a) Re-key the family as portion-scoped through the M-75 correction route: 900.3.10(287)(E), 900.3.10(324), (331), (812), (713) and 900.5.10(88) get applies_to.part \"portion\" (the parking-space portion). Phase 2 sets them aside for the whole-building setback and discloses them in the M-169 form, e.g. \"a portion with a parking space may be 0.3 m from the side lot line (900.3.10(287)(E)); not modelled\".",
+      "decision": "approve",
+      "decided_at": "2026-11-04",
+      "operator_quote": "Q287e a"
+    },
+    {
+      "id": "CHAT-230.Q-287E2",
+      "question": "M-497: the mechanism: applies_to.part gains \"portion\" (an evaluator item on the increment-3 night); x812 (D)(ii) is split.",
+      "recommendation": "Operator answer (~/Buildo-scratch/p2close/CARD-x287E-parking-portion.md, \"Operator answer (2026-11-04, verbatim): \"Q-287E2 a\"\"): \"Q-287E2 a\". Rule text: Correction to the first answer's mechanism: it is not data-only (applies_to.part has no \"portion\" value; evaluate.mjs:667-679 handles map_area, named_addresses and lot_list only; measured in ~/Buildo-scratch/mcbylaws/inc3/prep/q287e-measure.md). It becomes a red-first evaluator item on the increment-3 Layer 2 night: add applies_to.part \"portion\"; portion rules are set aside for the whole-building setback and disclosed in the M-169 form; x812 (D)(ii) is split into a whole-building unit (4.5 m) and a portion unit (6.0 m). 2,240 principal cells on 448 lots move (x331 187 lots and x88 153 lots go back to the zone 3.0 m; x324 108 lots go to the zone 6.0 m), plus 398 x287 suite cells. The prereg lists every move. The evaluator_version re-pin is named at landing. It runs after the storage line (780 MiB) is met.",
+      "decision": "approve",
+      "decided_at": "2026-11-04",
+      "operator_quote": "Q-287E2 a"
+    },
+    {
+      "id": "CHAT-230.LQ-1",
+      "question": "M-205: the 10.20.40.70(4) side-yard shift disclosure only where the stored side yard comes from 10.20.40.70(3).",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Operator answer LQ-1 (2026-11-06)\"): \"a\". Rule text: Phase 2 fix first: the 10.20.40.70(4) side-yard shift disclosure is emitted only where the stored side yard comes from 10.20.40.70(3) (not where an exception sets it: x5(A), x155(D), x310(C) on the 25; reading ~/Buildo-scratch/mcbylaws/MB-27L2/switch-on/mcproof/oq2-sideyard.md).",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "a"
+    },
+    {
+      "id": "CHAT-230.LQ-2",
+      "question": "M-205: the generic evaluator fix (rule 2 discloses an optional variation only if the varied limit survives rule 4) is a card for the increment-3 night; supersedes LQ-1 a for increment 2.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Operator answer LQ-2 (2026-11-06)\"): \"b\". Rule text: The generic evaluator fix (prototype ~/Buildo-scratch/mcbylaws/MB-27L2/switch-on/build/lq1-evaluate.patch) becomes a card for the increment-3 night: red-first, Spec 68 §7.5 dated note, measured citywide in that night's dry run, restamped that night. Supersedes LQ-1 \"a\" for this increment (M-246, that entry kept).",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "b"
+    },
+    {
+      "id": "CHAT-230.Q5",
+      "question": "M-344: M-344 moves to the sixplex increment, where it first changes an answer; trigger: a u2 or u3 label in R, RT or RM returns it to the houseplex work.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q5 (2026-11-03), verbatim: \"Q5 b\" (final; replaces the conditional \"Q5a if recommended\")\"): \"Q5 b\". Rule text: (b) A dated note on Q:87 moves M-344 to the sixplex increment, where it first changes an answer. FLAGGED: this moves increment-3 work to a later increment, by dated note. Evidence: the census of 2026-11-03 shows every labelled R/RT/RM lot is u4 (R 4,439; RM 49,130; RT 54) or u5 (RM 7; RT 30), with no u2 or u3, so M-344 changes no 2-4 houseplex answer. Trigger: if a u2 or u3 label appears in R/RT/RM, M-344 returns to the houseplex work.Queue note owed (lane R).",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q5 b"
+    },
+    {
+      "id": "CHAT-230.Q8",
+      "question": "LC-18: units are counted by area, basement included: units = min(u, the cap of 4 / 6, the sum over each floor including the basement of floor(livable area / minimum unit size)).",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q8 (2026-11-03)\"): \"Q8a\". Rule text: (a) Count units by area, basement included: units = min('u', the cap of 4 / 6, the sum over each floor including the basement of floor(livable area / minimum unit size)). The basement counts as a design choice (M-172), shown on its own line, with the site-fact note (groundwater and depth not modelled, R4-05). A dated note on LC-18 replaces \"floors including the basement\" with the area count (a ruling; lane R records it). Until Q9 rules the minimum unit size, the count is one unit per floor, labelled \"at least N units (unit size not yet ruled)\". Data: plan facts A0140/26SC and A0178/26EYK have 4 units in 2 storeys, and A0226/26EYK has 4 in 3. Increment check: the formula is general and will serve the sixplex increment later; nothing for the 5-6 class is built now.",
+      "decision": "approve",
+      "decided_at": "2026-11-03",
+      "operator_quote": "Q8a"
+    },
+    {
+      "id": "CHAT-230.Q-LC18",
+      "question": "LC-18: the LC-18 note waits for the Spec 131 to 131a split and is owed to the first batch after it.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer Q-LC18 (2026-11-04)\"): \"Q-LC18 a\". Rule text: The note is owed to the first batch after the split, before increment-3 stage 1.",
+      "decision": "approve",
+      "decided_at": "2026-11-04",
+      "operator_quote": "Q-LC18 a"
+    },
+    {
+      "id": "CHAT-230.D8M435",
+      "question": "M-435: the 0.45 m blank-wall sentence is a Phase 2 item on the increment-3 night (switch-on decision D-8, card L3-DISC).",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc2/open-questions.md, \"Operator answer SWITCH-ON decision list D-1..D-9 (2026-11-06): \"all recommended\"\"): \"all recommended\". Rule text: M-435 0.45 m sentence a Phase 2 item on the increment-3 night (card L3-DISC)",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "all recommended"
+    },
+    {
+      "id": "CHAT-230.DL-1",
+      "question": "M-498: Spec 131 split, then ONE increment-3 batch before any build commit and before the dry run.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) Split Spec 131 → 131a now (MB-79 (u-prep)). It blocks a project commit, which is allowed under the infra freeze. Then lane R lands ONE increment-3 batch with every answer above plus the LC-18 note, before any build commit and before the dry run.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-2",
+      "question": "M-498: the night runs last; a landing freeze runs from the dry run to C6.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) Night last. Every version-moving commit lands before the dry run: the rule batch, all Layer 1/2 items, and every Layer 3 seed edit (building type, catalogue rows, switchboard rows). Then a landing freeze runs from the dry run to C6 (N-6 a), and the night restamps the final increment-3 tree. The houseplex rows fail closed (`not_modelled`, Q-A) on stored data until the night stores D5. golden-25 runs on fixtures generated by the pure core (DL-14).",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-3",
+      "question": "M-498: carry everything, gated by the final G-STOR record against the 780 MiB stop, with the M-472 storage half held as the named fallback.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) Carry everything: D2, Q12, D5 (Q-STOR F), the mechanical cells appended (width 61 → 63) and the rest. Go only if the final-tree G-STOR record is ≤ 780; the record decides. (b) Carry D5 and everything else, but hold M-472's storage half to a later night with a room-maker. The four mechanical rows stay `not_evaluated:missing_input:absent_target`, disclosed \"mechanical area: not yet stored\". The headline is unchanged (M-472). This **amends Q-M1 b+** (*\"stored on the increment-3 Layer 2 night\"*) by a dated note, M-246. Projected 746.0 MiB, a margin of 34. **Recommendation: (a), gated, with (b) as the named fallback.** Build all of it. If the final G-STOR record is above 780, or the margin is below the figure the operator names, take (b) at that gate rather than stopping the night. (c) is the most work for 2.6 MiB of risk.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-4",
+      "question": "M-499: RM houseplex main-wall share, set-back storey and pitched-slope cells are re-stored unregulated by absence (T Q4 c: no pitched RM houseplex option).",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) A red-first Layer 2 item on the one night: RM houseplex `main_wall_*_share_pct`, `upper_storey_setback_m` and `pitched_roof_slope_min` are re-stored as `unregulated` by absence, through an absence ruling row per (zone RM, class) executed against its pinned page (the Q11/M-475 form). With T Q4 (c), D5 stores no pitched option for the RM houseplex (it shares the cell), so the headline is flat = S × F. **Recommend (a)** (with T Q4 c). It is the ruled reading (M-190) and the existing absence pattern, and lane T's key values become reachable.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-5",
+      "question": "M-499: the houseplex side yard on A0399 is a red-first keying fix on the night.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) A red-first keying fix on the night. The build lane counts the citywide reach first (UNVERIFIED here). **Recommend (a).**",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-6",
+      "question": "M-499: the two frozen oracle tests move 10 to 12, named, in the Q12 fix commit.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) Named expected-value changes (10 → 12, with the M-201 citation) in the Q12 fix commit, with an R-MC door line per file (DOOR-PA) and `cases.json` regenerated by `golden-lots-cases.mjs --write`. **Recommend (a).**",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-7",
+      "question": "M-499: D5 writes class overrides at option slots; migration 297 carries the override read and the width move.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) Remove the representative-only guards for the listed classes. Write class overrides at option slots. Decode an override at an option slot (class override first, then a shared code reads that class's own base). Layer 2 scope `options.roof_form.classes` gains `detached_houseplex`. Migration 297 rewrites `bylaw_resolution_option_results` for the listed classes and the override read, and carries the width move of DL-3. It is applied alone, `--only=297 --dry-run` first (N-7 a). **Recommend (a).** Named test changes are measured at build: the RC-1 tests in `migration-295`, `materialize-roof-axis`, `materialize` and `violations` are listed in the map §2.3.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-8",
+      "question": "M-499: the LQ1 and M-435 effects are measured by a sha-frozen read-only disclosure census on the final tree.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-8 [D N-5] + [E] LQ1 and M-435 \"measured citywide in that night's dry run\".** **Measured now on the 2 % sample** (`measure-lq1.cjs`, tip vs the LQ1 prototype). LQ1 removes the 10.20.40.70(4) side-yard-shift sentence from 9,564 cells on 1,926 lots, all RD `side_setback_m`, all five classes. 1,922 of the 1,924 house lots have an exception winner (`sql/lq1-win.out`). That is LQ-1 a's reading (x5, x155, x310 on the 25). 1,415 sample lots keep the sentence. Scaled: about 474,600 cells on about 95,600 lots. Nothing is stored. `evaluator_version` moves. **Options.** (a) A sha-frozen read-only disclosure census on the final tree in section D, with its table in the prereg (lane D's recommendation). (b) Extend the dry-run harness. **Recommend (a).**",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-9",
+      "question": "M-498: the held Q-D4W figures go in the notes-only night patch before the capture.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-9 [D N-4] Held Q-D4W figures and notes words.** As lane D N-4. **Recommend (a)**: the held figures go in the notes-only night patch before the capture. [night list, N-4] (a) Put the held figures (from the d4-figures file, source run 4414, dated 2026-11-05) in the notes-only night patch, applied in `$CAP` before the capture (C3b), so #44 stays fresh. This night's own figures go into the night record and a new held file for the next recapture.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-10",
+      "question": "M-498: the night's own migration (297) alone; 294 and 296 wait for their Layer 3 DB window.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-10 [D N-7] Migrations on the night.** As lane D N-7, with 297 = DL-7 + DL-3. 294 and 296 (and a new Layer 3 settings migration for Q9-1 / Q9-2, if one is written) wait for their Layer 3 DB window. **Recommend (a).** [night list, N-7] (a) The D-MIG form for this night: the night's own migration (297, if D5 or N-3 need it) alone, `--only=297 --dry-run` first, all others held, the night running its VALIDATE. 294 and 296 wait for their Layer 3 DB window (MB-35 order).",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-11",
+      "question": "M-498: C1 refuses unless the storage baseline is 708.51 MiB ± 1 and 89,375 heap pages.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-11 [D N-8] C1 storage baseline.** As lane D N-8. **Recommend (a)**: 708.51 MiB ± 1 and 89,375 heap pages (re-measured by lane E: 708.51 / heap 698.24 MiB). [night list, N-8] (a) C1 refuses unless the three tables equal the readiness measure 708.51 MiB ± 1 and the lots heap is exactly 89,375 pages: the heap the projection and the G-STOR fill assumed.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-12",
+      "question": "M-498: the 25-lot stop covers the houseplex class.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-12 [D N-9] The 25-lot stop covers the houseplex class.** As lane D N-9. **Recommend (a).** [night list, N-9] (a) C1 and C4 read the 25-lot image for detached_house and detached_houseplex. Only the dry run's moved cells may change, taken from `golden25-allowed.tsv` (data, not a typed list).",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-13",
+      "question": "M-498: the orchestrator runs each night block on the operator's word; the typed go is still required.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-13 [D N-1] The night go wording and who runs the blocks.** As lane D N-1. **Recommend (b)**: the orchestrator runs each block on the operator's word. [night list, N-1] (b) The orchestrator runs each block on the operator's word, one at a time, stopping at each refusal or stop (the axis go (b) form).",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-14",
+      "question": "M-500: golden-25 gains the houseplex class (named re-pin RP-G25H).",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) `golden25-inputs.mjs` gains the houseplex class cells (base + D5 options) from the pure core on the final pre-night tree (path A, the OR-7 / mode-B form). `expected.jsonl` gains the houseplex rows from lane T's key. The manifest and `MANIFEST_SHA` are re-pinned (`golden-25.logic.test.ts:34`), as one oracle-only round with its own prereg. Stop if any `detached_house` cell moves. **Recommend (a).** Measured: step = key on 18 of 19 non-RM numeric lots now, and on the 6 RM lots once DL-4 (a) lands (`impact-map.md` §3).",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-15",
+      "question": "M-500: the uncapped O-3 reading is a Layer 3 reading row, and the figure shown is its own headline.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) A Layer 3 reading row `reading:exc_fsi_uncapped` (on, with confidence C9/C10). It re-runs the gfa rows with `l2(fsi)` read as `not_applicable` where the fsi winner is an exception arm that names no building type. It is shown beside the headline with the Q3 a label. (which figure) (a) the uncapped reading's own headline (684.93 / 687.11 / 601.29) **Recommend:** how (a), which figure (a) (T Q1 a). The figures quoted in Q3 a and Q4 a are (a)'s.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-16",
+      "question": "M-386: one closed flag word per new disclosure family, named in this batch.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **Rule.** D-8: an unmapped family fails closed (`disclosure-families.json` `unmapped_word`). (a) One closed word per family, named by lane R in the DL-1 batch, with the golden flags keyed after it (T Q5 a). **Recommend (a).**",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-17",
+      "question": "M-500: the unit-count floors: the footprint F for the basement floor, the headline form's floors, the capped GFA spread over S storeys, the basement line beside the capped total.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-17 [T Q3] The unit-count floors: four details.** As T Q3. **Recommend (i) a, (ii) a, (iii) a, (iv) a.** (i) (a) the footprint F (the box, disclosed `shape_box_assumed`, like every floor); (ii) (a) the headline form's floors (the key); (iii) (a) the capped GFA spread evenly over S storeys; (iv) (a) the basement's livable area (0.9 × F) and its own capacity floor(0.9F ÷ 30), shown next to the capped total of 4. For example, A0067 shows basement 205.48 m², room for 6, total 4.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-18",
+      "question": "M-500: the per-unit area row shows the net per unit, basement included.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-18 [T Q7] The per-unit area row.** As T Q7. **Recommend (a)**: the net per unit, basement included. (a) The average net per unit, basement included: 0.9 × (headline GFA + basement F) ÷ units. Examples: A0375 61.0, A0553 67.1, A0175 108.7, A0399 375.7 m².",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-19",
+      "question": "M-500: the 19 m release tests read the parcel depth; D4 is a named finding on A0182, A0388 and A0464.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-19 [T Q6] The 19 m release depth input (MB-62 D4).** As T Q6. **Recommend (a)**: the parcel depth, with D4 a named finding on A0182, A0388 and A0464. (a) Key on the parcel depth, as increments 1 and 2 did, and disclose D4 as a named finding on the three lots.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-20",
+      "question": "M-500: the 2-storey option is not in increment 3.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: **DL-20 [T Q8] The 2-storey option.** As T Q8. **Recommend (a)**: not in increment 3. (b) pulls cross-class work forward. (a) Increment 3 keys the maximum-storey headline only, as increments 1 and 2 did. The 2-storey option stays with its owed lock.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-21",
+      "question": "M-500: the Layer 3 named changes of the build are approved as a set; any other move stops.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: `building-types.json` gains `detached_houseplex` (units 4, M-160 / Q6 a) and `switchboard.json` gains `building_type:detached_houseplex`. Every catalogue row's `building_type` becomes a list (Q2 a). This means `rows.js:460` (`r.building_type === buildingType.id`) and the catalogue validator. The new rows: units (Q8 a, Q9-1 a, Q9-2 a settings), bedrooms (Q7 a), basement line, per-unit area. The confidence reading rows are C8, C9, C10, C13 and C14 (Q14 a). The D-8 production read wiring: `READ_SQL.lots` gains `evaluator_version` (`compute-maxbld-scenarios.js:40-42`; descriptor `:41`); a parcels read of the `buildLotVector` columns (descriptor `:59`); `lookups.layer1Env` and `permitted_by_class` in the step shell (location UNVERIFIED). With them come the step-closure / neighbour-facts ALLOWED assertions. Pins: `layer3-catalogue.logic.test.ts` catalogue / switchboard / buildingTypes shas (`:35`, `:38`, `:39`); `determinism.logic.test.ts:76-77` (47 → the two-type count, UNVERIFIED). **Options.** (a) Approve the set in the RP-K form: version and hash fields plus these named assertion changes; any other move stops.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    },
+    {
+      "id": "CHAT-230.DL-22",
+      "question": "M-500: the increment-3 worked examples run on the lots' real cells; \"3 green\" is named.",
+      "recommendation": "Operator answer (~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"2026-11-06: operator \"approved provided they are complaint\" (RP-INC3R; DL-2..DL-22; the night go; removals)\"): \"approved provided they are complaint\". Rule text: (a) `fixtures/layer3/increment-3/examples.json` from lane T's key (operator-checked, O-10), run by an `increment3-worked-examples` test on the lots' real base / option cells (the D-3 harness). \"3 green\" means golden-25 (both types), increment3-worked-examples (0 todos), disclosure-carriage (houseplex) and the CoA check of A0097 / A0289 (Q13 a) are green on the tip, recorded as an R-LZ zero-move round plus a queue row 3 note.",
+      "decision": "approve",
+      "decided_at": "2026-11-06",
+      "operator_quote": "approved provided they are complaint"
+    }
+  ]
+}

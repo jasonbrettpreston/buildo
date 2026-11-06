@@ -1,27 +1,53 @@
 {
   "task": "MB-83",
-  "item": "decision batch 2026-11-06-batch-bb (CHAT-229, operator MCINC): the McIncrement recipe, six new Spec 69a rows with their text home Spec 08 §11.8 (MCINC-1..MCINC-6, step 1 pointing at §11.7) and a dated note on queue row 3; enforcement (a) now, (b) OWED to card DR-5; with the one named re-pin RP-MCINC (version and hash fields only)",
+  "item": "decision batch 2026-11-06-batch-bc (CHAT-230, the ONE increment-3 batch of decision list DL-1 a): 43 decisions as seven new Spec 69a rows (M-494..M-500), dated notes on M-160, M-182, M-190, M-201, M-205, M-344, M-386, M-397, M-416, M-435, M-482 and M-492, the LC-18 dated note in Spec 131 and six closed flag words (DL-16 a); one named re-pin RP-INC3R (table_version bd533bfd5489 to a659c942d67e, G-STOR re-bound); two named test changes (decision-log 801 to 844; mcbylaws-conflicts pinned list gains M-160, M-499, M-500, operator B-4)",
   "class": "R",
   "stage": 8,
   "date": "2026-11-06",
-  "head": "d74feb7f8",
+  "head": "0d609cd04",
   "commits_reviewed": [
-    "d74feb7f8",
-    "the staged batch commit (with the loop record round-47)"
+    "0d609cd04",
+    "the staged batch commit (with the loop record round-49)"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md",
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (Operator answer MCINC; Operator answer RP-MCINC)"
+    "~/Buildo-scratch/mcbylaws/inc3/open-questions.md (2026-11-06 ruling; B-4)",
+    "~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md (DL-1..DL-22)",
+    "~/Buildo-scratch/p2close/CARD-x287E-parking-portion.md",
+    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (LQ-1, LQ-2, D-8)"
   ],
-  "plan": "drafts ~/Buildo-scratch/mcbylaws/inc2/mcinc/ (build.mjs, mcinc-e67fc9e8f.patch, prereg-MB-83-6.draft.json)",
-  "output": "Stage 8 OUTPUT panel, one independent read-only seat: ~/Buildo-scratch/mcbylaws/inc2/mcinc/panel/seat-report.md (a read of mcinc-e67fc9e8f.patch). Verdict line: VERDICT: PASS; no BLOCKER or MAJOR. Sections 1-7 PASS: Spec 08 §11.8 matches the card with no added scope; the six rows in the McProof row form with the operator quote verbatim (6/6); the queue note a pure insertion; the decision batch files and the count 791 to 797; the re-pin moves only the approved fields (body_sha256, evaluator_version, totals, scorer_sha untouched); the prereg draft zero moves, round 81; hygiene. Fixed before the commit: the MINOR on the prereg $comment (the rules[] sentence now says the row status reads RULED, and that M-321 carries a build OWED marker). The commit messages cite no new row by id (the six rows read OWED in arm C).",
+  "plan": "drafts ~/Buildo-scratch/mcbylaws/inc3/R-batch/ (build-r.mjs, extra.mjs, rows3.mjs, run-r.sh)",
+  "output": "Stage 8 OUTPUT panel, one independent read-only seat on the re-cut: ~/Buildo-scratch/mcbylaws/inc3/R-batch/second-seat-batch-bc.md. VERDICT: PASS WITH FINDINGS; no blocker. The author judgement calls (a) to (d) and the M-435 call (e) are each COMPLIANT. Finding fixed before the commit: the precedent wording of 8f5aaeb48 is not cited (M-457 and M-481 are the row precedents). The six flag words, the lock paths and the M-201 case tokens were added after the seat read and are named in the commit message.",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "enforcement (b) of the recipe (the prereg names its impact-map file; the prereg checker fails on an unlisted moved test, golden or version): owed to card DR-5, after the freeze lift by name"
+    "the Layer 2 and Layer 3 builds of increment 3 (MB-27, MB-27.L2, MB-64) and the typed night go OPERATOR-GO MB27-INC3-NIGHT-1, not given"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/inc2/mcinc/ (panel/seat-report.md, msg/)",
+  "evidence": "~/Buildo-scratch/mcbylaws/inc3/R-batch/ (second-seat-batch-bc.md, batch-bc.tip-f323a6dfe.patch); split re-cut seat ~/Buildo-scratch/mcbylaws/inc3/R-landing/second-seat-split-recut.md",
   "previous": [
+    {
+      "task": "MB-83",
+      "item": "decision batch 2026-11-06-batch-bb (CHAT-229, operator MCINC): the McIncrement recipe, six new Spec 69a rows with their text home Spec 08 §11.8 (MCINC-1..MCINC-6, step 1 pointing at §11.7) and a dated note on queue row 3; enforcement (a) now, (b) OWED to card DR-5; with the one named re-pin RP-MCINC (version and hash fields only)",
+      "class": "R",
+      "stage": 8,
+      "date": "2026-11-06",
+      "head": "d74feb7f8",
+      "commits_reviewed": [
+        "d74feb7f8",
+        "the staged batch commit (with the loop record round-47)"
+      ],
+      "cards": [
+        "~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md",
+        "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (Operator answer MCINC; Operator answer RP-MCINC)"
+      ],
+      "plan": "drafts ~/Buildo-scratch/mcbylaws/inc2/mcinc/ (build.mjs, mcinc-e67fc9e8f.patch, prereg-MB-83-6.draft.json)",
+      "output": "Stage 8 OUTPUT panel, one independent read-only seat: ~/Buildo-scratch/mcbylaws/inc2/mcinc/panel/seat-report.md (a read of mcinc-e67fc9e8f.patch). Verdict line: VERDICT: PASS; no BLOCKER or MAJOR. Sections 1-7 PASS: Spec 08 §11.8 matches the card with no added scope; the six rows in the McProof row form with the operator quote verbatim (6/6); the queue note a pure insertion; the decision batch files and the count 791 to 797; the re-pin moves only the approved fields (body_sha256, evaluator_version, totals, scorer_sha untouched); the prereg draft zero moves, round 81; hygiene. Fixed before the commit: the MINOR on the prereg $comment (the rules[] sentence now says the row status reads RULED, and that M-321 carries a build OWED marker). The commit messages cite no new row by id (the six rows read OWED in arm C).",
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "enforcement (b) of the recipe (the prereg names its impact-map file; the prereg checker fails on an unlisted moved test, golden or version): owed to card DR-5, after the freeze lift by name"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/inc2/mcinc/ (panel/seat-report.md, msg/)"
+    },
     {
       "task": "MB-83",
       "item": "decision batch 2026-11-04-batch-ba, part 5 (no new row: ten increment-2 answers recorded as dated notes on the mechanical-area, pitched-roof, option, runRow seam, switched-off formula, mechanical attic and blank-wall rows, with the named ATTIC-23 fixture correction and lane MK's keying note; queue notes Q-G25B a, Q9-1 a, Q9-2 a; no re-pin)",

@@ -21,7 +21,7 @@ On a policy question the register governs; on the standard and behaviour, Spec 6
 
 **What is generated.** Everything below, from the two registers by `scripts/generate-bylaw-handbook.mjs` (reader: `scripts/analysis/bylaw/bylaw-register.mjs`). The rule map `scripts/analysis/bylaw/_schema/bylaw-rule-map.json` is generated from the same rows, not hand-written; `src/tests/spec133-bylaw-handbook.logic.test.ts` locks that every register row has exactly one line and every line cites exactly one row. Size: a measured cap in `docs/specs/01-pipeline/122_split_manifest.json` `generated_size_caps["133"]` (`spec-split-check` arm iv-b), raised only by a reviewed hand-edit.
 
-**Rules rendered: 523** (454 M-rows, 69 LC-rows): 520 in force (215 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: its line id, which names the rule (m.N is M-N in Spec 69a, lc.N is LC-N in Spec 131), the reading headline, then the register's status, its "Enforced by" cell and the number of dated notes under the row.
+**Rules rendered: 530** (461 M-rows, 69 LC-rows): 527 in force (222 with an OWED marker), 3 history. Rules are grouped by provision family, derived from the first clause a row cites (a zone-chapter clause 10.20.40.10 and 10.80.40.10 are both family 40.10; 10.5, 150, 800 and 900 keep their chapter; a row citing no clause is general / cross-cutting), so the mirrored zone chapters read together. Line ids do not depend on the grouping. Each line: its line id, which names the rule (m.N is M-N in Spec 69a, lc.N is LC-N in Spec 131), the reading headline, then the register's status, its "Enforced by" cell and the number of dated notes under the row.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules by provision family · 3 Rows with an OWED marker · 4 History
 
@@ -280,6 +280,9 @@ First clause cited: 10.20.40.70, 10.10.40.70, 10.80.40.70, x.40.70.
 
 - **m.435** R-zone main-building side yard: the stored maximum uses 0.9 m; the 0.45 m blank-wall reduction is a disclosure.
   Status: RULED 2026-10-31 · OWED · Enforced by: OWED -> MB-18: item (l), the stored R-zone cell re-keyed 0.45 -> 0.9 with pre-registered moves…
+
+- **m.499** The Layer 2 content of the increment-3 night is settled for five items: the RM houseplex no-candidate cells are re-stored as unregulated by absence (no pitched RM option); the A0399 side yard is keyed red-first; the two frozen oracle tests that Q12-S moves are changed by name; D5 writes class…
+  Status: RULED 2026-11-06 · OWED · Enforced by: OWED -> MB-27.L2 (the increment-3 night): the red-first locks for the RM absence re-store, the A0399 keying…
 
 ### 40.71 — Setbacks Exemptions
 
@@ -760,6 +763,9 @@ First clause cited: 900.1, 900.2, 900.3, 900.5, 900.6, 900.4.
 
 - **m.486** 900.3.10(70)(C) is keyed as a 9.5 m height limit in the 69(C) form, with its 1:4 token, in the 1:4 re-key (F-2).
   Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27.L2 (1:4) (lane E): the lock src/tests/bylaw-mb27l2-1in4.logic.test.ts, every moving lot in its…
+
+- **m.497** A rule for the portion of a building with a parking space is portion-scoped: applies_to.part gains portion; a portion rule is set aside for the whole-building setback and disclosed in the M-169 form; 900.3.10(812) (D)(ii) is split into a whole-building unit (4.5 m) and a portion unit (6.0 m).
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27.L2 (the increment-3 night): the red-first lock src/tests…
 
 ### General / cross-cutting
 
@@ -1581,6 +1587,21 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **m.493** McIncrement (MCINC-6): close. Text home: Spec 08 §11.8.
   Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
 
+- **m.494** Increment 3 adds the building type detached_houseplex: every increment-1 and increment-2 row runs on the houseplex class rows, plus the new unit and bedroom rows; it depends on the houseplex roof option rows (D5) on the increment-3 Layer 2 night.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: scripts/seeds/bylaw/building-types.json gains detached_houseplex and…
+
+- **m.495** One Layer 3 catalogue row per field: each row's building_type becomes a list, and a class's Phase 2 rows are read through the building-types table (the houseplex row gets its own units); increment-1 results stay unchanged.
+  Status: RULED 2026-11-03 · OWED · Enforced by: OWED -> MB-27: building_type as a list on every row of scripts/seeds/bylaw/layer3-catalogue.json with the…
+
+- **m.496** The houseplex per-unit area rests on two settings: the circulation share 0.10 ("operator value, not a cited OBC figure", confidence low) and the minimum livable unit size 30 m2 net (confidence medium); the OBC 13.5 m2 floor is reference only.
+  Status: RULED 2026-11-04 · OWED · Enforced by: OWED -> MB-27: the two settings with their labels (a logic-variable home; a DB mirror is held to its Layer 3…
+
+- **m.498** The increment-3 batch and its one Layer 2 night are planned as one set: the Spec 131 split, then ONE increment-3 batch; the night last; storage carried whole and gated by the 780 MiB stop; the held figures, one migration, the C1 baseline, the 25-lot stop for the houseplex class and the…
+  Status: RULED 2026-11-06 · OWED · Enforced by: OWED -> MB-27.L2: the night checklist (night-checklist-inc3 v2) and its prereg name each of these, locked by…
+
+- **m.500** The Layer 3 build of increment 3 is settled for eight items: golden-25 gains the houseplex class (RP-G25H); the uncapped O-3 reading is a Layer 3 reading row and shows its own headline; the unit-count floors, the per-unit area row, the 19 m release depth input and the 2-storey option are fixed as…
+  Status: RULED 2026-11-06 · OWED · Enforced by: OWED -> MB-27: the golden-25 houseplex rows (RP-G25H, one oracle-only round with its own prereg), the…
+
 - **lc.15** The step is born V3, with McBylaws Airtight inputs.
   Status: RULED · OWED · Enforced by: Spec 78 P5.11 V3 plan: step-validate V3, admin-step-registration.logic, step-validate-net-new.logic
 
@@ -1755,7 +1776,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **lc.34** Estimate design choices: the pipeline never reads user entries (O-12); storeys take the upper value (O-13) (superseded by LC-40); basement unknown (O-14); confidence seeds 0.5 / 0.6 are uncalibrated logic variables (O-15).
   Status: RULED · OWED · Enforced by: Spec 78 P5.0, P5.9
 
-## 3. Rows with an OWED marker (215 in force)
+## 3. Rows with an OWED marker (222 in force)
 
 The register marks work still owed on these rows (a lock, a step commit, a ruling). The register row says what and who; this list only finds them.
 
@@ -1940,6 +1961,13 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-491 | m.491 | RULED 2026-11-06 · OWED |
 | M-492 | m.492 | RULED 2026-11-06 · OWED |
 | M-493 | m.493 | RULED 2026-11-06 · OWED |
+| M-494 | m.494 | RULED 2026-11-03 · OWED |
+| M-495 | m.495 | RULED 2026-11-03 · OWED |
+| M-496 | m.496 | RULED 2026-11-04 · OWED |
+| M-497 | m.497 | RULED 2026-11-04 · OWED |
+| M-498 | m.498 | RULED 2026-11-06 · OWED |
+| M-499 | m.499 | RULED 2026-11-06 · OWED |
+| M-500 | m.500 | RULED 2026-11-06 · OWED |
 | LC-15 | lc.15 | RULED · OWED |
 | LC-16 | lc.16 | RULED · OWED |
 | LC-17 | lc.17 | RULED · OWED |

@@ -1434,3 +1434,265 @@ describe("CHAT-229 (batch 2026-11-06-batch-bb): 6 rulings recorded in 6 new rows
     expect(row, "M-493 row").toContain("2026-11-06-batch-bb#CHAT-229.MCINC-6");
   });
 });
+
+describe("CHAT-230 (batch 2026-11-06-batch-bc): 43 rulings recorded in 7 new rows (M-494..M-500), dated notes on M-160, M-182, M-190, M-201, M-205, M-344, M-386, M-416, M-435, M-482 and M-492, and the LC-18 note in Spec 131 (increment 3, decision list DL-1 a); the builds are OWED to MB-27, MB-27.L2 and MB-64", () => {
+  it("M-494 carries 2026-11-06-batch-bc#CHAT-230.Q1 and its Rule text", () => {
+    expect(M, "CHAT-230.Q1").toContain("2026-11-06-batch-bc#CHAT-230.Q1");
+    expect(M, "CHAT-230.Q1 rule text").toContain("(a) Increment 3 adds the building type detached_houseplex: every increment-1 and increment-2 row runs on the houseplex class rows, plus the new unit and bedroom rows. It depends on the houseplex roof option rows (D5) on the increment-3 Layer 2 night.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-494** |")) as string;
+    expect(row, "M-494 row").toContain("2026-11-06-batch-bc#CHAT-230.Q1");
+  });
+  it("M-495 carries 2026-11-06-batch-bc#CHAT-230.Q2 and its Rule text", () => {
+    expect(M, "CHAT-230.Q2").toContain("2026-11-06-batch-bc#CHAT-230.Q2");
+    expect(M, "CHAT-230.Q2 rule text").toContain("(a) One row per field: each row's building_type becomes a list, and the class's Phase 2 rows are read through the building-types table (the houseplex row gets its own units). Increment-1 results must stay unchanged; the loop shows it.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-495** |")) as string;
+    expect(row, "M-495 row").toContain("2026-11-06-batch-bc#CHAT-230.Q2");
+  });
+  it("M-160 carries 2026-11-06-batch-bc#CHAT-230.Q6 and its Rule text", () => {
+    expect(M, "CHAT-230.Q6").toContain("2026-11-06-batch-bc#CHAT-230.Q6");
+    expect(M, "CHAT-230.Q6 rule text").toContain("(a) as confirmed: Evaluate the envelope at 4 units: one envelope for 2-4 (M-160). The 6-unit envelope is its own class, in the sixplex increment (5-6 class, R3-11 not_modelled until then). Unit count and unit size are presentation (Q8, Q9). Where an exception makes a 2- or 3-unit houseplex more permissive than the 4-unit one, the result is not_evaluated, \"unit count below the class count Phase 2 evaluated (M-160)\", named as a finding. On the 25 that hits no lot: on A0399 (x23) the 4-unit envelope is the larger one (0.6 m side yard against 1.2 m; duplex/triplex lot minimums of 555/610 m2 against the lot's 521.81 m2).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-160** |")) as string;
+    expect(row, "M-160 row").toContain("2026-11-06-batch-bc#CHAT-230.Q6");
+  });
+  it("M-496 carries 2026-11-06-batch-bc#CHAT-230.Q9 and its Rule text", () => {
+    expect(M, "CHAT-230.Q9").toContain("2026-11-06-batch-bc#CHAT-230.Q9");
+    expect(M, "CHAT-230.Q9 rule text").toContain("(a) Research card (lane R, drafted at increment-3 stage 1): the circulation share from cited OBC stair and corridor minimums; a cited livable-unit minimum size; each checked against the CoA plan-fact houseplex per-unit sizes (about 73 / 91 / 97 / 98 m2, basement included, n about 5), and ruled before the per-unit row is built. Meanwhile Q8 a's \"at least N units (unit size not yet ruled)\" stands. Both values go into the confidence register (switchboard confidence per Q-CONF a). The OBC 13.5 m2 combined-space floor is reference only (operator 10-31: \"we dont want to recommend non livable building\").");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-496** |")) as string;
+    expect(row, "M-496 row").toContain("2026-11-06-batch-bc#CHAT-230.Q9");
+  });
+  it("M-496 carries 2026-11-06-batch-bc#CHAT-230.Q9-1 and its Rule text", () => {
+    expect(M, "CHAT-230.Q9-1").toContain("2026-11-06-batch-bc#CHAT-230.Q9-1");
+    expect(M, "CHAT-230.Q9-1 rule text").toContain("(a) The circulation share is ruled now as a setting: 0.10, labelled \"operator value, not a cited OBC figure\", with confidence low in the confidence register (Q-CONF a / Q-G3 a). A task is owed to fetch and cite OBC 9.8 / 9.9 (stair and corridor minimums) and refit the value. It feeds the area-based unit count (Q8 a); the 2-4 houseplex count stays capped at 4.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-496** |")) as string;
+    expect(row, "M-496 row").toContain("2026-11-06-batch-bc#CHAT-230.Q9-1");
+  });
+  it("M-496 carries 2026-11-06-batch-bc#CHAT-230.Q9-2 and its Rule text", () => {
+    expect(M, "CHAT-230.Q9-2").toContain("2026-11-06-batch-bc#CHAT-230.Q9-2");
+    expect(M, "CHAT-230.Q9-2 rule text").toContain("(a) The minimum livable unit size is 30 m2 NET livable area (after the circulation share, Q9-1 a 0.10), as a setting labelled \"operator value, cited against the CoA houseplex plan facts (8 plans, tightest A0226/26EYK at 40 m2 max); OBC 13.5 m2 reference only; near the OBC one-bedroom room sum 26.8-30.3 m2 net\". Confidence medium in the confidence register (Q-CONF a / Q-G3 a). It feeds Q8 a's per-floor unit count; the cap clamp (4 / 6) is unchanged. Evidence: inc3/prep/q9-research-card.md sections 2-3. The row is authored after increment 2 closes.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-496** |")) as string;
+    expect(row, "M-496 row").toContain("2026-11-06-batch-bc#CHAT-230.Q9-2");
+  });
+  it("M-190 carries 2026-11-06-batch-bc#CHAT-230.Q10 and its Rule text", () => {
+    expect(M, "CHAT-230.Q10").toContain("2026-11-06-batch-bc#CHAT-230.Q10");
+    expect(M, "CHAT-230.Q10 rule text").toContain("(a) Same as increment 2. The RM houseplex is shown with no main-wall limit (M-190; 10.80.40.10(2) names \"a detached house or a semi-detached house\"), disclosed \"reading awaiting expert check\", with its confidence shown beside it (confidence register C8, medium; Q-CONF a). Increment 3 may close with it open. The over-report risk is disclosed. Examiner question 8(a) stays open.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-190** |")) as string;
+    expect(row, "M-190 row").toContain("2026-11-06-batch-bc#CHAT-230.Q10");
+  });
+  it("M-482 carries 2026-11-06-batch-bc#CHAT-230.Q11 and its Rule text", () => {
+    expect(M, "CHAT-230.Q11").toContain("2026-11-06-batch-bc#CHAT-230.Q11");
+    expect(M, "CHAT-230.Q11 rule text").toContain("Confirmed: the 5:3 cap of 10.10.40.10(4) does not reach the houseplex (it names a detached house). The R houseplex pitch is the steepest the height allows, with the OBC 1-in-3 check only. A red-first Layer 2 item re-stores the houseplex roof_slope_max as unregulated by absence (Spec 68 rule 7a v2; M-361 Q1) and is added to the Q14 night list. Detailed research follows: data-checks-1103.md section Q11-detail.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-482** |")) as string;
+    expect(row, "M-482 row").toContain("2026-11-06-batch-bc#CHAT-230.Q11");
+  });
+  it("M-201 carries 2026-11-06-batch-bc#CHAT-230.Q12 and its Rule text", () => {
+    expect(M, "CHAT-230.Q12").toContain("2026-11-06-batch-bc#CHAT-230.Q12");
+    expect(M, "CHAT-230.Q12 rule text").toContain("(a) A red-first MB-27.L2 fix against M-201: find why 10.80.40.10(1)(C) wins over (B)(ii) for the RM unlabelled houseplex, and re-store 12.0 m. It goes on the increment-3 Layer 2 night before the first round, with its own red test, prereg and G-STOR line. Data 2026-11-03 (post-night): A0179 and A0399 still store 10 m, winner (1)(C). The build lane counts the citywide reach.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-201** |")) as string;
+    expect(row, "M-201 row").toContain("2026-11-06-batch-bc#CHAT-230.Q12");
+  });
+  it("M-201 carries 2026-11-06-batch-bc#CHAT-230.Q12-S and its Rule text", () => {
+    expect(M, "CHAT-230.Q12-S").toContain("2026-11-06-batch-bc#CHAT-230.Q12-S");
+    expect(M, "CHAT-230.Q12-S rule text").toContain("The Q12 fix is one keying correction: 10.80.40.10(1)(C) gains the `mapped(HT)` condition that (A) has, matching the text \"despite (A)\". It is one unit shared by both houseplex classes, so the prereg lists all 17,730 cells: detached_houseplex 11,434 and semi_detached_houseplex 6,296 (RM, no HT value: 10 to 12.0, winner (B)(ii)). No semi-detached Layer 3 rows are built, so nothing is pulled forward. Red test drafted in inc3/prep/q12-rm-height-diagnosis.md. Rides the increment-3 Layer 2 night (Q14 a), after the storage line is met.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-201** |")) as string;
+    expect(row, "M-201 row").toContain("2026-11-06-batch-bc#CHAT-230.Q12-S");
+  });
+  it("M-182 carries 2026-11-06-batch-bc#CHAT-230.Q-D2 and its Rule text", () => {
+    expect(M, "CHAT-230.Q-D2").toContain("2026-11-06-batch-bc#CHAT-230.Q-D2");
+    expect(M, "CHAT-230.Q-D2 rule text").toContain("(a) D2 is fixed in data: unit 10.20.30.40(1)#(1)(D) gains the `mapped(LC)` condition, so on an unmapped lot (D) does not apply and (B) answers (unregulated), as the M-182 note says. This is the same keying-correction pattern as Q12. Red test drafted (src/tests/bylaw-d2-houseplex-coverage-unmapped.logic.test.ts). Pre-registered at 101,312 cells (RD 24,643 × 4, RT 548 × 5). Rides the increment-3 Layer 2 night. The RT unit ids are read at build.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-182** |")) as string;
+    expect(row, "M-182 row").toContain("2026-11-06-batch-bc#CHAT-230.Q-D2");
+  });
+  it("M-416 carries 2026-11-06-batch-bc#CHAT-230.Q13 and its Rule text", () => {
+    expect(M, "CHAT-230.Q13").toContain("2026-11-06-batch-bc#CHAT-230.Q13");
+    expect(M, "CHAT-230.Q13 rule text").toContain("(a) Score A0097/26SC (triplex, 3 units, 369.91 m2) and A0289/26TEY (duplex, 2 units, 195.99 m2). Each passes when the approved GFA is at or under the houseplex maximum and the units are within the cap. A0461/26TEY, A0277 and A0375 show not_modelled for the 5-6 class (R3-11) and are not scored.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-416** |")) as string;
+    expect(row, "M-416 row").toContain("2026-11-06-batch-bc#CHAT-230.Q13");
+  });
+  it("M-492 carries 2026-11-06-batch-bc#CHAT-230.Q14 and its Rule text", () => {
+    expect(M, "CHAT-230.Q14").toContain("2026-11-06-batch-bc#CHAT-230.Q14");
+    expect(M, "CHAT-230.Q14 rule text").toContain("(a) One increment-3 Layer 2 night carries D2, the houseplex roof option rows (D5) and the RM houseplex 12.0 m (Q12 a). Each item has its own red test and prereg, with one combined G-STOR check (the plan v7 axis-night form). Also: the Q-CONF a switchboard confidence (p2close/CARD-confidence-switchboard.answered.md) applies to Phase 3 (Layer 3) for increment 3 too. Every increment-3 reading row carries its confidence: C8, C9, C10, C13, C14 of CONFIDENCE-REGISTER.md, plus any new reading.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-492** |")) as string;
+    expect(row, "M-492 row").toContain("2026-11-06-batch-bc#CHAT-230.Q14");
+  });
+  it("M-497 carries 2026-11-06-batch-bc#CHAT-230.Q-287E and its Rule text", () => {
+    expect(M, "CHAT-230.Q-287E").toContain("2026-11-06-batch-bc#CHAT-230.Q-287E");
+    expect(M, "CHAT-230.Q-287E rule text").toContain("(a) Re-key the family as portion-scoped through the M-75 correction route: 900.3.10(287)(E), 900.3.10(324), (331), (812), (713) and 900.5.10(88) get applies_to.part \"portion\" (the parking-space portion). Phase 2 sets them aside for the whole-building setback and discloses them in the M-169 form, e.g. \"a portion with a parking space may be 0.3 m from the side lot line (900.3.10(287)(E)); not modelled\".");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-497** |")) as string;
+    expect(row, "M-497 row").toContain("2026-11-06-batch-bc#CHAT-230.Q-287E");
+  });
+  it("M-497 carries 2026-11-06-batch-bc#CHAT-230.Q-287E2 and its Rule text", () => {
+    expect(M, "CHAT-230.Q-287E2").toContain("2026-11-06-batch-bc#CHAT-230.Q-287E2");
+    expect(M, "CHAT-230.Q-287E2 rule text").toContain("Correction to the first answer's mechanism: it is not data-only (applies_to.part has no \"portion\" value; evaluate.mjs:667-679 handles map_area, named_addresses and lot_list only; measured in ~/Buildo-scratch/mcbylaws/inc3/prep/q287e-measure.md). It becomes a red-first evaluator item on the increment-3 Layer 2 night: add applies_to.part \"portion\"; portion rules are set aside for the whole-building setback and disclosed in the M-169 form; x812 (D)(ii) is split into a whole-building unit (4.5 m) and a portion unit (6.0 m). 2,240 principal cells on 448 lots move (x331 187 lots and x88 153 lots go back to the zone 3.0 m; x324 108 lots go to the zone 6.0 m), plus 398 x287 suite cells. The prereg lists every move. The evaluator_version re-pin is named at landing. It runs after the storage line (780 MiB) is met.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-497** |")) as string;
+    expect(row, "M-497 row").toContain("2026-11-06-batch-bc#CHAT-230.Q-287E2");
+  });
+  it("M-205 carries 2026-11-06-batch-bc#CHAT-230.LQ-1 and its Rule text", () => {
+    expect(M, "CHAT-230.LQ-1").toContain("2026-11-06-batch-bc#CHAT-230.LQ-1");
+    expect(M, "CHAT-230.LQ-1 rule text").toContain("Phase 2 fix first: the 10.20.40.70(4) side-yard shift disclosure is emitted only where the stored side yard comes from 10.20.40.70(3) (not where an exception sets it: x5(A), x155(D), x310(C) on the 25; reading ~/Buildo-scratch/mcbylaws/MB-27L2/switch-on/mcproof/oq2-sideyard.md).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-205** |")) as string;
+    expect(row, "M-205 row").toContain("2026-11-06-batch-bc#CHAT-230.LQ-1");
+  });
+  it("M-205 carries 2026-11-06-batch-bc#CHAT-230.LQ-2 and its Rule text", () => {
+    expect(M, "CHAT-230.LQ-2").toContain("2026-11-06-batch-bc#CHAT-230.LQ-2");
+    expect(M, "CHAT-230.LQ-2 rule text").toContain("The generic evaluator fix (prototype ~/Buildo-scratch/mcbylaws/MB-27L2/switch-on/build/lq1-evaluate.patch) becomes a card for the increment-3 night: red-first, Spec 68 §7.5 dated note, measured citywide in that night's dry run, restamped that night. Supersedes LQ-1 \"a\" for this increment (M-246, that entry kept).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-205** |")) as string;
+    expect(row, "M-205 row").toContain("2026-11-06-batch-bc#CHAT-230.LQ-2");
+  });
+  it("M-344 carries 2026-11-06-batch-bc#CHAT-230.Q5 and its Rule text", () => {
+    expect(M, "CHAT-230.Q5").toContain("2026-11-06-batch-bc#CHAT-230.Q5");
+    expect(M, "CHAT-230.Q5 rule text").toContain("(b) A dated note on Q:87 moves M-344 to the sixplex increment, where it first changes an answer. FLAGGED: this moves increment-3 work to a later increment, by dated note. Evidence: the census of 2026-11-03 shows every labelled R/RT/RM lot is u4 (R 4,439; RM 49,130; RT 54) or u5 (RM 7; RT 30), with no u2 or u3, so M-344 changes no 2-4 houseplex answer. Trigger: if a u2 or u3 label appears in R/RT/RM, M-344 returns to the houseplex work.Queue note owed (lane R).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-344** |")) as string;
+    expect(row, "M-344 row").toContain("2026-11-06-batch-bc#CHAT-230.Q5");
+  });
+  it("LC-18 carries 2026-11-06-batch-bc#CHAT-230.Q8 and its Rule text", () => {
+    expect(L131, "CHAT-230.Q8").toContain("2026-11-06-batch-bc#CHAT-230.Q8");
+    expect(L131, "CHAT-230.Q8 rule text").toContain("(a) Count units by area, basement included: units = min('u', the cap of 4 / 6, the sum over each floor including the basement of floor(livable area / minimum unit size)). The basement counts as a design choice (M-172), shown on its own line, with the site-fact note (groundwater and depth not modelled, R4-05). A dated note on LC-18 replaces \"floors including the basement\" with the area count (a ruling; lane R records it). Until Q9 rules the minimum unit size, the count is one unit per floor, labelled \"at least N units (unit size not yet ruled)\". Data: plan facts A0140/26SC and A0178/26EYK have 4 units in 2 storeys, and A0226/26EYK has 4 in 3. Increment check: the formula is general and will serve the sixplex increment later; nothing for the 5-6 class is built now.");
+    const row = L131.split('\n').find((l) => l.startsWith("| **LC-18** |")) as string;
+    expect(row, "LC-18 row").toContain("2026-11-06-batch-bc#CHAT-230.Q8");
+  });
+  it("LC-18 carries 2026-11-06-batch-bc#CHAT-230.Q-LC18 and its Rule text", () => {
+    expect(L131, "CHAT-230.Q-LC18").toContain("2026-11-06-batch-bc#CHAT-230.Q-LC18");
+    expect(L131, "CHAT-230.Q-LC18 rule text").toContain("The note is owed to the first batch after the split, before increment-3 stage 1.");
+    const row = L131.split('\n').find((l) => l.startsWith("| **LC-18** |")) as string;
+    expect(row, "LC-18 row").toContain("2026-11-06-batch-bc#CHAT-230.Q-LC18");
+  });
+  it("M-435 carries 2026-11-06-batch-bc#CHAT-230.D8M435 and its Rule text", () => {
+    expect(M, "CHAT-230.D8M435").toContain("2026-11-06-batch-bc#CHAT-230.D8M435");
+    expect(M, "CHAT-230.D8M435 rule text").toContain("M-435 0.45 m sentence a Phase 2 item on the increment-3 night (card L3-DISC)");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-435** |")) as string;
+    expect(row, "M-435 row").toContain("2026-11-06-batch-bc#CHAT-230.D8M435");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-1 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-1").toContain("2026-11-06-batch-bc#CHAT-230.DL-1");
+    expect(M, "CHAT-230.DL-1 rule text").toContain("(a) Split Spec 131 → 131a now (MB-79 (u-prep)). It blocks a project commit, which is allowed under the infra freeze. Then lane R lands ONE increment-3 batch with every answer above plus the LC-18 note, before any build commit and before the dry run.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-1");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-2 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-2").toContain("2026-11-06-batch-bc#CHAT-230.DL-2");
+    expect(M, "CHAT-230.DL-2 rule text").toContain("(a) Night last. Every version-moving commit lands before the dry run: the rule batch, all Layer 1/2 items, and every Layer 3 seed edit (building type, catalogue rows, switchboard rows). Then a landing freeze runs from the dry run to C6 (N-6 a), and the night restamps the final increment-3 tree. The houseplex rows fail closed (`not_modelled`, Q-A) on stored data until the night stores D5. golden-25 runs on fixtures generated by the pure core (DL-14).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-2");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-3 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-3").toContain("2026-11-06-batch-bc#CHAT-230.DL-3");
+    expect(M, "CHAT-230.DL-3 rule text").toContain("(a) Carry everything: D2, Q12, D5 (Q-STOR F), the mechanical cells appended (width 61 → 63) and the rest. Go only if the final-tree G-STOR record is ≤ 780; the record decides. (b) Carry D5 and everything else, but hold M-472's storage half to a later night with a room-maker. The four mechanical rows stay `not_evaluated:missing_input:absent_target`, disclosed \"mechanical area: not yet stored\". The headline is unchanged (M-472). This **amends Q-M1 b+** (*\"stored on the increment-3 Layer 2 night\"*) by a dated note, M-246. Projected 746.0 MiB, a margin of 34. **Recommendation: (a), gated, with (b) as the named fallback.** Build all of it. If the final G-STOR record is above 780, or the margin is below the figure the operator names, take (b) at that gate rather than stopping the night. (c) is the most work for 2.6 MiB of risk.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-3");
+  });
+  it("M-499 carries 2026-11-06-batch-bc#CHAT-230.DL-4 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-4").toContain("2026-11-06-batch-bc#CHAT-230.DL-4");
+    expect(M, "CHAT-230.DL-4 rule text").toContain("(a) A red-first Layer 2 item on the one night: RM houseplex `main_wall_*_share_pct`, `upper_storey_setback_m` and `pitched_roof_slope_min` are re-stored as `unregulated` by absence, through an absence ruling row per (zone RM, class) executed against its pinned page (the Q11/M-475 form). With T Q4 (c), D5 stores no pitched option for the RM houseplex (it shares the cell), so the headline is flat = S × F. **Recommend (a)** (with T Q4 c). It is the ruled reading (M-190) and the existing absence pattern, and lane T's key values become reachable.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-499** |")) as string;
+    expect(row, "M-499 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-4");
+  });
+  it("M-499 carries 2026-11-06-batch-bc#CHAT-230.DL-5 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-5").toContain("2026-11-06-batch-bc#CHAT-230.DL-5");
+    expect(M, "CHAT-230.DL-5 rule text").toContain("(a) A red-first keying fix on the night. The build lane counts the citywide reach first (UNVERIFIED here). **Recommend (a).**");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-499** |")) as string;
+    expect(row, "M-499 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-5");
+  });
+  it("M-499 carries 2026-11-06-batch-bc#CHAT-230.DL-6 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-6").toContain("2026-11-06-batch-bc#CHAT-230.DL-6");
+    expect(M, "CHAT-230.DL-6 rule text").toContain("(a) Named expected-value changes (10 → 12, with the M-201 citation) in the Q12 fix commit, with an R-MC door line per file (DOOR-PA) and `cases.json` regenerated by `golden-lots-cases.mjs --write`. **Recommend (a).**");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-499** |")) as string;
+    expect(row, "M-499 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-6");
+  });
+  it("M-499 carries 2026-11-06-batch-bc#CHAT-230.DL-7 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-7").toContain("2026-11-06-batch-bc#CHAT-230.DL-7");
+    expect(M, "CHAT-230.DL-7 rule text").toContain("(a) Remove the representative-only guards for the listed classes. Write class overrides at option slots. Decode an override at an option slot (class override first, then a shared code reads that class's own base). Layer 2 scope `options.roof_form.classes` gains `detached_houseplex`. Migration 297 rewrites `bylaw_resolution_option_results` for the listed classes and the override read, and carries the width move of DL-3. It is applied alone, `--only=297 --dry-run` first (N-7 a). **Recommend (a).** Named test changes are measured at build: the RC-1 tests in `migration-295`, `materialize-roof-axis`, `materialize` and `violations` are listed in the map §2.3.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-499** |")) as string;
+    expect(row, "M-499 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-7");
+  });
+  it("M-499 carries 2026-11-06-batch-bc#CHAT-230.DL-8 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-8").toContain("2026-11-06-batch-bc#CHAT-230.DL-8");
+    expect(M, "CHAT-230.DL-8 rule text").toContain("**DL-8 [D N-5] + [E] LQ1 and M-435 \"measured citywide in that night's dry run\".** **Measured now on the 2 % sample** (`measure-lq1.cjs`, tip vs the LQ1 prototype). LQ1 removes the 10.20.40.70(4) side-yard-shift sentence from 9,564 cells on 1,926 lots, all RD `side_setback_m`, all five classes. 1,922 of the 1,924 house lots have an exception winner (`sql/lq1-win.out`). That is LQ-1 a's reading (x5, x155, x310 on the 25). 1,415 sample lots keep the sentence. Scaled: about 474,600 cells on about 95,600 lots. Nothing is stored. `evaluator_version` moves. **Options.** (a) A sha-frozen read-only disclosure census on the final tree in section D, with its table in the prereg (lane D's recommendation). (b) Extend the dry-run harness. **Recommend (a).**");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-499** |")) as string;
+    expect(row, "M-499 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-8");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-9 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-9").toContain("2026-11-06-batch-bc#CHAT-230.DL-9");
+    expect(M, "CHAT-230.DL-9 rule text").toContain("**DL-9 [D N-4] Held Q-D4W figures and notes words.** As lane D N-4. **Recommend (a)**: the held figures go in the notes-only night patch before the capture. [night list, N-4] (a) Put the held figures (from the d4-figures file, source run 4414, dated 2026-11-05) in the notes-only night patch, applied in `$CAP` before the capture (C3b), so #44 stays fresh. This night's own figures go into the night record and a new held file for the next recapture.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-9");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-10 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-10").toContain("2026-11-06-batch-bc#CHAT-230.DL-10");
+    expect(M, "CHAT-230.DL-10 rule text").toContain("**DL-10 [D N-7] Migrations on the night.** As lane D N-7, with 297 = DL-7 + DL-3. 294 and 296 (and a new Layer 3 settings migration for Q9-1 / Q9-2, if one is written) wait for their Layer 3 DB window. **Recommend (a).** [night list, N-7] (a) The D-MIG form for this night: the night's own migration (297, if D5 or N-3 need it) alone, `--only=297 --dry-run` first, all others held, the night running its VALIDATE. 294 and 296 wait for their Layer 3 DB window (MB-35 order).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-10");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-11 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-11").toContain("2026-11-06-batch-bc#CHAT-230.DL-11");
+    expect(M, "CHAT-230.DL-11 rule text").toContain("**DL-11 [D N-8] C1 storage baseline.** As lane D N-8. **Recommend (a)**: 708.51 MiB ± 1 and 89,375 heap pages (re-measured by lane E: 708.51 / heap 698.24 MiB). [night list, N-8] (a) C1 refuses unless the three tables equal the readiness measure 708.51 MiB ± 1 and the lots heap is exactly 89,375 pages: the heap the projection and the G-STOR fill assumed.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-11");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-12 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-12").toContain("2026-11-06-batch-bc#CHAT-230.DL-12");
+    expect(M, "CHAT-230.DL-12 rule text").toContain("**DL-12 [D N-9] The 25-lot stop covers the houseplex class.** As lane D N-9. **Recommend (a).** [night list, N-9] (a) C1 and C4 read the 25-lot image for detached_house and detached_houseplex. Only the dry run's moved cells may change, taken from `golden25-allowed.tsv` (data, not a typed list).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-12");
+  });
+  it("M-498 carries 2026-11-06-batch-bc#CHAT-230.DL-13 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-13").toContain("2026-11-06-batch-bc#CHAT-230.DL-13");
+    expect(M, "CHAT-230.DL-13 rule text").toContain("**DL-13 [D N-1] The night go wording and who runs the blocks.** As lane D N-1. **Recommend (b)**: the orchestrator runs each block on the operator's word. [night list, N-1] (b) The orchestrator runs each block on the operator's word, one at a time, stopping at each refusal or stop (the axis go (b) form).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-498** |")) as string;
+    expect(row, "M-498 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-13");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-14 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-14").toContain("2026-11-06-batch-bc#CHAT-230.DL-14");
+    expect(M, "CHAT-230.DL-14 rule text").toContain("(a) `golden25-inputs.mjs` gains the houseplex class cells (base + D5 options) from the pure core on the final pre-night tree (path A, the OR-7 / mode-B form). `expected.jsonl` gains the houseplex rows from lane T's key. The manifest and `MANIFEST_SHA` are re-pinned (`golden-25.logic.test.ts:34`), as one oracle-only round with its own prereg. Stop if any `detached_house` cell moves. **Recommend (a).** Measured: step = key on 18 of 19 non-RM numeric lots now, and on the 6 RM lots once DL-4 (a) lands (`impact-map.md` §3).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-14");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-15 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-15").toContain("2026-11-06-batch-bc#CHAT-230.DL-15");
+    expect(M, "CHAT-230.DL-15 rule text").toContain("(a) A Layer 3 reading row `reading:exc_fsi_uncapped` (on, with confidence C9/C10). It re-runs the gfa rows with `l2(fsi)` read as `not_applicable` where the fsi winner is an exception arm that names no building type. It is shown beside the headline with the Q3 a label. (which figure) (a) the uncapped reading's own headline (684.93 / 687.11 / 601.29) **Recommend:** how (a), which figure (a) (T Q1 a). The figures quoted in Q3 a and Q4 a are (a)'s.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-15");
+  });
+  it("M-386 carries 2026-11-06-batch-bc#CHAT-230.DL-16 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-16").toContain("2026-11-06-batch-bc#CHAT-230.DL-16");
+    expect(M, "CHAT-230.DL-16 rule text").toContain("**Rule.** D-8: an unmapped family fails closed (`disclosure-families.json` `unmapped_word`). (a) One closed word per family, named by lane R in the DL-1 batch, with the golden flags keyed after it (T Q5 a). **Recommend (a).**");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-386** |")) as string;
+    expect(row, "M-386 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-16");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-17 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-17").toContain("2026-11-06-batch-bc#CHAT-230.DL-17");
+    expect(M, "CHAT-230.DL-17 rule text").toContain("**DL-17 [T Q3] The unit-count floors: four details.** As T Q3. **Recommend (i) a, (ii) a, (iii) a, (iv) a.** (i) (a) the footprint F (the box, disclosed `shape_box_assumed`, like every floor); (ii) (a) the headline form's floors (the key); (iii) (a) the capped GFA spread evenly over S storeys; (iv) (a) the basement's livable area (0.9 × F) and its own capacity floor(0.9F ÷ 30), shown next to the capped total of 4. For example, A0067 shows basement 205.48 m², room for 6, total 4.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-17");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-18 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-18").toContain("2026-11-06-batch-bc#CHAT-230.DL-18");
+    expect(M, "CHAT-230.DL-18 rule text").toContain("**DL-18 [T Q7] The per-unit area row.** As T Q7. **Recommend (a)**: the net per unit, basement included. (a) The average net per unit, basement included: 0.9 × (headline GFA + basement F) ÷ units. Examples: A0375 61.0, A0553 67.1, A0175 108.7, A0399 375.7 m².");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-18");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-19 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-19").toContain("2026-11-06-batch-bc#CHAT-230.DL-19");
+    expect(M, "CHAT-230.DL-19 rule text").toContain("**DL-19 [T Q6] The 19 m release depth input (MB-62 D4).** As T Q6. **Recommend (a)**: the parcel depth, with D4 a named finding on A0182, A0388 and A0464. (a) Key on the parcel depth, as increments 1 and 2 did, and disclose D4 as a named finding on the three lots.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-19");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-20 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-20").toContain("2026-11-06-batch-bc#CHAT-230.DL-20");
+    expect(M, "CHAT-230.DL-20 rule text").toContain("**DL-20 [T Q8] The 2-storey option.** As T Q8. **Recommend (a)**: not in increment 3. (b) pulls cross-class work forward. (a) Increment 3 keys the maximum-storey headline only, as increments 1 and 2 did. The 2-storey option stays with its owed lock.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-20");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-21 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-21").toContain("2026-11-06-batch-bc#CHAT-230.DL-21");
+    expect(M, "CHAT-230.DL-21 rule text").toContain("`building-types.json` gains `detached_houseplex` (units 4, M-160 / Q6 a) and `switchboard.json` gains `building_type:detached_houseplex`. Every catalogue row's `building_type` becomes a list (Q2 a). This means `rows.js:460` (`r.building_type === buildingType.id`) and the catalogue validator. The new rows: units (Q8 a, Q9-1 a, Q9-2 a settings), bedrooms (Q7 a), basement line, per-unit area. The confidence reading rows are C8, C9, C10, C13 and C14 (Q14 a). The D-8 production read wiring: `READ_SQL.lots` gains `evaluator_version` (`compute-maxbld-scenarios.js:40-42`; descriptor `:41`); a parcels read of the `buildLotVector` columns (descriptor `:59`); `lookups.layer1Env` and `permitted_by_class` in the step shell (location UNVERIFIED). With them come the step-closure / neighbour-facts ALLOWED assertions. Pins: `layer3-catalogue.logic.test.ts` catalogue / switchboard / buildingTypes shas (`:35`, `:38`, `:39`); `determinism.logic.test.ts:76-77` (47 → the two-type count, UNVERIFIED). **Options.** (a) Approve the set in the RP-K form: version and hash fields plus these named assertion changes; any other move stops.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-21");
+  });
+  it("M-500 carries 2026-11-06-batch-bc#CHAT-230.DL-22 and its Rule text", () => {
+    expect(M, "CHAT-230.DL-22").toContain("2026-11-06-batch-bc#CHAT-230.DL-22");
+    expect(M, "CHAT-230.DL-22 rule text").toContain("(a) `fixtures/layer3/increment-3/examples.json` from lane T's key (operator-checked, O-10), run by an `increment3-worked-examples` test on the lots' real base / option cells (the D-3 harness). \"3 green\" means golden-25 (both types), increment3-worked-examples (0 todos), disclosure-carriage (houseplex) and the CoA check of A0097 / A0289 (Q13 a) are green on the tip, recorded as an R-LZ zero-move round plus a queue row 3 note.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-500** |")) as string;
+    expect(row, "M-500 row").toContain("2026-11-06-batch-bc#CHAT-230.DL-22");
+  });
+
+});
