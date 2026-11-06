@@ -49,7 +49,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
   - Lane P. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; Q-MFGO "a"): RUNNING (lane R/P, stage 1: plan and measure, no commits). Waits on: inc 2, freeze lift. Done-condition: measurements written; numbers proposed to the operator (MF-08).
 
 **MF-10 Retire old lineage names from the report schema seed; every field has a `source` in the closed binding set; binding-sources protected file — LATER** (E)
-  - Lane E. Status cell (kept): LATER. Waits on: MF-05, inc 2. Done-condition: 0 lineage refs; Rule 20 check fails an invented field.
+  - Lane E. Status cell (kept): LATER. Waits on: MF-05, inc 2. Done-condition: 0 lineage refs; Rule 20 check fails an invented field. Dated note 2026-11-06 (M-246, prior text kept; operator answers MF-10 D-1..D-7 "MF-10 all recommended provided they are complaint" and D-6+ "MF-10 D-6+ a", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): RUNNING (lane E, stages 3-9). MF-10 also builds the FE-18 lock `src/tests/surfaces/report-binding.logic.test.ts` (D-2 a), the `parcels` source (D-5 b, FE-27) and the named check and test changes (RS-1, RS-2, RS-3, RS-5, RS-9 by D-6 a; RS-4, RS-6, RS-7, the sample reports and the Q-7 block first test by D-6+ a).
 
 **MF-11 Red tests first for the generator (row with no field; field with no row; hand edit) — LATER** (T)
   - Lane T. Status cell (kept): LATER. Waits on: MF-10. Done-condition: red evidence under `docs/reports/red-evidence/`.
@@ -67,7 +67,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
   - Lane G. Status cell (kept): LATER. Waits on: MF-12. Done-condition: planted bad descriptor exits 1.
 
 **MF-16 Locks: binding, no-maths, generated-only, honest, parity, budget, variants — LATER** (T)
-  - Lane T. Status cell (kept): LATER. Waits on: MF-14, MF-15. Done-condition: each RED then GREEN.
+  - Lane T. Status cell (kept): LATER. Waits on: MF-14, MF-15. Done-condition: each RED then GREEN. Dated note 2026-11-06 (M-246, prior text kept; operator answer MF-10 D-2 a, verbatim "MF-10 all recommended provided they are complaint"): the "binding" lock (`src/tests/surfaces/report-binding.logic.test.ts`, FE-18) is built by MF-10, so "binding" is removed from this row's locks; the other locks stay here.
 
 **MF-17 Gate arm C wiring (Spec 128 §4.11 items 1-6): 135 landed earlier; ID_RE; trailer; prereg-name/PREREG_RE; policy globs held then layer23 — RUNNING (items 1-5 and the D-2 loop-scope item in the early gate batch; item 6, the policy flip, follows; dated note 2026-11-06)** (G)
   - Lane G. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b): items 1-5 and the D-2 loop-scope item run now as the early gate batch, before MF-10; item 6 (the policy flip) follows it. Waits on: MF-16, freeze lift. Done-condition: commit citing an OWED FE row refused; waits for the named freeze lift; McBylaws owner review.
