@@ -178,6 +178,7 @@ describe('MK-2: keyed but not stored, the four mechanical rows are pending and t
       logicVariables: read('scripts/seeds/logic_variables.json'),
       vocab: VOCAB,
       layer2Classes: SCOPE.classes,
+      layer2Options: SCOPE.options, // operator "a" on Q-A and Q-A4: R2's R3-11 check fails closed without the declared roof_form scope
     };
     const have = new Set((baseSeeds.catalogue.rows as Json[]).map((r) => r.id));
     const stubs = GEOMETRY_ROWS.filter((id) => !have.has(id)).map((id) => ({ id, building_type: 'detached_house', increment: '2', form: 'expr', unit: 'm2', envelope: false, expression: '0 m2', clauses: [], rules: [] }));
