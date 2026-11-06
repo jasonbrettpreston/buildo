@@ -1,0 +1,36 @@
+{
+  "source": "operator chat 2026-11-01",
+  "operator_quote": "1-3 recommendation approved if they are complaint to the nhandbook or governing spec (state the ruling) and they meet the overall 5 key objectives standardized, observable, scalable, accurate and understandable (simple and no scope creep). Those are the two conditions",
+  "context": "Recorded by lane R (McBylaws queue, lane R slot), stage 9. Operator approval of items 2a and 3 (~/Buildo-scratch/mcbylaws/compliance/night-1101-items-1-3.md, its two conditions and Revision 1). Four dated notes, M-246 form; no status cell flips and nothing is built: the policy, lock and file changes are lane G's (MB-79 (t) for exc-lit-scope.json; a new MB-79 item for the seed move, not yet lettered).",
+  "decisions": [
+    {
+      "id": "CHAT-219.M377-PATH",
+      "subject": "M-377 path note: the formula catalogue is at scripts/seeds/layer3/layer3-catalogue.json",
+      "decision": "approve",
+      "recommendation": "CARD-table-version-scope (~/Buildo-scratch/p2close/CARD-table-version-scope.answered.md), option A (\"the three seeds go to `scripts/seeds/layer3/`\"), applied to MB-31 by CARD-mb31-plan-conflicts (c) = Card 1 A (~/Buildo-scratch/p2close/CARD-mb31-plan-conflicts.answered.md); compliance item 2a. Drafted and panel-checked at ~/Buildo-scratch/mcbylaws/R-batch-ar/drafts.md (panel REVISE, folded, fold validation PASS). Rule text: the catalogue's path is scripts/seeds/layer3/layer3-catalogue.json, not scripts/seeds/bylaw/layer3-catalogue.json. Only the path changes: the catalogue is still M-61's formula registry, is still built by MB-31, and every other clause of this row is unchanged.",
+      "quote_ref": "q_13"
+    },
+    {
+      "id": "CHAT-219.M378-PATH",
+      "subject": "M-378 path note: the switchboard is at scripts/seeds/layer3/switchboard.json",
+      "decision": "approve",
+      "recommendation": "CARD-table-version-scope, option A; compliance item 2a. Drafted and panel-checked at ~/Buildo-scratch/mcbylaws/R-batch-ar/drafts.md (panel REVISE, folded, fold validation PASS). Rule text: the switchboard's path is scripts/seeds/layer3/switchboard.json, not scripts/seeds/bylaw/switchboard.json. Only the path changes: the rows, kinds, defaults and \"off beats on\" are unchanged.",
+      "quote_ref": "q_13"
+    },
+    {
+      "id": "CHAT-219.LC16-PATH",
+      "subject": "LC-16 path note: the building-types table is at scripts/seeds/layer3/layer3-building-types.json",
+      "decision": "approve",
+      "recommendation": "CARD-table-version-scope, option A; compliance item 2a, Revision 1 (:131). Drafted and panel-checked at ~/Buildo-scratch/mcbylaws/R-batch-ar/drafts.md (panel REVISE, folded, fold validation PASS). Rule text: the building-types table's path is scripts/seeds/layer3/layer3-building-types.json, not scripts/seeds/bylaw/layer3-building-types.json. Only the folder changes. The file name is this row's own (`layer3-building-types.json`), so MB-31 renames its built scripts/seeds/bylaw/building-types.json to match. The closed scenario set, the future-build count for semis and the rest of this row are unchanged.",
+      "quote_ref": "q_13"
+    },
+    {
+      "id": "CHAT-219.RKR-EXCLIT",
+      "subject": "R-KR note: adds exactly scripts/analysis/bylaw/_schema/exc-lit-scope.json to literal_exempt (MB-18 e1)",
+      "decision": "approve",
+      "recommendation": "Compliance item 3 (route ~/Buildo-scratch/mcbylaws/compliance/night-1101-four.md section 3.4); MB-18 e1, O-1 option (b) (~/Buildo-scratch/mcbylaws/MB-18/stage8/adjudication.md). Drafted and panel-checked at ~/Buildo-scratch/mcbylaws/R-batch-ar/drafts.md (panel REVISE, folded, fold validation PASS). Rule text: adds exactly scripts/analysis/bylaw/_schema/exc-lit-scope.json to the declared exceptions (policy literal_exempt). The file is the data file that holds G-EXC-LIT's scope rules (the `SCOPE_RULES` path entries, the `layer2_closure` reason and its note), moved out of scripts/analysis/bylaw/exc-lit.mjs. No glob, no other file.",
+      "quote_ref": "q_13"
+    }
+  ],
+  "q_13": "1-3 recommendation approved if they are complaint to the nhandbook or governing spec (state the ruling) and they meet the overall 5 key objectives standardized, observable, scalable, accurate and understandable (simple and no scope creep). Those are the two conditions"
+}

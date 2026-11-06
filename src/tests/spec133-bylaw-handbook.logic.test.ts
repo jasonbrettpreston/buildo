@@ -75,6 +75,19 @@ describe('M-260 — the register reader: every M-row and LC-row, one entry each'
     }
   });
 
+  // MB-79 (u), operator 2026-11-02 (CARD-spec131-landing U1/U2): LC-1..LC-14 and LC-28..LC-36 moved to 131a (M37, M38). The reader finds the
+  // files a register's rows moved to through the split manifest, not through a list of its own (R-LA: no new literal in this folder).
+  it('LC-rows moved to 131a by M37/M38 are still read, each from the file it now lives in; the rest stay in 131', () => {
+    const rows = reg.readBylawRegisterRows();
+    const file = (id: string) => rows.find((r) => r.id === id)!.file;
+    for (const id of ['LC-1', 'LC-14', 'LC-28', 'LC-36']) expect(file(id), id).toMatch(/131a_lot_configuration_register\.md$/);
+    for (const id of ['LC-15', 'LC-16', 'LC-27', 'LC-37']) expect(file(id), id).toMatch(/131_lot_configuration_policy\.md$/);
+    expect(rows.find((r) => r.id === 'LC-1')!.section).toBe('lc-1');
+    expect(rows.find((r) => r.id === 'LC-28')!.section).toBe('lc-2');
+    const ids = rows.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it('every register row id appears in the register file it is read from, and in no other', () => {
     for (const r of reg.readBylawRegisterRows()) expect(read(r.file), r.id).toContain(`**${r.id}**`.replace(/^\*\*(.*)\*\*$/, (_m, id) => (r.struck ? `~~${id}~~` : `**${id}**`)));
   });

@@ -42,6 +42,8 @@ const SPEC_FILES: Record<string, string> = {
   '68a': '68a_mcbylaw_standard_appendix.md',
   // Lot Configuration Policy (2026-10-18): the policy half of Spec 78, arm (iv) budget.
   '131': '131_lot_configuration_policy.md',
+  // Spec 131 register rows, moved out by M37/M38 (MB-79 (u), 2026-11-02) — a move destination like 69a.
+  '131a': '131a_lot_configuration_register.md',
   // Spec 132 — Step Standard Handbook (Spec 124 R-GU, 2026-10-20): generated; arm (iv-b) size cap and arm (v) shape check.
   '132': '132_step_standard_handbook.md',
   // Spec 133 — By-law Handbook (Spec 69a M-260, 2026-10-21): generated; arm (iv-b) size cap and arm (v) shape check.
@@ -298,6 +300,46 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
       expect(mv && [mv.from_spec, mv.to_spec, mv.classification], id).toEqual(['68', '68a', 'HISTORICAL']);
       expect(mv!.content_sha256, id).toMatch(/^[0-9a-f]{64}$/);
     }
+  });
+
+  // MB-79 (u), operator 2026-11-02 (CARD-spec131-budget option 1; CARD-spec131-landing U1): Spec 131 register rows LC-1..LC-14 and
+  // LC-28..LC-36 moved to 131a by the tool (M37, M38, Spec 124 R-AA); the moves are gated both directions like M19 and M18.
+  it('GREEN/RED — the Spec 131 -> 131a register moves (M37, M38) are declared and hashed; an untouched copy verifies; one changed byte in a moved row fails arm (i)', () => {
+    const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; from_spec: string; to_spec: string; classification: string; content_sha256: string | null }[] };
+    const into131a = manifest.moves.filter((m) => m.to_spec === '131a');
+    expect(into131a.map((m) => [m.id, m.from_spec, m.classification])).toEqual([['M37', '131', 'REGISTER'], ['M38', '131', 'REGISTER']]);
+    for (const m of into131a) expect(m.content_sha256, m.id).toMatch(/^[0-9a-f]{64}$/);
+
+    const green = makeFixtureTree();
+    const ok = runCli(['--check'], { BUILDO_SPEC_SPLIT_SPEC_DIR: green.relDir, BUILDO_SPEC_SPLIT_MANIFEST_PATH: green.relManifest });
+    expect(ok.status, `stderr=${ok.stderr}`).toBe(0);
+
+    const red = makeFixtureTree();
+    const p131a = path.join(red.dir, SPEC_FILES['131a']!);
+    const text = fs.readFileSync(p131a, 'utf8');
+    expect(text.split('| **LC-1** |').length - 1, 'the tamper target must exist exactly once').toBe(1);
+    fs.writeFileSync(p131a, text.replace('| **LC-1** |', '| **LC-1.** |'));
+    const bad = runCli(['--check'], { BUILDO_SPEC_SPLIT_SPEC_DIR: red.relDir, BUILDO_SPEC_SPLIT_MANIFEST_PATH: red.relManifest });
+    expect(bad.status, `stdout=${bad.stdout}`).toBe(1);
+    expect(bad.stderr).toContain('arm(i) move M37');
+  });
+
+  it('RED — a 131a "(moved from ...)" heading with no moves[] row fails --check (arm vi covers 131a)', () => {
+    const local = makeFixtureTree();
+    fs.appendFileSync(path.join(local.dir, SPEC_FILES['131a']!), '\n\n## Appendix §D99 — Undeclared fixture move (moved from Spec 131 §' + '999) — LIVE REGISTER\n\nbody\n');
+    const run = runCli(['--check'], { BUILDO_SPEC_SPLIT_SPEC_DIR: local.relDir, BUILDO_SPEC_SPLIT_MANIFEST_PATH: local.relManifest });
+    expect(run.status, `stdout=${run.stdout}`).toBe(1);
+    expect(run.stderr).toContain('arm(vi) UNDECLARED MOVE — 131a heading');
+  });
+
+  it('RED — the M38 row-anchor stub label removed from Spec 131 fails arm (ii)', () => {
+    const local = makeFixtureTree();
+    const p131 = path.join(local.dir, SPEC_FILES['131']!);
+    const kept = fs.readFileSync(p131, 'utf8').split('\n').filter((l) => !l.startsWith('**M38 — moved to'));
+    fs.writeFileSync(p131, kept.join('\n'));
+    const run = runCli(['--check'], { BUILDO_SPEC_SPLIT_SPEC_DIR: local.relDir, BUILDO_SPEC_SPLIT_MANIFEST_PATH: local.relManifest });
+    expect(run.status, `stdout=${run.stdout}`).toBe(1);
+    expect(run.stderr).toContain('no synthetic label for move M38');
   });
 
   it('RED — bad-move-breaks-reader.json: a move whose anchor collides with a declared reader_guards slice fails --check', () => {

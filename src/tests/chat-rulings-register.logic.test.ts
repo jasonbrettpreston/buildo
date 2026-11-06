@@ -916,6 +916,23 @@ describe('CHAT-218 (batch 2026-11-01-batch-aq): 4 rulings recorded; behaviour lo
   }
 });
 
+// CHAT-219 (batch 2026-11-01-batch-ar): each Rule text line is present in the register that carries it and cites its decision.
+describe('CHAT-219 (batch 2026-11-01-batch-ar): 4 rulings recorded; behaviour locks are OWED to the owning tasks', () => {
+  const CASES: Array<[string, string, string, string]> = [
+    ["M-377 note", "M", "2026-11-01-batch-ar#CHAT-219.M377-PATH", "the catalogue's path is scripts/seeds/layer3/layer3-catalogue.json, not scripts/seeds/bylaw/layer3-catalogue.json. Only the path changes: the catalogue is still M-61's formula registry, is still built by MB-31, and every other clause of this row is unchanged."],
+    ["M-378 note", "M", "2026-11-01-batch-ar#CHAT-219.M378-PATH", "the switchboard's path is scripts/seeds/layer3/switchboard.json, not scripts/seeds/bylaw/switchboard.json. Only the path changes: the rows, kinds, defaults and \"off beats on\" are unchanged."],
+    ["LC-16 note", "L", "2026-11-01-batch-ar#CHAT-219.LC16-PATH", "the building-types table's path is scripts/seeds/layer3/layer3-building-types.json, not scripts/seeds/bylaw/layer3-building-types.json. Only the folder changes. The file name is this row's own (`layer3-building-types.json`), so MB-31 renames its built scripts/seeds/bylaw/building-types.json to match. The closed scenario set, the future-build count for semis and the rest of this row are unchanged."],
+    ["R-KR note", "A", "2026-11-01-batch-ar#CHAT-219.RKR-EXCLIT", "adds exactly scripts/analysis/bylaw/_schema/exc-lit-scope.json to the declared exceptions (policy literal_exempt). The file is the data file that holds G-EXC-LIT's scope rules (the `SCOPE_RULES` path entries, the `layer2_closure` reason and its note), moved out of scripts/analysis/bylaw/exc-lit.mjs. No glob, no other file."],
+  ];
+  const TEXT: Record<string, string> = { A, M, L: L131, S: S68 };
+  for (const [row, reg, c, rule] of CASES) {
+    it(`${row} carries ${c} and its Rule text`, () => {
+      expect(TEXT[reg], c).toContain(c);
+      expect(TEXT[reg] + L131 + M + A + S68, c + ' rule text').toContain(rule);
+    });
+  }
+});
+
 // CHAT-220 (batch 2026-11-02-batch-as): the rule text is present in the register that carries it and cites its decision.
 describe('CHAT-220 (batch 2026-11-02-batch-as): 2 rulings recorded; the I10 lock is OWED to MB-18 (i) and the per-move check to MB-79 (x)', () => {
   const CASES: Array<[string, string, string]> = [

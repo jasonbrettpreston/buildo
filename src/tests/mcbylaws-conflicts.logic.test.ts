@@ -89,13 +89,14 @@ describe('checkCard (K4) and the CLI shim', () => {
 
 describe('decision-log --check gains arm K (W3): a register row ADDED in the staged diff needs its Conflict check', () => {
   const SPEC = 'docs/specs/01-pipeline/69a_mcbylaw_register.md';
-  const stageRow = (rowText: string) => {
+  const stageRow = (rowText: string, spec: string = SPEC) => {
     const repo = makeRepo();
     try {
-      repo.write(SPEC, `${REGISTER}\n`);
+      repo.write(SPEC, `${REGISTER}\n`); // arm K reads the conflict register from the staged 69a, so it is always present
+      repo.write(spec, `${REGISTER}\n`);
       repo.commit('register');
-      repo.write(SPEC, `${REGISTER}\n${rowText.replace(/\n+/g, ' ')}\n`);
-      repo.stage(SPEC);
+      repo.write(spec, `${REGISTER}\n${rowText.replace(/\n+/g, ' ')}\n`);
+      repo.stage(spec);
       return stagedRowConflictProblems(repo.dir);
     } finally {
       repo.cleanup();
@@ -104,6 +105,33 @@ describe('decision-log --check gains arm K (W3): a register row ADDED in the sta
   it('red: the MB17-Q1 draft row with no paragraph, and one that omits M-180', () => {
     expect(stageRow(row('M-500', DRAFT))).toContain('FAIL:K:no-conflict-check:M-500');
     expect(stageRow(row('M-500', `${DRAFT}\n\n**Conflict check.** ${paragraph(OMITS_M180)}`))).toContain('FAIL:K:omits:M-180:M-500');
+  });
+  // MB-79 (u): 131a holds moved Spec 131 register rows (M37, M38); a new row typed straight into it is a new ruling and needs its Conflict check too.
+  it('red: a row added straight to Spec 131a (a split register) with no paragraph', () => {
+    expect(stageRow(row('LC-500', DRAFT), 'docs/specs/01-pipeline/131a_lot_configuration_register.md')).toContain('FAIL:K:no-conflict-check:LC-500');
+  });
+  // MB-79 (u): a MOVED row (removed from 131, added to 131a by the tool, same id) is not a new ruling; a row with a new id is.
+  it('green/red: a row moved verbatim from 131 to 131a is filtered; a row with a new id typed into 131a fails', () => {
+    const P131 = 'docs/specs/01-pipeline/131_lot_configuration_policy.md';
+    const P131A = 'docs/specs/01-pipeline/131a_lot_configuration_register.md';
+    const moved = row('LC-501', DRAFT);
+    const run = (copy: string) => {
+      const repo = makeRepo();
+      try {
+        repo.write('docs/specs/01-pipeline/69a_mcbylaw_register.md', `${REGISTER}\n`);
+        repo.write(P131, `${moved}\n`);
+        repo.write(P131A, 'x\n');
+        repo.commit('register');
+        repo.write(P131, 'stub\n');
+        repo.write(P131A, `x\n${copy}\n`);
+        repo.stage(P131, P131A);
+        return stagedRowConflictProblems(repo.dir);
+      } finally {
+        repo.cleanup();
+      }
+    };
+    expect(run(moved)).toEqual([]);
+    expect(run(moved.replace('LC-501', 'LC-502'))).toContain('FAIL:K:no-conflict-check:LC-502');
   });
   it('green: the row naming all ten with M-180 amends, and a staged diff with no register row', () => {
     expect(stageRow(greenTwin())).toEqual([]);

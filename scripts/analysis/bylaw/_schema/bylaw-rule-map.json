@@ -2016,62 +2016,6 @@
       "section": "fam-general"
     },
     {
-      "id": "lc.1",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.2",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.3",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.4",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.5",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.6",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.7",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.8",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.9",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.10",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.11",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.12",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.13",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.14",
-      "section": "fam-general"
-    },
-    {
       "id": "lc.15",
       "section": "fam-general"
     },
@@ -2122,42 +2066,6 @@
     {
       "id": "lc.27",
       "section": "fam-general"
-    },
-    {
-      "id": "lc.28",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.29",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.30",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.31",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.32",
-      "section": "fam-5.10.1.30"
-    },
-    {
-      "id": "lc.33",
-      "section": "fam-150"
-    },
-    {
-      "id": "lc.34",
-      "section": "fam-general"
-    },
-    {
-      "id": "lc.35",
-      "section": "fam-150"
-    },
-    {
-      "id": "lc.36",
-      "section": "fam-150"
     },
     {
       "id": "lc.37",
@@ -2290,6 +2198,98 @@
     {
       "id": "lc.69",
       "section": "fam-general"
+    },
+    {
+      "id": "lc.1",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.2",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.3",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.4",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.5",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.6",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.7",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.8",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.9",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.10",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.11",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.12",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.13",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.14",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.28",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.29",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.30",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.31",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.32",
+      "section": "fam-5.10.1.30"
+    },
+    {
+      "id": "lc.33",
+      "section": "fam-150"
+    },
+    {
+      "id": "lc.34",
+      "section": "fam-general"
+    },
+    {
+      "id": "lc.35",
+      "section": "fam-150"
+    },
+    {
+      "id": "lc.36",
+      "section": "fam-150"
     }
   ],
   "rules": [
@@ -7288,160 +7288,6 @@
       }
     },
     {
-      "id": "LC-1",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.1",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-1**"
-      }
-    },
-    {
-      "id": "LC-2",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.2",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-2**"
-      }
-    },
-    {
-      "id": "LC-3",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.3",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-3**"
-      }
-    },
-    {
-      "id": "LC-4",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.4",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-4**"
-      }
-    },
-    {
-      "id": "LC-5",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.5",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-5**"
-      }
-    },
-    {
-      "id": "LC-6",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.6",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-6**"
-      }
-    },
-    {
-      "id": "LC-7",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.7",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-7**"
-      }
-    },
-    {
-      "id": "LC-8",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.8",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-8**"
-      }
-    },
-    {
-      "id": "LC-9",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.9",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-9**"
-      }
-    },
-    {
-      "id": "LC-10",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.10",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-10**"
-      }
-    },
-    {
-      "id": "LC-11",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.11",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-11**"
-      }
-    },
-    {
-      "id": "LC-12",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.12",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-12**"
-      }
-    },
-    {
-      "id": "LC-13",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.13",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-13**"
-      }
-    },
-    {
-      "id": "LC-14",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.14",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-14**"
-      }
-    },
-    {
       "id": "LC-15",
       "kind": "lc-row",
       "status": "owed",
@@ -7582,105 +7428,6 @@
         "register": true,
         "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
         "anchor": "**LC-27**"
-      }
-    },
-    {
-      "id": "LC-28",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.28",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-28**"
-      }
-    },
-    {
-      "id": "LC-29",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.29",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-29**"
-      }
-    },
-    {
-      "id": "LC-30",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.30",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-30**"
-      }
-    },
-    {
-      "id": "LC-31",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.31",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-31**"
-      }
-    },
-    {
-      "id": "LC-32",
-      "kind": "lc-row",
-      "status": "active",
-      "handbook_line": "lc.32",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-32**"
-      }
-    },
-    {
-      "id": "LC-33",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.33",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-33**"
-      }
-    },
-    {
-      "id": "LC-34",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.34",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-34**"
-      }
-    },
-    {
-      "id": "LC-35",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.35",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-35**"
-      }
-    },
-    {
-      "id": "LC-36",
-      "kind": "lc-row",
-      "status": "owed",
-      "handbook_line": "lc.36",
-      "source": {
-        "register": true,
-        "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-        "anchor": "**LC-36**"
       }
     },
     {
@@ -8044,6 +7791,259 @@
         "register": true,
         "file": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
         "anchor": "**LC-69**"
+      }
+    },
+    {
+      "id": "LC-1",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.1",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-1**"
+      }
+    },
+    {
+      "id": "LC-2",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.2",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-2**"
+      }
+    },
+    {
+      "id": "LC-3",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.3",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-3**"
+      }
+    },
+    {
+      "id": "LC-4",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.4",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-4**"
+      }
+    },
+    {
+      "id": "LC-5",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.5",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-5**"
+      }
+    },
+    {
+      "id": "LC-6",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.6",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-6**"
+      }
+    },
+    {
+      "id": "LC-7",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.7",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-7**"
+      }
+    },
+    {
+      "id": "LC-8",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.8",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-8**"
+      }
+    },
+    {
+      "id": "LC-9",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.9",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-9**"
+      }
+    },
+    {
+      "id": "LC-10",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.10",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-10**"
+      }
+    },
+    {
+      "id": "LC-11",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.11",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-11**"
+      }
+    },
+    {
+      "id": "LC-12",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.12",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-12**"
+      }
+    },
+    {
+      "id": "LC-13",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.13",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-13**"
+      }
+    },
+    {
+      "id": "LC-14",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.14",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-14**"
+      }
+    },
+    {
+      "id": "LC-28",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.28",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-28**"
+      }
+    },
+    {
+      "id": "LC-29",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.29",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-29**"
+      }
+    },
+    {
+      "id": "LC-30",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.30",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-30**"
+      }
+    },
+    {
+      "id": "LC-31",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.31",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-31**"
+      }
+    },
+    {
+      "id": "LC-32",
+      "kind": "lc-row",
+      "status": "active",
+      "handbook_line": "lc.32",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-32**"
+      }
+    },
+    {
+      "id": "LC-33",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.33",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-33**"
+      }
+    },
+    {
+      "id": "LC-34",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.34",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-34**"
+      }
+    },
+    {
+      "id": "LC-35",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.35",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-35**"
+      }
+    },
+    {
+      "id": "LC-36",
+      "kind": "lc-row",
+      "status": "owed",
+      "handbook_line": "lc.36",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/131a_lot_configuration_register.md",
+        "anchor": "**LC-36**"
       }
     }
   ]

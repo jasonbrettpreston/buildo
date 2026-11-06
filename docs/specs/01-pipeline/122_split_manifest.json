@@ -830,6 +830,32 @@
       "content_sha256": "11ad3fe5ff91910c2463cd9b3a889a315f977384004fcf9b2ab64382ae4c9f68",
       "moved_at": "2026-10-20",
       "commit": "1fb8bd07"
+    },
+    {
+      "id": "M37",
+      "from_spec": "131",
+      "anchor": "### 1.1 Rules carried from the as-built Spec 78 (Phases 1–3, §6)",
+      "to_spec": "131a",
+      "to_anchor": "## Appendix §D1 — Register rows LC-1…LC-14 (moved from Spec 131 §1.1) — LIVE REGISTER, 2026-11-02",
+      "content_sha256": "371669a73f56e75c5771e1392250d3c45c792dbf0634bd463399f4ec2601ac97",
+      "line_count": 19,
+      "classification": "REGISTER",
+      "evidence": "MB-79 (u), operator 2026-11-02 (CARD-spec131-budget option 1; R-AA; landing CARD-spec131-landing U1). Rows LC-1…LC-14 stay in force as Spec 131 rulings, cited as Spec 131 LC-n; new rows are still added to Spec 131.",
+      "moved_at": "2026-11-02",
+      "commit": "86588d440"
+    },
+    {
+      "id": "M38",
+      "from_spec": "131",
+      "anchor": "| **LC-28** | **One shared pure calculation.** All renovation math lives in `src/features/leads/lib/renovation-shared.js`, which the step and the app both call (precedent `cost-model-shared.js`, Spec 83 §7.2). It is pure under R-BZ / R-CA: no query, no clock.<br>**Dated note 2026-10-30 (LC-28; `2026-10-30-batch-aj#CHAT-211.P3-MODEL`, `2026-10-30-batch-aj#CHAT-211.G1`):** superseded for Layer 3: calculations are catalogue rows run by the one evaluator (M-377) and no old code, including renovation-shared.js, is imported (R-KJ, M-384). | operator 2026-10-18 | — | compute-closure purity scan (G0–G13, gate E #32); JS/TS parity test | RULED. **OWED:** ①; TS shim APP-RENO |",
+      "to_spec": "131a",
+      "to_anchor": "## Appendix §D2 — Register rows LC-28…LC-36 (moved from Spec 131 §1.2) — LIVE REGISTER, 2026-11-02",
+      "content_sha256": "191601da5cb042388b4171516517fcd230a21235d60db7e5a3782fd37e85b456",
+      "line_count": 9,
+      "classification": "REGISTER",
+      "evidence": "MB-79 (u), operator 2026-11-02 (CARD-spec131-budget option 1; R-AA; landing CARD-spec131-landing U1). Rows LC-28…LC-36 stay in force as Spec 131 rulings, cited as Spec 131 LC-n; new rows are still added to Spec 131.",
+      "moved_at": "2026-11-02",
+      "commit": "86588d440"
     }
   ]
 }

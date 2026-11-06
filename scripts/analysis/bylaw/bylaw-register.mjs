@@ -10,6 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MANIFEST_PATH, SPEC_FILES } from '../spec-split-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -17,8 +18,21 @@ export const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 /** The policy registers the handbook reads, in render order. `sectionOf` maps a register heading to a handbook section. */
 export const BYLAW_REGISTERS = Object.freeze([
   { kind: 'M', rel: 'docs/specs/01-pipeline/69a_mcbylaw_register.md', spec: 'Spec 69a', headings: [/^## 1\. The register/, /^## §1a\./] , sections: ['m-core', 'm-added'] },
-  { kind: 'LC', rel: 'docs/specs/01-pipeline/131_lot_configuration_policy.md', spec: 'Spec 131', headings: [/^### 1\.1 /, /^### 1\.2 /, /^### 1\.3 /], sections: ['lc-1', 'lc-2', 'lc-3'] },
+  { kind: 'LC', rel: 'docs/specs/01-pipeline/131_lot_configuration_policy.md', spec: 'Spec 131', headings: [/^### 1\.1 /, /^(### 1\.2 |## .*\(moved from Spec 131 §1\.2\))/, /^### 1\.3 /], sections: ['lc-1', 'lc-2', 'lc-3'] },
 ]);
+
+const read = (p) => fs.readFileSync(p, 'utf8');
+
+/**
+ * The files a register's rows live in: its own file, then each file a declared spec-split move (Spec 124 R-AA) sent rows of
+ * it to. Read from the split manifest and SPEC_FILES, never listed here, so a move cannot hide rows from the handbook.
+ */
+function registerFiles(reg, root) {
+  const id = /^[0-9]+[a-z]?(?=_)/.exec(path.basename(reg.rel));
+  const { moves } = JSON.parse(read(path.join(root, path.relative(REPO_ROOT, MANIFEST_PATH))));
+  const sent = moves.filter((m) => id && m.from_spec === id[0]).map((m) => path.join(path.dirname(reg.rel), SPEC_FILES[m.to_spec]));
+  return [...new Set([reg.rel, ...sent])];
+}
 
 const ID_CELL_RE = /^(~~)?\*{0,2}(M|LC)-([0-9]+)\*{0,2}(~~)?$/;
 const HEADLINE_MAX = 300;
@@ -132,8 +146,8 @@ function statusOf(cell, struck) {
  */
 export function readBylawRegisterRows(root = REPO_ROOT) {
   const rows = [];
-  for (const reg of BYLAW_REGISTERS) {
-    const lines = fs.readFileSync(path.join(root, reg.rel), 'utf8').split('\n');
+  for (const { reg, rel } of BYLAW_REGISTERS.flatMap((r) => registerFiles(r, root).map((f) => ({ reg: r, rel: f })))) {
+    const lines = read(path.join(root, rel)).split('\n');
     let sec = -1;
     let last = null;
     lines.forEach((line) => {
@@ -154,7 +168,7 @@ export function readBylawRegisterRows(root = REPO_ROOT) {
       const row = {
         id: `${reg.kind}-${m[3]}`,
         kind: reg.kind,
-        file: reg.rel,
+        file: rel,
         spec: reg.spec,
         section: reg.sections[sec],
         headline: headlineOf(ruleCell),

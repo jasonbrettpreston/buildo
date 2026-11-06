@@ -12,7 +12,7 @@ const msg = (n: string) => readFileSync(`${FIX}/msg-${n}.txt`, 'utf8');
 const spec = (n: string) => readFileSync(`${SPEC}/${n}.md`, 'utf8');
 
 const real133 = spec('133_bylaw_handbook');
-const realRegisters = ['69a_mcbylaw_register', '124a_step_standard_policy_appendix', '131_lot_configuration_policy']
+const realRegisters = ['69a_mcbylaw_register', '124a_step_standard_policy_appendix', '131_lot_configuration_policy', '131a_lot_configuration_register']
   .map((n) => spec(n)).join('\n');
 
 describe('parseMessage', () => {
@@ -129,7 +129,7 @@ describe('parseRegisterRows + isRuled', () => {
     expect(RULED_STATUSES).toEqual(['RULED']);
   });
   it('O67-09: the real spec 131 OWED rows are OWED, never citable', () => {
-    const map = parseRegisterRows(spec('131_lot_configuration_policy'));
+    const map = parseRegisterRows(spec('131_lot_configuration_policy') + '\n' + spec('131a_lot_configuration_register'));
     expect(map.get('LC-30')?.status).toBe('OWED');
     expect(map.get('LC-46')?.status).toBe('OWED');
     expect(map.get('LC-15')?.status).toBe('OWED');

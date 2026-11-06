@@ -74,7 +74,7 @@ export const REGISTER_ROW_RE = /^\|\s*\*{0,2}([A-Z]{1,4}-[A-Z0-9]+(?:\.[0-9]+)?)
 // "Conflict check" paragraph naming every id the register search returns, each with a verdict (register-conflicts.mjs).
 // Added rows only: an edit to an older row (a status move, a lock record) is not a new ruling and is not re-judged.
 // File-only: reads `git diff --cached` and the 69a text; no staged register file means no work and no problem.
-const K_SPECS = ['69a_mcbylaw_register.md', '124a_step_standard_policy_appendix.md', '131_lot_configuration_policy.md'].map((n) => `docs/specs/01-pipeline/${n}`);
+const K_SPECS = ['69a_mcbylaw_register.md', '124a_step_standard_policy_appendix.md', '131_lot_configuration_policy.md', '131a_lot_configuration_register.md'].map((n) => `docs/specs/01-pipeline/${n}`);
 export function stagedRowConflictProblems(root, git = (args) => spawnSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 })) {
   // Fail closed outside a repository: there is no staged diff to read, so the arm cannot decide (never a pass).
   const probe = git(['rev-parse', '--is-inside-work-tree']);

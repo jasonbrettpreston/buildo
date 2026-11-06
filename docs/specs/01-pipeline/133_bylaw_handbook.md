@@ -1581,48 +1581,6 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 - **m.493** McIncrement (MCINC-6): close. Text home: Spec 08 §11.8.
   Status: RULED 2026-11-06 · OWED · Enforced by: (a) existing gates + second-seat check: the existing loop gate, prereg checker and door already refuse any…
 
-- **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
-  Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
-
-- **lc.2** Norm window and sample floor. Norms use a 5-year permit window (BUILD_NORM_WINDOW_YEARS).
-  Status: RULED · OWED · Enforced by: build-norms.logic; migration 199 partial-unique index
-
-- **lc.3** One observation per (dominant parcel, kind),
-  Status: RULED · OWED · Enforced by: build-norms.logic; compute-build-norms.db
-
-- **lc.4** The existing-ratio method. The pre-reno current-home fraction is clamp(1 − addition_delta ÷ max_build_gfa, 0, 1) (p25/p50), distinct from the new-build build_ratio_p50.
-  Status: RULED · Enforced by: build-norms.logic
-
-- **lc.5** Measuring the existing structure from massing is abandoned for headline answers
-  Status: RULED · Enforced by: Spec 65 ES-6 locks (enrich-parcels-existing-dq.db)
-
-- **lc.6** As-of-right never exceeds the max-build envelope.
-  Status: RULED · Enforced by: optimal-config.logic
-
-- **lc.7** CoA is up, not out: storeys_p90 at the same footprint.
-  Status: RULED · Enforced by: optimal-config.logic
-
-- **lc.8** Garden/laneway constants (P2.1, consolidation 2025).
-  Status: SUPERSEDED (in part) · Enforced by: contracts.infra (optimal_config group); optimal-config.logic
-
-- **lc.9** The 20 % all-ancillary cap is shared
-  Status: RULED · Enforced by: optimal-config.logic
-
-- **lc.10** Suite fit is conservative. It is measured against the current building's rear yard; a shallow yard shrinks the suite rather than failing it.
-  Status: RULED · Enforced by: optimal-config.logic
-
-- **lc.11** Confidence degradation. opt_config_confidence falls with lot-size confidence, FSI absence, a suspected existing accessory and comp count.
-  Status: RULED · Enforced by: optimal-config.logic (confidence degradation)
-
-- **lc.12** Holding zone gates the as-of-right suite;
-  Status: RULED · Enforced by: optimal-config.logic
-
-- **lc.13** comp_fsi_p50 uses new-build comps only,
-  Status: RULED · Enforced by: enrich-parcels-comps.logic
-
-- **lc.14** The McBylaw Phase 3 report (§6): report fields as declared formulas over Layer 2; the scenario catalogue; two closed status levels; PROHIBIT wins at the same rank; the CoA axis; parking never a size constraint.
-  Status: RULED 2026-10-07 · OWED · Enforced by: Spec 78 §6.9 gate table (PLANNED)
-
 - **lc.15** The step is born V3, with McBylaws Airtight inputs.
   Status: RULED · OWED · Enforced by: Spec 78 P5.11 V3 plan: step-validate V3, admin-step-registration.logic, step-validate-net-new.logic
 
@@ -1655,21 +1613,6 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **lc.27** The low-confidence threshold. existing_confidence is built on the Spec 65 ES-6 mislink checks, the link confidence and a shared-footprint penalty.
   Status: RULED · OWED · Enforced by: P5.9 variable (R-CV seed); P5.13
-
-- **lc.28** One shared pure calculation. All renovation math lives in src/features/leads/lib/renovation-shared.js, which the step and the app both call (precedent cost-model-shared.js, Spec 83 §7.2).
-  Status: RULED · OWED · Enforced by: compute-closure purity scan (G0–G13, gate E #32); JS/TS parity test
-
-- **lc.29** The ground-truth store. With consent, user-entered dimensions are stored beside the estimate snapshot (existing_house_reports) as an accuracy oracle.
-  Status: RULED · OWED · Enforced by: Spec 78 P5.8
-
-- **lc.30** When the low-confidence label may drop
-  Status: OWED · Enforced by: —
-
-- **lc.31** The enrich_parcels max-build columns are kept
-  Status: RULED · OWED · Enforced by: §6.9 shadow classifier (PLANNED)
-
-- **lc.34** Estimate design choices: the pipeline never reads user entries (O-12); storeys take the upper value (O-13) (superseded by LC-40); basement unknown (O-14); confidence seeds 0.5 / 0.6 are uncalibrated logic variables (O-15).
-  Status: RULED · OWED · Enforced by: Spec 78 P5.0, P5.9
 
 - **lc.37** Trust model. New-build rows are high trust by design (by-law + geometry); the existing house is the only low-trust input; a lawfully-existing effect on a new build is a disclosure.
   Status: RULED · Enforced by: INV-22; P5.14
@@ -1754,6 +1697,63 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
 
 - **lc.69** Box shape disclosed; footprint_shape_factor hook with the switch off.
   Status: RULED 2026-10-30 · OWED · Enforced by: OWED -> MB-31: footprint switch test (MB-31); record: chat-rulings-register.logic.test.ts › "CHAT-211/212…
+
+- **lc.1** Market-realized, not legal. Every neighbourhood norm (realized FSI, build ratios, storey p50/p90, CoA approval) is an empirical prior, never a by-law ceiling.
+  Status: RULED · Enforced by: src/tests/build-norms.logic.test.ts
+
+- **lc.2** Norm window and sample floor. Norms use a 5-year permit window (BUILD_NORM_WINDOW_YEARS).
+  Status: RULED · OWED · Enforced by: build-norms.logic; migration 199 partial-unique index
+
+- **lc.3** One observation per (dominant parcel, kind),
+  Status: RULED · OWED · Enforced by: build-norms.logic; compute-build-norms.db
+
+- **lc.4** The existing-ratio method. The pre-reno current-home fraction is clamp(1 − addition_delta ÷ max_build_gfa, 0, 1) (p25/p50), distinct from the new-build build_ratio_p50.
+  Status: RULED · Enforced by: build-norms.logic
+
+- **lc.5** Measuring the existing structure from massing is abandoned for headline answers
+  Status: RULED · Enforced by: Spec 65 ES-6 locks (enrich-parcels-existing-dq.db)
+
+- **lc.6** As-of-right never exceeds the max-build envelope.
+  Status: RULED · Enforced by: optimal-config.logic
+
+- **lc.7** CoA is up, not out: storeys_p90 at the same footprint.
+  Status: RULED · Enforced by: optimal-config.logic
+
+- **lc.8** Garden/laneway constants (P2.1, consolidation 2025).
+  Status: SUPERSEDED (in part) · Enforced by: contracts.infra (optimal_config group); optimal-config.logic
+
+- **lc.9** The 20 % all-ancillary cap is shared
+  Status: RULED · Enforced by: optimal-config.logic
+
+- **lc.10** Suite fit is conservative. It is measured against the current building's rear yard; a shallow yard shrinks the suite rather than failing it.
+  Status: RULED · Enforced by: optimal-config.logic
+
+- **lc.11** Confidence degradation. opt_config_confidence falls with lot-size confidence, FSI absence, a suspected existing accessory and comp count.
+  Status: RULED · Enforced by: optimal-config.logic (confidence degradation)
+
+- **lc.12** Holding zone gates the as-of-right suite;
+  Status: RULED · Enforced by: optimal-config.logic
+
+- **lc.13** comp_fsi_p50 uses new-build comps only,
+  Status: RULED · Enforced by: enrich-parcels-comps.logic
+
+- **lc.14** The McBylaw Phase 3 report (§6): report fields as declared formulas over Layer 2; the scenario catalogue; two closed status levels; PROHIBIT wins at the same rank; the CoA axis; parking never a size constraint.
+  Status: RULED 2026-10-07 · OWED · Enforced by: Spec 78 §6.9 gate table (PLANNED)
+
+- **lc.28** One shared pure calculation. All renovation math lives in src/features/leads/lib/renovation-shared.js, which the step and the app both call (precedent cost-model-shared.js, Spec 83 §7.2).
+  Status: RULED · OWED · Enforced by: compute-closure purity scan (G0–G13, gate E #32); JS/TS parity test
+
+- **lc.29** The ground-truth store. With consent, user-entered dimensions are stored beside the estimate snapshot (existing_house_reports) as an accuracy oracle.
+  Status: RULED · OWED · Enforced by: Spec 78 P5.8
+
+- **lc.30** When the low-confidence label may drop
+  Status: OWED · Enforced by: —
+
+- **lc.31** The enrich_parcels max-build columns are kept
+  Status: RULED · OWED · Enforced by: §6.9 shadow classifier (PLANNED)
+
+- **lc.34** Estimate design choices: the pipeline never reads user entries (O-12); storeys take the upper value (O-13) (superseded by LC-40); basement unknown (O-14); confidence seeds 0.5 / 0.6 are uncalibrated logic variables (O-15).
+  Status: RULED · OWED · Enforced by: Spec 78 P5.0, P5.9
 
 ## 3. Rows with an OWED marker (215 in force)
 
@@ -1940,9 +1940,6 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | M-491 | m.491 | RULED 2026-11-06 · OWED |
 | M-492 | m.492 | RULED 2026-11-06 · OWED |
 | M-493 | m.493 | RULED 2026-11-06 · OWED |
-| LC-2 | lc.2 | RULED · OWED |
-| LC-3 | lc.3 | RULED · OWED |
-| LC-14 | lc.14 | RULED 2026-10-07 · OWED |
 | LC-15 | lc.15 | RULED · OWED |
 | LC-16 | lc.16 | RULED · OWED |
 | LC-17 | lc.17 | RULED · OWED |
@@ -1955,14 +1952,6 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | LC-25 | lc.25 | RULED · OWED |
 | LC-26 | lc.26 | RULED · OWED |
 | LC-27 | lc.27 | RULED · OWED |
-| LC-28 | lc.28 | RULED · OWED |
-| LC-29 | lc.29 | RULED · OWED |
-| LC-30 | lc.30 | OWED |
-| LC-31 | lc.31 | RULED · OWED |
-| LC-33 | lc.33 | RULED · OWED |
-| LC-34 | lc.34 | RULED · OWED |
-| LC-35 | lc.35 | RULED · OWED |
-| LC-36 | lc.36 | RULED 2026-10-18 · OWED |
 | LC-38 | lc.38 | RULED · OWED |
 | LC-40 | lc.40 | RULED · OWED |
 | LC-43 | lc.43 | RULED · OWED |
@@ -1976,6 +1965,17 @@ The register marks work still owed on these rows (a lock, a step commit, a rulin
 | LC-67 | lc.67 | RULED 2026-10-22 · OWED |
 | LC-68 | lc.68 | RULED 2026-10-23 · OWED |
 | LC-69 | lc.69 | RULED 2026-10-30 · OWED |
+| LC-2 | lc.2 | RULED · OWED |
+| LC-3 | lc.3 | RULED · OWED |
+| LC-14 | lc.14 | RULED 2026-10-07 · OWED |
+| LC-28 | lc.28 | RULED · OWED |
+| LC-29 | lc.29 | RULED · OWED |
+| LC-30 | lc.30 | OWED |
+| LC-31 | lc.31 | RULED · OWED |
+| LC-33 | lc.33 | RULED · OWED |
+| LC-34 | lc.34 | RULED · OWED |
+| LC-35 | lc.35 | RULED · OWED |
+| LC-36 | lc.36 | RULED 2026-10-18 · OWED |
 
 ## 4. History
 
