@@ -449,7 +449,7 @@
  {
   "id": "STS-2",
   "layer": "Ruling",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "4.09 m on the stored 0.45 (was not_evaluated); 3.19 m once M-435 reaches the fixture (MB-18 (l))",
   "inputs": {
    "l2": {
@@ -589,7 +589,7 @@
  {
   "id": "STS-5",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "4.2 m",
   "inputs": {
    "l2": {
@@ -1697,7 +1697,7 @@
  {
   "id": "FLAT-9",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "199.33 m2 (unchanged)",
   "inputs": {
    "l2": {
@@ -1993,7 +1993,7 @@
  {
   "id": "PITCH-4",
   "layer": "Ruling",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A p = 0.51372; arm B not_evaluated: no cited rafter span",
   "inputs": {
    "l2": {
@@ -2033,7 +2033,7 @@
  {
   "id": "PITCH-5",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A p = 0.44445; arm B p = 0.29412; no attic, so no rafter tier; both arms n × F",
   "inputs": {
    "l2": {
@@ -2347,7 +2347,7 @@
  {
   "id": "PITCH-12",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A p = 0.44541, offered; arm B not_evaluated: no cited rafter span",
   "inputs": {
    "l2": {
@@ -2387,7 +2387,7 @@
  {
   "id": "PITCH-13-A0175",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A p = 0.74516, 1.00402, 1.11857 (cap does not bind); arm B (s 8.5) not_evaluated on all three",
   "inputs": {
    "l2": {
@@ -2425,7 +2425,7 @@
  {
   "id": "PITCH-13-A0388",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A p = 0.74516, 1.00402, 1.11857 (cap does not bind); arm B (s 8.5) not_evaluated on all three",
   "inputs": {
    "l2": {
@@ -2463,7 +2463,7 @@
  {
   "id": "PITCH-13-A0561",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A p = 0.74516, 1.00402, 1.11857 (cap does not bind); arm B (s 8.5) not_evaluated on all three",
   "inputs": {
    "l2": {
@@ -2814,7 +2814,7 @@
  {
   "id": "SLOPE-7",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "dv = 0.231818 m",
   "inputs": {
    "l2": {},
@@ -3682,7 +3682,7 @@
  {
   "id": "ATTIC-11",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A passes (83.0 %); counted attic 67.617 + block 34.221; pitched raw 444.048 -> 153.252; attic_outside_gfa 0; mechanical line X = 7.6626 (Q-MECH); arm B (s 8.5) not_evaluated, flag dropped (equals the cap)",
   "inputs": {
    "l2": {
@@ -3853,7 +3853,7 @@
  {
   "id": "ATTIC-12/A0388",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "both pass (82.9 %, 82.8 %); counted attic 49.792 and 44.520 (G-I); capped 127.044 and 199.33; mechanical lines 6.3522 and 9.9665 (A0388 part)",
   "inputs": {
    "l2": {
@@ -3902,7 +3902,7 @@
  {
   "id": "ATTIC-12/A0561",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "counted attic 44.520; capped 199.33; mechanical line 9.9665 (A0561 part of the ATTIC-12 answer)",
   "inputs": {
    "l2": {
@@ -3951,7 +3951,7 @@
  {
   "id": "ATTIC-13",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "both arms pass; arm A counted 55.405 + block 23.745, arm B counted 39.575 + block 39.575; pitched 237.4515 on both (tie, arm A shown first)",
   "inputs": {
    "l2": {
@@ -4011,7 +4011,7 @@
  {
   "id": "ATTIC-14",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "arm A passes; counted attic 112.483 + block 48.207; pitched 243.47 (capped); arm B not_evaluated (flag dropped: equals the cap); mechanical line 12.1735",
   "inputs": {
    "l2": {
@@ -4062,7 +4062,7 @@
  {
   "id": "ATTIC-15/A0193",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "pass; G-I counted attic 135.699; capped; mechanical line 13.2174",
   "inputs": {
    "l2": {
@@ -4113,7 +4113,7 @@
  {
   "id": "ATTIC-15/A0354",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "pass; G-I counted attic 80.152; capped; mechanical line 7.3609",
   "inputs": {
    "l2": {
@@ -4164,7 +4164,7 @@
  {
   "id": "ATTIC-15/A0399",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "pass; G-I counted attic 123.522; capped; mechanical line 15.6543",
   "inputs": {
    "l2": {
@@ -4215,7 +4215,7 @@
  {
   "id": "ATTIC-15/A0578",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "pass; G-I counted attic 61.88; capped; mechanical line 9.6198",
   "inputs": {
    "l2": {
@@ -4484,7 +4484,7 @@
  {
   "id": "ATTIC-23",
   "layer": "Ruling",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "not applied, disclosed (Q-MECH: no FSI cap, no permitted maximum GFA base, M-229 (3) form)",
   "inputs": {
    "l2": {
@@ -4528,7 +4528,7 @@
  {
   "id": "ATTIC-24",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "no attic; pitched GFA = n x F = 2 x 191.247 = 382.494; disclosed (new disclosure word naming 10.20.40.10(8))",
   "inputs": {
    "l2": {
@@ -4668,7 +4668,7 @@
  {
   "id": "ROOF-8",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "headline pitched 237.4515 (arms A and B tie, arm A shown first; increment 1 unchanged); other shown: flat 221.0715",
   "inputs": {
    "l2": {
@@ -4746,7 +4746,7 @@
  {
   "id": "ROOF-10",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "headline flat 243.47 (tie, increment 1 unchanged); other shown: pitched arm A 243.47 with mechanical line 12.1735 outside GFA; arm B not_evaluated (flag dropped: equals the cap)",
   "inputs": {
    "l2": {
@@ -4825,7 +4825,7 @@
  {
   "id": "ROOF-12",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "headline flat 382.494; other form shown: pitched 382.494 (no attic, n_w = n)",
   "inputs": {
    "l2": {
@@ -5044,7 +5044,7 @@
  {
   "id": "ROOF-17",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "gfa_pitched_m2 = 237.4515 m2, flag headline:gfa_pitched_a_m2; arm B 237.4515 shown in detail; headline gfa_max_m2 237.4515 (pitched arm A, headline:gfa_pitched_a_m2), flat 221.0715 shown",
   "inputs": {
    "l2": {
@@ -5089,7 +5089,7 @@
  {
   "id": "ROOF-18",
   "layer": "Ruling",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "gfa_pitched_m2 = 243.47 m2, flag headline:gfa_pitched_a_m2, no lower-bound flag (the row takes gfa_max_m2's ceiling, D1 a); arm B not_evaluated: no cited rafter span shown in detail; mechanical line 12.1735 m2 outside GFA attached to the pitched line (item 5); headline flat 243.47 (tie, flat first)",
   "inputs": {
    "l2": {
@@ -5337,7 +5337,7 @@
  {
   "id": "ROOF-23",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "gfa_pitched_m2 = 382.494 m2, flag headline:gfa_pitched_a_m2; arm B 382.494 (evaluated: no rafter is needed without an attic); headline flat 382.494 (tie, flat first)",
   "inputs": {
    "l2": {
