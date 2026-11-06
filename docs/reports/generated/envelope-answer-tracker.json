@@ -2828,7 +2828,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.20.30.40(1)#(1)(D)/application.building_types, COR-10.20.30.40(1)#(1)(D)/application.evidence"
+    "correction COR-10.20.30.40(1)#(1)(D)/application.building_types, COR-10.20.30.40(1)#(1)(D)/application.evidence, COR-10.20.30.40(1)#(1)(D)/condition"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"

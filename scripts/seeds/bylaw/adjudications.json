@@ -115276,6 +115276,38 @@
         "status": "partially_modelled",
         "user_inputs": []
       }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.20.30.40(1)#(1)(D)/condition",
+      "kind": "correction",
+      "reason": "D2 (Q-D2 a, 2026-11-04): the (1)(D) lot-coverage clause applies only on a lot the Landscape Coverage overlay maps, so on an unmapped lot (D) does not apply and (B) answers (unregulated), as the M-182 dated note says; the same keying-correction pattern as Q12-S (M-75)",
+      "rule": "Spec 69a M-182 dated note; operator Q-D2 a (2026-11-04), \"Q-D2 a\"",
+      "unit": "10.20.30.40(1)#(1)(D)",
+      "value": {
+        "if": "mapped(LC) and overlay(LC) < 45 pct",
+        "tokens": [
+          "overlay_mapped"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.60.30.40(1)#(1)(D)/condition",
+      "kind": "correction",
+      "reason": "D2 (Q-D2 a, 2026-11-04): the (1)(D) lot-coverage clause applies only on a lot the Landscape Coverage overlay maps, so on an unmapped lot (D) does not apply and (B) answers (unregulated), as the M-182 dated note says; the same keying-correction pattern as Q12-S (M-75)",
+      "rule": "Spec 69a M-182 dated note; operator Q-D2 a (2026-11-04), \"Q-D2 a\"",
+      "unit": "10.60.30.40(1)#(1)(D)",
+      "value": {
+        "if": "mapped(LC) and overlay(LC) < 45 pct",
+        "tokens": [
+          "overlay_mapped"
+        ]
+      }
     }
   ]
 }

@@ -1,0 +1,10 @@
+== MB-27 increment 3 item E1a (D2, Q-D2 a) red: src/tests/bylaw-d2-houseplex-coverage-unmapped.logic.test.ts run on the landing parent fbbd17ecc (the prereg alone), the lock added alone: 10.20.30.40(1)#(1)(D) and 10.60.30.40(1)#(1)(D) carry no mapped(LC) condition and no COR, so an unmapped RD / RT houseplex lot answers not_evaluated, not unregulated. 6 of 7 fail; the survive case holds on both trees.
+   × Q-D2 a: (D) gains mapped(LC) (data, M-75) > 10.20.30.40(1)#(1)(D): the generated unit carries the mapped(LC) condition
+   × Q-D2 a: (D) gains mapped(LC) (data, M-75) > 10.60.30.40(1)#(1)(D): the generated unit carries the mapped(LC) condition
+   × Q-D2 a: (D) gains mapped(LC) (data, M-75) > 10.20.30.40(1)#(1)(D): one COR-…/condition adjudication, kind correction
+   × Q-D2 a: (D) gains mapped(LC) (data, M-75) > 10.60.30.40(1)#(1)(D): one COR-…/condition adjudication, kind correction
+   × Q-D2 a on the production path > RD detached_houseplex on an unmapped lot: (D) does not apply and (B) answers unregulated
+   × Q-D2 a on the production path > RT detached_houseplex on an unmapped lot: (D) does not apply and (B) answers unregulated
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  6 failed | 1 passed (7)

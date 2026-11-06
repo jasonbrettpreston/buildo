@@ -35,7 +35,7 @@
     "first_estimate_ctid_order_flat96_heap_mib": 729.29,
     "first_landing_measure_heap_mib": 728.55
   },
-  "table_version": "a659c942d67e88c5f3b16ca08783781d433436d23d271df645f8386e1f00cb21",
+  "table_version": "a45213af7ff559b327c411ac63a1d57d2108ea731d363a48162fd6a61dc8f30c",
   "evaluator_version": "cc56a43de6c28d04cdc8d902f5c61b5f8dc6c75e56267564db16b5f532ada1cc",
   "parent_sha": "e7bcd9e128c1cdf661b3a077c6fe751240e0d5ce",
   "measured": "2026-11-05"
