@@ -1,0 +1,97 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 24 (Spec 124a R-MA: the task's own next free number; round 84), the revert round of increment 1 that lands increment-3 item E1a, the D2 keying fix (operator Q-D2 a, 2026-11-04; build plan section 2.1/2.4): the (1)(D) lot-coverage units 10.20.30.40(1)#(1)(D) (RD) and 10.60.30.40(1)#(1)(D) (RT) gain the condition mapped(LC) and overlay(LC) < 45 pct, by two keying corrections (M-75), so on an unmapped lot (D) does not apply and (B) answers unregulated, as the M-182 dated note says. Layer 2 reach: 101,312 cells (RD 24,643 x 4 classes, RT 548 x 5 classes; ~/Buildo-scratch/mcbylaws/inc3/build/sql/state2.out), each from not_evaluated to unregulated. Zero scorer moves. Red lock first: src/tests/bylaw-d2-houseplex-coverage-unmapped.logic.test.ts. One table_version move, evaluator_version unchanged.",
+ "schema": "coa-round-prereg-v1",
+ "round": 84,
+ "task": "MB-27",
+ "rules": [
+  "M-182",
+  "M-75",
+  "M-180",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/build-plan.md section 2; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version a659c942d67e -> a45213af7ff5 (body_sha256 moves with the two corrections; evaluator_version cc56a43de6c2 unchanged)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version a659c942d67e -> a45213af7ff5",
+  "expected-172.json and expected-4d.json commit and inputs.table_version a659c942d67e -> a45213af7ff5 through coa-scorecard.mjs --pin, totals equal",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version a659c942d67e -> a45213af7ff5, the G-STOR re-bind (RP-SW2 a)",
+  "docs/reports/generated/envelope-answer-tracker.json: regenerated hash field (generate-answer-tracker.mjs --write)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": []
+}
