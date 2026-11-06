@@ -2,14 +2,14 @@
  "schema": "golden25-manifest-v1",
  "note": "sha256 of every file of this folder (the test pins the sha256 of this manifest). Mode A: the Layer 2 half is recomputed by materializeBatch with MB-18 (k) in and (j) (i) (l) out. See ~/Buildo-scratch/mcbylaws/MB-31/inc1-plan.md. Mode B (MB-31 inc1 plan 2.2; operator \"a\" on Q-G25B, 2026-11-04): the inputs regenerated with MB-18 (i) and (j) in (front_setback_fallback_m added to the written targets); the 7 cells they move derived by hand in mode-b-derivation.md.",
  "files": {
-  "inputs.jsonl": "cd4c9c1ccc7834f56b02c65d625d929a46bbdbee63b9f5d27da19551aceca213",
-  "expected.jsonl": "e1c3afffc652d2a2fdfcd7a66468ec8d58aa8e9ef20ddb44516351954121b187",
+  "inputs.jsonl": "6b11df0d4060df26d30804e464f73fb5d228cdd41793fe35cd6cc84ba86007eb",
+  "expected.jsonl": "be113395c2d655722b1ba386017dbca97f89f0a5fdc93a96ff8ef033a4a007f6",
   "refusals.json": "d89bee871d34682ae040c842ef6768a1f98fa8896d7ec8b07fc63d247c9baa4e",
   "mcproof-e25.json": "4bfcc1603aed1d62a3933e20b3fc73c0e0a2d936dd9998d39c5545e0d401d33f",
   "source-inputs.jsonl": "a1b9636109786c481b5c75add26fa611c39de5fe966733cc5e5f91505a0fec24",
   "parcels-rows.json": "9f71124b0823dcfb62fba539904424196cdbb4f9e7a5b3192a92e3174e40969d",
-  "flag-corrections.json": "eb265910f83145a7f59f51994c696a1b0987c0d27b45aa53c0fe63976ad02350",
-  "mode-b-derivation.md": "beb4bbf6200c658b5f682823902087f0696172f42350bd10edcc38d3f8164aa1"
+  "flag-corrections.json": "771e8cca26fe7f962c23a9a7cd2f4d397f38876bf8d11340802b42938c7a70f8",
+  "mode-b-derivation.md": "806ac12d219ac4e19e03e6e8e4fac3349b290145025b78bc8790cf242fb6dc66"
  },
  "provenance": {
   "parcels_rows": "one read-only SELECT of the 17 parcels columns resolve_bylaws reads, for these parcel ids, on the local stack 127.0.0.1:54322, by scripts/analysis/bylaw-validation/golden25-db-rows.mjs on 2026-11-02",

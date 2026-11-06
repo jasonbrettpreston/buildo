@@ -1,5 +1,5 @@
 {
- "commit": "e7bcd9e1",
+ "commit": "d71c32e1",
  "notices": 172,
  "variances": 698,
  "totals": {
@@ -14,7 +14,7 @@
   "BY-LAW CHANGED": 3
  },
  "inputs": {
-  "table_version": "3bc74bbfc0c9eb852a15119b28124520e336a44c0c92a446dc896c2934ac8c55",
+  "table_version": "a06e557c56a3cf15c20c89c08a6f370ac3cea9e8817503dcd25f51619c804ece",
   "evaluator_version": "cc56a43de6c28d04cdc8d902f5c61b5f8dc6c75e56267564db16b5f532ada1cc",
   "scorer_sha": "f0ac2bae21a55349"
  },

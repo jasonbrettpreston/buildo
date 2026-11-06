@@ -173,6 +173,17 @@ describe('DC-2: the lock on the 25 golden cases (increment 2 is not green until 
     }
     expect(cells).toBe(24);
   });
+  it('LQ-2 b, the named accepted finding: the side-yard shift word is carried on exactly the 14 footprint and gfa cells of the seven exception lots, and on four other lots', () => {
+    const EXCEPTION_LOTS = ['A0067', 'A0097', 'A0182', 'A0203', 'A0205', 'A0229', 'A0277'];
+    const carriers: string[] = [];
+    for (const name of LOTS.keys()) {
+      const rows = rowsOfLot(name);
+      for (const field of ['footprint_max_m2', 'gfa_max_m2']) if (((rows.find((r) => r.field_id === field) as Json).flags as string[]).includes(W.shift)) carriers.push(`${name}/${field}`);
+    }
+    const onExceptionLots = carriers.filter((c) => EXCEPTION_LOTS.includes(c.split('/')[0] as string));
+    expect(onExceptionLots.sort()).toEqual(EXCEPTION_LOTS.flatMap((n) => [`${n}/footprint_max_m2`, `${n}/gfa_max_m2`]).sort());
+    expect(carriers.length - onExceptionLots.length).toBe(8); // A0170, A0193, A0553, A0578 keep it (the text applies)
+  });
   it('permission disclosures: none on the 25 for the detached house, so the permission row carries no word', () => {
     for (const name of LOTS.keys()) expect([name, wordsOfLot(name).permFlags]).toEqual([name, []]);
   });

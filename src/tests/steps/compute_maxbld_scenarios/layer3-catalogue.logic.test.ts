@@ -35,7 +35,8 @@ const PINNED_SHA: Record<string, string> = {
   catalogue: 'e56ad1eb60a5b289ac138b47b04ac377c20b0f6f94810b494ea813ff1ecca0d3',
   // re-pinned 2026-11-04 (MB-27 switchboard confidence, operator Q-CONF a 'Q CONF a' and 'RP-10 approved, switchboard pin approved, shape low yes'): schema switchboard-v2; every reading row gained confidence and evidence; the seven increment-2 register readings C1-C7 joined as reading rows (M-481).
   // re-pinned 2026-11-04 (MB-27 increment-2 rows, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 39 formula switches (37 rows, 2 revisions; M-378, M-476), four off by "Q-default a".
-  switchboard: '4aa44e448b1f6990c036cb1989a70a5df19a391b315034d1113471d0229e15fb',
+  // re-pinned 2026-11-06 (MB-27 the switch-on, operator RP-SW "all recommended" (D-9) and RP-SW2 "a", version and hash fields only): the four Q-DEFAULT switches off -> on, their reason text; was 4aa44e44
+  switchboard: 'ab2caae47bc86a53ba3950555a7b6c9a164b3e62fd55d40e677bbf44dc335abe',
   buildingTypes: '1a10625b9c7821b7db5642ffaa64b1f9b2118eb3285163cce61e3747c09b2e39',
 };
 const ROW_IDS = [

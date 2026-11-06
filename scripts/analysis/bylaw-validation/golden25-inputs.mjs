@@ -33,7 +33,9 @@ const DEFAULT_DIR = 'src/tests/fixtures/layer3/golden-25';
 const TOLERANCE = 0.01;
 const ADDED_TARGET = 'averaging_distance_m'; // always written when the source line does not carry it
 // golden-25 mode B (MB-31 inc1 plan 2.2): the MB-18 (j) slot, written so the chain-step-4 front fallback reaches the 25
-const ADDED_TARGETS = [ADDED_TARGET, 'front_setback_fallback_m'];
+// MB-27 the switch-on (operator D-2, named re-pin RP-G25S): the 9 stored targets the increment-2 rows read
+const INCREMENT2_TARGETS = ['attic_counted_clearance_m', 'attic_qualifying_area_m2', 'attic_qualifying_clearance_m', 'attic_qualifying_share_pct', 'element_width_pct', 'gfa_m2', 'main_wall_front_rear_share_pct', 'main_wall_side_share_pct', 'roof_slope_max'];
+const ADDED_TARGETS = [ADDED_TARGET, 'front_setback_fallback_m', ...INCREMENT2_TARGETS];
 
 function parseArgs(argv) {
   const opts = { dir: DEFAULT_DIR, check: false };
@@ -144,6 +146,7 @@ function main() {
     const phase2 = {};
     for (const target of targets) {
       const rec = recs.get(target);
+      if (!rec && INCREMENT2_TARGETS.includes(target)) continue; // RP-G25S: written where the lot stores it (an absent cell stays absent)
       if (!rec) throw new Error(`${caseName}: no recomputed record for target ${target}`);
       phase2[target] = {
         status: rec.status,

@@ -48,8 +48,9 @@ describe('MB-31 switchboard data (M-378)', () => {
   });
 
   // Q-K-ASSERT a ("Q-default a"): the increment-2 headline revision and the three GFA form rows it reads default off
-  it('the off rows are reading:shape_calibration and the four Q-DEFAULT formula switches', () => {
-    expect(SW.rows.filter((r: Json) => r.state === 'off').map((r: Json) => r.id).sort()).toEqual(['formula:gfa_flat_m2', 'formula:gfa_max_m2:increment_2', 'formula:gfa_pitched_a_m2', 'formula:gfa_pitched_b_m2', 'reading:shape_calibration']);
+  // MB-27 switch-on (operator D-5, "all recommended"; Q-default a: "switched on, by one data change with its own prereg"): the four are on
+  it('the only off row is reading:shape_calibration (the four Q-DEFAULT formula switches are on since the switch-on)', () => {
+    expect(SW.rows.filter((r: Json) => r.state === 'off').map((r: Json) => r.id).sort()).toEqual(['reading:shape_calibration']);
   });
 
   it('one formula switch per catalogue row plus the detached_house building type', () => {

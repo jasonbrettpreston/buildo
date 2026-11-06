@@ -106,3 +106,11 @@ The R-zone side yard of five detached-house cases moves from 0.45 m (10.10.40.70
 The full hand derivation (clauses per case, the exceptions checked, the depth room) is ~/Buildo-scratch/mcbylaws/MB-27L2/r2/rpl/derive/derivation.md; no value is copied from the step. Each cell keeps the flag set the key already records.
 
 **Owed (not in the flags):** the M-435 disclosure that the side yard may be reduced to 0.45 m on a side with no windows or doors (10.10.40.70(4)) is produced by Phase 2, but Layer 3 carries no Phase 2 base-row disclosure into its flags today (L3-F2 a carries option-row disclosures only; card L3-DISC, ~/Buildo-scratch/mcbylaws/inc2/CARD-l3-base-disclosures.md). Until that carriage is built and ruled, these five footprint cells do not show it.
+
+## The increment-2 switch-on (MB-27, 2026-11-06; RP-G25S, operator D-2 "all recommended", G25-D "c", FC-1 "a")
+
+- The loader gains `layer2Options` and the option cells from `phase2_options`; `inputs.jsonl` phase2 gains the stored increment-2 targets (attic_counted_clearance_m, attic_qualifying_area_m2, attic_qualifying_clearance_m, attic_qualifying_share_pct, element_width_pct, main_wall_front_rear_share_pct, main_wall_side_share_pct, roof_slope_max; gfa_m2 is stored on none of the 25 lots and stays absent).
+- `expected.jsonl` re-keys only the 25 gfa flag sets to the switch-on sets (McProof lane T `switch_on_flags`, 25 CONFIRMS; blind check AGREES). No value moves. `flag-corrections.json`: each of the 15 gfa entries gains `switch_on.to` (FC-1 a).
+- Golden-25 carries no Phase 2 disclosures (G25-D c). The disclosure words are locked by `src/tests/steps/compute_maxbld_scenarios/disclosure-carriage.logic.test.ts`.
+
+**Accepted finding (LQ-2 "b"):** the 10.20.40.70(4) side-yard shift sentence ("One side yard may be up to 0.3 m narrower …") is emitted by Phase 2 on A0067, A0097, A0182, A0203, A0205, A0229 and A0277, where an exception sets the side yard (900.3.10(5)(A), (155)(D), (310)(C)). The by-law text says it does not apply there (McProof lane T reading, oq2-sideyard). The Layer 3 step carries it as Phase 2 emits it (`side_yard_shift_permitted` on footprint and gfa: 14 cells), and the difference is disclosed here. The generic Phase 2 fix (rule 2: an optional variation is disclosed only where the limit it varies survives rule 4) is a card for the increment-3 night.

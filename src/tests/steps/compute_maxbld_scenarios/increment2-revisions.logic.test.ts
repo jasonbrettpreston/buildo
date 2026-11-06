@@ -186,7 +186,7 @@ describe('MB-27 R1: design_option tags on the catalogue rows (plan-reader-and-me
   });
 });
 
-describe('MB-27 Q-DEFAULT (operator "Q-default a"): the increment-2 headline revision and the rows it reads default off', () => {
+describe('MB-27 Q-DEFAULT (operator "Q-default a"): the increment-2 headline revision and the rows it reads, switched on (the switch-on, D-5)', () => {
   let R: Json;
   let SEEDS: Json;
   beforeAll(() => {
@@ -194,22 +194,25 @@ describe('MB-27 Q-DEFAULT (operator "Q-default a"): the increment-2 headline rev
     SEEDS = loadSeeds();
   });
 
-  it('QD-1 the off switches are reading:shape_calibration and exactly the four Q-DEFAULT switches', () => {
+  // MB-27 switch-on (operator D-5, "all recommended"): QD-1 and QD-2 become the switch-on locks (Q-default a: "switched on, by one
+  // data change with its own prereg, after the axis night and the Layer 3 reader (R2) land")
+  it('QD-1 the only off switch is reading:shape_calibration: the four Q-DEFAULT switches are on as seeded', () => {
     const off = SEEDS.switchboard.rows.filter((r: Json) => r.state === 'off').map((r: Json) => r.id).sort();
-    expect(off).toEqual(['formula:gfa_flat_m2', 'formula:gfa_max_m2:increment_2', 'formula:gfa_pitched_a_m2', 'formula:gfa_pitched_b_m2', 'reading:shape_calibration']);
+    expect(off).toEqual(['reading:shape_calibration']);
   });
 
-  it('QD-2 with the board as seeded, gfa_max_m2 is the increment-1 value; the three switched-off GFA form rows are not shown (D3 a); gfa_pitched_m2, which reads them, is shown not evaluated with the switch as its reason', () => {
+  it('QD-2 with the board as seeded, gfa_max_m2 is the increment-2 headline (equal to the four switches set on), and the three GFA form rows are shown', () => {
     const rows = { footprint_max_m2: { value: 79.1505 }, storeys_max: { value: 3 } };
-    const out = R.runAllRows({ seeds: SEEDS, rows, l2: { fsi: { s: 'applies', kind: 'unlimited', value: null, clause: 'c' } }, geometry: { lot_area_m2: 300 } });
+    const base = { seeds: SEEDS, rows, l2: { fsi: { s: 'applies', kind: 'unlimited', value: null, clause: 'c' } }, geometry: { lot_area_m2: 300 } };
+    const out = R.runAllRows(base);
     const ids = out.map((r: Json) => r.row);
-    for (const id of ['gfa_flat_m2', 'gfa_pitched_a_m2', 'gfa_pitched_b_m2']) expect(ids, id).not.toContain(id);
+    for (const id of ['gfa_flat_m2', 'gfa_pitched_a_m2', 'gfa_pitched_b_m2']) expect(ids, id).toContain(id);
     const pm = out.find((r: Json) => r.row === 'gfa_pitched_m2');
-    expect([pm && pm.status, pm && pm.reason]).toEqual(['not_evaluated', 'switched_off:formula:gfa_pitched_a_m2']);
+    expect(String(pm && pm.reason)).not.toMatch(/^switched_off:/);
     const head = out.find((r: Json) => r.row === 'gfa_max_m2');
-    expect(head.status).toBe('computed');
-    expect(head.value).toBeCloseTo(237.4515, 9);
-    expect(head.switches).toContainEqual({ id: 'formula:gfa_max_m2:increment_2', state: 'off' });
+    expect(head.switches).toContainEqual({ id: 'formula:gfa_max_m2:increment_2', state: 'on' });
+    const ON = { 'formula:gfa_max_m2:increment_2': 'on', 'formula:gfa_flat_m2': 'on', 'formula:gfa_pitched_a_m2': 'on', 'formula:gfa_pitched_b_m2': 'on' };
+    expect(head).toEqual(R.runAllRows({ ...base, switches: ON }).find((r: Json) => r.row === 'gfa_max_m2'));
   });
 });
 

@@ -27,10 +27,11 @@ const loadSeeds = (): Json => ({
   logicVariables: readJson('scripts/seeds/logic_variables.json'),
   vocab: readJson('scripts/seeds/bylaw/vocab.json'),
   layer2Classes: readJson('scripts/seeds/bylaw/layer2-scope.json').classes,
+  layer2Options: readJson('scripts/seeds/bylaw/layer2-scope.json').options, // the switch-on, RP-G25S (operator D-2; Q-A a: R3-11 fails closed without it)
 });
 
 const FIX = 'src/tests/fixtures/layer3/golden-25';
-const MANIFEST_SHA = '7dcaed10b5e27f2e850e618461d4a92c87785d5f4ba9e62cabc505e24e7c7e95'; // mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in; RP-n (MB-27 R2): inputs.jsonl gains phase2_options; RP-L (MB-18 (l)): the R-zone side yard on 5 cases
+const MANIFEST_SHA = '51898d41bc7d6e1a11eaeab241ca13bef67494cb9fa6d4434bbaae46fb942301'; // RP-G25S (the increment-2 switch-on, operator D-2, G25-D c, FC-1 a): the loader reads the option cells, phase2 gains the increment-2 targets, the 25 gfa flag sets re-keyed; mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in; RP-n (MB-27 R2): inputs.jsonl gains phase2_options; RP-L (MB-18 (l)): the R-zone side yard on 5 cases
 const META: Json = { layer2_table_version: 'golden-25', settings_sha: 'golden-25' };
 const MANIFESTED = ['inputs.jsonl', 'expected.jsonl', 'refusals.json', 'mcproof-e25.json', 'source-inputs.jsonl', 'parcels-rows.json', 'flag-corrections.json', 'mode-b-derivation.md'];
 /** The tolerances of the independent McProof check (front, footprint, gfa, height, storeys, units). */
@@ -56,8 +57,18 @@ const toCell = (c: Json): Json => {
   return { s: 'applies', kind: c.kind, value: c.value, clause: c.clause, reason: null };
 };
 
+/** RP-G25S (operator D-2): a phase2_options record as the option view row R2's decodeOptionCells reads (the OR-7 form). */
+const optionRow = (o: Json): Json => ({
+  class: 'detached_house', structure: 'principal', target: o.target, option: o.option, shared_with_base: o.shared === true, status: o.status,
+  value_kind: o.kind === '' ? null : o.kind, value: o.value, reason: o.reason === '' ? null : o.reason, winner_unit_id: o.clause === '' ? null : o.clause,
+});
+const VOCAB = readJson('scripts/seeds/bylaw/vocab.json');
+
 /** One `inputs.jsonl` line + the case's expected parcel id -> the parcel input `buildParcelRows` reads. */
 const parcelInput = (line: Json, parcelId: number): Json => {
+  const C = req(path.join(ROOT, 'scripts/lib/compute/maxbld/layer2-cells.js')) as Json;
+  const MZ = req(path.join(ROOT, 'scripts/lib/bylaw-materialize.js')) as Json;
+  const l2Options = C.decodeOptionCells((line.phase2_options || []).map(optionRow), 'detached_house', 'principal', { designOptions: VOCAB.design_options, notAbove: MZ.withNotAbove });
   const parcel = line.parcel || {};
   const l2: Json = {};
   for (const [target, c] of Object.entries(line.phase2 || {})) l2[target] = toCell(c as Json);
@@ -72,6 +83,7 @@ const parcelInput = (line: Json, parcelId: number): Json => {
   return {
     parcel_id: parcelId,
     l2,
+    l2Options,
     perm: { code: line.permitted_word.code, gate: line.permitted_word.gate },
     geometry: { lot_frontage_m: parcel.frontage, lot_depth_m: parcel.depth, lot_area_m2: parcel.area },
     flags: { corner_lot: parcel.corner },
@@ -139,7 +151,9 @@ describe('MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (
       const e = expected.find((x: Json) => x.case === entry.case);
       expect(e, `flag corrections: a case ${entry.case} in expected.jsonl`).toBeDefined();
       const cell = (e || {})[entry.cell] || {};
-      expect(sorted(cell.flags), `flag corrections: ${entry.case}/${entry.cell} flags`).toEqual(sorted(entry.to));
+      // operator FC-1 a (the switch-on): the newest to, the switch-on re-key where a gfa entry carries one
+      const to = entry.switch_on ? entry.switch_on.to : entry.to;
+      expect(sorted(cell.flags), `flag corrections: ${entry.case}/${entry.cell} flags`).toEqual(sorted(to));
     }
   });
 

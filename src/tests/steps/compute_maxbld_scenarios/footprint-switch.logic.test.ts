@@ -23,6 +23,7 @@ const loadSeeds = (): Json => ({
   logicVariables: readJson('scripts/seeds/logic_variables.json'),
   vocab: readJson('scripts/seeds/bylaw/vocab.json'),
   layer2Classes: readJson('scripts/seeds/bylaw/layer2-scope.json').classes,
+  layer2Options: readJson('scripts/seeds/bylaw/layer2-scope.json').options, // operator "a" on Q-A (R3-11 fails closed without it); the switch-on, D-5
 });
 
 const cell = (n: number): Json => ({ s: 'applies', kind: 'number', value: n, clause: 'fixture', reason: null });
@@ -111,6 +112,7 @@ describe('MB-31 footprint shape switch, LC-69 / M-392 (waits B5)', () => {
   it('R3-02: gfa_max_m2 carries the box assumption and takes min(198 x 3, 0.6 x 600) = 360', () => {
     const inp = base();
     inp.l2 = { ...baseL2(), height_storeys: cell(3), height_m: cell(10), fsi: cell(0.6) };
+    inp.switches = { 'formula:gfa_max_m2:increment_2': 'off' }; // the increment-1 formula under test (operator D-5; the MK-2 / Q-RND-SW form)
     const out = R.runRow('gfa_max_m2', inp);
     expect(out.status).toBe('computed');
     expect(out.value).toBeCloseTo(360, 6);

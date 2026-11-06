@@ -676,8 +676,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
-  "at_switch_on": true
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI."
  },
  {
   "id": "REG-1/A0203",
@@ -712,8 +711,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
-  "at_switch_on": true
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI."
  },
  {
   "id": "REG-1/A0205",
@@ -748,8 +746,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
-  "at_switch_on": true
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI."
  },
  {
   "id": "REG-1/A0229",
@@ -784,8 +781,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
-  "at_switch_on": true
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI."
  },
  {
   "id": "REG-1/A0277",
@@ -820,8 +816,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI.",
-  "at_switch_on": true
+  "note": "REG-1 split per lot (runner takes one input set per example). Stored cap 2 injected as storeys_max; no FSI."
  },
  {
   "id": "REG-2",
@@ -854,8 +849,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "FSI 0.5 and lot 508.97 from the A0094 golden (product = the key cap 254.485). Hw shown 7.0 (key says 7.0 / 7.2).",
-  "at_switch_on": true
+  "note": "FSI 0.5 and lot 508.97 from the A0094 golden (product = the key cap 254.485). Hw shown 7.0 (key says 7.0 / 7.2)."
  },
  {
   "id": "REG-3/A0289",
@@ -887,8 +881,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
-  "at_switch_on": true
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text."
  },
  {
   "id": "REG-3/A0457",
@@ -920,8 +913,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
-  "at_switch_on": true
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text."
  },
  {
   "id": "REG-3/A0461",
@@ -953,8 +945,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
-  "at_switch_on": true
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text."
  },
  {
   "id": "REG-3/A0562",
@@ -986,14 +977,13 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text.",
-  "at_switch_on": true
+  "note": "REG-3 split per lot; FSI 0.8, lot area, F and n=3 from the example text."
  },
  {
   "id": "REG-4",
   "layer": "Arithmetic",
   "case": "A0464",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "147.978 unchanged",
   "inputs": {
    "l2": {
@@ -1032,14 +1022,13 @@
     "tol": 0.0005
    }
   ],
-  "note": " FINDING: row storeys_above_wall = max(n - n_w; 0 storeys) returns status not_buildable (value null) when the result is 0, where the key says k = 0 (computed).",
-  "at_switch_on": true
+  "note": " FINDING: row storeys_above_wall = max(n - n_w; 0 storeys) returns status not_buildable (value null) when the result is 0, where the key says k = 0 (computed)."
  },
  {
   "id": "REG-5",
   "layer": "Arithmetic",
   "case": "A0375",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "A0375 not_evaluated -> 156.63 m2 (FSI 1.0 x 156.63 binds on both forms; n_w = n = 4, no attic); the input that moves is the street side (stored unregulated by absence, item 1 A); F 69.53 (54.23 after M-435)",
   "inputs": {
    "l2": {
@@ -1087,14 +1076,13 @@
     "tol": 0.005
    }
   ],
-  "note": "Same A0375 encoding as STS-3 (stored 0.45, street side unregulated); n=4 injected. \"not_evaluated -> 156.63\" before/after comparison is not expressible; only the after state is checked.",
-  "at_switch_on": true
+  "note": "Same A0375 encoding as STS-3 (stored 0.45, street side unregulated); n=4 injected. \"not_evaluated -> 156.63\" before/after comparison is not expressible; only the after state is checked."
  },
  {
   "id": "REG-6/A0170",
   "layer": "Arithmetic",
   "case": "A0170",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1119,14 +1107,13 @@
     "tol": 0.005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-6/A0175",
   "layer": "Arithmetic",
   "case": "A0175",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1151,14 +1138,13 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-6/A0193",
   "layer": "Arithmetic",
   "case": "A0193",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1183,14 +1169,13 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-6/A0354",
   "layer": "Arithmetic",
   "case": "A0354",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1215,14 +1200,13 @@
     "tol": 0.00005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-6/A0388",
   "layer": "Arithmetic",
   "case": "A0388",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1247,14 +1231,13 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-6/A0399",
   "layer": "Arithmetic",
   "case": "A0399",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1279,14 +1262,13 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 3 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-6/A0561",
   "layer": "Arithmetic",
   "case": "A0561",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1311,14 +1293,13 @@
     "tol": 0.005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-6/A0578",
   "layer": "Arithmetic",
   "case": "A0578",
-  "pending_reload": true,
+  "pending_reload": false,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
    "l2": {
@@ -1343,8 +1324,7 @@
     "tol": 0.0005
    }
   ],
-  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap).",
-  "at_switch_on": true
+  "note": "REG-6 split per lot. n = n_w + 1 = 4 (k=1 per the example); FSI and area from golden; the increment-1 ceiling is checked (counted GFA = cap)."
  },
  {
   "id": "REG-7",
