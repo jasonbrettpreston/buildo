@@ -3,7 +3,54 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Triage Log — 2026-11-06 (Weekly Automated Triage, Spec 05 §6)
+
+**Triage date:** 2026-11-06 · **Zombie threshold:** last_reviewed > 4 weeks ago (before 2026-10-09)
+**Total sections reviewed:** 35 · **Zombies flagged:** 25 (all sections dated before 2026-10-09 have no prior `last_reviewed`)
+
+### PROMOTE → WF3 (13 items — high severity, still relevant)
+
+| Item | Section | Severity | Rationale |
+|------|---------|----------|-----------|
+| `execution.step_timeout` wired but no `step_timeout_minutes` in manifest for 10 of 12 converted steps | 2026-09-15 EP-PHASE-DEADLINE | HIGH | Declared ceiling with no executor = inert for 10 steps; infra test locks the gap |
+| Security WF3: `verifyAdminAuth` on 11 admin routes + explicit projections on 2 public routes + audit rows on 7 mutations + reaper-to-job | 2026-09-15 Spec 126 group A | HIGH ×4 + MED ×2 | Six findings, one root cause, one fix shape; still unaddressed; Cross-Domain |
+| Dead meter: `useLeadView` has no caller; paywall `leadViewsCount > 0` unreachable in production | 2026-09-15 Spec 126 group B | HIGH | Spec 128 R-08 already rules retirement; WF3 to execute it |
+| Five columns rendered by builder page absent from `entities` (silent undefined/blank) | 2026-09-15 Spec 126 group C | HIGH | `SELECT *` hides the type error; explicit projection WF3 |
+| `captureDataQualitySnapshot()` duplicate of `refresh-snapshot.js` with no advisory lock + 61 vs 68 columns | 2026-08-31 Pilot 8 F7 | HIGH | Race risk on concurrent pipeline + manual trigger; Cross-Domain WF3 |
+| `*_dataset_version_when_enriched` stamps have no trigger invalidator | 2026-08-23 §P0 P1 agent | HIGH | Same class as centroid gap (mig 245); measure staleness count first, then WF3 |
+| Live massing-mislink $105M parcel cost (parcels 1944170/1944175, NULL-lot RT) | 2026-07-02 parcel-sanity | HIGH | $105M gut line in parcel_cost_menu; fix mislink + extend invariants + add cost-magnitude checks |
+| `parcels_null_address_pct` gate permanently unsatisfiable (always 100%, threshold <10%) | 2026-08-25 chain_sources WARN | MED | Structural WARN on every run; ACT disposition already filed |
+| `massing_zero_link_ghost` comment claims measured day-one value 0 but cloud rows read 1395 | 2026-08-25 chain_sources WARN | MED | ACT disposition already filed; either real orphans or false comment |
+| `manifest.json` `telemetry_tables` missing `parcel_buildings` (massing) + `enrich_parcels_pass3_scope` (enrich_parcels) | 2026-09-03 LDG cross-step | MED | ACT disposition already filed; two tables silently invisible to telemetry |
+| False ordering lock: `chain.logic.test.ts:173-174` pins `enrich_ravines` immediately after `link_parcels` with no real data dependency | 2026-09-03 LDG cross-step | MED | ACT disposition already filed; Guardian-owned change required |
+| `existing_structure` 4.5× regression (1,259s → 5,661s) root cause unconfirmed; prerequisite deadline now armed | 2026-09-15 EP-PHASE-DEADLINE Q5 | MED | ACT — own WF3 now unblocked per original filing |
+| Lineage-snapshot freshness: `lineage-meta-snapshot.json` never auto-refreshed; structural gap, no standing gate | 2026-09-03 LDG cross-step | MED | ACT disposition; two concrete instances measured; new WF1/WF3 needed |
+
+### CONVERT (1 item — route to test/lint, not a WF)
+
+| Item | Section | Severity | Route |
+|------|---------|----------|-------|
+| G0 owner-row lock uses first occurrence of `### Target Files` (prose beat can shadow the real section) | 2026-09-15 Spec 126 WF1 | MED | Harden `system-map.infra.test.ts` to assert exactly one `### Target Files` per spec before extracting — a targeted test fix, not a spec WF |
+
+### KILL (3 items — superseded or cost > benefit)
+
+| Item | Section | Severity | Reason |
+|------|---------|----------|--------|
+| Migration-number reservation stale text in Spec 122 §7.5 (three stacked amendments, 245/246/247) | 2026-09-15 Spec 126 WF1 | LOW | Pure archaeology; Specs 126/127 already instruct authors to re-measure; a fourth amendment is cheaper as a deletion |
+| "HIGH: `max_build_dim_below_floor` (27,984 FAIL-gated)" — 2026-08-23 P0 re-baseline | 2026-08-23 §P0 re-baseline | HIGH | SUPERSEDED 2026-10-01 (WF3 inert lot bound) — check is re-scoped, healthy run reads PASS; no live action needed |
+| DeepSeek false-positive "missing database pool parameter — showstopper" (Spec 26) | 2026-06-16 Spec 26 | HIGH | Integration confirmed false positive; compiles and runs; recorded only as reviewer noise |
+
+### DEFER (all remaining OPEN items — triage_after: 2026-12-04)
+
+All remaining OPEN items in sections dated 2026-05-11 through 2026-10-12 not listed above are deferred to **triage_after: 2026-12-04** (4 weeks). No new evidence changes their priority; each has an owner and a named destination WF already filed. See inline notes per section below.
+
+### Items refreshed (last_reviewed set to 2026-11-06)
+35 sections, all items surveyed. See `<!-- triage: 2026-11-06 -->` markers on each section header.
+
+---
+
 ## 2026-09-27 — engine-fence panel residue (wf2/engine-fence)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | status: DEFER all items (engine v1.1 owner) | triage_after: 2026-12-04 -->
 
 Source: the WF2 engine-fence output panel (DeepSeek security lens on `scripts/deepseek-exec.js` + `scripts/lib/exec-tools.js`, grounded by Claude; Integration seat). Fixed on the branch: F1–F5, F4b, the prototype-key crash, sibling fence-module self-protection, G1–G4. Filed here by orchestrator ruling:
 
@@ -20,6 +67,7 @@ Source: the WF2 engine-fence output panel (DeepSeek security lens on `scripts/de
 | MED | **`scripts/hooks/**` and the `scripts/analysis/*` validators the pre-commit hook runs are engine-writable**, and execute inside the engine's own `git_commit`. Not folded into self-protection: the engine legitimately edits both (e.g. the `wf2-gates-j-hooks` brief). | **CLOSED BY conversion-simplification item 11** (gate freeze + `registry_reserved`). |
 
 ## 2026-09-24 — engine + golden residue
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | status: DEFER (engine WF + operator measurement required) | triage_after: 2026-12-04 -->
 
 Source: DeepSeek execution-engine runs across today's INGESTOR-prerequisite batch (0p/0q/0r/0s) and the parcels ③ cutover golden capture — residue noticed while finishing prerequisite 0s (`coerceKey` receives geojson), not fixed here (library/tooling/data-hygiene items, out of 0s's `write_scope`).
 
@@ -33,6 +81,7 @@ Source: DeepSeek execution-engine runs across today's INGESTOR-prerequisite batc
 ---
 
 ## 2026-09-22 — SUB-ENG-1 pilot (Phase 4) — v1 boundary + 2 LOW
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | status: DEFER (SUB-ENG-1 v1.1 owner) | triage_after: 2026-12-04 -->
 
 Source: `docs/reports/2026-09-22-sub-eng-1-pilot-record.md` §6 (exit-criteria verdicts), landed with Spec 08 §A STATUS PLANNED→live (commit 14, non-golden task class).
 
@@ -45,6 +94,7 @@ Source: `docs/reports/2026-09-22-sub-eng-1-pilot-record.md` §6 (exit-criteria v
 ---
 
 ## 2026-09-22 — SUB-ENG-1 Step 9 panel
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | status: DEFER (contingent/own WF) | triage_after: 2026-12-04 -->
 
 Source: the Step 9 output-panel fold on `ce096013` (A3 Code Reviewer, A5 Integration + Idempotency Lens, DeepSeek lenses), landed as SUB-ENG-1 commits 12b/12c. Everything CONFIRMED was fixed in 12b/12c; the two items below were explicitly DEFERRED by the fold ledger, not adjudicated here.
 
@@ -56,6 +106,7 @@ Source: the Step 9 output-panel fold on `ce096013` (A3 Code Reviewer, A5 Integra
 ---
 
 ## WF3 EP-PHASE-DEADLINE / EP-PASS3-BACKLOG — deferrals from the 2026-09-15 `enrich_parcels` incident
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | PROMOTE: step_timeout manifest wiring (HIGH), existing_structure regression WF3 (MED); DEFER rest | triage_after: 2026-12-04 -->
 
 Source: `.cursor/wf3_enrich_parcels_pass3_backlog_active_task.md`, implemented 2026-09-15. Everything below was measured during that WF3 and deliberately NOT fixed in it — each is either a different subject, a different step's risk, or needs a measurement this WF3 could not take.
 
@@ -74,6 +125,7 @@ Source: `.cursor/wf3_enrich_parcels_pass3_backlog_active_task.md`, implemented 2
 ---
 
 ## Spec 126 surface research (2026-09-15)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | PROMOTE: group A security WF3 (HIGH×4+MED×2), useLeadView retirement (HIGH), entities columns (HIGH); DEFER group B phone-path/check-spec99, group C backup/envelope, group D ownership/a11y | triage_after: 2026-12-04 -->
 
 Source: the six-shard research pass over all 137 surfaces, contracts and jobs (`scripts/surfaces/_schema/census/*.json`, rendered at `docs/reports/generated/127-surface-registry.md`). Every row below was **measured while researching a descriptor field**, not sought out — which is the argument for the registry: these had all been green for months.
 
@@ -127,6 +179,7 @@ Three further defects surfaced by the pass are already filed above under *"Spec 
 ---
 
 ## Spec 126 WF1 (surface standard authoring) — findings filed, not fixed (2026-09-15)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | CONVERT: G0 first-occurrence extractor → test harness fix; KILL: migration-number reservation prose (pure archaeology); DEFER: orphan sweep discrepancy | triage_after: 2026-12-04 -->
 
 Source: WF1 "Specs 126/127/128, the MaxBLD Surface Standard" (`.cursor/wf1_spec126_128_active_task.md`), grounder fold. These are defects in **another programme's** artifacts, found while authoring; filed rather than fixed, per the discoverer≠adjudicator rule (Spec 124 §4.2).
 
@@ -139,6 +192,7 @@ Source: WF1 "Specs 126/127/128, the MaxBLD Surface Standard" (`.cursor/wf1_spec1
 ---
 
 ## WF1 cross-step ledger (Spec 122 §6, LDG-4) — commits 5-6 findings (2026-09-03)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | PROMOTE: manifest telemetry_tables omissions (MED-ACT), false ordering lock (MED-ACT), lineage snapshot freshness gate (MED-ACT); DEFER: dead telemetry stamp | triage_after: 2026-12-04 -->
 
 Source: `.cursor/wf1_cross_step_ledger_active_task.md` commit 5 — the descriptor↔ledger cross-check, `src/tests/step-conformance.infra.test.ts`'s new `LDG-4` describe block, verified live against the real 8 `converted.json` entries and both the local and cloud DB — plus commit 6's plan-named deferrals (Spec 122 §6.1/§6.3, `chain.logic.test.ts`), verified live the same session.
 
@@ -154,6 +208,7 @@ Source: `.cursor/wf1_cross_step_ledger_active_task.md` commit 5 — the descript
 ---
 
 ## Pilot 8 (`refresh_snapshot`) Finding 7 — admin dual-path re-implementation (2026-09-03)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | PROMOTE: captureDataQualitySnapshot duplicate + no advisory lock (HIGH) → Cross-Domain WF3 | triage_after: 2026-12-04 -->
 
 Source: `docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md` §0.6 Finding 7, filed per the pilot's own Ask 3 (`.cursor/active_task.md:150`). Out of Backend/Pipeline Operating Boundary — Cross-Domain, not actioned by pilot 8.
 
@@ -164,6 +219,7 @@ Source: `docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md` §0.6 Fi
 ---
 
 ## `step:validate` scorecard remediation — pilots 1-4 (2026-08-29)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: assert_schema 2 ungrounded rows, fleet CQA cascade (tracked by programme); LM-D6/LM-D11 CLOSED | triage_after: 2026-12-04 -->
 
 Source: `npm run step:validate -- --step=<slug>` run against all four converted-step assessment reports (`assert_schema`, `load_ravines`, `link_massing`, `link_wsib`) to close their outstanding hard stops (Spec 123 §6 G6/G8/G9) and other red gates. Items here are genuine gaps found and left open (Class C), not fixed silently — see each pilot's own report/`defect-ledger.md` for what WAS fixed.
 
@@ -177,6 +233,7 @@ Source: `npm run step:validate -- --step=<slug>` run against all four converted-
 ---
 
 ## `chain_sources` WARN classification — two check-calibration defects (2026-08-25)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | PROMOTE both MED items to WF3 (ACT already filed on both) | triage_after: 2026-12-04 -->
 
 Source: cloud `chain_sources` run 3463 (started 2026-08-24T21:22Z, `completed_with_warnings`) WARN classification sweep across all 8 WARN-verdict steps. Six traced to known/persistent data tails (footprint-coverage, geocode/link-rate backlogs, centreline feed tail, etc. — no action); two are newly-identified defects in the CHECKS themselves, filed here.
 
@@ -188,6 +245,7 @@ Source: cloud `chain_sources` run 3463 (started 2026-08-24T21:22Z, `completed_wi
 ---
 
 ## Spec 122 §S2-min — `pipeline.step()` output-review DEFER (2026-08-24)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: blocked until a pilot declares a non-blocking FAIL check | triage_after: 2026-12-04 -->
 
 Source: S2-min review panel (`scripts/lib/step/`). One item, and it BLOCKS a specific future decision rather than the current slice.
 
@@ -198,6 +256,7 @@ Source: S2-min review panel (`scripts/lib/step/`). One item, and it BLOCKS a spe
 ---
 
 ## Spec 122 §P0 — silent pre-cutover DB defaults: residuals after the resolver landed (2026-08-23)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | PROMOTE: dataset_version_when_enriched trigger invalidator (HIGH-ACT); DEFER: db-test loopback guard, generate-db-docs P2 | triage_after: 2026-12-04 -->
 
 Source: WF3 P0 (`scripts/lib/resolve-db.js` + 37 conversions). Closed this session: the 24-file census plus 13 more the census grep could not see. Items below were deliberately NOT converted, each with a stated fence.
 
@@ -213,6 +272,7 @@ Source: WF3 P0 (`scripts/lib/resolve-db.js` + 37 conversions). Closed this sessi
 | LOW | P0 conversion (restore tooling) | **`restore-db.js` pg_dump SOURCE + `supabase-load-gates.js#resolveSourcePool` take only HALF the contract** — fail-loud on a missing target, but NO migration floor, because a restore SOURCE may legitimately sit below it. Both now require an explicit `PG_HOST`/`PG_PORT`/`PG_DATABASE` triple (`envVars: []`, so `DATABASE_URL` — the restore TARGET — can never capture the source). | No action. Documented in-code as a Chesterton's fence at both sites. Revisit only if the restore SOURCE is ever re-pointed. |
 
 ## Spec 122 §P0 — the re-baseline: first true defect inventory against 54322 (2026-08-23)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | KILL: max_build_dim_below_floor (SUPERSEDED 2026-10-01); DEFER: July/Aug fix chain verification, existing_data_quality_flag visibility, existing_width/length bounds | triage_after: 2026-12-04 -->
 
 Source: WF3 P0 last checkbox — re-ran `parcel-sanity-audit.js` + `parcel-field-dump.js` against the now-authoritative `127.0.0.1:54322/postgres` (242 migrations tracked, max 245). Result: **17/42 checks tripped, 1 FAIL-GATED, 30,288 HIGH/MED violations (+15,080 INFO), 7/8 distribution fields with outliers** — matching the P0 table's "authoritative" column exactly. Reviewed each violation for genuine-bug vs not-yet-re-run before filing.
 
@@ -229,6 +289,7 @@ Source: WF3 P0 last checkbox — re-ran `parcel-sanity-audit.js` + `parcel-field
 ---
 
 ## Spec 89 Parcel Cost Model Tool — WF1 build DEFERs (2026-07-06)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (Playwright harness, RHF gap, typeahead) | triage_after: 2026-12-04 -->
 
 | Severity | Source | Item | Disposition |
 |----------|--------|------|-------------|
@@ -239,6 +300,7 @@ Source: WF3 P0 last checkbox — re-ran `parcel-sanity-audit.js` + `parcel-field
 ---
 
 ## Parcel-sanity-audit residuals — WF3 heritage storeys + lot-size audit refinement (2026-07-02)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | PROMOTE: $105M massing-mislink (HIGH-ACT); DEFER: envelope_constraint_reason split, lowrise stories, pocket_realized label, heritage NULL-lot | triage_after: 2026-12-04 -->
 
 Source: parcel-sanity-audit triage. Shipped this session: lot_size audit Option A (gate `lot_size_out_of_range` on `max_buildable_footprint_sqm IS NOT NULL` + INFO visibility count `lot_implausible_correctly_excluded`); WF3 heritage storeys (retire massing `estimated_stories` → `stories_calc`). Items below deferred.
 
@@ -253,6 +315,7 @@ Source: parcel-sanity-audit triage. Shipped this session: lot_size audit Option 
 ---
 
 ## WF3 cost-menu coherence + zoning FSI mis-sourcing (Spec 88 Fix A + Spec 65 Fix B) — plan-review DEFERs (2026-07-01)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (sibling ceilings RESOLVED 2026-10-06; plausibleFsi zone-aware, residential_sqm, geometry defaults, B2 guard) | triage_after: 2026-12-04 -->
 
 Source: 2-round 3-reviewer plan panel (Integration + Regression Guardian + Code Reviewer, both converged). Fixes shipped: `bylaw_max_fsi` precedence `'min'→'dominant'` + B2 residential `fsi_max>10` source guard; cost `new_build` line → `COALESCE(opt_aor_gfa, max_buildable_gfa)`. Items below are accepted-limitation DEFERs.
 
@@ -270,6 +333,7 @@ Source: 2-round 3-reviewer plan panel (Integration + Regression Guardian + Code 
 ---
 
 ## Spec 65 Phase 3 (garage + rear-suite accessory fit + CoA permission) — WF6 output-altitude review DEFERs (2026-06-23)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (pre-existing zoning-pass design, overlay staleness, prim CTE, massing scope perf) | triage_after: 2026-12-04 -->
 
 Source: 6-reviewer output review. Integration + Regression Guardian **PASS** (no undefended fences — heritage-freeze byte-stable via `FILTER(is_primary)`, garden-suite externalization byte-stable, #431-FU guards preserved, MAX_BUILD_COLS 17→25 / bool-cols unchanged). 2 findings folded into the commit: (a) `parcels_abuts_laneway_true_count` added to the `centreline_enrich` records_meta sub-object [Code Reviewer]; (b) `rear_suite_permission_as_of_right` count added to assert-global-coverage pa+ca [Observability]. Items below are DEFERs / refutations.
 
@@ -289,6 +353,7 @@ Source: 6-reviewer output review. Integration + Regression Guardian **PASS** (no
 ---
 
 ## Spec 65 Phase 2 (reno/build scenario GFAs + geom_basis + storey-height) — WF6 output-altitude review DEFERs (2026-06-22)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (pre-existing Phase-1 overlay/massing/perf design) | triage_after: 2026-12-04 -->
 
 Source: 6-reviewer output review (Gemini + DeepSeek + Code Reviewer + Observability + Integration + Regression Guardian) on the enrich-parcels Phase-2 diff. Integration + Regression Guardian PASS (no undefended fences). 3 findings folded into the commit: (a) Zod logic-var schema bounds aligned to `logic_variables.json` min/max + `.strict()` (was `.positive()`/`.passthrough()`) — closes the SC-3 "bad override FAILs loudly" gate [Code Reviewer #12 + DeepSeek upper-bounds]; (b) `assertMaxBuildColumns` error message now cites `185/189` + `186/190` (max_build_stories_basis ships in 189/190) [Code Reviewer #11]; (c) Spec 65 SC-6 clarified — `*_applied` provenance rows live at the producer (enrich-parcels) layer only [Observability]. Items below are DEFERs / refuted.
 
@@ -308,6 +373,7 @@ Source: 6-reviewer output review (Gemini + DeepSeek + Code Reviewer + Observabil
 ---
 
 ## Spec 26 (Step-Output Inspector) — WF1 output-altitude review DEFERs (2026-06-16)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | KILL: DeepSeek false positive "missing pool"; DEFER: AbortSignal timeout, double-log | triage_after: 2026-12-04 -->
 
 Source: 5-reviewer output review (Code Reviewer + Integration + Regression Guardian + Gemini + DeepSeek) on the admin Step-Output Inspector. Code Reviewer "safe to commit, no CRITICAL"; Integration + RG PASS. 1 fix folded (schema-qualify the `reltuples` query). Items below are DEFERs/accepted.
 
@@ -322,6 +388,7 @@ Source: 5-reviewer output review (Code Reviewer + Integration + Regression Guard
 ---
 
 ## Spec 30/48 (cov_* SDK vocabulary-coverage primitive) — WF1 output-altitude review DEFERs (2026-06-16)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (multi-schema, typeFamily, vocab DB seed, pipeline-SDK pre-existing) | triage_after: 2026-12-04 -->
 
 Source: 6-reviewer output review (Code Reviewer + Observability + Integration + Regression Guardian + Gemini + DeepSeek) on the `cov_*` SDK primitive diff. 4 findings fixed in the commit (pool.connect inside try; classify-permits config load before lock per §R5; cov_ threshold→passPct; db-test intersection mirror). Items below are DEFERs.
 
@@ -336,6 +403,7 @@ Source: 6-reviewer output review (Code Reviewer + Observability + Integration + 
 ---
 
 ## Spec 49 (Vocabulary-Coverage Profiling) — WF2 output-altitude review DEFERs (2026-06-16)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (SQL interpolation data-driven gate, serial loop, field-coverage spec claims need Integration verification) | triage_after: 2026-12-04 -->
 
 Source: output-altitude review (Integration general-purpose PASS + Regression Guardian PASS + Gemini + DeepSeek adversarial) on the vocabulary-coverage diff (`assert-global-coverage.js` `VOCAB_COVERAGE` matrix + `profileVocabTriple` + Zod keys, Spec 49 §3/§4.x). Both structural reviewers commit-ready; no BUG on the diff. Items below are DEFERs.
 
@@ -358,6 +426,7 @@ The adversarial models also flagged the **existing** field-coverage rows (predat
 ---
 
 ## Spec 62 (Toronto Centreline) — R3 SPEC review DEFERs (2026-05-26)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (cross-spec boolean/architectural WF, centroid-proxy v2, plugin-style refactor) | triage_after: 2026-12-04 -->
 
 Source: 3-reviewer adversarial R3 SPEC review (Gemini + DeepSeek + Independent code-reviewer) on `docs/specs/01-pipeline/62_source_centreline.md` v1.0. 5 CRIT + 7 HIGH folded to spec v1.1 (commit alongside). Items below are DEFERs.
 
@@ -377,6 +446,7 @@ Source: 3-reviewer adversarial R3 SPEC review (Gemini + DeepSeek + Independent c
 ---
 
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all remaining (pre-existing fetchLeadInspect, cosmetics, desktop-first) | triage_after: 2026-12-04 -->
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
 
@@ -407,6 +477,7 @@ Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + 
 ---
 
 ## classify-coa-scope.js R5.3 — plan-review + Pre-Review deferrals (2026-05-14)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (out-of-scope spec concerns; most are Spec 84/85/40/42 concerns) | triage_after: 2026-12-04 -->
 
 Source: 3-reviewer adversarial plan review (Gemini + DeepSeek + worktree feature-dev:code-reviewer) on the WF1 R5.3 plan, plus Pre-Review Self-Checklist item (l) verification against the live script.
 
@@ -429,6 +500,7 @@ The initial verdict on item (l) was based on a search for `load_at` updates in `
 ---
 
 ## mig 139 — Phase C composite-UNIQUE WF3 follow-ups (2026-05-14)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (advisory lock, NOT VALID pattern, phase H PK, deploy window concerns) | triage_after: 2026-12-04 -->
 
 Source: 3-reviewer reviews across two passes (plan + diff). Plan-review findings already triaged in the active task. Diff-review (post-Fix) findings appended below:
 
@@ -470,6 +542,7 @@ Worktree verdict: **GO** with no issues found (all 8 checklist items PASS).
 ---
 
 ## migrate-to-lead-id.js + deriveLeadId — LPAD-collision WF3 follow-ups (2026-05-14)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (data-hygiene, style, Phase C/H hardening) | triage_after: 2026-12-04 -->
 
 Source: 3-reviewer adversarial plan review on WF3 #lpad-revision-num-collision (Gemini + DeepSeek + worktree feature-dev:code-reviewer, user-requested adversarial). 14 findings total — 6 BUGs folded into the WF3 commit (administrative-exclusion + LPAD-collision preflight + Spec 42 §6.6.A.1 truncation correction + 4 plan refinements), 1 REJECTED (see below), 8 DEFER below.
 
@@ -490,6 +563,7 @@ The canonical `permit:<num>:LPAD(rev,2,'0')` form requires `LENGTH(revision_num)
 ---
 
 ## migrate-to-lead-id.js — Phase C hardening followups (WF3 2026-05-14)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (Phase D/E/F hardening, pre-existing data-hygiene) | triage_after: 2026-12-04 -->
 
 Source: 3-reviewer adversarial plan review on the lead_type-drift WF3 (Gemini + DeepSeek + worktree code-reviewer, user-requested adversarial). 14 findings total — 5 BUGs folded into WF3 commit, 1 INCORRECT (DeepSeek CRIT advisory-lock claim, see below), 8 DEFER below. All DEFER items are pre-existing weaknesses in `scripts/migrate-to-lead-id.js` not introduced by the WF3 fix — appropriate destination is a future Phase C hardening WF or `tasks/lessons.md` if a pattern emerges.
 
@@ -510,6 +584,7 @@ DeepSeek flagged the advisory-lock-vs-transaction client mismatch as a CRITICAL 
 ---
 
 ## WF1 #coa-pipeline-parity-phase-a R2.v2 Multi-Agent Review Deferred Items (2026-05-13)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (spec editorial / Phase E/H / multi-spec cross-ref) | triage_after: 2026-12-04 -->
 
 Source: R2.v2 re-review on `.cursor/active_task.md` + `docs/specs/01-pipeline/42_chain_coa.md` (Gemini + DeepSeek + worktree code-reviewer, after Round 1 BUG fixes + granular-first reframing + `lifecycle_status_history` unified table). 11 BUGs documented as known issues in the active task itself (under "Known Issues — Documented for Implementation"). Items below are accepted-and-deferred per user direction "B — authorize as-is with documented known issues."
 
@@ -528,6 +603,7 @@ Source: R2.v2 re-review on `.cursor/active_task.md` + `docs/specs/01-pipeline/42
 ---
 
 ## Spec 42 §6 — WF2 #coa-pipeline-parity R0 Multi-Agent Review Deferred Items (2026-05-13)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (operational hardening / Phase B/D/G/H architecture) | triage_after: 2026-12-04 -->
 
 Source: R0 plan review on `docs/specs/01-pipeline/42_chain_coa.md` §6 (Gemini + DeepSeek adversarial + worktree code-reviewer). Items below are accepted-and-deferred — either pre-existing pipeline concerns, operational hardening that fits a later WF, or specificity that resolves at WF1 plan-lock.
 
@@ -570,6 +646,7 @@ Source: R0 plan review on `docs/specs/01-pipeline/42_chain_coa.md` §6 (Gemini +
 8. CKAN `coa_applications.status` enumeration exhaustiveness — §6.7 lists specific status values; future CKAN additions would silently NULL `lifecycle_phase`. Add catchall fallback rule.
 
 ## WF1 #C (2026-05-11) — Multi-Agent Review deferrals from admin Lifecycle Timeline panel
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (micro-optimizations, cosmetic, Spec 33 tooltip library future) | triage_after: 2026-12-04 -->
 _Source: pre-implementation R0 Gemini review of the plan itself (7 findings, 5 folded into plan) + post-implementation R8 multi-agent review of the component code (Gemini + DeepSeek + worktree code-reviewer). 8 BUGs fixed in-loop; remaining items catalogued below._
 
 **Applied in this commit (R9 in-loop fixes):**
@@ -4066,6 +4143,7 @@ Spec 124 prose/register integrity) is far beyond one output-panel peel; the next
 (C1/C2/C3 each have a named draft-07-expressible fix in the original transcript).
 
 ## 2026-09-22 — Spec 08 Part A (§A/§B substrate mapping, 3b9df652..211acc8d) output panel — DeepSeek CLI + Haiku grounder, deferred from the landing session
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER all (WF2 doc peel + SUB-ENG-1 commit 12) | triage_after: 2026-12-04 -->
 
 Grounder adjudicated 8 DeepSeek findings: 8 CONFIRMED (0 refuted). All DEFERRED here rather than fixed inline — the operator's directive is the SUB-ENG-1 engine build; items 3 and 4 fold into that plan's Phase 3 commit 12 (which already extends `agent-roster.infra.test.ts`).
 
@@ -4080,6 +4158,7 @@ Grounder adjudicated 8 DeepSeek findings: 8 CONFIRMED (0 refuted). All DEFERRED 
 | MED | Spec 08 §4 cites "§11" for the spawn-prompt enforcement; the templates live in §10.1. T5 pins §4's digest, so the fix re-pins. | WF2 doc peel |
 
 ## 2026-09-23 — batch-2 row 2.6 (ENRICHER dry-run seam, Spec 124 R-AV) — SUB-ENG-1 engine runs 1–3 + the row-cap Ask
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: readPriorRunMeta dry_run gap (WF3 pending premise), engine brief/allowlist gaps; R-AZ RESOLVED | triage_after: 2026-12-04 -->
 
 Engine runs: `20260923T003332Z-afa733d5` (budget_exhausted, 30 it, 17 blocked — `read_file` TOO_LARGE on the 309 KB runner; fixed `64ab7233`), `20260923T004815Z-ac7c6ceb` (aborted at it 20 on `MALFORMED_TOOL_CALL` `reason2`; tests + alias landed), `20260923T005536Z-e1e54e88` (budget_exhausted at it 30 AFTER green; gates landed; orchestrator committed). Billable ≈ 160k tokens across the three; the seam itself is a 3-hunk diff.
 
@@ -4095,6 +4174,7 @@ Engine runs: `20260923T003332Z-afa733d5` (budget_exhausted, 30 it, 17 blocked �
 | LOW | `src/tests/deepseek-exec-fences.infra.test.ts` "timeout_ms:500 … sleep process is no longer running" flaked once under pre-commit load (passed in isolation) — a liveness poll with a short grace window would remove the flake. | SUB-ENG-1 v1.1 |
 
 ## 2026-09-24 — WF3 validateGeometries TEXT-key fix (`6457e713`) — output panel residue
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: Spec 55 Target Files CLOSED; parcels_lineage_mismatch self-retires; LOW nits | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4104,6 +4184,7 @@ Engine runs: `20260923T003332Z-afa733d5` (budget_exhausted, 30 it, 17 blocked �
 | LOW | `6457e713` commit message says pre-fix T4 "resolves with skipped 1" — measured skipped=2 (both TEXT keys miss pre-fix), and "held only for INTEGER" overstates (BIGINT matched by coerceKey coincidence). Code comment + lessons corrected in the follow-up commit; the message is history. | — (recorded) |
 
 ## 2026-09-24 — batch-2 row 3.7 (`parcels`, INGESTOR) commit ② — two shared-runner-library seam gaps, found while explaining the POST golden diffs
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: acquire.js rows_read/address fields (shared library WF2/WF3); address_points half RESOLVED | triage_after: 2026-12-04 -->
 
 Found during the mandatory `--compare` "explained diffs" pass (`docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md`, "Commit ② — explained golden diffs"). Both are inert this run (no threshold crossed, no chain gate affected — every `parcels` check row is `blocking: false`, D4/PIN) but both are real, and both are shared-library gaps, not `parcels`-local: fixing `scripts/lib/step/acquire.js`/`index.js` is outside a single conversion commit's declared scope (Spec 123 §3.1).
 
@@ -4113,6 +4194,7 @@ Found during the mandatory `--compare` "explained diffs" pass (`docs/reports/202
 | MED | **`ctx.acquired.attempted_address_number_rows` / `null_address_number_rows` are never populated anywhere**, for ANY INGESTOR. Two computes read them (`scripts/lib/compute/load-parcels.js:485-486` `null_address_pct`, `scripts/lib/compute/load-address-points.js:201-202` `null_address_number_pct`) but grep across `scripts/lib/step/{acquire,index}.js` finds zero writers. Both checks therefore ALWAYS short-circuit to `violations: 0`/`value: null` (the compute's own `numberOrNull(...) == null` guard), converting each legacy loader's documented "always WARN" null-address row (PR-D2 for `parcels`; the address_points equivalent — its own assessment never named this gap) into a silent, permanent PASS in the converted `audit_table.verdict`. Not a data-loss risk (the write path is unaffected — carried/PIN, not filtered) but a real observability regression: a known-bad, structurally-unsatisfiable condition that used to surface as WARN on every run now reads clean. | same `acquire.js`/`index.js` owner as above — populate both fields for the address-bearing INGESTORs (or drop the two dead checks and re-derive `null_address_pct` from the shaped record directly, inside the compute, if threading the counter through `acquired` is not wanted) — **RESOLVED 2026-09-24, commit ③ prep**: `null_address_pct` re-pointed onto the generic 0o counters (`acquired.rows_shaped` / `acquired.column_nulls.address_number`) instead. This is what surfaced the CRITICAL finding immediately below. **address_points half RESOLVED 2026-09-24 (AP-D8, WF3 fix commit)**: `null_address_number_pct` (`scripts/lib/compute/load-address-points.js`) re-pointed onto the same generic 0o counters, same precedent; locked in `src/tests/steps/address_points/post-conversion-fixes.logic.test.ts` L5a-d and `violations.test.ts:440-450`. |
 
 ## 2026-09-24 — batch-2 row 3.7 (`parcels`) commit ③ prep — CRITICAL: `validateGeometries` silently drops every parcel row; the converted step has written ZERO rows since commit ② landed
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | CLOSED in 6457e713 — no open items | triage_after: n/a -->
 
 **BLOCKS CUTOVER.** Found while recapturing the POST golden for commit ③ (rebase onto 0o + the `null_address_pct` rename above): the recapture reported `null_address_pct` as `"0.0%"` PASS, which is impossible on the real data — the live CSV fixture (`data/property-boundaries-4326.csv`, 498,479 rows) has header `_id,PARCELID,FEATURE_TYPE,STATEDAREA,OBJECTID,geometry` and has **never** carried an `ADDRESS_NUMBER` column (confirmed: `shapeRecord` returns `address_number: null` for every sampled row via `field(src,'ADDRESS_NUMBER') || null`), so a genuine measurement should read ~100% WARN, not 0% PASS.
 
@@ -4129,6 +4211,7 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 **Disposition: CLOSED — fixed in `6457e713`** (`fix(122_pipeline_step_optimization): validateGeometries joins keys through one String() normalizer + ValidationKeyMissError`, WF3 `.cursor/wf3_validate_geometries_text_key_active_task.md`, diagnosis corrected in `fff52b7a`). Both sides of the join now pass through one `keyOf = (k) => String(k)` normalizer (no `key_sql_type` branch), and a residual miss now THROWS `ValidationKeyMissError` before any write rather than silently counting `skipped` — a key-type-agnostic join is structurally unable to repeat this 100%-miss class. Re-verified per the "Recommended fix" above: WF3 Step 5 (2026-09-24) ran the forced-change differential this row demanded — perturbed 1000 real rows, converted run `records_updated=936` (legacy run also 936, same 64 residual departed-parcel ids in both arms), re-run over the legacy-written DB `updated=0` hash-identical to the converted run's own write. The false-negative commit-② golden (`15785c9b…`, 0 rows ever written) is DISCARDED; the trustworthy replacement (`72a91518…`, 496,500 rows, `null_address_pct` now genuinely WARNs at 100% instead of the pre-fix's impossible 0%) lands in this session's ② residue commit alongside this closure. `parcels` commit ③ (registry hygiene / cutover) proceeds in the same session. | `scripts/lib/step/write.js` `validateGeometries` (shared runner library) — fixed `6457e713`, verified `.cursor/wf3_validate_geometries_text_key_active_task.md` Step 5 RESULT |
 
 ## 2026-09-24 — INGESTOR prerequisite 0q landing (`70a9b9af` on wf2/load-centreline) — residue
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: staleness fingerprint_inputs executor (Spec 124 R-X ruling owner) | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4136,12 +4219,14 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | LOW | 0q plan premise "load_ravines' golden fingerprint includes `acquire.js`" was wrong — `computeSourceFingerprint` covers {compute, descriptor, step.js, notes.json} only; no recapture was needed. Plan-altitude claims about G8 inputs need the fingerprint function read, not inferred. | — (recorded) |
 
 ## 2026-09-24 — WF3 class-C retract-all guard, Commit 2 "anti-bypass hardening" — residue
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: x-banned-for-new replay/criticality enforcement (Spec 124 Rule 9) | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
 | MED | **`x-banned-for-new.values` names three paths (`outputs.writes[].replay: append_unsafe`, `outputs.writes[].write_discipline.guard: none`, `execution.criticality: best_effort`) but `assertGrandfathered` (`scripts/lib/step/validate.js`) only ever enforced the `guard` path** — this commit added a SECOND, narrowly-scoped arm for `outputs.writes[].write_discipline.class` (the class-C hole this WF3 exists to close), via `GRANDFATHERED_VALUE_PATHS`, but `replay:"append_unsafe"` and `execution.criticality:"best_effort"` remain METADATA WITH NO CONSUMER — a descriptor can declare either today, satisfy AJV's sibling-`why` requirement, and ship with no reviewed allowlist entry at all (the exact C-12 gap `assertGrandfathered` was built to close for `guard`). Deliberately NOT generalized in this commit (Commit 2 item B's own scope note: "narrowly for this path; do not generalize to replay/criticality") — measure which live descriptors actually carry either value before building a generic enforcer over every `x-banned-for-new.values` key (a wrong generalization risks refusing an already-shipped, already-adjudicated descriptor at construction with no grandfathered.json entry to rescue it). | next `x-banned-for-new` WF (Spec 124 Rule 9) |
 
 ## 2026-09-26 — WF2 "McDonald's Airtight" gates landing (`wf2/mcd-gates`) — orphan removal + spec-closing + gate V
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: step-validate.mjs per-row try/catch (Spec 123 R-R); gate V scorecard regen expected post-restore | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4149,6 +4234,7 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | MED | **Gate V's new "### Five-word verdict" section (`renderScorecard`) will red `step-conformance.infra.test.ts`'s "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run" lock, for all 20 converted steps**, the moment that suite runs — none of the 20 committed assessment reports carry the new section yet, and this landing was explicitly told not to run `--all --write` (a DB restore was in flight; scorecard regen was already deferred to post-restore for unrelated reasons). `vitest related <staged files>` does NOT select `step-conformance.infra.test.ts` for this commit (it reaches `step-validate.mjs` only via `spawnSync`, a runtime dependency `vitest related`'s static import-graph analysis cannot see — the same blind-spot class as the 2026-09-23 "`vitest related` cannot see text-reading locks" lesson), so pre-commit stays green; a full `npm run test` / pre-push run will NOT stay green until `--all --write` regenerates all 20 reports. Expected, not a defect — recorded so the post-restore `--all --write` pass budgets for it. | the same post-DB-restore `--all --write` pass already owed for the scorecard regen |
 
 ## 2026-09-27 — batch-2 row 3.6 (`massing`) commit ② — Integration seat item 5: the converted INGESTORs' `skip_rate_pct` FAIL can never fire
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: skip_rate_pct evaluateLimit bug (own WF3); massing audit blind spots; duration_ms=0 (lib WF3) | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4157,6 +4243,7 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | MED | **INGESTOR `*_load.duration_ms` always reads 0 (Integration seat, row 3.6 ②, 2026-09-28).** `buildLoadMeta` in `scripts/lib/compute/load-massing.js`, `load-parcels.js:663` and `load-address-points.js:324` reads `ctx.elapsed_ms`, but `scripts/lib/step/index.js` sets it only on the link / link_keyed / link_column / cascade paths (:5061/:5082/:5101/:5147), never on ingest. Measured: massing POST golden `massing_load.duration_ms` 0 on a 366.8 s run (legacy 96,791). Fix = set `stepCtx.elapsed_ms` on the ingest path (library change → lib_fingerprint recapture) with a lock. Also: converted massing runs ~3.8x slower than legacy (366.8 s vs 96.8 s; within its declared 10m budget) — measure the validator vs write split when the library is next touched. | library owner → own WF3 |
 
 ## 2026-09-28 — WF3 parcels geom guard — Reality-Check output altitude: two audit gaps the filled geoms expose
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: geom-area/lot ratio invariant (lock item 11(g)), lot_size_source never written | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4164,6 +4251,7 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | LOW | **`parcels.lot_size_source` is never written by the loader.** 6,631 rows inserted 2026-09-24 have `lot_size_sqm` set and `lot_size_source` NULL: migration 214 labelled existing rows 'stated' once, and `scripts/load-parcels.js` / its descriptor carry no `lot_size_source` column, so every later insert is unlabelled. Declare the column (`'stated'` when STATEDAREA parses) or document that the backfill owner stamps it. | parcels owner (Spec 55) |
 
 ## 2026-09-30 — WF2 generated Target Files — routed, not fixed here
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: LF-ONLY vacuous for 9 steps (score-floor.mjs), advisory noisy (step-registry.mjs); capture-ledger golden-mutation CLOSED 2026-10-06 | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4182,6 +4270,7 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | LOW | **Dead-flag detection is blind outside assert_parcel_sanity** — no other converted compute reports a check's population, so a check whose population is silently empty renders a clean PASS and cannot be found from audit rows (WF3 inert lot bound fleet sweep, chain run 2201). Candidate R-BA closed answer: every bound/invariant check reports its population. | Spec 124 / registry-truth |
 
 ## 2026-10-02 — WF3 witness-unblock (C1–C3) — declared follow-ups, owner registry-truth slice B
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: PRODUCER per-predicate AST fix, IN-list match, SELECT INTO, CTE-in-subquery (all registry-truth slice B) | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4192,6 +4281,7 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | LOW | **`stripSqlComments` does not nest block comments** (output-panel Code Reviewer, 2026-10-02): Postgres nests `/* */`; the lazy regex ends at the first `*/`, so `/* a /* nested */ completed_with_warnings */ status = 'completed'` leaves the token visible and suppresses the PRODUCER row (fail-open, adversarial input only). Also `E'…\\'…'` strings and double-quoted identifiers are not tokenised (no verdict flip observed). Fix: a depth-counting block-comment scanner. | registry-truth slice B |
 
 ## 2026-10-02/03 overnight — Reality-Check + queue triage (6 rows)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: guard_columns, retired AP rows (operator decision), AbortError, before-image test writes, non-finite SQL, split ledger baselines | triage_after: 2026-12-04 -->
 
 | Severity | Item | Disposition |
 |----------|------|--------------|
@@ -4211,6 +4301,7 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | LOW | **Witness resolver: the INSERT…SELECT write-target pseudo-scope exposes the target's columns to the SELECT** (S4, WF3 resolver-scope sibling, 2026-10-03): Postgres does not. When a catalogued source table lacks the column (stale catalog), the credit now moves from the source to the write target: `INSERT INTO a (id) SELECT id FROM c` read c.id before the fix and a.id after it — both wrong (Postgres raises an error). Corrected-corpus impact 0. | DEFER: registry-truth slice B — stop exposing the INSERT target's columns to its SELECT source; lock the shape above → FAIL:INPUT:column |
 
 ## 2026-10-03 — WF3 PostGIS pin (QUEUE L10)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | ALL CLOSED (DB-tier pin + Spec 34 update) | triage_after: n/a -->
 
 Source: `.cursor/wf3_postgis_pin_active_task.md` (authorized 2026-10-03; A1 = the target image, A2 = cloud measured).
 
@@ -4220,11 +4311,13 @@ Source: `.cursor/wf3_postgis_pin_active_task.md` (authorized 2026-10-03; A1 = th
 | LOW | **Spec 34 names a stale test-DB image** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md` L22 "16 with PostGIS 3.4", L40 `postgres:16-3.4`, L181 `postgis/postgis:16-3.4`). Already stale before the pin; out of scope for the WF3. | CLOSED 2026-10-04 (WF3 PostGIS pin Step 6): L22, the Option B block (was L40) and L181 now point at `_contracts.json` `db_target` / `public.ecr.aws/supabase/postgres:17.6.1.167`; Option A/B use `npm run test:db` and state the disposable-DB rule. |
 
 ## 2026-10-05 — MQ-B5 (a) (FLEET-2, morning batch 2) — record now, fix later
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: batch_errors reads never fire (seat A computes + seat D text, next RE-FREEZE) | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
 | LOW | **The `batch_errors` reads can never fire.** `records_errors` in `scripts/lib/compute/load-parcels.js:576` and the `errors` field at `scripts/lib/compute/load-address-points.js:340` read `acquired.batch_errors`, which nothing in scripts/ or src/ sets (the legacy batch-drop catch it counted no longer exists: the converted loaders write through `write.js executeWrite`, one transaction, no catch — PR-D1 / AP-D3 FIXED-BY-RUNNER). parcels' FAIL check `records_errors` therefore always reads 0. Either re-source the check from a real runner counter or retire it with a deviation; and refresh the schema `on_batch_error` description's legacy-loader citations in the 2.8 RE-FREEZE text. | seat A (computes) + seat D (2.8 text) |
 ## 2026-10-05 — WF3 resolver five defects (`.cursor/wf3_resolver_five_defects_active_task.md`) — two DEFERRED by operator ruling
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: (c)/(d) ORDER BY/GROUP BY alias (operator ruling, same WF); (f) sublink-in-write own WF3; (g) staging-name LOW | triage_after: 2026-12-04 -->
 
 | Severity | Item | Disposition |
 |----------|------|--------------|
@@ -4267,6 +4360,7 @@ Source: `.cursor/wf3_postgis_pin_active_task.md` (authorized 2026-10-03; A1 = th
 | MEDIUM | **EF-25: CR-dominant parcels still read STAND_SET as a front setback in metres.** E1 removed the borrowed STAND_SET (4,319 residential → NULL); a parcel whose own dominant zone is CR still gets `front_setback = COALESCE(bylaw_standard_setback_m, …)` with a 1/2/3 standard-set selector read as metres. Count to be re-measured on the post-capture data. | **OPEN — McBylaw (Spec 67 EF-25).** |
 
 ## 2026-10-06 — capture-ledger WF3 — output-roster defers (2026-10-06)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: FreshnessTimeline captured badge, capture stamp gaps, cohort recording gaps, signal-latch limits, flush retry, pre-existing reader bugs | triage_after: 2026-12-04 -->
 
 | Sev | Finding | Fix owner |
 |---|---|---|
@@ -4331,6 +4425,7 @@ Resolver gaps raised by the DeepSeek error-paths / spec lenses on the DML-CTE di
 | LOW | **Code-review lens items not taken:** case-insensitive `NOTICE OF DECISION`/`File Number` regexes, a whereas-count guard, phrase-regex precompilation in `parse-values.js`. All are refuted or unmeasured on synthetic text. | **OPEN.** Re-measure against the first `--measure` run (real text) before changing the extractor (any change bumps `extractor_version`). |
 
 ## 2026-10-12 — H3 compute purity Phase 1, WF6 output-panel residue (wf1/compute-purity)
+<!-- triage: 2026-11-06 | last_reviewed: 2026-11-06 | DEFER: G2 lexical arm (own WF2 after H3), vocab-coverage.js seam S2, .connect()/.release() name-only, SQL_WORD gaps, exit-0, counting hygiene, CLOSED_RUNNER_TEMPLATES staleness | triage_after: 2026-12-04 -->
 
 Grounded by a Sonnet seat against the code (DeepSeek ×2 + Gemini CLI reviews). The must-fix items (closure verdict applied, no silent skip of unreadable inputs, entry marking, leading-comment SQL, parse/resolve split, runner-set guard, hook print + row freeze, R-CA(i) wording) landed in the H3 fix commit; these are deferred.
 
