@@ -1,0 +1,111 @@
+{
+ "$comment": "Pre-registration, task MF-10, prereg 1 (R-MA; committed ALONE directly under its code commit), McFrontend queue lane E: retire the lineage, consumer, presentation and pending source forms from the report schema seed and checker; every field binds to a source in the closed set catalogue / content / user_input / ad_slot / external_embed / parcels (Spec 126 11a.1, Spec 135 FE-18, FE-27 added by the D-5 b dated note); binding-sources.json; the FE-18 lock src/tests/surfaces/report-binding.logic.test.ts with its RED fixture. It touches no by-law evaluator, scorer or oracle: expected 0 scorer rows move and every total below is copied from prereg-MB-83-6.json (the loop gate reads surface paths as out of scope). rules[] FE-18, FE-21, FE-23 and FE-27 (D-7; FE-27 is the D-5 b register row). Cited ids in the code commits: FE-18 (its lock lands with a red-evidence file in the same commit) and FE-27 (RULED). Test assertions and checks changed by operator ruling (Queue Process 1), and only these: D-6 a = RS-1, RS-2, RS-3, RS-5, RS-9 and their assertions in src/tests/report-schema.logic.test.ts; D-6+ a = RS-4 (check, 2 tests), RS-6 (1 test), RS-7 (check, 2 tests), the sample reports (worked example), the Q-7 scope block first test. Any other check or assertion move stops the lane. A digest or hash pin that moves only as the mechanical result of these ruled changes is a standing-approval E1C-S pin: before and after values are shown in the commit. Operator rulings verbatim: \"MF-10 all recommended provided they are complaint\"; \"MF-10 D-6+ a\".",
+ "schema": "coa-round-prereg-v1",
+ "round": 83,
+ "task": "MF-10",
+ "rules": [
+  "FE-18",
+  "FE-21",
+  "FE-23",
+  "FE-27"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/MF-10/plan.md; ~/Buildo-scratch/mcfrontend/MF-10/plan-panel/fold.md; ~/Buildo-scratch/mcfrontend/phase1/open-questions.md (Operator answers MF-10 D-1..D-7 and D-6+)",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [],
+ "increment": "3",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/report-schema.logic.test.ts",
+   "rows": "RS-1 (3 tests), RS-5 (4 tests and the \"RS-5 state is WARN\" assertion), RS-9 (1 test)",
+   "rule": "Queue Process 1, operator MF-10 D-6 a"
+  },
+  {
+   "file": "src/tests/report-schema.logic.test.ts",
+   "rows": "RS-4 (2 tests), RS-6 (1 test), RS-7 (2 tests), Q-7 scope block (first test)",
+   "rule": "Queue Process 1, operator MF-10 D-6+ a"
+  },
+  {
+   "file": "scripts/analysis/report-schema.mjs",
+   "rows": "gates RS-1, RS-2, RS-3, RS-4, RS-5, RS-6 (sample reading only), RS-7, RS-9",
+   "rule": "Queue Process 1, operator MF-10 D-6 a and D-6+ a"
+  },
+  {
+   "file": "scripts/surfaces/_schema/seed-report-v2.mjs",
+   "rows": "the sample reports (worked example): lot facts and content only",
+   "rule": "Queue Process 1, operator MF-10 D-6+ a"
+  }
+ ]
+}
