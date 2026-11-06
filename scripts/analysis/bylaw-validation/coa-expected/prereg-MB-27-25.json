@@ -1,0 +1,316 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 25 (Spec 124a R-MA: the task next free number; round 85), the revert round of increment 1 that lands increment-3 item E1b, the Q12 fix (operator Q12 a and Q12-S a): 10.80.40.10(1)#(1)(C) gains the condition mapped(HT) that (A) has (one keying correction, M-75), so an unlabelled RM houseplex lot answers 12.0 m at (B)(ii) per M-201 instead of 10.0 m at (C). Layer 2 reach 17,730 cells (detached_houseplex 11,434 and semi_detached_houseplex 6,296, RM, no HT value: 10 to 12.0; ~/Buildo-scratch/mcbylaws/inc3/build/sql/q12-count.out). DL-6 a (operator \"approved provided they are complaint\", 2026-11-06): the 10 to 12 oracle changes are made only after the tracker row behind 10.0 m was read (envelope-answer-tracker.json:11695 holds no figure; the 10.0 is the case author rationale, golden-lots-cases.mjs:162, and the shared RD/RS/RM expectation of bylaw-evaluator-fixes:412-419, not an RM ruling). The oracle lines are listed line for line in expected_value_changes (R-MC, DOOR-PA): bylaw-evaluator-fixes:412-419 (RM split out, 12 with the M-201 citation), golden-lots-cases.mjs:162 (the three RM checks) and the regenerated cases.json lines (every line is caused by this item). Zero scorer moves. One table_version move, evaluator_version unchanged. Red lock first: src/tests/bylaw-m201-rm-houseplex-height.logic.test.ts.",
+ "schema": "coa-round-prereg-v1",
+ "round": 85,
+ "task": "MB-27",
+ "rules": [
+  "M-201",
+  "M-75",
+  "M-180",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/build-plan.md section 2; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version a45213af7ff5 -> e5236ac9264e (body_sha256 moves with the correction; evaluator_version cc56a43de6c2 unchanged)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version a45213af7ff5 -> e5236ac9264e",
+  "expected-172.json and expected-4d.json commit and inputs.table_version a45213af7ff5 -> e5236ac9264e through coa-scorecard.mjs --pin, totals equal",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version a45213af7ff5 -> e5236ac9264e, the G-STOR re-bind (RP-SW2 a)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "line": "412-419",
+   "row": "RM: the exception binds the detached house; for the houseplex the more permissive zone rule prevails",
+   "from": "10 (shared by RD, RS, RM)",
+   "to": "RD and RS 10; RM 12 (M-201 (B)(ii), an unlabelled RM lot)",
+   "rule": "DL-6 a; M-201 (RATIFIED 2026-10-18)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md, 2026-11-06 \"approved provided they are complaint\" (DL-6 a)"
+  }
+ ],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": null,
+   "new": "  // DL-6 a (2026-11-06, operator): RM is split out. On an unlabelled RM lot (no HT overlay; here only LC 35) the houseplex height is (B)(ii)'s 12.0 m, not the 10 m the RD/RS loop shares (M-201, RATIFIED 2026-10-18; Q12-S a)."
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": null,
+   "new": "  // The exception 8.5 m still binds the detached house, and the more permissive zone rule is disclosed."
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": null,
+   "new": "  const HP_HEIGHT: Record<string, number> = { RD: 10, RS: 10, RM: 12 };"
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "    it(`${zone}: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (10 m, 45 % with LC 35)`, () => {",
+   "new": "    it(`${zone}: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (${HP_HEIGHT[zone]} m, 45 % with LC 35)`, () => {"
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "      expect([h.value, h.disclosures.some((d: string) => /more permissive than the exception/.test(d))]).toEqual([10, true]);",
+   "new": "      expect([h.value, h.disclosures.some((d: string) => /more permissive than the exception/.test(d))]).toEqual([HP_HEIGHT[zone], true]);"
+  },
+  {
+   "path": "scripts/analysis/bylaw-validation/golden-lots-cases.mjs",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "  '10.80.40.1(5)#whole': { z: { RM: [['5508019', { building_type: 'detached_houseplex' }, 'height_m', { value: 10, disclosure_match: 'more permissive than the exception' }, 'RM (x22, heritage): exception detached 9.5 m vs houseplex 10.0 m: 10.0 m, disclosed'], ['5510075', { building_type: 'detached_houseplex' }, 'height_m', { value: 10, disclosure_match: 'more permissive than the exception' }, 'as above'], ['5511363', { building_type: 'detached_houseplex', vars: { dwelling_units: 4 } }, 'height_m', { value: 10, disclosure_match: 'more permissive than the exception' }, 'RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex HT 10.0 (no HT overlay: zone default)'], ['5511363', { building_type: 'detached_houseplex', vars: { dwelling_units: 3 } }, 'height_m', { value: 11 }, 'RM (x18), 3-unit houseplex = a triplex (M-252): its own 11.0 m arm stands']] },",
+   "new": "  '10.80.40.1(5)#whole': { z: { RM: [['5508019', { building_type: 'detached_houseplex' }, 'height_m', { value: 12, disclosure_match: 'more permissive than the exception' }, 'RM (x22, heritage): exception detached 9.5 m vs houseplex 12.0 m on an unlabelled RM lot, (B)(ii) per M-201: 12.0 m, disclosed'], ['5510075', { building_type: 'detached_houseplex' }, 'height_m', { value: 12, disclosure_match: 'more permissive than the exception' }, 'as above'], ['5511363', { building_type: 'detached_houseplex', vars: { dwelling_units: 4 } }, 'height_m', { value: 12, disclosure_match: 'more permissive than the exception' }, 'RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex 12.0 m, (B)(ii) per M-201 (no HT overlay: unlabelled)'], ['5511363', { building_type: 'detached_houseplex', vars: { dwelling_units: 3 } }, 'height_m', { value: 11 }, 'RM (x18), 3-unit houseplex = a triplex (M-252): its own 11.0 m arm stands']] },"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "      \"value\": 10,",
+   "new": "      \"value\": 12,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "     \"rationale\": \"RM (x22, heritage): exception detached 9.5 m vs houseplex 10.0 m: 10.0 m, disclosed\",",
+   "new": "     \"rationale\": \"RM (x22, heritage): exception detached 9.5 m vs houseplex 12.0 m on an unlabelled RM lot, (B)(ii) per M-201: 12.0 m, disclosed\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "       \"value\": 10,",
+   "new": "       \"value\": 12,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "       \"winner\": \"10.80.40.10(1)#(1)(C)\",",
+   "new": "       \"winner\": \"10.80.40.10(1)#(1)(B)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"10.80.40.10(1)#(1)(B)\",",
+   "new": "        \"10.80.40.10(1)#(1)(B)\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"10.80.40.10(1)#(1)(C)\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5).\"",
+   "new": "        \"On this exception lot the height_m is 12 from 10.80.40.10(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5).\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "      \"value\": 10,",
+   "new": "      \"value\": 12,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "       \"value\": 10,",
+   "new": "       \"value\": 12,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "       \"winner\": \"10.80.40.10(1)#(1)(C)\",",
+   "new": "       \"winner\": \"10.80.40.10(1)#(1)(B)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"10.80.40.10(1)#(1)(B)\",",
+   "new": "        \"10.80.40.10(1)#(1)(B)\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"10.80.40.10(1)#(1)(C)\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5).\"",
+   "new": "        \"On this exception lot the height_m is 12 from 10.80.40.10(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5).\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "      \"value\": 10,",
+   "new": "      \"value\": 12,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "     \"rationale\": \"RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex HT 10.0 (no HT overlay: zone default)\",",
+   "new": "     \"rationale\": \"RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex 12.0 m, (B)(ii) per M-201 (no HT overlay: unlabelled)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "       \"value\": 10,",
+   "new": "       \"value\": 12,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "       \"winner\": \"10.80.40.10(1)#(1)(C)\",",
+   "new": "       \"winner\": \"10.80.40.10(1)#(1)(B)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"10.80.40.10(1)#(1)(B)\",",
+   "new": "        \"10.80.40.10(1)#(1)(B)\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"10.80.40.10(1)#(1)(C)\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0179 RM houseplex height_m 12.0 m (unlabelled RM lot, M-201; golden-lots, evaluator-fixes)",
+   "ruling": "M-201",
+   "ruling_ref": "CHAT-230.Q12",
+   "old": "        \"On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5).\"",
+   "new": "        \"On this exception lot the height_m is 12 from 10.80.40.10(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5).\""
+  }
+ ]
+}
