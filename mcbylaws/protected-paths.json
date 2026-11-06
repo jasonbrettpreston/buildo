@@ -59,7 +59,8 @@
     "mcbylaws/landing-exceptions.json",
     "docs/specs/**/135_mcfrontend_decisions_register.md",
     "src/tests/fixtures/surfaces/**",
-    ".cursor/MCFRONTEND-QUEUE.md"
+    ".cursor/MCFRONTEND-QUEUE.md",
+    "scripts/surfaces/_schema/binding-sources.json"
   ],
   "literal_scope": [
     "scripts/analysis/bylaw/**/*.mjs",
