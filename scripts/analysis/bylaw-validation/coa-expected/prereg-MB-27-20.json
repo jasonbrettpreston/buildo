@@ -1,0 +1,89 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 20 (Spec 124a R-MA; R-LZ revert round of increment 1), the round that lands the Layer 3 disclosure carriage (D-8, OQ-1, OQ-2, LQ-2 b; the 2026-11-06 lane R dated note on the flags-propagate row): Phase 2 base-row and permission disclosures, recomputed on read by Layer 2 (traceResult, permissionDisclosuresOf), carried as closed words (data: scripts/lib/compute/maxbld/disclosure-families.json) through the reader inputFlags on l2(<target>) in every run; M-35 held to the report; an unlisted family fails closed; a stale stamp, or no Layer 1 input, carries phase2_disclosures_not_current. New lock src/tests/steps/compute_maxbld_scenarios/disclosure-carriage.logic.test.ts, red first (docs/reports/red-evidence/bylaw/bylaw-mb27-d8-disclosure-carriage-red.txt). scripts/lib is not a table_version or evaluator_version input, so no version moves; golden-25 is unchanged in this commit (its re-key is RP-G25S at the switch-on). The increment-2 headline revision stays switched off, so no scorer row moves. Operator \"all recommended\" on D-1..D-9 and on OQ-1..OQ-3, \"b\" on LQ-2 (scratch record mcbylaws/inc2/open-questions.md). Committed alone directly under the code commit. Increment 1, zero moves: no scorer row, oracle row or floor moves. Round 77, as assigned at landing.",
+ "schema": "coa-round-prereg-v1",
+ "round": 77,
+ "task": "MB-27",
+ "rules": [
+  "R-MA"
+ ],
+ "plan_ref": "mcbylaws/inc2/open-questions.md (SWITCH-ON decision list D-1..D-9, D-8; OQ-1..OQ-3; LQ-2); mcbylaws/MB-27L2/switch-on/impact-map.md section 6.2 D-8",
+ "expected_assertion_changes": [
+  "step-closure.logic.test.ts EXPECTED_LOCAL gains scripts/lib/compute/maxbld/disclosure-families.json and scripts/lib/compute/maxbld/disclosures.js, with the walk title (nine Layer 3 files become eleven): the impact map D-8 item 4 (the closure assertion change), the reached files checked free of env, clock and io"
+ ],
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "increment": "1"
+}
