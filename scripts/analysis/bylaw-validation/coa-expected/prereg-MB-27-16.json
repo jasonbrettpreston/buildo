@@ -1,0 +1,95 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 16 (R-MA): the revert round of increment 1 (R-LZ) that lands the Layer 3 option reader R2 (plan-reader-and-mech.md 1.4 R2; operator \"L3-F2 a\", \"Q-r1 a\", \"Q-r2 a\", recorded as the 2026-11-04 dated notes on M-400 and M-415): one run per roof design option with the memo keyed by (row, run), the option view read (READ_SQL.options, declared), decodeOptionCells, ROOF-5 carried through Layer 2s own withNotAbove, R3-11 extended, and golden25-inputs.mjs writing phase2_options. The increment-2 headline revision stays switched off (Q-default a), so the scorer rows do not move. scripts/lib/compute is not a table_version or evaluator_version input, so no version moves (measured before and after: table_version 3bc74bbfc0c9, evaluator_version cc56a43de6c2). Expected: 0 scorer rows move; totals equal prereg 14; floors unchanged. ARM C: M-400 and M-415 are OWED in Spec 133 and both name src/tests/steps/compute_maxbld_scenarios/option-runs.logic.test.ts as their lock, which lands in this commit; red evidence docs/reports/red-evidence/bylaw/bylaw-mb27-r2-option-runs-red.txt (added). Named test changes (operator \"a\" on Q-R2A, Q-A and Q-A4; the 2026-11-06 lane R dated note): the three assertions below, the fail-closed R3-11 check and three seed-loader edits in steps/compute_maxbld_scenarios (the fourth, oracle-class, landed in its own round, prereg 15). Committed alone directly under the code commit. Round 73, as assigned at landing.",
+ "round": 73,
+ "rules": [
+  "M-400",
+  "M-415",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/MB-27L2/plan-reader-and-mech.md section R2; decisions 2026-11-04-batch-ba#CHAT-228.L3-F2, #CHAT-228.Q-R1, #CHAT-228.Q-R2",
+ "expected_repin": "none in this commit; the golden-25 manifest re-pin RP-n (operator \"a\") is its own commit directly above",
+ "expected_assertion_changes": [
+  "step-closure.logic.test.ts EXPECTED_TABLES gains bylaw_resolution_option_results (Q-R2A a)",
+  "step-closure.logic.test.ts EXPECTED_LOCAL gains cell-cache.mjs, bylaw-lot-row.js, bylaw-materialize.js, bylaw-resolution.js and cell-key-whole.json, with the walk count and title (Q-R2A a)",
+  "neighbour-facts.logic.test.ts ALLOWED gains bylaw_resolution_option_results (Q-R2A a)",
+  "seed loaders of increment2-worked-examples, increment2-revisions and comparison-rounding gain layer2Options: SCOPE.options, no expected value changed (Q-A a)"
+ ],
+ "schema": "coa-round-prereg-v1",
+ "task": "MB-27",
+ "increment": "1",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
