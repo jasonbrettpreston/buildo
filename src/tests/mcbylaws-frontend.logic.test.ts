@@ -336,6 +336,31 @@ describe('gate CLI identity: MB commits and MB-only ranges', () => {
     const r = spawnSync(process.execPath, [GATE, '--commit-msg', '.git/COMMIT_EDITMSG'], { cwd: repo.dir, encoding: 'utf8', timeout: 60_000, env: env() });
     return String(r.stdout);
   };
+  it('OUTPUT panel fold: the FE sentinel is read from Spec 135 alone (an FE-01 row elsewhere does not stand in for it)', () => {
+    const repo = makeRepo();
+    try {
+      repo.write('mcbylaws/protected-paths.json', JSON.stringify(fe, null, 2));
+      repo.write('docs/specs/01-pipeline/133_bylaw_handbook.md', `${OWED_TABLE}\n`);
+      repo.write('docs/specs/01-pipeline/69a_mcbylaw_register.md', `${REG}\n| FE-01 | stray | x | n/a | t | RULED |\n| FE-13 | stray | x | n/a | t | RULED |\n`);
+      repo.write('docs/specs/01-pipeline/124a_step_standard_policy_appendix.md', '# 124a\n');
+      repo.write('docs/specs/01-pipeline/131_lot_configuration_policy.md', '# 131\n');
+      repo.write('docs/specs/02-web-admin/135_mcfrontend_decisions_register.md', '| FE-13 | r | 128 | n/a | t | RULED 2026-11-04 |\n');
+      repo.write(SURF, '{}\n');
+      repo.write('src/lib/surfaces/generated/x.ts', 'export const x = 0;\n');
+      repo.write(`${PREREG_DIR}/prereg-MF-10-1.json`, JSON.stringify({ task: 'MF-10', rules: ['FE-13'] }));
+      repo.commit('seed: 135 without FE-01');
+      repo.write('mcbylaws/APPROVED', 'O-1 APPROVED 2026-10-30\n');
+      repo.commit('approved');
+      repo.write(SURF, '{"a":1}\n');
+      repo.write('docs/reports/panels/MF-10.json', JSON.stringify({ task: 'MF-10', plan: 'p', output: 'o' }));
+      repo.stage(SURF, 'docs/reports/panels/MF-10.json');
+      const out = commitMsg(repo, 'feat: x FE-13\n\nMcFrontend-Task: MF-10\n');
+      expect(out).toContain('FAIL:C:cannot-decide');
+      expect(out).toContain('GATE FAIL');
+    } finally {
+      repo.cleanup();
+    }
+  });
   it('an MB commit at a rev without Spec 135 is judged as today (GATE OK), with or without a frontend list', () => {
     for (const policy of [base, fe]) {
       const repo = makeRepo();
@@ -379,6 +404,16 @@ describe('gate CLI identity: MB commits and MB-only ranges', () => {
       repo.write('src/lib/surfaces/x.ts', 'export const x = 1;\n');
       repo.commit('surface');
       expect(ci(repo, mid, root)).toContain(`FAIL:Q:queue-untracked:${MF_QUEUE}`);
+      // OUTPUT panel fold: a rename OUT of a surface glob still counts as touching it (both sides of the rename).
+      const before = repo.git(['rev-parse', 'HEAD']);
+      repo.git(['mv', SURF, 'docs/features.json']);
+      repo.commit('move a surface file out');
+      expect(ci(repo, before, root)).toContain(`FAIL:Q:queue-untracked:${MF_QUEUE}`);
+      // OUTPUT panel fold: a tip policy that parses but is not valid is read as touching (the MF queue is judged).
+      const pre = repo.git(['rev-parse', 'HEAD']);
+      repo.write('mcbylaws/protected-paths.json', JSON.stringify({ ...fe, frontend: 'scripts/surfaces/**' }, null, 2));
+      repo.commit('a malformed tip policy');
+      expect(ci(repo, pre, root)).toContain(`FAIL:Q:queue-untracked:${MF_QUEUE}`);
     } finally {
       repo.cleanup();
     }

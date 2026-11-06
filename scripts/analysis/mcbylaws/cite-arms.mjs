@@ -32,6 +32,9 @@ const suffix = (sha) => (typeof sha === 'string' && sha !== '' ? `:${sha}` : '')
 const bootListed = (policy, task) => (policy?.boot1?.tasks || []).includes(task);
 const flagged = (sha) => `${CANNOT}${suffix(sha)}`;
 
+/** A McFrontend-named prereg (prereg-MF-...): never a McBylaws rules source. */
+const MF_NAMED = /\/prereg-MF-[^/]*$/;
+
 /**
  * R-MA: the rules source of `task` in `rev`, as {status, prereg, file}. When the task has files of the form
  * prereg-<task>-<k>.json, ONLY the highest integer k is read: unreadable or unparsable is 'cannot', a JSON task that is not
@@ -72,8 +75,6 @@ function findPrereg(cwd, rev, task) {
   }
   return { status: 'none', prereg: null, file: null };
 }
-
-const MF_NAMED = /\/prereg-MF-[^/]*$/;
 
 /**
  * §4.11 item 5: the McFrontend task's rules source in `rev`: ONLY its newest prereg-<MF-n>-<k>.json (no legacy names, no

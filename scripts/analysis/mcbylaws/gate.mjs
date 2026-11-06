@@ -121,15 +121,17 @@ function citeInputs(cwd, rev) {
 
 /**
  * §4.11 item 1: `inputs` plus `feRows` = its rows, then Spec 135's rows at `rev` (first wins, so 135 only adds ids).
- * `feRows` is null when 135 is missing or anything throws; arm C reads it only for a surface path and fails closed on null.
+ * `feRows` is null when 135 is missing, when 135's OWN parse lacks the FE-01 sentinel (a row elsewhere never stands in for
+ * it; OUTPUT panel fold), or when anything throws; arm C reads it only for a surface path and fails closed on null.
  */
 function withFe(cwd, rev, inputs) {
   let feRows = null;
   try {
     const text = at(cwd, rev, FE_REGISTER);
-    if (text !== null) {
+    const own = text === null ? null : parseRegisterRows(text);
+    if (own !== null && own.has('FE-01')) {
       feRows = new Map(inputs.rows);
-      for (const [id, v] of parseRegisterRows(text)) if (!feRows.has(id)) feRows.set(id, v);
+      for (const [id, v] of own) if (!feRows.has(id)) feRows.set(id, v);
     }
   } catch {
     feRows = null;
@@ -488,20 +490,30 @@ function summaryInput({ cwd, refs, ci, ctx }) {
 
 /**
  * MF-24a: arm Q over the McFrontend queue, for a range `base..tip` that changes the McFrontend queue or a surface path under
- * the base OR the tip policy's `frontend` list (a union: the tip can only add runs, never remove one). A range of McBylaws
- * work only is judged exactly as before. A diff or tip read that fails is cannot-decide.
+ * the base OR the tip policy's `frontend` list (a union: the tip can only add runs, never remove one). Both sides of a rename
+ * count, and a tip policy that is present but not valid counts as touching (OUTPUT panel folds: never a silent skip). A range of
+ * McBylaws work only is judged exactly as before. A diff that fails, or any throw, is cannot-decide.
  */
 function frontendQueueLines(cwd, base, tip, basePolicy) {
-  const diff = git(cwd, ['diff', '--name-only', '-z', '-M', base, tip]);
-  if (diff.status !== 0) return [CANNOT];
-  const changed = diff.stdout.split('\0').filter(Boolean);
-  let tipPolicy = null;
-  const text = readAt(cwd, tip, POLICY_PATH);
-  if (text !== null) {
-    try { tipPolicy = validatePolicy(JSON.parse(text)).policy || null; } catch { tipPolicy = null; }
+  try {
+    const diff = git(cwd, ['diff', '--name-status', '-z', '-M', base, tip]);
+    if (diff.status !== 0) return [CANNOT];
+    const entries = parseNameStatusZ(diff.stdout);
+    if (entries === null) return [CANNOT];
+    const changed = allPaths(entries);
+    let tipPolicy = null;
+    let tipBad = false;
+    const text = readAt(cwd, tip, POLICY_PATH);
+    if (text !== null) {
+      try { tipPolicy = validatePolicy(JSON.parse(text)).policy || null; } catch { tipPolicy = null; }
+      tipBad = tipPolicy === null;
+    }
+    const touches = changed.some((p) => p === MF_QUEUE_PATH || isFrontend(basePolicy, p) || (tipPolicy !== null && isFrontend(tipPolicy, p)))
+      || (tipBad && changed.includes(POLICY_PATH));
+    return touches ? queueCheck({ cwd, rev: tip, queuePath: MF_QUEUE_PATH, prefix: 'MF' }) : [];
+  } catch {
+    return [CANNOT];
   }
-  const touches = changed.some((p) => p === MF_QUEUE_PATH || isFrontend(basePolicy, p) || (tipPolicy !== null && isFrontend(tipPolicy, p)));
-  return touches ? queueCheck({ cwd, rev: tip, queuePath: MF_QUEUE_PATH, prefix: 'MF' }) : [];
 }
 
 /** S11: what the operator (or the CI log) sees — `summary.text` unpaged, so `full list:` shows and nothing overflows. */
