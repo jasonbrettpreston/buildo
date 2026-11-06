@@ -1,6 +1,6 @@
 # McFrontend queue (LEAN) — the ONLY McFrontend job list, landed 2026-11-04
 
-This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-34** (ids are never reused).
+This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-34** (ids are never reused). Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b): MF-34 is taken by the MF-24 split; next free id **MF-35**.
 
 Form copied from `.cursor/MCBYLAWS-QUEUE.md`: ten stages, status words DONE · RUNNING · WAITS · OPERATOR · HELD · LATER, lanes R rulings · G gates · E one-writer build · T tests · P product, reference practice `MF-nn (item) · McFrontend queue · lane X · stage N`. Arm Q today reads the McBylaws queue only (headings `**MB-nn ... - STATUS**` with `MB-nn@sha`); converting these tables to that form, and teaching arm Q a second queue, is MF-24.
 
@@ -9,6 +9,10 @@ Authority: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`. Principles: Spec
 Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gate.mjs, decision-log, preregs, panels, handbook generators, arm Q (parameterised); other screens convert on touch (operator "Q-Mf6 a": no fixed admin pilot).
 
 **McBylaws stays the priority.** Operator verbatim: "The focus is still on completing Mcbylaws." Every Phase 1 task WAITS on McBylaws increment 2 closing (the McBylaws queue increments table, row 2) and the infra freeze lifted for McFrontend by name. Every gate-code change (MF-17, MF-24, MF-25) waits for that lift and McBylaws owner review. Seats per Spec 08 and the token-economy rule (DeepSeek exec and lenses, Sonnet seats, Opus sparingly).
+
+- Dated note 2026-11-06 (M-246, prior text kept; operator answer Q-MFGO, verbatim "a", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): Phase 1 is open (Spec 135 FE-01 dated note). McBylaws increment 2 is closed (McBylaws queue increments table row 2, e67fc9e8f) and the 2026-11-02 infra freeze is lifted by name for McFrontend Phase 1, the report page: surface paths move from held to layer23 (Spec 128 §4.11 item 6); build MF-10..MF-23; gate items MF-15, MF-17, MF-24 and MF-25 each with McBylaws owner review. McBylaws stays the priority. First task MF-33. The "WAITS inc 2, freeze lift" cells and the Not-doing line "No code before the increment 2 close and freeze lift" are met as of this note; their text is kept.
+
+- Dated note 2026-11-06 (M-246, prior text kept; operator answer to the opening decision list D-1..D-9, verbatim "yes. proceed", `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`; map `~/Buildo-scratch/mcfrontend/phase1/opening-map.md`): the Phase 1 order is (D-1 b) this documents commit, then an early gate batch (MF-17 items 1-5 of Spec 128 §4.11, the loop-scope item of D-2 and MF-24a), then the policy flip, then MF-10. D-2 b: the surface paths go in a separate front-end policy list that arms H, C and P read and the McBylaws loop gate does not read. D-3 a: the gate batch is recorded in `docs/reports/panels/MF-17.json` with McBylaws (MB-67 lane) owner sign-off. D-4 a: the golden dir is `src/tests/fixtures/surfaces/**`, and this queue file joins the protected list. D-5 b and D-8 b: MF-33 baselines the Parcel Cost Tool now; the REPORT payload is re-timed and the numbers ruled after MF-13. D-6 a: web timing with Playwright, mobile by a manual operator run. D-9 b: MF-24 is split into MF-24a (in the early gate batch) and MF-34 (after MF-17 item 1). This pulls MF-17 items 1-5 and MF-24a ahead of MF-10 (check-increment-order rule), as ruled.
 
 ## Phase 0: specs ruled and recorded (documents only)
 
@@ -28,7 +32,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 
 | Id | Task | Lane | Status | WAITS | Done-condition |
 |---|---|---|---|---|---|
-| MF-33 | Measure first (Q-MF5 a): time the current report screen and the 25 golden lots on mobile and web; propose budget numbers for the operator to rule; ruled numbers go in a protected, tighten-only file | P | LATER | inc 2, freeze lift | measurements written; numbers proposed to the operator (MF-08) |
+| MF-33 | Measure first (Q-MF5 a): time the current report screen and the 25 golden lots on mobile and web; propose budget numbers for the operator to rule; ruled numbers go in a protected, tighten-only file | P | LATER. Dated note 2026-11-06 (M-246, prior text kept; Q-MFGO "a"): RUNNING (lane R/P, stage 1: plan and measure, no commits) | inc 2, freeze lift | measurements written; numbers proposed to the operator (MF-08) |
 | MF-10 | Retire old lineage names from the report schema seed; every field has a `source` in the closed binding set; binding-sources protected file | E | LATER | MF-05, inc 2 | 0 lineage refs; Rule 20 check fails an invented field |
 | MF-11 | Red tests first for the generator (row with no field; field with no row; hand edit) | T | LATER | MF-10 | red evidence under `docs/reports/red-evidence/` |
 | MF-12 | Goldens: structured trees, one per state per target (mobile, web, admin, pdf), incl. user_entry, user_entry_outranked and ad slot states | T | LATER | MF-11 | states x 4 targets = files |
@@ -36,14 +40,15 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 | MF-14 | One REPORT renderer (mobile, web, admin, pdf); reads the declaration; throws on unknown field/status; no maths | E | LATER | MF-13 | all goldens green on all targets |
 | MF-15 | `surface-validate.mjs` (first gate, FE-13): S-gen, S-golden, S-parity, binding, closed-status, budget | G | LATER | MF-12 | planted bad descriptor exits 1 |
 | MF-16 | Locks: binding, no-maths, generated-only, honest, parity, budget, variants | T | LATER | MF-14, MF-15 | each RED then GREEN |
-| MF-17 | Gate arm C wiring (Spec 128 §4.11 items 1-6): 135 landed earlier; ID_RE; trailer; prereg-name/PREREG_RE; policy globs held then layer23 | G | LATER | MF-16, freeze lift | commit citing an OWED FE row refused; waits for the named freeze lift; McBylaws owner review |
+| MF-17 | Gate arm C wiring (Spec 128 §4.11 items 1-6): 135 landed earlier; ID_RE; trailer; prereg-name/PREREG_RE; policy globs held then layer23 | G | LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b): items 1-5 and the D-2 loop-scope item run now as the early gate batch, before MF-10; item 6 (the policy flip) follows it | MF-16, freeze lift | commit citing an OWED FE row refused; waits for the named freeze lift; McBylaws owner review |
 | MF-18 | Spec 136 generator + `--check` | G | LATER | MF-17 | second run changes nothing |
 | MF-19 | User-input flow: declare the form, bind the input contract, render shared results with provenance and confidence by source; verified outranks user, newest user entry shown, history kept (FE-20); goldens for entry states | E | LATER | MF-14, McBylaws increment 6 re-evaluation capability for live results | goldens green; McBylaws does the re-evaluation |
 | MF-20 | Ad slots: contract, R-17 disclosure, R-34 outside cards and `variants[]`, declared-key targeting, never user-entered facts without consent (FE-22); goldens present/absent | E | LATER | MF-14 | ad-slot lock RED then GREEN |
 | MF-21 | In-product error count and budget breach shown on admin | E | LATER | MF-14, MB-35, MB-38 | `error-count.db.test.ts` green in a named CI step; on-screen part manual |
 | MF-22 | Product proof run: 25 lots vs answer key, all targets | P | LATER | MF-14, MB-38, MB-44 | `answer-key-e2e.db.test.ts` green in CI. No circular wait: MB-44 delivers data only and does not wait on MF-14 (Q-MB44 a) |
 | MF-23 | Executable canaries a-f (McFront proof) | T | LATER | MF-16 | each: planted defect in a temp copy exits non-zero, clean copy exits zero |
-| MF-24 | Arm Q second queue: parameterise path and prefix; DONE needs `MF-nn@sha`; DONE refused while its FE row is OWED | G | LATER | MF-17, freeze lift | waits for the named freeze lift; McBylaws owner review |
+| MF-24 | Arm Q second queue: parameterise path and prefix; DONE needs `MF-nn@sha`; DONE refused while its FE row is OWED | G | LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-9 b): split. MF-24a (parameterise path and prefix, convert this queue, DONE needs `MF-nn@sha`) runs in the early gate batch; the OWED-FE refusal is MF-34 | MF-17, freeze lift | waits for the named freeze lift; McBylaws owner review |
+| MF-34 | MF-24b (split from MF-24, D-9 b): arm Q refuses a DONE MF task whose FE row is still OWED | G | LATER | MF-17 item 1, MF-24a | a DONE MF task with an OWED FE row fails arm Q; McBylaws owner review |
 | MF-25 | Pre-commit/CI lines: surface-validate, generator, handbook `--check`; CI step for `*.db.test.ts` | G | LATER | MF-18, freeze lift | .husky is protected: panel arm P + APPROVED |
 | MF-26 | Extend spec-split-check citation arm to Spec 136 | G | LATER | MF-18 | citation to a missing line fails |
 
