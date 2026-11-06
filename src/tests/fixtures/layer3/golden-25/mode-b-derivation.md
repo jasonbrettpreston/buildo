@@ -90,3 +90,19 @@ Arithmetic:
 Each cell keeps the flag set the key already records (flag-corrections.json): front `front_yard_needs_survey`; footprint `front_yard_needs_survey`, `shape_box_assumed`; gfa the same, plus `storeys_from_minimum_ceiling` where the storeys come from S-1 (A0097, A0553).
 
 **Owed (not in the flags):** the M-406 disclosure that rests A0067's and A0097's building length and depth on today's frontage standing in for the 2013 frontage is produced by Phase 2 and recomputed on read, but Layer 3 carries no Phase 2 base-row disclosure into its flags today (L3-F2 a carries option-row disclosures only). Until that carriage is built and ruled, these four cells do not show it.
+
+## MB-18 (l) refresh (RP-L, 2026-11-06)
+
+The R-zone side yard of five detached-house cases moves from 0.45 m (10.10.40.70(4)#(4)(A)) to 0.9 m (10.10.40.70(3)#(3)(A)) under M-435: 10.10.40.70(3) "In the R zone, the required minimum side yard setback is: (A) 0.9 metres, for: (i) a detached house; ...". The 0.45 m of 10.10.40.70(4) ("may be reduced to 0.45 metres if there are no windows or doors in that side of the building") is a disclosure, not the stored maximum. Building depth (17.0 m, 10.10.40.30(1)(A)) binds the inner depth on all five and coverage is unregulated, so each footprint falls by 2 × (0.9 − 0.45) × 17.0 = 15.30 m² and every GFA is unchanged (FSI binds):
+
+| Case | Width (m) | Footprint (m²) | Footprint × storeys (m²) | GFA (m²) |
+|---|---|---|---|---|
+| A0175_26NY | 7.61 − 0.9 − 0.9 = 5.81 | 5.81 × 17.0 = 98.77 | 395.08 | 153.252 (unchanged) |
+| A0375_26TEY | 4.99 − 0.9 − 0.9 = 3.19 | 3.19 × 17.0 = 54.23 | 216.92 | 156.63 (unchanged) |
+| A0388_26TEY | 5.88 − 0.9 − 0.9 = 4.08 | 4.08 × 17.0 = 69.36 | 277.44 | 127.044 (unchanged) |
+| A0464_26TEY | 6.83 − 0.9 − 0.9 = 5.03 | 5.03 × 17.0 = 85.51 | 342.04 | 147.978 (unchanged) |
+| A0561_26TEY | 5.37 − 0.9 − 0.9 = 3.57 | 3.57 × 17.0 = 60.69 | 242.76 | 199.33 (unchanged) |
+
+The full hand derivation (clauses per case, the exceptions checked, the depth room) is ~/Buildo-scratch/mcbylaws/MB-27L2/r2/rpl/derive/derivation.md; no value is copied from the step. Each cell keeps the flag set the key already records.
+
+**Owed (not in the flags):** the M-435 disclosure that the side yard may be reduced to 0.45 m on a side with no windows or doors (10.10.40.70(4)) is produced by Phase 2, but Layer 3 carries no Phase 2 base-row disclosure into its flags today (L3-F2 a carries option-row disclosures only; card L3-DISC, ~/Buildo-scratch/mcbylaws/inc2/CARD-l3-base-disclosures.md). Until that carriage is built and ruled, these five footprint cells do not show it.
