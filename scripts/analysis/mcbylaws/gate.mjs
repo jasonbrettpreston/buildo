@@ -25,6 +25,7 @@ import { holdForCommit, deadGlobLines } from './hold.mjs';
 import { parseOwedTable, parseRegisterRows } from './cite-parse.mjs';
 import { citeForCommit } from './cite-arms.mjs';
 import { panelForCommit } from './panel.mjs';
+import { SPEC_FILES } from '../spec-split-check.mjs';
 import { scanScope, allowSet, deadScopeLines, RULE_FILE, ALLOW_REL } from './literal-scan.mjs';
 import { buildSummary, parseRefLines, isZeroSha } from './pre-push-summary.mjs';
 import { collectRef, heldCount, worktreeScan, pendingCount } from './summary-collect.mjs';
@@ -36,6 +37,7 @@ const DOCS = 'docs/specs/01-pipeline';
 const CITE_INPUTS = {
   spec133: `${DOCS}/133_bylaw_handbook.md`,
   registers: [`${DOCS}/69a_mcbylaw_register.md`, `${DOCS}/124a_step_standard_policy_appendix.md`, `${DOCS}/131_lot_configuration_policy.md`],
+  splitManifest: `${DOCS}/122_split_manifest.json`,
 };
 // §4.11 item 1: the McFrontend register. Read for `feRows` only, so a rev without it changes nothing for a McBylaws commit.
 const FE_REGISTER = 'docs/specs/02-web-admin/135_mcfrontend_decisions_register.md';
@@ -109,10 +111,26 @@ const top = (cwd) => {
 const at = (cwd, rev, rel) => readAt(cwd, rev, rel);
 const exists = (file) => fs.existsSync(file);
 
-/** The `owed` set and `rows` map arm C reads, from the copies at `rev`. `null` when any copy is missing. */
+/**
+ * MB-79 (u) F3: the files a declared spec-split move (Spec 124 R-AA) sent register rows to, read from the manifest at `rev`.
+ * A rev whose manifest declares no such move needs none; `null` (cannot decide) when the manifest is unreadable.
+ */
+function splitRegisterFiles(cwd, rev) {
+  const text = at(cwd, rev, CITE_INPUTS.splitManifest);
+  if (text === null) return [];
+  let moves;
+  try { ({ moves } = JSON.parse(text)); } catch { return null; }
+  if (!Array.isArray(moves)) return null;
+  const file = (id) => (SPEC_FILES[id] ? `${DOCS}/${SPEC_FILES[id]}` : null);
+  return [...new Set(moves.filter((m) => m && CITE_INPUTS.registers.includes(file(m.from_spec)) && file(m.to_spec)).map((m) => file(m.to_spec)))];
+}
+
+/** The `owed` set and `rows` map arm C reads, from the copies at `rev`. `null` when any copy is missing, 131a included once a move declares it. */
 function citeInputs(cwd, rev) {
   const spec = at(cwd, rev, CITE_INPUTS.spec133);
-  const regs = CITE_INPUTS.registers.map((p) => at(cwd, rev, p));
+  const split = splitRegisterFiles(cwd, rev);
+  if (split === null) return null;
+  const regs = [...new Set([...CITE_INPUTS.registers, ...split])].map((p) => at(cwd, rev, p));
   if (spec === null || regs.some((t) => t === null)) return null;
   const rows = new Map();
   for (const t of regs) for (const [id, v] of parseRegisterRows(t)) if (!rows.has(id)) rows.set(id, v);

@@ -51,6 +51,7 @@
     "docs/specs/**/69a_mcbylaw_register.md",
     "docs/specs/**/124a_step_standard_policy_appendix.md",
     "docs/specs/**/131_lot_configuration_policy.md",
+    "docs/specs/**/131a_lot_configuration_register.md",
     "src/tests/mcbylaws-*",
     "src/tests/fixtures/mcbylaws-gate/**",
     "docs/reports/generated/precommit-budget.json",

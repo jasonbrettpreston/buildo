@@ -895,7 +895,7 @@ describe('MB-79 (n): arm C reads the register in the PARENT at --commit-msg', ()
   const SENTINEL_ROW = '| **M-180** | x | y | z | RATIFIED 2026-10-18 |\n';
   const row = (id: string, cell: string) => `| **${id}** | x | y | z | ${cell} |\n`;
   /** The PARENT commit: seed, the panel record for MB-67 (arm P), the registers, the prereg; then the staged set. */
-  const build = (o: { reg: string; spec: string; rules: string[]; stage?: (repo: Repo) => void; message: string }) => {
+  const build = (o: { reg: string; spec: string; rules: string[]; stage?: (repo: Repo) => void; message: string; extra?: Record<string, string> }) => {
     const repo = mk();
     seed(repo);
     approve(repo);
@@ -905,6 +905,7 @@ describe('MB-79 (n): arm C reads the register in the PARENT at --commit-msg', ()
     repo.write(`${D}/124a_step_standard_policy_appendix.md`, '');
     repo.write(`${D}/131_lot_configuration_policy.md`, '');
     repo.write(PREREG, JSON.stringify({ task: 'MB-67', rules: o.rules }));
+    for (const [p, t] of Object.entries(o.extra ?? {})) repo.write(p, t);
     repo.commit('MB-67 registers and prereg');
     if (o.stage) o.stage(repo);
     else {
@@ -945,6 +946,41 @@ describe('MB-79 (n): arm C reads the register in the PARENT at --commit-msg', ()
     expect(r.status).toBe(0);
     expect(r.out).toContain('GATE OK');
     expect(r.out).not.toContain('FAIL:C:');
+    done();
+  });
+
+  // MB-79 (u) F3, operator 2026-11-02: Spec 131 rows moved to 131a (M37, M38). Arm C reads 131a exactly when the parent's split manifest declares a move to it.
+  const R131A = `${D}/131a_lot_configuration_register.md`;
+  const SPLIT = JSON.stringify({ moves: [{ id: 'M37', from_spec: '131', to_spec: '131a' }] });
+  it('T-u1: a ruled LC row in the parent\'s 131a, declared by the parent\'s split manifest, is seen: the cite passes', () => {
+    const repo = build({ reg: SENTINEL_ROW, spec: OWED(''), rules: ['LC-1'], message: cites('LC-1'), extra: { [`${D}/122_split_manifest.json`]: SPLIT, [R131A]: row('LC-1', 'RULED (as-built)') } });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(0);
+    expect(r.out).not.toContain('FAIL:C:');
+    done();
+  });
+
+  it('T-u2: a parent with no split manifest and no 131a is not cannot-decide (a rev before the split)', () => {
+    const repo = build({ reg: SENTINEL_ROW + row('M-190', 'RATIFIED 2026-11-01'), spec: OWED(''), rules: ['M-190'], message: cites('M-190') });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(0);
+    expect(r.out).not.toContain('cannot-decide');
+    done();
+  });
+
+  it('T-u3: a split manifest declares 131a but the parent has no 131a: cannot-decide, never a pass', () => {
+    const repo = build({ reg: SENTINEL_ROW, spec: OWED(''), rules: ['LC-1'], message: cites('LC-1'), extra: { [`${D}/122_split_manifest.json`]: SPLIT } });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:C:cannot-decide');
+    done();
+  });
+
+  it('T-u4: a 131a no manifest declares is not read: a ruled LC row in it does not rescue the cite', () => {
+    const repo = build({ reg: SENTINEL_ROW, spec: OWED(''), rules: ['LC-9'], message: cites('LC-9'), extra: { [`${D}/122_split_manifest.json`]: JSON.stringify({ moves: [] }), [R131A]: row('LC-9', 'RULED (as-built)') } });
+    const r = run(repo, ['--commit-msg', MSG]);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain('FAIL:C:not-ruled:LC-9');
     done();
   });
 
