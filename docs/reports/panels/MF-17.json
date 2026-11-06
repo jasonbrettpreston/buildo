@@ -26,7 +26,7 @@
     "ds-error-paths"
   ],
   "verdict": "PASS",
-  "mb67_owner_signoff": "PENDING OPERATOR: no MB-67 lane owner seat exists in this lane (D-3 a requires McBylaws owner sign-off; Q-MFGO a: gate items each with McBylaws owner review). The record is evidence; the gate does not read it for these commits.",
+  "mb67_owner_signoff": "PENDING OPERATOR: no MB-67 lane owner seat exists in this lane (D-3 a requires McBylaws owner sign-off; Q-MFGO a: gate items each with McBylaws owner review). The record is evidence; the gate does not read it for these commits. Dated note 2026-11-06: SIGNED OFF by the operator, \"1a\" (Q-MB67 a: give the MB-67 owner sign-off and push), after the independent security re-check returned ADJUDICATION UPHELD. Followups O1-O8 stay with the MB-67 owner.",
   "blockers": [],
   "followups": [
     "O1 landing-exceptions.json and protected-paths.json are protected, not layer23 (MB-67 owner)",
