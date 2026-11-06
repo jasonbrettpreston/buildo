@@ -4,7 +4,7 @@ McBylaws task MB-27, local database only (127.0.0.1:54322). The night applied mi
 
 - Pre-registration: `scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-14.json` (`41f1e2e3c`, committed alone before the go). Its `layer2_night` block holds the complete transition table of the dry run: 17,021 transitions, 6,210,208 moved cells, 119,216,297 unchanged.
 - Checklist: `~/Buildo-scratch/mcbylaws/MB-27L2/night-checklist-axis.v2.md` (C1 to C6, dated notes v2.1 to v2.7). Log and evidence: `~/Buildo-scratch/mcbylaws/MB-27L2/night/` (`night.log`, `blocks/*.out`, `obs/`, `diff-25.txt`, `runrows.txt`, `stop-c3a-1.txt`, `stop-c3a-2.txt`, `stop-c4-1.txt`).
-- Night patch: `~/Buildo-scratch/mcbylaws/MB-27L2/gate/night-patch.combined.diff` (sha256 `9baeb317…f904de9`). It holds the notes slot words (Q-D4W a), the resolve-bylaws.js fingerprint hunk and the two test hunks.
+- Night patch: `~/Buildo-scratch/mcbylaws/MB-27L2/gate/night-patch.combined.diff` (sha256 `9baeb317…f904de9`). It holds the notes slot words (Q-D4W a), the resolve-bylaws.js hunk (the three stamps bound as bytea at the write boundary, and the POST width from the base pairs plus the option pairs) and the two test hunks.
 - Operator rulings (answer log `~/Buildo-scratch/mcbylaws/inc2/open-questions.md`):
   - Go: the axis-night go (b), "b - you run this - go for it - let's finish this - I need to leave in any hour", typed as `OPERATOR-GO MB27-AXIS-NIGHT-1`. It confirms D-MIG ("migration 295 alone, --only=295 --dry-run first, all others held, the night running 295's VALIDATE"), the O-n2 extension ("the whole-DB restore also covers a 295 failure and a storage stop") and the go card ("a failed or differing night stops and is reported; no re-run without a new plan").
   - Before the night: Q-S6 a (storage stop only above 780 MiB, no band) and Q-D4W a (the 61-slot notes words).
@@ -88,5 +88,5 @@ No move outside the prereg: T3 found 0 unregistered keys.
 - **Migration 296** (`296_layer3_increment2_settings.sql`, lane K) stays unapplied, held by D-MIG for its own night.
 
 ## Commits (throwaway worktree `~/Buildo-wt-mb27cap` off `41f1e2e3c`; not pushed)
-1. `9f15d0ff4`, the night recapture: both POST goldens, both witness traces, `_catalog.json`, `explained-diffs.json` the night patch (notes slot words, the resolve-bylaws.js write-boundary and POST-width hunk, two test hunks) and the OUTPUT panel record `docs/reports/panels/MB-27.json`.
-2. This night record.
+1. `9f15d0ff4`, the night recapture: both POST goldens, both witness traces, `_catalog.json`, `explained-diffs.json`, the night patch (notes slot words, the resolve-bylaws.js write-boundary and POST-width hunk, two test hunks) and the OUTPUT panel record `docs/reports/panels/MB-27.json`.
+2. `3ee360356`, this night record (with this touch-up after it).
