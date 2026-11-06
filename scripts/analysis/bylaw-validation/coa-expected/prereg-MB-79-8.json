@@ -1,0 +1,134 @@
+{
+ "$comment": "M-321 pre-registration, task MB-79, prereg 8 (R-MA: a task numbers its preregs 1, 2, ...; prereg-MB-79-7.json is the last on the tip), the loop round that lands MB-79 (u-prep): the Spec 131 split into Spec 131a (moves M37 and M38, tool-performed by scripts/analysis/spec-split-check.mjs, Spec 124 R-AA), batch 2026-11-01-batch-ar (CHAT-219) in the same commit, and ONE Layer 2 re-pin (table_version e85511c23311 to bd533bfd5489), under CARD-spec131-landing U1 to U4 and CARD-spec131-budget option 1 (operator 2026-11-02), re-cut on the tip aa61c5777 (the 2026-11-02 landing set prepared on 86588d440; the prereg-MB-79-3 draft became this file because the sign-off landing took that name and round) and approved again as DL-1 a (operator 2026-11-06, 'approved provided they are complaint'). Prepared as round 82, the next free round on the tip (the highest is 81). Committed alone before the landing commit (R-LZ, R-MA). The landing commit edits: Spec 131 and the new 131a (rows moved by the tool, byte for byte; content_sha256 371669a73f56e75c5771e1392250d3c45c792dbf0634bd463399f4ec2601ac97 for M37 and 191601da5cb042388b4171516517fcd230a21235d60db7e5a3782fd37e85b456 for M38), the split manifest (two moves; budgets and measured_at unchanged), the batch ar notes with only their four new line cites re-resolved (U3), scripts/analysis/bylaw/bylaw-register.mjs (reads the files a declared move sent rows to; no new literal, R-LA), scripts/analysis/spec-split-check.mjs, scripts/analysis/decision-log.mjs, the generated files (Spec 133 and the rule map, the system map, 523 rules kept) and the re-pin set: expected-172.json, expected-4d.json, docs/reference/bylaw-layer2-input.json, docs/reference/maxbld-amendment-index.json and the G-STOR re-bind (only version, hash and commit fields change). It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure is unchanged, the totals equal the ones below (measured on aa61c5777, equal to prereg-MB-83-6.json), the floors file is unchanged and the floors check stays OK. Three existing test assertions change, all registered below: the realRegisters list and the O67-09 input widening in mcbylaws-citeparse (U4, Queue Process 1; expected values unchanged), and the decision-log decisions count 797 to 801 (batch ar's own, CHAT-219, four decisions). rules[] names only rules the registers read as RULED.",
+ "schema": "coa-round-prereg-v1",
+ "round": 82,
+ "task": "MB-79",
+ "rules": [
+  "M-321",
+  "R-AA",
+  "R-IL",
+  "R-LA",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-79 (u-prep); ~/Buildo-scratch/mcbylaws/R-spec131-split/plan.md (fold 2026-11-02); ~/Buildo-scratch/mcbylaws/R-spec131-split/fold-validation-1102b.md; ~/Buildo-scratch/mcbylaws/inc3/R-landing/ (the re-cut on aa61c5777)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version e85511c23311 -> bd533bfd5489 (the value the generators write; Spec 133 is reorder-only, the 23 moved rules change source.file)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version e85511c23311 -> bd533bfd5489",
+  "expected-172.json and expected-4d.json commit and inputs.table_version e85511c23311 -> bd533bfd5489 through coa-scorecard.mjs --pin, totals equal",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version e85511c23311 -> bd533bfd5489, the G-STOR re-bind (RP-SW2 a)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/mcbylaws-citeparse.logic.test.ts",
+   "line": 15,
+   "row": "realRegisters (the register text the cite tests read)",
+   "from": [
+    "69a",
+    "124a",
+    "131"
+   ],
+   "to": [
+    "69a",
+    "124a",
+    "131",
+    "131a"
+   ],
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104); M19 precedent \"updated every program that reads the register\"",
+   "authority": "~/Buildo-scratch/p2close/CARD-spec131-landing.answered.md U4 (operator 2026-11-02)"
+  },
+  {
+   "file": "src/tests/mcbylaws-citeparse.logic.test.ts",
+   "line": 132,
+   "row": "O67-09: the real spec 131 OWED rows are OWED, never citable",
+   "from": "input = Spec 131",
+   "to": "input = Spec 131 + Spec 131a; expected values unchanged (LC-30 OWED, LC-46 OWED, LC-15 OWED)",
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "~/Buildo-scratch/p2close/CARD-spec131-landing.answered.md U4 (operator 2026-11-02)"
+  },
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 797,
+   "to": 801,
+   "rule": "Queue Process 1; batch 2026-11-01-batch-ar (CHAT-219, four decisions)",
+   "authority": "~/Buildo-scratch/mcbylaws/compliance/night-1101-items-1-3.md items 2a and 3; ~/Buildo-scratch/p2close/CARD-spec131-landing.answered.md U1 (lands with the split)"
+  }
+ ]
+}
