@@ -22,6 +22,7 @@ const loadSeeds = (): Json => ({
   logicVariables: readJson('scripts/seeds/logic_variables.json'),
   vocab: readJson('scripts/seeds/bylaw/vocab.json'),
   layer2Classes: readJson('scripts/seeds/bylaw/layer2-scope.json').classes,
+  layer2Options: readJson('scripts/seeds/bylaw/layer2-scope.json').options, // operator "a" on Q-A: R3-11 extended fails closed without the declared scope
 });
 const num = (value: number, clause = 'c'): Json => ({ s: 'applies', kind: 'number', value, clause });
 const UNREG: Json = { s: 'applies', kind: 'unregulated', value: null, clause: null };

@@ -6,7 +6,7 @@
 //        Layer 3 files and only the `crypto`/`node:crypto` bare specifiers; nothing reached (bar the two existing
 //        Layer 2 files) touches env, clock or fs/pg/child_process.
 //   R-KT declared reads: every table named after FROM/JOIN in READ_SQL is declared in the descriptor and the
-//        declared read list is exactly the seven tables; the descriptor pins columns, steps, name, lock 135.
+//        declared read list is exactly the eight tables (the option view since MB-27 R2, operator "a" on Q-R2A); the descriptor pins columns, steps, name, lock 135.
 // Every file is read as TEXT and never executed.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -19,21 +19,29 @@ const ENTRY = 'scripts/lib/compute/compute-maxbld-scenarios.js';
 const SHELL = 'scripts/compute-maxbld-scenarios.js';
 const DESCRIPTOR = 'scripts/compute-maxbld-scenarios.descriptor.json';
 
+// MB-27 R2 (operator "Q-r2 a"; "a" on Q-R2A): the reader calls Layer 2's own withNotAbove (bylaw-materialize.js), so the walk reaches
+// that file and its Layer 2 dependencies; each is checked free of env, clock and io like the Layer 3 files.
 const EXPECTED_LOCAL = [
+  'scripts/analysis/bylaw/cell-cache.mjs',
   'scripts/analysis/bylaw/dsl.mjs',
   'scripts/analysis/bylaw/evaluate-l3.mjs',
   'scripts/analysis/bylaw/evaluate.mjs',
+  'scripts/lib/bylaw-lot-row.js',
+  'scripts/lib/bylaw-materialize.js',
+  'scripts/lib/bylaw-resolution.js',
   'scripts/lib/compute/compute-maxbld-scenarios.js',
   'scripts/lib/compute/maxbld/catalogue.js',
   'scripts/lib/compute/maxbld/layer2-cells.js',
   'scripts/lib/compute/maxbld/neighbour-facts.js',
   'scripts/lib/compute/maxbld/rows.js',
+  'scripts/seeds/bylaw/cell-key-whole.json', // read by cell-cache.mjs (MB-27 R2)
   'scripts/seeds/bylaw/layer3-catalogue.json', // the Layer 3 words (lexicon) that dsl.mjs reads; MB-31 operator answer 2026-11-02 (eight files became nine)
 ];
 const ALLOWED_BARE = ['crypto', 'node:crypto'];
 const LAYER2_EXISTING = ['scripts/analysis/bylaw/evaluate.mjs', 'scripts/analysis/bylaw/dsl.mjs'];
 const EXPECTED_TABLES = [
   'bylaw_resolution_lot_stamps', // Q-STOR a: the lot stamps read as hex through the view (migration 295)
+  'bylaw_resolution_option_results', // MB-27 R2 (operator "a" on Q-R2A): the design-option slots and the threshold (migration 295)
   'bylaw_resolution_results',
   'bylaw_resolution_texts',
   'bylaw_resolution_units',
@@ -153,7 +161,7 @@ function cteNames(sql: string): string[] {
 const descriptor = (): Json => JSON.parse(read(DESCRIPTOR));
 
 describe('MB-31 compute closure, R-KF / R-KT', () => {
-  it('walks from the step entry to exactly the nine Layer 3 files', () => {
+  it('walks from the step entry to exactly the nine Layer 3 files and the five Layer 2 files of withNotAbove (MB-27 R2)', () => {
     const graph = walk(ENTRY);
     expect(graph.missing).toEqual([]);
     expect(graph.local).toEqual(EXPECTED_LOCAL);

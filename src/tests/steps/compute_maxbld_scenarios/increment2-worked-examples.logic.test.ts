@@ -26,6 +26,7 @@ const loadSeeds = (): Json => ({
   logicVariables: readJson('scripts/seeds/logic_variables.json'),
   vocab: readJson('scripts/seeds/bylaw/vocab.json'),
   layer2Classes: readJson('scripts/seeds/bylaw/layer2-scope.json').classes,
+  layer2Options: readJson('scripts/seeds/bylaw/layer2-scope.json').options, // operator "a" on Q-A: R3-11 extended fails closed without the declared scope
 });
 const cell = (c: any): Json => {
   if (typeof c === 'number') return { s: 'applies', kind: 'number', value: c, clause: 'example' };

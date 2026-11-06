@@ -8,6 +8,10 @@ const l3 = require('../../../analysis/bylaw/evaluate-l3.mjs');
 const evaluator = require('../../../analysis/bylaw/evaluate.mjs');
 
 const NOT_MODELLED_REASON = 'class not resolved in Phase 2 (MB-27.L2)';
+// R3-11 extended (M-465 (6), RC-1; plan-l3-forms.md §2b "Fail closed"): a design_option row of a class Phase 2 stores no option for
+const optionNotModelledReason = (cls) => `roof option not resolved for ${cls} (MB-27.L2)`;
+// MB-27 R2 (operator "L3-F2 a", "Q-r1 a"): the run of the rows without a design option; every other run is an option value
+const BASE_RUN = 'base';
 const HOOKS_MISSING = 'expression_error:layer3_hooks_missing';
 const CODES = { ok: 0, refuse: 1, unknown: 2 };
 
@@ -184,7 +188,89 @@ function unitOk(value, row) {
   return value.u === 'count' && (row.unit === 'storeys' || row.unit === 'units');
 }
 
-function l3Env(seeds, row, inputs, state, memo, run) {
+// ── MB-27 R2: per-option runs (plan-reader-and-mech.md 1.4 R2 (3); plan-l3-forms.md §2b; operator "L3-F2 a", "Q-r1 a", "Q-r2 a") ──
+//
+// One cell set per run: `base` (the rows without an option, M-60) and one per option value of vocab.design_options. A row
+// whose `design_option` names X is always evaluated in run X, never its caller's; a row without one is evaluated in the run
+// of the row reading it, and reported from the base run (Q-r1 a: no duplicated rows). The memo is keyed by (row, run).
+
+/** The run a row's own `design_option` names ({key: option} -> option), or null for a row without one. */
+function designRunOf(row) {
+  if (!isObject(row) || !isObject(row.design_option)) return null;
+  const values = Object.values(row.design_option);
+  return typeof values[0] === 'string' ? values[0] : null;
+}
+
+/** The run a row is evaluated in when `callerRun` reads it. */
+function runFor(row, callerRun) {
+  return designRunOf(row) ?? callerRun;
+}
+
+/** The run a row is reported from (Q-r1 a): its own option, else the base run. */
+function reportRunOf(row) {
+  return designRunOf(row) ?? BASE_RUN;
+}
+
+/** The option values the seeds declare (vocab.design_options), each a run beside `base`. */
+function declaredRuns(seeds) {
+  const decls = isObject(seeds.vocab) && isObject(seeds.vocab.design_options) ? seeds.vocab.design_options : {};
+  const out = [BASE_RUN];
+  for (const decl of Object.values(decls)) for (const v of toList(isObject(decl) ? decl.values : null)) if (isObject(v) && typeof v.option === 'string') out.push(v.option);
+  return out;
+}
+
+/** R3-11 extended: the class's Phase 2 rows carry this row's option (layer2-scope.json options.<key>.classes, as seeded). */
+function optionListed(row, seeds, cls) {
+  // operator "a" on Q-A: fail closed, a design_option row with no declared roof_form scope is not_modelled, never the base cells
+  const key = Object.keys(row.design_option)[0];
+  const scope = isObject(seeds.layer2Options) ? seeds.layer2Options[key] : null;
+  return isObject(scope) && toList(scope.classes).includes(cls);
+}
+
+/**
+ * The cell set of one run: the base cells, overlaid in an option run with that option's cells (`inputs.l2Options.runs`),
+ * plus the cells without an option (`inputs.l2Options.shared`: slot 61, `pitched_roof_slope_min`) in every run.
+ */
+function cellsOfRun(inputs, run) {
+  const base = isObject(inputs.l2) ? inputs.l2 : {};
+  const opts = isObject(inputs.l2Options) ? inputs.l2Options : {};
+  const overlay = run !== BASE_RUN && isObject(opts.runs) && isObject(opts.runs[run]) ? opts.runs[run] : {};
+  const shared = isObject(opts.shared) ? opts.shared : {};
+  return { ...base, ...overlay, ...shared };
+}
+
+/**
+ * The row's input flags in a run: its declared `input_flags`, plus the Phase 2 option-row disclosures of that run
+ * (`inputs.l2Options.flags`, ROOF-5 from Layer 2's own withNotAbove) on the key `l2(<target>)`, so readL2 carries them
+ * into the value (evaluate-l3.mjs is not edited).
+ */
+function inputFlagsOfRun(row, inputs, run) {
+  const out = {};
+  for (const [k, words] of Object.entries(isObject(row.input_flags) ? row.input_flags : {})) out[k] = toList(words).slice();
+  const opts = isObject(inputs.l2Options) ? inputs.l2Options : {};
+  const words = run !== BASE_RUN && isObject(opts.flags) && isObject(opts.flags[run]) ? opts.flags[run] : {};
+  for (const [target, list] of Object.entries(words)) {
+    const key = `l2(${target})`;
+    out[key] = unique([...toList(out[key]), ...toList(list)]);
+  }
+  return out;
+}
+
+/**
+ * §2b lock and the M-400 / M-415 dated notes (2026-11-04): a trace entry carries `run` only on an option run, an absent `run`
+ * being the base run (so the increment-1 rows' traces are unchanged); a row read names the run that row ran in.
+ */
+function withRuns(res, run, seeds) {
+  const rows = toList(isObject(seeds.catalogue) ? seeds.catalogue.rows : null);
+  const trace = toList(res.trace).map((t) => {
+    if (!isObject(t)) return t;
+    const r = t.kind === 'row' ? runFor(findById(rows, t.id), run) : run;
+    return r === BASE_RUN ? t : { ...t, run: r };
+  });
+  return { ...res, trace };
+}
+
+function l3Env(seeds, row, inputs, state, memo, run, runName) {
   const cat = seeds.catalogue;
   const vocab = isObject(seeds.vocab) ? seeds.vocab : {};
   const targets = isObject(vocab.dsl_target) ? vocab.dsl_target : {};
@@ -196,13 +282,13 @@ function l3Env(seeds, row, inputs, state, memo, run) {
   for (const f of toList(cat.facts)) if (isObject(f)) factDecls[f.id] = f;
   const settingVals = catalogueLib.settingVals(cat, seeds.logicVariables);
   for (const [id, v] of Object.entries(isObject(inputs.settings) ? inputs.settings : {})) settingVals[id] = v;
+  const cells = cellsOfRun(inputs, runName);
   let facts = isObject(inputs.facts) ? inputs.facts : null;
   if (!facts && inputs.neighbours !== undefined) {
-    const cells = isObject(inputs.l2) ? inputs.l2 : {};
     facts = factsLib.neighbourFacts(inputs.neighbours, cells.averaging_distance_m).facts;
   }
   return l3.makeL3Env({
-    cells: isObject(inputs.l2) ? inputs.l2 : {},
+    cells,
     targetUnits,
     optionalTargets: toList(row.optional_targets),
     settingDecls: catalogueLib.settingDecls(cat, seeds.logicVariables),
@@ -215,7 +301,7 @@ function l3Env(seeds, row, inputs, state, memo, run) {
     lotFlags: isObject(inputs.flags) ? inputs.flags : {},
     rowIds: toList(cat.rows).map((r) => r.id),
     readRow: (id) => toValue(run(id)),
-    inputFlags: isObject(row.input_flags) ? row.input_flags : {},
+    inputFlags: inputFlagsOfRun(row, inputs, runName),
     // the evaluator contract (evaluate-l3.mjs compare, bestOf, applyInt): "Both values are rounded at 9 places first"
     round9: (x) => Math.round(x * 1e9) / 1e9,
     eps: 0,
@@ -241,8 +327,11 @@ function activeFormula(row, inputs, seeds) {
   return { formula: row, consulted };
 }
 
-function exprResult(row, inputs, state, memo, run, revisionSwitches) {
-  const env = l3Env(inputs.seeds, row, inputs, state, memo, run);
+function exprResult(row, inputs, state, memo, runIn, revisionSwitches, runName) {
+  // a row read is evaluated in the run its own design_option names, else in this row's run (Q-r1 a)
+  const catRows = toList(inputs.seeds.catalogue.rows);
+  const run = (id) => runIn(id, runFor(findById(catRows, id), runName));
+  const env = l3Env(inputs.seeds, row, inputs, state, memo, run, runName);
   for (const s of toList(revisionSwitches)) env.switchesRead.push(s);
   const res = evaluator.evaluate(row.expression, {}, { layer: 'l3', l3: env });
   const v = res ? res.l3 : undefined;
@@ -260,8 +349,14 @@ function exprResult(row, inputs, state, memo, run, revisionSwitches) {
   return shape(v, row, switched, env, flags);
 }
 
-/** One row's result, given the run function of the call's own memo. */
-function computeRow(row, inputs, runAll) {
+/** One row's result in one run, given the run function of the call's own memo (keyed by (row, run)). */
+function computeRow(row, inputs, runAll, runName) {
+  const seeds = isObject(inputs.seeds) ? inputs.seeds : null;
+  if (!seeds) throw new Error('runRow: inputs.seeds is required');
+  return withRuns(computeRowIn(row, inputs, runAll, runName), runName, seeds);
+}
+
+function computeRowIn(row, inputs, runAll, runName) {
   const seeds = isObject(inputs.seeds) ? inputs.seeds : null;
   if (!seeds) throw new Error('runRow: inputs.seeds is required');
   const buildingTypeId = inputs.buildingType || 'detached_house';
@@ -280,6 +375,8 @@ function computeRow(row, inputs, runAll) {
   if (off) return notEvaluated(row, `switched_off:${off.id}`, { switches: consulted });
 
   if (isObject(inputs.rows) && has(inputs.rows, row.id)) return injectedResult(row, inputs.rows[row.id], consulted);
+  // R3-11 extended: an injected row (the M-415 seam) reads no cell; every other design_option row of an unlisted class is refused here
+  if (designRunOf(row) !== null && !optionListed(row, seeds, buildingType.class)) return result(row, 'not_modelled', { reason: optionNotModelledReason(buildingType.class) });
 
   if (row.form === 'status') {
     const p = isObject(inputs.perm) ? inputs.perm : {};
@@ -291,7 +388,7 @@ function computeRow(row, inputs, runAll) {
 
   if (row.form !== 'expr' || typeof row.expression !== 'string') return notEvaluated(row, HOOKS_MISSING, { switches: consulted });
   const active = activeFormula(row, inputs, seeds);
-  return exprResult(active.formula, inputs, state, null, runAll, active.consulted);
+  return exprResult(active.formula, inputs, state, null, runAll, active.consulted, runName);
 }
 
 function toValue(r) {
@@ -306,46 +403,62 @@ function toValue(r) {
   }
 }
 
-/** One row of one building type (M-415): the seam every Layer 3 consumer reads. */
-function runRow(rowId, inputsIn) {
-  const inputs = isObject(inputsIn) ? inputsIn : {};
+/** One runner over one call's inputs: the memo is keyed by (row, run) (MB-27 R2, plan-l3-forms.md §2b). */
+function makeRunner(inputs) {
   const seeds = isObject(inputs.seeds) ? inputs.seeds : null;
   if (!seeds) throw new Error('runRow: inputs.seeds is required');
-  const row = findById(isObject(seeds.catalogue) ? seeds.catalogue.rows : null, rowId);
-  if (!row) throw new Error(`runRow: unknown row ${rowId}`);
   const memo = new Map();
-  const run = (id) => {
-    if (!memo.has(id)) memo.set(id, runRow(id, inputs));
-    return memo.get(id);
+  const run = (id, runName) => {
+    const key = `${id}\u0000${runName}`;
+    if (!memo.has(key)) {
+      const row = findById(isObject(seeds.catalogue) ? seeds.catalogue.rows : null, id);
+      if (!row) throw new Error(`runRow: unknown row ${id}`);
+      memo.set(key, computeRow(row, inputs, run, runName));
+    }
+    return memo.get(key);
   };
-  return computeRow(row, inputs, run);
+  return { seeds, run };
 }
 
-/** Every catalogue row of one building type, in dependency order, over one shared memo. */
+/** One row of one building type (M-415): the seam every Layer 3 consumer reads; reported from its own run (Q-r1 a). */
+function runRow(rowId, inputsIn) {
+  const inputs = isObject(inputsIn) ? inputsIn : {};
+  const { seeds, run } = makeRunner(inputs);
+  const row = findById(isObject(seeds.catalogue) ? seeds.catalogue.rows : null, rowId);
+  if (!row) throw new Error(`runRow: unknown row ${rowId}`);
+  return run(rowId, reportRunOf(row));
+}
+
+/**
+ * One row evaluated in a named run (`base` or an option value): the per-run answer of a row without a design option
+ * (Q-r1 a: what a reading row in that run sees; only Phase 3 compares options, M-400). A row with a design option is always
+ * evaluated in its own run, whatever run is named. An undeclared run throws.
+ */
+function runRowIn(rowId, runName, inputsIn) {
+  const inputs = isObject(inputsIn) ? inputsIn : {};
+  const { seeds, run } = makeRunner(inputs);
+  if (!declaredRuns(seeds).includes(runName)) throw new Error(`runRowIn: unknown run ${runName}`);
+  const row = findById(isObject(seeds.catalogue) ? seeds.catalogue.rows : null, rowId);
+  if (!row) throw new Error(`runRow: unknown row ${rowId}`);
+  return run(rowId, runFor(row, runName));
+}
+
+/** Every catalogue row of one building type, in dependency order, over one shared memo; each from its own report run. */
 function runAllRows(inputsIn) {
   const inputs = isObject(inputsIn) ? inputsIn : {};
-  const seeds = isObject(inputs.seeds) ? inputs.seeds : null;
-  if (!seeds) throw new Error('runRow: inputs.seeds is required');
+  const { seeds, run } = makeRunner(inputs);
   const buildingTypeId = inputs.buildingType || 'detached_house';
   const buildingType = findById(isObject(seeds.buildingTypes) ? seeds.buildingTypes.rows : null, buildingTypeId);
   if (!buildingType) throw new Error(`runRow: unknown building type ${buildingTypeId}`);
-  const memo = new Map();
-  const run = (id) => {
-    if (!memo.has(id)) {
-      const row = findById(seeds.catalogue.rows, id);
-      if (!row) throw new Error(`runRow: unknown row ${id}`);
-      memo.set(id, computeRow(row, inputs, run));
-    }
-    return memo.get(id);
-  };
-  const mine = new Set(toList(seeds.catalogue.rows).filter((r) => r.building_type === buildingType.id).map((r) => r.id));
+  const rows = toList(seeds.catalogue.rows);
+  const mine = new Set(rows.filter((r) => r.building_type === buildingType.id).map((r) => r.id));
   // M-476 dated note (D3 a): a switched-off row that has no increment-1 formula is not shown; rows that read it still do
   // (only the row whose OWN switch is off; a row that reads it is shown, not_evaluated with that switch as its reason)
-  const later = new Map(toList(seeds.catalogue.rows).filter((r) => isObject(r) && r.increment !== '1').map((r) => [r.id, r.switch]));
+  const later = new Map(rows.filter((r) => isObject(r) && r.increment !== '1').map((r) => [r.id, r.switch]));
   return catalogueLib.topoOrder(seeds.catalogue)
     .filter((id) => mine.has(id))
-    .map((id) => run(id))
+    .map((id) => run(id, reportRunOf(findById(rows, id))))
     .filter((res) => !(later.has(res.row) && res.status === 'not_evaluated' && res.reason === `switched_off:${later.get(res.row)}`));
 }
 
-module.exports = { runRow, runAllRows, toValue, NOT_MODELLED_REASON };
+module.exports = { runRow, runRowIn, runAllRows, toValue, cellsOfRun, NOT_MODELLED_REASON, BASE_RUN };

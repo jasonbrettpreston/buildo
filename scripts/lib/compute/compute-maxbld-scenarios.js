@@ -6,7 +6,7 @@
  * SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-377, M-384, M-415 (the Layer 3 step; the reader discipline; the row seam)
  * MB-31 B10: compute_maxbld_scenarios, a MATERIALIZER of parcel_maxbld_scenarios (migration 287). Pure: the shell's runner reads, this module computes.
  *
- * The runner pages the population, reads the seven declared READ_SQL statements per page (which is why each
+ * The runner pages the population, reads the eight declared READ_SQL statements per page (which is why each
  * materialize bind array is not expressible yet: scripts/lib/step/index.js MATERIALIZE_BIND_NAMES = last_key,
  * batch_size, run_at; the ring depth, the radii and the population list are recorded as a gap, never inlined).
  * This module holds no query beyond the declared reads, no transaction, no clock, no literal tunable and no
@@ -19,14 +19,21 @@ const rows = require('./maxbld/rows.js');
 const cat = require('./maxbld/catalogue.js');
 const cellsLib = require('./maxbld/layer2-cells.js');
 const factsLib = require('./maxbld/neighbour-facts.js');
+// MB-27 R2 (operator "Q-r2 a"): ROOF-5's word is Layer 2's own rule, recomputed on read through its withNotAbove, never re-derived here
+const { withNotAbove } = require('../bylaw-materialize.js');
 const { runRow, runAllRows } = rows;
 
-/** The seven standalone parameterised reads (contract C5). Bind order: $1 = parcel ids (int[]), $2 = radius / depth. */
+/** The eight standalone parameterised reads (contract C5). Bind order: $1 = parcel ids (int[]), $2 = radius / depth (cells, options: $2 = class, $3 = structure). */
 const READ_SQL = Object.freeze({
   cells: `SELECT r.parcel_id, r.lot_gate, r.class, r.structure, r.target, r.status, r.value_kind, r.value, r.reason, r.winner_unit_id
   FROM bylaw_resolution_results r
  WHERE r.parcel_id = ANY($1::int[]) AND r.class = $2 AND r.structure = $3
  ORDER BY r.parcel_id, r.target`,
+  // MB-27 R2 (M-400, M-465; plan-reader-and-mech.md 1.4 R2 (1)): the design-option slots and the threshold (option NULL), migration 295
+  options: `SELECT o.parcel_id, o.lot_gate, o.class, o.structure, o.target, o.option, o.status, o.value_kind, o.value, o.reason, o.winner_unit_id
+  FROM bylaw_resolution_option_results o
+ WHERE o.parcel_id = ANY($1::int[]) AND o.class = $2 AND o.structure = $3
+ ORDER BY o.parcel_id, o.target, o.option`,
   // Q-STOR a (migration 295): the lot stamps are stored as bytea; Layer 3 reads them as hex through the view bylaw_resolution_lot_stamps
   lots: `SELECT l.parcel_id, l.lot_gate, l.permitted, l.permitted_text_ids, l.table_version
   FROM bylaw_resolution_lot_stamps l
@@ -160,6 +167,7 @@ function buildParcelRows(parcelInput, seeds, meta) {
   const inputs = {
     seeds,
     l2: p.l2 || {},
+    l2Options: p.l2Options || {},
     perm: p.perm || {},
     geometry: p.geometry || {},
     flags: p.flags || {},
@@ -207,16 +215,21 @@ function censusOf(rows, U) {
   return counts;
 }
 
-/** One source row (parcel + its seven reads) -> the parcel rows plus the census the checks read. */
+/** One source row (parcel + its eight reads; `options` from MB-27 R2) -> the parcel rows plus the census the checks read. */
 function oneParcel(source, lookups) {
   const L = lookups || {};
   const l2Classes = toList(L.layer2Classes);
   const decoded = {};
+  const options = {};
   let unparseable = 0;
+  const designOptions = L.vocab && L.vocab.design_options;
   for (const bt of toList(L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.rows)) {
     const d = cellsLib.decodeCells(toList(source.cells), bt.class, bt.structure);
     decoded[bt.id] = d.cells;
     unparseable += d.malformed;
+    const o = cellsLib.decodeOptionCells(toList(source.options), bt.class, bt.structure, { designOptions, notAbove: withNotAbove });
+    options[bt.id] = o;
+    unparseable += o.malformed;
   }
   const meta = { settings_sha: L.settings_sha ?? null, layer2_table_version: source.lot ? source.lot.table_version : null };
   const out = [];
@@ -230,6 +243,7 @@ function oneParcel(source, lookups) {
     const parcelInput = {
       parcel_id: source.parcel_id,
       l2: decoded[bt.id],
+      l2Options: options[bt.id],
       perm,
       geometry: {
         lot_frontage_m: g.frontage_m,

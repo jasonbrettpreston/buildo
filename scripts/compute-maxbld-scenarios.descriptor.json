@@ -33,6 +33,10 @@
           "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "status", "value_kind", "value", "reason", "winner_unit_id"]
         },
         {
+          "table": "bylaw_resolution_option_results",
+          "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "option", "status", "value_kind", "value", "reason", "winner_unit_id"]
+        },
+        {
           "table": "bylaw_resolution_lot_stamps",
           "columns": ["parcel_id", "lot_gate", "permitted", "permitted_text_ids", "table_version"]
         },
@@ -150,7 +154,10 @@
       "scripts/analysis/bylaw/evaluate.mjs",
       "scripts/analysis/bylaw/evaluate-l3.mjs",
       "scripts/analysis/bylaw/dsl.mjs",
-      "scripts/seeds/bylaw/layer3-catalogue.json"
+      "scripts/seeds/bylaw/layer3-catalogue.json",
+      "scripts/lib/bylaw-materialize.js",
+      "scripts/lib/bylaw-lot-row.js",
+      "scripts/lib/bylaw-resolution.js"
     ],
     "logic_version": "none",
     "on_fingerprint_change": "run",

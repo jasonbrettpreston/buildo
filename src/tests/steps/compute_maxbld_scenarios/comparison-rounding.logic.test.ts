@@ -24,6 +24,7 @@ const loadSeeds = (): Json => {
     logicVariables: readJson('scripts/seeds/logic_variables.json'),
     vocab,
     layer2Classes: readJson('scripts/seeds/bylaw/layer2-scope.json').classes,
+  layer2Options: readJson('scripts/seeds/bylaw/layer2-scope.json').options, // operator "a" on Q-A: R3-11 extended fails closed without the declared scope
   };
 };
 const n = (value: number): Json => ({ s: 'applies', kind: 'number', value, clause: 'example' });

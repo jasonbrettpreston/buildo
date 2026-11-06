@@ -1,0 +1,42 @@
+== MB-27 R2 red: lock src/tests/steps/compute_maxbld_scenarios/option-runs.logic.test.ts (new), run on the unchanged tip 04f0ba886 (no option read, no decodeOptionCells, one cell set per row, memo keyed by row alone)
+   × OR-1: the option read is declared (R-KT) > READ_SQL.options reads bylaw_resolution_option_results per (parcels, class, structure), and the descriptor declares its columns
+   × OR-2: decodeOptionCells > a shared option row decodes to its base cell; slot 61 joins every run; the base cell set is not touched
+   × OR-2: decodeOptionCells > the run cell set is the base cells overlaid with the option cells (the option wins)
+   × OR-2: decodeOptionCells > a duplicate (option, target) throws, an unknown option throws, another class or structure is skipped
+   × OR-2: decodeOptionCells > a malformed option row is counted and decodes not_evaluated (never a silent value)
+   × OR-2: decodeOptionCells > option rows without Layer 2's withNotAbove fail closed (ROOF-5 is never dropped silently)
+   × OR-2: decodeOptionCells > oneParcel reads the option rows and counts their malformed cells in layer2_cell_unparseable
+   × OR-3: a row is evaluated in the run its own design_option names, never the caller's (plan-l3-forms.md §2b lock) > setback_plate_m2 = 100 − 2 × 1.4 × (100 ÷ 10) = 72 m2 from the flat set-back, top level and when read by gfa_flat_m2
+   × OR-3: a row is evaluated in the run its own design_option names, never the caller's (plan-l3-forms.md §2b lock) > a runner that resolved setback_plate_m2 in its caller's (base) run would read the not_applicable set-back: the values differ
+   × OR-3: a row is evaluated in the run its own design_option names, never the caller's (plan-l3-forms.md §2b lock) > every trace entry of a row evaluated in an option run names that run; a base-run row's own entries name none (M-60: increment-1 rows unchanged)
+   × OR-4: Q-r1 a, an option-less row is evaluated in the run of the row reading it and reported from the base run > RD main-wall roof-NE lot A0094: wall_storeys reads 7.2 m in the flat run [10.20.40.10(4)(A)] and 7.0 m in the pitched run [(2)(A)]
+   × OR-4: Q-r1 a, an option-less row is evaluated in the run of the row reading it and reported from the base run > the top-level wall_storeys stays not_evaluated:condition_unknown:flat_or_shallow_roof (R3-01: undecided never means a number)
+   × OR-4: Q-r1 a, an option-less row is evaluated in the run of the row reading it and reported from the base run > the memo is keyed by (row, run): the same option-less row gives different values in two runs within one call
+   × OR-5: R3-11 extended, another class's option row is not_modelled > a building type of a Phase 2 class outside layer2-scope options.roof_form.classes: every design_option row is not_modelled, never the base cells
+   × OR-5: R3-11 extended, another class's option row is not_modelled > a listed class with no option cells is not refused: its runs are the base cells (the view returns none only for a stale lot, which hides the base rows too)
+   × OR-6: M-478 (ROOF-5), the word comes through inputFlags from Layer 2's own withNotAbove, never re-derived in Layer 3 > A0166: flat main_wall_height_m 7.2 > flat height_m 6.5, so a row reading it in the flat run carries main_wall_limit_above_height
+   × OR-6: M-478 (ROOF-5), the word comes through inputFlags from Layer 2's own withNotAbove, never re-derived in Layer 3 > the pitched run (7.0 ≤ 9.5) and a lot at or below the height (A0094 flat 7.2 ≤ 9.0) do not
+   × OR-6: M-478 (ROOF-5), the word comes through inputFlags from Layer 2's own withNotAbove, never re-derived in Layer 3 > the base run never carries it (ROOF-5 is an option-row disclosure only)
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0182: gfa_max_m2 (increment_2 on) = 382.494 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0203: gfa_max_m2 (increment_2 on) = 395.08 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0205: gfa_max_m2 (increment_2 on) = 388.62 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0229: gfa_max_m2 (increment_2 on) = 498.1 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0277: gfa_max_m2 (increment_2 on) = 394.74 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0289: gfa_max_m2 (increment_2 on) = 195.632 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0457: gfa_max_m2 (increment_2 on) = 219.296 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0461: gfa_max_m2 (increment_2 on) = 256.344 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0562: gfa_max_m2 (increment_2 on) = 243.352 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0170: gfa_max_m2 (increment_2 on) = 243.47 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0175: gfa_max_m2 (increment_2 on) = 153.252 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0193: gfa_max_m2 (increment_2 on) = 264.348 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0354: gfa_max_m2 (increment_2 on) = 147.2175 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0388: gfa_max_m2 (increment_2 on) = 127.044 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0399: gfa_max_m2 (increment_2 on) = 313.086 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0561: gfa_max_m2 (increment_2 on) = 199.33 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > A0578: gfa_max_m2 (increment_2 on) = 192.396 m2 from the stored option cells
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > REG-11: the increment_2 switch off gives the increment-1 formula and the golden-25 increment-1 answer
+   × OR-7: the headline gfa_max_m2 increment_2 from real option cells (lane K's REG keys); REG-11 off-switch; determinism > determinism: two calls give byte-equal rows (content_sha), in either evaluation order
+   × OR-8: edge cases (McProof scenario rule), each expected answer derived from the ruled text > (ii) slot 61 unregulated (RT, P3 R6: "a pitched roof is not limited by one"): roof_pitch < l2(pitched_roof_slope_min) never refuses or stops the pitched arm; the arm equals the arm with no minimum
+   × OR-8: edge cases (McProof scenario rule), each expected answer derived from the ruled text > (iii) slot 61 not_applicable (operator "Q-T61 (a)": "Where slot 61 pitched_roof_slope_min is unregulated ... or not_applicable, the pitched form is offered"): the arm equals the arm with no minimum
+   green on base (locks of landed behaviour, kept): OR-8 (i) x2, OR-9
+      Tests  39 failed | 3 passed (42)

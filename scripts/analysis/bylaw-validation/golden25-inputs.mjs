@@ -5,6 +5,9 @@
  * Makes `inputs.jsonl` for the 25 golden cases WITHOUT a database: the Layer 2 half of each case (`phase2`) is recomputed from
  * the saved `parcels` rows through the committed pure core (bylaw-materialize.js + bylaw-lot-row.js) and everything else is
  * copied from the frozen `source-inputs.jsonl` line. Only `phase2` is replaced; every other key keeps the source line's order.
+ * MB-27 R2 (plan-reader-and-mech.md 1.4 R2 (6)): `phase2_options` follows `phase2`, the case's design-option slots and threshold
+ * (the rows of bylaw_resolution_option_results: target, option (null for the threshold), shared, and the cell), so Layer 3 replays
+ * its per-option runs from the same recompute.
  *
  *   node scripts/analysis/bylaw-validation/golden25-inputs.mjs [--dir <folder>] [--check]
  *
@@ -79,13 +82,17 @@ function recomputePhase2(rows) {
   const pairs = rb.scopePairs(SCOPE);
   const optionPairs = rb.optionPairs(SCOPE, VOCAB.design_options);
   const byParcel = new Map();
+  const optionsByParcel = new Map();
   for (const lot of out.rows.lots) {
     const decoded = lr.decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs });
     // The case is the principal detached house (the representative class of the golden lot).
     const recs = new Map(decoded.filter((d) => !d.option && d.class === 'detached_house' && d.structure === 'principal').map((d) => [d.target, d]));
     byParcel.set(lot.parcel_id, recs);
+    const opts = lr.decodeOptionResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs })
+      .filter((d) => d.class === 'detached_house' && d.structure === 'principal');
+    optionsByParcel.set(lot.parcel_id, opts);
   }
-  return byParcel;
+  return { byParcel, optionsByParcel };
 }
 
 /** The source `parcel` block against the parcels row it is supposed to be (a fixture that drifted stops the run). */
@@ -112,7 +119,7 @@ function main() {
   const rows = JSON.parse(fs.readFileSync(path.join(dir, 'parcels-rows.json'), 'utf8'));
   const source = readJsonl(path.join(dir, 'source-inputs.jsonl'));
   const expected = readJsonl(path.join(dir, 'expected.jsonl'));
-  const byParcel = recomputePhase2(rows);
+  const { byParcel, optionsByParcel } = recomputePhase2(rows);
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const idByCase = new Map(expected.map((e) => [e.case, e.parcel_id]));
 
@@ -155,9 +162,18 @@ function main() {
         if (differs) differing += 1;
       }
     }
-    // Only phase2 is replaced; every other key keeps the source line's order.
+    // MB-27 R2: the option slots in the view's order (target, then option, the threshold's null first)
+    const cellOf = (rec) => ({ status: rec.status, kind: rec.value_kind ?? '', value: rec.value, reason: rec.reason ?? '', clause: rec.winner_unit_id ?? '', ref: rec.evidence_ref ?? '' });
+    const phase2Options = (optionsByParcel.get(parcelId) || [])
+      .map((d) => ({ target: d.target, option: d.option, shared: d.shared_with_base === true, ...cellOf(d) }))
+      .sort((a, b) => (a.target < b.target ? -1 : a.target > b.target ? 1 : String(a.option ?? '') < String(b.option ?? '') ? -1 : String(a.option ?? '') > String(b.option ?? '') ? 1 : 0));
+    // Only phase2 is replaced (and phase2_options written after it); every other key keeps the source line's order.
     const out = {};
-    for (const [k, v] of Object.entries(line)) out[k] = k === 'phase2' ? phase2 : v;
+    for (const [k, v] of Object.entries(line)) {
+      if (k === 'phase2_options') continue;
+      out[k] = k === 'phase2' ? phase2 : v;
+      if (k === 'phase2') out.phase2_options = phase2Options;
+    }
     if (!Object.prototype.hasOwnProperty.call(out, 'phase2')) throw new Error(`${caseName}: the source line has no phase2 key to replace`);
     lines.push(JSON.stringify(out));
     report.push(`  ${caseName} ${parcelId}: ${ADDED_TARGET} ${phase2[ADDED_TARGET].status} ${JSON.stringify(phase2[ADDED_TARGET].value)}`);
