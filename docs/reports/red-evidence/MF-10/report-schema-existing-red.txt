@@ -1,0 +1,245 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf10-build
+
+ ❯ src/tests/report-schema.logic.test.ts (25 tests | 15 failed) 1099ms
+   × report-schema generator: the committed tree is green > no gate FAILs; pending rows WARN 106ms
+     → expected 'PASS' to be 'WARN' // Object.is equality
+   × RS-1 lineage names and types > FAILs on a misspelled lineage field 15ms
+     → no field scenarios.cards[].total_gfa_sqm
+   × RS-1 lineage names and types > FAILs when the declared type disagrees with lineage (main_storeys is an integer) 10ms
+     → no field scenarios.cards[].main_storeys
+   × RS-1 lineage names and types > FAILs when the payload key renames the lineage field 12ms
+     → no field scenarios.cards[].main_gfa_sqm
+   × RS-4 presentation keys both ways > FAILs on an unknown presentation key 27ms
+     → expected 'registry key trust_label: referenced …' to contain 'trust_labels'
+   × RS-5 pending rows > FAILs a lineage_queue row once lineage has the field (stale pending) 18ms
+     → Cannot read properties of undefined (reading 'fields')
+   × RS-5 pending rows > FAILs a row still pending on a ruling the operator has decided (Q-5 is decided in the register) 17ms
+     → no field scenarios.cards[].market.comp_count_same_form
+   × RS-5 pending rows > FAILs a spec100_amendment row once the S-001 whitelist carries its target 17ms
+     → no field parcel.lot.frontage_m
+   × RS-5 pending rows > FAILs a pending row naming an unknown ruling 11ms
+     → no field offers[].advertiser_name
+   × RS-6 disclosure codes > FAILs on a disclosure code that is not in Spec 78 P5.12 41ms
+     → Cannot read properties of undefined (reading 'cards')
+   × RS-7 display rules in the sample > FAILs a new-build card on a lot whose effective form is semi_half (Q-1) 46ms
+     → Cannot read properties of undefined (reading 'cards')
+   × RS-7 display rules in the sample > FAILs a rendered card in a hidden state (§6.6 rule 1) 41ms
+     → Cannot read properties of undefined (reading 'cards')
+   × RS-9 lineage totality > FAILs when a lineage field is neither declared nor listed not_in_report 38ms
+     → expected '' to contain 'roof_pitch'
+   × Q-7 scope > the approved list and the ten rows CHAT-11 confirmed (2026-10-20-chat-batch-b#CHAT-11, read from the decision log) are on spec100_amendment; none waits on operator_confirm 48ms
+     → no field parcel.lot.zone_label
+   × Q-7 scope > FAILs an operator_confirm row once the whitelist carries its target (a synthetic row: CHAT-11 left none on operator_confirm) 12ms
+     → no field parcel.lot.exception_number
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > report-schema generator: the committed tree is green > no gate FAILs; pending rows WARN
+AssertionError: expected 'PASS' to be 'WARN' // Object.is equality
+
+Expected: "WARN"
+Received: "PASS"
+
+ ❯ src/tests/report-schema.logic.test.ts:47:63
+     45|     const ev = RS.evaluate(fresh());
+     46|     expect(ev.gates.filter((g: Json) => g.state === 'FAIL').map((g: Js…
+     47|     expect(ev.gates.find((g: Json) => g.id === 'RS-5').state).toBe('WA…
+       |                                                               ^
+     48|   });
+     49|   it('--check finds no drift in the generated outputs', async () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-1 lineage names and types > FAILs on a misspelled lineage field
+Error: no field scenarios.cards[].total_gfa_sqm
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:58:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-1 lineage names and types > FAILs when the declared type disagrees with lineage (main_storeys is an integer)
+Error: no field scenarios.cards[].main_storeys
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:65:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-1 lineage names and types > FAILs when the payload key renames the lineage field
+Error: no field scenarios.cards[].main_gfa_sqm
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:70:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-4 presentation keys both ways > FAILs on an unknown presentation key
+AssertionError: expected 'registry key trust_label: referenced …' to contain 'trust_labels'
+
+Expected: "trust_labels"
+Received: "registry key trust_label: referenced by no field"
+
+ ❯ src/tests/report-schema.logic.test.ts:83:34
+     81|     const g = gate(inp, 'RS-4');
+     82|     expect(g.state).toBe('FAIL');
+     83|     expect(g.failing.join('\n')).toContain('trust_labels');
+       |                                  ^
+     84|   });
+     85|   it('FAILs on a registry key nothing references', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-5 pending rows > FAILs a lineage_queue row once lineage has the field (stale pending)
+TypeError: Cannot read properties of undefined (reading 'fields')
+ ❯ src/tests/report-schema.logic.test.ts:97:24
+     95|     // Put it back on the queue: a queued row whose lineage field exis…
+     96|     const inp = fresh();
+     97|     expect(inp.lineage.fields.some((f: Json) => f.field === 'avg_unit_…
+       |                        ^
+     98|     field(inp, 'scenarios.cards[].avg_unit_gfa_sqm').source = 'pending…
+     99|     const g = gate(inp, 'RS-5');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-5 pending rows > FAILs a row still pending on a ruling the operator has decided (Q-5 is decided in the register)
+Error: no field scenarios.cards[].market.comp_count_same_form
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:106:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-5 pending rows > FAILs a spec100_amendment row once the S-001 whitelist carries its target
+Error: no field parcel.lot.frontage_m
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:111:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-5 pending rows > FAILs a pending row naming an unknown ruling
+Error: no field offers[].advertiser_name
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:117:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-6 disclosure codes > FAILs on a disclosure code that is not in Spec 78 P5.12
+TypeError: Cannot read properties of undefined (reading 'cards')
+ ❯ src/tests/report-schema.logic.test.ts:125:25
+    123|   it('FAILs on a disclosure code that is not in Spec 78 P5.12', () => {
+    124|     const inp = fresh();
+    125|     inp.decl.samples[1].cards[0].disclosures.push('no_such_disclosure'…
+       |                         ^
+    126|     const g = gate(inp, 'RS-6');
+    127|     expect(g.state).toBe('FAIL');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-7 display rules in the sample > FAILs a new-build card on a lot whose effective form is semi_half (Q-1)
+TypeError: Cannot read properties of undefined (reading 'cards')
+ ❯ src/tests/report-schema.logic.test.ts:140:72
+    138|   it('FAILs a new-build card on a lot whose effective form is semi_hal…
+    139|     const inp = fresh();
+    140|     inp.decl.samples[0].cards.push(structuredClone(inp.decl.samples[1]…
+       |                                                                        ^
+    141|     expect(gate(inp, 'RS-7').state).toBe('FAIL');
+    142|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-7 display rules in the sample > FAILs a rendered card in a hidden state (§6.6 rule 1)
+TypeError: Cannot read properties of undefined (reading 'cards')
+ ❯ src/tests/report-schema.logic.test.ts:145:25
+    143|   it('FAILs a rendered card in a hidden state (§6.6 rule 1)', () => {
+    144|     const inp = fresh();
+    145|     inp.decl.samples[1].cards[0].values.scenario_status = 'not_permitt…
+       |                         ^
+    146|     expect(gate(inp, 'RS-7').state).toBe('FAIL');
+    147|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > RS-9 lineage totality > FAILs when a lineage field is neither declared nor listed not_in_report
+AssertionError: expected '' to contain 'roof_pitch'
+
+- Expected
++ Received
+
+- roof_pitch
+
+ ❯ src/tests/report-schema.logic.test.ts:162:50
+    160|     const inp = fresh();
+    161|     inp.decl.not_in_report = inp.decl.not_in_report.filter((x: Json) =…
+    162|     expect(gate(inp, 'RS-9').failing.join('\n')).toContain('roof_pitch…
+       |                                                  ^
+    163|   });
+    164| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > Q-7 scope > the approved list and the ten rows CHAT-11 confirmed (2026-10-20-chat-batch-b#CHAT-11, read from the decision log) are on spec100_amendment; none waits on operator_confirm
+Error: no field parcel.lot.zone_label
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:187:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯
+
+ FAIL  src/tests/report-schema.logic.test.ts > Q-7 scope > FAILs an operator_confirm row once the whitelist carries its target (a synthetic row: CHAT-11 left none on operator_confirm)
+Error: no field parcel.lot.exception_number
+ ❯ field src/tests/report-schema.logic.test.ts:30:17
+     28| const field = (inputs: Json, p: string): Json => {
+     29|   const f = allFields(inputs).find((x) => x.path === p);
+     30|   if (!f) throw new Error(`no field ${p}`);
+       |                 ^
+     31|   return f;
+     32| };
+ ❯ src/tests/report-schema.logic.test.ts:195:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯
+
+ Test Files  1 failed (1)
+      Tests  15 failed | 10 passed (25)
+   Start at  17:52:29
+   Duration  1.81s (transform 213ms, setup 18ms, collect 233ms, tests 1.10s, environment 0ms, prepare 32ms)
+

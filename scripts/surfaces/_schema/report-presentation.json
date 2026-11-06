@@ -1,26 +1,9 @@
 {
-  "$comment": "Presentation registry of the MaxBLD lot report v2: everything a field with source `presentation:<key>` reads (labels, plain-words maps, formats, states, illustrations, Street View block, ad placements). Not lot data. Checked both ways by scripts/analysis/report-schema.mjs RS-4 (every key referenced by report-v2.decl.json, every reference resolves). Rulings cited by Q-id from scripts/surfaces/_schema/report-v2.rulings.json.",
+  "$comment": "Presentation registry of the MaxBLD lot report v2: everything a field with source `content:<key>` reads (labels, plain-words maps, formats, states, illustrations, Street View block, ad placements). Not lot data. Checked both ways by scripts/analysis/report-schema.mjs RS-4 (every key referenced by report-v2.decl.json, every reference resolves). Rulings cited by Q-id from scripts/surfaces/_schema/report-v2.rulings.json.",
   "version": 1,
   "display_label": {
     "note": "card titles by scenario code; {dwelling_units} filled from the card (H is 4 or 6, gap 1)",
-    "by_code": {
-      "2": "MaxBLD Detached House + Secondary Suite",
-      "D": "MaxBLD Detached House",
-      "H": "MaxBLD Houseplex — {dwelling_units} units",
-      "S": "MaxBLD Semi Houseplex",
-      "RA": "Addition (back / up)",
-      "RE": "Expand to the full envelope",
-      "RI": "Gut job (envelope unchanged)",
-      "RB": "Basement underpinning",
-      "RF": "Basement renovation (no underpinning)"
-    }
-  },
-  "zone_class_label": {
-    "R": "Residential",
-    "RD": "Residential Detached",
-    "RS": "Residential Semi-Detached",
-    "RT": "Residential Townhouse",
-    "RM": "Residential Multiple Dwelling"
+    "by_code": {}
   },
   "trust_label": {
     "high": "By-law derived",
@@ -42,8 +25,7 @@
     "not_evaluated:coa_factor_unfitted:suite": "Not enough past Committee of Adjustment rear-suite builds to estimate (Q-4: calibrating)."
   },
   "field_trust": {
-    "generated_from": "lineage.trust_tier",
-    "note": "emitted per lineage field by the generator into the JSON Schema; never hand-listed"
+    "note": "per-field trust is not generated yet: the catalogue rows carry no trust tier (McBylaws catalogue, row owed); never hand-listed"
   },
   "disclosure_texts": {
     "generated_from": "spec78.P5.12",
@@ -138,16 +120,6 @@
     "note": "O-12: the pipeline never reads the override; the app applies it through the P5.7 shared pure function"
   },
   "sponsored_label": "Sponsored",
-  "comparable_family_by_scenario": {
-    "ruling": "Q-5",
-    "note": "Q-5 (decided): same-form comparables are a read-time filter of parcel.neighbourhood.comparableBuilds by structure_family (values from scripts/lib/build-norms.js:72-80: detached · townhouse · multiplex; semis group as detached). No new stored field (LC-51 holds).",
-    "map": {
-      "2": "detached",
-      "D": "detached",
-      "H": "multiplex",
-      "S": "multiplex"
-    }
-  },
   "ad_placements": {
     "rulings": [
       "Q-7",

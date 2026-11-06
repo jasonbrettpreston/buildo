@@ -7,25 +7,25 @@
 //            generated), R-17 + R-34 (a SLOT declares a FAIL, blocking disclosure); docs/specs/01-pipeline/
 //            78_optimal_lot_configuration.md P5.12 (closed disclosure codes, parsed like maxbld-trace-lib.mjs
 //            disclosureCodes) and §6.6 (display rules); docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2
-//            (the consumer whitelist); docs/reference/maxbld-field-lineage.json (names + types of every scenario field).
+//            (the consumer whitelist); docs/specs/02-web-admin/126_maxbld_surface_standard.md 11a.1 and docs/specs/02-web-admin/128_surface_standard_policy.md Rule 20
+//            (the closed binding set, scripts/surfaces/_schema/binding-sources.json; MF-10).
 //
 // MaxBLD LOT REPORT v2 SCHEMA GENERATOR. Input: scripts/surfaces/_schema/report-v2.decl.json (sections → fields, each
-// with exactly one source: lineage:<field> · consumer:<payload path> · parcels:<column> · presentation:<key> ·
-// pending:<reason>), report-presentation.json and report-v2.rulings.json. It checks the declared field names against
+// with exactly one source `<kind>:<member>`, kind in the closed set of binding-sources.json: catalogue · content ·
+// user_input · ad_slot · external_embed · parcels), report-presentation.json and report-v2.rulings.json. It checks the declared field names against
 // their sources so the Stitch prototype, the API and the app cannot drift, and renders:
 //   docs/reference/maxbld-report-v2-schema.md      the human schema page
 //   docs/reference/maxbld-report-v2.schema.json    JSON Schema 2020-12 for `scenarios` + `offers` (+ P5.12 templates)
 //   docs/reference/maxbld-report-v2.types.ts       TypeScript types for `scenarios` + `offers`
 //   docs/reference/maxbld-report-v2.sample.json    sample payloads with real P5.12 disclosure text
-//   docs/reference/report-v2-lineage-queue.json    lineage rows the report needs and lineage lacks (for the by-law fix lane)
 //
 //   node scripts/analysis/report-schema.mjs --write   render the outputs (gates are reported, never block a write)
 //   node scripts/analysis/report-schema.mjs --check   exit 1 on output drift or any gate FAIL; 2 = usage / structural
 //
-// Gates (REVIEW §6.2): RS-0 declaration shape · RS-1 lineage names + types · RS-2 consumer whitelist · RS-3 parcels
-// columns · RS-4 presentation both ways · RS-5 pending (WARN; FAIL once the ruling is decided or the source exists) ·
+// Gates (REVIEW §6.2): RS-0 declaration shape · RS-1 closed binding set + members · RS-2 parcels paths on the
+// consumer whitelist · RS-3 parcels columns · RS-4 content both ways · RS-5 no pending source ·
 // RS-6 disclosure codes ⊆ P5.12 · RS-7 §6.6 + decided lot-form rules hold in the samples · RS-8 sponsored slots ·
-// RS-9 every lineage field declared or listed not_in_report · RS-11 every decided ruling's pinned registry values hold. Deterministic; no DB, no network, executes no repo code.
+// RS-9 every catalogue row declared or listed not_in_report · RS-11 every decided ruling's pinned registry values hold. Deterministic; no DB, no network, executes no repo code.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -62,7 +62,8 @@ export function loadInputs(root) {
     declSchema: readJson(root, DECL_SCHEMA_PATH),
     presentation: readJson(root, decl.inputs.presentation),
     rulings: readJson(root, decl.inputs.rulings),
-    lineage: readJson(root, decl.inputs.lineage),
+    bindingSources: readJson(root, decl.inputs.binding_sources),
+    catalogue: readJson(root, decl.inputs.catalogue),
     spec78: readText(root, decl.inputs.spec78),
     consumer: {
       whitelist: (desc.inputs && desc.inputs.field_whitelist) || [],
@@ -90,31 +91,9 @@ export function disclosureTemplates(specText) {
   return out;
 }
 
-/** Lineage `type` text → {type, unit, enum}. */
-export function lineageType(t) {
-  const en = [...t.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
-  const isEnum = /^text `/.test(t);
-  const base = (type, unit) => ({ type, ...(unit ? { unit } : {}), ...(isEnum ? { enum: en } : {}) });
-  if (/^integer/.test(t)) return base('integer');
-  if (/^numeric m²/.test(t)) return base('number', 'm²');
-  if (/^numeric m\b/.test(t)) return base('number', 'm');
-  if (/^numeric \[0, 1\]/.test(t)) return base('number', 'fraction');
-  if (/^numeric ratio/.test(t)) return base('number', 'ratio');
-  if (/^numeric/.test(t)) return base('number');
-  if (/^text\[\]/.test(t)) return base('text[]');
-  if (/^text/.test(t)) return base('text');
-  if (/^boolean/.test(t)) return base('boolean');
-  if (/^jsonb/.test(t)) return base('jsonb', / m$/.test(t) ? 'm' : undefined);
-  if (/^timestamptz/.test(t)) return base('timestamp');
-  return { type: `?${t}` };
-}
-
 const parseSource = (s) => {
-  const m = /^(lineage|consumer|parcels|presentation|pending):(.+)$/.exec(s || '');
-  if (!m) return null;
-  if (m[1] !== 'pending') return { kind: m[1], ref: m[2] };
-  const p = /^(operator_ruling|operator_confirm|lineage_queue|spec_owed|spec100_amendment):(.+)$/.exec(m[2]);
-  return p ? { kind: 'pending', reason: p[1], ref: p[2] } : { kind: 'pending', reason: null, ref: m[2] };
+  const m = /^([a-z_]+):(.+)$/.exec(s || '');
+  return m ? { kind: m[1], ref: m[2] } : null;
 };
 const allFields = (decl) => decl.sections.flatMap((s) => s.fields.map((f) => ({ ...f, section: s.id })));
 const leafOf = (p) => p.split('.').pop().replace(/\[\]$/, '');
@@ -123,17 +102,16 @@ const getPath = (obj, dotted) => dotted.split('.').reduce((o, k) => (o && typeof
 // ------------------------------------------------------------------ gates
 
 export function evaluate(inputs) {
-  const { decl, presentation, rulings, lineage, spec78, consumer } = inputs;
+  const { decl, presentation, rulings, spec78, consumer } = inputs;
   const fields = allFields(decl);
-  const lin = new Map(lineage.fields.map((f) => [f.field, f]));
-  const codes = lineage.scenario_codes || {};
+  const bs = inputs.bindingSources.sources;
+  const catRows = new Map(inputs.catalogue.rows.map((r) => [r.id, r]));
   const templates = disclosureTemplates(spec78);
   const rulingById = new Map(rulings.rulings.map((r) => [r.ref, r]));
   const gates = [];
   const gate = (id, question, failing, warnings = []) => gates.push({ id, question, state: failing.length ? 'FAIL' : warnings.length ? 'WARN' : 'PASS', failing: uniqSorted(failing), warnings: uniqSorted(warnings) });
   const refs = (f) => [['source', f.source], ['target', f.target], ['origin', f.origin], ['via', f.via]].filter(([, s]) => s).map(([role, s]) => ({ role, s, p: parseSource(s) }));
   const whitelisted = (q) => consumer.whitelist.some((w) => q === w || q.startsWith(`${w}.`));
-  const under = (fp, q) => { const n = fp.replace(/\[\]/g, ''); return n === q || n.startsWith(`${q}.`); };
 
   // RS-0 shape
   const bad0 = [];
@@ -154,112 +132,84 @@ export function evaluate(inputs) {
   for (const c of decl.cards) { if (seenCode.has(c.code)) bad0.push(`duplicate card ${c.code}`); seenCode.add(c.code); }
   gate('RS-0', 'the declaration has the declared shape (schema, unique paths, name = path leaf, target only on pending rows)', bad0);
 
-  // RS-1 lineage
+  // RS-1 the closed binding set (Spec 126 11a.1, Spec 128 Rule 20, Spec 135 FE-18): kind in binding-sources.json, member resolves
   const bad1 = [];
-  for (const f of fields) for (const r of refs(f)) {
-    if (!r.p || r.p.kind !== 'lineage') continue;
-    const l = lin.get(r.p.ref);
-    if (!l) { bad1.push(`${f.path}: ${r.role} lineage:${r.p.ref} is not a lineage field`); continue; }
-    if (f.name !== r.p.ref) bad1.push(`${f.path}: payload key "${f.name}" renames lineage field "${r.p.ref}"`);
-    const t = lineageType(l.type);
-    if (t.type !== f.type) bad1.push(`${f.path}: type ${f.type} ≠ lineage ${t.type} (${l.type})`);
-    if ((t.unit || null) !== (f.unit || null)) bad1.push(`${f.path}: unit ${f.unit || '∅'} ≠ lineage ${t.unit || '∅'} (${l.type})`);
-    if (f.enum && t.enum && f.enum.join('|') !== t.enum.join('|')) bad1.push(`${f.path}: enum ${f.enum.join('/')} ≠ lineage ${t.enum.join('/')}`);
+  const UNIT = { m2: 'm²', m: 'm' };
+  const pcols = new Set(inputs.parcels_columns);
+  const member = (where, role, kind, ref) => {
+    const src = bs[kind];
+    if (!src) { bad1.push(`${where}: ${role} ${kind}:${ref} — ${kind} is not in the closed set (${Object.keys(bs).join(' | ')})`); return null; }
+    if (src.file === null) { bad1.push(`${where}: ${role} ${kind}:${ref} — the ${kind} contract has not landed, so no member resolves`); return null; }
+    if (src.resolver === 'registry_key' && getPath(presentation, ref) === undefined) bad1.push(`${where}: ${role} ${kind}:${ref} is not in the content registry`);
+    if (src.resolver === 'migration_column' && !pcols.has(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a parcels migration column`);
+    if (src.resolver === 'catalogue_row') { const row = catRows.get(ref); if (!row) bad1.push(`${where}: ${role} ${kind}:${ref} is not a catalogue row`); return row || null; }
+    return null;
+  };
+  for (const f of fields) {
+    if (!f.source) { bad1.push(`${f.path}: no source (a field with no source in the closed set is refused)`); continue; }
+    const p = parseSource(f.source);
+    if (!p) { bad1.push(`${f.path}: source "${f.source}" is not <kind>:<member>`); continue; }
+    const row = member(f.path, 'source', p.kind, p.ref);
+    if (f.via) { const v = parseSource(f.via); if (!v || v.kind !== 'content') bad1.push(`${f.path}: via ${f.via} is not a content member`); else member(f.path, 'via', v.kind, v.ref); }
+    if (row) {
+      if (f.name !== p.ref) bad1.push(`${f.path}: payload key "${f.name}" is not the catalogue row id "${p.ref}"`);
+      if (row.unit && f.type !== 'number') bad1.push(`${f.path}: type ${f.type} ≠ number (row ${p.ref} has unit ${row.unit})`);
+      if ((UNIT[row.unit] || null) !== (f.unit || null)) bad1.push(`${f.path}: unit ${f.unit || '∅'} ≠ row ${p.ref} unit ${row.unit || '∅'}`);
+    }
   }
   for (const c of decl.cards) {
-    if (c.source !== 'lineage:scenario') continue;
-    if (!(c.code in codes)) bad1.push(`card ${c.code}: not a lineage scenario code`);
-    else if (codes[c.code] !== c.scenario) bad1.push(`card ${c.code}: scenario ${c.scenario} ≠ lineage ${codes[c.code]}`);
+    const p = parseSource(c.source);
+    if (!p) { bad1.push(`card ${c.code}: no source`); continue; }
+    if (p.kind !== 'catalogue') bad1.push(`card ${c.code}: source ${c.source} must be a catalogue row`);
+    member(`card ${c.code}`, 'source', p.kind, p.ref);
   }
-  gate('RS-1', 'every lineage: name exists in the lineage, keeps its name as the payload key, and agrees on type / unit / enum', bad1);
+  gate('RS-1', 'every source is <kind>:<member> with kind in the closed binding set (binding-sources.json) and a member that resolves (catalogue row id with its unit, content key, parcels column)', bad1);
 
-  // RS-2 consumer
+  // RS-2 parcels paths on the consumer whitelist
   const bad2 = [];
-  for (const f of fields) for (const r of refs(f)) {
-    if (!r.p || r.p.kind !== 'consumer') continue;
-    const q = r.p.ref;
-    if (r.role === 'source') {
-      if (!whitelisted(q)) bad2.push(`${f.path}: consumer:${q} is not in the S-001 field_whitelist`);
-      const a = /^parcel\.areas\.([a-z0-9_]+)$/.exec(q);
-      if (a && !consumer.headline_cols.includes(a[1])) bad2.push(`${f.path}: ${a[1]} is not in CONSUMER_HEADLINE_COLS`);
-    }
-    if (!f.via && !under(f.path, q)) bad2.push(`${f.path}: path is not under its consumer ${r.role} ${q}`);
+  for (const f of fields) {
+    const p = parseSource(f.source);
+    if (!p || p.kind !== 'parcels') continue;
+    if (!whitelisted(f.path.replace(/\[\]/g, ''))) bad2.push(`${f.path}: not in the S-001 field_whitelist`);
+    const a = /^parcel\.areas\.([a-z0-9_]+)$/.exec(f.path);
+    if (a && !consumer.headline_cols.includes(a[1])) bad2.push(`${f.path}: ${a[1]} is not in CONSUMER_HEADLINE_COLS`);
+    if (a && p.ref !== a[1]) bad2.push(`${f.path}: source parcels:${p.ref} is not the column ${a[1]} the consumer reads`);
   }
-  gate('RS-2', 'every consumer: path is in the S-001 whitelist (and CONSUMER_HEADLINE_COLS for parcel.areas.*)', bad2);
+  gate('RS-2', 'every parcels-bound path is in the S-001 whitelist (and CONSUMER_HEADLINE_COLS for parcel.areas.*)', bad2);
 
-  // RS-3 parcels
+  // RS-3 parcels columns
   const bad3 = [];
-  const pc = new Set(inputs.parcels_columns);
   for (const f of fields) for (const r of refs(f)) {
     if (!r.p || r.p.kind !== 'parcels') continue;
-    if (!pc.has(r.p.ref)) bad3.push(`${f.path}: parcels.${r.p.ref} is not a migration column`);
-    if (r.role === 'source') bad3.push(`${f.path}: parcels:${r.p.ref} as a live source — a parcels column reaches the app only through a consumer path (origin), after the Spec 100 §3.2 amendment`);
+    if (!pcols.has(r.p.ref)) bad3.push(`${f.path}: parcels.${r.p.ref} is not a migration column`);
   }
-  gate('RS-3', 'every parcels: column exists in the migrations; none is live before the Spec 100 §3.2 amendment', bad3);
+  gate('RS-3', 'every parcels: column exists in the migrations (Spec 126 11a.1 dated note 2026-11-06, FE-27)', bad3);
 
   // RS-4 presentation both ways
   const bad4 = [];
   const used = new Set(['display_label']); // cards resolve their titles through display_label
   for (const f of fields) for (const r of refs(f)) {
-    if (!r.p || r.p.kind !== 'presentation') continue;
+    if (!r.p || r.p.kind !== 'content') continue;
     used.add(r.p.ref.split('.')[0]);
-    if (getPath(presentation, r.p.ref) === undefined) bad4.push(`${f.path}: presentation:${r.p.ref} is not in the registry`);
+    if (getPath(presentation, r.p.ref) === undefined) bad4.push(`${f.path}: content:${r.p.ref} is not in the registry`);
   }
   for (const k of Object.keys(presentation)) if (!META_KEYS.has(k) && !used.has(k)) bad4.push(`registry key ${k}: referenced by no field`);
   const byCode = (presentation.display_label && presentation.display_label.by_code) || {};
   for (const c of decl.cards) if (!(c.code in byCode)) bad4.push(`card ${c.code}: no display_label.by_code entry`);
   for (const k of Object.keys(byCode)) if (!decl.cards.some((c) => c.code === k)) bad4.push(`display_label.by_code.${k}: no such card`);
   for (const [k, v] of Object.entries(presentation.formats || {})) for (const fn of [v.formatter, v.alt_formatter]) if (fn && !inputs.formatter_exports.includes(fn)) bad4.push(`formats.${k}: ${fn} is not exported by parcelCostFormat.ts`);
-  gate('RS-4', 'every presentation: key resolves in the registry, and every registry key is referenced', bad4);
+  gate('RS-4', 'every content: key resolves in the registry, and every registry key is referenced', bad4);
 
-  // RS-5 pending
+  // RS-5 no pending source (D-3 b: a field with no source in the closed set is refused, never pended)
   const bad5 = [];
-  const warn5 = [];
-  const pendingCheck = (where, s, target) => {
-    const p = parseSource(s);
-    if (!p || p.kind !== 'pending') return;
-    if (!p.reason) { bad5.push(`${where}: pending reason "${p.ref}" is not operator_ruling | operator_confirm | lineage_queue | spec_owed | spec100_amendment`); return; }
-    if (p.reason === 'operator_confirm') {
-      const m = /^(Q-[0-9]+)-scope$/.exec(p.ref);
-      const r = m && rulingById.get(m[1]);
-      const t = target && parseSource(target);
-      if (!r) bad5.push(`${where}: operator_confirm ${p.ref} names no ruling in the register`);
-      else if (r.status !== 'decided') bad5.push(`${where}: operator_confirm ${p.ref}: ${m[1]} is not decided — use operator_ruling`);
-      else if (t && t.kind === 'consumer' && whitelisted(t.ref)) bad5.push(`${where}: the S-001 whitelist now has ${t.ref} — the scope was settled; switch the source`);
-      else warn5.push(`${where}: waits on the operator confirming ${p.ref}`);
-      return;
-    }
-    if (p.reason === 'spec100_amendment') {
-      const r = rulingById.get(p.ref);
-      const t = target && parseSource(target);
-      if (!r || r.status !== 'decided') bad5.push(`${where}: spec100_amendment needs a decided ruling (${p.ref} is ${r ? r.status : 'unknown'})`);
-      if (!t || t.kind !== 'consumer') bad5.push(`${where}: spec100_amendment needs a consumer: target`);
-      else if (whitelisted(t.ref)) bad5.push(`${where}: the S-001 whitelist now has ${t.ref} — switch the source to ${target}`);
-      else warn5.push(`${where}: waits on the Spec 100 §3.2 amendment (${p.ref})`);
-      return;
-    }
-    if (p.reason === 'operator_ruling') {
-      const r = rulingById.get(p.ref);
-      if (!r) bad5.push(`${where}: ${p.ref} is not in the rulings register`);
-      else if (r.status !== 'open') bad5.push(`${where}: ${p.ref} is ${r.status} — apply the decision and leave pending`);
-      else warn5.push(`${where}: waits on ${p.ref}`);
-    } else if (p.reason === 'lineage_queue') {
-      const sc = /^scenario:(.+)$/.exec(p.ref);
-      if (sc ? sc[1] in codes : lin.has(p.ref)) bad5.push(`${where}: lineage now has ${p.ref} — switch the source to lineage:`);
-      else warn5.push(`${where}: queued for lineage (${p.ref})`);
-    } else if (!(p.ref in (decl.spec_owed || {}))) bad5.push(`${where}: spec_owed ${p.ref} is not declared in spec_owed`);
-    else warn5.push(`${where}: owed by ${p.ref}`);
-    const t = target && parseSource(target);
-    if (t && t.kind === 'lineage' && lin.has(t.ref)) bad5.push(`${where}: target lineage:${t.ref} now exists — the row is stale`);
-  };
-  for (const f of fields) pendingCheck(f.path, f.source, f.target);
-  for (const c of decl.cards) pendingCheck(`card ${c.code}`, c.source);
+  for (const f of fields) if (/^pending:/.test(f.source || '')) bad5.push(`${f.path}: pending source ${f.source} — a field with no source in the closed set is left out until its row lands`);
+  for (const c of decl.cards) if (/^pending:/.test(c.source || '')) bad5.push(`card ${c.code}: pending source ${c.source}`);
   for (const d of decl.proposed_disclosures) {
     const r = rulingById.get(d.ruling);
     if (!r) bad5.push(`proposed disclosure ${d.code}: ${d.ruling} is not in the rulings register`);
     else if (r.status !== 'open') bad5.push(`proposed disclosure ${d.code}: ${d.ruling} is ${r.status}`);
   }
-  gate('RS-5', 'every pending row names a closed reason; WARN while it waits, FAIL once the ruling is decided or the source exists', bad5, warn5);
+  gate('RS-5', 'no field or card carries a pending source: every field binds to the closed set or is left out', bad5);
 
   // RS-6 disclosure codes
   const bad6 = [];
@@ -302,13 +252,12 @@ export function evaluate(inputs) {
         const card = cardByCode.get(c.code);
         if (!card) { bad7.push(`sample ${s.id}: card ${c.code} is not declared`); continue; }
         if (card.kind !== kind) bad7.push(`sample ${s.id}: card ${c.code} is ${card.kind}, listed under ${kind}`);
-        if (parseSource(card.source).kind === 'pending') bad7.push(`sample ${s.id}: card ${c.code} is pending (${card.source}) and cannot render`);
         for (const k of Object.keys(c.values)) if (!declared.has(`${base}.${k}`)) bad7.push(`sample ${s.id} ${c.code}: value key ${k} is not a declared path under ${base}`);
         const status = c.values.scenario_status || '';
         if (hidden.some((h) => status === h || status.startsWith(`${h}:`))) bad7.push(`sample ${s.id} ${c.code}: ${status} is a hidden state but the card is rendered (§6.6 rule 1)`);
       }
     }
-    if (v['scenarios.headline.scenario'] == null && !v['scenarios.headline.closed_reason']) bad7.push(`sample ${s.id}: neither a headline nor a closed reason (§6.6 rule 5)`);
+    if (declared.has('scenarios.headline.scenario') && v['scenarios.headline.scenario'] == null && !v['scenarios.headline.closed_reason']) bad7.push(`sample ${s.id}: neither a headline nor a closed reason (§6.6 rule 5)`);
     const permitted = s.cards.filter((c) => c.values.scenario_status === 'permitted').length;
     if ((v['scenarios.counts.permitted'] ?? 0) < permitted) bad7.push(`sample ${s.id}: counts.permitted < rendered permitted cards`);
     const eff = v['scenarios.lot_form.lot_form_effective'];
@@ -364,20 +313,20 @@ export function evaluate(inputs) {
   }
   gate('RS-8', 'every sponsored placement declares a FAIL, blocking "Sponsored" disclosure; offers stay top-level', bad8);
 
-  // RS-9 lineage totality
+  // RS-9 catalogue totality: every catalogue row is declared in the report or listed not_in_report with a reason
   const bad9 = [];
   const refd = new Set();
-  for (const f of fields) for (const r of refs(f)) if (r.p && r.p.kind === 'lineage') refd.add(r.p.ref);
+  for (const f of fields) for (const r of refs(f)) if (r.p && r.p.kind === 'catalogue') refd.add(r.p.ref);
   const nir = new Map();
   for (const n of decl.not_in_report) {
     if (nir.has(n.field)) bad9.push(`not_in_report ${n.field}: duplicate`);
     nir.set(n.field, n.reason);
-    if (!lin.has(n.field)) bad9.push(`not_in_report ${n.field}: not a lineage field`);
+    if (!catRows.has(n.field)) bad9.push(`not_in_report ${n.field}: not a catalogue row`);
     if (refd.has(n.field)) bad9.push(`not_in_report ${n.field}: also declared in the report`);
     if (!n.reason || /UNREVIEWED/.test(n.reason)) bad9.push(`not_in_report ${n.field}: no reason`);
   }
-  for (const f of lin.keys()) if (!refd.has(f) && !nir.has(f)) bad9.push(`lineage ${f}: neither declared nor listed not_in_report`);
-  gate('RS-9', 'every lineage field is declared in the report or listed not_in_report with a reason', bad9);
+  for (const id of catRows.keys()) if (!refd.has(id) && !nir.has(id)) bad9.push(`catalogue row ${id}: neither declared nor listed not_in_report`);
+  gate('RS-9', 'every catalogue row is declared in the report or listed not_in_report with a reason', bad9);
 
   // RS-11 decided rulings pin their checkable consequence in the registry (Q-1/Q-2/Q-3 lot-form rules)
   const bad11 = [];
@@ -425,51 +374,44 @@ const LEAF_JSON = {
 };
 const isCodeList = (f) => /(^|\.)(disclosures|lot_disclosures)$/.test(f.path);
 const isCode = (f) => /disclosure_texts\[\]\.code$/.test(f.path);
-const enumOf = (f, lin) => {
-  if (f.enum) return f.enum;
-  const p = parseSource(f.source);
-  if (p && p.kind === 'lineage' && lin.has(p.ref)) return lineageType(lin.get(p.ref).type).enum;
-  return undefined;
-};
+const enumOf = (f) => f.enum;
 
-function leafSchema(f, lin) {
-  const p = parseSource(f.source);
-  const annot = { description: f.label, 'x-source': f.source, ...(f.target ? { 'x-target': f.target } : {}), 'x-status': f.status, 'x-render': f.render, ...(f.unit ? { 'x-unit': f.unit } : {}) };
-  if (p && p.kind === 'lineage' && lin.has(p.ref)) annot['x-trust-tier'] = lin.get(p.ref).trust_tier;
+function leafSchema(f) {
+  const annot = { description: f.label, 'x-source': f.source, 'x-status': f.status, 'x-render': f.render, ...(f.unit ? { 'x-unit': f.unit } : {}) };
   if (isCodeList(f)) return { ...annot, type: ['array', 'null'], items: { $ref: '#/$defs/disclosure_code' } };
   if (isCode(f)) return { ...annot, $ref: '#/$defs/disclosure_code' };
   const base = structuredClone(LEAF_JSON[f.type] || {});
-  const en = enumOf(f, lin);
+  const en = enumOf(f);
   if (en) return { ...annot, enum: [...en, null] };
   if (base.type) base.type = [base.type, 'null'];
   return { ...annot, ...base };
 }
 
-function nodeSchema(node, lin) {
-  if (node.kind === 'leaf') return leafSchema(node.field, lin);
-  if (node.kind === 'array') return { type: 'array', items: nodeSchema(node.item, lin) };
+function nodeSchema(node) {
+  if (node.kind === 'leaf') return leafSchema(node.field);
+  if (node.kind === 'array') return { type: 'array', items: nodeSchema(node.item) };
   const keys = [...node.children.keys()].sort(cmp);
-  return { type: 'object', additionalProperties: false, required: keys, properties: Object.fromEntries(keys.map((k) => [k, nodeSchema(node.children.get(k), lin)])) };
+  return { type: 'object', additionalProperties: false, required: keys, properties: Object.fromEntries(keys.map((k) => [k, nodeSchema(node.children.get(k))])) };
 }
 
 const TS_LEAF = { integer: 'number', number: 'number', text: 'string', boolean: 'boolean', 'text[]': 'string[]', jsonb: 'unknown', 'object[]': 'Array<Record<string, unknown>>', timestamp: 'string', url: 'string', month: 'string', geojson: 'Record<string, unknown>' };
-function nodeTs(node, lin, ind) {
+function nodeTs(node, ind) {
   if (node.kind === 'leaf') {
     const f = node.field;
     if (isCodeList(f)) return 'DisclosureCode[] | null';
     if (isCode(f)) return 'DisclosureCode';
-    const en = enumOf(f, lin);
+    const en = enumOf(f);
     if (en) return `${en.map((e) => JSON.stringify(e)).join(' | ')} | null`;
     const t = TS_LEAF[f.type];
     return t === 'unknown' ? 'unknown' : `${t} | null`;
   }
-  if (node.kind === 'array') return `Array<${nodeTs(node.item, lin, ind)}>`;
+  if (node.kind === 'array') return `Array<${nodeTs(node.item, ind)}>`;
   const pad = '  '.repeat(ind + 1);
   const keys = [...node.children.keys()].sort(cmp);
   const lines = keys.map((k) => {
     const c = node.children.get(k);
     const doc = c.kind === 'leaf' ? `${pad}/** ${c.field.label.replace(/\*\//g, '* /')} — ${c.field.source}${c.field.unit ? ` (${c.field.unit})` : ''} */\n` : '';
-    return `${doc}${pad}${k}: ${nodeTs(c, lin, ind + 1)};`;
+    return `${doc}${pad}${k}: ${nodeTs(c, ind + 1)};`;
   });
   return `{\n${lines.join('\n')}\n${'  '.repeat(ind)}}`;
 }
@@ -492,7 +434,7 @@ function statusText(map, status) {
 }
 
 function cardItem(node, base, card, ctx) {
-  const { inputs, templates, lin } = ctx;
+  const { inputs, templates } = ctx;
   const decl = inputs.decl;
   const pres = inputs.presentation;
   const dc = decl.cards.find((c) => c.code === card.code);
@@ -512,7 +454,7 @@ function cardItem(node, base, card, ctx) {
       const r = rel ? `${rel}.${k}` : k;
       if (c.kind === 'leaf') {
         if (r === 'field_trust') {
-          out[k] = Object.fromEntries(Object.keys(v).filter((x) => lin.has(leafOf(x))).sort(cmp).map((x) => [leafOf(x), lin.get(leafOf(x)).trust_tier]));
+          out[k] = null; // no catalogue row carries a trust tier yet
         } else out[k] = r in v ? v[r] : r in derived ? derived[r] : null;
       } else if (c.kind === 'array') {
         if (k === 'disclosure_texts') out[k] = card.disclosures.map((code) => discText(templates, code, (card.params || {})[code]));
@@ -548,12 +490,11 @@ function samplePayload(tree, s, ctx) {
 
 // ------------------------------------------------------------------ render
 
-const srcFamily = (s) => { const p = parseSource(s); return p ? (p.kind === 'pending' ? `pending:${p.reason}` : p.kind) : '?'; };
+const srcFamily = (s) => { const p = parseSource(s); return p ? p.kind : '?'; };
 const md = (x) => String(x ?? '').replace(/\|/g, '\\|').replace(/\n+/g, ' ');
 
 export function render(inputs, ev) {
-  const { decl, lineage, presentation, rulings } = inputs;
-  const lin = new Map(lineage.fields.map((f) => [f.field, f]));
+  const { decl, presentation, rulings } = inputs;
   const fields = allFields(decl);
   const tree = buildTree(fields);
   const templates = ev.templates;
@@ -565,11 +506,11 @@ export function render(inputs, ev) {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     $id: 'maxbld-report-v2.schema.json',
     title: 'MaxBLD lot report v2 — scenarios + offers',
-    $comment: `GENERATED by ${GENERATOR} --write from ${DECL_PATH}. Do not edit. Every property carries x-source (its one source), x-status and, for lineage fields, x-trust-tier (the per-field trust map, O-17).`,
+    $comment: `GENERATED by ${GENERATOR} --write from ${DECL_PATH}. Do not edit. Every property carries x-source (its one source), x-status.`,
     type: 'object',
     additionalProperties: false,
     required: ['offers', 'scenarios'],
-    properties: { offers: nodeSchema(T('offers'), lin), scenarios: nodeSchema(T('scenarios'), lin) },
+    properties: { offers: nodeSchema(T('offers')), scenarios: nodeSchema(T('scenarios')) },
     $defs: { disclosure_code: { enum: codesSorted, description: 'Spec 78 P5.12 closed disclosure codes' } },
     'x-disclosure-templates': Object.fromEntries(codesSorted.map((c) => { const t = templates.get(c); return [c, { template: t.template, slots: t.slots, importance: t.importance, mandatory: t.mandatory }]; })),
   };
@@ -578,13 +519,13 @@ export function render(inputs, ev) {
   const ts = [
     `// GENERATED by ${GENERATOR} --write from ${DECL_PATH}. Do not edit; regenerate.`,
     '// Types of the MaxBLD lot report v2 `scenarios` block and the top-level `offers` list (Spec 128 R-21: one declaration,',
-    '// three renderers). Every property names its one source; pending:* properties are not produced yet.',
+    '// three renderers). Every property names its one source in the closed binding set.',
     '',
     `export type DisclosureCode =\n${codesSorted.map((c) => `  | ${JSON.stringify(c)}`).join('\n')};`,
     '',
-    `export type ReportV2Scenarios = ${nodeTs(T('scenarios'), lin, 0)};`,
+    `export type ReportV2Scenarios = ${nodeTs(T('scenarios'), 0)};`,
     '',
-    `export type ReportV2Offer = ${nodeTs(T('offers').item, lin, 0)};`,
+    `export type ReportV2Offer = ${nodeTs(T('offers').item, 0)};`,
     '',
     'export interface ReportV2Payload {',
     '  scenarios: ReportV2Scenarios;',
@@ -594,32 +535,10 @@ export function render(inputs, ev) {
   ].join('\n');
 
   // sample
-  const ctx = { inputs, templates, lin };
+  const ctx = { inputs, templates };
   const sample = {
     $comment: `GENERATED by ${GENERATOR} --write from ${DECL_PATH} samples + the Spec 78 P5.12 templates. Illustrative values (see each basis); the disclosure text is the real template text.`,
     samples: decl.samples.map((s) => ({ id: s.id, title: s.title, basis: s.basis, payload: samplePayload(tree, s, { ...ctx, values: s.values }) })),
-  };
-
-  // lineage queue
-  const q = new Map();
-  const addQ = (key, kind, f, extra) => {
-    if (!q.has(key)) q.set(key, { field: key, kind, needed_by: [], ...extra });
-    if (f) q.get(key).needed_by.push(f.path);
-  };
-  for (const f of fields) {
-    const p = parseSource(f.source);
-    const t = f.target && parseSource(f.target);
-    if (p && p.kind === 'pending' && p.reason === 'lineage_queue') addQ(p.ref, 'field', f, { type: f.type, ...(f.unit ? { unit: f.unit } : {}), label: f.label, blocked_by: null, note: f.note || '' });
-    else if (t && t.kind === 'lineage' && p.reason === 'operator_ruling') addQ(t.ref, 'field', f, { type: f.type, ...(f.unit ? { unit: f.unit } : {}), label: f.label, blocked_by: p.ref, note: f.note || '' });
-  }
-  for (const c of decl.cards) {
-    const p = parseSource(c.source);
-    if (p.kind === 'pending' && p.reason === 'lineage_queue') addQ(p.ref, 'scenario_code', null, { scenario: c.scenario, label: c.title, blocked_by: null, note: c.note || '' });
-    if (p.kind === 'pending' && p.reason === 'operator_ruling') addQ(`scenario:${c.code}`, 'scenario_code', null, { scenario: c.scenario, label: c.title, blocked_by: p.ref, note: c.note || '' });
-  }
-  const queue = {
-    $comment: `GENERATED by ${GENERATOR} --write from ${DECL_PATH}. The lineage rows the v2 report needs and docs/reference/maxbld-field-lineage.json lacks, for the by-law fix lane (sole writer of the lineage). blocked_by = an open operator ruling. Once a row lands in the lineage, RS-5 FAILs until the declaration switches it to lineage:<field>.`,
-    rows: [...q.values()].map((r) => ({ ...r, needed_by: uniqSorted(r.needed_by) })).sort((a, b) => cmp(a.field, b.field)),
   };
 
   // markdown
@@ -628,15 +547,15 @@ export function render(inputs, ev) {
   for (const f of fields) counts[srcFamily(f.source)] = (counts[srcFamily(f.source)] || 0) + 1;
   L.push('# MaxBLD lot report v2 — schema (generated — do not edit)');
   L.push('');
-  L.push(`> GENERATED by \`${GENERATOR}\` from \`${DECL_PATH}\`, \`${decl.inputs.presentation}\`, \`${decl.inputs.rulings}\`, \`${decl.inputs.lineage}\` and Spec 78 P5.12. Do not edit. Regenerate with \`node ${GENERATOR} --write\`; \`--check\` fails on drift or a gate FAIL. Machine forms: \`${decl.outputs.json_schema}\`, \`${decl.outputs.types}\`, \`${decl.outputs.sample}\`, \`${decl.outputs.lineage_queue}\`.`);
+  L.push(`> GENERATED by \`${GENERATOR}\` from \`${DECL_PATH}\`, \`${decl.inputs.presentation}\`, \`${decl.inputs.rulings}\`, \`${decl.inputs.binding_sources}\` and Spec 78 P5.12. Do not edit. Regenerate with \`node ${GENERATOR} --write\`; \`--check\` fails on drift or a gate FAIL. Machine forms: \`${decl.outputs.json_schema}\`, \`${decl.outputs.types}\`, \`${decl.outputs.sample}\`.`);
   L.push('');
   L.push('Rule: R-HM (Spec 124 §5; drafted as R-RS; operator CHAT-4, 2026-10-20, `2026-10-20-chat-batch-a#CHAT-4`, docs/reports/decisions/2026-10-20-chat-batch-a.json) — one field declaration per report surface, one source per field, checked by this generator; outputs generated, never hand-edited.');
   L.push('');
-  L.push('Every field has exactly one source: `lineage:` (docs/reference/maxbld-field-lineage.json), `consumer:` (the S-001 / Spec 100 §3.2 whitelist), `parcels:` (a column, only after a Spec 100 amendment), `presentation:` (report-presentation.json) or `pending:` (an open operator ruling, a lineage row queued for the by-law fix lane, or an owed spec).');
+  L.push('Every field has exactly one source `<kind>:<member>` in the closed binding set (`scripts/surfaces/_schema/binding-sources.json`): `catalogue:` (a catalogue row id), `content:` (report-presentation.json), `parcels:` (a column of the parcels table on the S-001 / Spec 100 §3.2 whitelist), `user_input:`, `ad_slot:` and `external_embed:` (each needs a contract file that has not landed). A field whose row or column does not exist is left out until it lands (Spec 126 11a.1).');
   L.push('');
   L.push(`## Totals`);
   L.push('');
-  L.push(`${fields.length} fields in ${decl.sections.length} sections; ${decl.cards.length} scenario cards; ${decl.not_in_report.length} lineage fields not in the report.`);
+  L.push(`${fields.length} fields in ${decl.sections.length} sections; ${decl.cards.length} scenario cards; ${decl.not_in_report.length} catalogue rows not in the report.`);
   L.push('');
   L.push('| Source | Fields |');
   L.push('|---|---|');
@@ -650,11 +569,10 @@ export function render(inputs, ev) {
   L.push('');
   L.push('## Operator rulings');
   L.push('');
-  L.push('| Ruling | Topic | Status | Decision | Rows pending on it |');
-  L.push('|---|---|---|---|---|');
+  L.push('| Ruling | Topic | Status | Decision |');
+  L.push('|---|---|---|---|');
   for (const r of rulings.rulings) {
-    const n = fields.filter((f) => f.source === `pending:operator_ruling:${r.ref}`).length + decl.cards.filter((c) => c.source === `pending:operator_ruling:${r.ref}`).length;
-    L.push(`| ${r.ref} | ${md(r.key)} | ${r.status} | ${md(r.decision ? `${r.decision.decided}: ${r.decision.text}` : '—')} | ${n} |`);
+    L.push(`| ${r.ref} | ${md(r.key)} | ${r.status} | ${md(r.decision ? `${r.decision.decided}: ${r.decision.text}` : '—')} |`);
   }
   L.push('');
   L.push('## Scenario cards');
@@ -668,20 +586,14 @@ export function render(inputs, ev) {
     L.push('');
     L.push('| Label | Path | Type | Unit | Status | Render | Source | Note |');
     L.push('|---|---|---|---|---|---|---|---|');
-    for (const f of s.fields) L.push(`| ${md(f.label)} | \`${md(f.path)}\` | ${f.type} | ${f.unit || ''} | ${f.status} | ${f.render} | \`${md(f.source)}\`${f.target ? ` → \`${md(f.target)}\`` : ''}${f.origin ? ` (from \`${md(f.origin)}\`)` : ''}${f.via ? ` via \`${md(f.via)}\`` : ''} | ${md(f.note)} |`);
+    for (const f of s.fields) L.push(`| ${md(f.label)} | \`${md(f.path)}\` | ${f.type} | ${f.unit || ''} | ${f.status} | ${f.render} | \`${md(f.source)}\`${f.via ? ` via \`${md(f.via)}\`` : ''} | ${md(f.note)} |`);
   }
   L.push('');
-  L.push('## Lineage fields not in the report');
+  L.push('## Catalogue rows not in the report');
   L.push('');
   L.push('| Field | Reason |');
   L.push('|---|---|');
   for (const n of decl.not_in_report) L.push(`| \`${n.field}\` | ${md(n.reason)} |`);
-  L.push('');
-  L.push('## Lineage queue (for the by-law fix lane)');
-  L.push('');
-  L.push('| Field | Kind | Blocked by | Needed by |');
-  L.push('|---|---|---|---|');
-  for (const r of queue.rows) L.push(`| \`${r.field}\` | ${r.kind} | ${r.blocked_by || '—'} | ${md(r.needed_by.map((p) => `\`${p}\``).join(', ') || '(card)')} |`);
   L.push('');
   L.push('## Disclosure templates (Spec 78 P5.12)');
   L.push('');
@@ -696,7 +608,6 @@ export function render(inputs, ev) {
     [decl.outputs.json_schema]: j(schema),
     [decl.outputs.types]: ts,
     [decl.outputs.sample]: j(sample),
-    [decl.outputs.lineage_queue]: j(queue),
   };
 }
 

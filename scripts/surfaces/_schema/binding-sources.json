@@ -1,0 +1,42 @@
+{
+  "$comment": "THE closed binding set of the report schema (Spec 126 11a.1; Spec 128 Rule 20; Spec 135 FE-18, FE-21, FE-23, FE-27). Every displayed field's `source` is `<kind>:<member>` with <kind> a key of `sources` below; any other kind fails RS-1. A member must resolve through its source's resolver; a source whose contract file has not landed (`file: null`) has no member yet, so a field naming it fails until the contract lands. PROTECTED: adding a source or a member needs a Spec 135 register row and a panel (MB-67 owner sign-off on the protected-paths edit). Read by scripts/analysis/report-schema.mjs and src/tests/surfaces/report-binding.logic.test.ts.",
+  "version": 1,
+  "sources": {
+    "catalogue": {
+      "register": "FE-18",
+      "member": "a catalogue row id; the payload key is the row id and the unit agrees with the row's `unit`",
+      "resolver": "catalogue_row",
+      "file": "scripts/seeds/bylaw/layer3-catalogue.json"
+    },
+    "content": {
+      "register": "FE-18",
+      "member": "a key of the label, help-text and legal-copy registry (dotted path)",
+      "resolver": "registry_key",
+      "file": "scripts/surfaces/_schema/report-presentation.json"
+    },
+    "user_input": {
+      "register": "FE-18",
+      "member": "an id in the input contract (the form archetype)",
+      "resolver": "contract_id",
+      "file": null
+    },
+    "ad_slot": {
+      "register": "FE-23",
+      "member": "an id in the ad contract (Spec 126 11a.10)",
+      "resolver": "contract_id",
+      "file": null
+    },
+    "external_embed": {
+      "register": "FE-21",
+      "member": "a declared external embed: map tiles, payment checkout, analytics",
+      "resolver": "contract_id",
+      "file": null
+    },
+    "parcels": {
+      "register": "FE-27",
+      "member": "a column of the parcels table, in the migrations, on the Spec 100 section 3.2 consumer whitelist",
+      "resolver": "migration_column",
+      "file": "migrations"
+    }
+  }
+}

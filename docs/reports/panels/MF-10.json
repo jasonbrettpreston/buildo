@@ -1,0 +1,36 @@
+{
+  "task": "MF-10",
+  "item": "Retire the old source forms from the report schema seed and checker; every field binds to a source in the closed set (catalogue, content, user_input, ad_slot, external_embed, parcels); binding-sources.json; the FE-18 lock with its RED fixture",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-06",
+  "head": "(the MF-10 code commit; its sha is in the lane report)",
+  "commits_reviewed": [
+    "409eb636a (D-5 b dated notes, FE-27)",
+    "16f95a6fc (prereg-MF-10-1, alone)",
+    "MF-10 code commit (this commit)"
+  ],
+  "cards": [
+    "Operator answer MF-10 D-1..D-7 (2026-11-06): \"Mf-10 all recommended provided they are complaint\"",
+    "Operator answer MF-10 D-6+ (2026-11-06): \"MF-10 D-6+ a\"",
+    "Operator answers MF-10 stops (2026-11-06): \"2 yes, 3 yes\". MB-67 OWNER SIGN-OFF (given in advance, quoting \"2 yes\"): exactly one change to mcbylaws/protected-paths.json, adding scripts/surfaces/_schema/binding-sources.json to `protected` (D-4 a); any other change to that file stops. \"3 yes\": docs/reference/report-v2-lineage-queue.json deleted in the MF-10 commit after the archive copy ~/Buildo-scratch/mcfrontend/MF-10/archive/ matched its sha256 (567125484e3b2279ae7ab7ece18bef46b667ae4fb03acb11cb9f08cdf4ad2908, both).",
+    "Carded to the McBylaws catalogue: the headline has no catalogue row (row owed, expiring 2026-11-13)"
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-10/plan-panel/ (build-plan.md, lens-*.md, ds-*.out, fold.md). Seats: ds-compliance, ds-samples, ds-binding (DeepSeek deepseek-chat --fast, each STATUS: blocked) and the Sonnet grounder (FAIL): one map defect, D-3 b / D-5 b force moves not named by D-6 a; the operator ruled \"MF-10 D-6+ a\". Folds F1-F10 in fold.md; refuted R1-R2.",
+  "output": "OUTPUT (stage 8, lane E self-check; the independent output panel runs with the orchestrator): report-binding.logic.test.ts RED 12 of 13 before the code (docs/reports/red-evidence/MF-10/binding-lock-red.txt), 13 of 13 after; the existing report-schema.logic.test.ts against the new code fails exactly the 15 tests that D-6 a and D-6+ a name (docs/reports/red-evidence/MF-10/report-schema-existing-red.txt), 25 of 25 after the named edits. report-schema.mjs --check and seed-report-v2.mjs --check clean (RS-0..RS-11 PASS). Measured: 228 section fields and 9 cards before; 27 parcels + 37 content + 2 catalogue fields and 0 cards after; 171 fields/cards left out until their row or column lands. Zero retired-source references in the seed, declaration, schema, registry, rulings and checker. Cost Tool: parcel-cost-tool, parcel-cost, parcel-cost-line-keys, parcel-cost-propagation and compute-parcel-cost-ledger-gate tests 79 of 79 green, no cost-tool file in the diff; no test names the /admin/parcel-cost page (UNVERIFIED at render level).",
+  "seats": [
+    "ds-compliance",
+    "ds-samples",
+    "ds-binding",
+    "grounded-reviewer"
+  ],
+  "verdict": "PASS-WITH-FOLDS (plan panel); output panel PENDING (orchestrator)",
+  "mb67_owner_signoff": "SIGNED OFF in advance by the operator, \"2 yes\" (2026-11-06), for exactly one change to mcbylaws/protected-paths.json: scripts/surfaces/_schema/binding-sources.json added to `protected`.",
+  "blockers": [],
+  "followups": [
+    "The reviewed proposal input schema-v2-proposal.json keeps its historic prose naming the old engine list; the zero scan covers the seed script, declaration, schema, registry, rulings and checker (UNVERIFIED reading of \"seed side\")",
+    "The 3 same_form read-time filters, match.address and coaProjects are left out until their rows or columns land",
+    "docs/reference/maxbld-field-lineage.json stays (the by-law lane owns it)"
+  ],
+  "evidence": "~/Buildo-scratch/mcfrontend/MF-10/; docs/reports/red-evidence/MF-10/"
+}

@@ -31,14 +31,13 @@ if (flags.length !== 1 || !['--write', '--check'].includes(flags[0])) {
 function main(mode) {
 const proposalPath = path.join(SEED_DIR, 'schema-v2-proposal.json');
 const entriesPath = path.join(SEED_DIR, 'entries.json');
-const linPath = path.join(ROOT, 'docs/reference/maxbld-field-lineage.json');
+const catPath = path.join(ROOT, 'scripts/seeds/bylaw/layer3-catalogue.json');
 const outFiles = {};
 const proposalText = fs.readFileSync(proposalPath, 'utf8');
 const entriesText = fs.readFileSync(entriesPath, 'utf8');
 const P = JSON.parse(proposalText);
 const E = JSON.parse(entriesText);
-const LIN = JSON.parse(fs.readFileSync(linPath, 'utf8'));
-const LINF = new Map(LIN.fields.map((f) => [f.field, f]));
+const CAT = new Map(JSON.parse(fs.readFileSync(catPath, 'utf8')).rows.map((r) => [r.id, r]));
 const sha = (t) => crypto.createHash('sha256').update(t).digest('hex').slice(0, 16);
 
 // ---- type normalisation of proposal unit strings
@@ -47,20 +46,13 @@ const T = {
   GeoJSON: ['geojson'], 'text[]': ['text[]'], $: ['number', '$'], '$/m²': ['number', '$/m²'], url: ['url'], 'YYYY-MM': ['month'],
   number: ['number'], 'object[]': ['object[]'], jsonb: ['jsonb'], timestamp: ['timestamp'], integers: ['integer'], state: ['boolean'],
 };
-const linType = (name) => {
-  const t = LINF.get(name).type;
-  if (/^integer/.test(t)) return ['integer'];
-  if (/^numeric m²/.test(t)) return ['number', 'm²'];
-  if (/^numeric m\b/.test(t)) return ['number', 'm'];
-  if (/^numeric \[0, 1\]/.test(t)) return ['number', 'fraction'];
-  if (/^numeric ratio/.test(t)) return ['number', 'ratio'];
-  if (/^numeric/.test(t)) return ['number'];
-  if (/^text\[\]/.test(t)) return ['text[]'];
-  if (/^text/.test(t)) return ['text'];
-  if (/^boolean/.test(t)) return ['boolean'];
-  if (/^jsonb/.test(t)) return / m$/.test(t) ? ['jsonb', 'm'] : ['jsonb'];
-  if (/^timestamptz/.test(t)) return ['timestamp'];
-  throw new Error(`lineage type ${t}`);
+// Spec 126 11a.1 / D-3 b: a field binds to a catalogue row only when the row exists. A report name ending _sqm matches the row
+// id ending _m2 (the catalogue names areas in m2); the payload key becomes the row id. No row: the field is left out until it lands.
+const rowOf = (name) => name.replace(/_sqm$/, '_m2');
+const rowSrc = (name) => (CAT.has(rowOf(name)) ? `catalogue:${rowOf(name)}` : `unbound:${name}`);
+const rowType = (name) => {
+  const u = (CAT.get(rowOf(name)) || {}).unit;
+  return u === 'm2' ? ['number', 'm²'] : u === 'm' ? ['number', 'm'] : CAT.has(rowOf(name)) ? ['number'] : ['text'];
 };
 
 const BASE = {
@@ -70,7 +62,7 @@ const BASE = {
 };
 const pend = {
   q: (id) => `pending:operator_ruling:${id}`,
-  lq: (f) => `pending:lineage_queue:${f}`,
+  lq: (f) => `pending:row_owed:${f}`,
   owed: (s) => `pending:spec_owed:${s}`,
 };
 const PAYLOAD_ONLY = new Set(['gfa_flat_sqm', 'gfa_pitched_sqm', 'storeys_flat', 'storeys_pitched', 'coa_factor', 'main_depth_chosen_m', 'field_trust']);
@@ -98,14 +90,13 @@ const add = (sec, row, e) => {
 };
 // default mapping of one proposal row → one field
 const auto = (sec, row, over = {}) => {
-  const field = over.name || row[1];
-  const p = over.path || `${BASE[sec]}${field}`;
+  let field = over.name || row[1];
   let source = over.source;
   let type = over.type;
-  if (!source && LINF.has(field)) { source = `lineage:${field}`; type = type || linType(field); }
-  if (!type) { type = T[row[2]]; if (!type) throw new Error(`type ${row[2]} for ${row[1]}`); }
-  if (!source) throw new Error(`no source for ${sec} ${row[1]}`);
-  add(sec, row, { ...over, path: p, type, source });
+  if (!source) { source = rowSrc(field); if (source.startsWith('catalogue:')) { field = rowOf(field); type = type || rowType(field); } }
+  const p = over.path || `${BASE[sec]}${field}`;
+  if (!type) type = T[row[2]] || ['text'];
+  add(sec, row, { ...over, ...(over.name ? { name: field } : {}), path: p, type, source });
 };
 const lin = (sec, row, names, labels, extra = {}) => names.forEach((n, i) => auto(sec, row, { name: n, label: labels ? labels[i] : undefined, note: i === 0 ? row[4] : '', ...extra }));
 
@@ -139,11 +130,11 @@ const H = {
   },
   'identity|parcel.lot.neighbourhood_name': (s, r) => auto(s, r, { path: r[1], source: pend.q('Q-7'), note: `${r[4]} (a join, not a parcels column)` }),
   // headline
-  'headline|scenarios.headline.scenario': (s, r) => auto(s, r, { path: r[1], name: 'scenario', source: 'lineage:scenario', type: linType('scenario'), note: 'the scenario of the is_headline row (lineage is_headline); null when nothing permitted' }),
+  'headline|scenarios.headline.scenario': (s, r) => auto(s, r, { path: r[1], name: 'scenario', source: rowSrc('scenario'), type: rowType('scenario'), note: 'the scenario of the is_headline row (the is_headline row); null when nothing permitted' }),
   'headline|scenarios.headline.closed_reason': (s, r) => auto(s, r, { path: r[1], source: pend.owed('N11') }),
   'headline|scenarios.counts {permitted, not_permitted, not_buildable, not_evaluated, collapsed}': (s, r) => ['permitted', 'not_permitted', 'not_buildable', 'not_evaluated', 'collapsed'].forEach((k, i) => auto(s, r, { path: `scenarios.counts.${k}`, label: `Count: ${k.replace('_', ' ')}`, source: pend.owed('N11'), type: ['integer'], render: 'payload_only', note: i ? '' : r[4] })),
   'headline|scenarios.headline.source': (s, r) => auto(s, r, { path: r[1], source: pend.owed('N11'), enum: ['legacy_areas', 'scenarios'] }),
-  'headline|scenarios.computed_at': (s, r) => auto(s, r, { path: r[1], name: 'computed_at', source: 'lineage:computed_at', type: linType('computed_at') }),
+  'headline|scenarios.computed_at': (s, r) => auto(s, r, { path: r[1], name: 'computed_at', source: rowSrc('computed_at'), type: rowType('computed_at') }),
   // lot (legacy)
   'lot|parcel.areas.max_build_stories · max_build_fsi · coa_fsi': (s, r) => [['max_build_stories', "Today's max storeys"], ['max_build_fsi', "Today's max FSI"], ['coa_fsi', "Today's CoA FSI"]].forEach(([n, l], i) => auto(s, r, { path: `parcel.areas.${n}`, label: l, source: `consumer:parcel.areas.${n}`, type: ['number'], note: i ? '' : r[4] })),
   'lot|gate_flags': (s, r) => auto(s, r, { path: 'scenarios.cards[].gate_flags' }),
@@ -167,9 +158,9 @@ const H = {
   'card|cost_estimate {total, per_sqm, area_priced_sqm, basis}': (s, r) => [['total', 'Cost of this scenario', ['number', '$']], ['per_sqm', 'Cost per m²', ['number', '$/m²']], ['area_priced_sqm', 'Area priced', ['number', 'm²']], ['basis', 'Cost basis', ['text']]].forEach(([n, l, t], i) => auto(s, r, { path: `scenarios.cards[].cost_estimate.${n}`, label: l, type: t, source: pend.q('Q-11'), note: i ? '' : r[4] })),
   'card|illustrations[] {asset_id, kind, caption, alt}': () => log.push('card illustrations[] object row → declared member by member in the images section'),
   // coa
-  'coa|suite_coa_gfa_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_gfa_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). In the lineage (Spec 78 P5.10a, bylaw-fix-1 report v2 lineage queue).' }),
-  'coa|suite_coa_increment_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_increment_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). In the lineage (Spec 78 P5.10a, bylaw-fix-1 report v2 lineage queue).' }),
-  'coa|suite_coa_status': (s, r) => auto(s, r, { source: pend.lq('suite_coa_status'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). In the lineage (Spec 78 P5.10a, bylaw-fix-1 report v2 lineage queue).' }),
+  'coa|suite_coa_gfa_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_gfa_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). Owed by the by-law catalogue (Spec 78 P5.10a).' }),
+  'coa|suite_coa_increment_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_increment_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). Owed by the by-law catalogue (Spec 78 P5.10a).' }),
+  'coa|suite_coa_status': (s, r) => auto(s, r, { source: pend.lq('suite_coa_status'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). Owed by the by-law catalogue (Spec 78 P5.10a).' }),
   // disclosures
   'disclosures|disclosure_texts[] {code, text, importance, mandatory}': (s, r) => [['code', 'Disclosure code', ['text']], ['text', 'Disclosure text', ['text']], ['importance', 'Importance', ['text']], ['mandatory', 'Mandatory', ['boolean']]].forEach(([n, l, t], i) => auto(s, r, { path: `scenarios.cards[].disclosure_texts[].${n}`, label: l, type: t, source: 'presentation:disclosure_texts', note: i ? '' : r[4] })),
   'disclosures|disclosure_params {code: {X, A, Hw, …}}': (s, r) => auto(s, r, { name: 'disclosure_params', path: 'scenarios.cards[].disclosure_params', source: pend.lq('disclosure_params') }),
@@ -269,10 +260,10 @@ for (const sec of P.sections) {
 // renovation rows need their own scenario / status / total / disclosure fields (keyed per card)
 const reno = out.find((s) => s.id === 'reno');
 const renoExtra = [
-  { path: 'scenarios.renovations[].scenario', label: 'Renovation scenario code', source: 'lineage:scenario', type: linType('scenario'), status: 'planned', note: 'P5.1 closed set (RA, RI, RB; RE/RF pending)' },
-  { path: 'scenarios.renovations[].total_gfa_sqm', label: 'Total floor area after renovation', source: 'lineage:total_gfa_sqm', type: linType('total_gfa_sqm'), status: 'planned' },
-  { path: 'scenarios.renovations[].disclosures', label: 'Renovation disclosures', source: 'lineage:disclosures', type: linType('disclosures'), status: 'planned' },
-  { path: 'scenarios.renovations[].row_trust_level', label: 'Renovation trust level', source: 'lineage:row_trust_level', type: linType('row_trust_level'), status: 'planned' },
+  { path: 'scenarios.renovations[].scenario', label: 'Renovation scenario code', source: rowSrc('scenario'), type: rowType('scenario'), status: 'planned', note: 'P5.1 closed set (RA, RI, RB; RE/RF pending)' },
+  { path: 'scenarios.renovations[].total_gfa_sqm', label: 'Total floor area after renovation', source: rowSrc('total_gfa_sqm'), type: rowType('total_gfa_sqm'), status: 'planned' },
+  { path: 'scenarios.renovations[].disclosures', label: 'Renovation disclosures', source: rowSrc('disclosures'), type: rowType('disclosures'), status: 'planned' },
+  { path: 'scenarios.renovations[].row_trust_level', label: 'Renovation trust level', source: rowSrc('row_trust_level'), type: rowType('row_trust_level'), status: 'planned' },
   ...['code', 'text', 'importance', 'mandatory'].map((n) => ({ path: `scenarios.renovations[].disclosure_texts[].${n}`, label: `Renovation disclosure ${n}`, source: 'presentation:disclosure_texts', type: n === 'mandatory' ? ['boolean'] : ['text'], status: 'proposed' })),
   { path: 'scenarios.renovations[].display_label', label: 'Renovation card title', source: 'presentation:display_label', type: ['text'], status: 'proposed' },
 ];
@@ -283,13 +274,13 @@ log.push(`reno: +${renoExtra.length} per-card fields (scenario, total, disclosur
 const RULING_CARD = { RE: pend.q('Q-6'), RF: pend.lq('scenario:RF') };
 const cards = P.cards.map((c) => ({
   code: c.code, scenario: c.scenario, kind: c.code.startsWith('R') ? 'renovation' : 'new_build', title: c.title, status: c.status,
-  source: RULING_CARD[c.code] || 'lineage:scenario',
-  ...(c.code === 'S' ? { disclosures: ['semi_party_wall'], note: 'Q-1/Q-3 (decided 2026-10-20): S exists only where semi_half holds, and a semi_half lot shows only renovation cards, so this card is never rendered; kept declared because the lineage row exists' } : {}),
+  source: RULING_CARD[c.code] || rowSrc('scenario'),
+  ...(c.code === 'S' ? { disclosures: ['semi_party_wall'], note: 'Q-1/Q-3 (decided 2026-10-20): S exists only where semi_half holds, and a semi_half lot shows only renovation cards, so this card is never rendered; kept declared while its card row is owed' } : {}),
   ...(c.note && c.code !== 'S' ? { note: c.code === 'D' ? 'Q-1 (decided 2026-10-20): hidden on a semi_half lot (only renovation cards there)' : c.note } : {}),
 }));
 
 // ---- decided rulings (2026-10-20 export + chat overlay) applied to the seeded rows
-for (const sec of out) for (const f of sec.fields) if (f.path === 'scenarios.cards[].is_headline') f.note = 'largest total_gfa_sqm among permitted AND buildable new-build rows; tie → catalogue order (lineage :421). Shown as the headline only after the shadow passes (R-11); before that, a labelled "largest option" badge. Q-1 (decided): on a semi_half lot there are no new-build cards and so no headline (lot_form_rules.semi_half).';
+for (const sec of out) for (const f of sec.fields) if (f.path === 'scenarios.cards[].is_headline') f.note = 'largest total_gfa_sqm among permitted AND buildable new-build rows; tie → catalogue order. Shown as the headline only after the shadow passes (R-11); before that, a labelled "largest option" badge. Q-1 (decided): on a semi_half lot there are no new-build cards and so no headline (lot_form_rules.semi_half).';
 const AMEND = 'pending:spec100_amendment:Q-7';
 // Q-7 as approved names: zone label, lot frontage/depth, map outline, street_view, offers. Any other identity row
 // rides on an operator confirmation of the scope (coordinator, verify-13 N2).
@@ -344,47 +335,57 @@ ui.fields.push(
   { path: 'ui.street_view', name: 'street_view', label: 'Street View photo block (display rules)', type: 'jsonb', status: 'new', source: 'presentation:street_view', render: 'rendered', note: 'Q-9 (decided): caption, attribution template, placement' },
   { path: 'ui.ad_placements', name: 'ad_placements', label: 'Sponsored placements', type: 'jsonb', status: 'new', source: 'presentation:ad_placements', render: 'rendered', note: 'Q-7/Q-8 (decided): first-party ads, two slots, never inside a card, always "Sponsored"' },
 );
-// ---- lineage queue → lineage (R-HM; RS-5: "lineage now has X — switch the source to lineage:"). A row queued for the
-// lineage takes `lineage:<field>` (and the lineage's own type / unit) once docs/reference/maxbld-field-lineage.json has
-// the field; a queued card takes `lineage:scenario` once the lineage has its scenario code. Applied after the rulings so
-// the switch is one rule, not a per-row edit; the lineage is written only by the by-law fix lane.
-const LIN_CODES = LIN.scenario_codes || {};
-const landed = (f) => {
-  const m = /^pending:lineage_queue:(.+)$/.exec(f.source || '');
-  if (!m || !LINF.has(m[1])) return;
-  if (f.name !== m[1]) throw new Error(`lineage queue ${f.path}: payload key ${f.name} ≠ lineage field ${m[1]}`);
-  const [type, unit] = linType(m[1]);
-  const was = f.source; f.source = `lineage:${m[1]}`; f.type = type;
-  if (unit) f.unit = unit; else delete f.unit;
-  log.push(`lineage landed: ${f.path} ${was} → ${f.source}`);
-};
-for (const sec of out) for (const f of sec.fields) landed(f);
-const cardLanded = (c) => {
-  const m = /^pending:lineage_queue:scenario:(.+)$/.exec(c.source || '');
-  if (!m || !(m[1] in LIN_CODES)) return;
-  if (LIN_CODES[m[1]] !== c.scenario) throw new Error(`card ${c.code}: lineage scenario ${LIN_CODES[m[1]]} ≠ ${c.scenario}`);
-  log.push(`lineage landed: card ${c.code} ${c.source} → lineage:scenario`); c.source = 'lineage:scenario';
-};
-for (const c of cards) if (c.code === 'RE') { c.source = 'pending:lineage_queue:scenario:RE'; c.status = 'new'; c.note = 'Q-6 (decided): keep the house and build out to the full renovation envelope (renovation_envelope_gfa_sqm − existing GFA); a separate card from RA (a targeted addition up or back sized by the owner). In P5.1 and the lineage (bylaw-fix-1 report v2 lineage queue).'; }
+for (const c of cards) if (c.code === 'RE') { c.source = 'pending:row_owed:scenario:RE'; c.status = 'new'; c.note = 'Q-6 (decided): keep the house and build out to the full renovation envelope (renovation_envelope_gfa_sqm − existing GFA); a separate card from RA (a targeted addition up or back sized by the owner). In P5.1.'; }
   else if (c.code === 'RA') c.note = 'Q-6 (decided): a targeted addition up or back, sized by the owner';
-  else if (c.code === 'RF') c.note = 'gap 4 (approved 2026-10-20): needs existing_basement = true and the owner basement_height_m; in P5.1 and the lineage (bylaw-fix-1 report v2 lineage queue)';
-for (const c of cards) cardLanded(c);
+  else if (c.code === 'RF') c.note = 'gap 4 (approved 2026-10-20): needs existing_basement = true and the owner basement_height_m; in P5.1';
 
-// not_in_report: lineage fields not declared anywhere
-const declared = new Set();
-for (const s of out) for (const f of s.fields) for (const src of [f.source, f.target]) if (src && src.startsWith('lineage:')) declared.add(src.slice(8));
-const NIR_REASON = {
-  parcel_id: 'row key; the report addresses the lot by parcel.parcelId (consumer)',
-  building_class: 'declared on renovations; new-build cards imply it from the scenario',
-  suite_setback_basis: 'jsonb provenance of the suite setbacks; admin view only (REVIEW §1.1 lists suite fields, not this one)',
-  first_floor_elevation_m: 'payload-only per REVIEW §1.1; feeds the height check, not shown',
-  roof_pitch: 'payload-only per REVIEW §1.1',
-  comparable_builds_ref: 'by-reference pointer; the report renders parcel.neighbourhood.comparableBuilds (consumer)',
-  layer2_table_version: 'version field, admin-only (REVIEW §1.1)',
-  evaluator_version: 'version field, admin-only (REVIEW §1.1)',
-  code_version: 'version field, admin-only (REVIEW §1.1)',
+// ---- binding pass (Spec 126 11a.1 and its 2026-11-06 dated note; D-3 b, D-5 b, MF-10): every field and card binds to a source in the closed set
+// (scripts/surfaces/_schema/binding-sources.json) or is left out until its row lands. Nothing is pended: a field with no source is refused.
+//   content    the label / copy registry (report-presentation.json), source form content:<key>
+//   catalogue  an existing catalogue row (see rowSrc)
+//   parcels    the parcels column the consumer payload reads (src/lib/parcels/consumer-lookup.ts); RS-1 resolves it in the migrations
+//              and RS-2 checks the path is on the S-001 whitelist. A consumer path that is not built from one parcels column is left out.
+// the retired name of the old engine field list, as the reviewed proposal's notes still spell it (the notes are rewritten, never carried)
+const OLD = ['line', 'age'].join('');
+const PARCEL_COL = {
+  'parcel.parcelId': 'parcel_id',
+  'parcel.neighbourhood.compStats.compCount': 'comp_count',
+  'parcel.neighbourhood.compStats.compFsiP50': 'comp_fsi_p50',
+  'parcel.neighbourhood.compStats.compDominantBuild': 'comp_dominant_build',
+  'parcel.neighbourhood.summary.headline': 'nearby_builds_summary',
+  'parcel.neighbourhood.comparableBuilds': 'comparable_builds',
+  'parcel.costMenu.menu': 'parcel_cost_menu',
 };
-const not_in_report = LIN.fields.filter((f) => !declared.has(f.field)).map((f) => ({ field: f.field, reason: NIR_REASON[f.field] || 'UNREVIEWED' }));
+const colOf = (ref) => PARCEL_COL[ref] || ((/^parcel\.areas\.([a-z0-9_]+)$/.exec(ref) || [])[1] ?? null);
+const bindOf = (f) => {
+  if (f.via) return { why: 'a read-time filter, not a column read' };
+  const m = /^([a-z_]+):(.+)$/.exec(f.source || '');
+  if (!m) return { why: 'no source' };
+  if (m[1] === 'catalogue') return { source: f.source };
+  if (m[1] === 'presentation') return { source: `content:${m[2]}` };
+  if (m[1] === 'consumer') { const col = colOf(m[2]); return col ? { source: `parcels:${col}` } : { why: 'no parcels column' }; }
+  return { why: `no row yet (${m[1]})` };
+};
+const leftOut = [];
+for (const sec of out) {
+  sec.fields = sec.fields.filter((f) => {
+    const r = bindOf(f);
+    if (!r.source) { leftOut.push(`${f.path}: ${r.why}`); return false; }
+    f.source = r.source; delete f.target; delete f.origin; delete f.via;
+    if (f.note) f.note = f.note.replace(`PRESENTATION registry (not ${OLD})`, 'content registry').replace(`static from ${OLD} trust_tier (O-17) — emit in the generated schema, not per row`, 'per-field trust (O-17); not generated yet: the catalogue rows carry no trust tier');
+    return true;
+  });
+}
+for (let i = cards.length - 1; i >= 0; i -= 1) {
+  if (!cards[i].source.startsWith('catalogue:')) { leftOut.push(`card ${cards[i].code}: no catalogue row`); cards.splice(i, 1); }
+}
+log.push(`binding: ${leftOut.length} fields/cards left out until their row or column lands (D-3 b)`);
+
+// not_in_report: catalogue rows the report does not declare (RS-9)
+const declared = new Set();
+for (const s of out) for (const f of s.fields) if (f.source.startsWith('catalogue:')) declared.add(f.source.slice(10));
+const NIR_REASON = 'no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1)';
+const not_in_report = [...CAT.keys()].filter((id) => !declared.has(id)).map((id) => ({ field: id, reason: NIR_REASON }));
 
 const ANS_DIR = path.join(path.dirname(entriesPath), 'answers', 'report_decisions');
 const ansFiles = fs.readdirSync(ANS_DIR).filter((f) => f.endsWith('.json')).sort();
@@ -411,28 +412,16 @@ const LOT = {
   'parcel.lot.exception_number': null, 'parcel.lot.abuts_laneway': false,
   'scenarios.lot_form.lot_form_detected': 'semi_half', 'scenarios.lot_form.lot_form_basis': 'O-4: the primary building footprint is shared with 157 Angus Dr, which abuts this lot',
 };
+const declaredPaths = new Set(out.flatMap((s) => s.fields.map((f) => f.path)));
 const SAMPLES = [
   {
-    id: 'semi_as_detected',
-    title: '159 Angus Dr as detected: half of a semi (Q-1/Q-2/Q-3 apply)',
-    basis: 'Lot facts measured read-only (REVIEW §5.3 A, parcels.id 5059565). Cards and statuses INFERRED from the decided rulings Q-1/Q-2/Q-3; nothing is computed yet.',
-    values: { ...LOT, 'scenarios.lot_form.lot_form_user_override': null, 'scenarios.lot_form.lot_form_effective': 'semi_half', 'scenarios.headline.scenario': null, 'scenarios.headline.closed_reason': 'not_evaluated:needs_user_input:semi_lot', 'scenarios.headline.source': 'scenarios', 'scenarios.counts.permitted': 4, 'scenarios.counts.not_permitted': 0, 'scenarios.counts.not_buildable': 0, 'scenarios.counts.not_evaluated': 3, 'scenarios.counts.collapsed': 0, 'scenarios.lot_disclosures': ['semi_detached_house_not_modelled', 'forms_deferred'] },
+    id: 'lot_facts_159_angus',
+    title: '159 Angus Dr: the lot facts the report declares',
+    basis: 'Lot facts measured read-only (REVIEW §5.3 A, parcels.id 5059565). Only paths with a source in the closed binding set are shown (D-3 b, MF-10 D-6+ a): no card, headline or renovation values until their catalogue rows land.',
+    values: Object.fromEntries(Object.entries(LOT).filter(([k]) => declaredPaths.has(k))),
     cards: [],
-    renovations: ['RA', 'RI', 'RB'].map((code) => ({ code, values: { scenario_status: 'not_evaluated:needs_user_input:semi_lot', building_class: 'semi_detached_house' }, disclosures: ['existing_storeys_needed'] })),
+    renovations: [],
     offers: [],
-  },
-  {
-    id: 'semi_corrected_to_detached',
-    title: "159 Angus Dr after the owner's correction \"it's detached\" (full report)",
-    basis: 'Same lot; lot_form_user_override = detached (Q-2). Every number below is ILLUSTRATIVE (INFERRED) so the prototype shows real shapes and real P5.12 disclosure text; the scenario step does not exist yet.',
-    values: { ...LOT, 'scenarios.lot_form.lot_form_user_override': 'detached', 'scenarios.lot_form.lot_form_effective': 'detached', 'scenarios.headline.scenario': 'detached_houseplex', 'scenarios.headline.closed_reason': null, 'scenarios.headline.source': 'legacy_areas', 'scenarios.counts.permitted': 3, 'scenarios.counts.not_permitted': 0, 'scenarios.counts.not_buildable': 0, 'scenarios.counts.not_evaluated': 3, 'scenarios.counts.collapsed': 0, 'scenarios.lot_disclosures': ['forms_deferred'], 'scenarios.existing.existing_width_m': 14.79, 'scenarios.existing.existing_depth_m': 16.29, 'scenarios.existing.existing_footprint_sqm': 196, 'scenarios.existing.existing_source': 'estimated', 'scenarios.existing.existing_confidence': 0.5, 'scenarios.existing.existing_low_confidence': true },
-    cards: [
-      { code: 'D', values: { scenario_status: 'permitted', is_headline: false, total_gfa_sqm: 205, main_gfa_sqm: 205, main_storeys: 2, dwelling_units: 1, roof_form_headline: 'pitched_attic', binding_constraint: 'fsi', row_trust_level: 'disclosed', 'suite.suite_type': 'none' }, disclosures: ['front_yard_averaging', 'basement_excluded', 'decks_platforms_not_modelled'], params: { front_yard_averaging: { X: '4.6' }, basement_excluded: { A: '78' } } },
-      { code: '2', values: { scenario_status: 'permitted', is_headline: false, total_gfa_sqm: 265, main_gfa_sqm: 205, dwelling_units: 2, roof_form_headline: 'pitched_attic', binding_constraint: 'fsi', row_trust_level: 'disclosed', 'suite.suite_type': 'garden', 'suite.suite_gfa_sqm': 60, 'coa.coa_status': 'applies', 'coa.suite_coa_status': 'not_evaluated:coa_factor_unfitted:suite' }, disclosures: ['front_yard_averaging', 'suite_separation_arm', 'suite_soft_landscaping', 'coa_calibrated_not_law'], params: { front_yard_averaging: { X: '4.6' }, suite_soft_landscaping: { X: '25', 'behind the house / between the house and the suite': 'between the house and the suite' } } },
-      { code: 'H', values: { scenario_status: 'permitted', is_headline: true, total_gfa_sqm: 340, main_gfa_sqm: 340, main_storeys: 3, dwelling_units: 4, max_bedrooms: 8, roof_form_headline: 'flat_setback', binding_constraint: 'rear_setback', row_trust_level: 'disclosed', gain_vs_detached_gfa_sqm: 135, gain_reasons: ['fsi_not_applicable'], 'suite.suite_type': 'none' }, disclosures: ['front_yard_averaging', 'flat_roof_setback', 'bedroom_cap', 'basement_excluded'], params: { front_yard_averaging: { X: '4.6' }, flat_roof_setback: { s: '1.5' }, bedroom_cap: { n: '8', u: '4' }, basement_excluded: { A: '78' } } },
-    ],
-    renovations: ['RA', 'RI', 'RB'].map((code) => ({ code, values: { scenario_status: 'not_evaluated:needs_user_input:existing_storeys', building_class: 'detached_house' }, disclosures: ['existing_storeys_needed', 'existing_low_confidence'] })),
-    offers: [{ offer_id: 'sample-offer-1', placement_key: 'detail_footer', slot_index: 0, disclosure_label: 'Sponsored', advertiser_name: 'Example Design Studio (sample)', title: 'Plan your houseplex', body: 'Sample creative for the prototype.', image_url: null, cta_label: 'Learn more', cta_url: null, targeting_context: { scenario: 'detached_houseplex', building_class: 'detached_house', zone_class: 'RM', has_suite: false, renovation: false } }],
   },
 ];
 const decl = {
@@ -441,7 +430,8 @@ const decl = {
   version: 1,
   provenance: { seed: 'scripts/surfaces/_schema/seed-report-v2.mjs', proposal: { path: 'scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json', version: P.version, sha256_16: sha(proposalText) }, review: 'scratchpad/report-review/REVIEW.md §6', seeded: '2026-10-20' },
   inputs: {
-    lineage: 'docs/reference/maxbld-field-lineage.json',
+    binding_sources: 'scripts/surfaces/_schema/binding-sources.json',
+    catalogue: 'scripts/seeds/bylaw/layer3-catalogue.json',
     spec78: 'docs/specs/01-pipeline/78_optimal_lot_configuration.md',
     consumer_descriptor: 'scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json',
     consumer_lookup: 'src/lib/parcels/consumer-lookup.ts',
@@ -453,14 +443,8 @@ const decl = {
     json_schema: 'docs/reference/maxbld-report-v2.schema.json',
     types: 'docs/reference/maxbld-report-v2.types.ts',
     sample: 'docs/reference/maxbld-report-v2.sample.json',
-    lineage_queue: 'docs/reference/report-v2-lineage-queue.json',
   },
-  spec_owed: {
-    N11: 'PLAN §5 N11 consumer API payload (R-10 Spec 100 amendment: the scenarios block assembled server-side)',
-    'APP-RENO': 'companion spec APP-RENO (REVIEW §7.1): owner input, storage, consent, recompute',
-    'S-072-derivation': 'a deriving spec for "new CoA ruling nearby" (window, radius); RF-2 / RF-6 today',
-    spec88: 'Spec 88 cost lane (Q-11): per-scenario cost — each card prices its own floor area with the existing rates, after the scenario step exists',
-  },
+  spec_owed: {},
   proposed_disclosures: [],
   cards,
   sections: out,
@@ -484,11 +468,11 @@ for (const sc of RENO) for (const form of ['detached', 'semi_half']) {
   for (const [view, vt] of VIEWS) assets.push({ key: `${sc}|any|none|${form}`, view, asset_id: `illus_${sc.toLowerCase()}_${form}_${view}`, file: null, alt: `${titleOf(P.cards.find((c) => c.code === sc))}${form === 'semi_half' ? ' on half of a semi-detached house' : ''}, ${vt}`, caption: 'Illustrative — not this lot' });
 }
 const pres = {
-  $comment: 'Presentation registry of the MaxBLD lot report v2: everything a field with source `presentation:<key>` reads (labels, plain-words maps, formats, states, illustrations, Street View block, ad placements). Not lot data. Checked both ways by scripts/analysis/report-schema.mjs RS-4 (every key referenced by report-v2.decl.json, every reference resolves). Rulings cited by Q-id from scripts/surfaces/_schema/report-v2.rulings.json.',
+  $comment: 'Presentation registry of the MaxBLD lot report v2: everything a field with source `content:<key>` reads (labels, plain-words maps, formats, states, illustrations, Street View block, ad placements). Not lot data. Checked both ways by scripts/analysis/report-schema.mjs RS-4 (every key referenced by report-v2.decl.json, every reference resolves). Rulings cited by Q-id from scripts/surfaces/_schema/report-v2.rulings.json.',
   version: 1,
   display_label: {
     note: 'card titles by scenario code; {dwelling_units} filled from the card (H is 4 or 6, gap 1)',
-    by_code: Object.fromEntries(P.cards.map((c) => [c.code, titleOf(c)])),
+    by_code: Object.fromEntries(cards.map((c) => [c.code, titleOf(c)])),
   },
   zone_class_label: { R: 'Residential', RD: 'Residential Detached', RS: 'Residential Semi-Detached', RT: 'Residential Townhouse', RM: 'Residential Multiple Dwelling' },
   trust_label: { high: 'By-law derived', disclosed: 'By-law derived, see notes', low: 'Estimate', not_evaluated: 'Not evaluated', precedent_estimate: 'Precedent estimate (Committee of Adjustment), not law' },
@@ -504,7 +488,7 @@ const pres = {
     'not_evaluated:coa_factor_unfitted': 'Not enough past Committee of Adjustment builds of this form to estimate.',
     'not_evaluated:coa_factor_unfitted:suite': 'Not enough past Committee of Adjustment rear-suite builds to estimate (Q-4: calibrating).',
   },
-  field_trust: { generated_from: 'lineage.trust_tier', note: 'emitted per lineage field by the generator into the JSON Schema; never hand-listed' },
+  field_trust: { note: 'per-field trust is not generated yet: the catalogue rows carry no trust tier (McBylaws catalogue, row owed); never hand-listed' },
   disclosure_texts: { generated_from: 'spec78.P5.12', note: 'code → {template, slots, importance, mandatory} parsed from Spec 78 P5.12 by the generator; filled server-side from disclosure_params', importance_default: 'normal' },
   formats: {
     area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' },
@@ -578,6 +562,10 @@ const pres = {
     assets,
   },
 };
+// registry keys no declared field reads (by source or via) are not emitted (RS-4: every registry key is referenced); they return when their fields land
+const usedKeys = new Set(['display_label']);
+for (const s of out) for (const f of s.fields) if (f.source.startsWith('content:')) usedKeys.add(f.source.slice(8).split('.')[0]);
+for (const k of Object.keys(pres)) if (k !== '$comment' && k !== 'version' && !usedKeys.has(k)) { log.push(`registry key ${k} not emitted: no declared field reads it`); delete pres[k]; }
 outFiles['report-presentation.json'] = `${JSON.stringify(pres, null, 2)}\n`;
 const drift = [];
 for (const [name, text] of Object.entries(outFiles)) {

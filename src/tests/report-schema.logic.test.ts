@@ -3,7 +3,8 @@
 //            docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers),
 //            R-27 (one home; tables generated from it), R-17 + R-34 (a SLOT declares a FAIL, blocking disclosure);
 //            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.12 (closed disclosure codes) + §6.6 (display rules);
-//            docs/reference/maxbld-field-lineage.json (the lineage the report names must match).
+//            docs/specs/02-web-admin/126_maxbld_surface_standard.md 11a.1 and scripts/surfaces/_schema/binding-sources.json (the closed
+//            binding set every field binds to; MF-10, operator D-6 a and D-6+ a name the changed gates and tests here).
 //
 // Logic locks for scripts/analysis/report-schema.mjs — the generator that checks the v2 lot report's field names so the
 // prototype, the API and the app cannot drift. Every gate is proven red on a mutated copy of the real inputs, and
@@ -41,10 +42,10 @@ describe('report-schema generator: module surface', () => {
 });
 
 describe('report-schema generator: the committed tree is green', () => {
-  it('no gate FAILs; pending rows WARN', () => {
+  it('no gate FAILs; no pending row remains (RS-5 PASS)', () => {
     const ev = RS.evaluate(fresh());
     expect(ev.gates.filter((g: Json) => g.state === 'FAIL').map((g: Json) => `${g.id}: ${g.failing.join('; ')}`)).toEqual([]);
-    expect(ev.gates.find((g: Json) => g.id === 'RS-5').state).toBe('WARN');
+    expect(ev.gates.find((g: Json) => g.id === 'RS-5').state).toBe('PASS');
   });
   it('--check finds no drift in the generated outputs', async () => {
     const r = await RS.run({ root: ROOT, mode: 'check' });
@@ -52,24 +53,24 @@ describe('report-schema generator: the committed tree is green', () => {
   });
 });
 
-describe('RS-1 lineage names and types', () => {
-  it('FAILs on a misspelled lineage field', () => {
+describe('RS-1 closed binding set and members', () => {
+  it('FAILs on a misspelled catalogue row id', () => {
     const inp = fresh();
-    field(inp, 'scenarios.cards[].total_gfa_sqm').source = 'lineage:total_gfa_sqmm';
+    field(inp, 'scenarios.cards[].gfa_flat_m2').source = 'catalogue:gfa_flat_m22';
     const g = gate(inp, 'RS-1');
     expect(g.state).toBe('FAIL');
-    expect(g.failing.join('\n')).toContain('total_gfa_sqmm');
+    expect(g.failing.join('\n')).toContain('gfa_flat_m22');
   });
-  it('FAILs when the declared type disagrees with lineage (main_storeys is an integer)', () => {
+  it('FAILs when the declared unit disagrees with the catalogue row (gfa_flat_m2 is m2)', () => {
     const inp = fresh();
-    field(inp, 'scenarios.cards[].main_storeys').type = 'number';
-    expect(gate(inp, 'RS-1').failing.join('\n')).toContain('main_storeys');
+    field(inp, 'scenarios.cards[].gfa_flat_m2').unit = 'm';
+    expect(gate(inp, 'RS-1').failing.join('\n')).toContain('gfa_flat_m2');
   });
-  it('FAILs when the payload key renames the lineage field', () => {
+  it('FAILs when the payload key renames the catalogue row id', () => {
     const inp = fresh();
-    const f = field(inp, 'scenarios.cards[].main_gfa_sqm');
-    f.path = 'scenarios.cards[].main_floor_area';
-    f.name = 'main_floor_area';
+    const f = field(inp, 'scenarios.cards[].gfa_flat_m2');
+    f.path = 'scenarios.cards[].gfa_flat_sqm';
+    f.name = 'gfa_flat_sqm';
     expect(gate(inp, 'RS-1').state).toBe('FAIL');
   });
 });
@@ -77,7 +78,7 @@ describe('RS-1 lineage names and types', () => {
 describe('RS-4 presentation keys both ways', () => {
   it('FAILs on an unknown presentation key', () => {
     const inp = fresh();
-    field(inp, 'scenarios.cards[].trust_label').source = 'presentation:trust_labels';
+    field(inp, 'scenarios.cards[].trust_label').source = 'content:trust_labels';
     const g = gate(inp, 'RS-4');
     expect(g.state).toBe('FAIL');
     expect(g.failing.join('\n')).toContain('trust_labels');
@@ -89,40 +90,35 @@ describe('RS-4 presentation keys both ways', () => {
   });
 });
 
-describe('RS-5 pending rows', () => {
-  it('FAILs a lineage_queue row once lineage has the field (stale pending)', () => {
-    // The lineage has avg_unit_gfa_sqm (bylaw-fix-1's lineage queue, f5f82087), so the committed row reads lineage:.
-    // Put it back on the queue: a queued row whose lineage field exists is a stale pending.
+describe('RS-5 no pending source', () => {
+  it('FAILs a field that carries a pending source (a field with no source is left out, never pended)', () => {
     const inp = fresh();
-    expect(inp.lineage.fields.some((f: Json) => f.field === 'avg_unit_gfa_sqm')).toBe(true);
-    field(inp, 'scenarios.cards[].avg_unit_gfa_sqm').source = 'pending:lineage_queue:avg_unit_gfa_sqm';
+    field(inp, 'scenarios.cards[].trust_label').source = 'pending:spec_owed:N11';
     const g = gate(inp, 'RS-5');
     expect(g.state).toBe('FAIL');
-    expect(g.failing.join('\n')).toContain('avg_unit_gfa_sqm');
+    expect(g.failing.join('\n')).toContain('scenarios.cards[].trust_label');
   });
-  it('FAILs a row still pending on a ruling the operator has decided (Q-5 is decided in the register)', () => {
+  it('FAILs a card that carries a pending source', () => {
     const inp = fresh();
-    expect(inp.rulings.rulings.find((r: Json) => r.ref === 'Q-5').status).toBe('decided');
-    field(inp, 'scenarios.cards[].market.comp_count_same_form').source = 'pending:operator_ruling:Q-5';
-    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('Q-5');
+    inp.decl.cards.push({ code: 'X', scenario: 'x', kind: 'new_build', title: 'x', status: 'new', source: 'pending:row_owed:scenario:X' });
+    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('card X');
   });
-  it('FAILs a spec100_amendment row once the S-001 whitelist carries its target', () => {
+  it('FAILs a proposed disclosure that names an unknown ruling', () => {
     const inp = fresh();
-    expect(field(inp, 'parcel.lot.frontage_m').source).toBe('pending:spec100_amendment:Q-7');
-    inp.consumer.whitelist.push('parcel.lot.frontage_m');
-    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('parcel.lot.frontage_m');
+    inp.decl.proposed_disclosures.push({ code: 'x_code', ruling: 'Q-99', text: 'x' });
+    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('Q-99');
   });
-  it('FAILs a pending row naming an unknown ruling', () => {
+  it('FAILs an operator_confirm form of pending as well', () => {
     const inp = fresh();
-    field(inp, 'offers[].advertiser_name').source = 'pending:operator_ruling:Q-99';
-    expect(gate(inp, 'RS-5').state).toBe('FAIL');
+    field(inp, 'parcel.areas.lot_size_sqm').source = 'pending:operator_confirm:Q-7-scope';
+    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('parcel.areas.lot_size_sqm');
   });
 });
 
 describe('RS-6 disclosure codes', () => {
   it('FAILs on a disclosure code that is not in Spec 78 P5.12', () => {
     const inp = fresh();
-    inp.decl.samples[1].cards[0].disclosures.push('no_such_disclosure');
+    field(inp, 'scenarios.cards[].disclosure_texts[].code').disclosures = ['no_such_disclosure'];
     const g = gate(inp, 'RS-6');
     expect(g.state).toBe('FAIL');
     expect(g.failing.join('\n')).toContain('no_such_disclosure');
@@ -135,15 +131,21 @@ describe('RS-6 disclosure codes', () => {
 });
 
 describe('RS-7 display rules in the sample', () => {
-  it('FAILs a new-build card on a lot whose effective form is semi_half (Q-1)', () => {
+  it('FAILs a sample value whose key is not a declared path', () => {
     const inp = fresh();
-    inp.decl.samples[0].cards.push(structuredClone(inp.decl.samples[1].cards[0]));
-    expect(gate(inp, 'RS-7').state).toBe('FAIL');
+    inp.decl.samples[0].values['scenarios.not_declared'] = 1;
+    const g = gate(inp, 'RS-7');
+    expect(g.state).toBe('FAIL');
+    expect(g.failing.join('\n')).toContain('scenarios.not_declared');
   });
-  it('FAILs a rendered card in a hidden state (§6.6 rule 1)', () => {
+  it('FAILs a sample with neither a headline nor a closed reason once the headline field is declared (§6.6 rule 5)', () => {
     const inp = fresh();
-    inp.decl.samples[1].cards[0].values.scenario_status = 'not_permitted:10.5.30.21(3)';
-    expect(gate(inp, 'RS-7').state).toBe('FAIL');
+    expect(gate(inp, 'RS-7').state).toBe('PASS');
+    const f = structuredClone(field(inp, 'scenarios.cards[].trust_label'));
+    f.path = 'scenarios.headline.scenario';
+    f.name = 'scenario';
+    inp.decl.sections[0].fields.push(f);
+    expect(gate(inp, 'RS-7').failing.join('\n')).toContain('headline');
   });
 });
 
@@ -155,11 +157,11 @@ describe('RS-8 sponsored slots', () => {
   });
 });
 
-describe('RS-9 lineage totality', () => {
-  it('FAILs when a lineage field is neither declared nor listed not_in_report', () => {
+describe('RS-9 catalogue totality', () => {
+  it('FAILs when a catalogue row is neither declared nor listed not_in_report', () => {
     const inp = fresh();
-    inp.decl.not_in_report = inp.decl.not_in_report.filter((x: Json) => x.field !== 'roof_pitch');
-    expect(gate(inp, 'RS-9').failing.join('\n')).toContain('roof_pitch');
+    inp.decl.not_in_report = inp.decl.not_in_report.filter((x: Json) => x.field !== 'front_setback_used_m');
+    expect(gate(inp, 'RS-9').failing.join('\n')).toContain('front_setback_used_m');
   });
 });
 
@@ -182,19 +184,16 @@ describe('RS-11 decided rulings pin the semi_half rules (Q-1/Q-2/Q-3)', () => {
 });
 
 describe('Q-7 scope', () => {
-  it('the approved list and the ten rows CHAT-11 confirmed (2026-10-20-chat-batch-b#CHAT-11, read from the decision log) are on spec100_amendment; none waits on operator_confirm', () => {
+  it('no pending row remains: the Q-7 rows are left out until their parcels column and whitelist entry land, and the bound parcel facts read parcels columns', () => {
     const inp = fresh();
-    expect(field(inp, 'parcel.lot.zone_label').source).toBe('pending:spec100_amendment:Q-7');
-    for (const p of ['zone_class_label', 'exception_number', 'is_irregular', 'is_corner_lot', 'is_through_lot', 'abuts_laneway', 'centroid_lat', 'centroid_lng', 'overlays', 'neighbourhood_name']) {
-      expect(field(inp, `parcel.lot.${p}`).source, p).toBe('pending:spec100_amendment:Q-7');
-    }
-    expect(JSON.stringify(inp.decl)).not.toContain('pending:operator_confirm:Q-7-scope');
+    expect(JSON.stringify(inp.decl)).not.toContain('pending:');
+    expect(allFields(inp).some((f) => f.path.startsWith('parcel.lot.'))).toBe(false);
+    expect(field(inp, 'parcel.areas.lot_size_sqm').source).toBe('parcels:lot_size_sqm');
   });
-  it('FAILs an operator_confirm row once the whitelist carries its target (a synthetic row: CHAT-11 left none on operator_confirm)', () => {
+  it('FAILs a pending form once more (the same form the Q-7 rows used)', () => {
     const inp = fresh();
-    field(inp, 'parcel.lot.exception_number').source = 'pending:operator_confirm:Q-7-scope';
-    inp.consumer.whitelist.push('parcel.lot.exception_number');
-    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('parcel.lot.exception_number: the S-001 whitelist now has');
+    field(inp, 'parcel.areas.lot_size_sqm').source = 'pending:spec100_amendment:Q-7';
+    expect(gate(inp, 'RS-5').failing.join('\n')).toContain('parcel.areas.lot_size_sqm');
   });
 });
 

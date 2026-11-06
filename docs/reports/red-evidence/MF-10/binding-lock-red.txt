@@ -1,0 +1,204 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf10-build
+
+ ❯ src/tests/surfaces/report-binding.logic.test.ts (13 tests | 12 failed) 122ms
+   × FE-18 / Rule 20: the closed binding set (binding-sources.json) > names exactly the six sources: catalogue, content, user_input, ad_slot, external_embed, parcels (FE-18, FE-21, FE-23, FE-27) 2ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf10-build/scripts/surfaces/_schema/binding-sources.json'
+   × FE-18 / Rule 20: the closed binding set (binding-sources.json) > the committed declaration binds every field and card to a source in the set, and RS-1 is green 12ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf10-build/scripts/surfaces/_schema/binding-sources.json'
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs a field whose catalogue row does not exist (invented field) 9ms
+     → no field bound to catalogue
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs a field with no source at all (a node with an invented field) 7ms
+     → no field bound to content
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs a retired source form (the old engine list) 7ms
+     → no field bound to content
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs a pending source (a field with no source is refused, never pended) 7ms
+     → no field bound to content
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs a sixth, unlisted source name 7ms
+     → no field bound to content
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs a content key that is not in the registry, and a parcels column that is not a migration column 6ms
+     → no field bound to content
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs user_input, ad_slot and external_embed members until their contract file exists 7ms
+     → no field bound to content
+   × Rule 20 RED fixture: an invented field fails (both directions) > FAILs a parcels path that is not on the S-001 consumer whitelist (RS-2) 7ms
+     → no field bound to parcels
+   × Rule 20 RED fixture: an invented field fails (both directions) > is GREEN on the unmutated copy (the other direction) 52ms
+     → RS-5: expected 'WARN' to be 'PASS' // Object.is equality
+   × MF-10 done-condition: zero retired-source (old engine list) references in the seed-side files > the scan finds none in the committed seed, declaration, schema, registry, rulings and checker 0ms
+     → scripts/surfaces/_schema/seed-report-v2.mjs: expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > FE-18 / Rule 20: the closed binding set (binding-sources.json) > names exactly the six sources: catalogue, content, user_input, ad_slot, external_embed, parcels (FE-18, FE-21, FE-23, FE-27)
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf10-build/scripts/surfaces/_schema/binding-sources.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-binding.logic.test.ts:19:55
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:49:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > FE-18 / Rule 20: the closed binding set (binding-sources.json) > the committed declaration binds every field and card to a source in the set, and RS-1 is green
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf10-build/scripts/surfaces/_schema/binding-sources.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-binding.logic.test.ts:19:55
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:55:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs a field whose catalogue row does not exist (invented field)
+Error: no field bound to catalogue
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:65:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs a field with no source at all (a node with an invented field)
+Error: no field bound to content
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:72:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs a retired source form (the old engine list)
+Error: no field bound to content
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:81:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs a pending source (a field with no source is refused, never pended)
+Error: no field bound to content
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:86:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs a sixth, unlisted source name
+Error: no field bound to content
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:91:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs a content key that is not in the registry, and a parcels column that is not a migration column
+Error: no field bound to content
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:96:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs user_input, ad_slot and external_embed members until their contract file exists
+Error: no field bound to content
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:105:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > FAILs a parcels path that is not on the S-001 consumer whitelist (RS-2)
+Error: no field bound to parcels
+ ❯ aField src/tests/surfaces/report-binding.logic.test.ts:31:17
+     29| const aField = (inputs: Json, kind: string): Json => {
+     30|   const f = allFields(inputs).find((x) => String(x.source).startsWith(…
+     31|   if (!f) throw new Error(`no field bound to ${kind}`);
+       |                 ^
+     32|   return f;
+     33| };
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:111:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > Rule 20 RED fixture: an invented field fails (both directions) > is GREEN on the unmutated copy (the other direction)
+AssertionError: RS-5: expected 'WARN' to be 'PASS' // Object.is equality
+
+Expected: "PASS"
+Received: "WARN"
+
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:118:88
+    116|   it('is GREEN on the unmutated copy (the other direction)', () => {
+    117|     const inp = fresh();
+    118|     for (const id of ['RS-1', 'RS-2', 'RS-3', 'RS-5']) expect(gate(inp…
+       |                                                                                        ^
+    119|   });
+    120| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/12]⎯
+
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > MF-10 done-condition: zero retired-source (old engine list) references in the seed-side files > the scan finds none in the committed seed, declaration, schema, registry, rulings and checker
+AssertionError: scripts/surfaces/_schema/seed-report-v2.mjs: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/tests/surfaces/report-binding.logic.test.ts:124:70
+    122| describe('MF-10 done-condition: zero retired-source (old engine list) …
+    123|   it('the scan finds none in the committed seed, declaration, schema, …
+    124|     for (const rel of SEED_SIDE) expect(scanRetired(read(rel)), rel).t…
+       |                                                                      ^
+    125|   });
+    126|   it('the scan itself fires on a mutated copy (RED direction)', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/12]⎯
+
+ Test Files  1 failed (1)
+      Tests  12 failed | 1 passed (13)
+   Start at  17:48:46
+   Duration  375ms (transform 77ms, setup 7ms, collect 95ms, tests 122ms, environment 0ms, prepare 20ms)
+
