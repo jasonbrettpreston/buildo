@@ -478,7 +478,8 @@
  {
   "id": "STS-3",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "case": "A0375",
+  "pending_reload": false,
   "key_answer": "F 69.53 m2 on the stored 0.45 (54.23 after M-435); GFA 156.63 m2 either way (FSI binds)",
   "inputs": {
    "l2": {
@@ -516,7 +517,7 @@
    {
     "row": "footprint_max_m2",
     "status": "computed",
-    "value": 69.53,
+    "value": 54.23,
     "tol": 0.005
    },
    {
@@ -531,7 +532,8 @@
  {
   "id": "STS-4",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "case": "A0375",
+  "pending_reload": false,
   "inputs": {
    "l2": {
     "side_setback_m": 0.9,
@@ -644,6 +646,7 @@
  {
   "id": "REG-1/A0182",
   "layer": "Arithmetic",
+  "case": "A0182",
   "pending_reload": false,
   "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
   "inputs": {
@@ -679,6 +682,7 @@
  {
   "id": "REG-1/A0203",
   "layer": "Arithmetic",
+  "case": "A0203",
   "pending_reload": false,
   "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
   "inputs": {
@@ -714,6 +718,7 @@
  {
   "id": "REG-1/A0205",
   "layer": "Arithmetic",
+  "case": "A0205",
   "pending_reload": false,
   "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
   "inputs": {
@@ -749,6 +754,7 @@
  {
   "id": "REG-1/A0229",
   "layer": "Arithmetic",
+  "case": "A0229",
   "pending_reload": false,
   "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
   "inputs": {
@@ -784,6 +790,7 @@
  {
   "id": "REG-1/A0277",
   "layer": "Arithmetic",
+  "case": "A0277",
   "pending_reload": false,
   "key_answer": "382.494, 395.08, 388.62, 498.1, 394.74 - all unchanged [FX-exp]",
   "inputs": {
@@ -819,6 +826,7 @@
  {
   "id": "REG-2",
   "layer": "Arithmetic",
+  "case": "A0094",
   "pending_reload": false,
   "key_answer": "254.485 unchanged",
   "inputs": {
@@ -852,6 +860,7 @@
  {
   "id": "REG-3/A0289",
   "layer": "Arithmetic",
+  "case": "A0289",
   "pending_reload": false,
   "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
   "inputs": {
@@ -884,6 +893,7 @@
  {
   "id": "REG-3/A0457",
   "layer": "Arithmetic",
+  "case": "A0457",
   "pending_reload": false,
   "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
   "inputs": {
@@ -916,6 +926,7 @@
  {
   "id": "REG-3/A0461",
   "layer": "Arithmetic",
+  "case": "A0461",
   "pending_reload": false,
   "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
   "inputs": {
@@ -948,6 +959,7 @@
  {
   "id": "REG-3/A0562",
   "layer": "Arithmetic",
+  "case": "A0562",
   "pending_reload": false,
   "key_answer": "195.632, 219.296, 256.344, 243.352 unchanged",
   "inputs": {
@@ -980,6 +992,7 @@
  {
   "id": "REG-4",
   "layer": "Arithmetic",
+  "case": "A0464",
   "pending_reload": true,
   "key_answer": "147.978 unchanged",
   "inputs": {
@@ -1025,6 +1038,7 @@
  {
   "id": "REG-5",
   "layer": "Arithmetic",
+  "case": "A0375",
   "pending_reload": true,
   "key_answer": "A0375 not_evaluated -> 156.63 m2 (FSI 1.0 x 156.63 binds on both forms; n_w = n = 4, no attic); the input that moves is the street side (stored unregulated by absence, item 1 A); F 69.53 (54.23 after M-435)",
   "inputs": {
@@ -1063,7 +1077,7 @@
    {
     "row": "footprint_max_m2",
     "status": "computed",
-    "value": 69.53,
+    "value": 54.23,
     "tol": 0.005
    },
    {
@@ -1079,6 +1093,7 @@
  {
   "id": "REG-6/A0170",
   "layer": "Arithmetic",
+  "case": "A0170",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1110,6 +1125,7 @@
  {
   "id": "REG-6/A0175",
   "layer": "Arithmetic",
+  "case": "A0175",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1141,6 +1157,7 @@
  {
   "id": "REG-6/A0193",
   "layer": "Arithmetic",
+  "case": "A0193",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1172,6 +1189,7 @@
  {
   "id": "REG-6/A0354",
   "layer": "Arithmetic",
+  "case": "A0354",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1203,6 +1221,7 @@
  {
   "id": "REG-6/A0388",
   "layer": "Arithmetic",
+  "case": "A0388",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1234,6 +1253,7 @@
  {
   "id": "REG-6/A0399",
   "layer": "Arithmetic",
+  "case": "A0399",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1265,6 +1285,7 @@
  {
   "id": "REG-6/A0561",
   "layer": "Arithmetic",
+  "case": "A0561",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1296,6 +1317,7 @@
  {
   "id": "REG-6/A0578",
   "layer": "Arithmetic",
+  "case": "A0578",
   "pending_reload": true,
   "key_answer": "243.47, 153.252, 264.348, 147.2175, 127.044, 313.086, 199.33, 192.396 unchanged (counted)",
   "inputs": {
@@ -1327,7 +1349,8 @@
  {
   "id": "REG-7",
   "layer": "Arithmetic",
-  "pending_reload": true,
+  "case": "A0179",
+  "pending_reload": false,
   "key_answer": "237.4515 unchanged, after the Q-RSM reload. Before it: pitched arms not_evaluated (roof_slope_max no_candidate), headline flat at least 221.0715, flags headline:gfa_flat_m2, headline_lower_bound:gfa_pitched_a_m2, headline_lower_bound:gfa_pitched_b_m2 and the flat row's own headline_lower_bound: main_wall_shares_not_resolved (L3-F3 a; 221.0715 < ceiling 237.4515); G-I's free_share_union case is covered by that one generic flag, the cause staying in the free_share_union_not_taken disclosure (N4 a)",
   "inputs": {
    "l2": {
