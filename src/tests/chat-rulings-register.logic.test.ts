@@ -1696,3 +1696,84 @@ describe("CHAT-230 (batch 2026-11-06-batch-bc): 43 rulings recorded in 7 new row
   });
 
 });
+
+describe("CHAT-231 (batch 2026-11-06-batch-bd): 13 rulings recorded in 13 new rows (MB-85 ticket header, reply status, orchestrator split, open-work list, citation checks); text only", () => {
+  it("M-501 carries 2026-11-06-batch-bd#CHAT-231.TKT-1 and its Rule text", () => {
+    expect(M, "CHAT-231.TKT-1").toContain("2026-11-06-batch-bd#CHAT-231.TKT-1");
+    expect(M, "CHAT-231.TKT-1 rule text").toContain("Ticket header. The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N` (queue Process 11); `Rule:` the rule quoted with file:line; `Scope:` the files or targets; `Done-condition:`; `max_fix_rounds:` a number; when the header omits it the default is 2 (D6 B). Wider scope than the header is a new MB item, not a longer brief. every brief also opens its body, directly after the front-matter block, with the ticket header of §11.9 (TKT-1). The engine ignores any front-matter key it does not parse (`scripts/lib/exec-brief.js:20`), so the header sits in the body: no code change, and `write_scope` parsing is untouched. every brief and prompt, for every seat and lane agent (Claude and DeepSeek), opens with the ticket header, `Ticket: MB-nn · lane X · stage N`, the rule quoted with file:line, scope, done-condition and `max_fix_rounds`; every lane report and seat reply ends with one line `STATUS: ready\\|blocked\\|failed\\|dropped` and at most one question. A reply-level word: it never changes a queue status cell (Status words below stay as they are). Rule text: Spec 08 §11.9 (TKT-1..TKT-4).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-501** |")) as string;
+    expect(row, "M-501 row").toContain("2026-11-06-batch-bd#CHAT-231.TKT-1");
+  });
+  it("M-502 carries 2026-11-06-batch-bd#CHAT-231.TKT-2 and its Rule text", () => {
+    expect(M, "CHAT-231.TKT-2").toContain("2026-11-06-batch-bd#CHAT-231.TKT-2");
+    expect(M, "CHAT-231.TKT-2 rule text").toContain("Closed reply status. Every reply ends with one line `STATUS: ready\\|blocked\\|failed\\|dropped` and carries at most one question. ready: the done-condition is met and the evidence is in the reply. blocked: a ruling, card or input is missing; the question names it. failed: the work did not complete, or the reply is empty or truncated (TKT-4). dropped: the ticket is withdrawn or superseded; the reason is one line. This is a reply-level word. It never writes a queue status cell: the queue's own words (DONE, RUNNING, WAITS, OPERATOR, HELD, LATER; stage 10 is set by the checker) stay as they are. the TICKET and CLOSE lines of §10.1 apply to every seat in §10.2, Claude and DeepSeek alike (§11.9); a CLI or DeepSeek prompt carries the same two lines. every brief and prompt, for every seat and lane agent (Claude and DeepSeek), opens with the ticket header, `Ticket: MB-nn · lane X · stage N`, the rule quoted with file:line, scope, done-condition and `max_fix_rounds`; every lane report and seat reply ends with one line `STATUS: ready\\|blocked\\|failed\\|dropped` and at most one question. A reply-level word: it never changes a queue status cell (Status words below stay as they are). Rule text: Spec 08 §11.9 (TKT-1..TKT-4).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-502** |")) as string;
+    expect(row, "M-502 row").toContain("2026-11-06-batch-bd#CHAT-231.TKT-2");
+  });
+  it("M-503 carries 2026-11-06-batch-bd#CHAT-231.TKT-3 and its Rule text", () => {
+    expect(M, "CHAT-231.TKT-3").toContain("2026-11-06-batch-bd#CHAT-231.TKT-3");
+    expect(M, "CHAT-231.TKT-3 rule text").toContain("McProof answer-first. A McProof reply puts its answers first, in the answer table the code already requires (`scripts/analysis/mcproof/prompts.mjs:10`, one row per example id: a number with an optional unit, a closed status, or `cannot decide`); the working follows the table. Rows outside the table are not read. MCPROOF-3 and MCPROOF-13 gain the answer-first and empty-or-truncated rules of §11.9 (TKT-3, TKT-4). The text above stands.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-503** |")) as string;
+    expect(row, "M-503 row").toContain("2026-11-06-batch-bd#CHAT-231.TKT-3");
+  });
+  it("M-504 carries 2026-11-06-batch-bd#CHAT-231.TKT-4 and its Rule text", () => {
+    expect(M, "CHAT-231.TKT-4").toContain("2026-11-06-batch-bd#CHAT-231.TKT-4");
+    expect(M, "CHAT-231.TKT-4 rule text").toContain("Empty or truncated is failed. An empty or truncated reply is `failed`, never a verdict and never a pass. One concise rerun is allowed; a second empty or truncated reply parks the ticket with an operator card (MCPROOF-13). McProof stage runs keep the configured retry count (`scripts/analysis/mcproof/mcproof.config.json:69`, `max_retries_per_stage` = 2) until that value is moved by a ruling (OWED, infra, frozen): this rule changes no config and no code. Output-cap and stop-reason logging are infra and frozen. A truncated or empty reply that reads like a verdict (MB-85, 2026-11-06). A seat reply cut off by an output cap, or empty, can look like a pass because nothing in it objects. It is not a verdict: it is `failed` (§11.9 TKT-4). The cap and stop-reason logging live in the ask tool, which is not in this repo, and are infra, frozen, not part of this rule. MCPROOF-3 and MCPROOF-13 gain the answer-first and empty-or-truncated rules of §11.9 (TKT-3, TKT-4). The text above stands.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-504** |")) as string;
+    expect(row, "M-504 row").toContain("2026-11-06-batch-bd#CHAT-231.TKT-4");
+  });
+  it("M-505 carries 2026-11-06-batch-bd#CHAT-231.TKT-5 and its Rule text", () => {
+    expect(M, "CHAT-231.TKT-5").toContain("2026-11-06-batch-bd#CHAT-231.TKT-5");
+    expect(M, "CHAT-231.TKT-5 rule text").toContain("No agent teams; lane-to-lane facts go through the orchestrator. A fact one lane needs from another goes through the orchestrator as a note of at most 100 words that cites file:line and grants no authority. Claude Code agent teams are not enabled (a harness setting is infra, frozen until lifted by name). Source (verbatim, operator 2026-11-06): \"E1 a\" (\"E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry\"). lanes do not message each other and agent teams stay off; a lane-to-lane fact is an orchestrator-relayed note of at most 100 words that cites file:line and grants no authority (§11.9 TKT-5). Operator, verbatim: \"E1 a\".");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-505** |")) as string;
+    expect(row, "M-505 row").toContain("2026-11-06-batch-bd#CHAT-231.TKT-5");
+  });
+  it("M-506 carries 2026-11-06-batch-bd#CHAT-231.ORCH-1 and its Rule text", () => {
+    expect(M, "CHAT-231.ORCH-1").toContain("2026-11-06-batch-bd#CHAT-231.ORCH-1");
+    expect(M, "CHAT-231.ORCH-1 rule text").toContain("the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: \"E2a\".");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-506** |")) as string;
+    expect(row, "M-506 row").toContain("2026-11-06-batch-bd#CHAT-231.ORCH-1");
+  });
+  it("M-507 carries 2026-11-06-batch-bd#CHAT-231.BOARD-1 and its Rule text", () => {
+    expect(M, "CHAT-231.BOARD-1").toContain("2026-11-06-batch-bd#CHAT-231.BOARD-1");
+    expect(M, "CHAT-231.BOARD-1 rule text").toContain("One open-work list: this lane board. Each open row carries one waiting word (OPERATOR, WAITS or HELD), names its card, and carries an opened date and an expiry date 7 days later. At expiry it is resurfaced in the next decision list; it is never closed automatically. The status file is an index of MB-nn and MF-nn rows with the waiting word, card and date; it holds no state of its own, and \"row owed\" marks a row not yet in the queue until the next queue dated note. No tool and no code. One-time sweep (E5): a read-only lane lists the unanswered CARD files against their queue rows (answered elsewhere, open with a row, or open with no row); nothing is deleted. Operator, verbatim: \"E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry\" then \"E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?\".");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-507** |")) as string;
+    expect(row, "M-507 row").toContain("2026-11-06-batch-bd#CHAT-231.BOARD-1");
+  });
+  it("M-508 carries 2026-11-06-batch-bd#CHAT-231.EXP-1 and its Rule text", () => {
+    expect(M, "CHAT-231.EXP-1").toContain("2026-11-06-batch-bd#CHAT-231.EXP-1");
+    expect(M, "CHAT-231.EXP-1 rule text").toContain("One open-work list: this lane board. Each open row carries one waiting word (OPERATOR, WAITS or HELD), names its card, and carries an opened date and an expiry date 7 days later. At expiry it is resurfaced in the next decision list; it is never closed automatically. The status file is an index of MB-nn and MF-nn rows with the waiting word, card and date; it holds no state of its own, and \"row owed\" marks a row not yet in the queue until the next queue dated note. No tool and no code. One-time sweep (E5): a read-only lane lists the unanswered CARD files against their queue rows (answered elsewhere, open with a row, or open with no row); nothing is deleted. Operator, verbatim: \"E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry\" then \"E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?\".");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-508** |")) as string;
+    expect(row, "M-508 row").toContain("2026-11-06-batch-bd#CHAT-231.EXP-1");
+  });
+  it("M-509 carries 2026-11-06-batch-bd#CHAT-231.PUSH-1 and its Rule text", () => {
+    expect(M, "CHAT-231.PUSH-1").toContain("2026-11-06-batch-bd#CHAT-231.PUSH-1");
+    expect(M, "CHAT-231.PUSH-1 rule text").toContain("pushes are planned push windows, and lanes build on the verified local `wf1/mb-rulings` tip, so a lane is not held for a push. The operator still approves each push (F-34). Operator, verbatim: \"P3 Mb-86 D1-D7.\".");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-509** |")) as string;
+    expect(row, "M-509 row").toContain("2026-11-06-batch-bd#CHAT-231.PUSH-1");
+  });
+  it("M-510 carries 2026-11-06-batch-bd#CHAT-231.CITE-1 and its Rule text", () => {
+    expect(M, "CHAT-231.CITE-1").toContain("2026-11-06-batch-bd#CHAT-231.CITE-1");
+    expect(M, "CHAT-231.CITE-1 rule text").toContain("(C1) at stage 1, before the plan goes to a seat, run the draft commit message through `node scripts/analysis/mcbylaws/gate.mjs --commit-msg <file>`, so a not-ruled, owed or cite-not-in-rules result shows at stage 1, not at the hook. (C2) Cite by id and anchor, with the line number as a hint dated by sha (Spec 08 §7 rule 10 note). (C3) Every answered card ends with the four-line compliance block of the same note. Operator, verbatim: \"C1-C4\" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-510** |")) as string;
+    expect(row, "M-510 row").toContain("2026-11-06-batch-bd#CHAT-231.CITE-1");
+  });
+  it("M-511 carries 2026-11-06-batch-bd#CHAT-231.CITE-2 and its Rule text", () => {
+    expect(M, "CHAT-231.CITE-2").toContain("2026-11-06-batch-bd#CHAT-231.CITE-2");
+    expect(M, "CHAT-231.CITE-2 rule text").toContain("(C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`); the id governs and the verbatim-quote check of arm D is unchanged. This amends the cite form of M-381 by a dated note. (C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none. Operator, verbatim: \"C1-C4\" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-511** |")) as string;
+    expect(row, "M-511 row").toContain("2026-11-06-batch-bd#CHAT-231.CITE-2");
+  });
+  it("M-512 carries 2026-11-06-batch-bd#CHAT-231.CITE-3 and its Rule text", () => {
+    expect(M, "CHAT-231.CITE-3").toContain("2026-11-06-batch-bd#CHAT-231.CITE-3");
+    expect(M, "CHAT-231.CITE-3 rule text").toContain("(C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`); the id governs and the verbatim-quote check of arm D is unchanged. This amends the cite form of M-381 by a dated note. (C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none. Operator, verbatim: \"C1-C4\" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-512** |")) as string;
+    expect(row, "M-512 row").toContain("2026-11-06-batch-bd#CHAT-231.CITE-3");
+  });
+  it("M-513 carries 2026-11-06-batch-bd#CHAT-231.CITE-4 and its Rule text", () => {
+    expect(M, "CHAT-231.CITE-4").toContain("2026-11-06-batch-bd#CHAT-231.CITE-4");
+    expect(M, "CHAT-231.CITE-4 rule text").toContain("at stage 6, before the prereg is written, list every id the commit will cite and tick three things for each: RULED in the register, not OWED, present in `rules[]`. Operator, verbatim: \"C1-C4\" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-513** |")) as string;
+    expect(row, "M-513 row").toContain("2026-11-06-batch-bd#CHAT-231.CITE-4");
+  });
+});

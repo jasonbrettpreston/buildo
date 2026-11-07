@@ -1,0 +1,26 @@
+{
+  "task": "MB-85",
+  "item": "decision batch 2026-11-06-batch-bd (CHAT-231): the MB-85 ticket header, closed reply status, McProof answer-first, empty-or-truncated rule, lane-to-lane through the orchestrator, orchestrator split, one open-work list, 7-day expiry, planned push windows and four citation checks as thirteen Spec 69a rows with the full committed text (M-501..M-513), dated notes on M-381, M-438, M-447 and the DL-16 a note (operator Q1 a) on M-386; one named E1C-S re-pin (table_version fdc013c8503e to e881e07c2197, G-STOR re-bound); one named test change (decision-log 844 to 857)",
+  "class": "R",
+  "stage": 8,
+  "date": "2026-11-06",
+  "head": "ce34ea83b",
+  "commits_reviewed": [
+    "ce34ea83b",
+    "the staged batch commit (with the loop record round-55)"
+  ],
+  "cards": [
+    "~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md",
+    "~/Buildo-scratch/mcbylaws/MB-85/bd/DECISION-LIST.md",
+    "~/Buildo-scratch/mcbylaws/inc3/open-questions.md (E2c / x812; MB-85 batch bd decision list)"
+  ],
+  "plan": "drafts ~/Buildo-scratch/mcbylaws/MB-85/bd/ (build-bd.mjs, regen.sh, mk-prereg.mjs)",
+  "output": "Stage 8 OUTPUT panel, one independent read-only seat: ~/Buildo-scratch/mcbylaws/MB-85/bd/seat-report.md. VERDICT: PASS WITH FINDINGS; no blocker. Rule text, quotes, pins, count and conflict checks verified. Finding 1 (M-386 note says the wording is corrected while disclosure-families.json is fixed by lane E's E2c commit) is carried: the note is the operator-ruled text and is not reworded here. Findings 2 and 3 (fidelity gaps on M-502 and M-508) are carried to the orchestrator.",
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "lane E E2c commit fixes the M-435 starts_with in disclosure-families.json (the M-386 note)",
+    "M-502 lacks the section 10.1 TICKET/CLOSE lines and M-508 lacks the 17-card lane-board note: orchestrator to confirm"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/MB-85/bd/ (seat-report.md)"
+}
