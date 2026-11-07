@@ -409,12 +409,15 @@ describe('M-180 — Chapter 900 exceptions and houseplexes: the detached-house s
     }
     expect(unitOf('10.60.40.1(5)#whole').application.articles).toEqual(['10.60.40.10', '10.60.40.40']);
   });
+  // DL-6 a (2026-11-06, operator): RM is split out. On an unlabelled RM lot (no HT overlay; here only LC 35) the houseplex height is (B)(ii)'s 12.0 m, not the 10 m the RD/RS loop shares (M-201, RATIFIED 2026-10-18; Q12-S a).
+  // The exception 8.5 m still binds the detached house, and the more permissive zone rule is disclosed.
+  const HP_HEIGHT: Record<string, number> = { RD: 10, RS: 10, RM: 12 };
   for (const zone of ['RD', 'RS', 'RM']) {
-    it(`${zone}: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (10 m, 45 % with LC 35)`, () => {
+    it(`${zone}: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (${HP_HEIGHT[zone]} m, 45 % with LC 35)`, () => {
       const us = withExc(8.5);
       expect([ev(excLot(zone, 'detached_house'), 'height_m', us).value, ev(excLot(zone, 'detached_house'), 'lot_coverage_pct', us).value]).toEqual([8.5, 30]);
       const h = ev(excLot(zone, 'detached_houseplex'), 'height_m', us);
-      expect([h.value, h.disclosures.some((d: string) => /more permissive than the exception/.test(d))]).toEqual([10, true]);
+      expect([h.value, h.disclosures.some((d: string) => /more permissive than the exception/.test(d))]).toEqual([HP_HEIGHT[zone], true]);
       expect(ev(excLot(zone, 'detached_houseplex'), 'lot_coverage_pct', us).value).toBe(45);
     });
   }

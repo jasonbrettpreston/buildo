@@ -115308,6 +115308,22 @@
           "overlay_mapped"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.80.40.10(1)#(1)(C)/condition",
+      "kind": "correction",
+      "reason": "Q12-S (Q12 a, 2026-11-03; Q12-S a, 2026-11-04): (1)(C) gains the mapped(HT) condition that (A) has, matching the text \"despite (A)\", so an unlabelled RM houseplex lot answers 12.0 m at (B)(ii) per M-201 (M-75 keying correction)",
+      "rule": "Spec 69a M-201 (RATIFIED 2026-10-18); operator Q12 a, \"Q12 a\", and Q12-S a, \"Q12-S a\"",
+      "unit": "10.80.40.10(1)#(1)(C)",
+      "value": {
+        "if": "mapped(HT)",
+        "tokens": [
+          "overlay_mapped"
+        ]
+      }
     }
   ]
 }

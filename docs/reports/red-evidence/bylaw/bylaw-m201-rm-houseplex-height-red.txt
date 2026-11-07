@@ -1,0 +1,7 @@
+== MB-27 increment 3 item E1b (Q12, Q12-S a) red: src/tests/bylaw-m201-rm-houseplex-height.logic.test.ts run on the landing parent f347f63d2 (the prereg alone), the lock added alone: 10.80.40.10(1)#(1)(C) has no mapped(HT), so an unlabelled RM houseplex or semi-detached houseplex answers 10 at (C), not 12 at (B)(ii) (M-201). 3 of 5 fail; the two survive cases hold on both trees.
+   × Q12-S a: (C) gains mapped(HT) (data, M-75) > the generated (C) unit carries the mapped(HT) condition
+   × M-201 on the production path > unlabelled RM lot, detached_houseplex: (B)(ii) gives 12.0 m, not max(HT, 10)
+   × M-201 on the production path > unlabelled RM lot, semi_detached_houseplex: (B)(ii) gives 12.0 m, not max(HT, 10)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  3 failed | 2 passed (5)

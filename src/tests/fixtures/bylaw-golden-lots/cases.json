@@ -29812,10 +29812,10 @@
      },
      "target": "height_m",
      "expect": {
-      "value": 10,
+      "value": 12,
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "RM (x22, heritage): exception detached 9.5 m vs houseplex 10.0 m: 10.0 m, disclosed",
+     "rationale": "RM (x22, heritage): exception detached 9.5 m vs houseplex 12.0 m on an unlabelled RM lot, (B)(ii) per M-201: 12.0 m, disclosed",
      "initial": {
       "pass": true,
       "observed": {
@@ -29823,15 +29823,14 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 10,
+       "value": 12,
        "reason": null,
-       "winner": "10.80.40.10(1)#(1)(C)",
+       "winner": "10.80.40.10(1)#(1)(B)",
        "applied": [
-        "10.80.40.10(1)#(1)(B)",
-        "10.80.40.10(1)#(1)(C)"
+        "10.80.40.10(1)#(1)(B)"
        ],
        "disclosures": [
-        "On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
+        "On this exception lot the height_m is 12 from 10.80.40.10(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
        ],
        "alternate_paths": 30
       }
@@ -29846,7 +29845,7 @@
      },
      "target": "height_m",
      "expect": {
-      "value": 10,
+      "value": 12,
       "disclosure_match": "more permissive than the exception"
      },
      "rationale": "as above",
@@ -29857,15 +29856,14 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 10,
+       "value": 12,
        "reason": null,
-       "winner": "10.80.40.10(1)#(1)(C)",
+       "winner": "10.80.40.10(1)#(1)(B)",
        "applied": [
-        "10.80.40.10(1)#(1)(B)",
-        "10.80.40.10(1)#(1)(C)"
+        "10.80.40.10(1)#(1)(B)"
        ],
        "disclosures": [
-        "On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
+        "On this exception lot the height_m is 12 from 10.80.40.10(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
        ],
        "alternate_paths": 30
       }
@@ -29883,10 +29881,10 @@
      },
      "target": "height_m",
      "expect": {
-      "value": 10,
+      "value": 12,
       "disclosure_match": "more permissive than the exception"
      },
-     "rationale": "RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex HT 10.0 (no HT overlay: zone default)",
+     "rationale": "RM (x18), 4-unit houseplex: exception by_type detached 9.5 m vs houseplex 12.0 m, (B)(ii) per M-201 (no HT overlay: unlabelled)",
      "initial": {
       "pass": true,
       "observed": {
@@ -29894,15 +29892,14 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 10,
+       "value": 12,
        "reason": null,
-       "winner": "10.80.40.10(1)#(1)(C)",
+       "winner": "10.80.40.10(1)#(1)(B)",
        "applied": [
-        "10.80.40.10(1)#(1)(B)",
-        "10.80.40.10(1)#(1)(C)"
+        "10.80.40.10(1)#(1)(B)"
        ],
        "disclosures": [
-        "On this exception lot the height_m is 10 from 10.80.40.10(1)#(1)(C): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
+        "On this exception lot the height_m is 12 from 10.80.40.10(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (9.5)."
        ],
        "alternate_paths": 32
       }
