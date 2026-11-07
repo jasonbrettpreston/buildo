@@ -171,7 +171,10 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // 12 top-level (RS/RM/RT house lots, no_candidate → unregulated by absence), 76 gain building_type in inputs[]; nothing else moved.
     // re-pinned 2026-11-05 (M-482, Q-RSM, roof_slope_max absence ABS-10.1..10.5): all 140 roof_slope_max cells move, no_candidate →
     // unregulated by absence (the 35 RD/RS/RT/RM lots × 4 variants, zone-wide); nothing else moved.
-    expect(h.digest('hex')).toBe('6f87158700284aabf3ad7ff4eae65ea00b4c7e7a1d0799709e384d427d1057ec');
-    expect(hLeftOut.digest('hex')).toBe('cada5b36283eb70988f1a2f6f4d83b84a89d31f84d6178f0694a5b6155f936a9');
+    // re-pinned 2026-11-06 (DL-4 a, operator E1C a; M-190 / Q10 a, ABS-11.1..11.4): the RM detached_houseplex main_wall_front_rear_share_pct,
+    // main_wall_side_share_pct, upper_storey_setback_m and pitched_roof_slope_min cells move no_candidate → unregulated by absence; before 6f871587…, after 094c0572…
+    expect(h.digest('hex')).toBe('094c05726b7f24c7d1e239d41227c1ee2ea35fde10d97f3b3685351ffcd99906');
+    // E1C-S (standing approval; the same ruled data change, ABS-11.1..11.4): the left-out digest moves mechanically; before cada5b36…, after 2e8d816d…
+    expect(hLeftOut.digest('hex')).toBe('2e8d816db99d73a1ea26fe52e5f46f59c38692ec2f8b93f0a350385238f0f32e');
   }, 60_000);
 });

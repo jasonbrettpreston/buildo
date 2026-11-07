@@ -616,6 +616,116 @@
       "statement": "no roof-slope regulation in 569-2013 Ch.10.10 for a semi-detached house, detached houseplex or semi-detached houseplex in the R zone: 10.10.40.10(4) (5.0 in 3.0, above the second storey) and 10.10.40.11(1) (an altered roof of a lawfully existing building) name a detached house only; the other slope phrases are the flat-or-shallow-roof threshold (less than 1.0 in 10.0) of the main-wall height rules (Spec 68 rule 7a v2)",
       "target": "roof_slope_max",
       "zone": "R"
+    },
+    {
+      "absent_phrases": [
+        "main walls for a detached houseplex",
+        "main walls of a detached houseplex",
+        "main walls for a semi-detached houseplex",
+        "main walls of a semi-detached houseplex"
+      ],
+      "accounted_occurrences": [
+        "(2) Maximum Height of Specified Pairs of Main Walls In the RM zone, the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house is the higher of 7.0 metres above established grade or 2.5 metres less than the permitted maximum height in regulation 10.80.40.10(1), for either (A) or (B) below: (A) all side main walls, for at least 70 percent of the total width of each side main wall; or (B) all front main walls and all rear main walls, for at least: (i) 60 percent of the total width of all front main walls and all rear main walls if the building is on a lot with a lot frontage of 12.0 metres or more; (ii) 50 percent of the total width of all front main walls and all rear main walls if the building is on a lot with a lot frontage greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent of the total width of all front main walls and all rear main walls if the building is on a lot with a lot frontage of 7.5 metres or less; and [ By-law: 1062-2025(OLT); 608-2024 ] (C) despite (A) to (B) above, the permitted maximum height of main walls do not apply to townhouses or apartment buildings on a lot abutting a major street"
+      ],
+      "building_types": [
+        "detached_houseplex"
+      ],
+      "checked_page": "ch10_80",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-11.1",
+      "occurrence_patterns": [
+        "of the total width of all front main walls and all rear main walls"
+      ],
+      "present_phrases": [
+        "the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house"
+      ],
+      "ruling": "Spec 69a M-190 (dated note 2026-11-06, Q10 a: \"The RM houseplex is shown with no main-wall limit\"); M-361 Q1; M-240 (rule 7a v2); M-482 (the typed-ruling form); operator Q10a and DL-4 a (2026-11-06, \"approved provided they are complaint\")",
+      "statement": "no front-rear main-wall share in 569-2013 Ch.10.80 for an RM detached houseplex: RM 10.80.40.10(2) and (6) name \"a detached house or a semi-detached house\" only, so the 60 / 50 / 40 percent tiers of (2)(B) do not reach it (unregulated by absence, not no_candidate)",
+      "target": "main_wall_front_rear_share_pct",
+      "zone": "RM"
+    },
+    {
+      "absent_phrases": [
+        "main walls for a detached houseplex",
+        "main walls of a detached houseplex",
+        "main walls for a semi-detached houseplex",
+        "main walls of a semi-detached houseplex"
+      ],
+      "accounted_occurrences": [
+        "(2) Maximum Height of Specified Pairs of Main Walls In the RM zone, the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house is the higher of 7.0 metres above established grade or 2.5 metres less than the permitted maximum height in regulation 10.80.40.10(1), for either (A) or (B) below: (A) all side main walls, for at least 70 percent of the total width of each side main wall; or (B) all front main walls and all rear main walls, for at least: (i) 60 percent of the total width of all front main walls and all rear main walls if the building is on a lot with a lot frontage of 12.0 metres or more; (ii) 50 percent of the total width of all front main walls and all rear main walls if the building is on a lot with a lot frontage greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent of the total width of all front main walls and all rear main walls if the building is on a lot with a lot frontage of 7.5 metres or less; and [ By-law: 1062-2025(OLT); 608-2024 ] (C) despite (A) to (B) above, the permitted maximum height of main walls do not apply to townhouses or apartment buildings on a lot abutting a major street"
+      ],
+      "building_types": [
+        "detached_houseplex"
+      ],
+      "checked_page": "ch10_80",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-11.2",
+      "occurrence_patterns": [
+        "of the total width of each side main wall"
+      ],
+      "present_phrases": [
+        "the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house"
+      ],
+      "ruling": "Spec 69a M-190 (dated note 2026-11-06, Q10 a: \"The RM houseplex is shown with no main-wall limit\"); M-361 Q1; M-240 (rule 7a v2); M-482 (the typed-ruling form); operator Q10a and DL-4 a (2026-11-06, \"approved provided they are complaint\")",
+      "statement": "no side main-wall share in 569-2013 Ch.10.80 for an RM detached houseplex: RM 10.80.40.10(2) and (6) name \"a detached house or a semi-detached house\" only, so the 70 percent of (2)(A) does not reach it (unregulated by absence, not no_candidate)",
+      "target": "main_wall_side_share_pct",
+      "zone": "RM"
+    },
+    {
+      "absent_phrases": [
+        "main walls for a detached houseplex",
+        "main walls of a detached houseplex",
+        "main walls for a semi-detached houseplex",
+        "main walls of a semi-detached houseplex"
+      ],
+      "accounted_occurrences": [
+        "(6) Maximum Height of Main Walls for a Detached House or Semi-Detached House with a Flat or Shallow Roof Subject to regulation 10.80.40.10(1), if a detached house or semi-detached house in the RM zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area: (A) despite regulation 10.80.40.10(2) above, additional main walls are permitted to be located above the maximum height of all main walls permitted in regulation 10.80.40.10(2), provided all the additional front main walls and rear main walls located above the main walls permitted in regulation 10.80.40.10(2) are set back a minimum of 1.4 metres from the front main walls and rear main walls permitted in regulation 10.80.40.10(2)"
+      ],
+      "building_types": [
+        "detached_houseplex"
+      ],
+      "checked_page": "ch10_80",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-11.3",
+      "occurrence_patterns": [
+        "additional front main walls and rear main walls"
+      ],
+      "present_phrases": [
+        "the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house"
+      ],
+      "ruling": "Spec 69a M-190 (dated note 2026-11-06, Q10 a: \"The RM houseplex is shown with no main-wall limit\"); M-361 Q1; M-240 (rule 7a v2); M-482 (the typed-ruling form); operator Q10a and DL-4 a (2026-11-06, \"approved provided they are complaint\")",
+      "statement": "no set-back storey in 569-2013 Ch.10.80 for an RM detached houseplex: the only set-back of additional main walls is (6)(A), whose subject is a detached house or semi-detached house with a flat or shallow roof (unregulated by absence, not no_candidate)",
+      "target": "upper_storey_setback_m",
+      "zone": "RM"
+    },
+    {
+      "absent_phrases": [
+        "main walls for a detached houseplex",
+        "main walls of a detached houseplex",
+        "main walls for a semi-detached houseplex",
+        "main walls of a semi-detached houseplex"
+      ],
+      "accounted_occurrences": [],
+      "building_types": [
+        "detached_houseplex"
+      ],
+      "checked_page": "ch10_80",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-11.4",
+      "occurrence_patterns": [
+        "pitched roof slope threshold"
+      ],
+      "present_phrases": [
+        "the permitted maximum height of the exterior portion of main walls for a detached house or a semi-detached house"
+      ],
+      "ruling": "Spec 69a M-190 (dated note 2026-11-06, Q10 a: \"The RM houseplex is shown with no main-wall limit\"); M-361 Q1; M-240 (rule 7a v2); M-482 (the typed-ruling form); operator Q10a and DL-4 a (2026-11-06, \"approved provided they are complaint\")",
+      "statement": "no flat-or-shallow roof test for an RM detached houseplex in 569-2013 Ch.10.80: the one threshold (less than 1.0 in 10.0) is the subject of (6), a detached house or semi-detached house, so no clause generates a pitched-roof threshold for the houseplex (unregulated by absence, not no_candidate; T Q4 c)",
+      "target": "pitched_roof_slope_min",
+      "zone": "RM"
     }
   ]
 }

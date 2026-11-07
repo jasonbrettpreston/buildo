@@ -1,0 +1,11 @@
+== MB-27 increment 3 item E1c (DL-4 a, T Q4 c) red: src/tests/bylaw-mb27-inc3-rm-houseplex-absence.logic.test.ts run on the landing parent 8276803cd (the prereg alone), the lock added alone: no RM typed absence rulings for the detached houseplex, so the four targets answer not_evaluated:no_candidate. The ABS-10.5-form negative case and the detached-house survive cases hold on both trees.
+   × DL-4 a: the RM detached-houseplex absence rulings are data > one typed RM ruling per target, building_types [detached_houseplex], on page ch10_80
+   × DL-4 a: the RM detached-houseplex absence rulings are data > each passes on its pinned page (every occurrence accounted for)
+   × DL-4 a: the RM detached-houseplex absence rulings are data > negative case (the ABS-10.5 form, panel F11): a new RM clause that names the detached houseplex turns the rulings red
+   × DL-4 a on the production path > RM detached_houseplex main_wall_front_rear_share_pct: unregulated by absence, never no_candidate
+   × DL-4 a on the production path > RM detached_houseplex main_wall_side_share_pct: unregulated by absence, never no_candidate
+   × DL-4 a on the production path > RM detached_houseplex upper_storey_setback_m: unregulated by absence, never no_candidate
+   × DL-4 a on the production path > RM detached_houseplex pitched_roof_slope_min: unregulated by absence, never no_candidate
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  7 failed | 1 passed (8)

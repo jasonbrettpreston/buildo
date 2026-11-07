@@ -207,7 +207,7 @@ describe('R10: the pitched step-back (M-465 (3), a dated note on M-183)', () => 
   it('a unit out for another reason keeps today\'s rules: RT has no step-back unit (no_candidate), an RM houseplex is outside 10.80.40.10(6)\'s subject', () => {
     expect(eff('RT', { [RF.token]: false }, T.us)).toMatchObject({ status: 'not_evaluated', reason: 'no_candidate' });
     const lot = { ...lotFor('RM', { [RF.token]: false }), building_type: 'detached_houseplex' };
-    expect(E.effective(lot, T.us, E.loadCandidates(lot, INPUT.body.units).candidates, env.ctx)).toMatchObject({ status: 'not_evaluated', reason: 'no_candidate' });
+    expect(E.effective(lot, T.us, E.loadCandidates(lot, INPUT.body.units).candidates, env.ctx)).toMatchObject({ status: 'value', value: 'unregulated', evidence: { kind: 'absence' } }); // DL-4 a (operator E1C a, 2026-11-06): was not_evaluated:no_candidate
   });
   it('the "only because" re-check keeps its reads in the result\'s inputs (hardened inputs[]; the cell cache keys on them): OUTPUT panel S1-01', () => {
     const u = (INPUT.body.units as Json[]).find((x) => x.unit_id === '10.20.40.10(4)#(4)(B)') as Json;
