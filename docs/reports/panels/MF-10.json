@@ -4,13 +4,14 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-06",
-  "head": "dadef2b13abf70b7d720b3ced8b5a78f4c4fb38c",
+  "head": "adb8b332e15639ca08c1e9962f5707e235f0f624",
   "commits_reviewed": [
-    "409eb636a (D-5 b dated notes, FE-27)",
-    "16f95a6fc (prereg-MF-10-1, alone; superseded, kept unedited)",
-    "40f1d8cca (prereg-MF-10-2, alone, directly under the code)",
-    "dadef2b13 (MF-10 code commit)",
-    "1db3dd21f (protected-paths.json, MB-67 owner sign-off)"
+    "324ad2b75 (D-5 b dated notes, FE-27; was 409eb636a)",
+    "76ae474b1 (prereg-MF-10-1, alone; superseded, kept unedited; was 16f95a6fc)",
+    "e3e67c395 (prereg-MF-10-2, alone, directly under the code; was 40f1d8cca)",
+    "adb8b332e (MF-10 code commit; was dadef2b13)",
+    "070cf2305 (protected-paths.json, MB-67 owner sign-off; was 1db3dd21f)",
+    "2fa233a9c (OUTPUT panel F1/F2 touch-up; was 9030f1306)"
   ],
   "cards": [
     "Operator answer MF-10 D-1..D-7 (2026-11-06): \"Mf-10 all recommended provided they are complaint\"",
@@ -37,6 +38,7 @@
   ],
   "evidence": "~/Buildo-scratch/mcfrontend/MF-10/; docs/reports/red-evidence/MF-10/",
   "notes": [
-    "2026-11-06 touch-up (OUTPUT panel F1): head, commits_reviewed and verdict replaced; prior values kept here: {\"head\":\"(the MF-10 code commit; its sha is in the lane report)\",\"commits_reviewed\":[\"409eb636a (D-5 b dated notes, FE-27)\",\"16f95a6fc (prereg-MF-10-1, alone)\",\"MF-10 code commit (this commit)\"],\"verdict\":\"PASS-WITH-FOLDS (plan panel); output panel PENDING (orchestrator)\"}"
+    "2026-11-06 touch-up (OUTPUT panel F1): head, commits_reviewed and verdict replaced; prior values kept here: {\"head\":\"(the MF-10 code commit; its sha is in the lane report)\",\"commits_reviewed\":[\"409eb636a (D-5 b dated notes, FE-27)\",\"16f95a6fc (prereg-MF-10-1, alone)\",\"MF-10 code commit (this commit)\"],\"verdict\":\"PASS-WITH-FOLDS (plan panel); output panel PENDING (orchestrator)\"}",
+    "2026-11-06 re-cut onto mb-rul 74a48181b (P3: build on the verified local tip), each commit re-made through the real hooks with its message unchanged; content identical. head and commits_reviewed renamed to the re-cut shas; prior values kept here: {\"head\":\"dadef2b13abf70b7d720b3ced8b5a78f4c4fb38c\",\"commits_reviewed\":[\"409eb636a (D-5 b dated notes, FE-27)\",\"16f95a6fc (prereg-MF-10-1, alone; superseded, kept unedited)\",\"40f1d8cca (prereg-MF-10-2, alone, directly under the code)\",\"dadef2b13 (MF-10 code commit)\",\"1db3dd21f (protected-paths.json, MB-67 owner sign-off)\"]}"
   ]
 }
