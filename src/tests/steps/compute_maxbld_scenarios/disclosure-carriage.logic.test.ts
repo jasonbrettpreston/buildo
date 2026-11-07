@@ -26,6 +26,7 @@ const W = {
   ext: 'rd_extension_not_modelled',
   shift: 'side_yard_shift_permitted',
   rear: 'rear_extension_not_modelled',
+  blank: 'blank_wall_side_yard_permitted',
 };
 // The carried words on footprint and gfa of each lot, as Phase 2 emits them (OQ-2; LQ-2 b: the side-yard shift sentence on
 // A0067, A0097, A0182, A0203, A0205, A0229 and A0277 is carried as emitted, the named accepted finding). Every other lot: none.
@@ -36,6 +37,8 @@ const ON_FOOTPRINT_AND_GFA: Record<string, string[]> = {
   A0170: [W.ext, W.shift], A0193: [W.ext, W.shift], A0553: [W.ext, W.shift],
   A0578: [W.shift],
   A0166: [W.ext, W.rear],
+  // M-435 emit (E2c; operator Q2 yes, 2026-11-06): the 0.45 m blank-wall sentence reaches the five R-zone lots
+  A0175: [W.blank], A0375: [W.blank], A0464: [W.blank], A0388: [W.blank], A0561: [W.blank],
 };
 const CARRIED = new Set(FAMILIES.families.map((f: Json) => f.carry).filter((w: unknown) => typeof w === 'string'));
 
@@ -161,7 +164,7 @@ describe('DC-2: the lock on the 25 golden cases (increment 2 is not green until 
       }
     }
   });
-  it('footprint and the headline gfa carry exactly the named-family words of the map (24 cells on 12 lots); M-35 never', () => {
+  it('footprint and the headline gfa carry exactly the named-family words of the map (34 cells on 17 lots); M-35 never', () => {
     let cells = 0;
     for (const name of LOTS.keys()) {
       const rows = rowsOfLot(name);
@@ -172,7 +175,7 @@ describe('DC-2: the lock on the 25 golden cases (increment 2 is not green until 
         if (carried.length) cells += 1;
       }
     }
-    expect(cells).toBe(24);
+    expect(cells).toBe(34); // was 24: the five R-zone lots gain the M-435 blank-wall word (E2c, operator Q2)
   });
   it('LQ-2 b retired by the LQ1 fix (B-2): the side-yard shift word is carried on none of the 14 footprint and gfa cells of the seven exception lots, and still on the four other lots', () => {
     const EXCEPTION_LOTS = ['A0067', 'A0097', 'A0182', 'A0203', 'A0205', 'A0229', 'A0277'];

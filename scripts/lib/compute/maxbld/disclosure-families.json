@@ -9,7 +9,7 @@
   { "id": "10.20.40.20(2)", "starts_with": ["On RD lots in the frontage band, the optional one-storey extension", "On RD lots needing more than "], "carry": "rd_extension_not_modelled" },
   { "id": "10.20.40.70(4)", "starts_with": ["One side yard may be up to "], "carry": "side_yard_shift_permitted" },
   { "id": "rear_extension", "starts_with": ["In this area the one-storey rear extension counts"], "carry": "rear_extension_not_modelled" },
-  { "id": "M-435", "starts_with": ["the 0.45 m blank-wall reduction"], "carry": "blank_wall_side_yard_permitted" },
+  { "id": "M-435", "starts_with": ["If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m"], "carry": "blank_wall_side_yard_permitted" },
   { "id": "M-497", "starts_with": ["a portion with a parking space may be "], "carry": "parking_space_portion_rule_not_modelled" },
   { "id": "M-397", "starts_with": ["would need an FSI variance"], "carry": "fsi_variance_needed" },
   { "id": "M-190", "starts_with": ["reading awaiting expert check"], "carry": "rm_reading_awaiting_expert_check" },

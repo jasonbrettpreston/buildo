@@ -370,6 +370,13 @@ export function checkPermissionScope(units, vocab) {
  * {name:{unit}}, zone, user_input, and the DERIVED building_type_residential (M-50 list), building_type_parent and
  * lot_condition_threshold. PURE.
  */
+/** M-435 / M435-EMIT 1a: {no_disclosure, tokens: {token: {excludes}}} from the design_choice_disclosure default_overrides flagged disclose_dropped_arm (data, never code). PURE. */
+function droppedArmOf(dc) {
+  const o = (dc && dc.default_overrides) || {};
+  const tokens = {};
+  for (const [k, v] of Object.entries(o)) if (v && v.disclose_dropped_arm === true) tokens[k] = { excludes: Array.isArray(v.disclose_dropped_arm_excludes) ? v.disclose_dropped_arm_excludes : [] };
+  return { no_disclosure: (dc && dc.disclose_dropped_arm_no_disclosure) || null, tokens };
+}
 export function evaluatorVocab(vocab) {
   const types = vocab.building_type || {};
   const names = Object.keys(types).sort(cmpStr);
@@ -381,6 +388,7 @@ export function evaluatorVocab(vocab) {
     exception_type_binding: vocab.exception_type_binding, // M-252 dated note 2026-10-29 (MB17-Q1): an exception applies only to the building types it names
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
+    disclose_dropped_arm: droppedArmOf(vocab.design_choice_disclosure), // M-435 emit (operator M435-EMIT 1a): the default-override tokens whose dropped arm discloses itself
     portion_scope: vocab.portion_scope, // Q-287E2 a: the portion scope (set aside for the whole-building target, disclosed)
     exception_type_list_closure: vocab.exception_type_list_closure, // CHAT-194.USO-Q1 (Q1e): the exception "only" type lists permitted() reads
     existing_assumption: vocab.existing_assumption, // MB-18 (i), M-406

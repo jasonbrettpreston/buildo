@@ -1,0 +1,29 @@
+== MB-27 increment 3 item E2c (the Phase 2 blank-wall emit, M435-EMIT 1a) red: src/tests/bylaw-m435-blank-wall-emit.logic.test.ts run on the landing parent 9f1325fae (the prereg alone), the lock added alone: the 10.10.40.70(4) units carry the 0.45 m sentence as their own disclosure but drop condition_false and no code emits it, so the five R lots x five classes show 0.9 m at (3)(A) without the sentence. 25 of 27 fail; the sentence-text case and the rear-setback case hold on both trees.
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0175 (173273) detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0175 (173273) detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0175 (173273) semi_detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0175 (173273) semi_detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0175 (173273) house_with_secondary_suite: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0375 (410720) detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0375 (410720) detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0375 (410720) semi_detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0375 (410720) semi_detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0375 (410720) house_with_secondary_suite: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0464 (427312) detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0464 (427312) detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0464 (427312) semi_detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0464 (427312) semi_detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0464 (427312) house_with_secondary_suite: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0388 (442123) detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0388 (442123) detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0388 (442123) semi_detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0388 (442123) semi_detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0388 (442123) house_with_secondary_suite: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0561 (461807) detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0561 (461807) detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0561 (461807) semi_detached_houseplex: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0561 (461807) semi_detached_house: value 0.9 m from (3)(A) and the sentence is carried
+   × M-435: the 0.45 m blank-wall sentence is emitted by Phase 2 > A0561 (461807) house_with_secondary_suite: value 0.9 m from (3)(A) and the sentence is carried
+⎯⎯⎯⎯⎯⎯ Failed Tests 25 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  25 failed | 2 passed (27)

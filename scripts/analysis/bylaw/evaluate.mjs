@@ -110,6 +110,7 @@ export function makeContext(vocab, extra = {}) {
     // CHAT-152 C (M-168): dsl_input -> {target, rule}; inside permitted() the input resolves the target (always an object)
     permissionInputBasis: vocabMap(vocab.permission_input_basis),
     // CHAT-194.USO-Q1 (Q1e): exception id -> {clause, types}; the closure is read in permitted() only
+    discloseDroppedArm: vocab.disclose_dropped_arm || { no_disclosure: null, tokens: {} }, // M-435 emit (M435-EMIT 1a): data-switched
     portionScope: vocab.portion_scope || null, // Q-287E2 a (M-497): {part, why, fallback_disclosure, no_disclosure}
     typeListClosure: vocabMap(vocab.exception_type_list_closure), // includes $disclosure, the closed sentence
     units: unitTable(vocab),
@@ -1076,6 +1077,7 @@ function effCore(lot, target, candidates, C, env) {
     if (a.ok === true) A.add(u);
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
     else if (a.disclosure && !disclosures.includes(a.disclosure)) disclosures.push(a.disclosure); // M-224 literal reading
+    else if (a.ok === false && droppedArmDisclosure(lot, u, C) && !disclosures.includes(u.disclosure)) disclosures.push(u.disclosure); // M-435 / M435-EMIT 1a: a design-default arm not taken discloses itself
     if (a.ok === false && valueSet.has(u)) condLosers.push({ unit_id: u.unit_id, dropped_by: 'condition_false', by: null });
     if (a.ok === false && knownFalse.includes(a.known_false_condition)) condFalse.add(u); // Q-KG3
     // M-465 (3) "only because": the same unit applies on the lot with that token held; every other input it reads is this lot's own value, so
@@ -1160,6 +1162,18 @@ function commonLosers(lists) {
   const key = (l) => `${l.unit_id}\u0000${l.dropped_by}\u0000${l.by}\u0000${l.arg ?? ''}`;
   return ls[0].filter((l) => ls.every((o) => o.some((m) => key(m) === key(l))));
 }
+/**
+ * M-435 (operator M435-EMIT 1a, 2026-11-06; M-224 precedent): a unit dropped `condition_false` contributes its own disclosure when every lot flag it
+ * reads that is false is a default-override token flagged disclose_dropped_arm in the vocabulary, and the unit is not excluded by data.
+ * No zone, unit or value is named here. PURE.
+ */
+function droppedArmDisclosure(lot, u, C) {
+  const D = C.discloseDroppedArm;
+  if (!u.disclosure || !u.disclosure.length || u.disclosure === D.no_disclosure) return false;
+  const falseTokens = tokensOf(u.condition).filter((t) => lot.flags && lot.flags[t] === false);
+  return falseTokens.length > 0 && falseTokens.every((t) => D.tokens[t] && !D.tokens[t].excludes.includes(u.unit_id));
+}
+
 function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [], condFalse = null, optOut = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const losers = [...condLosers]; // L2-LOSERS: structured beside the trace; DROPPED_BY names the reasons
