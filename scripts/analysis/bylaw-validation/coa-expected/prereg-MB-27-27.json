@@ -1,0 +1,200 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 27 (Spec 124a R-MA; round 87), the revert round of increment 1 that lands increment-3 item E1c, DL-4 a (T Q4 c): four typed absence rulings ABS-11.1..11.4 (zone RM, building_types [detached_houseplex], page ch10_80; targets main_wall_front_rear_share_pct, main_wall_side_share_pct, upper_storey_setback_m, pitched_roof_slope_min) make the RM detached-houseplex cells unregulated by absence, never not_evaluated:no_candidate (M-190 / Q10 a: the RM houseplex is shown with no main-wall limit; 10.80.40.10(2) and (6) name a detached house or a semi-detached house). Reach 155,691 base cells (3 x 51,897 RM lots; ~/Buildo-scratch/mcbylaws/inc3/build/sql/nocand.out); pitched_roof_slope_min has no base cell (the D5 threshold slot, so it moves with E3). The semi-detached houseplex has the same gap and is not in this item (its own increment, RR-01). Named test changes (operator E1C a, DL-4 a): bylaw-eval-perf.logic.test.ts:174 digest 6f871587 -> 094c0572; bylaw-permission-disclosure.logic.test.ts:133 G5_PIN bdcce3c4 -> f07a6998; bylaw-mb27l2-roof.logic.test.ts:210 (R10) now expects the DL-4 ruled value. E1C-S (standing approval, a pin that moves only as the mechanical result of this ruled data change): bylaw-eval-perf.logic.test.ts:175 left-out digest cada5b36 -> 2e8d816d, before and after shown. Oracle lines listed line for line in expected_value_changes. Zero scorer moves. One table_version move, evaluator_version unchanged. Red lock first: src/tests/bylaw-mb27-inc3-rm-houseplex-absence.logic.test.ts.",
+ "schema": "coa-round-prereg-v1",
+ "round": 87,
+ "task": "MB-27",
+ "rules": [
+  "M-190",
+  "M-240",
+  "M-361",
+  "M-499",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/build-plan.md section 2; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version e5236ac9264e -> 33bff42ce369 (body_sha256 moves with the four absence rulings; evaluator_version cc56a43de6c2 unchanged)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version e5236ac9264e -> 33bff42ce369",
+  "expected-172.json and expected-4d.json commit and inputs.table_version e5236ac9264e -> 33bff42ce369 through coa-scorecard.mjs --pin, totals equal",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version e5236ac9264e -> 33bff42ce369, the G-STOR re-bind (RP-SW2 a)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "line": 174,
+   "row": "h.digest (35 lots x 4 variants x every target + permitted())",
+   "from": "6f87158700284aabf3ad7ff4eae65ea00b4c7e7a1d0799709e384d427d1057ec",
+   "to": "094c05726b7f24c7d1e239d41227c1ee2ea35fde10d97f3b3685351ffcd99906",
+   "rule": "DL-4 a (M-190 / Q10 a)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer E1C / E1C-S (2026-11-06)\": \"E1ca, E1C-S yes\" (E1C a, item 1)"
+  },
+  {
+   "file": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "line": 133,
+   "row": "G5_PIN",
+   "from": "bdcce3c4bb3073b4e5a765dce3d63758392b21a744cfa80014398690d80f23c1",
+   "to": "f07a69989147619a83ed12d606571d31f8c121c1594759eb26f16b4feca3a106",
+   "rule": "DL-4 a (M-190 / Q10 a)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer E1C / E1C-S (2026-11-06)\": \"E1ca, E1C-S yes\" (E1C a, item 2)"
+  },
+  {
+   "file": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "line": 210,
+   "row": "R10: an RM houseplex is outside 10.80.40.10(6)'s subject",
+   "from": "not_evaluated:no_candidate",
+   "to": "value unregulated, evidence absence (ABS-11.3)",
+   "rule": "DL-4 a (M-190 / Q10 a)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer E1C / E1C-S (2026-11-06)\": \"E1ca, E1C-S yes\" (E1C a, item 3)"
+  },
+  {
+   "file": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "line": 175,
+   "row": "hLeftOut.digest",
+   "from": "cada5b36283eb70988f1a2f6f4d83b84a89d31f84d6178f0694a5b6155f936a9",
+   "to": "2e8d816db99d73a1ea26fe52e5f46f59c38692ec2f8b93f0a350385238f0f32e",
+   "rule": "E1C-S: the mechanical result of the ruled DL-4 a data change",
+   "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md, \"Operator answer E1C / E1C-S (2026-11-06)\": \"E1ca, E1C-S yes\" (E1C-S)"
+  }
+ ],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": "    expect(h.digest('hex')).toBe('6f87158700284aabf3ad7ff4eae65ea00b4c7e7a1d0799709e384d427d1057ec');",
+   "new": "    // re-pinned 2026-11-06 (DL-4 a, operator E1C a; M-190 / Q10 a, ABS-11.1..11.4): the RM detached_houseplex main_wall_front_rear_share_pct,"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": "    expect(hLeftOut.digest('hex')).toBe('cada5b36283eb70988f1a2f6f4d83b84a89d31f84d6178f0694a5b6155f936a9');",
+   "new": "    // main_wall_side_share_pct, upper_storey_setback_m and pitched_roof_slope_min cells move no_candidate → unregulated by absence; before 6f871587…, after 094c0572…"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": null,
+   "new": "    expect(h.digest('hex')).toBe('094c05726b7f24c7d1e239d41227c1ee2ea35fde10d97f3b3685351ffcd99906');"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": null,
+   "new": "    // E1C-S (standing approval; the same ruled data change, ABS-11.1..11.4): the left-out digest moves mechanically; before cada5b36…, after 2e8d816d…"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": null,
+   "new": "    expect(hLeftOut.digest('hex')).toBe('2e8d816db99d73a1ea26fe52e5f46f59c38692ec2f8b93f0a350385238f0f32e');"
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": "  const G5_PIN = 'bdcce3c4bb3073b4e5a765dce3d63758392b21a744cfa80014398690d80f23c1';",
+   "new": "  // re-pinned 2026-11-06 (DL-4 a, operator E1C a; ABS-11.1..11.4): the corpus moved the RM houseplex cells, as bylaw-eval-perf; before bdcce3c4…, after f07a6998…."
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": null,
+   "new": "  const G5_PIN = 'f07a69989147619a83ed12d606571d31f8c121c1594759eb26f16b4feca3a106';"
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "A0399 RM houseplex cells (DL-4 a absence rulings ABS-11.1..11.4)",
+   "ruling": "M-499",
+   "ruling_ref": "CHAT-230.DL-4",
+   "old": "    expect(E.effective(lot, T.us, E.loadCandidates(lot, INPUT.body.units).candidates, env.ctx)).toMatchObject({ status: 'not_evaluated', reason: 'no_candidate' });",
+   "new": "    expect(E.effective(lot, T.us, E.loadCandidates(lot, INPUT.body.units).candidates, env.ctx)).toMatchObject({ status: 'value', value: 'unregulated', evidence: { kind: 'absence' } }); // DL-4 a (operator E1C a, 2026-11-06): was not_evaluated:no_candidate"
+  }
+ ]
+}
