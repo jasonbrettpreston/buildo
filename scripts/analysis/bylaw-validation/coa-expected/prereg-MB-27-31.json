@@ -1,0 +1,252 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 31 (Spec 124a R-MA; round 92), the revert round of increment 1 that lands increment-3 item E2c, the M-435 Phase 2 emit (operator M435-EMIT \"1a\", \"a approved as ong as its complaint\"): in evaluate.mjs a unit dropped condition_false contributes its own disclosure when every false lot flag it reads is a default_overrides token flagged disclose_dropped_arm (data: only blank_side_wall; the apartment-building unit 10.10.40.70(4)#(4)(G) is excluded by data until its own increment), reusing the M-224 literal-reading path. The 0.45 m sentence of 10.10.40.70(4)(A)-(E) is then carried on side_setback_m beside the stored 0.9 m (10.10.40.70(3)(A)). Q1 (a): the M-435 starts_with in scripts/lib/compute/maxbld/disclosure-families.json becomes \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m\" (the recorded wording did not match the stored sentence; the DL-16 a note landed in batch bd). Census reach (DL-8 a, measured on the 25): 25 Phase 2 cells (5 R-zone lots x 5 classes) and 10 Layer 3 cells (A0175, A0375, A0464, A0388, A0561 on footprint_max_m2 and gfa_max_m2); no other family moves. Named test change (operator Q2 yes): disclosure-carriage.logic.test.ts ON_FOOTPRINT_AND_GFA gains [W.blank] on A0175, A0375, A0464, A0388 and A0561 (the W table gains blank: blank_wall_side_yard_permitted) and cells goes 24 to 34 (24 cells on 12 lots to 34 cells on 17 lots); only those 10 cells move. The golden-lots cases.json lines that change are listed line for line in expected_value_changes (R-MC, oracle-first door). Zero scorer moves. One table_version move and one evaluator_version move. Red lock first: src/tests/bylaw-m435-blank-wall-emit.logic.test.ts.",
+ "schema": "coa-round-prereg-v1",
+ "round": 92,
+ "task": "MB-27",
+ "rules": [
+  "M-435",
+  "M-172",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/build-plan.md section 2; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version e881e07c2197 -> e1fdd437bde4 and evaluator_version bfdeb2e43915 -> 0075647ff2b0 (body_sha256 unchanged: the units do not move)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version e881e07c2197 -> e1fdd437bde4",
+  "docs/reference/maxbld-report-field-inventory.{md,json}: the version hash fields only (report-fields.mjs --write)",
+  "expected-172.json and expected-4d.json commit and inputs.table_version e881e07c2197 -> e1fdd437bde4 (evaluator_version where the pin carries it) through coa-scorecard.mjs --pin, totals equal",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version e881e07c2197 -> e1fdd437bde4 and evaluator_version bfdeb2e43915 -> 0075647ff2b0, the G-STOR re-bind (RP-SW2 a)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/disclosure-carriage.logic.test.ts",
+   "line": "24-30, 32-40, 164-176",
+   "row": "DC-2: footprint and the headline gfa carry exactly the named-family words of the map (24 cells on 12 lots)",
+   "from": "ON_FOOTPRINT_AND_GFA without the five R-zone lots; cells 24",
+   "to": "[W.blank] on A0175, A0375, A0464, A0388 and A0561 (W.blank = blank_wall_side_yard_permitted); cells 34 (34 cells on 17 lots)",
+   "rule": "M-435 emit (M435-EMIT 1a); DL-16 a",
+   "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md, the answers recorded on 2026-11-06: \"approved conditional upon compliance with governing handbook or spec Q1–Q3…\" (Q2 yes) and M435-EMIT \"1a\" (Q2)"
+  }
+ ],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [],",
+   "new": "       \"disclosures\": ["
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "       ],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [],",
+   "new": "       \"disclosures\": ["
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "       ],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [],",
+   "new": "       \"disclosures\": ["
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "       ],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [],",
+   "new": "       \"disclosures\": ["
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "       ],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [],",
+   "new": "       \"disclosures\": ["
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "       ],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [],",
+   "new": "       \"disclosures\": ["
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "A0399 R-zone side yard: the 0.45 m blank-wall sentence is emitted beside the 0.9 m answer (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": null,
+   "new": "       ],"
+  }
+ ]
+}
