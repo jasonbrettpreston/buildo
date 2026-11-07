@@ -6,7 +6,7 @@
   "bound": ["min", "max", "exact"],
   "value_form": ["literal", "band", "formula", "by_building_type", "if", "map_lookup", "existing_as_of", "none"],
   "layer": ["base", "overlay", "exception", "provincial"],
-  "applies_to_part": ["whole", "named_addresses", "lot_list", "map_area"],
+  "applies_to_part": ["whole", "named_addresses", "lot_list", "map_area", "portion"],
   "relevance": ["envelope", "existing_building", "permission", "precedence", "definition", "informational", "governance", "risk_reference"],
   "row_status": ["complete", "pending", "pending:stale", "failed"],
   "field_status": ["verified", "unverified", "failed"],
@@ -1329,6 +1329,14 @@
     "building_history_permission",
     "building_history_permission_undated"
   ],
+  "portion_scope": {
+    "$comment": "MB-27 increment 3 (Q-287E2 a, operator 2026-11-04; Spec 69a M-497): a unit whose applies_to.part is `part` governs one portion of a building (the portion with a parking space), not the whole building. applies() sets it aside for the whole-building target and attaches its own disclosure, or `fallback_disclosure` ({unit} filled) when the unit carries none (`no_disclosure`).",
+    "fallback_disclosure": "A portion of the building has its own rule under {unit}; not modelled.",
+    "no_disclosure": "none",
+    "part": "portion",
+    "placeholder": "{unit}",
+    "why": "portion of the building, not the whole building (Q-287E2 a)"
+  },
   "permission_scope": {
     "$comment": "Spec 69a M-56 (2026-10-25 dated note) / 2026-10-25-batch-g#CHAT-152.L2-USE-SCOPE (A): the use permission (evaluate.mjs permitted()) reads only PERMIT / PROHIBIT units whose subject is the permission of a building type for a use; an element-scope unit (a wall, a rooftop structure, parking, a lot fact) is not a use subject and attaches to its own target as feed metadata only. One entry per agreed PERMIT / PROHIBIT unit (checkPermissionScope, totality both ways); scope use <=> aspect use_permission, except an element entry whose attaches_to names a dsl_target, which takes that target's aspect. The 20 review units are element (2026-10-26-batch-m#CHAT-181.L2-REVIEW-UNITS-ELEMENT). Reviewed list: PLAN-scope (v2 §3, v3 §3). The five zone use lists 10.x.20.10(1)#whole (2026-10-26-batch-n#CHAT-182) and the CR \"r\" list 40.10.20.10(1)#(1)(B) (2026-10-26-batch-o#CHAT-184) are PROCEDURAL / informational and carry no entry.",
     "10.10.20.20(1)#whole": {

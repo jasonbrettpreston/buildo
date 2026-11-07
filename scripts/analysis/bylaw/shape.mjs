@@ -35,7 +35,7 @@
 //   value_form_not_allowed     the generated value_form is outside the archetype's allowed forms (§7.3)
 //   statement_target_mismatch  a LIMIT / DEFINE statement's target ≠ the unit's `target` (a mixed-measure LIMIT may list several targets, each with its own statement — Spec 69 M-76 A10; a DEFINE only over declared threshold definitions — 69a M-239)
 //   modelled_without_inputs    calculation_handling `modelled` with an overlay / existing(…) we do not hold, or
-//                              applies_to.part ∈ {map_area, named_addresses, lot_list} (§7.3 cross-cutting)
+//                              applies_to.part ∈ {map_area, named_addresses, lot_list, portion (vocab.portion_scope.part)} (§7.3 cross-cutting)
 //   feeds_unresolved           a LIMIT / PERMIT / PROHIBIT unit resolves to no (structure, aspect) pair (M-52)
 
 import { DslError, parseCond, parseExpression, valueForm } from './dsl.mjs';
@@ -254,7 +254,7 @@ function shapeProblems(u, index, vocab, external) {
     const notHeld = [...new Set(overlays)].filter((c) => !(vocab.overlay_code && vocab.overlay_code[c] && vocab.overlay_code[c].held === true)).sort();
     if (notHeld.length) p.push(['modelled_without_inputs', `overlay ${notHeld.join(', ')} geometry is not declared held`]);
     if (nodes.some((n) => n.type === 'existing')) p.push(['modelled_without_inputs', 'existing(…) needs as-built input']);
-    if (NOT_HELD_PARTS.includes(u.applies_to && u.applies_to.part)) p.push(['modelled_without_inputs', `applies_to.part ${u.applies_to.part}`]);
+    if (NOT_HELD_PARTS.includes(u.applies_to && u.applies_to.part) || (vocab.portion_scope && u.applies_to && u.applies_to.part === vocab.portion_scope.part)) p.push(['modelled_without_inputs', `applies_to.part ${u.applies_to.part}`]);
   }
   // Spec 69a M-82 (Q7): `limit_not_modelled` names a real limit the unit does not model — only an UNUSUAL unit may say so
   for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) if (e && e.reason === 'limit_not_modelled' && a !== 'UNUSUAL') p.push(['shape_must_be_none', `literals_not_expressed reason limit_not_modelled on ${a} (only UNUSUAL may use it — Spec 69a M-82)`]);

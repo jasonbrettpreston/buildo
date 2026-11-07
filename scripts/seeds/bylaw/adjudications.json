@@ -115324,6 +115324,186 @@
           "overlay_mapped"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "applies_to",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/applies_to",
+      "kind": "correction",
+      "reason": "Q-287E: the clause governs the portion of the building with a parking space, not the whole building; keyed whole it was a competing whole-building limit (x331, x88: 4a takes the larger 6.0; x324: the part value replaced the zone rule; x287: discarded undisclosed)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "part": "portion",
+        "refs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "applies_to",
+      "id": "COR-900.3.10(324)#(324)[SSP](C)/applies_to",
+      "kind": "correction",
+      "reason": "Q-287E: the clause governs the portion of the building with a parking space, not the whole building; keyed whole it was a competing whole-building limit (x331, x88: 4a takes the larger 6.0; x324: the part value replaced the zone rule; x287: discarded undisclosed)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(324)#(324)[SSP](C)",
+      "value": {
+        "part": "portion",
+        "refs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(324)#(324)[SSP](C)/disclosure",
+      "kind": "correction",
+      "reason": "Q-287E: the portion is set aside for the whole-building setback and disclosed (the M-169 closed form)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(324)#(324)[SSP](C)",
+      "value": "a portion with a parking space may be set back differently: the part of the main wall with the access to the required parking space must be set back a minimum of 5.7 metres from a front lot line or a side lot line that abuts a street (900.3.10(324)(C)); the portion is not modelled."
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "applies_to",
+      "id": "COR-900.3.10(331)#(331)[SSP](E)/applies_to",
+      "kind": "correction",
+      "reason": "Q-287E: the clause governs the portion of the building with a parking space, not the whole building; keyed whole it was a competing whole-building limit (x331, x88: 4a takes the larger 6.0; x324: the part value replaced the zone rule; x287: discarded undisclosed)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(331)#(331)[SSP](E)",
+      "value": {
+        "part": "portion",
+        "refs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(331)#(331)[SSP](E)/disclosure",
+      "kind": "correction",
+      "reason": "Q-287E: the portion is set aside for the whole-building setback and disclosed (the M-169 closed form)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(331)#(331)[SSP](E)",
+      "value": "a portion with a parking space may be set back differently: the part of the main wall with the access to the required parking space must be set back a minimum of 6.0 metres from a front lot line (900.3.10(331)(E)); the portion is not modelled, the whole-building front setback is 3.0 metres."
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(331)#(331)[SSP](E)/calculation_handling",
+      "kind": "correction",
+      "reason": "Q-287E: a portion unit is disclosed, not computed for the whole building",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(331)#(331)[SSP](E)",
+      "value": {
+        "description": "The part of the main wall with access to the required parking space is set back at least 6.0 m from a front lot line.",
+        "gaps": "The clause governs only the portion of the building with a parking space; applies_to.part portion sets it aside for the whole-building setback and discloses it (Q-287E2 a).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "applies_to",
+      "id": "COR-900.5.10(88)#(88)[SSP](F)/applies_to",
+      "kind": "correction",
+      "reason": "Q-287E: the clause governs the portion of the building with a parking space, not the whole building; keyed whole it was a competing whole-building limit (x331, x88: 4a takes the larger 6.0; x324: the part value replaced the zone rule; x287: discarded undisclosed)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.5.10(88)#(88)[SSP](F)",
+      "value": {
+        "part": "portion",
+        "refs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.5.10(88)#(88)[SSP](F)/disclosure",
+      "kind": "correction",
+      "reason": "Q-287E: the portion is set aside for the whole-building setback and disclosed (the M-169 closed form)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.5.10(88)#(88)[SSP](F)",
+      "value": "a portion with a parking space may be set back differently: the part of the main wall with the access to the required parking space must be set back a minimum of 6.0 metres from a front lot line (900.5.10(88)(F)); the portion is not modelled, the whole-building front setback is 3.0 metres."
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.5.10(88)#(88)[SSP](F)/calculation_handling",
+      "kind": "correction",
+      "reason": "Q-287E: a portion unit is disclosed, not computed for the whole building",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.5.10(88)#(88)[SSP](F)",
+      "value": {
+        "description": "The part of the main wall with access to the required parking space is set back at least 6.0 m from a front lot line.",
+        "gaps": "The clause governs only the portion of the building with a parking space; applies_to.part portion sets it aside for the whole-building setback and discloses it (Q-287E2 a).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "applies_to",
+      "id": "COR-900.3.10(713)#(713)[SSP](D)(i)/applies_to",
+      "kind": "correction",
+      "reason": "Q-287E: the clause governs the portion of the building with a parking space, not the whole building; keyed whole it was a competing whole-building limit (x331, x88: 4a takes the larger 6.0; x324: the part value replaced the zone rule; x287: discarded undisclosed)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(713)#(713)[SSP](D)(i)",
+      "value": {
+        "part": "portion",
+        "refs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(713)#(713)[SSP](D)(i)/disclosure",
+      "kind": "correction",
+      "reason": "Q-287E: the portion is set aside for the whole-building setback and disclosed (the M-169 closed form)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "unit": "900.3.10(713)#(713)[SSP](D)(i)",
+      "value": "a portion with a parking space may be set back differently: the part of the building with a vehicle entrance to a parking space facing a lot line that abuts a street must be set back a minimum of 6.0 metres (900.3.10(713)(D)(i)); the portion is not modelled."
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/disclosure~s2",
+      "kind": "correction",
+      "reason": "Q-287E: the portion is set aside for the whole-building setback and disclosed (the M-169 closed form)",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/disclosure~s1",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": "a portion with a parking space may be located in a side yard if it is at least 0.3 metres from the side lot line (900.3.10(287)(E)); the portion is not modelled, the whole-building side setback is 0.9 metres."
+    },
+    {
+      "adjudicated_on": "2026-11-06",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-900.3.10(287)#(287)[SSP](E)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "Q-287E: a portion unit is disclosed, not computed for the whole building",
+      "rule": "Spec 69a M-497 (the parking-space portion scope); M-75; operator Q287e a and Q-287E2 a (2026-11-04); 900.3.10 / 900.5.10 text as cited in the disclosure",
+      "supersedes": "COR-900.3.10(287)#(287)[SSP](E)/calculation_handling~s1",
+      "unit": "900.3.10(287)#(287)[SSP](E)",
+      "value": {
+        "description": "A portion of a building with a parking space may be in a side yard if at least 0.3 metres from the side lot line.",
+        "gaps": "The clause governs only the portion of the building with a parking space; applies_to.part portion sets it aside for the whole-building setback and discloses it (Q-287E2 a).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "ancillary_contains_parking_space"
+        ]
+      }
     }
   ]
 }

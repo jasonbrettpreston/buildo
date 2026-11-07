@@ -110,6 +110,7 @@ export function makeContext(vocab, extra = {}) {
     // CHAT-152 C (M-168): dsl_input -> {target, rule}; inside permitted() the input resolves the target (always an object)
     permissionInputBasis: vocabMap(vocab.permission_input_basis),
     // CHAT-194.USO-Q1 (Q1e): exception id -> {clause, types}; the closure is read in permitted() only
+    portionScope: vocab.portion_scope || null, // Q-287E2 a (M-497): {part, why, fallback_disclosure, no_disclosure}
     typeListClosure: vocabMap(vocab.exception_type_list_closure), // includes $disclosure, the closed sentence
     units: unitTable(vocab),
     zones: new Set(vocab.zone || []),
@@ -665,6 +666,9 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     if (!(Array.isArray(lot.uses) && lot.uses.includes(specUse))) return { ok: false, why: `use ${specUse} (a specific use the lot does not have, M-159(3))` };
   }
   const part = (u.applies_to && u.applies_to.part) || 'whole';
+  // Q-287E2 a (operator 2026-11-04; M-497): a clause that governs one PORTION of a building (the portion with a parking space) is not a
+  // whole-building candidate: it is set aside for the whole-building target and its own disclosure is attached (the M-169 closed form).
+  if (C.portionScope && part === C.portionScope.part) return { ok: false, why: C.portionScope.why, disclosure: u.disclosure && u.disclosure !== C.portionScope.no_disclosure ? u.disclosure : C.portionScope.fallback_disclosure.replace(C.portionScope.placeholder, u.unit_id) };
   let unheldLiteral = null;
   const refs = (u.applies_to && u.applies_to.refs) || [];
   if (part === 'map_area') {

@@ -381,6 +381,7 @@ export function evaluatorVocab(vocab) {
     exception_type_binding: vocab.exception_type_binding, // M-252 dated note 2026-10-29 (MB17-Q1): an exception applies only to the building types it names
     label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
     named_street: vocab.named_street, // M-285: abuts_named_street joined from the lot's primary frontage street name
+    portion_scope: vocab.portion_scope, // Q-287E2 a: the portion scope (set aside for the whole-building target, disclosed)
     exception_type_list_closure: vocab.exception_type_list_closure, // CHAT-194.USO-Q1 (Q1e): the exception "only" type lists permitted() reads
     existing_assumption: vocab.existing_assumption, // MB-18 (i), M-406
     fallback_target: vocab.fallback_target, // MB-18 (k), M-423: the read-as-if-token-held records evaluate.mjs fallbackRead reads

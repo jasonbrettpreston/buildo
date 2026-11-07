@@ -1,0 +1,14 @@
+== MB-27 increment 3 item E2b (Q-287E, Q287e a / Q-287E2 a) red: src/tests/bylaw-x287-parking-portion.logic.test.ts run on the landing parent beba5e1a5 (the prereg alone), the lock added alone: no portion scope, so the five parking-space units are whole-building candidates (x331 and x88 answer 6.0 over the whole-building 3.0; x324 answers 5.7 over the zone rule; x287 discards its 0.3 m). The x331 (C) survive case holds on both trees.
+   × Q-287E: the portion scope is a closed vocabulary value and the five units carry it > vocab.applies_to_part lists portion
+   × Q-287E: the portion scope is a closed vocabulary value and the five units carry it > 900.3.10(287)#(287)[SSP](E) is keyed applies_to.part portion, with its own disclosure
+   × Q-287E: the portion scope is a closed vocabulary value and the five units carry it > 900.3.10(324)#(324)[SSP](C) is keyed applies_to.part portion, with its own disclosure
+   × Q-287E: the portion scope is a closed vocabulary value and the five units carry it > 900.3.10(331)#(331)[SSP](E) is keyed applies_to.part portion, with its own disclosure
+   × Q-287E: the portion scope is a closed vocabulary value and the five units carry it > 900.5.10(88)#(88)[SSP](F) is keyed applies_to.part portion, with its own disclosure
+   × Q-287E: the portion scope is a closed vocabulary value and the five units carry it > 900.3.10(713)#(713)[SSP](D)(i) is keyed applies_to.part portion, with its own disclosure
+   × Q-287E: on the production path the portion is set aside and disclosed, the whole building is answered by the whole-building clause > x331 (RD): the whole-building front setback is (C) 3.0 m, not the 6.0 m of the parking-access main wall (E)
+   × Q-287E: on the production path the portion is set aside and disclosed, the whole building is answered by the whole-building clause > x88 (RT): the whole-building front setback is (D) 3.0 m, not the 6.0 m of (F)
+   × Q-287E: on the production path the portion is set aside and disclosed, the whole building is answered by the whole-building clause > x324 (RD): the 5.7 m of the parking-access main wall no longer replaces the zone rule (no exception candidate is left)
+   × Q-287E: on the production path the portion is set aside and disclosed, the whole building is answered by the whole-building clause > x287 (RD): the whole-building side setback stays 0.9 m (C) and the 0.3 m portion is disclosed, not discarded
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  10 failed | 1 passed (11)
