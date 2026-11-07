@@ -102,7 +102,9 @@ Standardized · observable · scalable · accurate · understandable (R-BA, 124a
 
 ## Process (every task; Spec 08 governs how it runs)
 1. **Quote the rule first**, with `file:line` (R-IZ (2)). If there is no rule, write a card and attach the register conflict search (M-381). Changing a test assertion, a floor, an oracle case or a worked example is a ruling.
+    - Dated note 2026-11-06 (M-246, prior text kept; MB-85 C1 and C2 · McBylaws queue · lane R · stage 2): (C1) at stage 1, before the plan goes to a seat, run the draft commit message through `node scripts/analysis/mcbylaws/gate.mjs --commit-msg <file>`, so a not-ruled, owed or cite-not-in-rules result shows at stage 1, not at the hook. (C2) Cite by id and anchor, with the line number as a hint dated by sha (Spec 08 §7 rule 10 note). (C3) Every answered card ends with the four-line compliance block of the same note. Operator, verbatim: "C1-C4" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).
 2. **Plan with the tests in it** (08:453). Pre-register the task's `rules[]` and expected moves (M-321, 69a:455), committed alone.
+    - Dated note 2026-11-06 (M-246, prior text kept; MB-85 C4): at stage 6, before the prereg is written, list every id the commit will cite and tick three things for each: RULED in the register, not OWED, present in `rules[]`. Operator, verbatim: "C1-C4" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).
 3. **PLAN panel**: the DeepSeek four-lens set (§7 rule 4, 08:330), the lean grounder-first panel (08:456), Ground-truth before Compliance (08:213).
 4. **Fold, then validate the fold** (08:446).
 5. **Record rulings by decision-log**, in the same commit as their lock (124:186, 132:427). OWED clears only by the generator. One exemption, BOOT-1: MB-66..MB-68 cite O-1 until MB-67 lands (F-28).
@@ -110,12 +112,35 @@ Standardized · observable · scalable · accurate · understandable (R-BA, 124a
 7. **The loop gate** runs at commit, pre-push and CI (R-KI).
 8. **OUTPUT panel per task** (08:459). Its record, `docs/reports/panels/<task>.json`, is committed with the work (R-KM).
 9. **Pre-push**: the operator reads the one-screen summary of protected-path changes and approves the push (F-34). CI is the backstop.
+    - Dated note 2026-11-06 (M-246, prior text kept; MB-85 P3, lane R): pushes are planned push windows, and lanes build on the verified local `wf1/mb-rulings` tip, so a lane is not held for a push. The operator still approves each push (F-34). Operator, verbatim: "P3 Mb-86 D1-D7.".
 10. **Done** = committed + named test green + ruling recorded + this line updated. One status word per heading. READY is derived: every WAITS is done.
 11. **Reference practice** (operator 2026-11-01: "I also want to initiate a practice where we refer to the task the queue and lane number"): every mention of work, in reports, decisions and briefs, carries `MB-nn (item) · McBylaws queue · lane X · stage N`.
+    - Dated note 2026-11-06 (M-246, prior text kept; MB-85 · McBylaws queue · lane R · stage 2; operator, `~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md`): every brief and prompt, for every seat and lane agent (Claude and DeepSeek), opens with the ticket header, `Ticket: MB-nn · lane X · stage N`, the rule quoted with file:line, scope, done-condition and `max_fix_rounds`; every lane report and seat reply ends with one line `STATUS: ready|blocked|failed|dropped` and at most one question. A reply-level word: it never changes a queue status cell (Status words below stay as they are). Rule text: Spec 08 §11.9 (TKT-1..TKT-4).
 
 ## Lanes (08:148; a lane = one writer branch)
 R rulings (orchestrator) · G gates · M Layer 2 model · E Layer 3 (**one writer**; the write scope covers the catalogue, the step, the evaluator extension, seeds and migrations, so the engine refuses a second claim, `CLAIM_CONFLICT`, 08:146) · T tests (the loop set) · P product · D DB writer (ONE; operator go; `~/Buildo-scratch/dblock/HELD`) · V landing (ONE; the operator pushes) · A analysis · O operator.
 Status words: DONE · RUNNING · WAITS · OPERATOR (named O-id) · HELD · LATER.
+
+- Dated note 2026-11-06 (M-246, prior text kept; MB-85 E4 and E7 · McBylaws queue · lane R · stage 2). One open-work list: this lane board. Each open row carries one waiting word (OPERATOR, WAITS or HELD), names its card, and carries an opened date and an expiry date 7 days later. At expiry it is resurfaced in the next decision list; it is never closed automatically. The status file is an index of MB-nn and MF-nn rows with the waiting word, card and date; it holds no state of its own, and "row owed" marks a row not yet in the queue until the next queue dated note. No tool and no code. One-time sweep (E5): a read-only lane lists the unanswered CARD files against their queue rows (answered elsewhere, open with a row, or open with no row); nothing is deleted. Operator, verbatim: "E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry" then "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?".
+
+- Dated note 2026-11-06 (M-246, prior text kept; MB-85 E5 and E7 · McBylaws queue · lane R · stage 2). The one-time read-only card sweep (`~/Buildo-scratch/mcbylaws/MB-85/card-sweep/open-no-row.md`) found 17 open cards with no queue row. Each is listed here with its card path and opened date (a file date where the card gives none). Each carries a 7-day expiry, 2026-11-13: at expiry it is resurfaced in the next decision list and is never closed automatically. Nothing is deleted and no ruling is taken here.
+  - ~/Buildo-scratch/hookfix/CARD-prepush-failclosed.md, opened 2026-10-25, expires 2026-11-13.
+  - ~/Buildo-scratch/hookfix/CARD-prepush-range.md, opened 2026-10-25, expires 2026-11-13.
+  - ~/Buildo-scratch/rarms/CARD-RDY-ingest-prior-race.md, opened 2026-10-25, expires 2026-11-13.
+  - ~/Buildo-scratch/scope/CARD-rulings-register-notes.md, opened 2026-10-25, expires 2026-11-13.
+  - ~/Buildo-scratch/scope/CARD-use-scope-residuals.md, opened 2026-10-25, expires 2026-11-13.
+  - ~/Buildo-scratch/CARD-account-path-scrub.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/parse/CARD-conditions-header-round.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/parse/CARD-estate-coa-key.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/parse/CARD-estate-main-guard.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/permits-w1/CARD-permits-w1-orchestrator.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/rarms/CARD-derive-declared-shape.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/rarms/CARD-g5-single-statement-check.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/rarms/CARD-retry-double-count-cascade-materialize.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/scorer/CARD-curved-front-pattern.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/scorer/CARD-golden-relabel-site-plan.md, opened 2026-10-26, expires 2026-11-13.
+  - ~/Buildo-scratch/scope/CARD-l2-content-hash-run-timestamp.md, opened 2026-10-28, expires 2026-11-13.
+  - ~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md, opened 2026-11-06, expires 2026-11-13.
 
 ---
 ## Lane board — 2026-11-01 (by hand until MB-73 generates it; one row per task, the stage named; evidence under `~/Buildo-scratch/mcbylaws/<MB-id>/`)
