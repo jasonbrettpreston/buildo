@@ -1,0 +1,105 @@
+{
+ "$comment": "M-321 pre-registration, task MB-85, prereg 1 (R-MA; round 91; round 90 is prereg-MB-27-30.json), the loop round that lands decision batch 2026-11-06-batch-bd (CHAT-231): the MB-85 ticket header, closed reply status, orchestrator split, one open-work list and citation checks as thirteen new Spec 69a rows (M-501..M-513, each carrying the full committed Spec 08 / queue text, operator 2026-11-06 'approved conditional upon compliance with governing handbook or spec Q1-Q3, bd 1 and 2, and the headline card', item 2 b) and dated notes on M-381, M-438 and M-447 (M-246). One more dated text item (M-246, operator Q1 (a), E2c / x812: \"approved conditional upon compliance with governing handbook or spec Q1-Q3\"): the DL-16 a note on the M-386 row (the closed word blank_wall_side_yard_permitted starts_with corrected to the stored sentence); it moves no hash beyond the rows already named. The text itself landed earlier in the MB-85 text commit (c0bc79171). Named re-pin under E1C-S: the thirteen rows add thirteen rules to Spec 133 and its rule map (530 to 543), hashed into the Layer 2 table_version (fdc013c8503e to e881e07c2197; body_sha256 and evaluator_version unchanged). Measured on the tip: coa-scorecard --pin gives totals equal on the 172 and 4d sets before and after. It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure unchanged, the floors file unchanged and the floors check OK. One existing test assertion changes, named below: the decision-log decisions count 844 to 857.",
+ "schema": "coa-round-prereg-v1",
+ "round": 91,
+ "task": "MB-85",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-IL"
+ ],
+ "plan_ref": "~/Buildo/.cursor/MCBYLAWS-QUEUE.md MB-85; ~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md, DECISIONS-2.md, bd/DECISION-LIST.md; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md (last sections); drafts ~/Buildo-scratch/mcbylaws/MB-85/bd/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version fdc013c8503e -> e881e07c2197 (E1C-S, the thirteen rows move Spec 133 and the rule map)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version fdc013c8503e -> e881e07c2197 (E1C-S)",
+  "expected-172.json and expected-4d.json commit (27dc160c -> 113eea52) and inputs.table_version fdc013c8503e -> e881e07c2197 through coa-scorecard.mjs --pin, totals equal (E1C-S)",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version fdc013c8503e -> e881e07c2197, the G-STOR re-bind (RP-SW2 a)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 844,
+   "to": 857,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "the batch 2026-11-06-batch-bd decisions CHAT-231.* (13 new decisions; operator \"approved conditional upon compliance with governing handbook or spec Q1-Q3, bd 1 and 2, and the headline card\", ~/Buildo-scratch/mcbylaws/inc3/open-questions.md); any other change to this assertion stops"
+  }
+ ]
+}
