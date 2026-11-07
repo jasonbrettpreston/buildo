@@ -30,8 +30,9 @@ const W = {
 // The carried words on footprint and gfa of each lot, as Phase 2 emits them (OQ-2; LQ-2 b: the side-yard shift sentence on
 // A0067, A0097, A0182, A0203, A0205, A0229 and A0277 is carried as emitted, the named accepted finding). Every other lot: none.
 const ON_FOOTPRINT_AND_GFA: Record<string, string[]> = {
-  A0067: [W.m406, W.ext, W.shift], A0097: [W.m406, W.ext, W.shift],
-  A0182: [W.ext, W.shift], A0203: [W.ext, W.shift], A0205: [W.ext, W.shift], A0229: [W.ext, W.shift], A0277: [W.ext, W.shift],
+  // LQ1 (LQ-1 a, LQ-2 b; B-2 "yes", 2026-11-06): the seven exception lots no longer carry the side-yard shift word (the 14 cells invert, nothing else moves)
+  A0067: [W.m406, W.ext], A0097: [W.m406, W.ext],
+  A0182: [W.ext], A0203: [W.ext], A0205: [W.ext], A0229: [W.ext], A0277: [W.ext],
   A0170: [W.ext, W.shift], A0193: [W.ext, W.shift], A0553: [W.ext, W.shift],
   A0578: [W.shift],
   A0166: [W.ext, W.rear],
@@ -173,7 +174,7 @@ describe('DC-2: the lock on the 25 golden cases (increment 2 is not green until 
     }
     expect(cells).toBe(24);
   });
-  it('LQ-2 b, the named accepted finding: the side-yard shift word is carried on exactly the 14 footprint and gfa cells of the seven exception lots, and on four other lots', () => {
+  it('LQ-2 b retired by the LQ1 fix (B-2): the side-yard shift word is carried on none of the 14 footprint and gfa cells of the seven exception lots, and still on the four other lots', () => {
     const EXCEPTION_LOTS = ['A0067', 'A0097', 'A0182', 'A0203', 'A0205', 'A0229', 'A0277'];
     const carriers: string[] = [];
     for (const name of LOTS.keys()) {
@@ -181,7 +182,7 @@ describe('DC-2: the lock on the 25 golden cases (increment 2 is not green until 
       for (const field of ['footprint_max_m2', 'gfa_max_m2']) if (((rows.find((r) => r.field_id === field) as Json).flags as string[]).includes(W.shift)) carriers.push(`${name}/${field}`);
     }
     const onExceptionLots = carriers.filter((c) => EXCEPTION_LOTS.includes(c.split('/')[0] as string));
-    expect(onExceptionLots.sort()).toEqual(EXCEPTION_LOTS.flatMap((n) => [`${n}/footprint_max_m2`, `${n}/gfa_max_m2`]).sort());
+    expect(onExceptionLots.sort()).toEqual([]); // was the 14 cells (LQ-2 b accepted finding); retired by LQ1
     expect(carriers.length - onExceptionLots.length).toBe(8); // A0170, A0193, A0553, A0578 keep it (the text applies)
   });
   it('permission disclosures: none on the 25 for the detached house, so the permission row carries no word', () => {

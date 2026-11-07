@@ -1198,11 +1198,12 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
     }
   }
   // Q1 (Spec 68 §7.5 rule 2): an optional variation keeps the limit it names; its own disclosure says what it permits
+  const variationNotes = [];
   for (const { d, v } of ro) {
     if (!A.has(d) || !A.has(v)) continue;
     trace.push(`rule 2: ${d.unit_id} is an optional variation of ${v.unit_id} — the limit stays (operator 2026-10-19 Q1)`);
     const note = d.disclosure && d.disclosure !== 'none' ? d.disclosure : `An optional variation under ${d.unit_id} may adjust this limit; not applied.`;
-    if (!disclosures.includes(note)) disclosures.push(note);
+    variationNotes.push({ v, note }); // LQ-1: disclosed only where the limit it varies survives rule 4 (below)
   }
 
   // candidates: applicable value units, not dropped, not consumed by a substitution; unit-of-measure check (rule 1).
@@ -1309,6 +1310,8 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
       }
     }
   }
+  const survivors = new Set(Object.values(kept).flat().map((u) => u.unit_id));
+  for (const { v, note } of variationNotes) if (survivors.has(v.unit_id) && !disclosures.includes(note)) disclosures.push(note);
 
   // evaluate + rule 4a
   const ev1 = (s, args, u) => {

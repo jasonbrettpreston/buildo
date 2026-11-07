@@ -1,0 +1,8 @@
+== MB-27 increment 3 item E2a (LQ1-EVAL, LQ-1 a) red: src/tests/bylaw-lq1-sideyard-shift-survivor.logic.test.ts run on the landing parent 83e33c661 (the prereg alone), the lock added alone: rule 2 attaches the 10.20.40.70(4) shift sentence before rule 4 runs, so A0203 (x5 A) and A0067 (x155 D) carry it. 4 of 6 fail; the A0193 survive cases (the sentence is kept where (3)(C) wins) hold on both trees.
+   × LQ1-EVAL: the shift sentence only where the varied side yard survives rule 4 > A0203 (6640) detached_house: the exception sets the side yard, so no 10.20.40.70(4) shift sentence
+   × LQ1-EVAL: the shift sentence only where the varied side yard survives rule 4 > A0203 (6640) detached_houseplex: the exception sets the side yard, so no 10.20.40.70(4) shift sentence
+   × LQ1-EVAL: the shift sentence only where the varied side yard survives rule 4 > A0067 (205238) detached_house: the exception sets the side yard, so no 10.20.40.70(4) shift sentence
+   × LQ1-EVAL: the shift sentence only where the varied side yard survives rule 4 > A0067 (205238) detached_houseplex: the exception sets the side yard, so no 10.20.40.70(4) shift sentence
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)

@@ -68926,10 +68926,7 @@
        "applied": [
         "10.10.60.20(1)#(1)(A)"
        ],
-       "disclosures": [
-        "A garage shared with the neighbouring lot may sit on the common side lot line; not evaluated.",
-        "An optional variation under 970.10.15.10(2)#whole may adjust this limit; not applied."
-       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }
