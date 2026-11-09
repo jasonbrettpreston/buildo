@@ -4,16 +4,36 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-09",
-  "head": null,
-  "commits_reviewed": [],
+  "head": "a44b69823",
+  "commits_reviewed": [
+    "84a7c3db0 (rows)",
+    "54ad67882 (prereg-MF-14-1)",
+    "f72b35071 (code)",
+    "a44b69823 (output folds)"
+  ],
   "cards": [
     "Operator 2026-11-09: \"approved 1. MF-14 T-1 to T-4 (the trimmed renderer decisions above): approve as recommended?\"",
     "Mechanical decisions D-09 (~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md)."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-14/plan.md as amended by ~/Buildo-scratch/mcfrontend/MF-14/grounding.md (grounding wins; cut list binding).",
-  "output": "PENDING: the OUTPUT panel (stage 8) record replaces this placeholder.",
-  "seats": [],
-  "verdict": "PENDING",
+  "output": "OUTPUT (stage 8): targeted tests 284 green (src/tests/surfaces + report-preview + ParcelCostTool UI 90); surface-validate --check exit 0; seed --check and report-schema --check current; capture twice byte-identical (docs/reports/red-evidence/MF-14/capture-twice.txt); W-1a smoke 40/40 on next dev DEV_MODE, no page or console error (~/Buildo-scratch/mcfrontend/MF-14/smoke/RESULTS.md). Reports: ~/Buildo-scratch/mcfrontend/MF-14/output-panel/.",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "pipeline-reality-check",
+    "ds-spec (deepseek-chat --fast)",
+    "ds-error-paths (deepseek-chat --fast)"
+  ],
+  "verdict": "PASS-WITH-FOLDS: no blocker. Three small core.ts bugs from the grounded reviewer folded in a44b69823 with FE-24 lock cases red first. DeepSeek lens output is raw and unadjudicated beyond the grounded seats (most HIGH items are speculative or already covered: assertTree guards arrays via RR-SCHEMA, the headline view entry is not a tree node so FE-28 does not apply).",
   "blockers": [],
-  "followups": []
+  "followups": [
+    "Variant goldens previously omitted the permitted status_text node; buildTree now emits it for every non-lifecycle tree (24 trees changed: 12 variant, 12 lifecycle). Recorded per regression-guardian item 6.",
+    "No golden carries storeys_max or height_max_m values or a disclosure code: add a fixture with MF-12 tranche 2.",
+    "Hard-coded UI chrome in ReportView: Details, confidence:, provenance:. Move to content when a copy ruling exists.",
+    "Lifecycle states show headline dashes under the message (design question, follows T-1).",
+    "Lifecycle loading/error have no role=status/alert (accessibility nit).",
+    "Preview page imports src/tests/fixtures into the app bundle (accepted with T-3); remove or keep at MF-22.",
+    "not_modelled has no status_text registry line; assertTree requires text only for not_permitted:* and not_evaluated:* reasons.",
+    "FE-24 still reads OWED: flipping it to RULED is an operator decision; until then any frontend-path commit must modify the FE-24 lock with new red evidence."
+  ]
 }
