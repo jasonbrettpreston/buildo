@@ -1,4 +1,20 @@
 {
+  "houseplex_circulation_share": {
+    "default": 0.1,
+    "type": "number",
+    "min": 0.1,
+    "max": 0.1,
+    "description": "Spec 69a M-496 (operator \"Q9-1 a\", 2026-11-04; `2026-11-06-batch-bc#CHAT-230.Q9-1`; built by MB-27 inc3 lane E, E8): the share of a houseplex floor's floor area that is circulation, so a floor's livable area is 0.9 of its floor area. Operator value, not a cited OBC figure (confidence low in the confidence register, Q-CONF a); the task to fetch and cite OBC 9.8 / 9.9 (stair and corridor minimums) and refit the value is owed to lane R. Read by the catalogue setting houseplex_circulation_share (rows basement_livable_m2 and the per-unit area row) through lv(). CONSUMED by the Layer 3 compute_maxbld_scenarios catalogue.",
+    "admin": { "hidden": "internal" }
+  },
+  "houseplex_unit_min_net_m2": {
+    "default": 30,
+    "type": "number",
+    "min": 30,
+    "max": 30,
+    "description": "Spec 69a M-496 (operator \"Q9-2 a\", 2026-11-04; `2026-11-06-batch-bc#CHAT-230.Q9-2`; built by MB-27 inc3 lane E, E8): the minimum livable (net, after the circulation share) area of one dwelling unit in a houseplex, in m2. Operator value, cited against the CoA houseplex plan facts (8 plans, tightest A0226/26EYK at 40 m2 max); the OBC 13.5 m2 combined-space floor is reference only. Confidence medium in the confidence register (Q-CONF a). Feeds the area-based unit count per floor; the 2-4 cap clamp is unchanged. Read by the catalogue setting houseplex_unit_min_net_m2 (rows basement_unit_capacity and the units row) through lv(). CONSUMED by the Layer 3 compute_maxbld_scenarios catalogue.",
+    "admin": { "hidden": "internal" }
+  },
   "centreline_propagation_coverage_min": {
     "default": 0.9,
     "type": "number",

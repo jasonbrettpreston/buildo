@@ -1,7 +1,8 @@
 {
-  "$comment": "MB-31, copied from the stage 2 draft: scripts/seeds/bylaw/building-types.json (queue (b); LC-16). Increment 1: one row. A type with no Phase 2 class answers not_modelled (R3-11, M-393).",
+  "$comment": "MB-31, copied from the stage 2 draft: scripts/seeds/bylaw/building-types.json (queue (b); LC-16). Increment 1: one row. A type with no Phase 2 class answers not_modelled (R3-11, M-393). Increment 3 (MB-27, DL-21): the detached_houseplex row joins (units 4, M-160 / Q6 a) at element `\"3\"`.",
   "schema": "building-types-v1",
   "rows": [
-    {"id":"detached_house","class":"detached_house","structure":"principal","units":1,"increment":"1","switch":"building_type:detached_house","rules":["LC-16","M-377"]}
+    {"id":"detached_house","class":"detached_house","structure":"principal","units":1,"increment":"1","switch":"building_type:detached_house","rules":["LC-16","M-377"]},
+    {"id":"detached_houseplex","class":"detached_houseplex","structure":"principal","units":4,"increment":"3","switch":"building_type:detached_houseplex","rules":["LC-16","M-160","M-494","M-500","Q6 a"]}
   ]
 }

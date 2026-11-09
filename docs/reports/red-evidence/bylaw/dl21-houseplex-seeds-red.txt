@@ -1,0 +1,6 @@
+== MB-27 increment 3 DL-21 a (the detached houseplex seeds) red: src/tests/steps/compute_maxbld_scenarios/increment3-building-type.logic.test.ts run on the parent (no houseplex type, switch or readings, building_type a string, no validator), the lock added; 5 of 8 red on the parent, 8 of 8 green here
+   × M-494 / M-160: the houseplex building type is data > building-types.json has detached_houseplex, class detached_houseplex, principal, units 4, increment 3
+   × M-494 / M-160: the houseplex building type is data > its switch is in the switchboard, kind building_type, on
+   × M-495: building_type is a list on every catalogue row, closed by the validator > every row lists building types, each a building-types id
+   × M-495: building_type is a list on every catalogue row, closed by the validator > the validator refuses a string building_type and an unknown id
+   × M-397 / M-481 (DL-15 how a): the uncapped O-3 reading is a switchboard reading row with its confidence > reading:exc_fsi_uncapped is a reading row, on, with a confidence and evidence

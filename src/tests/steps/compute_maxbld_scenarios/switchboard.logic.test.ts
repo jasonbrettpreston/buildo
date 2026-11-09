@@ -36,9 +36,9 @@ describe('MB-31 switchboard data (M-378)', () => {
     CAT = readJson('scripts/seeds/bylaw/layer3-catalogue.json');
   });
 
-  it('schema, fifty-eight rows, unique ids, closed kind/state vocabularies', () => {
+  it('schema, sixty-five rows, unique ids, closed kind/state vocabularies', () => {
     expect(SW.schema).toBe('switchboard-v2'); // Q-CONF a (switchboard confidence): was 'switchboard-v1'
-    expect(SW.rows).toHaveLength(58); // Q-K-ASSERT a (M-378, M-476): 37 increment-2 row switches and 2 revision switches; was 19 (Q-CONF a), was 12
+    expect(SW.rows).toHaveLength(65); // MB-27 inc3 E8 (DL-21 a move 2): +1 building_type:detached_houseplex, +6 confidence readings (C8, C9, C10, C13, C14 x2); was 58 // Q-K-ASSERT a (M-378, M-476): 37 increment-2 row switches and 2 revision switches; was 19 (Q-CONF a), was 12
     const ids = SW.rows.map((r: Json) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const row of SW.rows) {

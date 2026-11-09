@@ -100,11 +100,12 @@ describe('Q-CONF a switchboard data', () => {
     }
   });
 
-  it('D5 no reading row cites an increment-3 register reading (C8 onward): they join when their rows are authored (M-481)', () => {
+  it('D5 only the six increment-3 reading rows cite a register reading of C8 onward: they join when their rows are authored (M-481; DL-21 a move 3, oracle-first door)', () => {
+    const SIX = new Set(["reading:rm_houseplex_no_main_wall_limit","reading:exc_fsi_uncapped","reading:x21_x38_take_x1462_reading","reading:houseplex_coa_check_two_cases","reading:circulation_share_operator_value","reading:minimum_unit_size_operator_value"]);
     for (const r of SW.rows.filter((x: Json) => x.kind === 'reading')) {
-      expect([r.id, /\bC(?:[89]|1\d)\b/.test(String(r.evidence))]).toEqual([r.id, false]);
+      expect([r.id, /\bC(?:[89]|1\d)\b/.test(String(r.evidence))]).toEqual([r.id, SIX.has(r.id)]);
     }
-    expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 1);
+    expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 7);
   });
 
   it('D4 shape_calibration keeps its state and ruling and gains a confidence and evidence', () => {

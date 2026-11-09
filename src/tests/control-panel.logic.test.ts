@@ -200,6 +200,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // Spec 131 compute_maxbld_scenarios (Layer 3, MB-31 increment 1, 2026-11-02) — admin group "Source Ingestion"; the population parcel-id list is a list-typed
   // variable (Q-J, seed loader type "list") hidden "internal" and sits in LIST_SEED_KEYS, not here (operator answer CARD-mb31-fullsuite-pins, pending).
   's1_ceiling_min_m',
+  // MB-27 inc3 E8 (operator 2026-11-08 E8 5a: the circulation share 0.10 and the minimum unit size 30 m2 net registered now, DB mirror in the held migration, DL-10): +2 keys
+  'houseplex_circulation_share',
+  'houseplex_unit_min_net_m2',
   's1_floor_assembly_m',
   's1_parapet_m',
   's2_first_floor_above_grade_m',

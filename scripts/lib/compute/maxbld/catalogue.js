@@ -168,7 +168,10 @@ function validateCatalogue(seeds, increments) {
   const targets = isObject(s.vocab) && isObject(s.vocab.dsl_target) ? s.vocab.dsl_target : {};
   const U = unitsFor(catalogue, s.vocab);
   const rowIds = new Set(idsOf(rowsOf(catalogue)));
+  // M-495 (Q2 a): a row's building_type is a non-empty list, each entry a building-types id
+  const typeIds = new Set(idsOf(entities(s.buildingTypes, 'rows')));
   for (const r of rowsOf(catalogue)) {
+    if (!Array.isArray(r.building_type) || !r.building_type.length || r.building_type.some((b) => !typeIds.has(b))) out.push(`row ${r.id}: building_type must be a non-empty list of building-types ids`);
     if (!switches.has(r.switch)) out.push(`row ${r.id}: switch ${r.switch} is not in the switchboard`);
     for (const v of revisionsOf(r)) if (!switches.has(v.switch)) out.push(`row ${r.id} revision ${v.increment}: switch ${v.switch} is not in the switchboard`);
   }
