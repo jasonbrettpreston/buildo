@@ -1,0 +1,225 @@
+# RED (MF-43, lock src/tests/surfaces/register-locks-resolve.infra.test.ts): the file run with its check function stubbed to return [] (red-first stub), so every planted case fails on its assertion and the real-tree case passes vacuously.
+# cmd: npx vitest run src/tests/surfaces/register-locks-resolve.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts (12 tests | 10 failed) 4ms
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: a RULED row whose lock is missing 2ms
+     → expected '' to match /FE-02: RULED but its lock is not trac…/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an uppercase "OWED:" in a flip note makes a landed row read OWED (keep "prior status: owed" lowercase) 0ms
+     → expected '' to match /FE-02: OWED but its lock already exis…/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: FE-08 without its "see FE-16" clause 0ms
+     → expected '' to match /FE-08: RULED with no lock path/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: "see" names no row 0ms
+     → expected '' to match /FE-08: RULED, "see FE-99" names no re…/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row whose lock already exists 0ms
+     → expected '' to match /FE-03: OWED but its lock already exis…/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED lock outside src/tests/surfaces 0ms
+     → expected '' to match /FE-03: OWED lock is not a src\/…/tests\
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row with no lock path 0ms
+     → expected '' to match /FE-03: OWED with no lock path/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: a duplicated row id 0ms
+     → expected '' to match /FE-03: duplicate row id/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: the sentinel row removed, and an empty register 0ms
+     → expected '' to match /sentinel FE-01 missing/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > FLIP_PENDING is exact: on the list a RULED row, an unlanded lock or a missing row is red; off the list a landed OWED lock is red 0ms
+     → expected '' to match /FE-02: reads RULED but is still on FL…/
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: a RULED row whose lock is missing
+AssertionError: expected '' to match /FE-02: RULED but its lock is not trac…/
+
+- Expected: 
+/FE-02: RULED but its lock is not tracked/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:114:59
+    112|   it('planted: a RULED row whose lock is missing', () => {
+    113|     const bad = mutateRow(REAL, 'FE-02', 'report-generated-only.infra.…
+    114|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    115|   });
+    116| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an uppercase "OWED:" in a flip note makes a landed row read OWED (keep "prior status: owed" lowercase)
+AssertionError: expected '' to match /FE-02: OWED but its lock already exis…/
+
+- Expected: 
+/FE-02: OWED but its lock already exists/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:119:59
+    117|   it('planted: an uppercase "OWED:" in a flip note makes a landed row …
+    118|     const bad = mutateRow(REAL, 'FE-02', 'prior status: owed', 'prior …
+    119|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    120|   });
+    121| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: FE-08 without its "see FE-16" clause
+AssertionError: expected '' to match /FE-08: RULED with no lock path/
+
+- Expected: 
+/FE-08: RULED with no lock path/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:124:59
+    122|   it('planted: FE-08 without its "see FE-16" clause', () => {
+    123|     const bad = mutateRow(REAL, 'FE-08', 'Lock: see FE-16.', 'Lock: no…
+    124|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    125|   });
+    126| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: "see" names no row
+AssertionError: expected '' to match /FE-08: RULED, "see FE-99" names no re…/
+
+- Expected: 
+/FE-08: RULED, "see FE-99" names no register row/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:129:59
+    127|   it('planted: "see" names no row', () => {
+    128|     const bad = mutateRow(REAL, 'FE-08', 'see FE-16', 'see FE-99');
+    129|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    130|   });
+    131| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row whose lock already exists
+AssertionError: expected '' to match /FE-03: OWED but its lock already exis…/
+
+- Expected: 
+/FE-03: OWED but its lock already exists/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:134:60
+    132|   it('planted: an OWED row whose lock already exists', () => {
+    133|     const tracked = new Set([...TRACKED, 'src/tests/surfaces/surface-v…
+    134|     expect(registerLockProblems(REAL, tracked).join('\n')).toMatch(/FE…
+       |                                                            ^
+    135|   });
+    136| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED lock outside src/tests/surfaces
+AssertionError: expected '' to match /FE-03: OWED lock is not a src\/…/tests\
+
+- Expected: 
+/FE-03: OWED lock is not a src\/tests\/surfaces/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:139:59
+    137|   it('planted: an OWED lock outside src/tests/surfaces', () => {
+    138|     const bad = mutateRow(REAL, 'FE-03', 'src/tests/surfaces/surface-v…
+    139|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    140|   });
+    141| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row with no lock path
+AssertionError: expected '' to match /FE-03: OWED with no lock path/
+
+- Expected: 
+/FE-03: OWED with no lock path/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:144:59
+    142|   it('planted: an OWED row with no lock path', () => {
+    143|     const bad = mutateRow(REAL, 'FE-03', '`src/tests/surfaces/surface-…
+    144|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    145|   });
+    146| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: a duplicated row id
+AssertionError: expected '' to match /FE-03: duplicate row id/
+
+- Expected: 
+/FE-03: duplicate row id/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:150:59
+    148|     const line = rowLine(REAL, 'FE-03');
+    149|     const bad = mutate(REAL, line, `${line}\n${line}`);
+    150|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    151|   });
+    152| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: the sentinel row removed, and an empty register
+AssertionError: expected '' to match /sentinel FE-01 missing/
+
+- Expected: 
+/sentinel FE-01 missing/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:155:59
+    153|   it('planted: the sentinel row removed, and an empty register', () =>…
+    154|     const bad = mutate(REAL, `${rowLine(REAL, 'FE-01')}\n`, '');
+    155|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/sen…
+       |                                                           ^
+    156|     expect(registerLockProblems('', TRACKED).join('\n')).toMatch(/sent…
+    157|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > FLIP_PENDING is exact: on the list a RULED row, an unlanded lock or a missing row is red; off the list a landed OWED lock is red
+AssertionError: expected '' to match /FE-02: reads RULED but is still on FL…/
+
+- Expected: 
+/FE-02: reads RULED but is still on FLIP_PENDING/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:160:71
+    158| 
+    159|   it('FLIP_PENDING is exact: on the list a RULED row, an unlanded lock…
+    160|     expect(registerLockProblems(REAL, TRACKED, ['FE-02']).join('\n')).…
+       |                                                                       ^
+    161|     expect(registerLockProblems(REAL, TRACKED, ['FE-03']).join('\n')).…
+    162|     expect(registerLockProblems(REAL, TRACKED, ['FE-99']).join('\n')).…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 2 passed (12)
+   Start at  17:15:54
+   Duration  195ms (transform 28ms, setup 7ms, collect 10ms, tests 4ms, environment 0ms, prepare 22ms)
+

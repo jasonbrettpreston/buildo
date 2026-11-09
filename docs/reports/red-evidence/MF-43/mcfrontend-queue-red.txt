@@ -1,0 +1,141 @@
+# RED (MF-43, lock src/tests/surfaces/mcfrontend-queue.infra.test.ts): the file run with its check function stubbed to return [] (red-first stub), so every planted case fails on its assertion and the real-tree case passes vacuously.
+# cmd: npx vitest run src/tests/surfaces/mcfrontend-queue.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ❯ src/tests/surfaces/mcfrontend-queue.infra.test.ts (8 tests | 6 failed) 4ms
+   × FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: a task under "## Not doing" 2ms
+     → expected '' to match /MF-98 sits under "## Not doing"/
+   × FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: a task under "## Phase 3" 0ms
+     → expected '' to match /MF-97 sits under "## Phase 3: more"/
+   × FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: a task before any section 0ms
+     → expected '' to match /MF-96 sits under/
+   × FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: an unlisted admin task under Phase 2 0ms
+     → expected '' to match /MF-98 is an admin task under Phase 2 …/
+   × FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: an admin task moved above the first report task 0ms
+     → expected '' to match /MF-95 is an admin task before the fir…/
+   × FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: the anchor removed, and an empty queue 0ms
+     → expected '' to match /anchor MF-10/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-queue.infra.test.ts > FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: a task under "## Not doing"
+AssertionError: expected '' to match /MF-98 sits under "## Not doing"/
+
+- Expected: 
+/MF-98 sits under "## Not doing"/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-queue.infra.test.ts:90:43
+     88|   it('planted: a task under "## Not doing"', () => {
+     89|     const bad = `${REAL.trimEnd()}\n\n**MF-98 Something else — LATER**…
+     90|     expect(queueProblems(bad).join('\n')).toMatch(/MF-98 sits under "#…
+       |                                           ^
+     91|   });
+     92| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-queue.infra.test.ts > FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: a task under "## Phase 3"
+AssertionError: expected '' to match /MF-97 sits under "## Phase 3: more"/
+
+- Expected: 
+/MF-97 sits under "## Phase 3: more"/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-queue.infra.test.ts:95:43
+     93|   it('planted: a task under "## Phase 3"', () => {
+     94|     const bad = mutate(REAL, '## Later: convert-on-touch', '## Phase 3…
+     95|     expect(queueProblems(bad).join('\n')).toMatch(/MF-97 sits under "#…
+       |                                           ^
+     96|   });
+     97| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-queue.infra.test.ts > FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: a task before any section
+AssertionError: expected '' to match /MF-96 sits under/
+
+- Expected: 
+/MF-96 sits under/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-queue.infra.test.ts:100:43
+     98|   it('planted: a task before any section', () => {
+     99|     const bad = mutate(REAL, '## Phase 0', '**MF-96 Loose task — LATER…
+    100|     expect(queueProblems(bad).join('\n')).toMatch(/MF-96 sits under/);
+       |                                           ^
+    101|   });
+    102| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-queue.infra.test.ts > FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: an unlisted admin task under Phase 2
+AssertionError: expected '' to match /MF-98 is an admin task under Phase 2 …/
+
+- Expected: 
+/MF-98 is an admin task under Phase 2 but not listed/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-queue.infra.test.ts:105:43
+    103|   it('planted: an unlisted admin task under Phase 2', () => {
+    104|     const bad = mutate(REAL, lineOf('MF-41'), `**MF-98 Admin roles con…
+    105|     expect(queueProblems(bad).join('\n')).toMatch(/MF-98 is an admin t…
+       |                                           ^
+    106|   });
+    107| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-queue.infra.test.ts > FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: an admin task moved above the first report task
+AssertionError: expected '' to match /MF-95 is an admin task before the fir…/
+
+- Expected: 
+/MF-95 is an admin task before the first report task MF-10/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-queue.infra.test.ts:110:43
+    108|   it('planted: an admin task moved above the first report task', () =>…
+    109|     const bad = mutate(REAL, lineOf('MF-33'), `**MF-95 Admin users pag…
+    110|     expect(queueProblems(bad).join('\n')).toMatch(/MF-95 is an admin t…
+       |                                           ^
+    111|   });
+    112| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-queue.infra.test.ts > FE-11 and FE-14: the McFrontend queue holds no task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed > planted: the anchor removed, and an empty queue
+AssertionError: expected '' to match /anchor MF-10/
+
+- Expected: 
+/anchor MF-10/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-queue.infra.test.ts:114:88
+    112| 
+    113|   it('planted: the anchor removed, and an empty queue', () => {
+    114|     expect(queueProblems(mutate(REAL, `**${REPORT_ANCHOR} `, '**MF-X10…
+       |                                                                                        ^
+    115|     expect(queueProblems('').join('\n')).toMatch(/no MF task heading f…
+    116|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 2 passed (8)
+   Start at  17:15:55
+   Duration  188ms (transform 28ms, setup 6ms, collect 4ms, tests 4ms, environment 0ms, prepare 23ms)
+

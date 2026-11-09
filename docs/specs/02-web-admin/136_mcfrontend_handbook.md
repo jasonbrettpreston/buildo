@@ -25,14 +25,14 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
 
 **What is generated.** Everything below, from the Spec 135 register table by `scripts/surfaces/generate-surface-handbook.mjs` (status and lock paths read by `scripts/analysis/mcbylaws/cite-parse.mjs` `parseRegisterRows`, the reader gate arm C uses). The rule map `scripts/surfaces/_schema/surface-rule-map.json` is generated from the same rows, not hand-written; `src/tests/surfaces/handbook-rule-map.logic.test.ts` (FE-10) locks that every register row has exactly one line and every line cites exactly one row.
 
-**Rules rendered: 32**: 32 in force (17 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline, the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
+**Rules rendered: 32**: 32 in force (12 OWED, whose lock is still to land), 0 history. Each line: its line id, the reading headline, the register status, the lock that enforces it (RULED rows only; an OWED row shows the lock it owes) and the number of dated notes under the row.
 
 **Contents.** 1 Standard and policy pairs · 2 Rules · 3 History
 
 ## 2. Rules
 
 - **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens.
-  Status: OWED · lock owed: src/tests/surfaces/mcfrontend-status.infra.test.ts · +3 dated notes
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +4 dated notes
 
 - **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components.
   Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +1 dated note
@@ -56,13 +56,13 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
   Status: RULED 2026-11-04
 
 - **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
-  Status: OWED · lock owed: src/tests/surfaces/register-locks-resolve.infra.test.ts
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
 
 - **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
   Status: OWED · lock owed: src/tests/surfaces/handbook-rule-map.logic.test.ts
 
 - **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view.
-  Status: OWED · lock owed: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +1 dated note
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
 
 - **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
   Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
@@ -71,13 +71,13 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
   Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +2 dated notes
 
 - **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch.
-  Status: OWED · lock owed: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +1 dated note
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
 
 - **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
   Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
 
 - **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
-  Status: OWED · lock owed: src/tests/surfaces/spec-paths.infra.test.ts
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
 
 - **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
   Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts

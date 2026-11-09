@@ -1,0 +1,13 @@
+# GREEN (MF-43, lock src/tests/surfaces/product-scope-pins.infra.test.ts): the real check function, after the Spec 135 rows flipped in the same commit.
+# cmd: npx vitest run src/tests/surfaces/product-scope-pins.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ✓ src/tests/surfaces/product-scope-pins.infra.test.ts (5 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  17:15:58
+   Duration  196ms (transform 27ms, setup 6ms, collect 13ms, tests 3ms, environment 0ms, prepare 19ms)
+

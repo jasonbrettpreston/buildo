@@ -1,0 +1,21 @@
+{
+  "task": "MF-43",
+  "item": "McFrontend Phase 2 locks: FE-01 status, FE-09 register-locks-resolve, FE-11/FE-14 queue, FE-16 spec paths, and the spec review's two locks (product scope pins, parcel-tool fence)",
+  "class": "T",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "PENDING",
+  "commits_reviewed": [],
+  "cards": [
+    "Operator 2026-11-09, Wave 1 decision batch: \"approved except for 9 - ...\" (item 10: same-commit flip of the owned rows; item 11: FE-16 stays with MF-43, D-14; MF-43 D-1, D-3..D-8 approved as recommended).",
+    "CARD-red-evidence-nonempty stays a standalone McBylaws-owner card (MF-43 D-7); the evidence files here were checked by hand: non-empty and containing FAIL."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-43/plan.md (regression-guardian, code-reviewer-grounded, compliance seat: PASS-WITH-FOLDS, section 11); prereg-MF-43-1 (rules[] FE-01, FE-09, FE-11, FE-14, FE-16).",
+  "output": "PENDING: OUTPUT panel (regression-guardian, code-reviewer-grounded) not yet run.",
+  "seats": [],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-43/",
+  "notes": []
+}

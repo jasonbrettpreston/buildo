@@ -161,7 +161,7 @@
     {
       "id": "FE-01",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.01",
       "source": {
         "register": true,
@@ -249,7 +249,7 @@
     {
       "id": "FE-09",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.09",
       "source": {
         "register": true,
@@ -271,7 +271,7 @@
     {
       "id": "FE-11",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.11",
       "source": {
         "register": true,
@@ -304,7 +304,7 @@
     {
       "id": "FE-14",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.14",
       "source": {
         "register": true,
@@ -326,7 +326,7 @@
     {
       "id": "FE-16",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.16",
       "source": {
         "register": true,

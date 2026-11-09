@@ -1,0 +1,141 @@
+# RED (MF-43, lock src/tests/surfaces/mcfrontend-status.infra.test.ts): the file run with its check function stubbed to return [] (red-first stub), so every planted case fails on its assertion and the real-tree case passes vacuously.
+# cmd: npx vitest run src/tests/surfaces/mcfrontend-status.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ❯ src/tests/surfaces/mcfrontend-status.infra.test.ts (8 tests | 6 failed) 4ms
+   × FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: Phase 2 replaced by Phase 9 in the status block 2ms
+     → expected '' to match /does not name Phase 2/
+   × FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: the §11b.3 pointer removed 0ms
+     → expected '' to match /does not point to §11b\.3/
+   × FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: Phase 1 removed from the status line 0ms
+     → expected '' to match /does not name Phase 1/
+   × FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: "Not authorized for implementation" dropped 0ms
+     → expected '' to match /no longer states "Not authorized for …/
+   × FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: the §11b.3 heading renamed, and no status line at all 0ms
+     → expected '' to match /no "### 11b\.3" section/
+   × FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: the queue without its opening notes or its Phase 2 not-doing list 0ms
+     → expected '' to match /Phase 1 opening note/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-status.infra.test.ts > FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: Phase 2 replaced by Phase 9 in the status block
+AssertionError: expected '' to match /does not name Phase 2/
+
+- Expected: 
+/does not name Phase 2/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-status.infra.test.ts:100:47
+     98|   it('planted: Phase 2 replaced by Phase 9 in the status block', () =>…
+     99|     const bad = mutateBlock((l) => l.replaceAll('Phase 2', 'Phase 9'));
+    100|     expect(statusProblems(bad, Q).join('\n')).toMatch(/does not name P…
+       |                                               ^
+    101|   });
+    102| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-status.infra.test.ts > FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: the §11b.3 pointer removed
+AssertionError: expected '' to match /does not point to §11b\.3/
+
+- Expected: 
+/does not point to §11b\.3/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-status.infra.test.ts:105:47
+    103|   it('planted: the §11b.3 pointer removed', () => {
+    104|     const bad = mutateBlock((l) => l.replaceAll(PHASE2_POINTER, '§11b'…
+    105|     expect(statusProblems(bad, Q).join('\n')).toMatch(/does not point …
+       |                                               ^
+    106|   });
+    107| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-status.infra.test.ts > FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: Phase 1 removed from the status line
+AssertionError: expected '' to match /does not name Phase 1/
+
+- Expected: 
+/does not name Phase 1/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-status.infra.test.ts:110:47
+    108|   it('planted: Phase 1 removed from the status line', () => {
+    109|     const bad = mutateBlock((l) => (l.startsWith(STATUS_HEAD) ? l.repl…
+    110|     expect(statusProblems(bad, Q).join('\n')).toMatch(/does not name P…
+       |                                               ^
+    111|   });
+    112| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-status.infra.test.ts > FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: "Not authorized for implementation" dropped
+AssertionError: expected '' to match /no longer states "Not authorized for …/
+
+- Expected: 
+/no longer states "Not authorized for implementation"/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-status.infra.test.ts:115:47
+    113|   it('planted: "Not authorized for implementation" dropped', () => {
+    114|     const bad = mutateBlock((l) => l.replaceAll(NOT_AUTHORIZED, 'autho…
+    115|     expect(statusProblems(bad, Q).join('\n')).toMatch(/no longer state…
+       |                                               ^
+    116|   });
+    117| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-status.infra.test.ts > FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: the §11b.3 heading renamed, and no status line at all
+AssertionError: expected '' to match /no "### 11b\.3" section/
+
+- Expected: 
+/no "### 11b\.3" section/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-status.infra.test.ts:119:88
+    117| 
+    118|   it('planted: the §11b.3 heading renamed, and no status line at all',…
+    119|     expect(statusProblems(mutate(S126, PHASE2_HEADING_RE, '### 11b.9')…
+       |                                                                                        ^
+    120|     expect(statusProblems(mutate(S126, STATUS_HEAD, '> **State:'), Q).…
+    121|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/tests/surfaces/mcfrontend-status.infra.test.ts > FE-01: the 126 status line names Phase 1 and Phase 2 (pointing to §11b.3); the queue carries the opening notes > planted: the queue without its opening notes or its Phase 2 not-doing list
+AssertionError: expected '' to match /Phase 1 opening note/
+
+- Expected: 
+/Phase 1 opening note/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/mcfrontend-status.infra.test.ts:124:111
+    122| 
+    123|   it('planted: the queue without its opening notes or its Phase 2 not-…
+    124|     expect(statusProblems(S126, mutate(Q, new RegExp(QUEUE_PHASE1_OPEN…
+       |                                                                                                               ^
+    125|     expect(statusProblems(S126, mutate(Q, new RegExp(QUEUE_PHASE2_OPEN…
+    126|     expect(statusProblems(S126, mutate(Q, /^## Phase 2/m, '## Stage 2'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 2 passed (8)
+   Start at  17:15:54
+   Duration  192ms (transform 26ms, setup 6ms, collect 3ms, tests 4ms, environment 0ms, prepare 20ms)
+

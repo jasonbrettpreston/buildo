@@ -1,0 +1,13 @@
+# GREEN (MF-43, lock src/tests/surfaces/register-locks-resolve.infra.test.ts): the real check function, after the Spec 135 rows flipped in the same commit.
+# cmd: npx vitest run src/tests/surfaces/register-locks-resolve.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ✓ src/tests/surfaces/register-locks-resolve.infra.test.ts (12 tests) 7ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  17:15:56
+   Duration  198ms (transform 28ms, setup 7ms, collect 10ms, tests 7ms, environment 0ms, prepare 18ms)
+

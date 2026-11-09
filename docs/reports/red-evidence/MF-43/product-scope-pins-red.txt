@@ -1,0 +1,78 @@
+# RED (MF-43, lock src/tests/surfaces/product-scope-pins.infra.test.ts): the file run with its check function stubbed to return [] (red-first stub), so every planted case fails on its assertion and the real-tree case passes vacuously.
+# cmd: npx vitest run src/tests/surfaces/product-scope-pins.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ❯ src/tests/surfaces/product-scope-pins.infra.test.ts (5 tests | 3 failed) 3ms
+   × spec-review lock 1: web_landing is parcel_product and mobile_settings is platform_shared > planted: web_landing scope flipped to estate_other (a mutated copy of the real text) 2ms
+     → expected '' to match /web_landing: programme\.scope is "est…/
+   × spec-review lock 1: web_landing is parcel_product and mobile_settings is platform_shared > planted: mobile_settings moved under another scope directory 0ms
+     → expected '' to match /mobile_settings: descriptor sits unde…/
+   × spec-review lock 1: web_landing is parcel_product and mobile_settings is platform_shared > planted: a duplicate, a missing id, and an empty walk 0ms
+     → expected '' to match /web_landing: expected exactly one des…/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/product-scope-pins.infra.test.ts > spec-review lock 1: web_landing is parcel_product and mobile_settings is platform_shared > planted: web_landing scope flipped to estate_other (a mutated copy of the real text)
+AssertionError: expected '' to match /web_landing: programme\.scope is "est…/
+
+- Expected: 
+/web_landing: programme\.scope is "estate_other", pinned "parcel_product"/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/product-scope-pins.infra.test.ts:77:48
+     75|     expect(text).not.toBe(real.text);
+     76|     const files = REAL.map((f) => (f === real ? { ...f, text } : f));
+     77|     expect(scopePinProblems(files).join('\n')).toMatch(/web_landing: p…
+       |                                                ^
+     78|   });
+     79| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tests/surfaces/product-scope-pins.infra.test.ts > spec-review lock 1: web_landing is parcel_product and mobile_settings is platform_shared > planted: mobile_settings moved under another scope directory
+AssertionError: expected '' to match /mobile_settings: descriptor sits unde…/
+
+- Expected: 
+/mobile_settings: descriptor sits under scope directory "parcel_product"/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/product-scope-pins.infra.test.ts:83:48
+     81|     const real = byId('mobile_settings');
+     82|     const files = REAL.map((f) => (f === real ? { ...f, path: f.path.r…
+     83|     expect(scopePinProblems(files).join('\n')).toMatch(/mobile_setting…
+       |                                                ^
+     84|   });
+     85| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/tests/surfaces/product-scope-pins.infra.test.ts > spec-review lock 1: web_landing is parcel_product and mobile_settings is platform_shared > planted: a duplicate, a missing id, and an empty walk
+AssertionError: expected '' to match /web_landing: expected exactly one des…/
+
+- Expected: 
+/web_landing: expected exactly one descriptor, found 2/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/product-scope-pins.infra.test.ts:89:46
+     87|     const real = byId('web_landing');
+     88|     const dup = [...REAL, { path: real.path.replace('/parcel_product/'…
+     89|     expect(scopePinProblems(dup).join('\n')).toMatch(/web_landing: exp…
+       |                                              ^
+     90|     const missing = REAL.filter((f) => f !== byId('mobile_settings'));
+     91|     expect(scopePinProblems(missing).join('\n')).toMatch(/mobile_setti…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 2 passed (5)
+   Start at  17:15:55
+   Duration  196ms (transform 26ms, setup 6ms, collect 13ms, tests 3ms, environment 0ms, prepare 19ms)
+

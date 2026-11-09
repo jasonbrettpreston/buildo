@@ -1,0 +1,120 @@
+# RED (MF-43, lock src/tests/surfaces/parcel-tool-fence.infra.test.ts): the file run with its check function stubbed to return [] (red-first stub), so every planted case fails on its assertion and the real-tree case passes vacuously.
+# cmd: npx vitest run src/tests/surfaces/parcel-tool-fence.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts (7 tests | 5 failed) 4ms
+   × spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: a parcel-tool route outside (app) 2ms
+     → expected '' to match /mobile\/app\/parcel-tool\/x\.tsx …/app\
+   × spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: the gate return moved after <Tabs 0ms
+     → expected '' to match /"return <PaywallMount" comes after <T…/
+   × spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: the correct order exists only in comments 0ms
+     → expected '' to match /"return <SubscriptionLoadingGuard" mi…/
+   × spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: the parcel-tool screen removed, or placed before <Tabs 0ms
+     → expected '' to match /no name="parcel-tool" screen/
+   × spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: an empty file list, and the ruling comment removed 0ms
+     → expected '' to match /no tracked parcel-tool route file fou…/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/parcel-tool-fence.infra.test.ts > spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: a parcel-tool route outside (app)
+AssertionError: expected '' to match /mobile\/app\/parcel-tool\/x\.tsx …/app\
+
+- Expected: 
+/mobile\/app\/parcel-tool\/x\.tsx is outside mobile\/app\/\(app\)\/: .*MF-49/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts:109:89
+    107| 
+    108|   it('planted: a parcel-tool route outside (app)', () => {
+    109|     expect(fenceProblems([...FILES, 'mobile/app/parcel-tool/x.tsx'], L…
+       |                                                                                         ^
+    110|   });
+    111| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/tests/surfaces/parcel-tool-fence.infra.test.ts > spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: the gate return moved after <Tabs
+AssertionError: expected '' to match /"return <PaywallMount" comes after <T…/
+
+- Expected: 
+/"return <PaywallMount" comes after <Tabs/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts:114:54
+    112|   it('planted: the gate return moved after <Tabs', () => {
+    113|     const bad = `${mutate(L, /return <PaywallMount/g, 'void <PaywallMo…
+    114|     expect(fenceProblems(FILES, bad, GL).join('\n')).toMatch(/"return …
+       |                                                      ^
+    115|   });
+    116| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/tests/surfaces/parcel-tool-fence.infra.test.ts > spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: the correct order exists only in comments
+AssertionError: expected '' to match /"return <SubscriptionLoadingGuard" mi…/
+
+- Expected: 
+/"return <SubscriptionLoadingGuard" missing outside comments/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts:119:54
+    117|   it('planted: the correct order exists only in comments', () => {
+    118|     const bad = `// return <SubscriptionLoadingGuard />;\n${mutate(L, …
+    119|     expect(fenceProblems(FILES, bad, GL).join('\n')).toMatch(/"return …
+       |                                                      ^
+    120|   });
+    121| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/tests/surfaces/parcel-tool-fence.infra.test.ts > spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: the parcel-tool screen removed, or placed before <Tabs
+AssertionError: expected '' to match /no name="parcel-tool" screen/
+
+- Expected: 
+/no name="parcel-tool" screen/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts:123:94
+    121| 
+    122|   it('planted: the parcel-tool screen removed, or placed before <Tabs'…
+    123|     expect(fenceProblems(FILES, mutate(L, /^.*name="parcel-tool".*\n/m…
+       |                                                                                              ^
+    124|     const early = mutate(L, 'export default', 'const early = <Tabs.Scr…
+    125|     expect(fenceProblems(FILES, early, GL).join('\n')).toMatch(/name="…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/tests/surfaces/parcel-tool-fence.infra.test.ts > spec-review lock 2: every parcel-tool route stays inside the (app) gate > planted: an empty file list, and the ruling comment removed
+AssertionError: expected '' to match /no tracked parcel-tool route file fou…/
+
+- Expected: 
+/no tracked parcel-tool route file found/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts:129:49
+    127| 
+    128|   it('planted: an empty file list, and the ruling comment removed', ()…
+    129|     expect(fenceProblems([], L, GL).join('\n')).toMatch(/no tracked pa…
+       |                                                 ^
+    130|     expect(fenceProblems(FILES, L, mutate(GL, new RegExp(RULING_WORDS,…
+    131|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 2 passed (7)
+   Start at  17:15:55
+   Duration  194ms (transform 26ms, setup 7ms, collect 9ms, tests 4ms, environment 0ms, prepare 18ms)
+
