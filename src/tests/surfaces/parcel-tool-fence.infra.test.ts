@@ -24,7 +24,7 @@ const SCREEN = `name="${GROUP}"`;
 const RULING_WORDS = 'security regression';
 const EXIT = 'parcel-tool must stay behind the (app) subscription gate (ruling 2026-09-16 (c)); a move out needs a per-product gate first (MF-49, spec review R-3)';
 
-/** Strip `//` and block comments, keeping newlines and string literals (', ", `). */
+/** Strip `//` and block comments, keeping newlines and string literals (', ", `); a ' or " literal ends at a newline, so an apostrophe in JSX text cannot hide a later comment. */
 function stripComments(src: string): string {
   let out = '';
   let i = 0;
@@ -35,7 +35,7 @@ function stripComments(src: string): string {
     if (quote) {
       out += c;
       if (c === '\\') { out += n ?? ''; i += 2; continue; }
-      if (c === quote) quote = null;
+      if (c === quote || (c === '\n' && quote !== '`')) quote = null; // ' and " never span a line (JSX text such as Don't)
       i += 1;
     } else if (c === '/' && n === '/') {
       while (i < src.length && src[i] !== '\n') i += 1;
@@ -80,8 +80,13 @@ function trackedMobileApp(): string[] {
 }
 
 const FILES = trackedMobileApp();
-const L = fs.readFileSync(path.join(ROOT, LAYOUT), 'utf8');
-const GL = fs.readFileSync(path.join(ROOT, GROUP_LAYOUT), 'utf8');
+/** A missing file reads as empty, so a moved group is reported as a fence problem, not a crash at load. */
+function readIfExists(rel: string): string {
+  const p = path.join(ROOT, rel);
+  return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+}
+const L = readIfExists(LAYOUT);
+const GL = readIfExists(GROUP_LAYOUT);
 
 function mutate(text: string, from: string | RegExp, to: string): string {
   const out = text.replace(from, to);
@@ -127,5 +132,26 @@ describe('spec-review lock 2: every parcel-tool route stays inside the (app) gat
   it('planted: an empty file list, and the ruling comment removed', () => {
     expect(fenceProblems([], L, GL).join('\n')).toMatch(/no tracked parcel-tool route file found/);
     expect(fenceProblems(FILES, L, mutate(GL, new RegExp(RULING_WORDS, 'g'), 'risk')).join('\n')).toMatch(/the recorded ruling/);
+  });
+
+  it('fold: the whole group moved out of (app) names the exit instead of crashing on the missing group layout', () => {
+    const moved = FILES.map((f) => f.replace('mobile/app/(app)/parcel-tool/', 'mobile/app/parcel-tool/'));
+    const out = fenceProblems(moved, L, readIfExists('mobile/app/(app)/parcel-tool/_layout.missing.tsx')).join('\n');
+    expect(out).toMatch(/mobile\/app\/parcel-tool\/index\.tsx is outside mobile\/app\/\(app\)\/: .*MF-49/);
+    expect(out).toMatch(/mobile\/app\/\(app\)\/parcel-tool\/_layout\.tsx missing/);
+    expect(out).toMatch(/the recorded ruling/);
+  });
+
+  it('fold: index.tsx missing, and a layout with no line-start <Tabs', () => {
+    const noIndex = FILES.filter((f) => f !== 'mobile/app/(app)/parcel-tool/index.tsx');
+    expect(fenceProblems(noIndex, L, GL).join('\n')).toMatch(/parcel-tool\/index\.tsx missing \(dead-man\)/);
+    expect(fenceProblems(FILES, mutate(L, /^(\s*)<Tabs\b/gm, '$1<Tabz'), GL).join('\n')).toMatch(/no line-start <Tabs outside comments/);
+  });
+
+  it('fold: an apostrophe in JSX text does not hide a later comment from the stripper', () => {
+    const src = "const a = <Text>Don't pay</Text>;\n// return <PaywallMount gone\nconst b = 'x';\n";
+    const out = stripComments(src);
+    expect(out).not.toContain('return <PaywallMount');
+    expect(out.split('\n').length).toBe(src.split('\n').length);
   });
 });

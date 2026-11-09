@@ -1,0 +1,78 @@
+# RED (MF-43 OUTPUT-panel folds): the new planted cases run against the code of d96f3fecf. Red: the moved group crashes on the missing group layout (no readIfExists), an apostrophe in JSX text hides a later comment from the stripper, a RULED lock outside src/tests/surfaces reads as not tracked. The coverage plants (index.tsx missing, no <Tabs, invalid JSON, head-count divergence) pass here by construction: they pin rules that already existed.
+# cmd: npx vitest run src/tests/surfaces/parcel-tool-fence.infra.test.ts src/tests/surfaces/product-scope-pins.infra.test.ts src/tests/surfaces/register-locks-resolve.infra.test.ts --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ✓ src/tests/surfaces/product-scope-pins.infra.test.ts (6 tests) 5ms
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts (14 tests | 1 failed) 23ms
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > fold: a RULED lock outside src/tests/surfaces resolves against the whole tracked tree 11ms
+     → expected [ Array(1) ] to deeply equal []
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts (10 tests | 2 failed) 26ms
+   × spec-review lock 2: every parcel-tool route stays inside the (app) gate > fold: the whole group moved out of (app) names the exit instead of crashing on the missing group layout 2ms
+     → readIfExists is not defined
+   × spec-review lock 2: every parcel-tool route stays inside the (app) gate > fold: an apostrophe in JSX text does not hide a later comment from the stripper 1ms
+     → expected 'const a = <Text>Don\'t pay</Text>;\n/…' not to contain 'return <PaywallMount'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/parcel-tool-fence.infra.test.ts > spec-review lock 2: every parcel-tool route stays inside the (app) gate > fold: the whole group moved out of (app) names the exit instead of crashing on the missing group layout
+ReferenceError: readIfExists is not defined
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts:134:38
+    132|   it('fold: the whole group moved out of (app) names the exit instead …
+    133|     const moved = FILES.map((f) => f.replace('mobile/app/(app)/parcel-…
+    134|     const out = fenceProblems(moved, L, readIfExists('mobile/app/(app)…
+       |                                      ^
+    135|     expect(out).toMatch(/mobile\/app\/parcel-tool\/index\.tsx is outsi…
+    136|     expect(out).toMatch(/mobile\/app\/\(app\)\/parcel-tool\/_layout\.t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/tests/surfaces/parcel-tool-fence.infra.test.ts > spec-review lock 2: every parcel-tool route stays inside the (app) gate > fold: an apostrophe in JSX text does not hide a later comment from the stripper
+AssertionError: expected 'const a = <Text>Don\'t pay</Text>;\n/…' not to contain 'return <PaywallMount'
+
+- Expected
++ Received
+
+- return <PaywallMount
++ const a = <Text>Don't pay</Text>;
++ // return <PaywallMount gone
++ const b = 'x';
++
+
+ ❯ src/tests/surfaces/parcel-tool-fence.infra.test.ts:149:21
+    147|     const src = "const a = <Text>Don't pay</Text>;\n// return <Paywall…
+    148|     const out = stripComments(src);
+    149|     expect(out).not.toContain('return <PaywallMount');
+       |                     ^
+    150|     expect(out.split('\n').length).toBe(src.split('\n').length);
+    151|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > fold: a RULED lock outside src/tests/surfaces resolves against the whole tracked tree
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "FE-02: RULED but its lock is not tracked: src/tests/hooks-composition.infra.test.ts (rule 5)",
++ ]
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:174:50
+    172|   it('fold: a RULED lock outside src/tests/surfaces resolves against t…
+    173|     const moved = mutateRow(REAL, 'FE-02', 'src/tests/surfaces/report-…
+    174|     expect(registerLockProblems(moved, TRACKED)).toEqual([]);
+       |                                                  ^
+    175|   });
+    176| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  3 failed | 27 passed (30)
+   Start at  17:22:42
+   Duration  542ms (transform 148ms, setup 46ms, collect 120ms, tests 54ms, environment 1ms, prepare 112ms)
+

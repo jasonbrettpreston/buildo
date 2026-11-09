@@ -4,7 +4,8 @@
 //
 // MF-43 · McFrontend queue · lane T. One lock file for two rows (FE-11, FE-14), as the register names it. Only LINE-START headings are tasks: an id
 // mentioned in a note or in the "unused" line is not. An admin task is a heading whose title names `admin` OUTSIDE parentheses (a parenthetical, such as
-// "(mobile, web, admin, pdf)", lists targets, it does not make the task an admin conversion). Not checked here: next-free-id and id uniqueness are queue
+// "(mobile, web, admin, pdf)", lists targets, it does not make the task an admin conversion; so a title must name an admin task outside parentheses, e.g.
+// "Admin roles console", never "Roles console (admin)"). Not checked here: next-free-id and id uniqueness are queue
 // hygiene, owned by the queue (plan section 10).
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';

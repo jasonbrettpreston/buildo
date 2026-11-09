@@ -75,7 +75,8 @@ function registerLockProblems(text: string, tracked: ReadonlySet<string>, flipPe
 }
 
 function trackedSet(): Set<string> {
-  const r = spawnSync('git', ['ls-files', 'src/tests/surfaces'], { cwd: ROOT, encoding: 'utf8' });
+  // The whole tracked tree: rule 5 puts no directory limit on a RULED lock (an OWED lock is held to src/tests/surfaces by OWED_LOCK_RE).
+  const r = spawnSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' });
   expect(r.status).toBe(0);
   return new Set(r.stdout.split('\n').filter(Boolean));
 }
@@ -162,5 +163,15 @@ describe('FE-09: the Spec 135 Lock column resolves (rule 5)', () => {
     const tracked = new Set([...TRACKED, 'src/tests/surfaces/surface-validate.infra.test.ts']);
     expect(registerLockProblems(REAL, tracked, ['FE-03'])).not.toContain('FE-03: OWED but its lock already exists: src/tests/surfaces/surface-validate.infra.test.ts (rule 5; flip the row)');
     expect(registerLockProblems(REAL, tracked, []).join('\n')).toMatch(/FE-03: OWED but its lock already exists/);
+  });
+
+  it('fold: a row head the gate parser reads but this lock head count does not (bold id) is red', () => {
+    const bad = `${REAL.trimEnd()}\n| **FE-99** | x | y | n/a | z | OWED \`src/tests/surfaces/x.infra.test.ts\` |\n`;
+    expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/parsed \d+ FE rows but the register has \d+ row-head lines/);
+  });
+
+  it('fold: a RULED lock outside src/tests/surfaces resolves against the whole tracked tree', () => {
+    const moved = mutateRow(REAL, 'FE-02', 'src/tests/surfaces/report-generated-only.infra.test.ts', 'src/tests/hooks-composition.infra.test.ts');
+    expect(registerLockProblems(moved, TRACKED)).toEqual([]);
   });
 });

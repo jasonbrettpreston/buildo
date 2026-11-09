@@ -1,0 +1,18 @@
+# GREEN (MF-43 OUTPUT-panel folds): all six MF-43 locks after the folds.
+# cmd: npx vitest run <the six MF-43 lock files> --reporter=default --no-color
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf43
+
+ ✓ src/tests/surfaces/mcfrontend-queue.infra.test.ts (8 tests) 3ms
+ ✓ src/tests/surfaces/mcfrontend-status.infra.test.ts (8 tests) 6ms
+ ✓ src/tests/surfaces/spec-paths.infra.test.ts (5 tests) 1ms
+ ✓ src/tests/surfaces/parcel-tool-fence.infra.test.ts (10 tests) 6ms
+ ✓ src/tests/surfaces/product-scope-pins.infra.test.ts (6 tests) 4ms
+ ✓ src/tests/surfaces/register-locks-resolve.infra.test.ts (14 tests) 10ms
+
+ Test Files  6 passed (6)
+      Tests  51 passed (51)
+   Start at  17:22:59
+   Duration  238ms (transform 58ms, setup 54ms, collect 84ms, tests 30ms, environment 0ms, prepare 169ms)
+

@@ -90,4 +90,10 @@ describe('spec-review lock 1: web_landing is parcel_product and mobile_settings 
     expect(scopePinProblems(missing).join('\n')).toMatch(/mobile_settings: expected exactly one descriptor, found 0/);
     expect(scopePinProblems([]).join('\n')).toMatch(/no descriptor file found/);
   });
+
+  it('fold: a pinned descriptor that is not valid JSON', () => {
+    const real = byId('web_landing');
+    const files = REAL.map((f) => (f === real ? { ...f, text: '{' } : f));
+    expect(scopePinProblems(files).join('\n')).toMatch(/web_landing: descriptor is not valid JSON/);
+  });
 });
