@@ -4,18 +4,31 @@
   "class": "T",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "PENDING",
-  "commits_reviewed": [],
+  "head": "23d11dd9d",
+  "commits_reviewed": [
+    "f00c15da8 (docs: queue row, Spec 128 rule 17 note, FE-15 note, system map)",
+    "f23a91c16 (prereg-MF-23-1, rules FE-15)",
+    "23d11dd9d (code: the lock, red evidence, panel placeholder)",
+    "23d11dd9d (output folds: grounded-reviewer folds 1-3)"
+  ],
   "cards": [
     "Operator 2026-11-09: \"all approved as recommended\" (MF-23 D-3 a-now, catalogue-flag oracle deferred; D-4 FE-15 covers a-d).",
     "Card MF-23-F1 (queue): the catalogue-flag oracle for at least and disclosures, after the generator emits flags (MF-12 tranche 2 F-B) and MB-44."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-23/plan.md (PASS-WITH-FOLDS, section 10); prereg-MF-23-1 (rules[] FE-15).",
-  "output": "PENDING: OUTPUT panel (regression-guardian, code-reviewer-grounded) not yet run.",
-  "seats": [],
-  "verdict": "PENDING",
+  "output": "OUTPUT (stage 8): src/tests/surfaces 392 tests green (14 files; mcfront-proof 17, 11-12 s). Red then green in docs/reports/red-evidence/MF-23/ (stub runners, then real runners; a dead-checker mutant per canary). No full suite run (lane brief).",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded"
+  ],
+  "verdict": "PASS-WITH-FOLDS: no blocker. Regression guardian: nothing loosened, only kept-text edits; found the Spec 128 rule 17 note wrongly named the honest and parity locks (corrected). Grounded reviewer: tokens for the at_least leg and canary c were too loose (a changed suffix or any probe failure counted); tightened (received-label diff line; MF23 PROBE reaches), dead green() clause dropped, renderer-untouched hash now walks both directories. Executed: bad plant throws, copy list sound (223 nested tests), no temp leaks, env and load stable.",
   "blockers": [],
-  "followups": [],
-  "evidence": "docs/reports/red-evidence/MF-23/",
+  "followups": [
+    "Canary c probe repeats the FE-24 lock render step but goes through the generator; the FE-24 lock stays the home of that check (R-27).",
+    "Canary d plants in viewOf (core.ts), not ReportView.tsx, which holds no target.",
+    "Card MF-23-F1: catalogue-flag oracle.",
+    "Lane R: Spec 135 FE-15 dated note flipping it RULED with the landed sha; MF-23 heading DONE."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-23/; raw seat reports in ~/Buildo-scratch/mcfrontend/MF-23/output-panel/",
   "notes": []
 }

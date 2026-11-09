@@ -43,7 +43,7 @@ const L = {
   genOnly: `${SUR}/report-generated-only.infra.test.ts`, render: `${SUR}/report-render.logic.test.ts`, parity: `${SUR}/parity.golden.test.ts`, viewUi: `${SUR}/report-view.ui.test.tsx`,
 };
 const LOCKS = Object.values(L);
-// Measured copy list (about 16 MB); node_modules is a symlink, the rest is copied.
+// Measured copy list (about 16 MB, 11 s for the file); node_modules is a symlink, the rest is copied.
 const COPY = [
   'scripts/surfaces', 'scripts/analysis/report-schema.mjs', 'scripts/analysis/bylaw', CATALOGUE, SWITCHBOARD, 'scripts/seeds/bylaw/vocab.json', 'scripts/seeds/bylaw/adjudications.json',
   'docs/reports/decisions/2026-10-20-chat-batch-b.json', 'docs/specs/01-pipeline/78_optimal_lot_configuration.md', 'src/lib/parcels/consumer-lookup.ts', 'mobile/src/lib/parcelCostFormat.ts',
@@ -88,7 +88,7 @@ const runLock = (tree: string, files: string[]): Run => {
 // Red = the run did not crash, and a failed test of the named lock file carries the checker's own token. An exit code alone proves nothing.
 const lockRed = (r: Run, token: string, file: string): boolean => !r.crashed && r.failed.some((f) => f.file.endsWith(file) && f.title.includes(token));
 const cliRed = (r: Run, token: string): boolean => !r.crashed && r.code === 1 && r.text.includes(token);
-const green = (r: Run): void => {  expect(r.crashed).toBe(false); expect(r.code).toBe(0); expect(r.tests === 0 || r.failed.length === 0).toBe(true); };
+const green = (r: Run): void => {  expect(r.crashed).toBe(false); expect(r.code).toBe(0); expect(r.failed).toEqual([]); };
 
 // ---- the temp copy ----------------------------------------------------------------------------------------------------------------------------------
 let tmpRoot = '';
@@ -140,6 +140,8 @@ describe('canary a (a-now): "at least" and a disclosure are dropped from real ou
     const r = runLock(t, files);
     expect(lockRed(r, 'at_least', 'report-render.logic.test.ts')).toBe(true);
     expect(lockRed(r, 'FE-02', 'report-generated-only.infra.test.ts')).toBe(true);
+    // The defect itself: the received label has lost the suffix (a changed suffix, e.g. ', at least QQ', would not match). Names the lock's own diff line.
+    expect(r.text).toMatch(/^\+\s+"label": "GFA \(flat roof\)",?$/m);
   });
   it('RED (synthetic trees): ReportView.tsx stops rendering disclosures: the parity lock and the view lock name disclosure', () => {
     const t = mkTree();
@@ -234,8 +236,8 @@ describe('MF23 PROBE: the new catalogue row', () => {
 });
 `;
   const rendererSha = (t: string): string => {
-    const files = [CORE, VIEW, 'src/lib/surfaces/report/data.ts'];
-    return files.map((f) => sha(path.join(t, f))).join('|');
+    const walk = (d: string): string[] => fs.readdirSync(path.join(t, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
+    return ['src/lib/surfaces/report', 'src/components/report'].flatMap(walk).sort().map((f) => `${f}:${sha(path.join(t, f))}`).join('|');
   };
   // Clean copy + catalogue row ON: the generator is red until --write, the renderer sources are untouched by it, then the probe is written.
   const withRow = (t: string): void => {
@@ -264,7 +266,7 @@ describe('MF23 PROBE: the new catalogue row', () => {
     const t = mkTree();
     withRow(t);
     edit(t, CORE, swap('const fields = fieldsOf(ctx.decl);\n  const reason', "const fields = fieldsOf(ctx.decl).filter((f) => f.name === 'status_text' || f.name === 'gfa_flat_m2');\n  const reason"));
-    expect(lockRed(runLock(t, [PROBE_FILE]), 'MF23 PROBE', 'zz-mf23-probe.test.ts')).toBe(true);
+    expect(lockRed(runLock(t, [PROBE_FILE]), 'MF23 PROBE reaches', 'zz-mf23-probe.test.ts')).toBe(true);
   });
   it('dead checker: with the probe emptied the planted run is NOT red', () => {
     const t = mkTree();

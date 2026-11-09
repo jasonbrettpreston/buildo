@@ -1,0 +1,8 @@
+# MF-23 output-panel folds, red first (grounded reviewer folds 1-4). Each tightened form is shown failing/rejecting the input the old loose form let through, then the green run.
+# Reading: fold 1 and 2: OLD passes (vacuous), NEW fails on the wrong-defect plant. Fold 3: OLD green() accepts a run listing a failure, NEW rejects. Fold 4: the OLD hash is blind to a new generated file (its 'not.toBe' case fails), the NEW walk sees it (passes).
+
+
+## Green after the folds: src/tests/surfaces/ (targeted)
+ Test Files  14 passed (14)
+      Tests  392 passed (392)
+   Duration  14.05s (transform 509ms, setup 246ms, collect 1.44s, tests 29.20s, environment 692ms, prepare 556ms)
