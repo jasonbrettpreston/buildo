@@ -1,0 +1,7 @@
+# RED 2 (FE-10, output-panel fold): the reader run WITHOUT the closed-status-word check: a status cell that is 'pending', empty, 'RULD ...' or 'ratified' reads as RULED silently, so the planted case fails (plant detected).
+# cmd: npx vitest run src/tests/surfaces/handbook-rule-map.logic.test.ts (generator with the check removed)
+   × FE-10 H1 — the reader: every FE row, no row can vanish > RED: a struck id, a bold id, a PROPOSED row, a numbering gap, a wrong "Next free id" and a short row each throw 5ms
+     → pending: expected [Function] to throw an error
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 20 passed (21)

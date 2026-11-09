@@ -21,15 +21,69 @@ export const RULE_MAP_REL = 'scripts/steps/_schema/rule-map.json';
 export const HANDBOOK_REL = 'docs/specs/01-pipeline/132_step_standard_handbook.md';
 export const BYLAW_RULE_MAP_REL = 'scripts/analysis/bylaw/_schema/bylaw-rule-map.json';
 export const BYLAW_HANDBOOK_REL = 'docs/specs/01-pipeline/133_bylaw_handbook.md';
+export const SURFACE_RULE_MAP_REL = 'scripts/surfaces/_schema/surface-rule-map.json';
+export const SURFACE_HANDBOOK_REL = 'docs/specs/02-web-admin/136_mcfrontend_handbook.md';
 /**
  * The generated handbooks, keyed by spec id (Spec 124 R-IY; 124a §B25: "generated_size_caps and arm (iii-b)'s resolver
  * are keyed by spec id"). 132 is the step handbook (rule map hand-curated from the Spec 124 register); 133 is the by-law
- * handbook (rule map GENERATED from the Spec 69a M-rows and Spec 131 LC-rows, Spec 69a M-260).
+ * handbook (rule map GENERATED from the Spec 69a M-rows and Spec 131 LC-rows, Spec 69a M-260); 136 is the McFrontend
+ * handbook (rule map GENERATED from the Spec 135 FE rows, MF-18). `tag` prefixes the CLI messages of runHandbookCli.
  */
 export const HANDBOOKS = Object.freeze({
   '132': Object.freeze({ spec: '132', ruleMapRel: RULE_MAP_REL, handbookRel: HANDBOOK_REL, generator: 'scripts/generate-step-handbook.mjs' }),
-  '133': Object.freeze({ spec: '133', ruleMapRel: BYLAW_RULE_MAP_REL, handbookRel: BYLAW_HANDBOOK_REL, generator: 'scripts/generate-bylaw-handbook.mjs' }),
+  '133': Object.freeze({ spec: '133', ruleMapRel: BYLAW_RULE_MAP_REL, handbookRel: BYLAW_HANDBOOK_REL, generator: 'scripts/generate-bylaw-handbook.mjs', tag: 'bylaw-handbook' }),
+  '136': Object.freeze({ spec: '136', ruleMapRel: SURFACE_RULE_MAP_REL, handbookRel: SURFACE_HANDBOOK_REL, generator: 'scripts/surfaces/generate-surface-handbook.mjs', tag: 'surface-handbook' }),
 });
+
+/**
+ * The shared `--write` / `--check` shell of a GENERATED handbook (Spec 133, Spec 136). Exactly one flag, else exit 2;
+ * `--check` exits 1 when the rule map or the handbook differs from the build, or when the build throws; `--write`
+ * rewrites both. `build(root)` returns { map, text } (it may throw). Sets `process.exitCode` on the injected `process`
+ * (default: the real one; a test passes a plain object) and RETURNS the same code; `out` / `err` default to the console.
+ * No clock, no DB, no network.
+ */
+export function runHandbookCli({ spec, argv, build, root = REPO_ROOT, out = console.log, err = console.error, process = globalThis.process }) {
+  // `process` is the injected parameter above: do not use the global process inside this function.
+  const h = HANDBOOKS[spec];
+  const known = new Set(['--write', '--check']);
+  const write = argv.includes('--write');
+  const check = argv.includes('--check');
+  if (argv.some((a) => !known.has(a)) || write === check) {
+    err(`usage: node ${h.generator} --write | --check`);
+    process.exitCode = 2;
+    return process.exitCode;
+  }
+  let built;
+  try {
+    built = build(root);
+  } catch (e) {
+    err(String(e && e.message ? e.message : e));
+    process.exitCode = 1;
+    return process.exitCode;
+  }
+  const { map, text } = built;
+  const mapText = `${JSON.stringify(map, null, 2)}\n`;
+  const mapOut = path.join(root, h.ruleMapRel);
+  const hbOut = path.join(root, h.handbookRel);
+  if (check) {
+    const stale = [];
+    if (!fs.existsSync(mapOut) || fs.readFileSync(mapOut, 'utf8') !== mapText) stale.push(h.ruleMapRel);
+    if (!fs.existsSync(hbOut) || fs.readFileSync(hbOut, 'utf8') !== text) stale.push(h.handbookRel);
+    if (stale.length) {
+      err(`[${h.tag}] ${stale.join(' and ')} stale — run node ${h.generator} --write`);
+      process.exitCode = 1;
+      return process.exitCode;
+    }
+    out(`[${h.tag}] ${h.handbookRel} is up to date (${map.rules.length} rules)`);
+    return 0;
+  }
+  fs.mkdirSync(path.dirname(mapOut), { recursive: true });
+  fs.mkdirSync(path.dirname(hbOut), { recursive: true });
+  fs.writeFileSync(mapOut, mapText);
+  fs.writeFileSync(hbOut, text);
+  out(`[${h.tag}] wrote ${h.ruleMapRel} and ${h.handbookRel} (${text.split('\n').length - 1} lines, ${map.rules.length} rules)`);
+  return 0;
+}
 
 export function loadHandbookRuleMap(specId, repoRoot = REPO_ROOT) {
   const h = HANDBOOKS[specId];

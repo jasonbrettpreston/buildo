@@ -1,0 +1,10 @@
+# GREEN (FE-10): real generator; controls current, plants detected, --write idempotent
+# cmd: npx vitest run src/tests/surfaces/handbook-rule-map.logic.test.ts src/tests/spec133-bylaw-handbook.logic.test.ts
+ Test Files  2 passed (2)
+      Tests  44 passed (44)
+# cmd: npx vitest run src/tests/surfaces
+ Test Files  14 passed (14)
+      Tests  396 passed (396)
+# cmd: node scripts/generate-bylaw-layer2-input.mjs --check (after): exit 0: [bylaw-layer2-input] clean — docs/reference/bylaw-layer2-input.json current (table_version 44dbbfa2b5e5, 1937 input files)
+# Spec 133 characterization (--check, no flag, --nope, --write --check, --write --write, --write; stdout, stderr, exit, file hashes) before vs after: byte-identical (diff -r clean)
+# git diff --name-only <base> under scripts/analysis/bylaw and scripts/seeds/bylaw: 0 path(s) (no table_version move)

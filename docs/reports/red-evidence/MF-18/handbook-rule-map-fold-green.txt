@@ -1,0 +1,4 @@
+# GREEN 2 (FE-10, output-panel fold): real reader
+# cmd: npx vitest run src/tests/surfaces/handbook-rule-map.logic.test.ts
+ Test Files  1 passed (1)
+      Tests  21 passed (21)

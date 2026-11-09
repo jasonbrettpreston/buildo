@@ -1,0 +1,22 @@
+{
+  "task": "MF-18",
+  "item": "Spec 136 generator + --check (FE-10): shared CLI shell, generated rule map and handbook, the lock handbook-rule-map.logic.test.ts",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "pending",
+  "cards": [
+    "Operator 2026-11-09: \"Wf-18 proceed if compliant and meets the 5 principle standard\" (D-1..D-5 as recommended; MF-18 owns FE-10 only)."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-18/plan.md section 11; regression-guardian and code-reviewer-grounded, both APPROVE WITH FOLDS, no blocker; reports in ~/Buildo-scratch/mcfrontend/MF-18/plan-panel/.",
+  "output": "PENDING: the OUTPUT panel is filled before the push.",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded"
+  ],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-18/",
+  "notes": []
+}

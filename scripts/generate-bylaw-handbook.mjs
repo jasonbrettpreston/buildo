@@ -26,13 +26,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { HANDBOOKS } from './analysis/gates/rule-map.mjs';
+import { HANDBOOKS, runHandbookCli } from './analysis/gates/rule-map.mjs';
 import { readBylawRegisterRows, BYLAW_REGISTERS, GENERAL_FAMILY } from './analysis/bylaw/bylaw-register.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const SPEC = HANDBOOKS['133'];
-const MAP_OUT = path.join(ROOT, SPEC.ruleMapRel);
-const OUTPUT = path.join(ROOT, SPEC.handbookRel);
 const HISTORY = 'history';
 
 const PROVISIONS_REL = 'docs/reference/bylaw-provisions.json';
@@ -76,7 +74,7 @@ const HISTORY_SECTION = {
 };
 const sectionIdOf = (row) => (row.history ? HISTORY : `${FAMILY_PREFIX}${row.family}`);
 
-const lineIdOf = (id) => id.toLowerCase().replace('-', '.');
+export const lineIdOf = (id) => id.toLowerCase().replace('-', '.');
 
 /** The rule map, built from the register rows. Structure only: line text is read from the register at render time. */
 export function buildRuleMap(rows) {
@@ -126,7 +124,7 @@ export function mapFindings(map, rows, read = (rel) => fs.readFileSync(path.join
   return out;
 }
 
-function renderLine(row) {
+export function renderLine(row) {
   const notes = row.notes ? ` · +${row.notes} dated note${row.notes === 1 ? '' : 's'}` : '';
   const enforced = row.enforcedBy ? ` · Enforced by: ${row.enforcedBy}` : '';
   // Q-133 3 and Q-133b (operator 2026-11-03/04, ~/Buildo-scratch/p2close/CARD-spec133-cap.md): no per-rule "Rules:" line, because
@@ -229,46 +227,13 @@ export function render(map, rows) {
   return `${out.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd()}\n`;
 }
 
-const json = (v) => `${JSON.stringify(v, null, 2)}\n`;
-
 function main(argv) {
-  const known = new Set(['--write', '--check']);
-  const unknown = argv.filter((a) => !known.has(a));
-  const write = argv.includes('--write');
-  const check = argv.includes('--check');
-  if (unknown.length || write === check) {
-    console.error('usage: node scripts/generate-bylaw-handbook.mjs --write | --check');
-    process.exitCode = 2;
-    return;
-  }
-  let map;
-  let text;
-  try {
-    const rows = readBylawRegisterRows(ROOT);
-    map = buildRuleMap(rows);
-    text = render(map, rows);
-  } catch (err) {
-    console.error(String(err && err.message ? err.message : err));
-    process.exitCode = 1;
-    return;
-  }
-  const mapText = json(map);
-  if (check) {
-    const stale = [];
-    if (!fs.existsSync(MAP_OUT) || fs.readFileSync(MAP_OUT, 'utf8') !== mapText) stale.push(SPEC.ruleMapRel);
-    if (!fs.existsSync(OUTPUT) || fs.readFileSync(OUTPUT, 'utf8') !== text) stale.push(SPEC.handbookRel);
-    if (stale.length) {
-      console.error(`[bylaw-handbook] ${stale.join(' and ')} stale — run node scripts/generate-bylaw-handbook.mjs --write`);
-      process.exitCode = 1;
-      return;
-    }
-    console.log(`[bylaw-handbook] ${SPEC.handbookRel} is up to date (${map.rules.length} rules)`);
-    return;
-  }
-  fs.mkdirSync(path.dirname(MAP_OUT), { recursive: true });
-  fs.writeFileSync(MAP_OUT, mapText);
-  fs.writeFileSync(OUTPUT, text);
-  console.log(`[bylaw-handbook] wrote ${SPEC.ruleMapRel} and ${SPEC.handbookRel} (${text.split('\n').length - 1} lines, ${map.rules.length} rules)`);
+  const build = (root) => {
+    const rows = readBylawRegisterRows(root);
+    const map = buildRuleMap(rows);
+    return { map, text: render(map, rows) };
+  };
+  runHandbookCli({ spec: '133', argv, build, root: ROOT });
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) main(process.argv.slice(2));

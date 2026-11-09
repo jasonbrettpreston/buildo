@@ -1,0 +1,33 @@
+# RED (FE-10, lock src/tests/surfaces/handbook-rule-map.logic.test.ts): the file run against STUBS (readFeRows returns no rows, buildRuleMap returns an empty map, render and build return empty text, runHandbookCli returns 0 without checking), so every case fails for the right reason: plant detected, expected N got 0.
+# cmd: npx vitest run src/tests/surfaces/handbook-rule-map.logic.test.ts
+   × FE-10 H1 — the reader: every FE row, no row can vanish > reads the live register: >= 30 rows, FE-01..FE-nn contiguous, "Next free id" follows the last, status and locks equal the gate reader 2ms
+     → expected 0 to be greater than or equal to 30
+   × FE-10 H1 — the reader: every FE row, no row can vanish > RED: a struck id, a bold id, a PROPOSED row, a numbering gap, a wrong "Next free id" and a short row each throw 1ms
+     → expected [Function] to throw an error
+   × FE-10 H1 — the reader: every FE row, no row can vanish > control: the planted-text reader reads status, date, locks and counts only the dated notes of the form "Dated note <date>" 1ms
+     → expected [] to deeply equal [ [ 'FE-01', 'RULED', …(3) ], …(3) ]
+   × FE-10 H2/H3 — the rule map: built from the register, one rule per line > the committed map deep-equals the map built from the register; it has >= 30 rules 2ms
+     → expected { '$comment': [ …(2) ], …(5) } to deeply equal { rules: [], lines: [], …(2) }
+   × FE-10 H2/H3 — the rule map: built from the register, one rule per line > shape: closed sections, one rule per line and one line per rule, line ids fe.nn, map vs register findings are empty 2ms
+     → expected [ …(30) ] to deeply equal []
+   × FE-10 H2/H3 — the rule map: built from the register, one rule per line > RED: an unmapped row, a stale rule, a missing anchor and a line with no rule each produce a finding 1ms
+     → expected 'FE-01 is in the map but not in a regi…' to match /no rule-map entry/
+   × FE-10 H2/H3 — the rule map: built from the register, one rule per line > status mapping: RULED to active, OWED to owed, RETIRED to history (a history line), planted 0ms
+     → expected [] to deeply equal [ 'active', 'active', 'owed', …(1) ]
+   × FE-10 H4 — the committed Spec 136 equals the render, and tells the truth about enforcement > equals the build, and two builds are identical 1ms
+     → expected '# SPEC 136 — McFrontend Handbook\n\n*…' to be '' // Object.is equality
+   × FE-10 H4 — the committed Spec 136 equals the render, and tells the truth about enforcement > RED: a RULED row that names a missing lock, a missing named path and a map that disagrees with the register each make the render throw 3ms
+     → expected [Function] to throw an error
+   × FE-10 H4 — the committed Spec 136 equals the render, and tells the truth about enforcement > a RETIRED row renders only under History; an empty History says "None yet." 2ms
+     → expected -1 to be greater than -1
+   × FE-10 H6 — the shell: --check and --write on a temp root, exit codes and messages > missing files, then --write, then --check exit 0; --write twice is byte-identical (second run changes nothing) 3ms
+     → expected +0 to be 1 // Object.is equality
+   × FE-10 H6 — the shell: --check and --write on a temp root, exit codes and messages > RED: a stale handbook and a stale map each exit 1 and name that file only 3ms
+     → expected +0 to be 1 // Object.is equality
+   × FE-10 H6 — the shell: --check and --write on a temp root, exit codes and messages > usage: no flag, both flags and an unknown flag exit 2; a build that throws exits 1 with its message 13ms
+     → expected +0 to be 2 // Object.is equality
+   × FE-10 H6 — the shell: --check and --write on a temp root, exit codes and messages > the committed files are current: --check on the repo exits 0 0ms
+     → expected '' to contain 'surface-handbook'
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  14 failed | 7 passed (21)
