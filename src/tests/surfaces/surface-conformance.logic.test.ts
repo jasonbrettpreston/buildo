@@ -60,6 +60,7 @@ export const sitesOf = (text: string, file: string): Site[] => {
   const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
   const visit = (n: ts.Node): void => {
     if (ts.isImportDeclaration(n)) out.push({ spec: lit(n.moduleSpecifier), line: at(n), kind: 'import' });
+    else if (ts.isImportEqualsDeclaration(n) && ts.isExternalModuleReference(n.moduleReference)) out.push({ spec: lit(n.moduleReference.expression), line: at(n), kind: 'import =' });
     else if (ts.isExportDeclaration(n) && n.moduleSpecifier) out.push({ spec: lit(n.moduleSpecifier), line: at(n), kind: 'export from' });
     else if (ts.isCallExpression(n)) {
       const e = n.expression;
@@ -80,6 +81,8 @@ const resolveSpec = (file: string, spec: string): string | null => {
   return null;
 };
 const globHit = (globs: string[], p: string): boolean => globs.some((g) => (g.endsWith('/**') ? p.startsWith(g.slice(0, -2)) : p === g));
+// A component file outside the binding homes (R-13 roots minus the surfaces dirs) is hand-built: a mount file may not import it, by any path form.
+const HAND_BUILT = (p: string): boolean => ['src/components/', 'mobile/src/components/'].some((r) => p.startsWith(r)) && !['src/components/surfaces/', 'mobile/src/components/surfaces/'].some((r) => p.startsWith(r));
 const stem = (p: string): string => p.replace(/\.(tsx?|jsx?|mjs|cjs)$/, '').replace(/\/index$/, '');
 
 /** C-2: library and vendor imports outside the allowed files, non-literal specifiers outside tests, and mount-file imports outside the closed list. */
@@ -104,6 +107,7 @@ export const boundaryProblems = (root: string, b: Json): { lines: string[]; file
       const lib = libOf(s.spec, libs);
       const vendor = resolved !== null && (resolved === b.vendor_dir || resolved.startsWith(`${b.vendor_dir}/`));
       if ((lib || vendor) && !exempt) { lines.push(`C-2 ${file}:${s.line}: ${vendor ? 'vendor path' : 'library'} ${s.spec} (${s.kind}) outside a binding module`); continue; }
+      if (isMount && resolved !== null && HAND_BUILT(resolved)) { lines.push(`C-2 ${file}:${s.line}: mount file imports hand-built component ${s.spec}`); continue; }
       if (isMount) {
         const ok = s.spec.startsWith('.') || b.mount_internal.some((p: string) => s.spec?.startsWith(p)) || libOf(s.spec, b.framework) !== undefined
           || (resolved !== null && modules.has(stem(resolved)));
@@ -123,7 +127,10 @@ export const textProblems = (text: string, file: string, nonDisplay: string[]): 
   const visit = (n: ts.Node): void => {
     if (ts.isJsxText(n) && n.text.trim() !== '') out.push(`C-2b ${file}:${at(n)}: JSX text "${n.text.trim()}"`);
     else if (ts.isJsxExpression(n) && n.expression && ts.isStringLiteralLike(n.expression) && !ts.isJsxAttribute(n.parent)) out.push(`C-2b ${file}:${at(n)}: string child "${n.expression.text}"`);
-    else if (ts.isJsxAttribute(n) && n.initializer && ts.isStringLiteral(n.initializer) && !nonDisplay.includes(n.name.getText(sf))) out.push(`C-2b ${file}:${at(n)}: display attribute ${n.name.getText(sf)}="${n.initializer.text}"`);
+    else if (ts.isJsxAttribute(n) && n.initializer && !nonDisplay.includes(n.name.getText(sf))) {
+      const v = ts.isStringLiteral(n.initializer) ? n.initializer : ts.isJsxExpression(n.initializer) && n.initializer.expression && ts.isStringLiteralLike(n.initializer.expression) ? n.initializer.expression : null;
+      if (v) out.push(`C-2b ${file}:${at(n)}: display attribute ${n.name.getText(sf)}="${v.text}"`);
+    }
     ts.forEachChild(n, visit);
   };
   visit(sf);
@@ -234,6 +241,7 @@ describe('C-2 the import boundary (one tier: libraries only in binding modules, 
     put(root, 'src/lib/x.ts', 'const name = process.env.X as string;\nexport const m = require(name);\n');
     put(root, 'src/tests/x.test.ts', "const name = 'a';\nexport const m = require(name);\nvi.mock('@mantine/core');\n");
     put(root, 'src/components/surfaces/web/FormBinding.tsx', "import { Button } from '@mantine/core';\nexport const F = Button;\n");
+    put(root, 'src/lib/q.ts', "import M = require('@mantine/core');\nexport const q = M;\n");
     expect(boundaryProblems(root, b).lines.sort()).toEqual([
       'C-2 mobile/app/w.tsx:1: vendor path @/vendor/rnr/button (import) outside a binding module',
       'C-2 mobile/app/w.tsx:2: vendor path ../src/vendor/rnr/button (import) outside a binding module',
@@ -241,6 +249,7 @@ describe('C-2 the import boundary (one tier: libraries only in binding modules, 
       'C-2 src/app/x/Wrapper.tsx:1: library @mantine/core (import) outside a binding module',
       'C-2 src/components/z.tsx:1: library @rjsf/core (import()) outside a binding module',
       'C-2 src/lib/foo.ts:1: library mantine-datatable (export from) outside a binding module',
+      'C-2 src/lib/q.ts:1: library @mantine/core (import =) outside a binding module',
       'C-2 src/lib/t.ts:1: library @mantine/core (import) outside a binding module',
       'C-2 src/lib/x.ts:2: non-literal require specifier',
       'C-2 src/x.css:1: library @mantine/core/styles.css (css @import) outside a binding module',
@@ -252,11 +261,14 @@ describe('C-2 the import boundary (one tier: libraries only in binding modules, 
     const b = { ...B, mounts: [{ surface: 'admin_media', path: page }], modules: [{ path: 'src/components/surfaces/web/FormBinding.tsx', platform: 'web', archetypes: ['FORM'], owner: 'binding_web_form', exports: [] }] };
     put(root, page, ["import { notFound } from 'next/navigation';", "import { useState } from 'react';", "import { FormBinding } from '@/components/surfaces/web/FormBinding';",
       "import { requireAdminPage } from '@/lib/auth/admin';", "import { useMedia } from './useMedia';", "import { toast } from 'sonner';", "import { View } from 'react-native';",
-      "import { Button } from '@mantine/core';", 'export const p = [notFound, useState, FormBinding, requireAdminPage, useMedia, toast, View, Button];', ''].join('\n'));
+      "import { Button } from '@mantine/core';", "import { Wrapper } from '../../../../components/admin/Wrapper';", "import { Tile } from '@/components/admin/Tile';",
+      'export const p = [notFound, useState, FormBinding, requireAdminPage, useMedia, toast, View, Button, Wrapper, Tile];', ''].join('\n'));
     expect(boundaryProblems(root, b).lines).toEqual([
       'C-2 src/app/(maxbld)/admin/media/page.tsx:6: mount file imports sonner',
       'C-2 src/app/(maxbld)/admin/media/page.tsx:7: mount file imports react-native',
       'C-2 src/app/(maxbld)/admin/media/page.tsx:8: library @mantine/core (import) outside a binding module',
+      'C-2 src/app/(maxbld)/admin/media/page.tsx:9: mount file imports hand-built component ../../../../components/admin/Wrapper',
+      'C-2 src/app/(maxbld)/admin/media/page.tsx:10: mount file imports hand-built component @/components/admin/Tile',
     ]);
   });
 });
@@ -269,11 +281,13 @@ describe('C-2b no display text in mount files and binding modules (the exempt li
     expect(lines).toEqual([]);
   });
   it('RED: JSX text, a string child and a string display attribute; a non-display attribute and a content binding are allowed', () => {
-    const src = "export const P = ({ c }: { c: Record<string, string> }) => (\n  <Stack variant=\"page\">\n    <Text>Save</Text>\n    <Text>{'Cancel'}</Text>\n    <Button title=\"Go\">{c['k']}</Button>\n  </Stack>\n);\n";
+    const src = "export const P = ({ c }: { c: Record<string, string> }) => (\n  <Stack variant=\"page\">\n    <Text>Save</Text>\n    <Text>{'Cancel'}</Text>\n    <Button title=\"Go\">{c['k']}</Button>\n    <Input title={'Name'} placeholder={`Type`} variant={'filled'} />\n  </Stack>\n);\n";
     expect(textProblems(src, 'page.tsx', B.non_display_keys)).toEqual([
       'C-2b page.tsx:3: JSX text "Save"',
       'C-2b page.tsx:4: string child "Cancel"',
       'C-2b page.tsx:5: display attribute title="Go"',
+      'C-2b page.tsx:6: display attribute title="Name"',
+      'C-2b page.tsx:6: display attribute placeholder="Type"',
     ]);
   });
 });

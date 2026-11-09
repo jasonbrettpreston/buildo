@@ -10,11 +10,11 @@
 // What JSON Schema can refuse, screen-data.schema.json refuses (plan.min cut 7); this file keeps only the cross-file checks.
 // queueProblems() is exported for the FE-31 lock and is NOT run by the gate: the gate reads only the tree it sits in (plan.min M-0).
 // Pure over committed files. Read-only. No DB, no network. Every finding is one line `SV-<ARM> <subject>: <problem>`.
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { GOLDEN_DIR, readJson, sha16 } from './report-checks.mjs';
 
 const require_ = createRequire(import.meta.url);
 const AjvModule = require_('ajv');
@@ -32,8 +32,6 @@ export const FORM_KEYWORDS = ['type', 'properties', 'required', 'enum', 'const',
 export const FORM_FORMATS = ['date', 'date-time', 'email', 'uri', 'uuid'];
 const OPTION_VALUE = /^[a-z0-9_]+$/;
 
-const sha16 = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex').slice(0, 16);
-const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 const tryJson = (p) => { try { return readJson(p); } catch { return undefined; } };
 const sorted = (xs) => [...xs].sort();
 
@@ -74,7 +72,7 @@ export async function loadContext(root) {
   else problems.push(...shapeProblems(root, 'bindings', bindings).map((p) => `bindings.json: ${p}`));
   const validator = await import(pathToFileURL(path.join(root, VALIDATOR)).href);
   const scopes = Array.isArray(manifest?.scope?.programme_scopes) ? manifest.scope.programme_scopes : [];
-  const all = new Map(); // id -> {d, file} for every SURFACE descriptor (any scope)
+  const all = new Map(); // id -> {d, file} for every SURFACE descriptor; inScope filters it
   for (const file of walkDescriptors(path.join(root, 'scripts/surfaces')).sort()) {
     const d = tryJson(file);
     const rel = path.relative(root, file);
@@ -82,7 +80,7 @@ export async function loadContext(root) {
     if (d?.kind === 'SURFACE' && typeof d?.identity?.id === 'string') all.set(d.identity.id, { d, file: rel });
   }
   const inScope = new Map([...all].filter(([, v]) => scopes.includes(v.d.programme?.scope)));
-  return { root, manifest, bindings, validator, all, inScope, problems, ok: problems.length === 0 };
+  return { root, manifest, bindings, validator, inScope, problems, ok: problems.length === 0 };
 }
 
 const listsOf = (m) => ({
@@ -108,6 +106,7 @@ const keywordProblems = (node, at) => {
   const out = [];
   for (const [k, v] of Object.entries(node)) {
     if (!FORM_KEYWORDS.includes(k)) { out.push(`schema keyword not allowed: ${k} at ${at || '/'}`); continue; }
+    if (k === 'additionalProperties' && v !== false) { out.push(`schema keyword not allowed: additionalProperties other than false at ${at || '/'}`); continue; }
     if (k === 'format' && !FORM_FORMATS.includes(v)) out.push(`schema format not allowed: ${v} at ${at || '/'}`);
     if (k === 'properties' && v && typeof v === 'object') for (const [p, s] of Object.entries(v)) out.push(...keywordProblems(s, `${at}/properties/${p}`));
   }
@@ -128,7 +127,7 @@ export const formProblems = (root, d, widgetTypes) => {
   for (const p of Object.keys(props)) if (!named.includes(p)) out.push(`property ${p} has no field`);
   for (const f of fields) {
     const p = props[f.field];
-    if (!p) continue;
+    if (p === null || typeof p !== 'object') { if (f.field in props) out.push(`property ${f.field} is not an object`); continue; }
     const allowed = widgetTypes?.[f.widget] ?? [];
     const types = [].concat(p.type ?? []).filter((t) => t !== 'null');
     if (!allowed.includes('*') && (types.length === 0 || types.some((t) => !allowed.includes(t)))) out.push(`field ${f.field}: widget ${f.widget} does not fit type ${types.join('|') || 'none'}`);
@@ -181,7 +180,7 @@ const convertedOf = (ctx) => (ctx.ok ? ctx.manifest.converted.filter((id) => ctx
 const waitsNote = (ctx, label) => (ctx.ok && ctx.manifest.converted.length === 0 ? `${label} WAITS ${ctx.manifest.waits}` : null);
 export const contentPath = (file, id) => path.join(path.dirname(file), `${id}.content.json`);
 /** The fingerprint inputs of one surface: its own descriptor, content file and form contract schema (never bindings.json). */
-export const fingerprintFiles = (root, id, e) => {
+export const fingerprintFiles = (id, e) => {
   const files = [e.file, contentPath(e.file, id)];
   const ref = e.d.render?.form?.schema_ref;
   if (typeof ref === 'string') files.push(ref.split('#')[0]);
@@ -191,7 +190,7 @@ export const targetsOf = (d) => (Array.isArray(d.identity?.platforms) ? d.identi
 const goldensOf = (ctx, id) => {
   const dir = path.join(ctx.root, GOLDEN_ROOT, id);
   if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => ({ f, doc: tryJson(path.join(dir, f)) }));
+  return fs.readdirSync(dir, { withFileTypes: true }).map((e) => e.name).sort().map((f) => ({ f, doc: f.endsWith('.json') ? tryJson(path.join(dir, f)) : undefined }));
 };
 
 // ---- SV-SCREEN ------------------------------------------------------------------------------------------------------------------------------
@@ -201,11 +200,19 @@ export function screenArm(ctx) {
   const out = [];
   let count = 0;
   const ids = convertedOf(ctx);
+  const groot = path.join(ctx.root, GOLDEN_ROOT);
+  if (ctx.ok && fs.existsSync(groot)) {
+    for (const e of fs.readdirSync(groot, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (e.isDirectory() && (path.posix.join(GOLDEN_ROOT, e.name) === GOLDEN_DIR || ids.includes(e.name))) continue;
+      out.push(`SV-SCREEN ${GOLDEN_ROOT}/${e.name}: not a converted surface's golden dir`);
+    }
+  }
   for (const id of ids) {
     const e = ctx.inScope.get(id);
     const states = Array.isArray(e.d.states) ? e.d.states : [];
     const targets = targetsOf(e.d);
     const names = states.map((s) => s.name);
+    for (const n of new Set(names.filter((x, i) => names.indexOf(x) !== i))) out.push(`SV-SCREEN ${id}: state ${n} declared twice`);
     const checks = (Array.isArray(e.d.checks) ? e.d.checks : []).map((c) => c.id);
     const gs = goldensOf(ctx, id);
     const have = new Set(gs.map((g) => g.f));
@@ -215,7 +222,7 @@ export function screenArm(ctx) {
       if (mine.every((f) => !have.has(f))) { out.push(`SV-SCREEN ${id}: state ${s.name}: golden ${s.golden} names no file`); continue; }
       for (const f of mine) if (!have.has(f)) out.push(`SV-SCREEN ${id}/${f}: missing`);
     }
-    const fpFiles = fingerprintFiles(ctx.root, id, e);
+    const fpFiles = fingerprintFiles(id, e);
     const covered = new Set();
     for (const { f, doc } of gs) {
       if (!expected.has(f)) { out.push(`SV-SCREEN ${id}/${f}: not a declared state x target`); continue; }
@@ -285,7 +292,7 @@ export const propsProblems = (value, at, ctx) => {
     return [];
   }
   if (keys.length === 1 && !nonDisplay.includes(keys[0]) && typeof value[keys[0]] === 'string') return [`unknown binding kind ${keys[0]} at ${at}`];
-  return keys.filter((k) => !nonDisplay.includes(k)).flatMap((k) => propsProblems(value[k], `${at}/${k}`, ctx));
+  return keys.filter((k) => !nonDisplay.includes(k) || (value[k] !== null && typeof value[k] === 'object')).flatMap((k) => propsProblems(value[k], `${at}/${k}`, ctx));
 };
 
 export function sbindArm(ctx) {

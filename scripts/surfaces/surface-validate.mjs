@@ -5,7 +5,8 @@
 //
 // MF-15 · McFrontend queue · lane G. The first surface gate, REPORT only. Read-only; writes nothing.
 //   node scripts/surfaces/surface-validate.mjs [--check]   exit 0 clean, 1 any finding, 2 usage
-// One finding per line on stderr: `SV-<ARM> <subject>: <problem>`, arms in the order GEN, GOLDEN, PARITY, BIND, STATUS.
+// One finding per line on stderr: `SV-<ARM> <subject>: <problem>`, arms in the order GEN, GOLDEN, PARITY, BIND, STATUS (REPORT), then DESC, SCREEN, SBIND
+// (MF-42: the generic arms of scripts/surfaces/screen-checks.mjs for converted non-REPORT surfaces; FE-31).
 // The check logic lives in scripts/surfaces/report-checks.mjs (one home, R-27). GEN spawns the committed generators' own --check; no logic is copied.
 // Budget has no code: it waits for MF-08 and is printed as a stated waiting, never a pass (FE-04 stays OWED).
 // The tree it reads is the one the script sits in, never the cwd.

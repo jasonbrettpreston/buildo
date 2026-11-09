@@ -458,7 +458,7 @@ describe('C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b,
     expect(real.pending_globs).toEqual(expect.arrayContaining(['scripts/lib/compute/bylaw-*.js', 'scripts/lib/compute/maxbld-*.js']));
   });
   it('MF-42: the binding homes, the vendor dir, the RNR config, the MaxBLD web pages and the golden dir are frontend; the vendor dir and the three standards data files are protected', () => {
-    for (const p of ['src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/components/surfaces/web/FormBinding.tsx', 'mobile/src/components/surfaces/ListBinding.tsx',
+    for (const p of ['src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/tests/fixtures/surfaces/report/web.json', 'src/components/surfaces/web/FormBinding.tsx', 'mobile/src/components/surfaces/ListBinding.tsx',
       'mobile/src/vendor/rnr/button.tsx', 'mobile/components.json', 'src/app/(maxbld)/admin/media/page.tsx']) {
       expect(isFrontend(real, p), p).toBe(true);
       expect(classify(real, p).layer23).toBe(false);

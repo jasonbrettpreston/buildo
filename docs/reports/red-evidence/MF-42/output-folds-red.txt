@@ -1,0 +1,25 @@
+MF-42 OUTPUT panel folds, red first (2026-11-09, ~/Buildo-wt-mf42 on e7f37956). Each new plant run against the code it folds.
+
+1. src/tests/surfaces/screen-checks.logic.test.ts against scripts/surfaces/screen-checks.mjs at e7f37956 (CR HIGH-1 subtree under a non-display key, CR MED-3 nested/non-JSON strays and orphan golden dir, CR LOW-2 property not an object, CR LOW-3 duplicate state, compliance MED-5 additionalProperties true). Green after: 48 of 48.
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > additionalProperties other than false (it brings the library add-key UI and its default strings)
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a contract property that is not an object
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a nested directory, a non-JSON file and a .json.bak copy in a surface dir are strays too
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a golden dir for a surface that is not converted (an orphan, or one left behind)
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a state name declared twice
+   × SV-SBIND: content keys, columns, and no display text in goldens > display text hidden in a subtree under a non-display key (icon, value) is still found
+AssertionError: expected [] to include 'SV-DESC admin_placements: schema keyw…'
+AssertionError: expected [] to include 'SV-DESC admin_placements: property ma…'
+AssertionError: expected [] to include 'SV-SCREEN web_landing/old: not a decl…'
+AssertionError: expected [] to include 'SV-SCREEN src/tests/fixtures/surfaces…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements: state loa…'
+AssertionError: expected [] to include 'SV-SBIND web_landing/static.web.json:…'
+      Tests  6 failed | 42 passed (48)
+
+2. src/tests/surfaces/surface-conformance.logic.test.ts with the three fold fixes removed (CR MED-1 import =, CR MED-2 string expression under a display attribute, compliance MED-4 a mount file reaching a hand-built component). Green after: 23 of 23.
+   × C-2 the import boundary (one tier: libraries only in binding modules, providers, tests and the vendor dir) > RED: one planted file per specifier form outside a binding module; tests, modules and mocks are allowed
+   × C-2 the import boundary (one tier: libraries only in binding modules, providers, tests and the vendor dir) > a converted mount file: a UI library or any other third-party package is RED; framework, binding modules and project-internal paths are allowed
+   × C-2b no display text in mount files and binding modules (the exempt list: tests, the vendor dir, non_display_keys attributes) > RED: JSX text, a string child and a string display attribute; a non-display attribute and a content binding are allowed
+AssertionError: expected [ …(9) ] to deeply equal [ …(10) ]
+AssertionError: expected [ …(4) ] to deeply equal [ …(5) ]
+AssertionError: expected [ …(3) ] to deeply equal [ …(5) ]
+      Tests  3 failed | 20 passed (23)

@@ -85,6 +85,14 @@ describe('SV-DESC: the descriptor (the ONE validator, cutover, render.form)', ()
     expect(l).toContain('SV-DESC admin_placements: property extra has no field');
     expect(l).toContain('SV-DESC admin_placements: field placement_keyz is not a property');
   });
+  it('additionalProperties other than false (it brings the library add-key UI and its default strings)', async () => {
+    const fx = fresh(); contract(fx, (s) => { s.additionalProperties = true; });
+    await has(fx, 'SV-DESC admin_placements: schema keyword not allowed: additionalProperties other than false at /');
+  });
+  it('a contract property that is not an object', async () => {
+    const fx = fresh(); contract(fx, (s) => { s.properties.max_slots = null; });
+    await has(fx, 'SV-DESC admin_placements: property max_slots is not an object');
+  });
   it('a keyword outside the closed subset (items), and a format outside it', async () => {
     const fx = fresh();
     contract(fx, (s) => { s.properties.placement_key.items = {}; s.properties.flight_start.format = 'time'; });
@@ -175,6 +183,23 @@ describe('SV-SCREEN: one golden per state per declared target, covers, nothing s
     expect(l).toContain('SV-SCREEN web_landing/notes.json: not a declared state x target');
     expect(l).toContain('SV-SCREEN web_landing/static.pdf.json: not a declared state x target');
   });
+  it('a nested directory, a non-JSON file and a .json.bak copy in a surface dir are strays too', async () => {
+    const fx = fresh();
+    fs.mkdirSync(goldenPath(fx, 'STATIC', 'old'));
+    fs.copyFileSync(goldenPath(fx, 'STATIC', 'static.web.json'), path.join(goldenPath(fx, 'STATIC', 'old'), 'static.web.json'));
+    fs.writeFileSync(goldenPath(fx, 'STATIC', 'raw.txt'), 'x\n');
+    fs.copyFileSync(goldenPath(fx, 'STATIC', 'static.web.json'), goldenPath(fx, 'STATIC', 'static.web.json.bak'));
+    const l = await lines(fx);
+    for (const f of ['old', 'raw.txt', 'static.web.json.bak']) expect(l).toContain(`SV-SCREEN web_landing/${f}: not a declared state x target`);
+  });
+  it('a golden dir for a surface that is not converted (an orphan, or one left behind)', async () => {
+    const fx = fresh(); fs.mkdirSync(path.join(fx.root, 'src/tests/fixtures/surfaces/ghost'));
+    await has(fx, "SV-SCREEN src/tests/fixtures/surfaces/ghost: not a converted surface's golden dir");
+  });
+  it('a state name declared twice', async () => {
+    const fx = fresh(); editDescriptor(fx, 'FORM', (d) => { d.states.push({ ...d.states[0] }); });
+    await has(fx, 'SV-SCREEN admin_placements: state loading declared twice');
+  });
   it('a dangling covers entry', async () => {
     const fx = fresh(); editGolden(fx, 'FORM', 'hit.web.json', (g) => { g.covers.push('nowhere'); });
     await has(fx, 'SV-SCREEN admin_placements/hit.web.json: covers nowhere is not a state or check');
@@ -230,6 +255,12 @@ describe('SV-SBIND: content keys, columns, and no display text in goldens', () =
     const l = await lines(fx);
     expect(l).toContain('SV-SBIND admin_surface_registry/empty.web.json: raw string at /props/children/0/children/0');
     expect(l).toContain('SV-SBIND admin_surface_registry/empty.web.json: raw string at /props/props/noRecordsText');
+  });
+  it('display text hidden in a subtree under a non-display key (icon, value) is still found', async () => {
+    const fx = fresh(); editGolden(fx, 'STATIC', 'static.web.json', (g) => { g.props.props = { icon: { component: 'Text', children: ['Raw hidden text'] }, value: ['Hidden'] }; });
+    const l = await lines(fx);
+    expect(l).toContain('SV-SBIND web_landing/static.web.json: raw string at /props/props/icon/children/0');
+    expect(l).toContain('SV-SBIND web_landing/static.web.json: raw string at /props/props/value/0');
   });
   it('a content ref to an unknown key', async () => {
     const fx = fresh(); editGolden(fx, 'STATIC', 'static.web.json', (g) => { g.props.children[0].children = [{ content: 'web_landing.nope' }]; });
