@@ -4,22 +4,37 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "pending",
+  "head": "ccc9c4d6",
   "cards": [
     "Operator 2026-11-09: \"P42 decisions approved\" (Part A P42-D1, D2, D3, D4, D5, D9 (a); Part B as recommended).",
     "Operator 2026-11-09: \"approved smaller version\" (MF-42 built from plan.min.md).",
     "Operator 2026-11-09: \"approved except for 9 ...\" (Wave 1 decision batch: conflicts C-1, C-3, C-4, C-11, C-12 resolved as the batch file proposes)."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-42/plan.min.md (plan.md v3 as reference); two PLAN panel rounds (regression-guardian, code-reviewer-grounded, observability-reviewer, compliance) plus a delta seat on the minimum variant (code-reviewer-grounded, CONDITIONAL PASS, all folded); reports in ~/Buildo-scratch/mcfrontend/MF-42/panel/.",
-  "output": "PENDING: the OUTPUT panel is filled before the push.",
+  "output": "OUTPUT (stage 8): targeted only (lane brief, no full suite): src/tests/surfaces 22 files 650 tests green with surface-registry.infra and mcbylaws-frontend.logic; FE-15 canaries 17 green; real gate exit 0 with the new line (examined 20 in scope: converted 0, pending 7, parked 9, report 4; S-screen and S-sbind WAITS MF-37); gate --ci --base ffb6b0610 GATE OK (seat-run). Red then green in docs/reports/red-evidence/MF-42/ (6 files incl. the policy lock and the output folds).",
   "seats": [
     "regression-guardian",
     "code-reviewer-grounded",
     "compliance (general-purpose, Spec 08 A9/A10)"
   ],
-  "verdict": "PENDING",
+  "verdict": "PASS-WITH-FOLDS: no blocker. Regression guardian PASS-WITH-FOLDS (no silent retirement; REPORT arms, usage contract, FE-13 and FE-05 rows kept byte for byte). Grounded reviewer APPROVE WITH FOLDS (HIGH-1 props subtree under non-display keys, MED-1 import-equals, MED-2 string attribute expressions, MED-3 stray variants and orphan golden dirs). Compliance CONDITIONAL PASS (HIGH-1 FE-31 Six cell per approved batch section 2, MED-2 toast note, MED-3 precedent wording, MED-4 mount rule gap and pending-confirmation wording, MED-5 additionalProperties false only, MED-6 parked members). All folded in ccc9c4d6 with planted reds, none refuted.",
   "blockers": [],
-  "followups": [],
-  "evidence": "docs/reports/red-evidence/MF-42/",
-  "notes": []
+  "followups": [
+    "Operator confirmation owed: the widened mount-file rule (project-internal and relative paths allowed, hand-built components refused; coordinator input 2026-11-09, beyond plan.min cut 5).",
+    "Operator confirmation owed: overlay_sponsor_slot parked (Spec 126 11b.3 says through MF-20; MF-20 is DONE and the descriptor is not converted).",
+    "Log for the morning: FE-03 and FE-31 flipped in the code commit itself (arm C judges rules per commit against the parent; a separate flip commit that regenerates the rule map fails FAIL:C:not-ruled).",
+    "MB-67 owner sign-off at push for 53b6f28a (policy globs). From then on src/tests/fixtures/surfaces/** (REPORT goldens included) is frontend-held: MF-12 tranches and MF-38 golden commits need an MF trailer, prereg and panel record.",
+    "Protect scripts/surfaces/_schema/screen-data.schema.json in the next MB-67 policy commit (review_followups).",
+    "Fix the dead spec mirror and land the 126 3.1 table guard (deferred C-10; review_followups).",
+    "LOW, noted not folded: one thrown arm error drops that arm's other findings (no crash); require.resolve, createRequire and relative node_modules paths are not C-2 sites; the widget vocabulary lives in the schema and bindings.json widget_types with no equality lock."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-42/; raw seat reports in ~/Buildo-scratch/mcfrontend/MF-42/output-panel/",
+  "notes": [],
+  "commits_reviewed": [
+    "99450cac (docs: dated notes and queue notes)",
+    "53b6f28a (MB-67 policy globs and their lock)",
+    "91c3ecef (prereg-MF-42-1)",
+    "e7f37956 (code: schema, arms, data, locks, red evidence, register flips and render-smoke row)",
+    "ccc9c4d6 (output folds)"
+  ]
 }
