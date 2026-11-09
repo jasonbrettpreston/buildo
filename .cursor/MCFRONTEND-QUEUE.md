@@ -61,6 +61,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 
 **MF-12 Goldens: structured trees, one per state per target (mobile, web, admin, pdf), incl. user_entry, user_entry_outranked and ad slot states — LATER** (T)
   - Lane T. Status cell (kept): LATER. Waits on: MF-11. Done-condition: states x 4 targets = files.
+  - Dated note 2026-11-08 (M-246, prior text kept; MF-12 · McFrontend queue · lane T · stage 2; operator "I approve all the recommendations on the condition you are highly confident in each", record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answer MF-12 D-1..D-4"): D-1 (a) tranche 1 = 10 states / 40 files now, 17 states owed with named blockers (user_entry needs McBylaws increment 6), MF-12 RUNNING until 108 files; D-2 (a) 27 states incl. pitched A/B split (FE-17); D-3 (a) parity = the four target files agree; D-4 (a) one file per state per target at `src/tests/fixtures/surfaces/report/<state>.<target>.json`, dated note on 127 §4.3 / 126 11a.7 (M-246). Rule: 126 11a.7, 127 §4.3, FE-17, DB-fields ruling. Compliant: yes. Confidence: high (panel folds F1-F7 measured). New rule: none. The heading word is not changed here.
 
 **MF-13 Catalogue-to-report generator (seed via `seed-report-v2.mjs`); emits `headline` flag and labels from `content` — LATER** (E)
   - Lane E. Status cell (kept): LATER. Waits on: MF-11, MF-12. Done-condition: generator `--check` green.
