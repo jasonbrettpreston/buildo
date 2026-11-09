@@ -1,0 +1,44 @@
+# MF-13 follow-up 1 GEN-ROW-BAD-STATE, RED on tip 0f4c6a160 (generator unchanged), 2026-11-09
+$ npx vitest run src/tests/surfaces/report-generator-fields.logic.test.ts -t G3b
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-push3
+ ❯ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests | 1 failed | 27 skipped) 41ms
+   × G3b a switch row whose state is not on or off (fail closed) > RED: `GEN-ROW-BAD-STATE <switch id> <state>`, exit 1, nothing written, never treated as OFF 38ms
+     → expected 'GEN-STALE scripts/surfaces/_schema/re…' to contain 'GEN-ROW-BAD-STATE formula:front_setba…'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/report-generator-fields.logic.test.ts > G3b a switch row whose state is not on or off (fail closed) > RED: `GEN-ROW-BAD-STATE <switch id> <state>`, exit 1, nothing written, never treated as OFF
+AssertionError: expected 'GEN-STALE scripts/surfaces/_schema/re…' to contain 'GEN-ROW-BAD-STATE formula:front_setba…'
+- Expected
++ Received
+- GEN-ROW-BAD-STATE formula:front_setback_used_m ON
++ GEN-STALE scripts/surfaces/_schema/report-v2.decl.json
++ GEN-STALE scripts/surfaces/_schema/report-v2-seed/catalogue-fields.json
++
+ ❯ src/tests/surfaces/report-generator-fields.logic.test.ts:153:23
+    151|         const r = run(dir, mode);
+    152|         expect(r.status).toBe(1);
+    153|         expect(r.err).toContain(`GEN-ROW-BAD-STATE formula:front_setba…
+       |                       ^
+    154|       }
+    155|       expect(snapshot(dir)).toBe(before);
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 27 skipped (28)
+   Start at  11:05:44
+   Duration  198ms (transform 31ms, setup 6ms, collect 9ms, tests 41ms, environment 0ms, prepare 24ms)
+
+# GREEN after the generator change (same case, then the whole file)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-push3
+ ✓ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests | 27 skipped) 185ms
+ Test Files  1 passed (1)
+      Tests  1 passed | 27 skipped (28)
+   Start at  11:06:10
+   Duration  372ms (transform 31ms, setup 6ms, collect 8ms, tests 185ms, environment 0ms, prepare 19ms)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-push3
+ ✓ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests) 1938ms
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  11:06:11
+   Duration  2.12s (transform 30ms, setup 6ms, collect 8ms, tests 1.94s, environment 0ms, prepare 22ms)

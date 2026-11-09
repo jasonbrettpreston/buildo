@@ -139,6 +139,24 @@ describe('G3 a catalogue row with no switch row (fail closed)', () => {
   });
 });
 
+describe('G3b a switch row whose state is not on or off (fail closed)', () => {
+  it('RED: `GEN-ROW-BAD-STATE <switch id> <state>`, exit 1, nothing written, never treated as OFF', () => {
+    for (const bad of ['ON', 'maybe', '']) {
+      const dir = sandbox();
+      const before = snapshot(dir);
+      const sw = readJson(dir, SWITCHBOARD);
+      sw.rows.find((r: Json) => r.id === 'formula:front_setback_used_m').state = bad;
+      writeJson(dir, SWITCHBOARD, sw);
+      for (const mode of ['--check', '--write'] as const) {
+        const r = run(dir, mode);
+        expect(r.status).toBe(1);
+        expect(r.err).toContain(`GEN-ROW-BAD-STATE formula:front_setback_used_m ${bad}`);
+      }
+      expect(snapshot(dir)).toBe(before);
+    }
+  });
+});
+
 describe('G4 labels (126 11a.7, FE-30)', () => {
   it('RED: a labelled row carries its label; a detail row with no label shows its row id and is listed `labels owed: <id>` (exit 0)', () => {
     const dir = sandbox();

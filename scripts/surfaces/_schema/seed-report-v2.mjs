@@ -68,6 +68,8 @@ const UNIT_TYPE = new Map([['m2', ['number', 'm²']], ['m', ['number', 'm']], ['
 const typeOfRow = (r) => (r.form === 'status' ? ['text'] : UNIT_TYPE.get(r.unit) || null);
 const findings = [];
 const flag = (line) => { if (!findings.includes(line)) findings.push(line); };
+// MF-13 follow-up 1: a switch state other than exactly 'on' or 'off' is a finding, never read as OFF
+for (const [id, st] of SW) if (st !== 'on' && st !== 'off') flag(`GEN-ROW-BAD-STATE ${id} ${st}`);
 const STATE = new Map(); // row id -> on | off | noswitch
 for (const r of CAT.values()) {
   const ids = [r.switch || `formula:${r.id}`, `building_type:${r.building_type}`];
