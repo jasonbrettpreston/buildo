@@ -1,0 +1,34 @@
+{
+  "harness": "mf12-report-golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md#11a.7",
+  "surface": "report",
+  "state": "not_buildable",
+  "target": "pdf",
+  "response_fixture": {
+    "synthetic": true,
+    "status": "not_buildable"
+  },
+  "rendered_tree": {
+    "nodes": [
+      {
+        "field": "status_text",
+        "source": "content",
+        "label": "Status reason (plain words)",
+        "value": "Allowed, but nothing fits on this lot as of right.",
+        "status": "not_buildable",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      }
+    ]
+  },
+  "fingerprint": {
+    "response_fixture": "89b341a51998eff0",
+    "files": {
+      "scripts/surfaces/_schema/binding-sources.json": "642da823d9ba45b5",
+      "scripts/surfaces/_schema/report-v2.decl.json": "8de8860eb8e809b8",
+      "scripts/surfaces/_schema/report-presentation.json": "7ebd1825435db648",
+      "scripts/surfaces/_schema/report-tree.schema.json": "d19f855fc21d5f39"
+    }
+  }
+}

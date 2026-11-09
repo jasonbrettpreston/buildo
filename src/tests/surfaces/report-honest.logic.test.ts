@@ -26,8 +26,8 @@ const CODES = Object.keys(PRESENTATION.disclosure_texts).filter((k) => !DISCLOSU
 const goldens = fs.existsSync(DIR) ? fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== 'states.json').sort() : [];
 
 describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
-  it('there are 40 goldens to check', () => {
-    expect(goldens).toHaveLength(40);
+  it('there are 44 goldens to check', () => {
+    expect(goldens).toHaveLength(44);
   });
 
   for (const f of goldens) {
@@ -50,6 +50,7 @@ describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
     for (const key of SCHEMA.$defs.node.required as string[]) expect(honestProblems(drop(ok, key)), `missing ${key}`).not.toEqual([]);
     expect(honestProblems(mut(ok, { extra: 1 }))).not.toEqual([]);
     expect(honestProblems(mut(ok, { status: null }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { status: 'not_buildable' }))).toEqual([]);
     expect(honestProblems(mut(ok, { status: 'loading' }))).not.toEqual([]);
     expect(honestProblems(mut(ok, { status: 'none' }))).not.toEqual([]);
     expect(honestProblems(mut(ok, { status: 'not_evaluated:made_up' }))).not.toEqual([]);

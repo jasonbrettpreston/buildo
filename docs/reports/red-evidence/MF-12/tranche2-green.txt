@@ -1,0 +1,37 @@
+== MUTATION 1: one value changed in not_buildable.web.json
+SV-PARITY not_buildable: rendered_tree differs: mobile vs web
+SV-BIND not_buildable.web.json: node status_text: status_text value is not the content text
+exit=1
+== MUTATION 2: tree status changed to not_modelled in not_buildable.admin.json (fixture untouched)
+SV-PARITY not_buildable: rendered_tree differs: mobile vs admin
+SV-BIND not_buildable.admin.json: node status_text: status_text value is not the content text
+exit=1
+== MUTATION 3: not_buildable.pdf.json removed
+SV-GOLDEN not_buildable.pdf.json: missing
+exit=1
+== GREEN: restored
+surface-validate current; S-gen ok · S-golden ok (11 states x 4; owed 16 states / 64 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08
+exit=0
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf12t2
+
+ ✓ src/tests/surfaces/report-honest.logic.test.ts (46 tests) 26ms
+ ✓ src/tests/surfaces/report-golden-parity.logic.test.ts (38 tests) 28ms
+ ✓ src/tests/surfaces/report-generator.logic.test.ts (12 tests) 926ms
+ ✓ src/tests/surfaces/report-binding.logic.test.ts (13 tests) 768ms
+ ✓ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests) 3999ms
+   ✓ G3b a switch row whose state is not on or off (fail closed) > RED: `GEN-ROW-BAD-STATE <switch id> <state>`, exit 1, nothing written, never treated as OFF 350ms
+   ✓ P3 headline label (D0-8) > RED: a listed row with no label: `GEN-ROW-NO-LABEL <row>`, exit 1; with a label exits 0; the same row unlisted shows its id and exits 0 337ms
+ ✓ src/tests/surfaces/surface-validate.logic.test.ts (46 tests) 10259ms
+   ✓ FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting 336ms
+   ✓ usage, output and read-only > no flag is the same run as --check 363ms
+   ✓ usage, output and read-only > the real tree twice from two cwd: byte-identical output, and no input file changes 625ms
+   ✓ usage, output and read-only > a two-defect tree twice (fresh copy each time): identical findings in a fixed order 426ms
+
+ Test Files  6 passed (6)
+      Tests  183 passed (183)
+   Start at  11:35:16
+   Duration  10.70s (transform 364ms, setup 137ms, collect 628ms, tests 16.01s, environment 1ms, prepare 208ms)
+
+exit=0
