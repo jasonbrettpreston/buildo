@@ -122,8 +122,10 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 **MF-23 Executable canaries a-f (McFront proof) — LATER** (T)
   - Lane T. Status cell (kept): LATER. Waits on: MF-16. Done-condition: each: planted defect in a temp copy exits non-zero, clean copy exits zero.
 
-**MF-24 Arm Q second queue: parameterise path and prefix; DONE needs `MF-nn@sha`; DONE refused while its FE row is OWED — RUNNING (MF-24a in the early gate batch; the OWED-FE refusal is MF-34; dated note 2026-11-06)** (G)
+**MF-24 Arm Q second queue: parameterise path and prefix; DONE needs `MF-nn@sha`; DONE refused while its FE row is OWED — DONE 2026-11-09 (MF-24@407b9eaef; operator "approved provided they are compliant simple and dont contribute to scope creep")** (G)
+  - FE rows owned: none.
   - Lane G. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-9 b): split. MF-24a (parameterise path and prefix, convert this queue, DONE needs `MF-nn@sha`) runs in the early gate batch; the OWED-FE refusal is MF-34. Waits on: MF-17, freeze lift. Done-condition: waits for the named freeze lift; McBylaws owner review.
+  - Dated note 2026-11-09 (M-246, prior text kept; MF-24 · McFrontend queue · lane S7; operator, verbatim: "approved provided they are compliant simple and dont contribute to scope creep", on "MF-24 DONE ... with FE rows owned: none"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-24 DONE"): DONE as MF-24@407b9eaef (MF-24a, code: path and prefix parameterised, this queue converted, DONE needs `MF-nn@sha`). The split half MF-34 (OWED-FE refusal) is DONE as MF-34@4203c5b08. MF-24 builds no FE lock, so it owns none. The heading above read "RUNNING" before this note.
 
 **MF-34 MF-24b (split from MF-24, D-9 b): arm Q refuses a DONE MF task whose FE row is still OWED — DONE 2026-11-09 (MF-34@4203c5b08; operator sign-off "MF-34 sign-off")** (G)
   - FE rows owned: none.
