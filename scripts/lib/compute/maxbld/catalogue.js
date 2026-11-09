@@ -176,6 +176,7 @@ function validateCatalogue(seeds, increments) {
     if (!switches.has(bt.switch)) out.push(`building_type ${bt.id}: switch ${bt.switch} is not in the switchboard`);
   }
   out.push(...confidenceViolations(s.switchboard));
+  out.push(...stateViolations(s.switchboard));
   out.push(...nameSpaceViolations(catalogue, targets));
   out.push(...designOptionViolations(catalogue, s.vocab));
   out.push(...rowViolations(catalogue, U, rowIds, increments));
@@ -183,6 +184,15 @@ function validateCatalogue(seeds, increments) {
     topoOrder(catalogue);
   } catch (e) {
     out.push('cycle: catalogue row order is not acyclic');
+  }
+  return out;
+}
+
+/** Card SWITCH-STATE-DEFAULT-ON (operator 2026-11-09, a): a switchboard row's state is exactly 'on' or 'off'; anything else is a load-time finding, so the engine never reads one (rows.js default-on is then unreachable). */
+function stateViolations(switchboard) {
+  const out = [];
+  for (const r of entities(switchboard, 'rows')) {
+    if (r.state !== 'on' && r.state !== 'off') out.push(`switch ${r.id}: state ${JSON.stringify(r.state)} is not one of on, off`);
   }
   return out;
 }
