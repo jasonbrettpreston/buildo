@@ -9,7 +9,8 @@
 // .toPrecision, .toExponential, and any numeric literal other than 0 and 1. The projection files hold none of these, so there is no allow-list: no
 // named formatter exists (D-2 a). Token kinds are compared by SyntaxKind constants, literals by node.text.
 // Pass-through (output digits = input digits) is already pinned at run time by report-render.logic.test.ts "no maths: a float is shown as the
-// producer sent it" and is not copied here. Left to review (named, not scanned): eval, globalThis.Math, computed Math['round'].
+// producer sent it" and is not copied here. Panel folds: also ban element access and destructured names of the banned methods, reduceRight, toLocaleString, Intl, BigInt, globalThis; the walk reads .js/.jsx/.mjs/.cjs/.mts/.cts too.
+// Left to review (named, not scanned): eval, new Function, an import of maths from outside the three directories, isNaN, Date.
 // Each ban has a planted case (in memory), one is planted in a copy of the REAL core.ts, and the walk is proven on disk. No DB, no network.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -28,13 +29,13 @@ const BANNED_BINARY = new Set<ts.SyntaxKind>([
   K.BarEqualsToken, K.AmpersandEqualsToken, K.CaretEqualsToken, K.LessThanLessThanEqualsToken, K.GreaterThanGreaterThanEqualsToken,
   K.GreaterThanGreaterThanGreaterThanEqualsToken,
 ]);
-const BANNED_METHODS = new Set(['reduce', 'toFixed', 'toPrecision', 'toExponential']);
-const BANNED_IDENTS = new Set(['Math', 'Number', 'parseFloat', 'parseInt']);
+const BANNED_METHODS = new Set(['reduce', 'reduceRight', 'toFixed', 'toPrecision', 'toExponential', 'toLocaleString']);
+const BANNED_IDENTS = new Set(['Math', 'Number', 'parseFloat', 'parseInt', 'Intl', 'BigInt', 'globalThis']);
 const ALLOWED_NUMBERS = new Set(['0', '1']);
 
 interface Finding { file: string; line: number; rule: string; text: string }
 
-const scanSourceReal = (text: string, file: string): Finding[] => {
+const scanSource = (text: string, file: string): Finding[] => {
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
   const out: Finding[] = [];
   const add = (n: ts.Node, rule: string): void => {
@@ -48,6 +49,8 @@ const scanSourceReal = (text: string, file: string): Finding[] => {
     else if (ts.isNumericLiteral(n) && !ALLOWED_NUMBERS.has(n.text)) add(n, 'literal');
     else if (ts.isBigIntLiteral(n)) add(n, 'bigint');
     else if (ts.isPropertyAccessExpression(n) && BANNED_METHODS.has(n.name.text)) add(n, 'method');
+    else if (ts.isElementAccessExpression(n) && ts.isStringLiteralLike(n.argumentExpression) && BANNED_METHODS.has(n.argumentExpression.text)) add(n, 'method'); // xs["reduce"]
+    else if (ts.isBindingElement(n) && ts.isIdentifier(n.propertyName ?? n.name) && BANNED_METHODS.has((n.propertyName ?? n.name).getText(sf))) add(n, 'method'); // const { toFixed } = v
     else if (ts.isIdentifier(n) && BANNED_IDENTS.has(n.text)) {
       const p = n.parent;
       const isProp = ts.isPropertyAccessExpression(p) && p.name === n; // x.Math is a property name, not the global
@@ -60,7 +63,6 @@ const scanSourceReal = (text: string, file: string): Finding[] => {
   visit(sf);
   return out;
 };
-const scanSource = scanSourceReal; // STUB-POINT
 
 // The walk: every .ts/.tsx file under each projection directory of `root`, at any depth.
 const walk = (dir: string): string[] => {
@@ -68,7 +70,7 @@ const walk = (dir: string): string[] => {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) return walk(p);
-    return /\.tsx?$/.test(e.name) ? [p] : [];
+    return /\.[cm]?[jt]sx?$/.test(e.name) ? [p] : [];
   });
 };
 const scanTree = (root: string): { files: string[]; findings: Finding[] } => {
@@ -86,6 +88,12 @@ beforeAll(() => { tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mf16-nomaths-
 afterAll(() => { fs.rmSync(tmpRoot, { recursive: true, force: true }); });
 
 describe('FE-05 report-no-maths: the real projection files', () => {
+  it('the walk reads .js, .mjs, .jsx, .mts and .cts files too', () => {
+    const root = fs.mkdtempSync(path.join(tmpRoot, 'ext-'));
+    for (const d of DIRS) fs.mkdirSync(path.join(root, d), { recursive: true });
+    for (const n of ['a.js', 'b.mjs', 'c.jsx', 'd.mts', 'e.cts']) fs.writeFileSync(path.join(root, DIRS[0] as string, n), 'export const f = (a, b) => a * b;\n');
+    expect(scanTree(root).files).toHaveLength(5);
+  });
   it('the walk finds the known files and every directory contributes', () => {
     const { files } = scanTree(ROOT);
     const names = files.map((f) => path.basename(f));
@@ -128,6 +136,14 @@ describe('FE-05 RED: one planted source per ban', () => {
     ['numeric literal 7', 'export const seven = 7;', 'literal'],
     ['numeric literal 0.5', 'export const half = 0.5;', 'literal'],
     ['bigint literal', 'export const big = 1n;', 'bigint'],
+    // panel folds (code-reviewer-grounded 1, 2): bypasses with no banned operator
+    ['element access reduce', 'export const f = (xs: number[]) => xs["reduce"]((a, b) => a, 0);', 'method'],
+    ['destructured toFixed', 'export const f = (v: number) => { const { toFixed } = v; return toFixed; };', 'method'],
+    ['reduceRight', 'export const f = (xs: number[]) => xs.reduceRight((a, b) => a, 0);', 'method'],
+    ['toLocaleString', 'export const f = (v: number) => v.toLocaleString("en");', 'method'],
+    ['Intl.NumberFormat', 'export const f = (v: number) => new Intl.NumberFormat("en").format(v);', 'global'],
+    ['BigInt()', 'export const f = (v: string) => BigInt(v);', 'global'],
+    ['globalThis.Math', 'export const f = (v: number) => globalThis.Math.round(v);', 'global'],
   ];
   it.each(planted)('%s is reported', (_name, src, rule) => {
     expect(rulesOf(src)).toContain(rule);

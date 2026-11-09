@@ -1,0 +1,12 @@
+# RED (MF-16 panel folds, FE-05): new planted cases and the wider walk, run BEFORE the scan change
+# cmd: npx vitest run src/tests/surfaces/report-no-maths.logic.test.ts
+   × FE-05 report-no-maths: the real projection files > the walk reads .js, .mjs, .jsx, .mts and .cts files too 7ms
+   × FE-05 RED: one planted source per ban > element access reduce is reported 1ms
+   × FE-05 RED: one planted source per ban > destructured toFixed is reported 0ms
+   × FE-05 RED: one planted source per ban > reduceRight is reported 0ms
+   × FE-05 RED: one planted source per ban > toLocaleString is reported 0ms
+   × FE-05 RED: one planted source per ban > Intl.NumberFormat is reported 0ms
+   × FE-05 RED: one planted source per ban > BigInt() is reported 1ms
+   × FE-05 RED: one planted source per ban > globalThis.Math is reported 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  8 failed | 41 passed (49)

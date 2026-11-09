@@ -84,9 +84,9 @@ describe('FE-02 controls: an untouched copy is current in every class', () => {
     expect(r.out).toContain('current');
     expect(r.status).toBe(0);
   });
-  it('the golden class reproduces from the capture (no stale file; all 44 files compared)', () => {
+  it('the golden class reproduces from the capture (no stale file; every file of the manifest compared)', () => {
     const dir = sandbox();
-    expect(captureAll(dir).size).toBe(44);
+    expect(captureAll(dir).size).toBe(readJson(dir, `${GOLDEN_DIR}/states.json`).states.length * (TARGETS as string[]).length);
     expect(staleGoldens(dir)).toEqual([]);
   });
 });

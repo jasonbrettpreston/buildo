@@ -10,7 +10,7 @@
 // does not call viewOf (an anchor: four equally wrong outputs still fail). Output per target: web, admin, pdf = renderToStaticMarkup of ReportView
 // over viewOf (one component, three layout rows); mobile = the viewOf projection (T-2: no React Native component until MF-22). Block order is not
 // compared (sorted by field); the reason block has no label in the DOM, so its label is '' in all four and in the expectation.
-// Honest limits: the lock cannot see a viewOf bug shared by all four (the golden and capture side covers it: report-render.logic.test.ts T1);
+// Honest limits: block membership (headline versus detail), data-lifecycle and the layout attributes are not compared here (layout is pinned by report-view.ui.test.tsx); the lock cannot see a viewOf bug shared by all four (the golden and capture side covers it: report-render.logic.test.ts T1);
 // there is no extracted PDF text until a PDF engine exists; re-point mobile at the React Native component in MF-22.
 // The goldens carry confidence/provenance none and no disclosures, so a few synthetic rich trees (injected ctx) cover those legs.
 // A hand-written literal pins the at_least state independently of the generator. No DB, no network.
@@ -117,7 +117,7 @@ const caseFindings = (name: string, tree: Json, scenario: string | null, ctx: Js
   const pick = scenario ?? 'no-scenario';
   const out: string[] = [];
   for (const t of TARGETS as string[]) out.push(...diff(`${name} [${pick}] ${t} vs golden:`, got[t] as Rec[], want));
-  for (const t of (TARGETS as string[]).slice(1)) out.push(...diff(`${name} [${pick}] ${t} vs mobile:`, got[t] as Rec[], got.mobile as Rec[]));
+  for (const t of (TARGETS as string[]).filter((x) => x !== 'mobile')) out.push(...diff(`${name} [${pick}] ${t} vs mobile:`, got[t] as Rec[], got.mobile as Rec[]));
   return out;
 };
 const goldenFindings = (em: Emit, states: string[] = manifest.states, picks: Array<string | null> = PICKS): string[] =>

@@ -1,0 +1,4 @@
+# GREEN (MF-16 panel folds): no-maths 49 tests (8 new cases red before the scan change, see no-maths-folds-red.txt), parity and generated-only unchanged in outcome
+# cmd: npx vitest run src/tests/surfaces
+ Test Files  12 passed (12)
+      Tests  349 passed (349)
