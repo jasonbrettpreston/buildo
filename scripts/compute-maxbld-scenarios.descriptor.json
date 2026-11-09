@@ -335,6 +335,8 @@
       { "name": "fya_placeholder_ring_min_n", "min": 1, "max": 4, "on_invalid": "fail" },
       { "name": "fya_est_min_m", "min": 0, "max": 5, "on_invalid": "fail" },
       { "name": "fya_est_max_m", "min": 5, "max": 200, "on_invalid": "fail" },
+      { "name": "houseplex_circulation_share", "min": 0.1, "max": 0.1, "on_invalid": "fail" },
+      { "name": "houseplex_unit_min_net_m2", "min": 30, "max": 30, "on_invalid": "fail" },
       { "name": "s1_ceiling_min_m", "min": 2.3, "max": 2.3, "on_invalid": "fail" },
       { "name": "s1_floor_assembly_m", "min": 0.212, "max": 0.212, "on_invalid": "fail" },
       { "name": "s1_parapet_m", "min": 0.3, "max": 0.3, "on_invalid": "fail" },

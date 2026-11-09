@@ -8,12 +8,12 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-115 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+123 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
 | `ad_slot` | 4 |
-| `catalogue` | 47 |
+| `catalogue` | 55 |
 | `content` | 37 |
 | `parcels` | 27 |
 
@@ -81,7 +81,6 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | Label | Path | Type | Unit | Status | Render | Source | Note |
 |---|---|---|---|---|---|---|---|
 | Card title | `scenarios.cards[].display_label` | text |  | proposed | rendered | `content:display_label` | content registry: label template per scenario × dwelling_units, e.g. "Houseplex — 6 units" |
-| Status reason (plain words) | `scenarios.cards[].status_text` | text |  | proposed | rendered | `content:status_text` | PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback |
 | permitted | `scenarios.cards[].permitted` | text |  | planned | rendered | `catalogue:permitted` |  |
 | front_setback_used_m | `scenarios.cards[].front_setback_used_m` | number | m | planned | rendered | `catalogue:front_setback_used_m` |  |
 | depth_room_m | `scenarios.cards[].depth_room_m` | number | m | planned | rendered | `catalogue:depth_room_m` |  |
@@ -129,6 +128,15 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | mechanical_attic_outside_gfa_b_m2 | `scenarios.cards[].mechanical_attic_outside_gfa_b_m2` | number | m² | planned | rendered | `catalogue:mechanical_attic_outside_gfa_b_m2` |  |
 | total_floor_area_pitched_b_m2 | `scenarios.cards[].total_floor_area_pitched_b_m2` | number | m² | planned | rendered | `catalogue:total_floor_area_pitched_b_m2` |  |
 | GFA (pitched roof) | `scenarios.cards[].gfa_pitched_m2` | number | m² | planned | rendered | `catalogue:gfa_pitched_m2` |  |
+| basement_livable_m2 | `scenarios.cards[].basement_livable_m2` | number | m² | planned | rendered | `catalogue:basement_livable_m2` |  |
+| basement_units | `scenarios.cards[].basement_units` | number |  | planned | rendered | `catalogue:basement_units` |  |
+| units_flat | `scenarios.cards[].units_flat` | number |  | planned | rendered | `catalogue:units_flat` |  |
+| units_pitched_a | `scenarios.cards[].units_pitched_a` | number |  | planned | rendered | `catalogue:units_pitched_a` |  |
+| units_pitched_b | `scenarios.cards[].units_pitched_b` | number |  | planned | rendered | `catalogue:units_pitched_b` |  |
+| unit_count | `scenarios.cards[].unit_count` | number |  | planned | rendered | `catalogue:unit_count` |  |
+| houseplex_bedrooms | `scenarios.cards[].houseplex_bedrooms` | number |  | planned | rendered | `catalogue:houseplex_bedrooms` |  |
+| unit_area_m2 | `scenarios.cards[].unit_area_m2` | number | m² | planned | rendered | `catalogue:unit_area_m2` |  |
+| Status reason (plain words) | `scenarios.cards[].status_text` | text |  | proposed | rendered | `content:status_text` | PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback |
 | Per-field trust tier | `scenarios.cards[].field_trust` | jsonb |  | proposed | payload_only | `content:field_trust` | per-field trust (O-17); not generated yet: the catalogue rows carry no trust tier |
 | Trust label (plain words) | `scenarios.cards[].trust_label` | text |  | proposed | rendered | `content:trust_label` | PRESENTATION: high → "By-law derived", disclosed → "By-law derived, see notes", low → "Estimate", CoA → "Precedent estimate" |
 

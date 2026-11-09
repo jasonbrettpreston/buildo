@@ -116,6 +116,10 @@ export type ReportV2Scenarios = {
     attic_variant_noblock_a_m2: number | null;
     /** attic_variant_noblock_b_m2 — catalogue:attic_variant_noblock_b_m2 (m²) */
     attic_variant_noblock_b_m2: number | null;
+    /** basement_livable_m2 — catalogue:basement_livable_m2 (m²) */
+    basement_livable_m2: number | null;
+    /** basement_units — catalogue:basement_units */
+    basement_units: number | null;
     /** buildable_depth_m — catalogue:buildable_depth_m (m) */
     buildable_depth_m: number | null;
     /** buildable_width_m — catalogue:buildable_width_m (m) */
@@ -158,6 +162,8 @@ export type ReportV2Scenarios = {
     half_span_b_m: number | null;
     /** Height (max) — catalogue:height_max_m (m) */
     height_max_m: number | null;
+    /** houseplex_bedrooms — catalogue:houseplex_bedrooms */
+    houseplex_bedrooms: number | null;
     illustrations: Array<{
       /** Alt text — content:illustrations */
       alt: string | null;
@@ -200,8 +206,18 @@ export type ReportV2Scenarios = {
     total_floor_area_pitched_b_m2: number | null;
     /** Trust label (plain words) — content:trust_label */
     trust_label: string | null;
+    /** unit_area_m2 — catalogue:unit_area_m2 (m²) */
+    unit_area_m2: number | null;
+    /** unit_count — catalogue:unit_count */
+    unit_count: number | null;
+    /** units_flat — catalogue:units_flat */
+    units_flat: number | null;
     /** units_max — catalogue:units_max */
     units_max: number | null;
+    /** units_pitched_a — catalogue:units_pitched_a */
+    units_pitched_a: number | null;
+    /** units_pitched_b — catalogue:units_pitched_b */
+    units_pitched_b: number | null;
     /** wall_storeys — catalogue:wall_storeys */
     wall_storeys: number | null;
   }>;

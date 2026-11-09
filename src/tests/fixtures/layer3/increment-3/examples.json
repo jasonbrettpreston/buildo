@@ -48,6 +48,36 @@
     "status": "computed",
     "value": 279,
     "tol": 0.005
+   },
+   {
+    "row": "unit_count",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "houseplex_bedrooms",
+    "status": "computed",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "row": "basement_livable_m2",
+    "status": "computed",
+    "value": 205.479,
+    "tol": 0.005
+   },
+   {
+    "row": "basement_units",
+    "status": "computed",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "row": "unit_area_m2",
+    "status": "computed",
+    "value": 114.1448,
+    "tol": 0.005
    }
   ],
   "owed_checks": [
@@ -99,31 +129,6 @@
     "form": "pitched_a",
     "tol": 0.005,
     "ruling": "Q1 a via DL-15; label \"would need an FSI variance\""
-   },
-   {
-    "target": "units (Q8 a)",
-    "value": 4,
-    "tol": 0
-   },
-   {
-    "target": "bedrooms (Q7 a)",
-    "value": 12,
-    "tol": 0
-   },
-   {
-    "target": "basement line livable_m2 (Q3 iv a)",
-    "value": 205.479,
-    "tol": 0.005
-   },
-   {
-    "target": "basement line capacity_units (Q3 iv a)",
-    "value": 6,
-    "tol": 0
-   },
-   {
-    "target": "per_unit_area_m2 (Q7 a)",
-    "value": 114.1448,
-    "tol": 0.005
    }
   ],
   "confidence": [
@@ -187,6 +192,36 @@
     "status": "computed",
     "value": 254.485,
     "tol": 0.005
+   },
+   {
+    "row": "unit_count",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "houseplex_bedrooms",
+    "status": "computed",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "row": "basement_livable_m2",
+    "status": "computed",
+    "value": 206.1329,
+    "tol": 0.005
+   },
+   {
+    "row": "basement_units",
+    "status": "computed",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "row": "unit_area_m2",
+    "status": "computed",
+    "value": 108.7923,
+    "tol": 0.005
    }
   ],
   "owed_checks": [
@@ -238,31 +273,6 @@
     "form": "pitched_b",
     "tol": 0.005,
     "ruling": "Q1 a via DL-15; label \"would need an FSI variance\""
-   },
-   {
-    "target": "units (Q8 a)",
-    "value": 4,
-    "tol": 0
-   },
-   {
-    "target": "bedrooms (Q7 a)",
-    "value": 12,
-    "tol": 0
-   },
-   {
-    "target": "basement line livable_m2 (Q3 iv a)",
-    "value": 206.1329,
-    "tol": 0.005
-   },
-   {
-    "target": "basement line capacity_units (Q3 iv a)",
-    "value": 6,
-    "tol": 0
-   },
-   {
-    "target": "per_unit_area_m2 (Q7 a)",
-    "value": 108.7923,
-    "tol": 0.005
    }
   ],
   "confidence": [
@@ -326,35 +336,39 @@
     "status": "computed",
     "value": 562.02,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 168.606,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 5,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 168.606,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)",
    "C13 medium-low (two-case CoA check, Q13 a)"
@@ -390,22 +404,21 @@
    {
     "row": "gfa_max_m2",
     "status": "not_evaluated"
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
     "status": "not_evaluated"
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
     "status": "not_evaluated"
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
     "status": "not_evaluated"
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C10 low (x21(C)/x38(A) take the x1462 reading, Q4 a)"
   ],
@@ -461,6 +474,36 @@
     "status": "computed",
     "value": 243.47,
     "tol": 0.005
+   },
+   {
+    "row": "unit_count",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "houseplex_bedrooms",
+    "status": "computed",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "row": "basement_livable_m2",
+    "status": "computed",
+    "value": 180.3883,
+    "tol": 0.005
+   },
+   {
+    "row": "basement_units",
+    "status": "computed",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "row": "unit_area_m2",
+    "status": "computed",
+    "value": 99.8778,
+    "tol": 0.005
    }
   ],
   "owed_checks": [
@@ -512,31 +555,6 @@
     "form": "pitched_a",
     "tol": 0.005,
     "ruling": "Q1 a via DL-15; label \"would need an FSI variance\""
-   },
-   {
-    "target": "units (Q8 a)",
-    "value": 4,
-    "tol": 0
-   },
-   {
-    "target": "bedrooms (Q7 a)",
-    "value": 12,
-    "tol": 0
-   },
-   {
-    "target": "basement line livable_m2 (Q3 iv a)",
-    "value": 180.3883,
-    "tol": 0.005
-   },
-   {
-    "target": "basement line capacity_units (Q3 iv a)",
-    "value": 6,
-    "tol": 0
-   },
-   {
-    "target": "per_unit_area_m2 (Q7 a)",
-    "value": 99.8778,
-    "tol": 0.005
    }
   ],
   "confidence": [
@@ -600,35 +618,39 @@
     "status": "computed",
     "value": 384.2944,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 88.893,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 2,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 108.6895,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -689,35 +711,39 @@
     "status": "computed",
     "value": 316.602,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 71.2355,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 2,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 89.0443,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
@@ -779,35 +805,39 @@
     "status": "computed",
     "value": 699.96,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 209.988,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 6,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 209.988,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -867,35 +897,39 @@
     "status": "computed",
     "value": 653.82,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 196.146,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 6,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 196.146,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -955,35 +989,39 @@
     "status": "computed",
     "value": 662.34,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 198.702,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 6,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 198.702,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -1043,35 +1081,39 @@
     "status": "computed",
     "value": 651.51,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 195.453,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 6,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 195.453,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -1131,35 +1173,39 @@
     "status": "computed",
     "value": 835.05,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 250.515,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 8,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 250.515,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -1219,35 +1265,39 @@
     "status": "computed",
     "value": 661.77,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 198.531,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 6,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 198.531,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -1308,35 +1358,39 @@
     "status": "computed",
     "value": 406.899,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 91.5523,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 3,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 114.4404,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)",
@@ -1399,35 +1453,39 @@
     "status": "computed",
     "value": 405.45,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 121.635,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 121.635,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -1488,35 +1546,39 @@
     "status": "computed",
     "value": 216.92,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 48.807,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 1,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 61.0088,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -1576,35 +1638,39 @@
     "status": "computed",
     "value": 301.0606,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 69.768,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 2,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 85.1806,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -1665,34 +1731,39 @@
     "status": "computed",
     "value": 1335.8022,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 300.5555,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 10,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 375.6944,
     "tol": 0.005
-   },
+   }
+  ],
+  "owed_checks": [
    {
     "target": "side_setback_m cell (Layer 2, base): 0.6 at 900.6.10(23)#(23)[SSP](D)(i)",
     "value": 0.6,
@@ -1761,35 +1832,39 @@
     "status": "computed",
     "value": 463.3774,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 104.26,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 3,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 130.3249,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
@@ -1852,35 +1927,39 @@
     "status": "computed",
     "value": 581.2622,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 130.784,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 163.48,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
@@ -1943,35 +2022,39 @@
     "status": "computed",
     "value": 382.28,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 86.013,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 2,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 107.5163,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -2032,35 +2115,39 @@
     "status": "computed",
     "value": 237.3616,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 54.6969,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 1,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 67.0806,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -2120,35 +2207,39 @@
     "status": "computed",
     "value": 263.1707,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 61.047,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 2,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 74.4752,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],
@@ -2209,35 +2300,39 @@
     "status": "computed",
     "value": 647.1004,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 145.5976,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 181.997,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
@@ -2299,35 +2394,39 @@
     "status": "computed",
     "value": 353.6,
     "tol": 0.005
-   }
-  ],
-  "owed_checks": [
+   },
    {
-    "target": "units (Q8 a)",
+    "row": "unit_count",
+    "status": "computed",
     "value": 4,
     "tol": 0
    },
    {
-    "target": "bedrooms (Q7 a)",
+    "row": "houseplex_bedrooms",
+    "status": "computed",
     "value": 12,
     "tol": 0
    },
    {
-    "target": "basement line livable_m2 (Q3 iv a)",
+    "row": "basement_livable_m2",
+    "status": "computed",
     "value": 79.56,
     "tol": 0.005
    },
    {
-    "target": "basement line capacity_units (Q3 iv a)",
+    "row": "basement_units",
+    "status": "computed",
     "value": 2,
     "tol": 0
    },
    {
-    "target": "per_unit_area_m2 (Q7 a)",
+    "row": "unit_area_m2",
+    "status": "computed",
     "value": 99.45,
     "tol": 0.005
    }
   ],
+  "owed_checks": [],
   "confidence": [
    "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
   ],

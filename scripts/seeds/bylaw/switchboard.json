@@ -66,6 +66,14 @@
     {"id":"formula:total_floor_area_pitched_b_m2","kind":"formula","state":"on","ruling":"M-378; M-457","reason":"increment 2 row total_floor_area_pitched_b_m2"},
     {"id":"formula:gfa_pitched_m2","kind":"formula","state":"on","ruling":"M-378; M-457","reason":"increment 2 row gfa_pitched_m2"},
     {"id":"formula:buildable_width_m:increment_2","kind":"formula","state":"on","ruling":"M-378; M-476","reason":"increment 2 formula of row buildable_width_m; off reverts to the increment 1 formula"},
-    {"id":"formula:gfa_max_m2:increment_2","kind":"formula","state":"on","ruling":"M-378; M-476; Q-DEFAULT a","reason":"increment 2 formula of row gfa_max_m2; off reverts to the increment 1 formula; switched on after the axis night and the Layer 3 reader R2 (operator \"Q-default a\", the switch-on)"}
+    {"id":"formula:gfa_max_m2:increment_2","kind":"formula","state":"on","ruling":"M-378; M-476; Q-DEFAULT a","reason":"increment 2 formula of row gfa_max_m2; off reverts to the increment 1 formula; switched on after the axis night and the Layer 3 reader R2 (operator \"Q-default a\", the switch-on)"},
+    {"id":"formula:basement_livable_m2","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row basement_livable_m2"},
+    {"id":"formula:basement_units","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row basement_units"},
+    {"id":"formula:units_flat","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row units_flat"},
+    {"id":"formula:units_pitched_a","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row units_pitched_a"},
+    {"id":"formula:units_pitched_b","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row units_pitched_b"},
+    {"id":"formula:unit_count","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row unit_count"},
+    {"id":"formula:houseplex_bedrooms","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row houseplex_bedrooms"},
+    {"id":"formula:unit_area_m2","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row unit_area_m2"}
   ]
 }

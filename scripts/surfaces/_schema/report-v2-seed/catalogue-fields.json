@@ -463,6 +463,80 @@
       "status": "planned",
       "source": "catalogue:gfa_pitched_m2",
       "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].basement_livable_m2",
+      "name": "basement_livable_m2",
+      "label": "basement_livable_m2",
+      "type": "number",
+      "unit": "m²",
+      "status": "planned",
+      "source": "catalogue:basement_livable_m2",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].basement_units",
+      "name": "basement_units",
+      "label": "basement_units",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:basement_units",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].units_flat",
+      "name": "units_flat",
+      "label": "units_flat",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:units_flat",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].units_pitched_a",
+      "name": "units_pitched_a",
+      "label": "units_pitched_a",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:units_pitched_a",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].units_pitched_b",
+      "name": "units_pitched_b",
+      "label": "units_pitched_b",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:units_pitched_b",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].unit_count",
+      "name": "unit_count",
+      "label": "unit_count",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:unit_count",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].houseplex_bedrooms",
+      "name": "houseplex_bedrooms",
+      "label": "houseplex_bedrooms",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:houseplex_bedrooms",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].unit_area_m2",
+      "name": "unit_area_m2",
+      "label": "unit_area_m2",
+      "type": "number",
+      "unit": "m²",
+      "status": "planned",
+      "source": "catalogue:unit_area_m2",
+      "render": "rendered"
     }
   ]
 }

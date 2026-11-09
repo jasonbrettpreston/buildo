@@ -1,0 +1,6 @@
+== MB-27 increment 3 E8 rows (units form (i)) red: src/tests/steps/compute_maxbld_scenarios/increment3-units-branches.logic.test.ts run on a catalogue without the eight houseplex rows, the lock added; 5 of 6 cases red (the sixth, "the house type carries none of the houseplex rows", passes on both), then 6 of 6 green with the rows (cases a to d, per-unit area, and the house guard)
+   × (a) the area count below the cap wins: units = 3, not 4
+   × (b) the cap clamps: the area count is 10 and units = 4
+   × (c) bedrooms with units <> 4 is not_evaluated with its reason (R3-01), never a number
+   × (d) units = 4 shows the stored Layer 2 bedrooms
+   × per-unit area (3a): 0.9 x (headline GFA + basement F) / units, unrounded

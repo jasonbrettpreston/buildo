@@ -64,6 +64,8 @@
               "attic_variant_block_b_m2",
               "attic_variant_noblock_a_m2",
               "attic_variant_noblock_b_m2",
+              "basement_livable_m2",
+              "basement_units",
               "buildable_depth_m",
               "buildable_width_m",
               "depth_room_m",
@@ -81,6 +83,7 @@
               "half_span_a_m",
               "half_span_b_m",
               "height_max_m",
+              "houseplex_bedrooms",
               "illustrations",
               "mechanical_attic_outside_gfa_a_m2",
               "mechanical_attic_outside_gfa_b_m2",
@@ -98,7 +101,12 @@
               "total_floor_area_pitched_a_m2",
               "total_floor_area_pitched_b_m2",
               "trust_label",
+              "unit_area_m2",
+              "unit_count",
+              "units_flat",
               "units_max",
+              "units_pitched_a",
+              "units_pitched_b",
               "wall_storeys"
             ],
             "properties": {
@@ -284,6 +292,27 @@
                 "x-status": "planned",
                 "x-render": "rendered",
                 "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "basement_livable_m2": {
+                "description": "basement_livable_m2",
+                "x-source": "catalogue:basement_livable_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "basement_units": {
+                "description": "basement_units",
+                "x-source": "catalogue:basement_units",
+                "x-status": "planned",
+                "x-render": "rendered",
                 "type": [
                   "number",
                   "null"
@@ -506,6 +535,16 @@
                 "x-status": "planned",
                 "x-render": "rendered",
                 "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "houseplex_bedrooms": {
+                "description": "houseplex_bedrooms",
+                "x-source": "catalogue:houseplex_bedrooms",
+                "x-status": "planned",
+                "x-render": "rendered",
                 "type": [
                   "number",
                   "null"
@@ -737,9 +776,60 @@
                   "null"
                 ]
               },
+              "unit_area_m2": {
+                "description": "unit_area_m2",
+                "x-source": "catalogue:unit_area_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit_count": {
+                "description": "unit_count",
+                "x-source": "catalogue:unit_count",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "units_flat": {
+                "description": "units_flat",
+                "x-source": "catalogue:units_flat",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "units_max": {
                 "description": "units_max",
                 "x-source": "catalogue:units_max",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "units_pitched_a": {
+                "description": "units_pitched_a",
+                "x-source": "catalogue:units_pitched_a",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "units_pitched_b": {
+                "description": "units_pitched_b",
+                "x-source": "catalogue:units_pitched_b",
                 "x-status": "planned",
                 "x-render": "rendered",
                 "type": [

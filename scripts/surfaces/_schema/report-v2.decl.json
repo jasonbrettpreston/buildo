@@ -11,7 +11,7 @@
     },
     "review": "scratchpad/report-review/REVIEW.md §6",
     "seeded": "2026-10-20",
-    "inputs_sha256_16": "ae5df2e5be265d73"
+    "inputs_sha256_16": "841c9b3b3444fc6c"
   },
   "inputs": {
     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
@@ -134,16 +134,6 @@
           "source": "content:display_label",
           "render": "rendered",
           "note": "content registry: label template per scenario × dwelling_units, e.g. \"Houseplex — 6 units\""
-        },
-        {
-          "path": "scenarios.cards[].status_text",
-          "name": "status_text",
-          "label": "Status reason (plain words)",
-          "type": "text",
-          "status": "proposed",
-          "source": "content:status_text",
-          "render": "rendered",
-          "note": "PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback"
         },
         {
           "path": "scenarios.cards[].permitted",
@@ -607,6 +597,90 @@
           "status": "planned",
           "source": "catalogue:gfa_pitched_m2",
           "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].basement_livable_m2",
+          "name": "basement_livable_m2",
+          "label": "basement_livable_m2",
+          "type": "number",
+          "unit": "m²",
+          "status": "planned",
+          "source": "catalogue:basement_livable_m2",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].basement_units",
+          "name": "basement_units",
+          "label": "basement_units",
+          "type": "number",
+          "status": "planned",
+          "source": "catalogue:basement_units",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].units_flat",
+          "name": "units_flat",
+          "label": "units_flat",
+          "type": "number",
+          "status": "planned",
+          "source": "catalogue:units_flat",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].units_pitched_a",
+          "name": "units_pitched_a",
+          "label": "units_pitched_a",
+          "type": "number",
+          "status": "planned",
+          "source": "catalogue:units_pitched_a",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].units_pitched_b",
+          "name": "units_pitched_b",
+          "label": "units_pitched_b",
+          "type": "number",
+          "status": "planned",
+          "source": "catalogue:units_pitched_b",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].unit_count",
+          "name": "unit_count",
+          "label": "unit_count",
+          "type": "number",
+          "status": "planned",
+          "source": "catalogue:unit_count",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].houseplex_bedrooms",
+          "name": "houseplex_bedrooms",
+          "label": "houseplex_bedrooms",
+          "type": "number",
+          "status": "planned",
+          "source": "catalogue:houseplex_bedrooms",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].unit_area_m2",
+          "name": "unit_area_m2",
+          "label": "unit_area_m2",
+          "type": "number",
+          "unit": "m²",
+          "status": "planned",
+          "source": "catalogue:unit_area_m2",
+          "render": "rendered"
+        },
+        {
+          "path": "scenarios.cards[].status_text",
+          "name": "status_text",
+          "label": "Status reason (plain words)",
+          "type": "text",
+          "status": "proposed",
+          "source": "content:status_text",
+          "render": "rendered",
+          "note": "PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback"
         },
         {
           "path": "scenarios.cards[].field_trust",
