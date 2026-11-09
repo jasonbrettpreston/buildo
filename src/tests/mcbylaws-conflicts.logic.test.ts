@@ -83,7 +83,7 @@ describe('checkCard (K4) and the CLI shim', () => {
     const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
     const r = spawnSync(process.execPath, [cli, '--text', path.join(FIX, 'mb17q1-draft.txt')], { encoding: 'utf8', env: env as NodeJS.ProcessEnv });
     expect(r.status).toBe(0);
-    expect(r.stdout.trim().split('\n')).toEqual([...TEN, 'M-160', 'M-482', 'M-499', 'M-500'].sort((x, y) => Number(x.slice(2)) - Number(y.slice(2)))); // operator B-4 "yes" (2026-11-06): the increment-3 batch adds M-160 (note), M-499 and M-500 (rows), named in prereg-MB-83-7; operator "D1 and QK4p", then "a" (Q-K4P a): the live register gains M-482, whose verbatim Q-RSM text holds houseplex, exception and detached
+    expect(r.stdout.trim().split('\n')).toEqual([...TEN, 'M-160', 'M-465', 'M-482', 'M-499', 'M-500'].sort((x, y) => Number(x.slice(2)) - Number(y.slice(2)))); // operator B-4 "yes" (2026-11-06): the increment-3 batch adds M-160 (note), M-499 and M-500 (rows), named in prereg-MB-83-7; operator "D1 and QK4p", then "a" (Q-K4P a): the live register gains M-482, whose verbatim Q-RSM text holds houseplex, exception and detached; operator 2026-11-08 ("2. a", the oracle-door notes): the M-465 dated note names the listed houseplex roof cases, so M-465 joins the candidates
   });
 });
 
