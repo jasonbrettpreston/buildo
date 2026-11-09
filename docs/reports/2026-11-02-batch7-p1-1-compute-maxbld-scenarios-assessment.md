@@ -119,7 +119,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=287 |
+| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=288 |
 | 2 | compute_maxbld_scenarios | PASS | 24 declared, missing from seeds: none |
 | 3 | compute_maxbld_scenarios | PASS | retired=22 overlap-with-declared=none |
 | 7 | compute_maxbld_scenarios | PASS | SPEC LINK header present=true |
@@ -186,7 +186,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=31193B notes=3844B checks=7 rows records_meta=(no capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=31904B notes=3844B checks=7 rows records_meta=(no capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 

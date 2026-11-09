@@ -141,7 +141,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=287 |
+| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=288 |
 | 2 | resolve_bylaws | PASS | 8 declared, missing from seeds: none |
 | 3 | resolve_bylaws | PASS | retired=0 overlap-with-declared=none |
 | 7 | resolve_bylaws | PASS | SPEC LINK header present=true |
@@ -208,7 +208,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=49514B notes=9097B checks=19 rows records_meta=4777B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=49514B notes=9246B checks=19 rows records_meta=4777B (newest post/ capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 
