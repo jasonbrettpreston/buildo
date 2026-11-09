@@ -46,9 +46,10 @@
     "Budget arm: waits MF-08 then FE-04.",
     "Pre-commit, CI, package script wiring: MF-25."
   ],
-  "owner_signoff": "OWED (operator): McBylaws owner sign-off on the gate code is recorded here before the code commit is shown to the operator.",
+  "owner_signoff": "Operator sign-off 2026-11-09, verbatim: \"Mf-15 sign-off\" (MF-15 gate code, stack commit 97462b5b8).",
   "evidence": "docs/reports/red-evidence/MF-15/red-green.txt; ~/Buildo-scratch/mcfrontend/MF-15/output-panel/",
   "notes": [
-    "2026-11-09 touch-up after cherry-pick onto the push stack (prior values kept): {\"head\":\"TBD\",\"commits_reviewed\":[\"76cfefb49 (dated notes: FE-13, Spec 127, queue, system map)\",\"f59ca9a7f (prereg-MF-15-1, alone)\",\"MF-15 code commit (TBD)\"]}. Commit order: 3186b1dac (dated notes, FE-13, Spec 127, queue, system map), 8d801854f (prereg-MF-15-1, alone, directly under the code), 97462b5b8 (MF-15 code commit)."
+    "2026-11-09 touch-up after cherry-pick onto the push stack (prior values kept): {\"head\":\"TBD\",\"commits_reviewed\":[\"76cfefb49 (dated notes: FE-13, Spec 127, queue, system map)\",\"f59ca9a7f (prereg-MF-15-1, alone)\",\"MF-15 code commit (TBD)\"]}. Commit order: 3186b1dac (dated notes, FE-13, Spec 127, queue, system map), 8d801854f (prereg-MF-15-1, alone, directly under the code), 97462b5b8 (MF-15 code commit).",
+    "2026-11-09 owner sign-off recorded (prior value kept): {\"owner_signoff\":\"OWED (operator): McBylaws owner sign-off on the gate code is recorded here before the code commit is shown to the operator.\"}"
   ]
 }
