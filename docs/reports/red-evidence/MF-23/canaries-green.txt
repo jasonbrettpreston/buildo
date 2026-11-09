@@ -1,0 +1,84 @@
+# MF-23 canaries-green: the real runners (CLIs by spawnSync, locks by nested `vitest run --root <temp copy>`).
+# Red per plant (measured on the tip 34b5ff12c copy), which shipped checker goes red:
+#   a1 ", at least" dropped in core.ts        -> report-render.logic (T1 ... at_least.*), report-generated-only (FE-02 golden class). parity.golden, report-honest, report-view.ui stay green (parity reads the stored golden tree).
+#   a2 disclosures not rendered (ReportView)  -> parity.golden (synthetic rich trees), report-view.ui (honest display). SYNTHETIC trees only.
+#   b1 one byte of report-v2.decl.json        -> seed-report-v2.mjs --check (GEN-HAND-EDIT), surface-validate --check (SV-GEN), report-generated-only (FE-02 controls).
+#   b2 golden node renamed zz_invented x4     -> surface-validate --check (SV-BIND). decl source catalogue:zz_invented -> report-binding (RS-1).
+#   b3 String(v * 2) in core.ts / bare 7 in a new subdirectory -> report-no-maths (the real projection files carry no maths).
+#   c  catalogue row ON: generator --check GEN-ROW-NO-FIELD, --write, renderer sources unchanged, probe green; hard-coded field list in core.ts -> probe (MF23 PROBE) red.
+#   d  one target's value changed in viewOf   -> parity.golden names only that target against golden (admin, then mobile).
+# Dead-checker mutants (checker disabled: lock emptied / generator exits 0 / probe emptied): the planted run is NOT red, for a, b (CLI and lock), c, d.
+# Run 1: the new file alone.
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf23
+
+ ✓ src/tests/surfaces/mcfront-proof.infra.test.ts (17 tests) 11074ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > control: a clean copy runs the honest, parity and golden locks green 742ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > RED: the ", at least" label suffix dropped in core.ts is reported at_least by the golden compare (report-render.logic) and the capture compare (report-generated-only) 772ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > RED (synthetic trees): ReportView.tsx stops rendering disclosures: the parity lock and the view lock name disclosure 748ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > dead checker: with the locks emptied the planted run is NOT red 345ms
+   ✓ canary b: a hand edit, an invented field and a bare number > control: a clean copy passes the generator --check, the gate --check and the three locks 1016ms
+   ✓ canary b: a hand edit, an invented field and a bare number > RED (hand edit): one byte of the generated declaration: generator --check, the gate and the generated-only lock all name it 844ms
+   ✓ canary b: a hand edit, an invented field and a bare number > RED (invented field): a golden node renamed in all four targets: the gate names it SV-BIND; a declaration source naming no row: the Rule 20 lock names RS-1 962ms
+   ✓ canary b: a hand edit, an invented field and a bare number > RED (numeric literal): String(v * 2) in core.ts, and a bare 7 in a new subdirectory of src/components/report: the no-maths lock names carry no maths 1049ms
+   ✓ canary b: a hand edit, an invented field and a bare number > dead checker: a generator that exits 0 and an emptied no-maths lock do NOT report red 398ms
+   ✓ canary c: a new catalogue row reaches every target with no front-end code > control: the row without a field is red in the generator; after --write the renderer is untouched and the probe is green on all four targets 470ms
+   ✓ canary c: a new catalogue row reaches every target with no front-end code > RED: a renderer that filters fields through a hard-coded list loses the new row: the probe names it 459ms
+   ✓ canary c: a new catalogue row reaches every target with no front-end code > dead checker: with the probe emptied the planted run is NOT red 408ms
+   ✓ canary d: one target differs from the others > control: a clean copy is green 642ms
+   ✓ canary d: one target differs from the others > RED: a changed value in the admin output only: the parity lock names that target and no other 647ms
+   ✓ canary d: one target differs from the others > RED: a changed value in the mobile output only: the parity lock names that target and no other 640ms
+   ✓ canary d: one target differs from the others > dead checker: with the parity lock emptied the planted run is NOT red 326ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  15:16:40
+   Duration  11.26s (transform 30ms, setup 6ms, collect 7ms, tests 11.07s, environment 0ms, prepare 24ms)
+
+npx vitest run $F --reporter=default 2>&1  26.95s user 7.50s system 298% cpu 11.521 total
+
+# Run 2: src/tests/surfaces/ (targeted, not the full suite)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf23
+
+ ✓ src/tests/surfaces/report-golden-parity.logic.test.ts (42 tests) 28ms
+ ✓ src/tests/surfaces/report-honest.logic.test.ts (50 tests) 36ms
+ ✓ src/tests/surfaces/report-render.logic.test.ts (74 tests) 111ms
+ ✓ src/tests/surfaces/report-no-maths.logic.test.ts (49 tests) 56ms
+ ✓ src/tests/surfaces/new-row-zero-code.golden.test.ts (10 tests) 84ms
+ ✓ src/tests/surfaces/report-binding.logic.test.ts (13 tests) 525ms
+ ✓ src/tests/surfaces/report-generated-only.infra.test.ts (9 tests) 650ms
+ ✓ src/tests/surfaces/report-view.ui.test.tsx (12 tests) 87ms
+ ✓ src/tests/surfaces/report-generator.logic.test.ts (12 tests) 960ms
+ ✓ src/tests/surfaces/parity.golden.test.ts (16 tests) 341ms
+ ✓ src/tests/surfaces/report-generator-building-type-list.logic.test.ts (14 tests) 1520ms
+ ✓ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests) 3044ms
+   ✓ G3b a switch row whose state is not on or off (fail closed) > RED: `GEN-ROW-BAD-STATE <switch id> <state>`, exit 1, nothing written, never treated as OFF 387ms
+ ✓ src/tests/surfaces/surface-validate.logic.test.ts (46 tests) 6840ms
+   ✓ usage, output and read-only > the real tree twice from two cwd: byte-identical output, and no input file changes 355ms
+ ✓ src/tests/surfaces/mcfront-proof.infra.test.ts (17 tests) 12061ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > control: a clean copy runs the honest, parity and golden locks green 1245ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > RED: the ", at least" label suffix dropped in core.ts is reported at_least by the golden compare (report-render.logic) and the capture compare (report-generated-only) 919ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > RED (synthetic trees): ReportView.tsx stops rendering disclosures: the parity lock and the view lock name disclosure 929ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > dead checker: with the locks emptied the planted run is NOT red 368ms
+   ✓ canary b: a hand edit, an invented field and a bare number > control: a clean copy passes the generator --check, the gate --check and the three locks 1109ms
+   ✓ canary b: a hand edit, an invented field and a bare number > RED (hand edit): one byte of the generated declaration: generator --check, the gate and the generated-only lock all name it 935ms
+   ✓ canary b: a hand edit, an invented field and a bare number > RED (invented field): a golden node renamed in all four targets: the gate names it SV-BIND; a declaration source naming no row: the Rule 20 lock names RS-1 867ms
+   ✓ canary b: a hand edit, an invented field and a bare number > RED (numeric literal): String(v * 2) in core.ts, and a bare 7 in a new subdirectory of src/components/report: the no-maths lock names carry no maths 1027ms
+   ✓ canary b: a hand edit, an invented field and a bare number > dead checker: a generator that exits 0 and an emptied no-maths lock do NOT report red 397ms
+   ✓ canary c: a new catalogue row reaches every target with no front-end code > control: the row without a field is red in the generator; after --write the renderer is untouched and the probe is green on all four targets 474ms
+   ✓ canary c: a new catalogue row reaches every target with no front-end code > RED: a renderer that filters fields through a hard-coded list loses the new row: the probe names it 475ms
+   ✓ canary c: a new catalogue row reaches every target with no front-end code > dead checker: with the probe emptied the planted run is NOT red 417ms
+   ✓ canary d: one target differs from the others > control: a clean copy is green 657ms
+   ✓ canary d: one target differs from the others > RED: a changed value in the admin output only: the parity lock names that target and no other 654ms
+   ✓ canary d: one target differs from the others > RED: a changed value in the mobile output only: the parity lock names that target and no other 647ms
+   ✓ canary d: one target differs from the others > dead checker: with the parity lock emptied the planted run is NOT red 321ms
+
+ Test Files  14 passed (14)
+      Tests  392 passed (392)
+   Start at  15:16:59
+   Duration  12.30s (transform 454ms, setup 341ms, collect 1.43s, tests 26.34s, environment 485ms, prepare 492ms)
+
+npx vitest run src/tests/surfaces/ --reporter=default 2>&1  41.63s user 12.14s system 428% cpu 12.556 total

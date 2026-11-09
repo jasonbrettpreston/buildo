@@ -1,0 +1,253 @@
+# MF-23 stub-red: runCli/runLock stubbed to always exit 0 (code 0, no failed tests, tests 1). Every planted case must fail; the dead-checker and partition cases pass on their merits.
+# Run: npx vitest run src/tests/surfaces/mcfront-proof.infra.test.ts (stubbed copy of the file)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf23
+
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts (17 tests | 13 failed) 1820ms
+   × canary a (a-now): "at least" and a disclosure are dropped from real output > control: a clean copy runs the honest, parity and golden locks green 66ms
+     → expected 1 to be greater than 100
+   × canary a (a-now): "at least" and a disclosure are dropped from real output > RED: the ", at least" label suffix dropped in core.ts is reported at_least by the golden compare (report-render.logic) and the capture compare (report-generated-only) 71ms
+     → expected false to be true // Object.is equality
+   × canary a (a-now): "at least" and a disclosure are dropped from real output > RED (synthetic trees): ReportView.tsx stops rendering disclosures: the parity lock and the view lock name disclosure 68ms
+     → expected false to be true // Object.is equality
+   × canary b: a hand edit, an invented field and a bare number > control: a clean copy passes the generator --check, the gate --check and the three locks 60ms
+     → expected 1 to be greater than 50
+   × canary b: a hand edit, an invented field and a bare number > RED (hand edit): one byte of the generated declaration: generator --check, the gate and the generated-only lock all name it 61ms
+     → expected false to be true // Object.is equality
+   × canary b: a hand edit, an invented field and a bare number > RED (invented field): a golden node renamed in all four targets: the gate names it SV-BIND; a declaration source naming no row: the Rule 20 lock names RS-1 72ms
+     → expected false to be true // Object.is equality
+   × canary b: a hand edit, an invented field and a bare number > RED (numeric literal): String(v * 2) in core.ts, and a bare 7 in a new subdirectory of src/components/report: the no-maths lock names carry no maths 63ms
+     → expected false to be true // Object.is equality
+   × canary c: a new catalogue row reaches every target with no front-end code > control: the row without a field is red in the generator; after --write the renderer is untouched and the probe is green on all four targets 62ms
+     → expected false to be true // Object.is equality
+   × canary c: a new catalogue row reaches every target with no front-end code > RED: a renderer that filters fields through a hard-coded list loses the new row: the probe names it 68ms
+     → expected false to be true // Object.is equality
+   × canary c: a new catalogue row reaches every target with no front-end code > dead checker: with the probe emptied the planted run is NOT red 70ms
+     → expected false to be true // Object.is equality
+   × canary d: one target differs from the others > control: a clean copy is green 62ms
+     → expected 1 to be greater than 10
+   × canary d: one target differs from the others > RED: a changed value in the admin output only: the parity lock names that target and no other 70ms
+     → expected false to be true // Object.is equality
+   × canary d: one target differs from the others > RED: a changed value in the mobile output only: the parity lock names that target and no other 70ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary a (a-now): "at least" and a disclosure are dropped from real output > control: a clean copy runs the honest, parity and golden locks green
+AssertionError: expected 1 to be greater than 100
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:121:21
+    119|     const r = runLock(mkTree(), files);
+    120|     green(r);
+    121|     expect(r.tests).toBeGreaterThan(100);
+       |                     ^
+    122|   });
+    123|   it('RED: the ", at least" label suffix dropped in core.ts is reporte…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary a (a-now): "at least" and a disclosure are dropped from real output > RED: the ", at least" label suffix dropped in core.ts is reported at_least by the golden compare (report-render.logic) and the capture compare (report-generated-only)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:127:67
+    125|     edit(t, CORE, swap('`${f.label}, at least`', 'String(f.label)'));
+    126|     const r = runLock(t, files);
+    127|     expect(lockRed(r, 'at_least', 'report-render.logic.test.ts')).toBe…
+       |                                                                   ^
+    128|     expect(lockRed(r, 'FE-02', 'report-generated-only.infra.test.ts'))…
+    129|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary a (a-now): "at least" and a disclosure are dropped from real output > RED (synthetic trees): ReportView.tsx stops rendering disclosures: the parity lock and the view lock name disclosure
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:134:64
+    132|     edit(t, VIEW, (s) => s.replace(/^.*data-disclosure.*\n/m, ''));
+    133|     const r = runLock(t, files);
+    134|     expect(lockRed(r, 'disclosures', 'parity.golden.test.ts')).toBe(tr…
+       |                                                                ^
+    135|     expect(lockRed(r, 'disclosure', 'report-view.ui.test.tsx')).toBe(t…
+    136|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary b: a hand edit, an invented field and a bare number > control: a clean copy passes the generator --check, the gate --check and the three locks
+AssertionError: expected 1 to be greater than 50
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:156:21
+    154|     const r = runLock(t, [L.genOnly, L.binding, L.noMaths]);
+    155|     green(r);
+    156|     expect(r.tests).toBeGreaterThan(50);
+       |                     ^
+    157|   });
+    158|   it('RED (hand edit): one byte of the generated declaration: generato…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary b: a hand edit, an invented field and a bare number > RED (hand edit): one byte of the generated declaration: generator --check, the gate and the generated-only lock all name it
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:161:74
+    159|     const t = mkTree();
+    160|     edit(t, DECL, swap('"label": "', '"label": "X'));
+    161|     expect(cliRed(runCli(t, GEN, ['--check']), `GEN-HAND-EDIT ${DECL}`…
+       |                                                                          ^
+    162|     expect(cliRed(runCli(t, GATE, ['--check']), `SV-GEN seed-report-v2…
+    163|     expect(lockRed(runLock(t, [L.genOnly]), 'FE-02 controls', 'report-…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary b: a hand edit, an invented field and a bare number > RED (invented field): a golden node renamed in all four targets: the gate names it SV-BIND; a declaration source naming no row: the Rule 20 lock names RS-1
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:168:124
+    166|     const t = mkTree();
+    167|     for (const target of TARGETS) edit(t, `${GOLD}/permitted.${target}…
+    168|     expect(cliRed(runCli(t, GATE, ['--check']), 'SV-BIND permitted.web…
+       |                                                                                                                            ^
+    169|     const u = mkTree();
+    170|     edit(u, DECL, swap('"source": "catalogue:gfa_flat_m2"', '"source":…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary b: a hand edit, an invented field and a bare number > RED (numeric literal): String(v * 2) in core.ts, and a bare 7 in a new subdirectory of src/components/report: the no-maths lock names carry no maths
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:176:97
+    174|     const t = mkTree();
+    175|     edit(t, CORE, swap('${String(v)}', '${String(v * 2)}'));
+    176|     expect(lockRed(runLock(t, [L.noMaths]), 'carry no maths', 'report-…
+       |                                                                                                 ^
+    177|     const u = mkTree();
+    178|     writeNew(u, 'src/components/report/zz/extra.ts', 'export const x =…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary c: a new catalogue row reaches every target with no front-end code > control: the row without a field is red in the generator; after --write the renderer is untouched and the probe is green on all four targets
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ withRow src/tests/surfaces/mcfront-proof.infra.test.ts:235:76
+    233|     sw.rows.push({ id: `formula:${ROW}`, kind: 'formula', state: 'on',…
+    234|     writeJson(t, SWITCHBOARD, sw);
+    235|     expect(cliRed(runCli(t, GEN, ['--check']), `GEN-ROW-NO-FIELD ${ROW…
+       |                                                                            ^
+    236|     const before = rendererSha(t);
+    237|     expect(runCli(t, GEN, ['--write']).code).toBe(0);
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:244:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary c: a new catalogue row reaches every target with no front-end code > RED: a renderer that filters fields through a hard-coded list loses the new row: the probe names it
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ withRow src/tests/surfaces/mcfront-proof.infra.test.ts:235:76
+    233|     sw.rows.push({ id: `formula:${ROW}`, kind: 'formula', state: 'on',…
+    234|     writeJson(t, SWITCHBOARD, sw);
+    235|     expect(cliRed(runCli(t, GEN, ['--check']), `GEN-ROW-NO-FIELD ${ROW…
+       |                                                                            ^
+    236|     const before = rendererSha(t);
+    237|     expect(runCli(t, GEN, ['--write']).code).toBe(0);
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:251:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary c: a new catalogue row reaches every target with no front-end code > dead checker: with the probe emptied the planted run is NOT red
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ withRow src/tests/surfaces/mcfront-proof.infra.test.ts:235:76
+    233|     sw.rows.push({ id: `formula:${ROW}`, kind: 'formula', state: 'on',…
+    234|     writeJson(t, SWITCHBOARD, sw);
+    235|     expect(cliRed(runCli(t, GEN, ['--check']), `GEN-ROW-NO-FIELD ${ROW…
+       |                                                                            ^
+    236|     const before = rendererSha(t);
+    237|     expect(runCli(t, GEN, ['--write']).code).toBe(0);
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:257:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary d: one target differs from the others > control: a clean copy is green
+AssertionError: expected 1 to be greater than 10
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:272:21
+    270|     const r = runLock(mkTree(), [L.parity]);
+    271|     green(r);
+    272|     expect(r.tests).toBeGreaterThan(10);
+       |                     ^
+    273|   });
+    274|   it.each(['admin', 'mobile'])('RED: a changed value in the %s output …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary d: one target differs from the others > RED: a changed value in the admin output only: the parity lock names that target and no other
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary d: one target differs from the others > RED: a changed value in the mobile output only: the parity lock names that target and no other
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/mcfront-proof.infra.test.ts:278:65
+    276|     plant(t, target);
+    277|     const r = runLock(t, [L.parity]);
+    278|     expect(lockRed(r, 'FE-07 parity', 'parity.golden.test.ts')).toBe(t…
+       |                                                                 ^
+    279|     expect(r.text).toContain(`${target} vs golden:`);
+    280|     for (const other of TARGETS.filter((x) => x !== target)) expect(r.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+ Test Files  1 failed (1)
+      Tests  13 failed | 4 passed (17)
+   Start at  15:15:28
+   Duration  2.07s (transform 39ms, setup 17ms, collect 10ms, tests 1.82s, environment 0ms, prepare 36ms)
+
+npx vitest run $F --reporter=default 2>&1  1.35s user 2.00s system 139% cpu 2.407 total

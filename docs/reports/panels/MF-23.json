@@ -1,0 +1,21 @@
+{
+  "task": "MF-23",
+  "item": "Executable canaries a-d of the McFront proof (FE-15); e and f owned by FE-25 / MF-22 and FE-26 / MF-21",
+  "class": "T",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "PENDING",
+  "commits_reviewed": [],
+  "cards": [
+    "Operator 2026-11-09: \"all approved as recommended\" (MF-23 D-3 a-now, catalogue-flag oracle deferred; D-4 FE-15 covers a-d).",
+    "Card MF-23-F1 (queue): the catalogue-flag oracle for at least and disclosures, after the generator emits flags (MF-12 tranche 2 F-B) and MB-44."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-23/plan.md (PASS-WITH-FOLDS, section 10); prereg-MF-23-1 (rules[] FE-15).",
+  "output": "PENDING: OUTPUT panel (regression-guardian, code-reviewer-grounded) not yet run.",
+  "seats": [],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-23/",
+  "notes": []
+}
