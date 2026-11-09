@@ -167,7 +167,9 @@ function dbRow(parcelId, buildingType, increment, result, s) {
 
 /**
  * E31-14: the rows of one parcel, one per result of every building type of the seed list, in a stable order.
- * @param {{parcel_id: number, l2: object, perm: object, geometry: object, flags: object, neighbours: object, settings?: object}} parcelInput
+ * MB-27 increment 3, E7 item 2 (M-494): `parcelInput.buildingType` names ONE building type id; when it is set only that
+ * type is run (so `oneParcel`'s per-type loop does not loop the types a second time). Unset: every type, as before.
+ * @param {{parcel_id: number, buildingType?: string, l2: object, perm: object, geometry: object, flags: object, neighbours: object, settings?: object}} parcelInput
  * @param {object} seeds the parsed seed JSON (C5 shape)
  * @param {{settings_sha?: string, layer2_table_version?: string}} meta
  */
@@ -187,7 +189,9 @@ function buildParcelRows(parcelInput, seeds, meta) {
   };
   const s = shas(seeds, meta);
   const out = [];
+  const only = typeof p.buildingType === 'string' ? p.buildingType : null;
   for (const bt of toList(seeds && seeds.buildingTypes && seeds.buildingTypes.rows)) {
+    if (only !== null && bt.id !== only) continue;
     const results = runAllRows({ ...inputs, buildingType: bt.id });
     for (const result of results) out.push(dbRow(p.parcel_id, bt.id, bt.increment, result, s));
   }
@@ -277,6 +281,7 @@ function oneParcel(source, lookups) {
     const words = l2Classes.includes(bt.class) ? disclosureWords(source, bt, Object.keys(decoded[bt.id]), L) : { l2Flags: {}, permFlags: [] };
     const parcelInput = {
       parcel_id: source.parcel_id,
+      buildingType: bt.id, // E7 item 2 (M-494): buildParcelRows runs this one type; the loop above is the only per-type loop
       l2: decoded[bt.id],
       l2Options: options[bt.id],
       l2Flags: words.l2Flags,

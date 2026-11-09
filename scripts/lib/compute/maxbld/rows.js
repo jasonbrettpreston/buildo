@@ -457,7 +457,8 @@ function runAllRows(inputsIn) {
   const buildingType = findById(isObject(seeds.buildingTypes) ? seeds.buildingTypes.rows : null, buildingTypeId);
   if (!buildingType) throw new Error(`runRow: unknown building type ${buildingTypeId}`);
   const rows = toList(seeds.catalogue.rows);
-  const mine = new Set(rows.filter((r) => r.building_type === buildingType.id).map((r) => r.id));
+  // M-495 (Q2 a): a row's building_type is a list; a string reads as one entry (the increment-1 seeds)
+  const mine = new Set(rows.filter((r) => isObject(r) && [].concat(r.building_type).includes(buildingType.id)).map((r) => r.id));
   // M-476 dated note (D3 a): a switched-off row that has no increment-1 formula is not shown; rows that read it still do
   // (only the row whose OWN switch is off; a row that reads it is shown, not_evaluated with that switch as its reason)
   const later = new Map(rows.filter((r) => isObject(r) && r.increment !== '1').map((r) => [r.id, r.switch]));
@@ -467,4 +468,24 @@ function runAllRows(inputsIn) {
     .filter((res) => !(later.has(res.row) && res.status === 'not_evaluated' && res.reason === `switched_off:${later.get(res.row)}`));
 }
 
-module.exports = { runRow, runRowIn, runAllRows, toValue, cellsOfRun, NOT_MODELLED_REASON, BASE_RUN };
+/**
+ * MB-27 increment 3, E7 (operator 2026-11-08 4a): the SECOND reading, as one more pass and nothing more. A copy of the cells
+ * is taken so that the named Layer 2 target's cell becomes not_applicable (value null), ONLY when its `clause` is one of
+ * `override.units`; runAllRows then runs over that copy. The first pass is untouched, nothing is stored and `inputsIn` is
+ * never mutated; a cell whose clause is not listed, and every other target, is read as it stands.
+ * @param {object} inputsIn the inputs of the base pass
+ * @param {{l2: string, as: string, units: string[]}} override
+ */
+function runReadingRun(inputsIn, override) {
+  const inputs = isObject(inputsIn) ? inputsIn : {};
+  const o = isObject(override) ? override : {};
+  const units = toList(o.units);
+  const cells = { ...(isObject(inputs.l2) ? inputs.l2 : {}) };
+  const cell = units.length ? cells[o.l2] : undefined;
+  if (isObject(cell) && typeof cell.clause === 'string' && units.includes(cell.clause)) {
+    cells[o.l2] = { ...cell, s: 'not_applicable', value: null };
+  }
+  return runAllRows({ ...inputs, l2: cells });
+}
+
+module.exports = { runRow, runRowIn, runAllRows, runReadingRun, toValue, cellsOfRun, NOT_MODELLED_REASON, BASE_RUN };
