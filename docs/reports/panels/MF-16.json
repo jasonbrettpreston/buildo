@@ -4,20 +4,36 @@
   "class": "T",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "TBD",
+  "head": "bc43cc1fb",
   "commits_reviewed": [
-    "TBD"
+    "ea4836524 (docs: queue note, MF-36 row, Spec 128 2.2a note)",
+    "b2b21a0e9 (prereg-MF-16-1)",
+    "a2d11babf (code: the three locks, red evidence, panel placeholder)",
+    "1ffe0b69e (prereg-MF-16-2)",
+    "cf0cac0d6 (D-5 hardening)",
+    "bc43cc1fb (output folds)"
   ],
   "cards": [
     "Operator 2026-11-09: \"2. MF-16 approved provided its ocmplaint\" (D-1..D-5 as recommended).",
-    "D-1 split: budget (FE-04) and variants (FE-17) move to the new row MF-36."
+    "D-1 split: budget (FE-04) and variants (FE-17) move to the new row MF-36.",
+    "Card MF-16-F1 (queue): the gate does not catch a golden edited identically in all four targets; the generated-only lock does. Wiring report-capture --check into the gate GEN arm is a gate change for owner review."
   ],
-  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-16/plan.md; prereg-MF-16-1 (rules[] FE-02, FE-05, FE-07).",
-  "output": "OUTPUT (stage 8): pending",
-  "seats": [],
-  "verdict": "TBD",
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-16/plan.md; prereg-MF-16-1 (rules[] FE-02, FE-05, FE-07) and prereg-MF-16-2 (FE-28, FE-29).",
+  "output": "OUTPUT (stage 8): src/tests/surfaces 349 tests green (12 files; no-maths 49, parity 16, generated-only 9, golden-parity 39); surface-validate --check exit 0. Red then green per lock in docs/reports/red-evidence/MF-16/. No full suite run (lane brief).",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "ds-compliance (deepseek-chat --fast)"
+  ],
+  "verdict": "PASS-WITH-FOLDS: no blocker. Regression guardian PASS (one import line altered in a landed lock, nothing loosened, 38 to 39 tests). Grounded reviewer folds executed in bc43cc1fb with 8 cases red first: element-access and destructured method names, reduceRight, toLocaleString, Intl, BigInt, globalThis, js/mjs/mts walk, TARGETS order coupling, derived count. DeepSeek output is raw and adjudicated only by the grounded seat: its claims about string concatenation, the object-key exemption and the absolute-path coverage guard were checked against the passing planted cases and are not defects.",
   "blockers": [],
-  "followups": [],
-  "evidence": "docs/reports/red-evidence/MF-16/",
+  "followups": [
+    "No-maths scan has no import guard (a projection file could import maths from outside the three directories), and eval, new Function, isNaN and Date are not scanned; named in the test header.",
+    "Parity does not compare block membership (headline versus detail) or data-lifecycle; layout attributes are pinned by report-view.ui.test.tsx. Named in the header.",
+    "Parity mobile leg is the viewOf projection until MF-22; no extracted PDF text until a PDF engine exists.",
+    "MF-36 (budget FE-04, variants FE-17) waits on MF-08 numbers and the card shape.",
+    "Lane R: Spec 135 dated notes flipping FE-02, FE-05, FE-07 to RULED with the landed sha; F-12 (b) schema pattern and (g) CRLF hash stay deferred."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-16/; raw seat reports in ~/Buildo-scratch/mcfrontend/MF-16/output-panel/",
   "notes": []
 }
