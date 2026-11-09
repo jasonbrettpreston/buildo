@@ -1,0 +1,33 @@
+# RED (FE-10, lock src/tests/surfaces/handbook-rule-map.logic.test.ts): the new assertion run before the Spec 135 FE-10 cell flips; the register still reads OWED, so the one new case fails for the right reason (expected RULED, got OWED). The other 21 cases stay green.
+# cmd: npx vitest run src/tests/surfaces/handbook-rule-map.logic.test.ts
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 ~/Buildo-wt-push14
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts (22 tests | 1 failed) 77ms
+   × FE-10 H1 — the reader: every FE row, no row can vanish > Spec 135 FE-10 reads RULED and names exactly this lock (the FE-10 flip, MF-18) 3ms
+     → expected 'OWED' to be 'RULED' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/handbook-rule-map.logic.test.ts > FE-10 H1 — the reader: every FE row, no row can vanish > Spec 135 FE-10 reads RULED and names exactly this lock (the FE-10 flip, MF-18)
+AssertionError: expected 'OWED' to be 'RULED' // Object.is equality
+
+Expected: "RULED"
+Received: "OWED"
+
+ ❯ src/tests/surfaces/handbook-rule-map.logic.test.ts:86:26
+     84|   it('Spec 135 FE-10 reads RULED and names exactly this lock (the FE-1…
+     85|     const fe10 = realRows().find((r: Row) => r.id === 'FE-10');
+     86|     expect(fe10?.status).toBe('RULED');
+       |                          ^
+     87|     expect(fe10?.locks).toEqual(['src/tests/surfaces/handbook-rule-map…
+     88|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  17:51:29
+   Duration  297ms (transform 44ms, setup 6ms, collect 38ms, tests 77ms, environment 0ms, prepare 20ms)
+

@@ -81,6 +81,12 @@ describe('FE-10 H1 — the reader: every FE row, no row can vanish', () => {
     expect(r.map((x: Row) => [x.id, x.status, x.date, x.locks.length, x.notes])).toEqual([['FE-01', 'RULED', '2026-11-04', 0, 0], ['FE-02', 'RULED', '2026-11-09', 1, 2], ['FE-03', 'OWED', '', 1, 0], ['FE-04', 'RULED', '2026-11-05', 0, 1]]);
   });
 
+  it('Spec 135 FE-10 reads RULED and names exactly this lock (the FE-10 flip, MF-18)', () => {
+    const fe10 = realRows().find((r: Row) => r.id === 'FE-10');
+    expect(fe10?.status).toBe('RULED');
+    expect(fe10?.locks).toEqual(['src/tests/surfaces/handbook-rule-map.logic.test.ts']);
+  });
+
   it('pins headlineOf on three FE-shaped cells, so a change in the by-law reader fails this lock by name', () => {
     expect(headlineOf('P1 Declared, not coded: a screen is a descriptor.')).toBe('P1 Declared, not coded: a screen is a descriptor.');
     expect(headlineOf('`parcels` is a source in the closed binding set: a `column`.')).toBe('parcels is a source in the closed binding set: a column.');

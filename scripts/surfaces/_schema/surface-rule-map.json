@@ -260,7 +260,7 @@
     {
       "id": "FE-10",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.10",
       "source": {
         "register": true,

@@ -20,8 +20,8 @@ const OWED_LOCK_RE = /^src\/tests\/surfaces\/[^/]+\.test\.tsx?$/;
 const ROW_HEAD_RE = /^\| (?:~~\*\*)?(FE-\d+)(?:\*\*~~)? \|/;
 const SEE_RE = /\bsee (FE-\d+)\b/;
 const SENTINEL = 'FE-01';
-// FE-10: OWED while its lock landed in MF-18 (6aca7c76d); the lane R flip removes it. Closed and shrink-only.
-const FLIP_PENDING: readonly string[] = ['FE-10'];
+// Empty since the FE-10 flip (RULED 2026-11-09, lock 6aca7c76d, MF-18). Closed and shrink-only.
+const FLIP_PENDING: readonly string[] = [];
 
 type Row = { status: string; locks: string[] };
 
