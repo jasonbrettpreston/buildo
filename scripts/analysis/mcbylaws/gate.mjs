@@ -30,7 +30,7 @@ import { scanScope, allowSet, deadScopeLines, RULE_FILE, ALLOW_REL } from './lit
 import { buildSummary, parseRefLines, isZeroSha } from './pre-push-summary.mjs';
 import { collectRef, heldCount, worktreeScan, pendingCount } from './summary-collect.mjs';
 import { scanDbTargetsInFiles, isDbScopePath } from './db-target.mjs';
-import { queueCheck, MF_QUEUE_PATH } from './mcbylaws-queue-check.mjs';
+import { queueCheck, MF_QUEUE_PATH, FE_REGISTER } from './mcbylaws-queue-check.mjs';
 
 const CANNOT = 'FAIL:X:cannot-decide';
 const DOCS = 'docs/specs/01-pipeline';
@@ -39,8 +39,6 @@ const CITE_INPUTS = {
   registers: [`${DOCS}/69a_mcbylaw_register.md`, `${DOCS}/124a_step_standard_policy_appendix.md`, `${DOCS}/131_lot_configuration_policy.md`],
   splitManifest: `${DOCS}/122_split_manifest.json`,
 };
-// §4.11 item 1: the McFrontend register. Read for `feRows` only, so a rev without it changes nothing for a McBylaws commit.
-const FE_REGISTER = 'docs/specs/02-web-admin/135_mcfrontend_decisions_register.md';
 // G67-12: the arms that live outside the repo are a fixed table; the policy names them by `id` only.
 // O67-11: MB-68's CLI is `check --mode <commit|push|ci> [--base <rev>] [--tip <rev>]`; exit 0 green, 1 red, 2 could not run. MB-79 (o) F-10: push and ci always pass --tip (the pushed local sha; HEAD in CI).
 const EXTERNAL_ARMS = {

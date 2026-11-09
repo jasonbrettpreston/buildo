@@ -245,7 +245,7 @@ describe('arm Q parameterised (MF-24a)', () => {
       const sha = r.commit('base');
       expect(q.queueCheck({ cwd: r.dir, rev: 'HEAD', queuePath: MF_QUEUE, prefix: 'MF' })).toEqual([`FAIL:Q:queue-untracked:${MF_QUEUE}`]);
       expect(q.queueCheck({ cwd: r.dir, rev: 'HEAD' })).toEqual([]);
-      r.write(MF_QUEUE, MFQ(`**MF-01 One — DONE (MF-01@${sha.slice(0, 9)})** (R)\n**MF-02 Two — DONE (MF-02@deadbeef1)** (R)`));
+      r.write(MF_QUEUE, MFQ(`**MF-01 One — DONE (MF-01@${sha.slice(0, 9)})** (R)\n  - FE rows owned: none.\n**MF-02 Two — DONE (MF-02@deadbeef1)** (R)\n  - FE rows owned: none.`));
       r.commit('mf queue');
       expect(q.queueCheck({ cwd: r.dir, rev: 'HEAD', queuePath: MF_QUEUE, prefix: 'MF' })).toEqual(['FAIL:Q:missing-commit:MF-02']);
     } finally {

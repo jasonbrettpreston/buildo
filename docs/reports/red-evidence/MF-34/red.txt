@@ -1,0 +1,178 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf34
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts (10 tests | 7 failed) 781ms
+   × MF-34 arm Q: a DONE task that declares an OWED FE row fails > P1 an OWED owned row refuses; a RULED one is clean 57ms
+     → expected [] to deeply equal [ 'FAIL:Q:done-fe-owed:MF-10:FE-18' ]
+   × MF-34 arm Q: a DONE task that declares an OWED FE row fails > P4 declaration forms; a line under a following ## section does not count 152ms
+     → expected [] to deeply equal [ 'FAIL:Q:done-fe-undeclared:MF-01' ]
+   × MF-34 arm Q: a DONE task that declares an OWED FE row fails > P5 an id absent from Spec 135 (also a mis-padded id) is unknown 52ms
+     → expected [] to deeply equal [ Array(1) ]
+   × MF-34 arm Q: a DONE task that declares an OWED FE row fails > P6 lazy read and the pinned fixture 142ms
+     → expected [ 'FAIL:Q:missing-commit:MF-02' ] to deeply equal [ 'FAIL:Q:missing-commit:MF-02', …(2) ]
+   × MF-34 arm Q: a DONE task that declares an OWED FE row fails > P6c Spec 135 without its own FE-01, or an unresolvable rev, is cannot-decide 51ms
+     → expected [] to deeply equal [ 'FAIL:Q:cannot-decide' ]
+   × MF-34 arm Q: a DONE task that declares an OWED FE row fails > P7 a decorated OWED cell reads OWED; a struck row is RETIRED and passes 49ms
+     → expected [] to deeply equal [ 'FAIL:Q:done-fe-owed:MF-10:FE-18' ]
+   × MF-34 arm Q: a DONE task that declares an OWED FE row fails > P9 two defects give two lines in numeric task order, then row (MF-2 before MF-10) 56ms
+     → expected [] to deeply equal [ …(4) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-queue-fe.logic.test.ts > MF-34 arm Q: a DONE task that declares an OWED FE row fails > P1 an OWED owned row refuses; a RULED one is clean
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:done-fe-owed:MF-10:FE-18' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:done-fe-owed:MF-10:FE-18",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts:33:85
+     31| describe('MF-34 arm Q: a DONE task that declares an OWED FE row fails'…
+     32|   it('P1 an OWED owned row refuses; a RULED one is clean', () => {
+     33|     expect(run(Q(D('10', 'FE-18.')), REG({ 'FE-01': 'RULED', 'FE-18': …
+       |                                                                                     ^
+     34|     expect(run(Q(D('10', 'FE-18.')))).toEqual([]);
+     35|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/tests/mcbylaws-queue-fe.logic.test.ts > MF-34 arm Q: a DONE task that declares an OWED FE row fails > P4 declaration forms; a line under a following ## section does not count
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:done-fe-undeclared:MF-01' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:done-fe-undeclared:MF-01",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts:50:35
+     48|     expect(run(Q(D('01', 'none.')))).toEqual([]);
+     49|     expect(run(Q(D('01', 'FE-18, FE-27.')))).toEqual([]);
+     50|     expect(run(Q(D('01', null)))).toEqual(['FAIL:Q:done-fe-undeclared:…
+       |                                   ^
+     51|     expect(run(Q(D('01', 'none.') + '  - FE rows owned: none.\n'))).to…
+     52|     expect(run(Q(D('01', 'FE-1x.')))).toEqual(['FAIL:Q:done-fe-undecla…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/tests/mcbylaws-queue-fe.logic.test.ts > MF-34 arm Q: a DONE task that declares an OWED FE row fails > P5 an id absent from Spec 135 (also a mis-padded id) is unknown
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:done-fe-unknown:MF-10:FE-99",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts:60:39
+     58| 
+     59|   it('P5 an id absent from Spec 135 (also a mis-padded id) is unknown'…
+     60|     expect(run(Q(D('10', 'FE-99.')))).toEqual(['FAIL:Q:done-fe-unknown…
+       |                                       ^
+     61|     expect(run(Q(D('10', 'FE-8.')))).toEqual(['FAIL:Q:done-fe-unknown:…
+     62|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/tests/mcbylaws-queue-fe.logic.test.ts > MF-34 arm Q: a DONE task that declares an OWED FE row fails > P6 lazy read and the pinned fixture
+AssertionError: expected [ 'FAIL:Q:missing-commit:MF-02' ] to deeply equal [ 'FAIL:Q:missing-commit:MF-02', …(2) ]
+
+- Expected
++ Received
+
+  Array [
+    "FAIL:Q:missing-commit:MF-02",
+-   "FAIL:Q:done-fe-undeclared:MF-01",
+-   "FAIL:Q:done-fe-undeclared:MF-02",
+  ]
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts:80:32
+     78|       r.write(MF_QUEUE_PATH, Q(head('01', sha.slice(0, 9)), head('02',…
+     79|       r.commit('q b');
+     80|       expect(queueCheck(opts)).toEqual(['FAIL:Q:missing-commit:MF-02',…
+       |                                ^
+     81|       // (c) an owned id and no Spec 135: cannot-decide only.
+     82|       r.write(MF_QUEUE_PATH, Q(head('01', sha.slice(0, 9)) + '  - FE r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  src/tests/mcbylaws-queue-fe.logic.test.ts > MF-34 arm Q: a DONE task that declares an OWED FE row fails > P6c Spec 135 without its own FE-01, or an unresolvable rev, is cannot-decide
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:cannot-decide' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:cannot-decide",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts:91:66
+     89| 
+     90|   it('P6c Spec 135 without its own FE-01, or an unresolvable rev, is c…
+     91|     expect(run(Q(D('10', 'FE-18.')), REG({ 'FE-18': 'RULED' }))).toEqu…
+       |                                                                  ^
+     92|     expect(run(Q(D('10', 'FE-18.')), null)).toEqual(['FAIL:Q:cannot-de…
+     93|     expect(doneFeOwnedErrors({ cwd: '/nonexistent-mf34', rev: 'HEAD', …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  src/tests/mcbylaws-queue-fe.logic.test.ts > MF-34 arm Q: a DONE task that declares an OWED FE row fails > P7 a decorated OWED cell reads OWED; a struck row is RETIRED and passes
+AssertionError: expected [] to deeply equal [ 'FAIL:Q:done-fe-owed:MF-10:FE-18' ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:done-fe-owed:MF-10:FE-18",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts:98:102
+     96| 
+     97|   it('P7 a decorated OWED cell reads OWED; a struck row is RETIRED and…
+     98|     expect(run(Q(D('10', 'FE-18.')), REG({ 'FE-01': 'RULED', 'FE-18': …
+       |                                                                                                      ^
+     99|     const struck = `# 135\n\n${row('FE-01', 'RULED')}\n| ~~**FE-18**~~…
+    100|     expect(run(Q(D('10', 'FE-18.')), struck)).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  src/tests/mcbylaws-queue-fe.logic.test.ts > MF-34 arm Q: a DONE task that declares an OWED FE row fails > P9 two defects give two lines in numeric task order, then row (MF-2 before MF-10)
+AssertionError: expected [] to deeply equal [ …(4) ]
+
+- Expected
++ Received
+
+- Array [
+-   "FAIL:Q:done-fe-owed:MF-2:FE-18",
+-   "FAIL:Q:done-fe-owed:MF-2:FE-27",
+-   "FAIL:Q:done-fe-undeclared:MF-3",
+-   "FAIL:Q:done-fe-owed:MF-10:FE-18",
+- ]
++ Array []
+
+ ❯ src/tests/mcbylaws-queue-fe.logic.test.ts:120:25
+    118|     const t = Q(D('10', 'FE-18.'), D('2', 'FE-27, FE-18.'), D('3', nul…
+    119|     const reg = REG({ 'FE-01': 'RULED', 'FE-18': 'OWED a', 'FE-27': 'O…
+    120|     expect(run(t, reg)).toEqual([
+       |                         ^
+    121|       'FAIL:Q:done-fe-owed:MF-2:FE-18',
+    122|       'FAIL:Q:done-fe-owed:MF-2:FE-27',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 3 passed (10)
+   Start at  11:40:51
+   Duration  961ms (transform 36ms, setup 7ms, collect 13ms, tests 781ms, environment 0ms, prepare 26ms)
+

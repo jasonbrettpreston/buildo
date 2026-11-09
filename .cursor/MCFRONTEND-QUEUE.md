@@ -2,7 +2,7 @@
 
 This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-34** (ids are never reused). Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b): MF-34 is taken by the MF-24 split; next free id **MF-35**. Dated note 2026-11-09 (prior text kept; operator, verbatim: "yes Shall I add the search-pair conversion as a queue row placed after MF-15"): MF-35 is taken by the search-pair conversion row; next free id **MF-36**.
 
-Form copied from `.cursor/MCBYLAWS-QUEUE.md`: ten stages, status words DONE · RUNNING · WAITS · OPERATOR · HELD · LATER, lanes R rulings · G gates · E one-writer build · T tests · P product, reference practice `MF-nn (item) · McFrontend queue · lane X · stage N`. Arm Q today reads the McBylaws queue only (headings `**MB-nn ... - STATUS**` with `MB-nn@sha`); converting these tables to that form, and teaching arm Q a second queue, is MF-24. Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b; MF-24a): the tables below are now in that form: one heading `**MF-nn <task> — <STATUS>** (lane)` per task, then one bullet that keeps every table cell (the status cell as it was, WAITS, Done-condition). A DONE heading cites `MF-nn@sha`: MF-01, MF-05 and MF-07 landed in the McFrontend Phase 0 documents commit a95246407, MF-09 in the McBylaws queue note 7f04f5b6a. Arm Q reads this file (prefix MF) at push and CI for a range that changes it or a surface path. Bullets never start with `- MF-` (that is the DONE-list form).
+Form copied from `.cursor/MCBYLAWS-QUEUE.md`: ten stages, status words DONE · RUNNING · WAITS · OPERATOR · HELD · LATER, lanes R rulings · G gates · E one-writer build · T tests · P product, reference practice `MF-nn (item) · McFrontend queue · lane X · stage N`. Arm Q today reads the McBylaws queue only (headings `**MB-nn ... - STATUS**` with `MB-nn@sha`); converting these tables to that form, and teaching arm Q a second queue, is MF-24. Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b; MF-24a): the tables below are now in that form: one heading `**MF-nn <task> — <STATUS>** (lane)` per task, then one bullet that keeps every table cell (the status cell as it was, WAITS, Done-condition). A DONE heading cites `MF-nn@sha`: MF-01, MF-05 and MF-07 landed in the McFrontend Phase 0 documents commit a95246407, MF-09 in the McBylaws queue note 7f04f5b6a. Arm Q reads this file (prefix MF) at push and CI for a range that changes it or a surface path. Bullets never start with `- MF-` (that is the DONE-list form). Dated note 2026-11-09 (M-246, prior text kept; MF-34 · McFrontend queue · lane G; operator, verbatim: "approve D-1 - D-8 as recommended"): a DONE heading's block (to the next `**MF-nn` heading or any `#` line) holds exactly one bullet `  - FE rows owned: none.` or `  - FE rows owned: FE-nn, FE-mm.` (those words, ids with two digits, a closing full stop; no other prose on the line) naming the Spec 135 rows whose lock that task builds; arm Q refuses a DONE heading without it, or whose listed row is OWED or absent from Spec 135. `none` means the task builds no lock (MF-01 and MF-07 landed rulings; the locks for FE-16 and FE-20..22 belong to later tasks). Whether a declaration is complete and honest is judged by the McBylaws owner review at each DONE flip.
 
 Authority: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`. Principles: Spec 126 §0a. Register: Spec 135 (`docs/specs/02-web-admin/135_mcfrontend_decisions_register.md`). Policy rules 16-20: Spec 128 §2.2a. Procedure: Spec 127 §3.2a.
 
@@ -18,6 +18,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 ## Phase 0: specs ruled and recorded (documents only)
 
 **MF-01 Spec numbers 135/136 and folder — DONE 2026-11-04 (Q-MF1 a) (MF-01@a95246407)** (R)
+  - FE rows owned: none.
   - Lane R. Status cell (kept): DONE 2026-11-04 (Q-MF1 a). Waits on: none. Done-condition: FE-08, FE-16.
 
 **MF-02 Record Q-FE, Q-MFP, doc-set, Q-MFS, Q-MF1..Q-MF6 and shared inputs as Spec 135 rows FE-01..FE-26 with Lock cells — RUNNING (stage 9: lands in the McFrontend Phase 0 documents commit)** (R)
@@ -30,12 +31,14 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
   - Lane R. Status cell (kept): LATER. Waits on: MF-03. Done-condition: documents only.
 
 **MF-05 Binding rule (Q-MF3), `variants[]` (Q-MF2), shared inputs: rulings recorded in the card — DONE 2026-11-04 (MF-05@a95246407)** (R)
+  - FE rows owned: none.
   - Lane R. Status cell (kept): DONE 2026-11-04. Waits on: none. Done-condition: rows written by MF-02.
 
 **MF-06 Check decision-log accepts register 135; the Spec 128 §4.11 change list is written — LATER** (G)
   - Lane G. Status cell (kept): LATER. Waits on: MF-02. Done-condition: list written; no code.
 
 **MF-07 Operator rules Q-MF4 (external embeds, user-entry conflict rule, ad targeting consent) — DONE 2026-11-04 (operator "Q-MF4 a (this is great work)") (MF-07@a95246407)** (R)
+  - FE rows owned: none.
   - Lane R. Status cell (kept): DONE 2026-11-04 (operator "Q-MF4 a (this is great work)"). Waits on: none. Done-condition: FE-20/21/22 ruled.
 
 **MF-08 Operator rules the REPORT performance numbers — WAITS MF-33, OPERATOR** (R)
@@ -44,6 +47,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
   - Dated note 2026-11-09 (M-246, prior text kept; MF-08 · McFrontend queue · lane R; operator, verbatim: "option a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-08 budgets, option A"): WAITS is renewed until a real 25-lot REPORT response can be measured (MF-14 and MB-44). The W-2 formula is confirmed: the REPORT payload gzip limit = measured max x 1.2, kept in the protected tighten-only file and enforced by the FE-04 lock `budget.infra.test.ts` and the surface-validate budget arm. Everything else stays PROSE-ONLY (FE-04). New expiry 2026-11-16. The heading word is not changed here.
 
 **MF-09 Q-MB44 (operator "Mb-44 a"): MB-44 delivers the report as stored data; it is displayed only through the McFrontend REPORT renderer (MF-14). The McBylaws queue note lands with the Phase 0 documents (lane R) — DONE 2026-11-04 (MF-09@7f04f5b6a)** (R)
+  - FE rows owned: none.
   - Lane R. Status cell (kept): DONE 2026-11-04. Waits on: none. Done-condition: McBylaws queue dated note under MB-44.
 
 ## Phase 1: the report page (WAITS increment 2 closed AND freeze lifted by name, FE-01)
@@ -92,6 +96,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
   - Lane T. Status cell (kept): LATER. Waits on: MF-14, MF-15. Done-condition: each RED then GREEN. Dated note 2026-11-06 (M-246, prior text kept; operator answer MF-10 D-2 a, verbatim "MF-10 all recommended provided they are complaint"): the "binding" lock (`src/tests/surfaces/report-binding.logic.test.ts`, FE-18) is built by MF-10, so "binding" is removed from this row's locks; the other locks stay here.
 
 **MF-17 Gate arm C wiring (Spec 128 §4.11 items 1-6): 135 landed earlier; ID_RE; trailer; prereg-name/PREREG_RE; policy globs held then layer23 — DONE 2026-11-06 (MF-17@aa61c5777; MB-67 sign-off "1a", Q-MB67)** (G)
+  - FE rows owned: none.
   - Lane G. Status cell (kept): LATER. Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b): items 1-5 and the D-2 loop-scope item run now as the early gate batch, before MF-10; item 6 (the policy flip) follows it. Waits on: MF-16, freeze lift. Done-condition: commit citing an OWED FE row refused; waits for the named freeze lift; McBylaws owner review.
   - Dated note 2026-11-06 (M-246, prior text kept; "yes. proceed", D-1 b, D-3 a): items 1-5 and the loop-scope item landed (407b9eaef, folds 96a481c2c); item 6, the policy flip, lands with the panel record `docs/reports/panels/MF-17.json`, whose McBylaws (MB-67 lane) owner sign-off is PENDING OPERATOR. MF-17 reads DONE only after that sign-off.
   - Heading before 2026-11-08 (kept, M-246): "RUNNING (items 1-5 and the D-2 loop-scope item in the early gate batch; item 6, the policy flip, follows; dated note 2026-11-06)".
@@ -120,6 +125,8 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 
 **MF-34 MF-24b (split from MF-24, D-9 b): arm Q refuses a DONE MF task whose FE row is still OWED — LATER** (G)
   - Lane G. Status cell (kept): LATER. Waits on: MF-17 item 1, MF-24a. Done-condition: a DONE MF task with an OWED FE row fails arm Q; McBylaws owner review.
+  - Dated note 2026-11-09 (M-246, prior text kept; MF-34 · McFrontend queue · lane G; operator, verbatim: "approve D-1 - D-8 as recommended"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-34 D-1..D-8"): the Done-condition is restated: a DONE MF task that DECLARES an OWED FE row (the `FE rows owned:` bullet, see the header) fails arm Q. A declaration of `none` by a task that does own an OWED row is not detected by the code; that is judged at the owner review. Coverage (every OWED FE row has exactly one owner) is carded below as MF-34-F1.
+  - Card MF-34-F1 (follow-up, not started): every OWED FE row has exactly one owner, and a task owns every OWED id in its own prereg.
 
 **MF-25 Pre-commit/CI lines: surface-validate, generator, handbook `--check`; CI step for `*.db.test.ts` — LATER** (G)
   - Lane G. Status cell (kept): LATER. Waits on: MF-18, freeze lift. Done-condition: .husky is protected: panel arm P + APPROVED.

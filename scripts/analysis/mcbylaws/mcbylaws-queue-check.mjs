@@ -12,11 +12,15 @@
 // every McBylaws call and verdict is unchanged. The McFrontend queue is `MF_QUEUE_PATH` with prefix `MF`.
 
 import { git, pathExistsAt, readAt } from './git-util.mjs';
+import { parseRegisterRows } from './cite-parse.mjs';
 
 /** The queue file, relative to the repo root. */
 export const QUEUE_PATH = '.cursor/MCBYLAWS-QUEUE.md';
 /** The McFrontend queue (MF-24a). */
 export const MF_QUEUE_PATH = '.cursor/MCFRONTEND-QUEUE.md';
+
+/** The McFrontend decisions register (Spec 135). Read for `FE rows owned` (Q6) and for `feRows` in gate.mjs. */
+export const FE_REGISTER = 'docs/specs/02-web-admin/135_mcfrontend_decisions_register.md';
 
 const PREFIXES = new Set(['MB', 'MF']);
 /** The id prefix of one queue; anything but MB or MF is refused (a throw, so the caller fails closed). */
@@ -169,8 +173,50 @@ export function readyDerivedErrors(text, opts) {
   return [...out];
 }
 
+const DECL = /^\s*- FE rows owned: (none|FE-\d+(, FE-\d+)*)\.?\s*$/;
+const BLOCK_END = /^\s*(\*\*MF-\d+|#)/;
+const num = (id) => Number(id.replace(/\D/g, ''));
+
 /**
- * (Q): Q4 first (an untracked queue ends it), then Q2, Q3, Q1 (tip = rev), Q5 — concatenated.
+ * (Q6, MF prefix only; MF-34): every DONE heading's block (up to the next `**MF-nn` heading or any `#` line) holds exactly
+ * one `- FE rows owned: none.` or `- FE rows owned: FE-nn, FE-mm.` line (else done-fe-undeclared). Each owned id must be
+ * in Spec 135 and not OWED (done-fe-owed, done-fe-unknown). Spec 135 is read only when some DONE heading owns an id; an
+ * unreadable register or one without its own FE-01 row is one cannot-decide. Sorted by task number, then row.
+ */
+export function doneFeOwnedErrors({ cwd, rev, text } = {}) {
+  const ls = lines(text);
+  if (ls === null) return [CANNOT];
+  const owned = [];
+  const out = [];
+  ls.forEach((line, i) => {
+    const h = headingBody(line, { prefix: 'MF' });
+    if (!h || !/\bDONE\b/.test(h.body ?? line)) return;
+    let end = i + 1;
+    while (end < ls.length && !BLOCK_END.test(ls[end])) end++;
+    const decls = ls.slice(i + 1, end).filter((l) => DECL.test(l));
+    if (decls.length !== 1) {
+      out.push({ n: num(h.n), row: 0, line: `FAIL:Q:done-fe-undeclared:MF-${h.n}` });
+      return;
+    }
+    const ids = decls[0].match(/FE-\d+/g) ?? [];
+    for (const id of ids) owned.push({ n: h.n, id });
+  });
+  if (owned.length > 0) {
+    const reg = readAt(cwd, rev, FE_REGISTER);
+    const rows = typeof reg === 'string' ? parseRegisterRows(reg) : null;
+    if (rows === null || !rows.has('FE-01')) return [CANNOT];
+    for (const { n, id } of owned) {
+      const row = rows.get(id);
+      if (!row) out.push({ n: num(n), row: num(id), line: `FAIL:Q:done-fe-unknown:MF-${n}:${id}` });
+      else if (row.status === 'OWED') out.push({ n: num(n), row: num(id), line: `FAIL:Q:done-fe-owed:MF-${n}:${id}` });
+    }
+  }
+  out.sort((a, b) => a.n - b.n || a.row - b.row);
+  return [...new Set(out.map((o) => o.line))];
+}
+
+/**
+ * (Q): Q4 first (an untracked queue ends it), then Q2, Q3, Q1 (tip = rev), Q5, then Q6 for the MF prefix — concatenated.
  * The ancestry half of Q1 needs a tip the repo resolves; when `rev` is missing or unresolvable that half reports
  * `cannot-decide` instead of a pass (fail closed).
  */
@@ -185,12 +231,15 @@ export function queueCheck({ cwd, rev, queuePath, prefix } = {}) {
     const missing = missingCommitErrors({ cwd, text, tipRev: rev, prefix: opts.prefix });
     const tipUnresolved =
       missing.length === 0 && git(cwd, ['rev-parse', '--verify', '--quiet', `${rev}^{commit}`]).status !== 0;
-    return [
+    const base = [
       ...statusWordErrors(text, opts),
       ...doneWithoutCommitErrors(text, opts),
       ...(tipUnresolved ? [CANNOT] : missing),
       ...readyDerivedErrors(text, opts),
     ];
+    if (opts.prefix !== 'MF') return base;
+    const fe = doneFeOwnedErrors({ cwd, rev, text });
+    return [...base, ...fe.filter((l) => l !== CANNOT || !base.includes(CANNOT))];
   } catch {
     return [CANNOT];
   }
