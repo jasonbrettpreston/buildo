@@ -6,7 +6,7 @@
 // word, no target comparison, no layout number. Every layout key is honoured through a data attribute and a class. No state: a collapsed block is a
 // natively toggled <details>, so the component is safe in a server component.
 import type { ReactElement } from 'react';
-import type { ReportView as View, ViewNode } from '../../lib/surfaces/report/core';
+import type { ReportView as View, ViewNode, ViewSlot } from '../../lib/surfaces/report/core';
 
 const Item = ({ n }: { n: ViewNode }): ReactElement => (
   <div data-field={n.field} data-status={n.status} data-unavailable={n.unavailable ? 'true' : 'false'} className="py-1">
@@ -26,10 +26,21 @@ const Block = ({ name, nodes, columns }: { name: string; nodes: ViewNode[]; colu
   </dl>
 );
 
+// MF-20 (Spec 126 11a.10, Spec 128 R-17, R-34): a sponsored slot is an <aside> that is a SIBLING of the card, never inside it; the disclosure is always visible.
+// It carries no data-field: it is not a report field.
+const Slot = ({ s }: { s: ViewSlot }): ReactElement => (
+  <aside data-block="ad-slot" data-slot={s.slot} data-ad-field={s.field} data-placement={s.placement} data-scenario={s.scenario ?? ''} className="rounded border p-3 md:w-64">
+    <p data-disclosure className="text-xs uppercase text-gray-600">{s.disclosure}</p>
+    <p className="text-base">{s.text}</p>
+  </aside>
+);
+
 export function ReportView({ view }: { view: View }): ReactElement {
   const { layout } = view;
   const collapsed = layout.details === 'collapsed';
   const hasDetail = view.detail.length > 0;
+  const beside = view.slots.filter((x) => x.placement === 'beside_card');
+  const after = view.slots.filter((x) => x.placement === 'after_card');
   return (
     <div
       data-report
@@ -47,6 +58,8 @@ export function ReportView({ view }: { view: View }): ReactElement {
           {view.reason.text}
         </p>
       ) : null}
+      <div data-block="card-row" className="flex flex-col gap-4 md:flex-row">
+      <div data-block="card" className="min-w-0 flex-1 space-y-4">
       {view.headline.length > 0 ? <Block name="headline" nodes={view.headline} columns={layout.columns} /> : null}
       {hasDetail ? (
         collapsed ? (
@@ -60,6 +73,10 @@ export function ReportView({ view }: { view: View }): ReactElement {
           </div>
         )
       ) : null}
+      </div>
+      {beside.map((x) => <Slot key={x.field} s={x} />)}
+      </div>
+      {after.map((x) => <Slot key={x.field} s={x} />)}
     </div>
   );
 }

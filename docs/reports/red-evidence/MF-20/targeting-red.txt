@@ -1,0 +1,60 @@
+ ❯ read src/tests/surfaces/ad-targeting-keys.logic.test.ts:18:51
+ ❯ real src/tests/surfaces/ad-targeting-keys.logic.test.ts:27:7
+ ❯ src/tests/surfaces/ad-targeting-keys.logic.test.ts:94:29
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+ FAIL  src/tests/surfaces/ad-targeting-keys.logic.test.ts > FE-22 RED: each defect is caught on a mutated copy > scenario_fields drift from the scenario keys, in both directions
+Error: ENOENT: no such file or directory, open '/private/tmp/claude-501/-Users-brettpreston-macmini/8bc79c3a-88f1-4a2e-a702-31506654ea3c/scratchpad/redwt/scripts/surfaces/_schema/ad-contract.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ read src/tests/surfaces/ad-targeting-keys.logic.test.ts:18:51
+ ❯ real src/tests/surfaces/ad-targeting-keys.logic.test.ts:27:7
+ ❯ src/tests/surfaces/ad-targeting-keys.logic.test.ts:99:15
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+ FAIL  src/tests/surfaces/ad-targeting-keys.logic.test.ts > FE-22 RED: each defect is caught on a mutated copy > the slot object stays closed: an open slot, or a targeting/identity field on it, is RED
+Error: ENOENT: no such file or directory, open '/private/tmp/claude-501/-Users-brettpreston-macmini/8bc79c3a-88f1-4a2e-a702-31506654ea3c/scratchpad/redwt/scripts/surfaces/_schema/ad-contract.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ read src/tests/surfaces/ad-targeting-keys.logic.test.ts:18:51
+ ❯ real src/tests/surfaces/ad-targeting-keys.logic.test.ts:27:7
+ ❯ src/tests/surfaces/ad-targeting-keys.logic.test.ts:107:15
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯
+ FAIL  src/tests/surfaces/ad-targeting-keys.logic.test.ts > FE-22 RED: each defect is caught on a mutated copy > a user-provenanced ad field, a placement with max_slots above 1, and catalogue_field promoted to a binding source kind are RED
+Error: ENOENT: no such file or directory, open '/private/tmp/claude-501/-Users-brettpreston-macmini/8bc79c3a-88f1-4a2e-a702-31506654ea3c/scratchpad/redwt/scripts/surfaces/_schema/ad-contract.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ read src/tests/surfaces/ad-targeting-keys.logic.test.ts:18:51
+ ❯ real src/tests/surfaces/ad-targeting-keys.logic.test.ts:27:7
+ ❯ src/tests/surfaces/ad-targeting-keys.logic.test.ts:118:15
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/12]⎯
+ FAIL  src/tests/surfaces/ad-targeting-keys.logic.test.ts > FE-22 RED: each defect is caught on a mutated copy > a placement or contract slot list that disagrees is RED
+Error: ENOENT: no such file or directory, open '/private/tmp/claude-501/-Users-brettpreston-macmini/8bc79c3a-88f1-4a2e-a702-31506654ea3c/scratchpad/redwt/scripts/surfaces/_schema/ad-contract.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ read src/tests/surfaces/ad-targeting-keys.logic.test.ts:18:51
+ ❯ real src/tests/surfaces/ad-targeting-keys.logic.test.ts:27:7
+ ❯ src/tests/surfaces/ad-targeting-keys.logic.test.ts:129:15
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/12]⎯
+ Test Files  1 failed (1)
+      Tests  12 failed (12)
+   Start at  15:22:32
+   Duration  487ms (transform 131ms, setup 12ms, collect 167ms, tests 5ms, environment 0ms, prepare 25ms)

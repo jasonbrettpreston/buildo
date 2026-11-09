@@ -8,10 +8,11 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-111 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+115 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
+| `ad_slot` | 4 |
 | `catalogue` | 47 |
 | `content` | 37 |
 | `parcels` | 27 |
@@ -219,6 +220,10 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | Label | Path | Type | Unit | Status | Render | Source | Note |
 |---|---|---|---|---|---|---|---|
 | Sponsored label | `offers[].disclosure_label` | text |  | proposed | rendered | `content:sponsored_label` | Q-7/Q-8 (decided): always labelled "Sponsored" (Spec 128 R-17 FAIL) |
+| Sponsored slot (detail footer) | `ui.ad_slots.detail_footer` | text |  | new | rendered | `ad_slot:detail_footer` | Q-8 (decided): first-party text offer, never inside a card, labelled Sponsored (R-17) |
+| Sponsored slot (renovation section) | `ui.ad_slots.renovation_section` | text |  | new | rendered | `ad_slot:renovation_section` | Q-8 (decided): first-party text offer, never inside a card, labelled Sponsored (R-17) |
+| Sponsored slot (beside the detached_house/flat_or_shallow_roof card) | `ui.ad_slots.ad_scenario_detached_house_flat_or_shallow_roof` | text |  | new | rendered | `ad_slot:scenario_card` | Operator 2026-11-09: one sponsored slot BESIDE the detached_house/flat_or_shallow_roof card, outside it (R-34), targeted by the scenario key |
+| Sponsored slot (beside the detached_house/pitched card) | `ui.ad_slots.ad_scenario_detached_house_pitched` | text |  | new | rendered | `ad_slot:scenario_card` | Operator 2026-11-09: one sponsored slot BESIDE the detached_house/pitched card, outside it (R-34), targeted by the scenario key |
 
 ## Empty / not permitted / not evaluated states and formatting (`states`)
 

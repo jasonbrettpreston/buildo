@@ -2,6 +2,8 @@
 //            docs/specs/02-web-admin/128_surface_standard_policy.md Rule 16 (no maths), Rule 17 (honest display),
 //            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-24 (throws on an unknown field or status), FE-29 (the one node contract).
 //
+// MF-20 (Spec 126 11a.10, FE-22, FE-23; Spec 128 R-17, R-34): the one closed source kind `ad_slot` is routed to the root `slots[]`, never to `nodes[]`.
+// Which scenario a slot sits beside is DATA (the ad contract's scenario_fields map); no field is named here.
 // MF-14 · McFrontend queue · lane E-MF14. THE one REPORT renderer core: three pure functions. Every datum (schema, declaration, content registry,
 // headline lists, layout table) is an argument, so a test can inject a synthetic one and nothing here names a field. Runs on the server (the schema
 // check is AJV, the engine of the gate: scripts/surfaces/report-checks.mjs). No maths: String(n), the declared unit, the dash for null.
@@ -12,9 +14,11 @@ type Json = Record<string, any>;
 // The injected data: { schema, decl, content, lists, layout }. Loosely typed on purpose: a test injects synthetic files of the same shape.
 export type ReportCtx = Json;
 export interface ReportNode { field: string; source: string; label: string; value: string | null; status: string; confidence: string; provenance: string; disclosures: string[] }
-export interface ReportTree { lifecycle?: string; nodes: ReportNode[] }
+export interface ReportSlot { field: string; slot: string; source: string; label: string; value: string; disclosure: string; scenario?: string }
+export interface ReportTree { lifecycle?: string; nodes: ReportNode[]; slots?: ReportSlot[] }
+export interface ViewSlot { field: string; slot: string; scenario?: string; label: string; text: string; disclosure: string; placement: 'beside_card' | 'after_card' }
 export interface ViewNode { field: string; label: string; text: string; status: string; badge: string | null; confidence: string; provenance: string; disclosures: string[]; showMeta: boolean; unavailable: boolean }
-export interface ReportView { target: string; layout: Json; lifecycle?: string; reason?: ViewNode; headline: ViewNode[]; detail: ViewNode[] }
+export interface ReportView { target: string; layout: Json; lifecycle?: string; reason?: ViewNode; headline: ViewNode[]; detail: ViewNode[]; slots: ViewSlot[] }
 
 // Control keys of a response pick the tree kind; information keys ride along and are never emitted (MF-14 D-11, closed list).
 const CONTROL_KEYS = ['status', 'lifecycle'];
@@ -50,6 +54,17 @@ const registryText = (content: Json, status: string): string | undefined => {
 };
 const disclosureCodes = (content: Json): string[] =>
   Object.entries(content.disclosure_texts ?? {}).filter(([, v]) => v !== null && typeof v === 'object').map(([k]) => k);
+
+// MF-20: the one closed source kind routed to root slots. The ad contract (ctx.adContract) and the Sponsored label (content) are data.
+const AD_KIND = 'ad_slot';
+const slotOf = (f: Json, v: unknown, ctx: ReportCtx): Json | null => {
+  const ad = ctx.adContract;
+  if (!ad) throw new ReportRenderError(['RR-SLOT ad contract missing']);
+  if (v === null || v === '') return null;
+  const member = String(f.source).split(':')[1] as string;
+  const scenario = Object.entries(ad.scenario_fields ?? {}).find(([, name]) => name === f.name)?.[0];
+  return { field: String(f.name), slot: member, source: AD_KIND, label: String(f.label), value: String(v), disclosure: String(ctx.content.sponsored_label), ...(scenario !== undefined ? { scenario } : {}) };
+};
 
 // 1. The capture: the declaration plus a response produce the tree. Accumulates every problem, then throws once.
 export const buildTree = (response: Json, ctx: ReportCtx): Json => {
@@ -91,14 +106,50 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
   if (out.length) throw new ReportRenderError(out);
 
   const nodes: Json[] = [];
+  const slots: Json[] = [];
   if (text !== undefined) nodes.push(mk(reason as Json, text, status));
   for (const f of fields) {
     if (!picked.includes(f)) continue;
+    if (kindOf(f) === AD_KIND) { // MF-20: an ad field is a root slot, never a node; a null or empty value yields no slot (no empty box)
+      const slot = slotOf(f, response[f.name], ctx);
+      if (slot) slots.push(slot);
+      continue;
+    }
     const v = response[f.name];
     const value = v === null ? null : `${String(v)}${f.unit ? ` ${f.unit}` : ''}`;
     nodes.push(mk(f, value, status, status === 'at_least' ? `${f.label}, at least` : String(f.label)));
   }
-  return { nodes };
+  return slots.length ? { nodes, slots } : { nodes };
+};
+
+// MF-20 R-17 / R-34: what the schema cannot say about slots. A slot is declared with kind ad_slot, in the contract, carries the Sponsored label, and is never a node.
+const slotProblems = (tree: Json, ctx: ReportCtx): string[] => {
+  const out: string[] = [];
+  const slots: Json[] = Array.isArray(tree?.slots) ? tree.slots : [];
+  const nodes: Json[] = Array.isArray(tree?.nodes) ? tree.nodes : [];
+  const fields = fieldsOf(ctx.decl);
+  const ad = ctx.adContract;
+  if (slots.length && !ad) out.push('RR-SLOT ad contract missing');
+  if (tree?.lifecycle !== undefined && slots.length) out.push('RR-SLOT a lifecycle tree carries no slots');
+  for (const n of nodes) if (n?.source === AD_KIND) out.push(`RR-SLOT ${String(n.field)}: an ad_slot source is never a node (R-34)`);
+  const seen = new Set<string>();
+  const places = new Set<string>(); // max_slots is 1 for every placement (the ad lock pins it): one slot per (slot id, scenario)
+  for (const sl of slots) {
+    const at = `RR-SLOT ${String(sl?.field)}:`;
+    if (seen.has(sl?.field)) out.push(`${at} duplicate slot`);
+    seen.add(sl?.field);
+    const hit = fields.find((f) => f.name === sl?.field);
+    if (!hit || kindOf(hit) !== AD_KIND) out.push(`${at} field is not declared with kind ${AD_KIND}`);
+    else if (String(hit.source).split(':')[1] !== sl.slot) out.push(`${at} slot ${String(sl.slot)} is not the declared member`);
+    if (ad && !(ad.slots ?? []).includes(sl?.slot)) out.push(`${at} slot ${String(sl?.slot)} is not in the ad contract`);
+    const want = ad ? Object.entries(ad.scenario_fields ?? {}).find(([, name]) => name === sl?.field)?.[0] : undefined;
+    if (sl?.slot === 'scenario_card' ? sl.scenario === undefined || sl.scenario !== want : sl?.scenario !== undefined) out.push(`${at} scenario ${String(sl?.scenario)} does not match the contract`);
+    if (sl?.disclosure !== ctx.content.sponsored_label) out.push(`${at} disclosure is not content.sponsored_label (R-17)`);
+    const k = `${String(sl?.slot)}|${String(sl?.scenario ?? '')}`;
+    if (places.has(k)) out.push(`${at} more slots than max_slots for ${String(sl?.slot)}`);
+    places.add(k);
+  }
+  return out;
 };
 
 // 2. The throw: schema (AJV, the one contract) plus what the schema cannot say. Accumulates, then throws once.
@@ -125,6 +176,7 @@ export const assertTree = (tree: Json, ctx: ReportCtx): void => {
     if (isLife && s !== 'none') out.push(`RR-LIFECYCLE ${String(n?.field)}: a lifecycle node must carry none`);
     if (isLife && n?.field !== REASON_FIELD) out.push(`RR-LIFECYCLE ${String(n?.field)}: a lifecycle node must be ${REASON_FIELD}`);
   });
+  slotProblems(tree, ctx).forEach((p) => out.push(p));
   if (out.length) throw new ReportRenderError(out);
 };
 
@@ -161,7 +213,8 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
     return { field: id, label: String(f?.label ?? id), text: dash, status: 'none', badge: null, confidence: 'none', provenance: 'none', disclosures: [], showMeta: false, unavailable: true };
   });
   const detail = rest.filter((n) => !listed.includes(n.field)).map(view);
-  const out: Json = { target: pick.target, layout: row, headline, detail };
+  const slots: ViewSlot[] = ((tree.slots ?? []) as Json[]).filter((x) => x.scenario === undefined || x.scenario === sc).map((x) => ({ field: x.field, slot: x.slot, ...(x.scenario !== undefined ? { scenario: x.scenario } : {}), label: x.label, text: x.value, disclosure: x.disclosure, placement: x.scenario !== undefined ? 'beside_card' : 'after_card' }));
+  const out: Json = { target: pick.target, layout: row, headline, detail, slots };
   if (tree.lifecycle !== undefined) out.lifecycle = tree.lifecycle;
   if (reasonNode) out.reason = view(reasonNode);
   return out;

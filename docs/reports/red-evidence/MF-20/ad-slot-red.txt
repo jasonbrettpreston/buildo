@@ -1,0 +1,80 @@
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/29]⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: an undeclared field
+AssertionError: expected 'rr-schema /: must not have additional…' to contain 'declared'
+Expected: "declared"
+Received: "rr-schema /: must not have additional properties"
+ ❯ src/tests/surfaces/ad-slot.golden.test.ts:153:62
+    151|     try { assertTree(t, reportCtx); } catch (e) { err = e; }
+    152|     expect(err, 'assertTree must throw before any render').toBeInstanc…
+    153|     expect((err as ReportRenderError).message.toLowerCase()).toContain…
+       |                                                              ^
+    154|     expect(() => viewOf(t, { scenario: SCENARIOS[0], target: 'web' }, …
+    155|   });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/29]⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a slot whose source is not ad_slot
+AssertionError: expected 'rr-schema /: must not have additional…' to contain 'source'
+Expected: "source"
+Received: "rr-schema /: must not have additional properties"
+ ❯ src/tests/surfaces/ad-slot.golden.test.ts:153:62
+    151|     try { assertTree(t, reportCtx); } catch (e) { err = e; }
+    152|     expect(err, 'assertTree must throw before any render').toBeInstanc…
+    153|     expect((err as ReportRenderError).message.toLowerCase()).toContain…
+       |                                                              ^
+    154|     expect(() => viewOf(t, { scenario: SCENARIOS[0], target: 'web' }, …
+    155|   });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/29]⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > GREEN the other direction: the unmutated present golden passes both
+AssertionError: expected [Function] to not throw an error but 'ReportRenderError: RR-SCHEMA /: must …' was thrown
+- Expected: 
+undefined
++ Received: 
+"ReportRenderError: RR-SCHEMA /: must NOT have additional properties"
+ ❯ src/tests/surfaces/ad-slot.golden.test.ts:162:53
+    160|   });
+    161|   it('GREEN the other direction: the unmutated present golden passes b…
+    162|     expect(() => assertTree(good(), reportCtx)).not.toThrow();
+       |                                                     ^
+    163|     expect(honestProblems(good())).toEqual([]);
+    164|   });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/29]⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > a contract-less context refuses a tree with slots
+AssertionError: expected 'RR-SCHEMA /: must NOT have additional…' to contain 'RR-SLOT ad contract missing'
+Expected: "RR-SLOT ad contract missing"
+Received: "RR-SCHEMA /: must NOT have additional properties"
+ ❯ throwsRR src/tests/surfaces/ad-slot.golden.test.ts:38:46
+     36|   try { fn(); } catch (e) { err = e; }
+     37|   expect(err).toBeInstanceOf(ReportRenderError);
+     38|   expect((err as ReportRenderError).message).toContain(needle);
+       |                                              ^
+     39| };
+     40| 
+ ❯ src/tests/surfaces/ad-slot.golden.test.ts:166:5
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/29]⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 binding: the ad_slot source resolves in the contract file, and only there > binding-sources.json names the ad contract as the ad_slot file, and the file exists with the declared slot ids
+AssertionError: expected null to be 'scripts/surfaces/_schema/ad-contract.…' // Object.is equality
+- Expected: 
+"scripts/surfaces/_schema/ad-contract.json"
++ Received: 
+null
+ ❯ src/tests/surfaces/ad-slot.golden.test.ts:173:37
+    171|   it('binding-sources.json names the ad contract as the ad_slot file, …
+    172|     const bs = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'sc…
+    173|     expect(bs.sources.ad_slot.file).toBe('scripts/surfaces/_schema/ad-…
+       |                                     ^
+    174|     expect(AD.slots).toEqual(['detail_footer', 'renovation_section', '…
+    175|   });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/29]⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 binding: the ad_slot source resolves in the contract file, and only there > ad_placements agrees with the contract: same slot ids, max_slots 1, the visible label and a FAIL blocking disclosure
+TypeError: Cannot read properties of undefined (reading 'slots')
+ ❯ src/tests/surfaces/ad-slot.golden.test.ts:178:56
+    176|   it('ad_placements agrees with the contract: same slot ids, max_slots…
+    177|     const pl: Json[] = reportCtx.content.ad_placements.placements;
+    178|     expect(pl.map((p) => p.key).sort()).toEqual([...AD.slots].sort());
+       |                                                        ^
+    179|     for (const p of pl) {
+    180|       expect(p.max_slots, p.key).toBe(1);
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/29]⎯
+ Test Files  1 failed (1)
+      Tests  29 failed | 24 passed (53)
+   Start at  15:22:31
+   Duration  657ms (transform 113ms, setup 15ms, collect 81ms, tests 79ms, environment 144ms, prepare 29ms)

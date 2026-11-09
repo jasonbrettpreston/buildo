@@ -1,0 +1,31 @@
+# base renderer (core.ts, ReportView.tsx, report-checks.mjs at 34b5ff12c) with the MF-20 data files and the new lock: the lock is RED
+⎯⎯⎯⎯⎯⎯ Failed Tests 30 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > mobile: each pick shows its own scenario slot beside the card and the two Q-8 slots after it
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > web: each pick shows its own scenario slot beside the card and the two Q-8 slots after it
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > admin: each pick shows its own scenario slot beside the card and the two Q-8 slots after it
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > pdf: each pick shows its own scenario slot beside the card and the two Q-8 slots after it
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > mobile: a pick with no scenario shows only the unscoped slots
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > web: a pick with no scenario shows only the unscoped slots
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > admin: a pick with no scenario shows only the unscoped slots
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 ad_slot_present: slots beside their card, outside it, disclosed (four targets) > pdf: a pick with no scenario shows only the unscoped slots
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 buildTree: ad fields go to slots, never to nodes > an ad field becomes a root slot with the registry disclosure; no node carries an ad_slot source
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 buildTree: ad fields go to slots, never to nodes > a scenario field carries its scenario from the contract
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 buildTree: ad fields go to slots, never to nodes > an ad value is independent of the lot status (D-7): it shows beside a not_permitted card too
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 buildTree: ad fields go to slots, never to nodes > a lifecycle response cannot carry an ad field; a context without the contract throws RR-SLOT, not a TypeError
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a disclosure that is not the registry label (R-17)
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a slot id that is not in the contract
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a scenario slot without its scenario
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a scenario that is not the contract's
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a scenario on an unscoped slot
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a duplicate slot
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: two slots for one placement (max_slots 1)
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: an undeclared field
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: a disclosure that is not the registry label (R-17)
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: a slot id that is not in the contract
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: a scenario slot without its scenario
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: a scenario that is not the contract's
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: a scenario on an unscoped slot
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: a duplicate slot
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: two slots for one placement (max_slots 1)
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: an undeclared field
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > gate: an ad_slot source inside nodes (R-34)

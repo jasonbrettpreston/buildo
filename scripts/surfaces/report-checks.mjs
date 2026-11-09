@@ -18,8 +18,9 @@ export const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 export const GOLDEN_DIR = 'src/tests/fixtures/surfaces/report';
 // The four targets are spelled by Spec 127 S-golden: the whole declaration.
 export const TARGETS = ['mobile', 'web', 'admin', 'pdf'];
-// The four fingerprint inputs of a tranche-1 golden (Spec 127 4.3 dated note 2026-11-09). A fifth is a one-line change here plus a re-stamp.
+// The five fingerprint inputs of a tranche-1 golden (Spec 127 4.3 dated notes 2026-11-09; the fifth, the ad contract, is MF-20). A sixth is a one-line change here plus a re-stamp.
 export const FP_FILES = [
+  `${SCHEMA_DIR}/ad-contract.json`,
   `${SCHEMA_DIR}/binding-sources.json`,
   `${SCHEMA_DIR}/report-presentation.json`,
   `${SCHEMA_DIR}/report-tree.schema.json`,
@@ -56,6 +57,9 @@ const contractOf = (root) => {
       lifecycle: schema.properties.lifecycle.enum,
       reasons: Object.keys(pres.status_text),
       codes: Object.keys(pres.disclosure_texts).filter((k) => !DISCLOSURE_META.includes(k)),
+      sponsored: pres.sponsored_label,
+      ad: readJson(path.join(root, SCHEMA_DIR, 'ad-contract.json')),
+      decl: readJson(path.join(root, SCHEMA_DIR, 'report-v2.decl.json')),
     });
   }
   return contracts.get(root);
@@ -78,6 +82,36 @@ export const honestProblems = (tree, root = REPO) => {
     });
     if (s === 'none' && !isLife) out.push(`node ${i}: none outside a lifecycle tree`);
     if (isLife && s !== 'none') out.push(`node ${i}: lifecycle node must carry none`);
+  });
+  out.push(...slotProblems(tree, c));
+  return out;
+};
+
+// MF-20 (Spec 126 11a.10, Spec 128 R-17, R-34): the slot checks, the same rules as the renderer's assertTree (FE-22, FE-23). A slot is root-only, declared with kind ad_slot,
+// in the ad contract, carries the Sponsored label, and is never a node; only a scenario_card slot has a scenario, equal to the contract's.
+const slotProblems = (tree, c) => {
+  const out = [];
+  const slots = Array.isArray(tree?.slots) ? tree.slots : [];
+  if (slots.length && c.lifecycle.includes(tree?.lifecycle)) out.push('a lifecycle tree carries no slots');
+  (Array.isArray(tree?.nodes) ? tree.nodes : []).forEach((n, i) => { if (n?.source === 'ad_slot') out.push(`node ${i}: an ad_slot source is never a node (R-34)`); });
+  const decls = c.decl.sections.flatMap((x) => x.fields);
+  const seen = new Set();
+  const count = new Set(); // max_slots is 1 for every placement (the ad lock pins it)
+  slots.forEach((sl, i) => {
+    const at = `slot ${i}:`;
+    if (seen.has(sl?.field)) out.push(`${at} duplicate slot ${sl?.field}`);
+    seen.add(sl?.field);
+    const d = decls.find((f) => f.name === sl?.field);
+    if (!d || d.source?.split(':')[0] !== 'ad_slot') out.push(`${at} field is not declared with kind ad_slot: ${sl?.field}`);
+    else if (d.source.split(':')[1] !== sl.slot) out.push(`${at} slot ${sl.slot} is not the declared member`);
+    else if (sl.label !== d.label) out.push(`${at} label is not the declared label`);
+    if (!c.ad.slots.includes(sl?.slot)) out.push(`${at} slot is not in the ad contract: ${sl?.slot}`);
+    const want = Object.entries(c.ad.scenario_fields).find(([, name]) => name === sl?.field)?.[0];
+    if (sl?.slot === 'scenario_card' ? sl.scenario === undefined || sl.scenario !== want : sl?.scenario !== undefined) out.push(`${at} scenario does not match the contract`);
+    if (sl?.disclosure !== c.sponsored) out.push(`${at} disclosure is not content.sponsored_label (R-17)`);
+    const k = `${sl?.slot}|${sl?.scenario ?? ''}`;
+    if (count.has(k)) out.push(`${at} more slots than max_slots for ${sl?.slot}`);
+    count.add(k);
   });
   return out;
 };

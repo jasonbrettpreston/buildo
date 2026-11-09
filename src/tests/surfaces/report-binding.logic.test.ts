@@ -99,12 +99,30 @@ describe('Rule 20 RED fixture: an invented field fails (both directions)', () =>
     aField(inp2, 'parcels').source = 'parcels:no_such_column';
     expect(gate(inp2, 'RS-1').failing.join('\n') + gate(inp2, 'RS-3').failing.join('\n')).toContain('no_such_column');
   });
-  it('FAILs user_input, ad_slot and external_embed members until their contract file exists', () => {
-    for (const kind of ['user_input', 'ad_slot', 'external_embed']) {
+  it('FAILs user_input and external_embed members until their contract file exists', () => {
+    for (const kind of ['user_input', 'external_embed']) {
       const inp = fresh();
       aField(inp, 'content').source = `${kind}:some_id`;
       expect(gate(inp, 'RS-1').failing.join('\n'), kind).toContain(kind);
     }
+  });
+  // MF-20 (FE-23): the ad contract landed, so an ad_slot member resolves against its slot ids; an unknown id is still RED (the old loop assertion, kept for ad_slot as an unknown id).
+  it('ad_slot: an id in the ad contract is GREEN, an unknown id FAILs (RS-1 contract_id)', () => {
+    const ok = fresh();
+    aField(ok, 'content').source = 'ad_slot:detail_footer';
+    expect(gate(ok, 'RS-1').failing.join('\n')).not.toContain('ad_slot');
+    const bad = fresh();
+    aField(bad, 'content').source = 'ad_slot:not_a_slot';
+    expect(gate(bad, 'RS-1').failing.join('\n')).toContain('ad_slot');
+    const none = fresh();
+    none.bindingSources.sources.ad_slot.file = null;
+    aField(none, 'content').source = 'ad_slot:detail_footer';
+    expect(gate(none, 'RS-1').failing.join('\n')).toContain('ad_slot');
+  });
+  it('catalogue_field is not a binding source kind: a decl field cannot use it (RS-1)', () => {
+    const inp = fresh();
+    aField(inp, 'content').source = 'catalogue_field:building_type';
+    expect(gate(inp, 'RS-1').failing.join('\n')).toContain('catalogue_field');
   });
   it('FAILs a parcels path that is not on the S-001 consumer whitelist (RS-2)', () => {
     const inp = fresh();

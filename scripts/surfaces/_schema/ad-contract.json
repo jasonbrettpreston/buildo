@@ -1,0 +1,14 @@
+{
+  "$comment": "THE ad contract: the home of the `ad_slot` source (Spec 126 11a.1 and 11a.10; Spec 135 FE-22, FE-23; Spec 128 R-17, R-34). Owns only what has no other home: the slot ids, the field that carries each scenario's slot, and the declared targeting keys. Position, max_slots and the \"Sponsored\" disclosure stay in report-presentation.json `ad_placements` (R-27 one home); src/tests/surfaces/ad-targeting-keys.logic.test.ts joins the two. `scenario_card` is the per-scenario slot shown BESIDE that scenario's card (operator 2026-11-09, scenario images and per-scenario ads); `detail_footer` and `renovation_section` are the two Q-8 slots shown after the card. `scenario_fields` maps each scenario key (building_type/design_option, the keys of report-v2-seed/row-presentation.json) to the declared field that carries its slot. `targeting_keys` maps each key to its database origin: `parcels:<column>` (a parcels migration column) or `catalogue_field:<property>` (a property the catalogue rows carry; the declared origin of the scenario key; a contract-local resolver, NOT a binding source kind). User-entered facts and income-derived keys are never targeting keys (FE-22; operator 2026-11-09: no income until reviewed). v1 creatives are text; image creatives arrive with the media library (MF-37). Read by seed-report-v2.mjs, scripts/analysis/report-schema.mjs RS-1, src/lib/surfaces/report/core.ts and the two MF-20 locks.",
+  "version": 1,
+  "slots": ["detail_footer", "renovation_section", "scenario_card"],
+  "scenario_fields": {
+    "detached_house/flat_or_shallow_roof": "ad_scenario_detached_house_flat_or_shallow_roof",
+    "detached_house/pitched": "ad_scenario_detached_house_pitched"
+  },
+  "targeting_keys": {
+    "zone_class": "parcels:zoning_class",
+    "building_type": "catalogue_field:building_type",
+    "design_option": "catalogue_field:design_option"
+  }
+}

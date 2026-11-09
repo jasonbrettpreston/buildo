@@ -18,7 +18,7 @@ describe('/admin/report-preview', () => {
     expect(container.querySelectorAll('[data-report]')).toHaveLength(1);
   });
   it('every state and target picks through the query string', async () => {
-    for (const state of ['permitted', 'not_permitted', 'not_evaluated', 'variant_flat', 'variant_pitched_a', 'variant_pitched_b', 'at_least', 'loading', 'miss', 'error']) {
+    for (const state of ['permitted', 'not_permitted', 'not_evaluated', 'variant_flat', 'variant_pitched_a', 'variant_pitched_b', 'at_least', 'loading', 'miss', 'error', 'ad_slot_present', 'ad_slot_absent']) {
       for (const target of ['mobile', 'web', 'admin', 'pdf']) {
         const { container } = await open({ state, target });
         expect((container.querySelector('[data-report]') as HTMLElement).dataset.target).toBe(target);

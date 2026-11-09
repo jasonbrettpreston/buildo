@@ -19,8 +19,10 @@
     "miss",
     "error",
     "not_buildable",
-    "not_modelled"
+    "not_modelled",
+    "ad_slot_present",
+    "ad_slot_absent"
   ],
-  "owed_states": 15,
-  "owed_files": 60
+  "owed_states": 13,
+  "owed_files": 52
 }

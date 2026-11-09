@@ -7,7 +7,8 @@ import schema from '../../../../scripts/surfaces/_schema/report-tree.schema.json
 import decl from '../../../../scripts/surfaces/_schema/report-v2.decl.json';
 import content from '../../../../scripts/surfaces/_schema/report-presentation.json';
 import lists from '../../../../scripts/surfaces/_schema/report-v2-seed/row-presentation.json';
+import adContract from '../../../../scripts/surfaces/_schema/ad-contract.json';
 import layout from '../../../../scripts/surfaces/_schema/report-layout.json';
 import type { ReportCtx } from './core';
 
-export const reportCtx: ReportCtx = { schema, decl, content, lists, layout };
+export const reportCtx: ReportCtx = { schema, decl, content, lists, layout, adContract };

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "report-tree.schema.json",
   "title": "MaxBLD report rendered tree (the node contract)",
-  "$comment": "THE one home of the report node contract (Spec 126 11a.7 structured tree; 126:552 R-27 one home; Spec 135 FE-29). Every golden `rendered_tree` validates against it; src/tests/surfaces/report-honest.logic.test.ts reads it and holds no copy; the renderer (MF-14) throws on a tree that fails it and the validator (MF-15) runs the same file. `status` = the 11a.3 closed forms plus `none` (no reading on this node; FE-28; Spec 122 1.2 per-field idiom inherited by 126:295); `confidence` = the 11a.4 set plus `none`; `provenance` = the 11a.4 sources plus `none`. `none` on a reading node and the one-message-node rule of a lifecycle tree are enforced by the lock, not by this shape. Extended only by a dated note, a register row and a lock.",
+  "$comment": "THE one home of the report node contract (Spec 126 11a.7 structured tree; 126:552 R-27 one home; Spec 135 FE-29). Every golden `rendered_tree` validates against it; src/tests/surfaces/report-honest.logic.test.ts reads it and holds no copy; the renderer (MF-14) throws on a tree that fails it and the validator (MF-15) runs the same file. `status` = the 11a.3 closed forms plus `none` (no reading on this node; FE-28; Spec 122 1.2 per-field idiom inherited by 126:295); `confidence` = the 11a.4 set plus `none`; `provenance` = the 11a.4 sources plus `none`. `none` on a reading node and the one-message-node rule of a lifecycle tree are enforced by the lock, not by this shape. `slots` (MF-20; Spec 126 11a.10, FE-22, FE-23): the sponsored slots, ROOT-ONLY and never a node, so a slot cannot sit inside a card (R-34 as a schema fact); each carries its non-empty `disclosure` (R-17); `scenario` is set exactly for the per-scenario slot `scenario_card` (checked by the lock and the renderer, not by this shape: an if/then fails Ajv strict). Extended only by a dated note, a register row and a lock.",
   "type": "object",
   "additionalProperties": false,
   "required": ["nodes"],
@@ -14,9 +14,28 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/node" }
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/slot" }
     }
   },
   "$defs": {
+    "slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "slot", "source", "label", "value", "disclosure"],
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "slot": { "type": "string", "minLength": 1 },
+        "source": { "const": "ad_slot" },
+        "label": { "type": "string" },
+        "value": { "type": "string", "minLength": 1 },
+        "disclosure": { "type": "string", "minLength": 1 },
+        "scenario": { "type": "string", "minLength": 1 }
+      }
+    },
     "node": {
       "type": "object",
       "additionalProperties": false,

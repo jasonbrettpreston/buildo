@@ -1,0 +1,20 @@
+{
+  "task": "MF-20",
+  "item": "Ad slots: the ad contract, root slots[], the per-scenario slot beside each card, FE-22 targeting keys, FE-23 slot lock",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "PLACEHOLDER",
+  "commits_reviewed": [],
+  "cards": [
+    "Operator 2026-11-09: \"all approved as recommended.\" (item 1: MF-20 D-3, D-4, D-5, D-6, D-10, D-12)",
+    "Operator rulings 2026-11-09: scenario images and per-scenario ads (open-questions.md)"
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-20/plan.v2.md (sections 13 and 14 win); panel reports in plan-panel/ and plan-panel-v2/.",
+  "output": "PLACEHOLDER: the OUTPUT panel record is written in the panel record commit.",
+  "seats": [],
+  "verdict": "PLACEHOLDER",
+  "blockers": [],
+  "followups": [],
+  "notes": ["Placeholder committed with the code so the pre-commit panel arm finds a record for MF-20 (MF-14 precedent); replaced by the panel record commit."]
+}

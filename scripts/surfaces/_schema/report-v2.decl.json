@@ -11,7 +11,7 @@
     },
     "review": "scratchpad/report-review/REVIEW.md §6",
     "seeded": "2026-10-20",
-    "inputs_sha256_16": "5f2a46a679cce079"
+    "inputs_sha256_16": "ae5df2e5be265d73"
   },
   "inputs": {
     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
@@ -1073,6 +1073,46 @@
           "source": "content:sponsored_label",
           "render": "rendered",
           "note": "Q-7/Q-8 (decided): always labelled \"Sponsored\" (Spec 128 R-17 FAIL)"
+        },
+        {
+          "path": "ui.ad_slots.detail_footer",
+          "name": "detail_footer",
+          "label": "Sponsored slot (detail footer)",
+          "type": "text",
+          "status": "new",
+          "source": "ad_slot:detail_footer",
+          "render": "rendered",
+          "note": "Q-8 (decided): first-party text offer, never inside a card, labelled Sponsored (R-17)"
+        },
+        {
+          "path": "ui.ad_slots.renovation_section",
+          "name": "renovation_section",
+          "label": "Sponsored slot (renovation section)",
+          "type": "text",
+          "status": "new",
+          "source": "ad_slot:renovation_section",
+          "render": "rendered",
+          "note": "Q-8 (decided): first-party text offer, never inside a card, labelled Sponsored (R-17)"
+        },
+        {
+          "path": "ui.ad_slots.ad_scenario_detached_house_flat_or_shallow_roof",
+          "name": "ad_scenario_detached_house_flat_or_shallow_roof",
+          "label": "Sponsored slot (beside the detached_house/flat_or_shallow_roof card)",
+          "type": "text",
+          "status": "new",
+          "source": "ad_slot:scenario_card",
+          "render": "rendered",
+          "note": "Operator 2026-11-09: one sponsored slot BESIDE the detached_house/flat_or_shallow_roof card, outside it (R-34), targeted by the scenario key"
+        },
+        {
+          "path": "ui.ad_slots.ad_scenario_detached_house_pitched",
+          "name": "ad_scenario_detached_house_pitched",
+          "label": "Sponsored slot (beside the detached_house/pitched card)",
+          "type": "text",
+          "status": "new",
+          "source": "ad_slot:scenario_card",
+          "render": "rendered",
+          "note": "Operator 2026-11-09: one sponsored slot BESIDE the detached_house/pitched card, outside it (R-34), targeted by the scenario key"
         }
       ]
     },

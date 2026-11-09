@@ -136,14 +136,12 @@
     "first_party": true,
     "never_inside_card": true,
     "targeting_from": [
-      "scenario",
-      "building_class",
       "zone_class",
-      "has_suite",
-      "renovation"
+      "building_type",
+      "design_option"
     ],
     "targeting_excludes": "user identity (targeting runs server-side on the lot / scenario context only)",
-    "note": "Q-7 (decided; operator: \"This will be targeted ads from us\"): first-party targeted ads, a separate top-level offers[] list, never inside parcel.* (Spec 100 §2.1). Q-8 (decided): two slots — after the scenario cards (detail_footer) and in the renovation section; never inside a card; always labelled Sponsored. Placement home is the placements table (Spec 128 R-34 (i)); this list is what projects into it. Disclosure: Spec 128 R-17 (FAIL) + R-34 (ii) blocking.",
+    "note": "Q-7 (decided; operator: \"This will be targeted ads from us\"): first-party targeted ads, a separate top-level offers[] list, never inside parcel.* (Spec 100 §2.1). Q-8 (decided): two slots — after the scenario cards (detail_footer) and in the renovation section; never inside a card; always labelled Sponsored. Placement home is the placements table (Spec 128 R-34 (i)); this list is what projects into it. Disclosure: Spec 128 R-17 (FAIL) + R-34 (ii) blocking. MF-20 (operator 2026-11-09, \"all approved as recommended\"): the response channel is the declared ui.ad_slots.* fields bound to the ad contract (scripts/surfaces/_schema/ad-contract.json); offers[] stays the deferred serving list. A third slot, scenario_card, sits BESIDE each scenario card. Targeting keys are database keys only (zone_class, building_type, design_option); the retired keys scenario, building_class, has_suite and renovation have no database source yet and return when their rows land; income is never a key (pending a human-rights review).",
     "placements": [
       {
         "key": "detail_footer",
@@ -151,10 +149,9 @@
         "declared_on": "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json offers",
         "max_slots": 1,
         "targeting": [
-          "scenario",
-          "building_class",
-          "zone_class",
-          "has_suite"
+          "building_type",
+          "design_option",
+          "zone_class"
         ],
         "disclosure": {
           "label": "Sponsored",
@@ -168,13 +165,26 @@
         "position": "in the renovation section",
         "declared_on": null,
         "max_slots": 1,
-        "targeting": [
-          "building_class",
-          "renovation"
-        ],
+        "targeting": [],
         "disclosure": {
           "label": "Sponsored",
           "check_id": "report_renovation_offers_disclosure",
+          "severity": "FAIL",
+          "blocking": true
+        }
+      },
+      {
+        "key": "scenario_card",
+        "position": "beside each scenario card",
+        "declared_on": null,
+        "max_slots": 1,
+        "targeting": [
+          "building_type",
+          "design_option"
+        ],
+        "disclosure": {
+          "label": "Sponsored",
+          "check_id": "report_scenario_card_offers_disclosure",
           "severity": "FAIL",
           "blocking": true
         }

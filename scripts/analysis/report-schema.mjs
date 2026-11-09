@@ -48,6 +48,12 @@ const HIDDEN_STATES_FALLBACK = ['not_permitted', 'not_applicable', 'not_buildabl
 
 // ------------------------------------------------------------------ inputs
 
+// MF-20: the ad contract is the file the `ad_slot` source names in binding-sources.json (null until it lands).
+const readAdContract = (root, bindingSources) => {
+  const file = bindingSources.sources?.ad_slot?.file;
+  return file ? readJson(root, file) : null;
+};
+
 /** Every input as plain JSON (structured-clonable), so tests mutate a copy and re-evaluate. */
 export function loadInputs(root) {
   const decl = readJson(root, DECL_PATH);
@@ -63,6 +69,7 @@ export function loadInputs(root) {
     presentation: readJson(root, decl.inputs.presentation),
     rulings: readJson(root, decl.inputs.rulings),
     bindingSources: readJson(root, decl.inputs.binding_sources),
+    adContract: readAdContract(root, readJson(root, decl.inputs.binding_sources)),
     catalogue: readJson(root, decl.inputs.catalogue),
     spec78: readText(root, decl.inputs.spec78),
     consumer: {
@@ -140,6 +147,7 @@ export function evaluate(inputs) {
     const src = bs[kind];
     if (!src) { bad1.push(`${where}: ${role} ${kind}:${ref} — ${kind} is not in the closed set (${Object.keys(bs).join(' | ')})`); return null; }
     if (src.file === null) { bad1.push(`${where}: ${role} ${kind}:${ref} — the ${kind} contract has not landed, so no member resolves`); return null; }
+    if (src.resolver === 'contract_id' && kind === 'ad_slot' && !(inputs.adContract?.slots ?? []).includes(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a slot id in the ad contract`);
     if (src.resolver === 'registry_key' && getPath(presentation, ref) === undefined) bad1.push(`${where}: ${role} ${kind}:${ref} is not in the content registry`);
     if (src.resolver === 'migration_column' && !pcols.has(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a parcels migration column`);
     if (src.resolver === 'catalogue_row') { const row = catRows.get(ref); if (!row) bad1.push(`${where}: ${role} ${kind}:${ref} is not a catalogue row`); return row || null; }

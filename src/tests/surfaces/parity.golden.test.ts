@@ -51,7 +51,7 @@ const fromView = (view: Json): Rec[] => {
     field: n.field, label: isReason ? '' : n.label, value: n.text, status: n.status, badge: n.badge ?? '',
     confidence: n.confidence, provenance: n.provenance, disclosures: [...n.disclosures], unavailable: n.unavailable,
   });
-  return [...(view.reason ? [rec(view.reason, true)] : []), ...view.headline.map((n: Json) => rec(n, false)), ...view.detail.map((n: Json) => rec(n, false))].sort(byField);
+  return [...(view.reason ? [rec(view.reason, true)] : []), ...view.headline.map((n: Json) => rec(n, false)), ...view.detail.map((n: Json) => rec(n, false)), ...view.slots.map((x: Json) => adRec(x.field, x.text, x.placement, x.disclosure))].sort(byField);
 };
 const textWithout = (el: Element, sel: string): string => {
   const c = el.cloneNode(true) as Element;
@@ -76,8 +76,13 @@ const fromMarkup = (markup: string): Rec[] => {
       disclosures: [...el.querySelectorAll('[data-disclosure]')].map((d) => d.textContent?.trim() ?? ''), unavailable: el.getAttribute('data-unavailable') === 'true',
     });
   });
+  box.querySelectorAll('aside[data-block="ad-slot"]').forEach((el) => {
+    out.push(adRec(el.getAttribute('data-ad-field') ?? '', el.querySelector('p:not([data-disclosure])')?.textContent?.trim() ?? '', el.getAttribute('data-placement') ?? '', el.querySelector('[data-disclosure]')?.textContent?.trim() ?? ''));
+  });
   return out.sort(byField);
 };
+// MF-20: a sponsored slot is compared as a record too (field ad:<field>, value = the offer text, status = its placement, disclosures = [Sponsored]), so a target that drops or misplaces a slot is RED.
+const adRec = (field: string, text: string, placement: string, disclosure: string): Rec => ({ field: `ad:${field}`, label: '', value: text, status: placement, badge: '', confidence: 'none', provenance: 'none', disclosures: [disclosure], unavailable: false });
 const normalise = (target: string, raw: Raw): Rec[] => (target === 'mobile' ? fromView(raw as Json) : fromMarkup(raw as string));
 
 // The anchor: the expectation from the golden tree, the declaration and the content registry. Never calls viewOf.
@@ -95,6 +100,8 @@ const expected = (tree: Json, scenario: string | null, ctx: Json): Rec[] => {
     if (recs.some((r) => r.field === id)) continue;
     recs.push({ field: id, label: String(declared.find((f) => f.name === id)?.label ?? id), value: dash, status: 'none', badge: '', confidence: 'none', provenance: 'none', disclosures: [], unavailable: true });
   }
+  // MF-20: the slots of the tree that belong to this pick (unscoped ones, and the picked scenario's), from the tree alone; never viewOf.
+  for (const x of (tree.slots ?? []) as Json[]) if (x.scenario === undefined || x.scenario === scenario) recs.push(adRec(x.field, x.value, x.scenario === undefined ? 'after_card' : 'beside_card', String(ctx.content.sponsored_label)));
   return recs.sort(byField);
 };
 
@@ -152,8 +159,8 @@ const all = (fix: (r: Raw) => Raw): Emit => (t, tree, sc, ctx) => fix(emit(t, tr
 const FLAT = 'detached_house/flat_or_shallow_roof';
 
 describe('FE-07 parity: the real output of every target (goldens)', () => {
-  it('covers the manifest: 12 states x 3 picks, four targets', () => {
-    expect(manifest.states).toHaveLength(12);
+  it('covers the manifest: 14 states x 3 picks, four targets', () => {
+    expect(manifest.states).toHaveLength(14);
     expect(PICKS).toHaveLength(3);
     expect(TARGETS).toHaveLength(4);
   });
@@ -168,7 +175,7 @@ describe('FE-07 parity: the real output of every target (goldens)', () => {
       if (tree.lifecycle) expect(expected(tree, null, reportCtx).map((r) => r.field)).toEqual([REASON]);
     }
   });
-  it('the four targets and the golden tree agree on all 36 combinations', () => {
+  it('the four targets and the golden tree agree on all 42 combinations', () => {
     expect(goldenFindings(emit)).toEqual([]);
   });
   it('a hand-written literal pins the at_least state apart from the generator', () => {

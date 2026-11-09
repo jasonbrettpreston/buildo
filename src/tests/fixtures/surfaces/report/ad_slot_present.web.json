@@ -1,0 +1,97 @@
+{
+  "harness": "mf12-report-golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md#11a.7",
+  "surface": "report",
+  "state": "ad_slot_present",
+  "target": "web",
+  "response_fixture": {
+    "synthetic": true,
+    "status": "permitted",
+    "gfa_flat_m2": 212.4,
+    "gfa_pitched_m2": 198.6,
+    "detail_footer": "Example sponsor offer (detail footer)",
+    "renovation_section": "Example sponsor offer (renovation)",
+    "ad_scenario_detached_house_flat_or_shallow_roof": "Example sponsor offer (flat roof)",
+    "ad_scenario_detached_house_pitched": "Example sponsor offer (pitched roof)"
+  },
+  "rendered_tree": {
+    "nodes": [
+      {
+        "field": "status_text",
+        "source": "content",
+        "label": "Status reason (plain words)",
+        "value": "Allowed as of right.",
+        "status": "permitted",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      },
+      {
+        "field": "gfa_flat_m2",
+        "source": "catalogue",
+        "label": "GFA (flat roof)",
+        "value": "212.4 m²",
+        "status": "permitted",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      },
+      {
+        "field": "gfa_pitched_m2",
+        "source": "catalogue",
+        "label": "GFA (pitched roof)",
+        "value": "198.6 m²",
+        "status": "permitted",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      }
+    ],
+    "slots": [
+      {
+        "field": "detail_footer",
+        "slot": "detail_footer",
+        "source": "ad_slot",
+        "label": "Sponsored slot (detail footer)",
+        "value": "Example sponsor offer (detail footer)",
+        "disclosure": "Sponsored"
+      },
+      {
+        "field": "renovation_section",
+        "slot": "renovation_section",
+        "source": "ad_slot",
+        "label": "Sponsored slot (renovation section)",
+        "value": "Example sponsor offer (renovation)",
+        "disclosure": "Sponsored"
+      },
+      {
+        "field": "ad_scenario_detached_house_flat_or_shallow_roof",
+        "slot": "scenario_card",
+        "source": "ad_slot",
+        "label": "Sponsored slot (beside the detached_house/flat_or_shallow_roof card)",
+        "value": "Example sponsor offer (flat roof)",
+        "disclosure": "Sponsored",
+        "scenario": "detached_house/flat_or_shallow_roof"
+      },
+      {
+        "field": "ad_scenario_detached_house_pitched",
+        "slot": "scenario_card",
+        "source": "ad_slot",
+        "label": "Sponsored slot (beside the detached_house/pitched card)",
+        "value": "Example sponsor offer (pitched roof)",
+        "disclosure": "Sponsored",
+        "scenario": "detached_house/pitched"
+      }
+    ]
+  },
+  "fingerprint": {
+    "response_fixture": "40d76ba1212e8630",
+    "files": {
+      "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
+      "scripts/surfaces/_schema/binding-sources.json": "cf8a66682209499b",
+      "scripts/surfaces/_schema/report-presentation.json": "42fffef25debd50e",
+      "scripts/surfaces/_schema/report-tree.schema.json": "22d09e1b704ef8d6",
+      "scripts/surfaces/_schema/report-v2.decl.json": "cf7ae26940da8821"
+    }
+  }
+}

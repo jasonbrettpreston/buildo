@@ -1,0 +1,2 @@
+IDENTICAL
+report-capture checked 56 goldens; 0 stale

@@ -26,10 +26,11 @@
   "fingerprint": {
     "response_fixture": "16e2ab247a6716a5",
     "files": {
-      "scripts/surfaces/_schema/binding-sources.json": "642da823d9ba45b5",
-      "scripts/surfaces/_schema/report-presentation.json": "5f1a69353c23f635",
-      "scripts/surfaces/_schema/report-tree.schema.json": "d19f855fc21d5f39",
-      "scripts/surfaces/_schema/report-v2.decl.json": "f9643b081b6e9e37"
+      "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
+      "scripts/surfaces/_schema/binding-sources.json": "cf8a66682209499b",
+      "scripts/surfaces/_schema/report-presentation.json": "42fffef25debd50e",
+      "scripts/surfaces/_schema/report-tree.schema.json": "22d09e1b704ef8d6",
+      "scripts/surfaces/_schema/report-v2.decl.json": "cf7ae26940da8821"
     }
   }
 }
