@@ -70,6 +70,9 @@ describe('FE-22 ad targeting keys: GREEN on the committed files', () => {
   it('renovation_section targets nothing today (re-adding a key is a conscious edit)', () => {
     expect(real().pres.ad_placements.placements.find((p: Json) => p.key === 'renovation_section').targeting).toEqual([]);
   });
+  it('the per-scenario slot targets only the scenario key parts (building_type, design_option)', () => {
+    expect(real().pres.ad_placements.placements.find((p: Json) => p.key === 'scenario_card').targeting).toEqual(['building_type', 'design_option']);
+  });
   it('an empty targeting list is GREEN (renovation_section targets nothing)', () => {
     const f = real();
     f.pres.ad_placements.placements.find((p: Json) => p.key === 'renovation_section').targeting = [];

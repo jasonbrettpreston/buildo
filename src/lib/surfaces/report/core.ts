@@ -112,6 +112,7 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
     if (!picked.includes(f)) continue;
     if (kindOf(f) === AD_KIND) { // MF-20: an ad field is a root slot, never a node; a null or empty value yields no slot (no empty box)
       const slot = slotOf(f, response[f.name], ctx);
+      if (slot && slot.scenario !== undefined && /^not_(permitted|evaluated):/.test(String(status))) continue; // operator "4. D-7 yes": no scenario ad beside a card that is not permitted or not evaluated
       if (slot) slots.push(slot);
       continue;
     }

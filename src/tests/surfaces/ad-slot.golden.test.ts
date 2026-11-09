@@ -112,10 +112,27 @@ describe('FE-23 buildTree: ad fields go to slots, never to nodes', () => {
   it('null and empty values yield no slot and no empty box', () => {
     for (const v of [null, '']) expect('slots' in buildTree(base({ detail_footer: v }), reportCtx)).toBe(false);
   });
-  it('an ad value is independent of the lot status (D-7): it shows beside a not_permitted card too', () => {
+  it('a report-level ad value is independent of the lot status: it shows with a not_permitted card too', () => {
     const t = buildTree({ status: 'not_permitted:10.20.20.40(1)', detail_footer: 'Example sponsor offer (z)' }, reportCtx);
     expect(t.slots).toHaveLength(1);
     expect((t.nodes as Json[]).every((n) => n.source !== 'ad_slot')).toBe(true);
+  });
+  // Operator 2026-11-09, "4. D-7 yes": no per-scenario ad beside a card whose scenario is not_permitted or not_evaluated; the report-level slots are unchanged.
+  it.each(['not_permitted:10.20.20.40(1)', 'not_evaluated:no_existing_house'])('D-7: status %s omits the scenario slot (no slot, no disclosure, no box) and keeps the report-level slots', (status) => {
+    const [sc, name] = Object.entries(AD.scenario_fields)[0] as [string, string];
+    const t = buildTree({ status, [name]: 'Example sponsor offer (s)', detail_footer: 'Example sponsor offer (d)', renovation_section: 'Example sponsor offer (r)' }, reportCtx);
+    expect((t.slots as Json[]).map((x) => x.slot).sort()).toEqual(['detail_footer', 'renovation_section']);
+    const box = html('web', t, sc) as unknown as HTMLElement;
+    expect(box.querySelector('aside[data-placement="beside_card"]')).toBeNull();
+    expect(box.querySelectorAll('aside[data-placement="after_card"]')).toHaveLength(2);
+  });
+  it('D-7: a permitted or at_least scenario still shows its scenario slot beside the card', () => {
+    const [sc, name] = Object.entries(AD.scenario_fields)[0] as [string, string];
+    for (const status of ['permitted', 'at_least']) {
+      const t = buildTree({ status, gfa_flat_m2: 1, [name]: 'Example sponsor offer (s)' }, reportCtx);
+      expect((t.slots as Json[]).map((x) => x.slot)).toEqual(['scenario_card']);
+      expect((html('web', t, sc) as unknown as HTMLElement).querySelectorAll('aside[data-placement="beside_card"]')).toHaveLength(1);
+    }
   });
   it('a lifecycle response cannot carry an ad field; a context without the contract throws RR-SLOT, not a TypeError', () => {
     throwsRR(() => buildTree({ lifecycle: 'miss', detail_footer: 'x' }, reportCtx), 'unexpected field on a lifecycle response');

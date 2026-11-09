@@ -1,0 +1,6 @@
+# D-7 lock cases against the pre-change buildTree (HEAD 0e3932082): the not_permitted and not_evaluated cases are RED, the permitted/at_least case is GREEN
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 buildTree: ad fields go to slots, never to nodes > D-7: status not_permitted:10.20.20.40(1) omits the scenario slot (no slot, no disclosure, no box) and keeps the report-lev
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 buildTree: ad fields go to slots, never to nodes > D-7: status not_evaluated:no_existing_house omits the scenario slot (no slot, no disclosure, no box) and keeps the report-
+ Test Files  1 failed (1)
+      Tests  2 failed | 56 passed (58)
