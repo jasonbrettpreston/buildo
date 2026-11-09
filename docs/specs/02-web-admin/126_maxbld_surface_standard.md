@@ -742,6 +742,8 @@ Operator verbatim: "isnt that the point of the schema - there might be exception
 
 > Dated note 2026-11-06 (McFrontend MF-10; prior text kept, M-246; operator answer MF-10 D-1..D-7, verbatim "MF-10 all recommended provided they are complaint", D-5 b; register row Spec 135 FE-27, panel `docs/reports/panels/MF-10.json`): the closed binding set gains a sixth source, `parcels`: a column of the `parcels` table (a DB field; `catalogue` / `content` / `user_input` / `ad_slot` / `external_embed` / `parcels`). A member is a migration column that the consumer payload reads on the Spec 100 §3.2 whitelist. The set file is `scripts/surfaces/_schema/binding-sources.json` (D-4 a). Per D-3 b a field whose row or column does not exist is left out of the schema until it lands; the old `lineage:`, `consumer:`, `presentation:` and `pending:` source forms are retired (`presentation:` is now `content:`).
 
+> Dated note 2026-11-09 (McFrontend MF-13; prior text kept, M-246; operator "Agreed and capture this as rulings", "yes - looks good now", "agreed", recorded in ~/Buildo-scratch/mcfrontend/phase1/open-questions.md; register row Spec 135 FE-30): the Generation bullet is built. The generator (`seed-report-v2.mjs --write | --check`) makes every effective-ON catalogue row (row switch ON and building type ON) a `catalogue` field in the generated seed file `report-v2-seed/catalogue-fields.json`; a row or building type with no switch row fails closed. Placement is presentation data in `report-v2-seed/row-presentation.json`: one ordered headline list per scenario, every unlisted row is detail in catalogue order, the lists ship empty. Retirement of a row is its switchboard row OFF. Labels are `content` (11a.7): a headline row with no authored label fails, a detail row shows its row id.
+
 ### 11a.2 `variants[]` (RULED, operator verbatim "Q-MF2 a")
 
 Card answer: one card per building type, with a `variants[]` list inside: one entry per roof form (flat, pitched A, pitched B) and unit class (houseplex 2-4 at 4; 6 `not_modelled` until its increment), generated from the catalogue. Each variant is a full field set, rendered. Ad slots stay outside the card list and outside `variants[]`.
@@ -780,6 +782,8 @@ Per reading and per variant, from the closed code set, with parameters. A disclo
 | `headline_lower_bound`, `units_at_least` | catalogue | "at least" qualifiers |
 
 The UI computes none of these. A sum in any file is a Rule 16 failure (Spec 128).
+
+> Dated note 2026-11-09 (McFrontend MF-13; prior text kept, M-246; same operator answers, register row Spec 135 FE-30): "Fields that must exist" is met for every catalogue row by generation (11a.1 dated note 2026-11-09): the field set is the effective-ON catalogue rows, not this table. Which rows lead a card is the ordered headline list in `row-presentation.json`; which variant wins on a lot stays McBylaws' computed rule (126:749).
 
 ### 11a.7 Golden render states: structured render trees
 
