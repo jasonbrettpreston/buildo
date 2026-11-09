@@ -4,12 +4,12 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "5fa8ed830",
+  "head": "fe9cf52fb",
   "commits_reviewed": [
     "00f96b374 (rows, dated notes)",
     "0d114edae (prereg-MF-20-1)",
-    "0d114edae (code)",
-    "5fa8ed830 (output folds)",
+    "5fa8ed830 (code)",
+    "fe9cf52fb (output folds)",
     "(OUTPUT panel record)"
   ],
   "cards": [
@@ -17,7 +17,7 @@
     "Operator rulings 2026-11-09: scenario images and per-scenario ads (open-questions.md)"
   ],
   "plan": "PLAN (stage 3-5): ~/Buildo-scratch/mcfrontend/MF-20/plan.v2.md (sections 13 and 14 win); plan-panel/ (regression-guardian, code-reviewer-grounded, DeepSeek compliance) and plan-panel-v2/ (regression-guardian PASS-WITH-FOLDS, code-reviewer-grounded PASS-WITH-FOLDS).",
-  "output": "OUTPUT (stage 8): src/tests/surfaces + report-preview 471 tests green (16 files; new locks ad-slot.golden 55, ad-targeting-keys.logic 13); surface-validate --check exit 0 (14 states x 4; owed 13 states / 52 files); report-capture --check 0 stale of 56; report-schema --check and seed --check current; capture twice byte-identical; 48 existing goldens restamped as fingerprints only (red-evidence/MF-20/restamp-fingerprint-only.txt). No full suite (lane scope).",
+  "output": "OUTPUT (stage 8): src/tests/surfaces + report-preview 471 tests green at the folds commit (16 files; new locks ad-slot.golden 55, ad-targeting-keys.logic 13); surface-validate --check exit 0 (14 states x 4; owed 13 states / 52 files); report-capture --check 0 stale of 56; report-schema --check and seed --check current; capture twice byte-identical; 48 existing goldens restamped as fingerprints only (red-evidence/MF-20/restamp-fingerprint-only.txt). No full suite (lane scope).",
   "seats": [
     "regression-guardian",
     "code-reviewer-grounded",
