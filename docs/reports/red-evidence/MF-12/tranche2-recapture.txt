@@ -1,0 +1,34 @@
+# capture-twice proof: MF-12 tranche 2 goldens recaptured after MF-14 landed beneath them
+# worktree: ~/Buildo-wt-push5 (push stack 5), base origin/wf1/mb-rulings f07e128c9
+# before: surface-validate --check exit 1
+SV-GOLDEN not_buildable.{mobile,web,admin,pdf}.json: fingerprint stale: report-presentation.json
+SV-GOLDEN not_buildable.{mobile,web,admin,pdf}.json: fingerprint stale: report-v2.decl.json
+$ npx tsx scripts/surfaces/report-capture.ts --check
+CAPTURE-STALE not_buildable.mobile.json
+CAPTURE-STALE not_buildable.web.json
+CAPTURE-STALE not_buildable.admin.json
+CAPTURE-STALE not_buildable.pdf.json
+report-capture checked 44 goldens; 4 stale
+exit 1
+$ npx tsx scripts/surfaces/report-capture.ts
+report-capture wrote 44 goldens; 4 changed
+$ npx tsx scripts/surfaces/report-capture.ts   (second run)
+report-capture wrote 44 goldens; 0 changed
+IDENTICAL: sha256 of all 45 files in src/tests/fixtures/surfaces/report equal after run 1 and run 2
+run-1 digest: 07c6ccc3844ad232
+run-2 digest: 07c6ccc3844ad232
+$ npx tsx scripts/surfaces/report-capture.ts --check
+report-capture checked 44 goldens; 0 stale
+exit 0
+# diff measured: fingerprints only. Each of the 4 files changes lines 29-31 only (fingerprint.files):
+#   report-v2.decl.json 8de8860eb8e809b8 -> f9643b081b6e9e37
+#   report-presentation.json 7ebd1825435db648 -> 964a9c5f94ceb4d9
+#   report-tree.schema.json d19f855fc21d5f39 unchanged (key order now the capture script's FP_FILES order)
+#   rendered_tree and fingerprint.response_fixture unchanged: the renderer's not_buildable tree equals the hand-made one.
+# count literal: src/tests/surfaces/report-render.logic.test.ts capture size literal 40 (MF-14) -> 44, the measured count (11 states x 4 targets).
+$ node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (11 states x 4; owed 16 states / 64 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08
+exit 0
+$ npx vitest run src/tests/surfaces
+Test Files  9 passed (9)
+Tests  274 passed (274)

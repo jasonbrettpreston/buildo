@@ -42,7 +42,7 @@ describe('T1 buildTree reproduces every golden (the capture)', () => {
     const a = captureAll(ROOT);
     const b = captureAll(ROOT);
     expect([...a.entries()]).toEqual([...b.entries()]);
-    expect(a.size).toBe(40);
+    expect(a.size).toBe(44);
     for (const [file, text] of a) expect(fs.readFileSync(path.join(GOLD, file), 'utf8')).toBe(text);
   });
   it('no maths: a float is shown as the producer sent it', () => {
