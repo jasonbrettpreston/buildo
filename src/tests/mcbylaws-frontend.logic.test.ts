@@ -433,13 +433,43 @@ describe('C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b,
       expect(isFrontend(real, p)).toBe(false);
     }
   });
-  it('Spec 135, the golden dir and the McFrontend queue are protected; the empty test dir is pending; no glob is dead', () => {
+  // MF-42 (P42-D4 a, owner sign-off, McBylaws-Task MB-67): src/tests/surfaces/** holds tracked locks, so it left pending_globs; the case below keeps
+  // a stale frontend pending entry from recurring. Prior assertion (2942704dc): `expect(real.pending_globs).toContain('src/tests/surfaces/**')`.
+  it('Spec 135, the golden dir and the McFrontend queue are protected; the surface test dir is not pending (it holds tracked locks); no glob is dead', () => {
     for (const p of ['docs/specs/02-web-admin/135_mcfrontend_decisions_register.md', 'src/tests/fixtures/surfaces/report/web.json', MF_QUEUE, '.cursor/MCBYLAWS-QUEUE.md']) {
       expect(classify(real, p).protected).toBe(true);
     }
     expect(classify(real, SURF).protected).toBe(false);
-    expect(real.pending_globs).toContain('src/tests/surfaces/**');
+    expect(real.pending_globs).not.toContain('src/tests/surfaces/**');
     expect(deadGlobLines(real, tracked)).toEqual([]);
+  });
+  // A frontend glob in pending_globs that already matches a tracked path is stale: pending means "no tracked file yet" (2942704dc).
+  const stalePending = (policy: typeof real, files: string[]): string[] => policy.pending_globs
+    .filter((g: string) => (policy.frontend ?? []).includes(g))
+    .filter((g: string) => files.some((p) => isFrontend({ ...policy, frontend: [g] }, p)))
+    .map((g: string) => `remove from pending: ${g}`);
+  it('MF-42: no glob in pending AND frontend matches a tracked path; a stale one is named; McBylaws pending globs are not judged here', () => {
+    expect(stalePending(real, tracked)).toEqual([]);
+    const planted = { ...real, pending_globs: [...real.pending_globs, 'src/tests/surfaces/**'] };
+    expect(stalePending(planted, tracked)).toEqual(['remove from pending: src/tests/surfaces/**']);
+    // control: a McBylaws pending glob (not frontend) that matches a tracked path is outside this check
+    const mb = { ...real, pending_globs: [...real.pending_globs, 'scripts/analysis/bylaw/**'] };
+    expect(stalePending(mb, tracked)).toEqual([]);
+    expect(real.pending_globs).toEqual(expect.arrayContaining(['scripts/lib/compute/bylaw-*.js', 'scripts/lib/compute/maxbld-*.js']));
+  });
+  it('MF-42: the binding homes, the vendor dir, the RNR config, the MaxBLD web pages and the golden dir are frontend; the vendor dir and the three standards data files are protected', () => {
+    for (const p of ['src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/components/surfaces/web/FormBinding.tsx', 'mobile/src/components/surfaces/ListBinding.tsx',
+      'mobile/src/vendor/rnr/button.tsx', 'mobile/components.json', 'src/app/(maxbld)/admin/media/page.tsx']) {
+      expect(isFrontend(real, p), p).toBe(true);
+      expect(classify(real, p).layer23).toBe(false);
+    }
+    for (const p of ['mobile/src/vendor/rnr/button.tsx', 'scripts/surfaces/_schema/bindings.json', 'scripts/surfaces/_schema/converted-surfaces.json', 'scripts/surfaces/_schema/vendor-rnr.manifest.json']) {
+      expect(classify(real, p).protected, p).toBe(true);
+    }
+    for (const g of ['src/components/surfaces/**', 'mobile/src/components/surfaces/**', 'mobile/src/vendor/rnr/**', 'mobile/components.json', 'src/app/(maxbld)/**']) {
+      expect(real.pending_globs, g).toContain(g);
+    }
+    expect(isFrontend(real, 'src/app/page.tsx')).toBe(false);
   });
   it('the McBylaws loop gate does not classify a surface path (it reads layer23 only)', async () => {
     const { makeClassifier, loadLayer23 } = await import('../../scripts/analysis/mcbylaws-loop/loop-oracle.mjs');

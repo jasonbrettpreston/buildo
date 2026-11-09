@@ -3,7 +3,11 @@
   "pending_globs": [
     "scripts/lib/compute/bylaw-*.js",
     "scripts/lib/compute/maxbld-*.js",
-    "src/tests/surfaces/**"
+    "src/components/surfaces/**",
+    "mobile/src/components/surfaces/**",
+    "mobile/src/vendor/rnr/**",
+    "mobile/components.json",
+    "src/app/(maxbld)/**"
   ],
   "layer23": [
     "scripts/analysis/bylaw/**",
@@ -19,7 +23,13 @@
   "frontend": [
     "scripts/surfaces/**",
     "src/lib/surfaces/**",
-    "src/tests/surfaces/**"
+    "src/tests/surfaces/**",
+    "src/tests/fixtures/surfaces/**",
+    "src/components/surfaces/**",
+    "mobile/src/components/surfaces/**",
+    "mobile/src/vendor/rnr/**",
+    "mobile/components.json",
+    "src/app/(maxbld)/**"
   ],
   "protected": [
     "scripts/seeds/bylaw/layer3-catalogue.json",
@@ -60,7 +70,11 @@
     "docs/specs/**/135_mcfrontend_decisions_register.md",
     "src/tests/fixtures/surfaces/**",
     ".cursor/MCFRONTEND-QUEUE.md",
-    "scripts/surfaces/_schema/binding-sources.json"
+    "scripts/surfaces/_schema/binding-sources.json",
+    "mobile/src/vendor/rnr/**",
+    "scripts/surfaces/_schema/bindings.json",
+    "scripts/surfaces/_schema/converted-surfaces.json",
+    "scripts/surfaces/_schema/vendor-rnr.manifest.json"
   ],
   "literal_scope": [
     "scripts/analysis/bylaw/**/*.mjs",

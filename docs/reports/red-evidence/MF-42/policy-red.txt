@@ -1,0 +1,14 @@
+MF-42 policy commit (McBylaws-Task: MB-67), red first: the new cases of src/tests/mcbylaws-frontend.logic.test.ts run against the PRIOR mcbylaws/protected-paths.json (base ffb6b0610), captured 2026-11-09 in ~/Buildo-wt-mf42. Green after the edit: 32 of 32.
+Command: npx vitest run src/tests/mcbylaws-frontend.logic.test.ts (policy file temporarily the base copy)
+
+   × C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > Spec 135, the golden dir and the McFrontend queue are protected; the surface test dir is not pending (it holds tracked locks); no glob is dead 3ms
+   × C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: no glob in pending AND frontend matches a tracked path; a stale one is named; McBylaws pending globs are not judged here 12ms
+   × C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: the binding homes, the vendor dir, the RNR config, the MaxBLD web pages and the golden dir are frontend; the vendor dir and the three standards data files are protected 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > Spec 135, the golden dir and the McFrontend queue are protected; the surface test dir is not pending (it holds tracked locks); no glob is dead
+AssertionError: expected [ …(3) ] to not include 'src/tests/surfaces/**'
+ FAIL  src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: no glob in pending AND frontend matches a tracked path; a stale one is named; McBylaws pending globs are not judged here
+AssertionError: expected [ Array(1) ] to deeply equal []
+ FAIL  src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: the binding homes, the vendor dir, the RNR config, the MaxBLD web pages and the golden dir are frontend; the vendor dir and the three standards data files are protected
+AssertionError: src/tests/fixtures/surfaces/admin_media/hit.web.json: expected false to be true // Object.is equality
+      Tests  3 failed | 29 passed (32)
