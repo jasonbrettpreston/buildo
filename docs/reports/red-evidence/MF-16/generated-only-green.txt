@@ -1,0 +1,5 @@
+# GREEN (FE-02): real checks; controls current, hand edits reported, regenerate restores
+# cmd: npx vitest run src/tests/surfaces/report-generated-only.infra.test.ts
+ ✓ src/tests/surfaces/report-generated-only.infra.test.ts (9 tests) 310ms
+ Test Files  1 passed (1)
+      Tests  9 passed (9)

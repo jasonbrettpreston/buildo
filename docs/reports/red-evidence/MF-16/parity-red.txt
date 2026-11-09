@@ -1,0 +1,34 @@
+# RED 1 (FE-07, lock src/tests/surfaces/parity.golden.test.ts): the test file run against a STUB comparison that reports no difference, so every planted change must fail for the right reason (expected a finding, got none)
+# cmd: npx vitest run <file with diff() stubbed to return []>
+   × FE-07 RED: one planted change in ONE target is reported by name > mobile: a changed value names the state, the pick, the target and the field 3ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > web: a changed value names the state, the pick, the target and the field 1ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > admin: a changed value names the state, the pick, the target and the field 1ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > pdf: a changed value names the state, the pick, the target and the field 1ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > the same change in all four targets is caught by the anchor 1ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > mobile: a dropped disclosure on a rich tree is reported 15ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > web: a dropped disclosure on a rich tree is reported 14ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > admin: a dropped disclosure on a rich tree is reported 14ms
+     → expected 0 to be greater than 0
+   × FE-07 RED: one planted change in ONE target is reported by name > pdf: a dropped disclosure on a rich tree is reported 14ms
+     → expected 0 to be greater than 0
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  9 failed | 7 passed (16)
+
+# RED 2 (FE-07): a REAL defect planted in src/components/report/ReportView.tsx (drops the first disclosure whenever the meta line shows, i.e. admin and any rich node), then reverted
+   × FE-07 parity: synthetic rich trees (confidence, provenance, disclosures, at_least, not_modelled, null, placeholder) > the four targets and the expectation agree 21ms
+     → expected [ …(18) ] to deeply equal []
+   × FE-07 parity: synthetic rich trees (confidence, provenance, disclosures, at_least, not_modelled, null, placeholder) > guard: the compared set carries non-default confidence, a disclosure, a placeholder and a null dash 5ms
+     → expected false to be true // Object.is equality
+   × FE-07 RED: one planted change in ONE target is reported by name > control: the untouched emit reports nothing on the same cases 15ms
+     → expected [ …(18) ] to deeply equal []
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  3 failed | 13 passed (16)

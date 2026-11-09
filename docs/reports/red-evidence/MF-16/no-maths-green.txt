@@ -1,0 +1,6 @@
+# GREEN (FE-05): the real scan; planted cases reported, negative controls and the 5 real files clean
+# cmd: npx vitest run src/tests/surfaces/report-no-maths.logic.test.ts
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf16
+ ✓ src/tests/surfaces/report-no-maths.logic.test.ts (41 tests) 31ms
+ Test Files  1 passed (1)
+      Tests  41 passed (41)

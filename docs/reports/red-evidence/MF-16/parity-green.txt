@@ -1,0 +1,5 @@
+# GREEN (FE-07): real emit, all 33 golden combinations and the rich trees agree; planted changes reported
+# cmd: npx vitest run src/tests/surfaces/parity.golden.test.ts
+ ✓ src/tests/surfaces/parity.golden.test.ts (16 tests) 174ms
+ Test Files  1 passed (1)
+      Tests  16 passed (16)

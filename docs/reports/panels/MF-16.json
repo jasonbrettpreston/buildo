@@ -1,0 +1,23 @@
+{
+  "task": "MF-16",
+  "item": "REPORT locks: no-maths (FE-05), generated-only (FE-02), parity (FE-07); D-5 hardening of the MF-12 parity lock",
+  "class": "T",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "TBD",
+  "commits_reviewed": [
+    "TBD"
+  ],
+  "cards": [
+    "Operator 2026-11-09: \"2. MF-16 approved provided its ocmplaint\" (D-1..D-5 as recommended).",
+    "D-1 split: budget (FE-04) and variants (FE-17) move to the new row MF-36."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-16/plan.md; prereg-MF-16-1 (rules[] FE-02, FE-05, FE-07).",
+  "output": "OUTPUT (stage 8): pending",
+  "seats": [],
+  "verdict": "TBD",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-16/",
+  "notes": []
+}

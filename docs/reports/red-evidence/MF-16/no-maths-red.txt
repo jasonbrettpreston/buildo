@@ -1,0 +1,92 @@
+# RED 1 (FE-05, lock src/tests/surfaces/report-no-maths.logic.test.ts): the test file run against a STUB scan that returns no findings, so every planted defect must fail for the right reason (expected a finding, got none)
+# cmd: npx vitest run <file with scanSource stubbed to return []>
+   × FE-05 RED: one planted source per ban > multiplication is reported 2ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > addition is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > subtraction is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > division is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > modulo is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > exponent is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > compound assignment is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > increment is reported 0ms
+     → expected [] to include 'increment'
+   × FE-05 RED: one planted source per ban > decrement is reported 0ms
+     → expected [] to include 'increment'
+   × FE-05 RED: one planted source per ban > unary plus on a value is reported 0ms
+     → expected [] to include 'unary'
+   × FE-05 RED: one planted source per ban > unary minus on a value is reported 0ms
+     → expected [] to include 'unary'
+   × FE-05 RED: one planted source per ban > bitwise or is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > bitwise not is reported 0ms
+     → expected [] to include 'bitwise'
+   × FE-05 RED: one planted source per ban > shift is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED: one planted source per ban > Math.round is reported 0ms
+     → expected [] to include 'global'
+   × FE-05 RED: one planted source per ban > Math destructured is reported 0ms
+     → expected [] to include 'global'
+   × FE-05 RED: one planted source per ban > reduce is reported 0ms
+     → expected [] to include 'method'
+   × FE-05 RED: one planted source per ban > Number() is reported 0ms
+     → expected [] to include 'global'
+   × FE-05 RED: one planted source per ban > map(Number) is reported 0ms
+     → expected [] to include 'global'
+   × FE-05 RED: one planted source per ban > new Number is reported 0ms
+     → expected [] to include 'global'
+   × FE-05 RED: one planted source per ban > parseFloat is reported 0ms
+     → expected [] to include 'global'
+   × FE-05 RED: one planted source per ban > parseInt is reported 0ms
+     → expected [] to include 'global'
+   × FE-05 RED: one planted source per ban > toFixed is reported 0ms
+     → expected [] to include 'method'
+   × FE-05 RED: one planted source per ban > toPrecision is reported 0ms
+     → expected [] to include 'method'
+   × FE-05 RED: one planted source per ban > numeric literal 7 is reported 0ms
+     → expected [] to include 'literal'
+   × FE-05 RED: one planted source per ban > numeric literal 0.5 is reported 0ms
+     → expected [] to include 'literal'
+   × FE-05 RED: one planted source per ban > bigint literal is reported 0ms
+     → expected [] to include 'bigint'
+   × FE-05 RED: one planted source per ban > a copy of the REAL core.ts with String(v) turned into String(v * 2) is reported 0ms
+     → expected [] to include 'operator'
+   × FE-05 RED on disk: the walk reaches a violating file in a new subdirectory of each projection directory > a sandbox with one violating file per directory reports each directory 2ms
+     → expected false to be true // Object.is equality
+⎯⎯⎯⎯⎯⎯ Failed Tests 29 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > multiplication is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > addition is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > subtraction is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > division is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > modulo is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > exponent is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > compound assignment is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > bitwise or is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > shift is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > increment is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > decrement is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > unary plus on a value is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > unary minus on a value is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > bitwise not is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > Math.round is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > Math destructured is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > Number() is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > map(Number) is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > new Number is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > parseFloat is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > parseInt is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > reduce is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > toFixed is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > toPrecision is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > numeric literal 7 is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > numeric literal 0.5 is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > bigint literal is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED: one planted source per ban > a copy of the REAL core.ts with String(v) turned into String(v * 2) is reported
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 RED on disk: the walk reaches a violating file in a new subdirectory of each projection directory > a sandbox with one violating file pe
+ Test Files  1 failed (1)
+      Tests  29 failed | 12 passed (41)

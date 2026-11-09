@@ -1,0 +1,27 @@
+# RED 1 (FE-02, lock src/tests/surfaces/report-generated-only.infra.test.ts): the file run against STUB checks (generator --check always exit 0, golden compare always empty), so every planted hand edit must fail for the right reason (expected a finding, got none)
+# cmd: npx vitest run <file with gen() and staleGoldens() stubbed>
+   × FE-02 RED: a hand edit of a generated seed file > scripts/surfaces/_schema/report-v2.decl.json: exit 1 and GEN-HAND-EDIT naming the file 10ms
+     → expected +0 to be 1 // Object.is equality
+   × FE-02 RED: a hand edit of a generated seed file > scripts/surfaces/_schema/report-v2-seed/catalogue-fields.json: exit 1 and GEN-HAND-EDIT naming the file 8ms
+     → expected +0 to be 1 // Object.is equality
+   × FE-02 RED: a hand edit of a generated seed file > scripts/surfaces/_schema/report-presentation.json: exit 1 and GEN-HAND-EDIT naming the file 8ms
+     → expected +0 to be 1 // Object.is equality
+   × FE-02 RED: a hand edit of a generated seed file > --write restores every edited seed file byte for byte, and --check is then GREEN 8ms
+     → expected [ …(3) ] to deeply equal [ …(3) ]
+   × FE-02 RED: a hand edit of a golden file > one target file: the compare names exactly that file 7ms
+     → expected [] to deeply equal [ 'permitted.web.json' ]
+   × FE-02 RED: a hand edit of a golden file > the same edit made identically in all four targets of a state: all four are named (the gate does not see this; card MF-16-F1) 7ms
+     → expected [] to deeply equal [ 'permitted.admin.json', …(3) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  6 failed | 3 passed (9)
+
+# RED 2 (FE-02): a hand edit planted in the REAL committed golden permitted.web.json (212.4 -> 212.5 in the tree), reverted afterwards. The lock goes red on the golden-class control and the restore test.
+# cmd: npx vitest run src/tests/surfaces/report-generated-only.infra.test.ts
+   × FE-02 controls: an untouched copy is current in every class > the golden class reproduces from the capture (no stale file; all 44 files compared) 13ms
+     → expected [ 'permitted.web.json' ] to deeply equal []
+   × FE-02 RED: a hand edit of a golden file > the regenerate restores the golden byte for byte, and the compare is then GREEN 11ms
+     → expected 'a053bd9f61e74b328421a1d47a1624f052dc9…' to be '23ae9fd977e8ee94e9209393c4a293603c4d3…' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  2 failed | 7 passed (9)
