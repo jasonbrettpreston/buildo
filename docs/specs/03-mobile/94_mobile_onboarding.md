@@ -2,6 +2,8 @@
 
 > ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
 
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-4, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; product names per the operator ruling "MAxbld stays a seperate app ...", record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): this spec governs the lead-gen product's (Buildo) onboarding. It is not the MaxBLD onboarding: the MaxBLD web sign-up has a terms checkbox that writes `tos_accepted_at` only and never sets `onboarding_complete` (Spec 126 §11b.3; D-10). The per-product entitlement model is Spec 116 §4 N2-N3; `user_profiles.subscription_status` is dropped (`migrations/229_uid_uuid_fk_conversion.sql:129`); product ownership is the Spec 116 §1 table (dated note 2026-11-09).
+
 **Status:** ACTIVE
 **Cross-references:** Spec 77 (Flight Board), Spec 90 (Engineering Protocol), Spec 91 (Lead Feed), Spec 93 (Auth), Spec 95 (User Profiles), Spec 96 (Subscription)
 

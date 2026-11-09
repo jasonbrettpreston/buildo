@@ -2,12 +2,16 @@
 
 > ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
 
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-4, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; product names per the operator ruling "MAxbld stays a seperate app ...", record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): this spec governs the lead-gen product's (Buildo) settings and the shared offboarding. The per-product entitlement model is Spec 116 §4 N2-N3; `user_profiles.subscription_status` is dropped (`migrations/229_uid_uuid_fk_conversion.sql:129`); product ownership is the Spec 116 §1 table (dated note 2026-11-09).
+
 **Status:** ACTIVE
 **Cross-references:** Spec 77 (Flight Board), Spec 90 (Engineering Protocol), Spec 91 (Lead Feed), Spec 92 (Engagement Hardware), Spec 93 (Auth), Spec 95 (User Profiles), Spec 96 (Subscription)
 
 ## 1. Settings Screen
 
 **Location:** `mobile/app/(app)/settings.tsx` — Tab 4 in the bottom tab bar (always visible — tab bar does not hide on scroll for this screen, per Spec 91 §2 and Spec 77 §2).
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-8, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; product names per the operator ruling "MAxbld stays a seperate app ...", record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): settings is the fifth tab in code (`mobile/app/(app)/_layout.tsx`), not Tab 4.
 
 ### 1.1 Screen Structure
 

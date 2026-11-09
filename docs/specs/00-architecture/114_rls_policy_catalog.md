@@ -365,6 +365,9 @@ enforcement at the storage layer itself — the client can address its own objec
 prefix is readable regardless of what the client requests. Admin-only buckets (if any) follow the
 same `profiles.is_admin`-gated shape as §3.2's `admin_watchlist`, substituting the bucket
 predicate for the table.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-7, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; records Spec 128 R-31, no new ruling): the first bucket (`surface-exports`) uses the owner template above, and an EXPORT route may mint a signed URL with a declared TTL for a recipient who is not the owner; the `pdf_exports` row is the authority on who may request one (Spec 126 §6.5; Spec 128 R-31). The admin media bucket of McFrontend Phase 2 (`surface-media`, MF-37) is private with `public: false` asserted and admin-gated.
+
 </architecture>
 
 ---

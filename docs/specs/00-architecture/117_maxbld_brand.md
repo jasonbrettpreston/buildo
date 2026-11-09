@@ -3,6 +3,9 @@
 **Status:** DECIDED 2026-07-18 (5 enumerated open items carry recommended defaults; none block current build work)
 **SPEC LINK:** `docs/specs/00-architecture/117_maxbld_brand.md`
 **Brand name:** MaxBLD. **Domain:** maxbld.ca (purchased).
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "MAxbld stays a seperate app - unless we can share some of the components with buildo than we build our own. ..." (OP-1) and "a" (D-4 app identity); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: MaxBLD is a separate app; no hand-built standard components" and "Operator ruling 2026-11-09: D-4 app identity"): "MaxBLD" names the parcel product (`parcel_tool`) and its own, separate app; the lead-gen and flight-center app (App A) is "Buildo". The §1.1 row "App A — the real product" and the §6 rows for App A and App B are read with that naming. App identity per D-4 (a), recorded in Spec 116 §1 (dated note 2026-11-09): the MaxBLD app takes `ca.maxbld.app`, `maxbld://` and "MaxBLD"; the Buildo app gets a new id and the display name "Buildo". The rename hazards of OD-B4 and Known Failure Modes ("Rename breaks EAS / bundle identity") are handled in MF-49 (push, Sentry and deep-link config move with the id).
+
 **Cross-references:** Spec 116 (multi-product architecture — App A / App B / Admin surfaces, App B "own accent tint" note in §6 below) · Spec 113 (Supabase migration — rename rollout should not collide with the migration's own EAS/build churn) · `docs/specs/archive/74_lead_feed_design.md` (Lead Feed Design System — the "Industrial Utilitarian" palette this spec ratifies as brand-primary) · `docs/specs/03-mobile/96_mobile_subscription.md` (Stripe checkout flow — §6 dashboard branding checklist) · `docs/specs/00-architecture/00_system_map.md`
 
 <requirements>
@@ -230,11 +233,15 @@ Resolving §4.2's option (a) *load the fonts* vs (b) *adopt system-font formally
 
 **Layout.** Centred "Google-style" column, `max-width: 448` (`SEARCH_MAX_WIDTH`), mobile-first, safe-area top edge. The surface does **not** draw a bottom navigation bar: the bottom bar in this product is owned by `shell_app_tabs` (`S-046`, `mobile/app/(app)/_layout.tsx`), which carries five tabs — Lead Feed, Flight Board, Map, Parcels, Settings — at 83px (iOS) / 60px (Android). S-002 reserves that height in its scroll content instead, so a duplicate 64px bar is a **defect**, not a style choice. Minimum touch target 44px throughout, per §3.5's accessibility posture and the descriptor's `a11y.touch_target_min_px`.
 
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-8): inside the parcel product the five-tab bar is hidden; the bottom navigation is the shelf of §6.2.
+
 ### 6.2 Surface application — S-004 `shell_parcel_tool_stack` (the product shelf)
 
 Registry entry: [`S-004`](../../reports/generated/127-surface-registry.md#s-004); archetype **SHELL**. Implementation: `mobile/app/(app)/parcel-tool/_layout.tsx`, with the shelf itself at `mobile/src/components/parcel/ParcelShelf.tsx` (declared in the surface's `owns.components`). Tokens in `PARCEL_SHELF_HEX`.
 
 This is the **only navigation inside MaxBLD** — three tabs, Lookup · Tracked Lots · Account. The five-tab bar belonging to the other product is hidden for every route in this group; rendering a second navigation bar inside the parcel product is a **defect**, not a style choice.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "MAxbld stays a seperate app - unless we can share some of the components with buildo than we build our own. ..." (OP-1); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): the shelf, ruling 2026-09-16 (c), is superseded in direction: MaxBLD becomes a separate app (MF-49), and the shelf is retired once that app is live (MF-50, D-12). The fence it carried still binds any move: moving `parcel-tool` out of the `(app)` gate without a per-product gate in the new place is a security regression.
 
 | Token | Value | §3.2 role | Used for |
 |---|---|---|---|
@@ -277,6 +284,8 @@ Brand tokens live in exactly two places today, and MUST be updated together:
 2. **Mobile:** `mobile/tailwind.config.js` `theme.extend.colors` (NativeWind).
 
 **Future single source:** Spec 116 §3 identifies a monorepo shared-library extraction as the natural home for cross-app-shared code once App B exists. When that lands, brand tokens (this spec's §3.2 table) become a shared `@maxbld/tokens` (or equivalent) package that both `globals.css` and `mobile/tailwind.config.js` derive from, collapsing the §3.3 drift permanently. Until then: **changing a brand token requires updating BOTH files in the same commit, plus this spec's §3.2 table** (same discipline as `_contracts.json` change-together rules elsewhere in the repo — but brand tokens are explicitly NOT added to `_contracts.json` itself; that file is reserved for pipeline data-quality thresholds, not visual design tokens, and mixing the two would make `_contracts.json` a dumping ground).
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" (D-2, D-3); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): the web library theme (Mantine) is a third place for the brand tokens, and it is GENERATED from the same token source, never hand-edited (Spec 126 §11b.4). The two-places rule above still governs the two hand-edited files.
 
 ## 8. Open decisions (recommended defaults — override to change)
 

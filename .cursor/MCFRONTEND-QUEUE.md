@@ -1,6 +1,6 @@
 # McFrontend queue (LEAN) — the ONLY McFrontend job list, landed 2026-11-04
 
-This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-34** (ids are never reused). Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b): MF-34 is taken by the MF-24 split; next free id **MF-35**. Dated note 2026-11-09 (prior text kept; operator, verbatim: "yes Shall I add the search-pair conversion as a queue row placed after MF-15"): MF-35 is taken by the search-pair conversion row; next free id **MF-36**. Dated note 2026-11-09 (prior text kept; MF-16 · McFrontend queue · lane T): MF-36 is taken by the MF-16 split (budget and variants); next free id **MF-37**.
+This file is the ONE source of MF task ids. A task not listed here is not done. Next free id: **MF-34** (ids are never reused). Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b): MF-34 is taken by the MF-24 split; next free id **MF-35**. Dated note 2026-11-09 (prior text kept; operator, verbatim: "yes Shall I add the search-pair conversion as a queue row placed after MF-15"): MF-35 is taken by the search-pair conversion row; next free id **MF-36**. Dated note 2026-11-09 (prior text kept; MF-16 · McFrontend queue · lane T): MF-36 is taken by the MF-16 split (budget and variants); next free id **MF-37**. Dated note 2026-11-09 (prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): MF-37..MF-50 are taken by the McFrontend Phase 2 rows; next free id **MF-51**. MF-27..MF-29 stay unused.
 
 Form copied from `.cursor/MCBYLAWS-QUEUE.md`: ten stages, status words DONE · RUNNING · WAITS · OPERATOR · HELD · LATER, lanes R rulings · G gates · E one-writer build · T tests · P product, reference practice `MF-nn (item) · McFrontend queue · lane X · stage N`. Arm Q today reads the McBylaws queue only (headings `**MB-nn ... - STATUS**` with `MB-nn@sha`); converting these tables to that form, and teaching arm Q a second queue, is MF-24. Dated note 2026-11-06 (M-246, prior text kept; operator "yes. proceed", D-9 b; MF-24a): the tables below are now in that form: one heading `**MF-nn <task> — <STATUS>** (lane)` per task, then one bullet that keeps every table cell (the status cell as it was, WAITS, Done-condition). A DONE heading cites `MF-nn@sha`: MF-01, MF-05 and MF-07 landed in the McFrontend Phase 0 documents commit a95246407, MF-09 in the McBylaws queue note 7f04f5b6a. Arm Q reads this file (prefix MF) at push and CI for a range that changes it or a surface path. Bullets never start with `- MF-` (that is the DONE-list form). Dated note 2026-11-09 (M-246, prior text kept; MF-34 · McFrontend queue · lane G; operator, verbatim: "approve D-1 - D-8 as recommended"): a DONE heading's block (to the next `**MF-nn` heading or any `#` line) holds exactly one bullet `  - FE rows owned: none.` or `  - FE rows owned: FE-nn, FE-mm.` (those words, ids with two digits, a closing full stop; no other prose on the line) naming the Spec 135 rows whose lock that task builds; arm Q refuses a DONE heading without it, or whose listed row is OWED or absent from Spec 135. `none` means the task builds no lock (MF-01 and MF-07 landed rulings; the locks for FE-16 and FE-20..22 belong to later tasks). Whether a declaration is complete and honest is judged by the McBylaws owner review at each DONE flip.
 
@@ -113,6 +113,8 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 **MF-35 Convert the parcel search pair, `mobile_parcel_search` (SEARCH) and `mobile_parcel_disambiguation_map` (LIST, `render.projection: map`), from the inventoried descriptors to declared surfaces by the Spec 127 ladder: shared SEARCH and LIST archetype components, no hand-coded fields, surface-validate green (operator 2026-11-09) — LATER** (E)
   - Lane E. Waits on: MF-15 (the gate that validates the descriptors). Done-condition: the two screens render from their descriptors with the inventoried states (prompt_type_more, fetching, outside_toronto, rate_limited, entitlement_refused, and the rest recorded in the descriptors) as goldens; surface-validate --check exits 0; the planted bad descriptor exits 1.
   - Rules: 126:72 ("same surface, except for its projection"), 126:254 (map is a projection on LIST, not an archetype), 126:840 (P3/B2 parcel_search -> SEARCH), Spec 127 ladder, Spec 128 rules (Airtight principles mirrored at 128:21-42). Scope: these two screens only. Other screens stay convert-on-touch (MF-32).
+  - Dated note 2026-11-09 (M-246, prior text kept; MF-35 · McFrontend queue · lane R-MF41; operator, verbatim: "Mf-35 - we are now going to embed a stadnardized approach with the McFront-end for all MaxBld pages? Correct?" (orchestrator answer: yes), confirmed by D-0 in "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs. ... D-9 for sure."; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator confirmation 2026-11-09: one standard approach for all MaxBLD pages; MF-35 joins the programme" and "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): MF-35 is in the McFrontend Phase 2 programme, off the 2026-11-09 HOLD ("3. MF-35 - hold"), as the SEARCH+LIST step after MF-39 (the approved order). Re-plan `~/Buildo-scratch/mcfrontend/MF-35/plan.md` against the chosen mobile library after MF-42 (no hand-built `SearchView`/`ListView`): install React Native Reusables (D-3) and the mobile binding; carry over the behaviour list (plan §5), the 22 goldens (as props goldens), F1 (legacy-literal oracle), F2-F8, F10 and F14 (including the operator device run), and the gate arms (now MF-42); then re-panel before build. Waits on: MF-42, MF-39. Done-condition: as above, plus FE-31 conformance. Size L. The heading word is not changed here.
+  - FE rows owned: none.
 
 **MF-16 Locks: binding, no-maths, generated-only, honest, parity, budget, variants — DONE 2026-11-09 (MF-16@710c67940; operator "2. MF-16 approved provided its ocmplaint")** (T)
   - Lane T. Status cell (kept): LATER. Waits on: MF-14, MF-15. Done-condition: each RED then GREEN. Dated note 2026-11-06 (M-246, prior text kept; operator answer MF-10 D-2 a, verbatim "MF-10 all recommended provided they are complaint"): the "binding" lock (`src/tests/surfaces/report-binding.logic.test.ts`, FE-18) is built by MF-10, so "binding" is removed from this row's locks; the other locks stay here.
@@ -135,21 +137,31 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 
 **MF-18 Spec 136 generator + `--check` — LATER** (G)
   - Lane G. Status cell (kept): LATER. Waits on: MF-17. Done-condition: second run changes nothing.
+  - Dated note 2026-11-09 (M-246, prior text kept; MF-18 · McFrontend queue · lane R-MF41; operator, verbatim: "Wf-18 proceed if compliant and meets the 5 principle standard. Ensure Wave 1 uses the panel to ensure the plan is correct. ..."; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-18 build; Wave plan"): MF-18 owns FE-10 only (the handbook rule map). FE-09 (register-locks-resolve) goes to MF-43. FE-16 (spec paths) goes to the row that builds its lock; no row builds `src/tests/surfaces/spec-paths.infra.test.ts`, so MF-41 assigns it to MF-43, the Phase 2 locks row (orchestrator decision under the ruling's delegation, logged). The heading word is not changed here.
+  - FE rows owned: FE-10.
 
 **MF-19 User-input flow: declare the form, bind the input contract, render shared results with provenance and confidence by source; verified outranks user, newest user entry shown, history kept (FE-20); goldens for entry states — LATER** (E)
   - Lane E. Status cell (kept): LATER. Waits on: MF-14, McBylaws increment 6 re-evaluation capability for live results. Done-condition: goldens green; McBylaws does the re-evaluation.
+  - FE rows owned: FE-19, FE-20.
 
 **MF-20 Ad slots: contract, R-17 disclosure, R-34 outside cards and `variants[]`, declared-key targeting, never user-entered facts without consent (FE-22); goldens present/absent — LATER** (E)
   - Lane E. Status cell (kept): LATER. Waits on: MF-14. Done-condition: ad-slot lock RED then GREEN.
+  - Dated note 2026-11-09 (M-246, prior text kept; MF-20 · McFrontend queue · lane R-MF41; operator, verbatim: "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail" (item 4: "D-7 yes"); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"; plan `~/Buildo-scratch/mcfrontend/MF-20/plan.v2.md`): MF-20 D-7 is reversed: no per-scenario (`scenario_card`) ad beside a card whose status is `not_permitted` or `not_evaluated` (honest display, FE-06; R-17). The report-level slots (`detail_footer`, `renovation_section`) are unaffected. In the McFrontend Phase 2 order MF-20 runs after MF-43 and before MF-42. The heading word is not changed here.
+  - FE rows owned: FE-22, FE-23.
 
 **MF-21 In-product error count and budget breach shown on admin — LATER** (E)
   - Lane E. Status cell (kept): LATER. Waits on: MF-14, MB-35, MB-38. Done-condition: `error-count.db.test.ts` green in a named CI step; on-screen part manual.
+  - FE rows owned: FE-26.
 
 **MF-22 Product proof run: 25 lots vs answer key, all targets — LATER** (P)
   - Lane P. Status cell (kept): LATER. Waits on: MF-14, MB-38, MB-44. Done-condition: `answer-key-e2e.db.test.ts` green in CI. No circular wait: MB-44 delivers data only and does not wait on MF-14 (Q-MB44 a).
+  - Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): its "all targets" proof covers mobile only after MF-48; until then it records web and pdf and states mobile as owed. Waits on: MF-14, MB-38, MB-44, MF-44. The heading word is not changed here.
+  - FE rows owned: FE-25.
 
 **MF-23 Executable canaries a-f (McFront proof) — LATER** (T)
   - Lane T. Status cell (kept): LATER. Waits on: MF-16. Done-condition: each: planted defect in a temp copy exits non-zero, clean copy exits zero.
+  - Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note, "Owners of the other OWED FE rows"): MF-23 owns FE-15 (the canaries). The heading word is not changed here.
+  - FE rows owned: FE-15.
 
 **MF-24 Arm Q second queue: parameterise path and prefix; DONE needs `MF-nn@sha`; DONE refused while its FE row is OWED — DONE 2026-11-09 (MF-24@407b9eaef; operator "approved provided they are compliant simple and dont contribute to scope creep")** (G)
   - FE rows owned: none.
@@ -169,16 +181,81 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
 **MF-26 Extend spec-split-check citation arm to Spec 136 — LATER** (G)
   - Lane G. Status cell (kept): LATER. Waits on: MF-18. Done-condition: citation to a missing line fails.
 
+## Phase 2: every MaxBLD page on one standard (McFrontend expansion)
+
+- Dated note 2026-11-09 (McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs. ... D-9 for sure." (Part A) and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail" (Part B); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"; card `~/Buildo-scratch/mcfrontend/PROGRAMME/CARD-mcfrontend-expansion.md` §6): McFrontend Phase 2 is open. Standard: Spec 126 §11b (every MaxBLD page = descriptor + content + standard library components configured by schema; no hand-built standard component). Rows: Spec 135 FE-31, FE-32. Named infra-freeze lift for Phase 2 (MF-35, MF-37..MF-50, MF-30), incl. the library dependencies and the Spec 33 amendment (D-1). Order: the ONE sequence, Spec 127 §4.4 dated note 2026-11-09; each row below carries its waits or trigger. McBylaws keeps priority and the DB lane. Security seat on MF-45, MF-46, MF-47, MF-49, and on MF-44's middleware change if it lands there. MF-20, MF-22, MF-30 and MF-35 keep their rows above (dated notes).
+- FE ownership: every OWED FE row has exactly one owner, written as the per-row `FE rows owned:` bullets.
+
+**MF-41 Record Phase 2: the spec review R-1..R-8, OP-1/OP-2, the Spec 33/90/99/116/117 notes, FE-31 and FE-32 (OWED), the programme notes, these rows — RUNNING 2026-11-09 (lane R-MF41; local, on wf1/mf41-1109)** (R)
+  - Lane R. Waits on: D-0, D-1, D-3 (ruled 2026-11-09). Done-condition: one docs commit; `spec-split-check --check` clean; arm Q accepts. Size S. The spec review's R-9 is flag-only (no edit).
+  - FE rows owned: none.
+
+**MF-43 Phase 2 locks: FE-01 status lock (126 status line names Phase 1 and the Phase 2 surfaces), FE-11/FE-14 queue lock (no MF task outside Phase 0-2 or convert-on-touch; admin tasks only as listed), FE-09 register-locks-resolve, FE-16 spec paths, the spec review's two locks (`web_landing` scope `parcel_product`, `mobile_settings` `platform_shared`; every `parcel-tool` route inside the `(app)/_layout.tsx` gate) — LATER** (T)
+  - Lane T. Waits on: MF-41. Done-condition: each RED on a mutated copy, then GREEN. Size S. FE-09 moved here from MF-18 by the operator ruling "Wf-18 proceed if compliant and meets the 5 principle standard" ("Operator ruling 2026-11-09: MF-18 build; Wave plan"). FE-16 is assigned here by MF-41 under that ruling's delegation ("FE-16 → the row that builds its lock"): no other row builds `src/tests/surfaces/spec-paths.infra.test.ts` (orchestrator decision, logged).
+  - FE rows owned: FE-01, FE-09, FE-11, FE-14, FE-16.
+
+**MF-42 Foundation: the one schema escalation (`render.form`, `render.list.columns`, `render.wizard.steps`; validator, types, registry regenerated); generic arms SV-DESC (incl. `UNRESEARCHED`), SV-SCREEN, SV-SBIND in `scripts/surfaces/screen-checks.mjs` (a missing validator cannot crash the REPORT arms, MF-35 F9); the converted manifest with two-direction totality; the import-boundary and vendored-manifest checks; the FE-31 lock; the no-maths scan widened to binding modules; the `frontend` glob list with a dead-glob check — LATER** (G)
+  - Lane G. Waits on: MF-41, MF-16 landed, D-1, D-2, D-3, McBylaws owner review. Done-condition: REPORT arms and fingerprints unchanged; the success-line assertion is amended deliberately to the new full string, still an exact `toBe`, with red evidence (never relaxed to `toContain` or a regex); a planted bad descriptor exits 1 for FORM, LIST, SEARCH, STATIC fixtures; FE-31 lock RED then GREEN; the `frontend` list gains `src/tests/fixtures/surfaces/**`, the binding dirs, `mobile/src/vendor/rnr/**`, `src/app/(maxbld)/**`, `src/middleware.ts`, the MaxBLD Expo project dir. Size L.
+  - FE rows owned: FE-03, FE-31.
+
+**MF-37 Admin media library: install the web library (D-1, Spec 33 amendment landed); the web binding (FORM via RJSF, LIST via mantine-datatable, upload via `@mantine/dropzone`); private bucket `surface-media` (`public: false` asserted; path `<kind>/<asset_id>.<ext>`, admin-gated); `media_assets` if needed; `media-contract.json`; upload/sign/delete routes; the `contract` binding kind — LATER** (E)
+  - Lane E (+ DB lane). Waits on: MF-42, MF-20, operator go for the migration. Done-condition: S-schema db test incl. `public = false`; one audit row per upload/delete; 401/403 tests; props goldens + render smokes; a failed upload visible. Size L.
+  - FE rows owned: FE-32.
+
+**MF-40 Admin ads and placements: `placements` + `offers`, the `admin_placements` FORM on the library, R-17/R-34 checks, first-party offers, targeting only on declared DB keys with income excluded (MF-20 D-4) — LATER** (E)
+  - Lane E (+ DB lane). Waits on: MF-37; RLS class ruled in its plan. Done-condition: S-schema green; offers read by the MF-20 ad contract; an income or user-entered targeting key is RED. Size M.
+  - FE rows owned: none.
+
+**MF-38 Report images: one ordered list per scenario key; web `@mantine/carousel` as a client island inside the landed REPORT renderer; mobile a horizontal FlashList (installed); pdf the first image only; alt required; selectors storeys/corner/frontage locked; default images only — LATER** (E)
+  - Lane E. Waits on: MF-37. Done-condition: new image-state goldens per target (existing REPORT goldens unchanged); empty list renders nothing; selector lock RED then GREEN. Size M.
+  - FE rows owned: none.
+
+**MF-39 House photo: `external_embed` node, disabled/available, live fetch deferred, not in PDF by default — LATER** (E)
+  - Lane E. Waits on: MF-38. Done-condition: FE-21 lock RED then GREEN. Size S.
+  - FE rows owned: FE-21.
+
+**MF-45 parcel_tool entitlement: widen `chk_entitlements_product` (`parcel_tool`, `agent_reports`), `PRODUCTS`, `_contracts.json`, the OD5 comment; an entitlement read contract; the lookup route accepts `parcel_tool` OR the current `lead_gen` statuses while the App A shelf exists (a declared deviation, removed by MF-50), so new lead_gen users keep the shelf; descriptors and contracts (incl. `contract_parcels_tracked`) declare `parcel_tool`; no blanket backfill (the transitional OR covers App A users) — LATER** (E)
+  - Lane E (+ DB lane). Waits on: MB-44 (needed first by MF-44), MF-41, D-1, Security seat. Done-condition: `contracts.infra.test.ts` extended (not loosened) with red evidence; lookup tests per product and status; Buildo tabs unchanged; the Spec 96 rewrite note in its commit. Size M.
+  - FE rows owned: none.
+
+**MF-44 MaxBLD web pages: the web route for `mobile_parcel_detail` and the web search pair under a nested `(maxbld)` layout on the existing host (no root-layout move, no host rewrite yet), signed-in and `parcel_tool`-entitled — LATER** (E)
+  - Lane E. Waits on: MB-44, MF-45, MF-35, MF-20. Done-condition: goldens and render smokes; parity mobile vs web for search; the 25 golden lots render on web with no page or console error. Size L.
+  - FE rows owned: none.
+
+**MF-46 MaxBLD web front door: maxbld.ca host allow-list rewrite in `src/middleware.ts` (protected) with the Host-parameterised table test; `web_landing` from content; the shared login with MaxBLD copy from content, persona picker hidden, target the MaxBLD search page (RED case: never `/dashboard`); the terms checkbox (`tos_accepted_at` only); the R-18 check; `(maxbld)` error page from content — LATER** (E)
+  - Lane E. Trigger: MF-44 live and D-9. Waits on: Security seat. Done-condition: on maxbld.ca every scope-D path is refused (Host table test RED on a mutated copy); the R-18 cross-check with a red case. Size M.
+  - FE rows owned: none.
+
+**MF-47 MaxBLD web checkout: Stripe-hosted (Pricing Table or Checkout redirect for `parcel_tool`, Customer Portal), a server action for the session, per-host checkout base URL, the price-map entry, RED cases for an unmapped price and the webhook's two `lead_gen` defaults, CSP for `js.stripe.com` — LATER** (E)
+  - Lane E. Trigger: D-8 (OD4 and new-user access ruled). Waits on: MF-45, MF-46, Security seat. Size M (the cost is the session route, webhook and CSP, not UI).
+  - FE rows owned: none.
+
+**MF-49 MaxBLD mobile app: a separate Expo project in a monorepo (Spec 116 §3) with shared packages; identity per D-4 (a); its own root and `parcel_tool` gate; the existing `(auth)` screens shared and declared; the whole `parcel-tool` group; no purchase CTA per D-11; per-app route-set and identity tests — LATER** (E)
+  - Lane E. Trigger: D-4, D-5, D-11. Waits on: MF-35, MF-45, Security seat. Done-condition includes: before any store submission, confirm in App Store Connect and Play Console that `ca.maxbld.app` has no public release (if it has one, STOP and bring it back); push, Sentry and deep-link config move with the id; the Spec 96 rewrite note in its commit. Size L.
+  - FE rows owned: none.
+
+**MF-48 MaxBLD report on mobile: a REPORT binding onto mobile library primitives in the MaxBLD app (MF-14 T-2) — LATER** (E)
+  - Lane E. Waits on: MF-49, MF-22. Done-condition: props goldens per target row unchanged; device run (operator; UNVERIFIED until then). Size L.
+  - FE rows owned: none.
+
+**MF-50 Retire App A's parcel shelf once the MaxBLD app is live: remove the group, the transitional OR in the lookup route, hrefs and Maestro flows; the (c) fence holds (no un-gated route) — LATER** (E)
+  - Lane E. Trigger: MF-49 shipped, D-12. Size S.
+  - FE rows owned: none.
+
 ## Later: convert-on-touch
 
 **MF-30 `/admin/surfaces` generated from the descriptor set (P2b): convert-on-touch, no fixed admin pilot (operator "Q-Mf6 a") — LATER** (E)
   - Lane E. Status cell (kept): LATER. Waits on: a product reason, MF-22. Done-condition: per-surface scorecard.
+  - Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): in McFrontend Phase 2, narrowed to `admin_surface_registry` and `admin_drift_status` first (then orphan, fan-out, role matrix), on the web library's table and cards (Spec 126 §11b.3). It keeps "a product reason, MF-22". Waits on: a product reason, MF-22, MF-42. Size M. The heading word is not changed here.
+  - FE rows owned: none.
 
 **MF-31 Move R-01..R-34 into 135; reconcile and generate counts (Spec 126 §2 dated note) — LATER** (R)
   - Lane R. Status cell (kept): LATER. Waits on: a product reason. Done-condition: line-set diff clean.
 
 **MF-32 Convert any other screen when touched, by the Spec 127 ladder; market-metrics is DASHBOARD (FE-12) — LATER** (E)
   - Lane E. Status cell (kept): LATER. Waits on: a product reason. Done-condition: scorecard green.
+  - Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note, "Owners of the other OWED FE rows"): MF-32 owns FE-12. `admin_market_metrics` is scope D (`estate_other/F92`); its DASHBOARD lock lands at its conversion. The heading word is not changed here.
+  - FE rows owned: FE-12.
 
 Ids MF-27..MF-29 are unused.
 
@@ -204,3 +281,5 @@ Increment 2 close · increment 6 (re-evaluation, MF-19) · MB-35 · MB-38 · MB-
 ## Not doing
 
 No second gate, queue checker, decision log or panel engine. No conversion of any screen but the report in Phase 1. No hand edit of the catalogue or generated decl. No code before the increment 2 close and freeze lift.
+
+Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): "No conversion of any screen but the report in Phase 1" still holds for Phase 1. Phase 2 converts only the pages listed in Spec 126 §11b.3 (the MaxBLD pages); every other screen stays convert-on-touch. Not doing in Phase 2: scope D (R-03); Buildo's onboarding, auth, paywall, tab shells and settings; anonymous teaser; advertiser self-serve; PDF send; `usage_events`; `app_outputs`; a hand-built standard component.

@@ -2,6 +2,8 @@
 
 > **Status: DRAFT** — Authorized for McFrontend Phase 1 only (card answer Q-FE a: "A Spec 126-128 plan is authorized as documents only, named McFrontend. ... The build starts after McBylaws increment 2 closes"; scope mobile, web, admin and PDF). Phase 1 = the REPORT section (§11a) and the report-page conversion only. Every other phase stays "Not authorized for implementation" until touched for a product reason (card answer Q-MFS a: "Other screens convert only when touched for a product reason"). Companion specs, RULED 2026-11-04 (Q-MF1 a): 135 (decisions register) and 136 (generated handbook), in docs/specs/02-web-admin. Source of the rulings: `~/Buildo-scratch/mcfrontend/CARD-Q-FE.answered.md`.
 >
+> Dated note 2026-11-09 (McFrontend Phase 2 (expansion); prior text kept, M-246; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" and "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9" and "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): authorized also for **McFrontend Phase 2 (expansion)**: every MaxBLD page on one standard (§11b; D-0). Phase 2 surfaces are those listed in §11b.3 (queue rows MF-35, MF-37..MF-50, MF-30). The 2026-11-02 infra freeze is lifted by name for Phase 2, including the library dependencies and the Spec 33 amendment (D-1). Web first; the separate mobile app, checkout and the maxbld.ca front door are LATER, triggered rows. Other screens stay convert-on-touch; scope D stays fenced (Spec 128 R-03).
+>
 > Prior status line (2026-09-15, kept, M-246): authored 2026-09-15 (WF1, Admin domain). Not authorized for implementation. A WF1 plan with PLAN LOCKED gates every phase below; `.cursor/wf1_spec126_128_active_task.md` is the authoring plan this spec was written under.
 >
 > **Placement note (measured, not chosen).** These three specs span mobile, web and admin, so `docs/specs/04-platform/` was the natural home. It is **not supported today**: `scripts/generate-system-map.mjs:24-31` defines `SECTIONS` as a hard-coded directory allow-list (`00-architecture`, `01-pipeline`, `02-web-admin`, `03-mobile`, `archive`, `reference`) and a directory absent from it is **silently dropped** from the system map — no throw, `collectSpecs` is simply never called for it. `src/tests/system-map.infra.test.ts` hard-codes the same four sub-directories at `:49`, `:300` and `:325`. Creating `04-platform/` therefore means a code change to a generator and a test that are outside this spec's Target Files. **Specs 126/127/128 land in `docs/specs/02-web-admin/` next to Spec 125, and the folder question is filed as `ASK-06` in Spec 128 §6.**
@@ -135,6 +137,8 @@ Every SURFACE declares `platforms[]` from the closed set `web | mobile | pdf`:
 | Admin surfaces (the 15 pages under `src/app/admin/` + `login`, `dashboard`, `subscribe*`, `auth/callback`) | `["web"]` | Next.js RSC + the admin archetype set (Shadcn/Tailwind) |
 | Product surfaces (parcel preview, search, marketing/landing, `permits/[id]`, `builders*`) | `["web","mobile"]` | RSC on web · fetched projection + the RN archetype set on mobile |
 | Export-bearing surfaces | adds `"pdf"` | the same descriptor, a PDF renderer, parity asserted by golden |
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-6 (i)-(ii), `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; operator, verbatim: "D-0-D-4 approved", D-2): (i) `login`, `subscribe*` (registry S-050..S-053) and `auth/callback` in the admin row are web-only customer pages in scope C (§2.0), not admin pages; `dashboard` is scope D (S-069). (ii) shadcn/ui is not installed (Spec 33:44); per D-2 the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4), which supersedes "Shadcn/Tailwind" in the admin row.
 
 **Admin surfaces are descriptored in the SAME pass as the product ones** — one archetype vocabulary, one schema, one validator, one registry page. The admin web tree is where the estate's largest single-file surfaces live (`src/components/admin/` is 13 files / 4,322 lines, `LeadDetailInspector.tsx` alone 727L), and it is where `GenericFieldRenderer.tsx` (83 lines, a type-aware renderer for ~120 heterogeneous DB fields) already proves the archetype-renderer idea works in this repo. Splitting admin into a later pass would produce a second vocabulary; that is the exact failure Spec 122 V1–V6 were ruled to prevent.
 
@@ -440,6 +444,8 @@ Measured impact: **4 of the 7 stores are MMKV-persisted mirrors of server fields
 
 Same descriptor, a different archetype component set (Shadcn/Tailwind, desktop-first `md:` breakpoints per `.claude/domain-admin.md`, vs RN/NativeWind mobile-first). The precedent is already in the tree and is smaller than expected: `src/components/admin/GenericFieldRenderer.tsx` (83 lines) is a type-aware renderer handling *"~120 heterogeneous DB fields (null / boolean / number / date / string / JSONB)"* without a per-field component — its own header calls it *"a deliberate renderer, not ad-hoc JSX"*. That is one archetype component, already written, already branch-tested. The admin twin of the pilot (`ParcelCostTool.tsx`, 425L) already consumes it.
 
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-6 (ii); operator, verbatim: "D-0-D-4 approved", D-2): "Shadcn/Tailwind" above is superseded. shadcn/ui is not installed (Spec 33:44); the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4).
+
 ### 5.5 Arrow 5 — descriptor → Supabase seeded projection
 
 **Git is the source; Supabase holds a projection.** Fully specified in §6.4.
@@ -588,6 +594,8 @@ The drift lock is bidirectional, per §5.0: the table equals the committed files
 | Retention | `expires_at` on the row + a SCHEDULED JOB that deletes expired objects and their rows; the JOB declares its `idempotency` and `audit_row` like any other |
 | Ledger | every issue and every download writes a `usage_events` row (`event: pdf_send` / `export`), so the share path is metered and observable on day one — the opposite of the dead-meter defect |
 | Parity | `pdf_exports.parity_fingerprint` is the golden fingerprint of the projection the PDF was rendered from. "100% data parity" is asserted by comparing it to the screen projection's fingerprint, not by discipline |
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-7, stale cites only, no rule change): at `0d90d92a7` Spec 114 §6 is 114:333-372. The 114 cites in this section map :310-344 → :333-372, :312 → :335, :320 → :343, :325-336 → :347-358, :482-487 → :505-510. R-31 is recorded on 114 §6 by its own dated note.
 
 **Measured caveat:** `@aws-sdk/client-s3` is already a dependency of this repo, so S3 is an alternative substrate. Supabase Storage is recommended because the auth model (`auth.uid()` in a bucket policy) is the same one every other table uses, which keeps one role vocabulary rather than two. This is `ASK-07`.
 
@@ -836,6 +844,84 @@ Flow: form (declared in the descriptor, `source: user_input`, bound to the input
 - RULED 2026-11-04 (Q-MF4 a; Spec 135 FE-22): ads target only declared database keys (the generator fails otherwise), never user-entered facts without consent.
 - Goldens: ad_slot_present, ad_slot_absent.
 
+## 11b. The MaxBLD page standard (McFrontend Phase 2, added 2026-11-09)
+
+Why here: operator, verbatim: "1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail" (item 2: the standard is ONE new section of this spec, one home, Spec 128 R-27). Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7". Source text: the programme card v2.1, `~/Buildo-scratch/mcfrontend/PROGRAMME/CARD-mcfrontend-expansion.md` §1-§2 (panel record `PROGRAMME/panel/record.md`). Rules ruled elsewhere are pointed to, not restated. Line cites were read at `0d90d92a7`.
+
+### 11b.1 The rule
+
+Operator, verbatim: "MAxbld stays a seperate app - unless we can share some of the components with buildo than we build our own. We actually dont want to build anything - use existing standard components - we dont build any standard stuff ourselves - no code standardized approach". Confirmed for every MaxBLD page by D-0 ("D-0-D-4 approved").
+
+- **Every MaxBLD page = descriptor + content + standard library components configured by schema.** MaxBLD is the parcel product (`parcel_tool`, Spec 128 R-01) and a separate app (Spec 116 §1 dated note 2026-11-09). "Every MaxBLD page" = the pages of §11b.3: the parcel product and parcel admin surfaces, plus the minimal web login, subscription and onboarding.
+- **No hand-built standard component.** Archetypes (FORM, LIST, SEARCH, DASHBOARD, auth, subscription, onboarding) use the libraries of §11b.4 or hosted components, configured by descriptors, never written by us. REPORT keeps the landed renderer (§11a; Spec 135 FE-24). DETAIL is not used: the report's details section is REPORT (D-6).
+- **Our code is limited to** the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer. Per-feature code is named in its queue row: CONTRACT routes for writes, migrations, product gates, the entitlement read contract, the host allow-list.
+- **Import boundary.** Library imports are allowed only in the declared binding modules. A wrapper component anywhere else (`src/app`, `mobile/app`, `src/lib`, the vendor folder) fails. Lock: Spec 135 FE-31.
+- **Auth and checkout are existing or hosted, not converted.** Sign-in is the existing Buildo sign-in (web and mobile), shared and declared; the `(auth)` screens stay "never" in §12. Checkout and billing are Stripe-hosted (Checkout, Customer Portal).
+
+### 11b.2 The pipeline
+
+descriptor → content → generator → standard library component (through ONE binding per archetype per platform) → goldens → gate → locks → canaries.
+
+| Step | What it is | Ruled in |
+|---|---|---|
+| Descriptor | `surface.schema.json` gains `render.form` (a JSON Schema + uiSchema reference), `render.list.columns` and `render.wizard.steps` by one Spec 128 §4 escalation; the validator, types and registry regenerate. `UNRESEARCHED` fails the gate | Spec 128 §4; queue MF-42 |
+| Content | every user-visible string comes from a content file; library default strings (e.g. "No records") are overridden from content | §11a.1 `content`; FE-18 |
+| Generator | descriptor + content → the binding's input; regenerated, never hand-edited | FE-02 |
+| Binding | one per archetype per platform. A value binds only through the closed binding set (§11a.1) plus `contract`: a field of a declared CONTRACT descriptor's response projection | FE-18, FE-27, FE-32 |
+| Goldens | one props golden per reachable state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, each `covers` a state; one render smoke per archetype per platform (web `renderToStaticMarkup` in root vitest; mobile jest-expo). Every declared state (error, unauthorized, offline, rate_limited) maps to a library state component. REPORT goldens are unchanged | FE-31 |
+| Gate | `surface-validate.mjs --check` gains the generic arms SV-DESC, SV-SCREEN, SV-SBIND; the REPORT arms and the success line are unchanged | FE-13 dated note 2026-11-09 |
+| Locks | conformance (FE-31), the `contract` binding kind (FE-32), generated-only incl. the vendored manifest (FE-02), no maths in bindings (FE-05), parity keyed by surface (FE-07) | Spec 135 |
+| Canaries | one planted defect per archetype in use, incl. a planted wrapper component; the arms print "examined N" | FE-31 |
+
+A converted-surfaces manifest has two-direction totality against the MaxBLD-scope descriptors marked converted; an empty manifest is a finding.
+
+### 11b.3 The pages (card §1.1, §1.2)
+
+| Descriptor | Archetype | Disposition | Queue |
+|---|---|---|---|
+| `mobile_parcel_detail` | REPORT | web: the landed renderer on a web route; mobile: a REPORT binding onto mobile library primitives | MF-44, MF-48 |
+| `overlay_sponsor_slot` | SLOT | through MF-20 | MF-20 |
+| `mobile_parcel_search`, `mobile_parcel_disambiguation_map` | SEARCH, LIST | mobile on the library; the `web` target is added later | MF-35, MF-44 |
+| `admin_media` (new) + its upload FORM | LIST, FORM | upload through `@mantine/dropzone` | MF-37 |
+| `admin_placements` | FORM | on the library | MF-40 |
+| `admin_surface_registry`, `admin_drift_status` (then orphan, fan-out, role matrix) | LIST, DASHBOARD | registry and drift first | MF-30 |
+| `web_landing` | STATIC | the maxbld.ca landing, from content (D-9) | MF-46 |
+| `web_login` | existing, shared | existing literals exempt by listed path; new MaxBLD strings from content; on the MaxBLD host the persona picker is hidden (Spec 116 N4) and the post-login target is the MaxBLD search page, never `/dashboard` | MF-46 |
+| terms | FORM field | a checkbox in the sign-up form writing `tos_accepted_at` only, never `onboarding_complete` (D-10) | MF-46 |
+| `web_subscribe*` | hosted | Stripe-hosted Checkout and Customer Portal for `parcel_tool` | MF-47 |
+
+- **Parked (9, "left out, not faked"):** `mobile_tracked_lots`, `mobile_parcel_account`, `shell_parcel_tool_stack` (move with MF-49, convert on touch), `admin_parcel_cost`, `admin_advertiser_accounts`, `advertiser_self_metrics`, `admin_export_audit`, `admin_run_ledger`, `admin_ledger_visualiser`.
+- **OUT (fences unchanged):** scope D (§2.0; Spec 128 R-03); Buildo's onboarding, auth, paywall, tab shells and settings; the anonymous teaser, advertiser self-serve, PDF send, `usage_events`, `app_outputs`.
+
+### 11b.4 The libraries
+
+Operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" (record "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9").
+
+| Platform | Library | Ruled by |
+|---|---|---|
+| Web and admin | Mantine 9 + `@rjsf/mantine` (forms from JSON Schema + uiSchema, AJV 8) + `mantine-datatable` (+ `@mantine/dates`, `@mantine/carousel`, `@mantine/dropzone`); Mantine CSS in `@layer mantine` beside Tailwind 4 | D-2; Spec 33 dated note 2026-11-09 |
+| Mobile | React Native Reusables per Spec 90 §6. The CLI output is vendored unmodified in `mobile/src/vendor/rnr/` under a closed, protected manifest that records the CLI version; an added or edited file fails (FE-02) | D-3; Spec 90 §6 dated note 2026-11-09 |
+| Auth | the existing sign-in, shared and declared | §11b.1 |
+| Subscription | Stripe-hosted Checkout and Customer Portal | D-0 (card §1.2); domain D-13 |
+
+The library theme is generated from the brand token source (Spec 117 §7 dated note 2026-11-09). The libraries come in under the named freeze lift (D-1).
+
+### 11b.5 Per-archetype infrastructure on first use
+
+The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its `frontend` path globs; nothing else. The web binding lands with MF-37 (the first web FORM and LIST), the mobile binding with MF-35. R-PACE-1 applies per archetype (Spec 127 §4.4). The decision mechanism is unchanged: Spec 128 §4 rulings, Spec 08 PLAN and OUTPUT panels per row, McBylaws owner review on gate code.
+
+### 11b.6 How it meets the five principles
+
+| Principle | How |
+|---|---|
+| Standardization | one pipeline and one library per platform for every MaxBLD page; no hand-built component (import boundary) |
+| Observability | every declared state maps to a library state component; render smoke per archetype; per-row in-product signals (error page from content, Sentry capture) are PROSE-ONLY until MF-21 |
+| Scalability | a new page is a descriptor + content; an archetype pays its infrastructure once, on first use |
+| Accuracy | values only through the closed binding set; no maths in bindings; conformance and parity locks |
+| Understandability | one home: this section; rules in Spec 135 FE-31, FE-32; tasks in `.cursor/MCFRONTEND-QUEUE.md` |
+
+The six McFrontend principles (§0a) are answered per row in the Spec 135 `Six` cells.
+
 ## 12. Phases
 
 **There is ONE sequence in this programme, and it lives in Spec 127 §4.4** (batching by archetype). The table below is that sequence rendered at spec altitude — same rows, same order, same ids. It is not a second plan: if a batch moves, it moves in Spec 127 and this table follows. The one thing stated *here* rather than there is the rule that reordered it.
@@ -857,6 +943,8 @@ Flow: form (declared in the descriptor, `source: user_input`, bound to the input
 | **never** | **(fenced)** | `mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx` (1,302 lines) — they talk to the Supabase Auth SDK, not to our contracts | — |
 
 > Dated note 2026-11-04 (McFrontend Phase 0; prior text kept, M-246): **P2-REPORT** = Phase 1 of McFrontend: the catalogue-to-report generator, one REPORT renderer, the goldens and their locks (§11a). It precedes P2b. The admin pilot (P2b) is convert-on-touch: operator verbatim, Q-MF6: "Q-Mf6 a"; card answer: no fixed admin pilot; admin screens convert when changed for a product reason, and `/admin/surfaces` is built when the admin next needs that view. Admin market-metrics stays DASHBOARD (P4 above); its descriptor's REPORT is an error, fixed at its conversion (operator doc-set answer 5).
+
+> Dated note 2026-11-09 (McFrontend Phase 2; prior text kept, M-246; operator, verbatim: "D-0-D-4 approved", D-1; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): McFrontend Phase 2 pulls work forward from P2, P2b, P3 and P5-P7 for the pages of §11b.3 only; the other members of those phases keep their place. The order is in Spec 127 §4.4 (dated note 2026-11-09), the ONE sequence.
 
 ### 12.1 What the pilot must carry, because it cannot be deferred
 

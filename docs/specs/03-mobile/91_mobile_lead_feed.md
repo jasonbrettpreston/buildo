@@ -53,6 +53,8 @@ The tab bar hides on downward scroll and reveals on upward scroll for the Feed a
 **Parcels tab (Spec 100)**
 A fifth tab, `parcel-tool` (title "Parcels"), hosts the standalone home-looker Parcel Cost Tool — a nested Stack (search → detail) defined in `mobile/app/(app)/parcel-tool/`. It is NOT part of the lead-feed algorithm (no `trade_slug` calibration, no saves, no flight board); it is a separate read-only surface governed entirely by **Spec 100**. The tab bar always shows on its screens (no hide-on-scroll wiring).
 
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-8, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; product names per the operator ruling "MAxbld stays a seperate app ...", record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): the tab bar is hidden in the parcel shell (Spec 117 §6.2, ruling 2026-09-16 (c)); MaxBLD becomes a separate app (Spec 116 §1 dated note 2026-11-09).
+
 **Scroll-to-Top on Active Tab Re-Tap**
 Tapping an already-active Feed tab scrolls the FlashList back to offset 0 (animated). Implemented via the React Navigation `tabPress` listener: if `navigation.isFocused()` is already true, call `flashListRef.current?.scrollToOffset({ offset: 0, animated: true })`. Apple HIG standard behaviour, expected by power users.
 

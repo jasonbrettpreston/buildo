@@ -13,6 +13,9 @@ This single Expo codebase targets three environments (Minimum OS requirements: i
 1. **Mobile (iOS/Android):** Primary target. UI must accommodate notches, dynamic islands, and safe areas.
 2. **Tablet (iPad/Android):** UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`) to convert stacked mobile cards into side-by-side or grid layouts.
 3. **Web (Expo Web):** Compiles to a PWA. *Fallback constraint:* `@shopify/flash-list` does not support Web. You must implement a standard `<FlatList>` or TanStack Virtual fallback for the web target.
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-8, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`): descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22); the MaxBLD web pages use the web library of Spec 126 §11b.4. The Expo Web build target is unruled.
+
 **Theme Constraint:** The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components.
 
 ## 3. The Prime Directive: "Dumb Glass" Architecture
@@ -56,6 +59,8 @@ If you attempt to use any of the following web paradigms in this project, you ha
 
 ## 6. The Component Philosophy: React Native Reusables
 We do not npm-install generic UI components. We use **React Native Reusables** (via `npx rn-reusables add [component]`). The code lives inside our repository, giving us full ownership of Tailwind styling and native dependency adjustments without version conflicts.
+
+> Dated note 2026-11-09 (McFrontend Phase 2; M-246, prior text kept; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): React Native Reusables is confirmed as the mobile library for MaxBLD pages (D-3). The CLI output is generated and never edited; it is vendored unmodified under a protected manifest (the vendor folder and its rule: Spec 126 §11b.4). It is installed by MF-35.
 
 ## 7. State & Data Flow Protocol
 * **The API Contract:** The Next.js `src/app/api/*` routes are the absolute source of truth.

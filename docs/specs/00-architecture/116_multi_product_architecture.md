@@ -18,6 +18,20 @@
 
 **Shared across all surfaces:** one `auth.users` identity, one per-product `entitlements` table, the one enriched pipeline database.
 **Not shared:** app binaries, navigation shells, store listings, onboarding flows.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "MAxbld stays a seperate app - unless we can share some of the components with buildo than we build our own. We actually dont want to build anything - use existing standard components - we dont build any standard stuff ourselves - no code standardized approach" (OP-1) and "a" (D-4 app identity); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: MaxBLD is a separate app; no hand-built standard components" and "Operator ruling 2026-11-09: D-4 app identity"; spec review R-1, R-2, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`).
+> - **Names.** "MaxBLD" = the parcel product (`parcel_tool`, Spec 128 R-01), a SEPARATE app (App B direction, OD2). It shares components with Buildo where it can; otherwise it has its own. "Buildo" = the lead-gen and flight-center app (App A).
+> - **App identity (D-4 (a)).** The new MaxBLD parcel app takes `ca.maxbld.app` (iOS bundle id and Android package), the `maxbld://` scheme and the display name "MaxBLD". The current Buildo app gets a new id (e.g. `ca.buildo.app`; the final id is named in MF-49's plan) and the display name "Buildo". Basis: `mobile/eas.json` `ascAppId` is still "REPLACE_WITH_ASC_APP_ID" (iOS never submitted). Condition carried into MF-49: before any store submission, confirm in App Store Connect and Play Console that `ca.maxbld.app` has no public release; if it has one, STOP and bring it back. Push, Sentry and deep-link config move with the id (MF-49).
+> - **Product ownership (one home; scope per surface is NOT copied here: it lives in Spec 126 §2.0 and the generated registry `docs/reports/generated/127-surface-registry.md`, incl. its §2.8 leakage sweep).**
+>
+> | Product key | Plain name | App and shell | Onboarding | Gate site | Governing specs |
+> |---|---|---|---|---|---|
+> | `lead_gen` | Buildo lead feed | Buildo app (App A), the five-tab shell `mobile/app/(app)/_layout.tsx` | the `(onboarding)` screens (Spec 94) | the `(app)/_layout.tsx` subscription gate (Spec 96; Spec 99 §5.1) | 91, 92, 94, 96, 30, 76, 102 |
+> | `flight_center` | Buildo flight board and flight center | the same app and shell, gated independently (N3) | as `lead_gen` | as `lead_gen`, per product (N3) | 77, 36 |
+> | `parcel_tool` | MaxBLD (the parcel product) | today a shelf inside the Buildo app (`mobile/app/(app)/parcel-tool/`, ruling 2026-09-16 (c)); target: its own Expo app (MF-49) and the MaxBLD web pages (MF-44, MF-46) | its own (§1 "Not shared"); web: a sign-up terms checkbox writing `tos_accepted_at` only (Spec 126 §11b.3) | today the Buildo app's gate (the lead-gen status); target: a `parcel_tool` gate (MF-45, MF-49) | 100, 89, 126 §11a and §11b, 135, 117 §6.1-6.3 |
+> | `agent_reports` | agent PDF reports | none yet | none | not built (Spec 128 R-09) | 128 R-09, 126 §6.5 |
+> | shared platform | auth, profile, subscription and Stripe, entitlements, notifications, navigation shells | both apps and the web | none | none | 13, 93, 95, 20, 21, 86, 99, 113, 114 |
+
 </requirements>
 
 <architecture>
@@ -45,6 +59,9 @@ The decisive fact for App B: lot-optimization is a **different product for a dif
 | Entitlement | **Shared** | One `entitlements` table, per-product shape (§4 N2). One `auth.users` row can hold a trades subscription and a lot-opt purchase side by side; neither app needs to know about the other's products. |
 | Analytics | **Shared uid, product-scoped** | Shared Supabase uid as distinctId; add a product dimension so funnels are per-product, not blended across audiences that convert differently. |
 | Codebase / shell | **NOT shared** | Two Expo apps, separate release trains, separate store listings. Share pure libraries via a monorepo local package (Supabase client setup, entitlement-check helpers, auth bridges, shared Zod schemas for common tables). Sharing the libraries is correct; sharing the shell is the mistake. |
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "1. confirmed" (Part B incl. D-5); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): the MaxBLD app follows the Codebase / shell row above: a separate Expo project in a monorepo, sharing packages (Supabase client, entitlement helpers, auth bridges, descriptors, bindings, the vendored Reusables output) and not the shell (D-5). It is MF-49, a LATER row.
+
 </architecture>
 
 <behavior>
@@ -83,6 +100,8 @@ Each item is a constraint on the Supabase-migration Phase 1 (web auth + schema) 
 | OD3 | Billing SKU shape | **RULED 2026-07-18 (operator): independent per-product subscriptions** | Layerable | One Stripe Price per product; webhook fan-out = price → product → upsert entitlement. Bundles/discounted tiers layerable later without table change. |
 | OD4 | Lot-opt monetization | **OPEN — App-B-internal, LATER** | — | The homebuyer is B2C: likely per-lookup / freemium / low consumer subscription, distinct from the developer/agent pro tier. Potentially two motions inside App B. Lives entirely within App B; does not touch App A or the shared foundation. Defer until App B is built. |
 | OD5 | Product key for the SHIPPED Spec 100 Parcel Cost Tool (Ground-truth 2026-07-18: App A already carries a third gated surface — `parcel-tool` tab + `parcels/lookup` route on the global subscription flag; §1's two-product framing missed it) | **Fold into `lead_gen`** at N2 cutover (zero access change; re-mappable to its own product or toward App B later — the entitlements shape makes re-mapping a data change, not a schema change) | Data-reversible | Decide-by: Phase 1.3. Override if the parcel tool should gate separately from day one. |
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "MAxbld stays a seperate app - unless we can share some of the components with buildo than we build our own. ..." (OP-1) and "1. confirmed" (Part B incl. D-8); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`; spec review R-3): **OD2** is confirmed by OP-1: MaxBLD (the parcel product) is a separate app. Ruling 2026-09-16 (c), which shipped the parcel product as a shelf inside App A behind App A's gate (`mobile/app/(app)/parcel-tool/_layout.tsx`, Spec 117 §6.2), is superseded in direction. Its fence still binds any move: moving `parcel-tool` out of the `(app)` gate without a per-product gate in the new place is a security regression. **OD4** stays OPEN; it and the Spec 100 v1 access rule are ruled before MF-47 starts (D-8).
 
 ## 6. Out of scope / does not block
 

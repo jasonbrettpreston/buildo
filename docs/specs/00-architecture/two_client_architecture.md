@@ -2,6 +2,8 @@
 
 > ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
 
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-5, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; operator, verbatim: "D-0-D-4 approved ... D-9 for sure" (D-1, D-9), record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): the parcel product's (MaxBLD) web pages are planned in McFrontend Phase 2 (Spec 126 §11b.3): the web pages under a nested `(maxbld)` layout (MF-44) and the maxbld.ca landing and front door (MF-46, LATER); buildo.com is unchanged (D-9). The rule at :22 (no tradesperson-facing UI on Next.js) is unchanged for the lead-gen product. The live pages `/builders*` and `/permits/[id]` (registry §D) already depart from :22, and `/dashboard` is listed at :38.
+
 **Spec ID:** `00-architecture/two_client_architecture`
 **Status:** Active
 **Decision date:** 2026-04-22

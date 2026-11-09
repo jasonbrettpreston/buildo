@@ -2,6 +2,8 @@
 
 > ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
 
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "1. confirmed" (Part B incl. D-5), record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): the MaxBLD app (a separate Expo project, Spec 116 §3 dated note 2026-11-09; MF-49) owns its own state and routing: its own root layout and a `parcel_tool` gate, not `decideAuthGateRoute`. The §5 routing arms govern the Buildo app.
+
 **Status:** ACTIVE
 **Cross-references:** Spec 90 (Engineering Protocol §7), Spec 93 (Auth & AuthGate routing), Spec 94 (Onboarding), Spec 95 (User Profiles — server is canonical), Spec 96 (Subscription gate)
 **As-is audit:** `docs/reports/mobile_state_audit_2026-05-02.md`
