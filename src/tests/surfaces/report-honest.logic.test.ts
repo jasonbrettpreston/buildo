@@ -5,7 +5,7 @@
 // MF-12 tranche 1 · McFrontend queue · lane T. The FE-06 honest-display lock over the committed report goldens (operator L-1C and G-2 a, 2026-11-08).
 // The node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json; this file holds no copy of its key list or closed sets.
 // A golden tree must validate against it; on top of it: `none` appears only in a lifecycle tree, a lifecycle tree carries one message node,
-// and a `not_evaluated:<reason>` has text in the content registry. Each check is proven RED on a mutated tree. No DB, no network.
+// a `not_evaluated:<reason>` has text in the content registry, and every disclosure code is a key of disclosure_texts (F-3). Each check is proven RED on a mutated tree. No DB, no network.
 import { describe, expect, it } from 'vitest';
 import Ajv2020 from 'ajv/dist/2020';
 import fs from 'node:fs';
@@ -18,7 +18,12 @@ const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROO
 const SCHEMA: Json = readJson('scripts/surfaces/_schema/report-tree.schema.json');
 const validate = new Ajv2020({ allErrors: true, strict: true }).compile(SCHEMA);
 const LIFECYCLE: string[] = SCHEMA.properties.lifecycle.enum;
-const REASONS = Object.keys(readJson('scripts/surfaces/_schema/report-presentation.json').status_text);
+const PRESENTATION: Json = readJson('scripts/surfaces/_schema/report-presentation.json');
+const REASONS = Object.keys(PRESENTATION.status_text);
+// The closed disclosure-code list is the keys of report-presentation.json `disclosure_texts` (Spec 126 11a.3: a closed list; MF-12 panel 2 F-3).
+// The three keys below are the object's own metadata, not codes. Read at run time, never copied: an empty list means every code fails.
+const DISCLOSURE_META = ['generated_from', 'note', 'importance_default'];
+const CODES = Object.keys(PRESENTATION.disclosure_texts).filter((k) => !DISCLOSURE_META.includes(k));
 
 export const honestProblems = (tree: Json): string[] => {
   const out: string[] = [];
@@ -29,6 +34,9 @@ export const honestProblems = (tree: Json): string[] => {
   nodes.forEach((n, i) => {
     const s = n?.status;
     if (typeof s === 'string' && s.startsWith('not_evaluated:') && !REASONS.includes(s)) out.push(`node ${i}: not_evaluated reason has no content text: ${s}`);
+    (Array.isArray(n?.disclosures) ? n.disclosures : []).forEach((c: unknown) => {
+      if (typeof c === 'string' && !CODES.includes(c)) out.push(`node ${i}: disclosure code not in disclosure_texts: ${c}`);
+    });
     if (s === 'none' && !isLife) out.push(`node ${i}: none outside a lifecycle tree`);
     if (isLife && s !== 'none') out.push(`node ${i}: lifecycle node must carry none`);
   });
@@ -65,6 +73,9 @@ describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
     expect(honestProblems(mut(ok, { status: 'loading' }))).not.toEqual([]);
     expect(honestProblems(mut(ok, { status: 'none' }))).not.toEqual([]);
     expect(honestProblems(mut(ok, { status: 'not_evaluated:made_up' }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { disclosures: ['made_up_code'] }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { disclosures: ['made_up_code'] })).join()).toContain('disclosure code not in disclosure_texts');
+    if (CODES.length > 0) expect(honestProblems(mut(ok, { disclosures: [CODES[0]] }))).toEqual([]);
     expect(honestProblems(mut(ok, { confidence: null }))).not.toEqual([]);
     expect(honestProblems(mut(ok, { confidence: 'very-high' }))).not.toEqual([]);
     expect(honestProblems(mut(ok, { provenance: 'guess' }))).not.toEqual([]);

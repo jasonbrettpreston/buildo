@@ -37,6 +37,7 @@
   ],
   "evidence": "docs/reports/red-evidence/MF-12/; ~/Buildo-scratch/mcfrontend/MF-12/",
   "notes": [
-    "2026-11-08 touch-up (prior values kept): {\"head\":\"TBD\",\"commits_reviewed\":[\"TBD\"]}. Commit order: b786599d1 (prereg-MF-12-1, alone; superseded, kept unedited), 0be5d06d1 (dated notes, FE-28, FE-29, FE-06 note), cb95231e0 (prereg-MF-12-2, alone, directly under the code), 496417d3aec23ca275ea3818de42bf4c7f77a930 (MF-12 code commit)."
+    "2026-11-08 touch-up (prior values kept): {\"head\":\"TBD\",\"commits_reviewed\":[\"TBD\"]}. Commit order: b786599d1 (prereg-MF-12-1, alone; superseded, kept unedited), 0be5d06d1 (dated notes, FE-28, FE-29, FE-06 note), cb95231e0 (prereg-MF-12-2, alone, directly under the code), 496417d3aec23ca275ea3818de42bf4c7f77a930 (MF-12 code commit).",
+    "2026-11-09 (prior text kept, M-246; MF-12 second OUTPUT panel folds F-2 and F-15; operator verbatim \"agreed on your recommendations\", 2026-11-09): the G-2 move (the node contract moved to scripts/surfaces/_schema/report-tree.schema.json and read by report-honest.logic.test.ts), which the output text above records as \"not re-panelled\", was reviewed by panel 2 (record ~/Buildo-scratch/mcfrontend/MF-12/panel-output-2.json, verdict PASS-WITH-FOLDS, no blockers, head 7aed3bb52). Because the schema is a fingerprint input, a schema edit now forces a protected-path golden fingerprint refresh with red evidence (F-15). The followup \"Fingerprint carries 3 inputs\" is corrected by this note: the lock carries four (binding-sources.json, report-presentation.json, report-tree.schema.json, report-v2.decl.json) with generator, catalogue, switchboard and closed-status-list owed; see Spec 127 4.3 dated note 2026-11-09."
   ]
 }

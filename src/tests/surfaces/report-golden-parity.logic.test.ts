@@ -25,9 +25,18 @@ const FP_FILES = [
   'scripts/surfaces/_schema/report-v2.decl.json',
 ];
 const readJson = (p: string): Json => JSON.parse(fs.readFileSync(p, 'utf8'));
+// Source kinds are the keys of binding-sources.json `sources` (the closed binding set; MF-12 panel 2 F-5), read at run time, never copied.
+const SOURCE_KINDS = Object.keys(readJson(path.join(ROOT, 'scripts/surfaces/_schema/binding-sources.json')).sources);
+// Tranche-1 constraint (decision D-3 b, 2026-11-08): tranche-1 nodes bind only to catalogue or content. A named subset of SOURCE_KINDS, to widen by its own ruling.
+const TRANCHE1_KINDS = ['catalogue', 'content'];
 const sha16 = (p: string): string => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex').slice(0, 16);
 const file = (s: string, t: string): string => path.join(DIR, `${s}.${t}.json`);
 const have = (s: string, t: string): boolean => fs.existsSync(file(s, t));
+
+export const sourceProblems = (kind: string): string[] => [
+  ...(SOURCE_KINDS.includes(kind) ? [] : [`source kind not in binding-sources.json: ${kind}`]),
+  ...(TRANCHE1_KINDS.includes(kind) ? [] : [`source kind outside the tranche-1 constraint (D-3 b): ${kind}`]),
+];
 
 export const parityOk = (trees: Json[]): boolean => trees.every((t) => JSON.stringify(t) === JSON.stringify(trees[0]));
 
@@ -72,7 +81,7 @@ describe('MF-12 tranche 1 goldens (S-golden, S-parity)', () => {
               const key = String(n.status).startsWith('not_permitted:') ? 'not_permitted' : n.status;
               expect(n.value).toBe(String(texts[key]).replace('{clause}', String(n.status).split(':')[1] ?? ''));
             }
-            expect(['catalogue', 'content']).toContain(n.source);
+            expect(sourceProblems(n.source)).toEqual([]); // the closed binding set, then the tranche-1 constraint (D-3 b)
           }
         }
       });
@@ -88,6 +97,18 @@ describe('MF-12 tranche 1 goldens (S-golden, S-parity)', () => {
       });
     });
   }
+
+  it('tranche-1 constraint is a subset of the binding set', () => {
+    for (const k of TRANCHE1_KINDS) expect(SOURCE_KINDS).toContain(k);
+    expect(SOURCE_KINDS).not.toContain('made_up_kind');
+  });
+
+  it('RED fixture: a source outside binding-sources, or outside the tranche-1 subset, is caught', () => {
+    expect(sourceProblems('content')).toEqual([]);
+    expect(sourceProblems('made_up_kind').join()).toContain('not in binding-sources.json');
+    expect(sourceProblems('parcels').join()).toContain('tranche-1 constraint'); // in the binding set, not in tranche 1
+    expect(sourceProblems('parcels').join()).not.toContain('not in binding-sources.json');
+  });
 
   it('RED fixture: a tree that differs from its siblings is caught by the parity check', () => {
     const a = { nodes: [{ field: 'gfa_flat_m2', value: '1 m2' }] };

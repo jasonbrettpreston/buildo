@@ -1,0 +1,21 @@
+MF-12 panel 2 folds F-3 and F-5, red then green, 2026-11-09 (real command output; mutations restored after each run)
+
+## F-3 RED: permitted.web.json node 0 disclosures = [made_up_code]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
++   "node 0: disclosure code not in disclosure_texts: made_up_code",
+      Tests  1 failed | 41 passed (42)
+
+## F-5 RED: content deleted from binding-sources.json sources
+   1       Tests  18 failed | 17 passed (35)
+   1  FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > fingerprint is fresh (response_fixture hash and the three input files)
+   1  FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > error > fingerprint is fresh (response_fixture hash and the three input files)
+   1  FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > error > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock)
+   1  FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > loading > fingerprint is fresh (response_fixture hash and the three input files)
+   1  FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > loading > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock)
+   1  FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > miss > fingerprint is fresh (response_fixture hash and the three input files)
+   1  FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > miss > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock)
+
+## GREEN: mutations restored
+ Test Files  3 passed (3)
+      Tests  90 passed (90)
