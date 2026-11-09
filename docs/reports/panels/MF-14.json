@@ -4,12 +4,13 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "a44b69823",
+  "head": "c9effcbca",
   "commits_reviewed": [
-    "84a7c3db0 (rows)",
-    "54ad67882 (prereg-MF-14-1)",
-    "f72b35071 (code)",
-    "a44b69823 (output folds)"
+    "9cc7a3d44 (rows, dated notes)",
+    "97a25c387 (prereg-MF-14-1)",
+    "c33f4d01a (code)",
+    "c9effcbca (output folds)",
+    "be5c268dd (OUTPUT panel record)"
   ],
   "cards": [
     "Operator 2026-11-09: \"approved 1. MF-14 T-1 to T-4 (the trimmed renderer decisions above): approve as recommended?\"",
@@ -35,5 +36,8 @@
     "Preview page imports src/tests/fixtures into the app bundle (accepted with T-3); remove or keep at MF-22.",
     "not_modelled has no status_text registry line; assertTree requires text only for not_permitted:* and not_evaluated:* reasons.",
     "FE-24 still reads OWED: flipping it to RULED is an operator decision; until then any frontend-path commit must modify the FE-24 lock with new red evidence."
+  ],
+  "notes": [
+    "2026-11-09 touch-up after the push-5 landing (prior values kept): {\"head\":\"a44b69823\",\"commits_reviewed\":[\"84a7c3db0 (rows)\",\"54ad67882 (prereg-MF-14-1)\",\"f72b35071 (code)\",\"a44b69823 (output folds)\"]}. The commit shas 84a7c3db0, 54ad67882, f72b35071 and a44b69823 landed as 9cc7a3d44, 97a25c387, c33f4d01a and c9effcbca."
   ]
 }

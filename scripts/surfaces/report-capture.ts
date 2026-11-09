@@ -3,7 +3,7 @@
 //
 // MF-14 · lane E-MF14. The golden capture: every golden's `rendered_tree` and `fingerprint` are rebuilt from its `response_fixture` by the renderer's
 // buildTree and the committed fingerprint inputs. The fixtures are never changed. Run twice it writes identical bytes.
-//   npx tsx scripts/surfaces/report-capture.ts            rewrite the 40 goldens
+//   npx tsx scripts/surfaces/report-capture.ts            rewrite every golden in the manifest
 //   npx tsx scripts/surfaces/report-capture.ts --check    exit 1 if any golden would change (writes nothing)
 import fs from 'node:fs';
 import path from 'node:path';
