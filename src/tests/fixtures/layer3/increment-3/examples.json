@@ -1,0 +1,2379 @@
+[
+ {
+  "id": "INC3-A0067",
+  "layer": "Arithmetic",
+  "case": "A0067",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 228.31, headline 279 capped (684.93 uncapped), units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 228.31,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 279,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 279,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 279,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "reading:exc_fsi_uncapped (DL-15 how a): headline of the uncapped reading",
+    "raw_forms": {
+     "flat": {
+      "Hw": 7.5,
+      "ws": 2,
+      "saw": 1,
+      "plate": 190.706,
+      "v": 647.326,
+      "floors": [
+       228.31,
+       228.31,
+       190.706
+      ]
+     },
+     "pitched_a": {
+      "half_span": 6.715,
+      "pitch": 0.3723,
+      "share": 0.7,
+      "depth": 0.3082,
+      "t": 0.3289,
+      "eave": 2.476,
+      "low": 0,
+      "high": 0,
+      "counted": 228.31,
+      "highf": 228.31,
+      "counts": true,
+      "noblock": 684.93,
+      "block": 684.93,
+      "variant": "noblock",
+      "v": 684.93,
+      "floors": [
+       228.31,
+       228.31,
+       228.31
+      ]
+     },
+     "pitched_b": {
+      "half_span": 8.5,
+      "pitch": 0.2941,
+      "share": 0.6,
+      "ne": "no_cited_rafter_span"
+     }
+    },
+    "value": 684.93,
+    "form": "pitched_a",
+    "tol": 0.005,
+    "ruling": "Q1 a via DL-15; label \"would need an FSI variance\""
+   },
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 205.479,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 114.1448,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C9 medium-low (O-3 x1462 capped reading, Q3 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "O-3 would need an FSI variance",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored. O-3 lot: every numeric form row reads the capped headline (tie); the raw forms are the uncapped reading, in owed_checks."
+ },
+ {
+  "id": "INC3-A0094",
+  "layer": "Arithmetic",
+  "case": "A0094",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 229.0365, headline 254.485 capped (687.1095 uncapped), units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 229.0365,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 254.485,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 254.485,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 254.485,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "reading:exc_fsi_uncapped (DL-15 how a): headline of the uncapped reading",
+    "raw_forms": {
+     "flat": {
+      "Hw": 7.5,
+      "ws": 2,
+      "saw": 1,
+      "plate": 170.9738,
+      "v": 629.0468,
+      "floors": [
+       229.0365,
+       229.0365,
+       170.9738
+      ]
+     },
+     "pitched_a": {
+      "half_span": 10.3683,
+      "pitch": 0.2411,
+      "share": 0.7,
+      "ne": "no_cited_rafter_span"
+     },
+     "pitched_b": {
+      "half_span": 5.5225,
+      "pitch": 0.4527,
+      "share": 0.6,
+      "depth": 0.2572,
+      "t": 0.2823,
+      "eave": 2.476,
+      "low": 0,
+      "high": 0,
+      "counted": 229.0365,
+      "highf": 229.0365,
+      "counts": true,
+      "noblock": 687.1095,
+      "block": 687.1095,
+      "variant": "noblock",
+      "v": 687.1095,
+      "floors": [
+       229.0365,
+       229.0365,
+       229.0365
+      ]
+     }
+    },
+    "value": 687.1095,
+    "form": "pitched_b",
+    "tol": 0.005,
+    "ruling": "Q1 a via DL-15; label \"would need an FSI variance\""
+   },
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 206.1329,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 108.7923,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C9 medium-low (O-3 x1462 capped reading, Q3 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "O-3 would need an FSI variance",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored. O-3 lot: every numeric form row reads the capped headline (tie); the raw forms are the uncapped reading, in owed_checks."
+ },
+ {
+  "id": "INC3-A0097",
+  "layer": "Arithmetic",
+  "case": "A0097",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 187.34, headline 562.02, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 187.34,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 531.164,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 562.02,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 562.02,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 168.606,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 5,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 168.606,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)",
+   "C13 medium-low (two-case CoA check, Q13 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0166",
+  "layer": "Arithmetic",
+  "case": "A0166",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "not_evaluated (footprint: side_setback_m=unlimited_in_arithmetic; O-3 capped arm 245.52)",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "not_evaluated"
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "status": "not_evaluated"
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "status": "not_evaluated"
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "status": "not_evaluated"
+   }
+  ],
+  "confidence": [
+   "C10 low (x21(C)/x38(A) take the x1462 reading, Q4 a)"
+  ],
+  "flag_families": [],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0170",
+  "layer": "Arithmetic",
+  "case": "A0170",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 200.4314, headline 243.47 capped (601.2942 uncapped), units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 200.4314,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 243.47,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 243.47,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 243.47,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "reading:exc_fsi_uncapped (DL-15 how a): headline of the uncapped reading",
+    "raw_forms": {
+     "flat": {
+      "Hw": 7.5,
+      "ws": 2,
+      "saw": 1,
+      "plate": 166.4394,
+      "v": 567.3022,
+      "floors": [
+       200.4314,
+       200.4314,
+       166.4394
+      ]
+     },
+     "pitched_a": {
+      "half_span": 6.07,
+      "pitch": 0.4119,
+      "share": 0.7,
+      "depth": 0.2572,
+      "t": 0.2782,
+      "eave": 2.476,
+      "low": 0,
+      "high": 0,
+      "counted": 200.4314,
+      "highf": 200.4314,
+      "counts": true,
+      "noblock": 601.2942,
+      "block": 601.2942,
+      "variant": "noblock",
+      "v": 601.2942,
+      "floors": [
+       200.4314,
+       200.4314,
+       200.4314
+      ]
+     },
+     "pitched_b": {
+      "half_span": 8.255,
+      "pitch": 0.3028,
+      "share": 0.6,
+      "ne": "no_cited_rafter_span"
+     }
+    },
+    "value": 601.2942,
+    "form": "pitched_a",
+    "tol": 0.005,
+    "ruling": "Q1 a via DL-15; label \"would need an FSI variance\""
+   },
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 180.3883,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 99.8778,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C10 low (x21(C)/x38(A) take the x1462 reading, Q4 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "O-3 would need an FSI variance",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored. O-3 lot: every numeric form row reads the capped headline (tie); the raw forms are the uncapped reading, in owed_checks."
+ },
+ {
+  "id": "INC3-A0175",
+  "layer": "Arithmetic",
+  "case": "A0175",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 98.77, headline 384.2944, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 98.77,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 378.812,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 384.2944,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 384.2944,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 88.893,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 108.6895,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0179",
+  "layer": "Arithmetic",
+  "case": "A0179",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 12, S 4, F 79.1505, headline 316.602, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 12,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 79.1505,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 316.602,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 316.602,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 316.602,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 316.602,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 71.2355,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 89.0443,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "RM reading awaiting expert check",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0182",
+  "layer": "Arithmetic",
+  "case": "A0182",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 233.32, headline 699.96, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 233.32,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 665.576,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 699.96,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 699.96,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 209.988,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 209.988,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored.  MB-62 D4 named finding: keyed depth would give GFA 626.28 (disclosure only)."
+ },
+ {
+  "id": "INC3-A0193",
+  "layer": "Arithmetic",
+  "case": "A0193",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 217.94, headline 653.82, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 217.94,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 617.924,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 653.82,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 653.82,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 196.146,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 196.146,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0203",
+  "layer": "Arithmetic",
+  "case": "A0203",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 220.78, headline 662.34, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 220.78,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 629.804,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 662.34,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 662.34,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 198.702,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 198.702,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0205",
+  "layer": "Arithmetic",
+  "case": "A0205",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 217.17, headline 651.51, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 217.17,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 619.506,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 651.51,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 651.51,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 195.453,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 195.453,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0229",
+  "layer": "Arithmetic",
+  "case": "A0229",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 278.35, headline 835.05, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 278.35,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 794.03,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 835.05,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 835.05,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 250.515,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 8,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 250.515,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0277",
+  "layer": "Arithmetic",
+  "case": "A0277",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 220.59, headline 661.77, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 220.59,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 629.262,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 661.77,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 661.77,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 198.531,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 6,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 198.531,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0289",
+  "layer": "Arithmetic",
+  "case": "A0289",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 101.7248, headline 406.899, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 101.7248,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 406.899,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 406.899,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 406.899,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 406.899,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 91.5523,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 114.4404,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)",
+   "C13 medium-low (two-case CoA check, Q13 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "RM reading awaiting expert check",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0354",
+  "layer": "Arithmetic",
+  "case": "A0354",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 10, S 3, F 135.15, headline 405.45, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 10,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 135.15,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 383.19,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 405.45,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 405.45,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 121.635,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 121.635,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0375",
+  "layer": "Arithmetic",
+  "case": "A0375",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 13, S 4, F 54.23, headline 216.92, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 13,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 54.23,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 216.92,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 216.92,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 216.92,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 216.92,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 48.807,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 1,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 61.0088,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0388",
+  "layer": "Arithmetic",
+  "case": "A0388",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 77.52, headline 301.0606, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 77.52,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 298.656,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 301.0606,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 301.0606,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 69.768,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 85.1806,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored.  MB-62 D4 named finding: keyed depth would give GFA 269.37 (disclosure only)."
+ },
+ {
+  "id": "INC3-A0399",
+  "layer": "Arithmetic",
+  "case": "A0399",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 12, S 4, F 333.9506, headline 1335.8022, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 12,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 333.9506,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 1335.8022,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 1335.8022,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 1335.8022,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 1335.8022,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 300.5555,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 10,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 375.6944,
+    "tol": 0.005
+   },
+   {
+    "target": "side_setback_m cell (Layer 2, base): 0.6 at 900.6.10(23)#(23)[SSP](D)(i)",
+    "value": 0.6,
+    "tol": 0
+   }
+  ],
+  "confidence": [
+   "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "RM reading awaiting expert check",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0457",
+  "layer": "Arithmetic",
+  "case": "A0457",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 115.8444, headline 463.3774, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 115.8444,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 463.3774,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 463.3774,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 463.3774,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 463.3774,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 104.26,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 3,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 130.3249,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "RM reading awaiting expert check",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0461",
+  "layer": "Arithmetic",
+  "case": "A0461",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 145.3155, headline 581.2622, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 145.3155,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 581.2622,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 581.2622,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 581.2622,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 581.2622,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 130.784,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 163.48,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "RM reading awaiting expert check",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0464",
+  "layer": "Arithmetic",
+  "case": "A0464",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 13, S 4, F 95.57, headline 382.28, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 13,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 95.57,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 382.28,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 382.28,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 382.28,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 382.28,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 86.013,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 107.5163,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored.  MB-62 D4 named finding: keyed depth would give GFA 342.04 (disclosure only)."
+ },
+ {
+  "id": "INC3-A0553",
+  "layer": "Arithmetic",
+  "case": "A0553",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 60.7743, headline 237.3616, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 60.7743,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 212.1012,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 235.7641,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 237.3616,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 237.3616,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 54.6969,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 1,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 67.0806,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0561",
+  "layer": "Arithmetic",
+  "case": "A0561",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 67.83, headline 263.1707, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 67.83,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 261.324,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 263.1707,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 263.1707,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 61.047,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 74.4752,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0562",
+  "layer": "Arithmetic",
+  "case": "A0562",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 11, S 4, F 161.7751, headline 647.1004, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 11,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 161.7751,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 647.1004,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 647.1004,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "computed",
+    "value": 647.1004,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 647.1004,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 145.5976,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 181.997,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C8 medium (M-190 RM houseplex no main-wall cap; \"reading awaiting expert check\", Q10 a)",
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "RM reading awaiting expert check",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-A0578",
+  "layer": "Arithmetic",
+  "case": "A0578",
+  "class": "detached_houseplex",
+  "pending_reload": false,
+  "key_answer": "H 12, S 4, F 88.4, headline 353.6, units 4",
+  "inputs": {},
+  "checks": [
+   {
+    "row": "height_max_m",
+    "status": "computed",
+    "value": 12,
+    "tol": 0.005
+   },
+   {
+    "row": "storeys_max",
+    "status": "computed",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "row": "footprint_max_m2",
+    "status": "computed",
+    "value": 88.4,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_flat_m2",
+    "status": "computed",
+    "value": 339.04,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_a_m2",
+    "status": "computed",
+    "value": 353.6,
+    "tol": 0.005
+   },
+   {
+    "row": "gfa_pitched_b_m2",
+    "status": "not_evaluated",
+    "reason_includes": "no_cited_rafter_span"
+   },
+   {
+    "row": "gfa_max_m2",
+    "status": "computed",
+    "value": 353.6,
+    "tol": 0.005
+   }
+  ],
+  "owed_checks": [
+   {
+    "target": "units (Q8 a)",
+    "value": 4,
+    "tol": 0
+   },
+   {
+    "target": "bedrooms (Q7 a)",
+    "value": 12,
+    "tol": 0
+   },
+   {
+    "target": "basement line livable_m2 (Q3 iv a)",
+    "value": 79.56,
+    "tol": 0.005
+   },
+   {
+    "target": "basement line capacity_units (Q3 iv a)",
+    "value": 2,
+    "tol": 0
+   },
+   {
+    "target": "per_unit_area_m2 (Q7 a)",
+    "value": 99.45,
+    "tol": 0.005
+   }
+  ],
+  "confidence": [
+   "C14: circulation 0.10 low; minimum unit 30 m2 net medium (Q9-1 a, Q9-2 a)"
+  ],
+  "flag_families": [
+   "storeys_from_minimum_ceiling",
+   "shape_box_assumed",
+   "basement site-fact note"
+  ],
+  "note": "Runs on the lot's real houseplex cells (D-3); inputs ignored."
+ },
+ {
+  "id": "INC3-R-Q1",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "uncapped reading shows its own headline: A0067 684.93, A0094 687.1095, A0170 601.2942 (not the flat form raw values 647.326 / 629.0468 / 567.3022)",
+  "inputs": {},
+  "checks": [],
+  "owed_checks": [
+   {
+    "target": "reading:exc_fsi_uncapped headline",
+    "cases": {
+     "A0067": 684.93,
+     "A0094": 687.1095,
+     "A0170": 601.2942
+    },
+    "tol": 0.005
+   }
+  ],
+  "note": "Q1 a via DL-15 (which a). Asserted per lot in INC3-A0067/A0094/A0170 once the reading row exists."
+ },
+ {
+  "id": "INC3-R-Q4c",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "RM houseplex pitched rows read not_modelled; headline flat = S x F",
+  "inputs": {},
+  "checks": [],
+  "note": "Q4 c via DL-4. Asserted per RM lot (A0179, A0289, A0399, A0457, A0461, A0562) in the INC3-<lot> checks."
+ },
+ {
+  "id": "INC3-R-Q8a",
+  "layer": "Ruling",
+  "pending_reload": false,
+  "key_answer": "no 2-storey option row in increment 3; maximum-storey headline only",
+  "inputs": {},
+  "checks": [],
+  "note": "Q8 a via DL-20; a Source statement (no checks)."
+ }
+]

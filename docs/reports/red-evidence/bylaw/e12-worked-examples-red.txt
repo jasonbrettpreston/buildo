@@ -1,0 +1,7 @@
+== MB-27 increment 3 item E12 (the worked examples, DL-22 a) red: src/tests/steps/compute_maxbld_scenarios/increment3-worked-examples.logic.test.ts run on the parent of the RM-fix commit (the harness and the folded key as the fixture): the six RM examples are red (gfa_flat_m2 not_evaluated:condition_unknown:unlimited_or_unregulated_in_comparison), 20 of 26 green; on this tree (the RM-fix commit below) 26 of 26 green, 0 todos
+   × INC3-A0179 (on A0179's real cells): gfa_flat_m2 expected computed
+   × INC3-A0289 (on A0289's real cells): gfa_flat_m2 expected computed
+   × INC3-A0399 (on A0399's real cells): gfa_flat_m2 expected computed
+   × INC3-A0457 (on A0457's real cells): gfa_flat_m2 expected computed
+   × INC3-A0461 (on A0461's real cells): gfa_flat_m2 expected computed
+   × INC3-A0562 (on A0562's real cells): gfa_flat_m2 expected computed
