@@ -4,12 +4,12 @@
   "class": "T",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "23d11dd9d",
+  "head": "e3e9ae2ea",
   "commits_reviewed": [
     "f00c15da8 (docs: queue row, Spec 128 rule 17 note, FE-15 note, system map)",
     "f23a91c16 (prereg-MF-23-1, rules FE-15)",
     "23d11dd9d (code: the lock, red evidence, panel placeholder)",
-    "23d11dd9d (output folds: grounded-reviewer folds 1-3)"
+    "e3e9ae2ea (output folds: grounded-reviewer folds 1-4, guardian fold 1)"
   ],
   "cards": [
     "Operator 2026-11-09: \"all approved as recommended\" (MF-23 D-3 a-now, catalogue-flag oracle deferred; D-4 FE-15 covers a-d).",

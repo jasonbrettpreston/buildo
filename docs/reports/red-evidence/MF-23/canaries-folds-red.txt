@@ -1,8 +1,73 @@
 # MF-23 output-panel folds, red first (grounded reviewer folds 1-4). Each tightened form is shown failing/rejecting the input the old loose form let through, then the green run.
 # Reading: fold 1 and 2: OLD passes (vacuous), NEW fails on the wrong-defect plant. Fold 3: OLD green() accepts a run listing a failure, NEW rejects. Fold 4: the OLD hash is blind to a new generated file (its 'not.toBe' case fails), the NEW walk sees it (passes).
 
+## Fold 1 (grounded reviewer 1): plant = the ', at least' suffix CHANGED to ', at least QQ' (not dropped). OLD assertions pass vacuously (at_least is a state name in the golden titles); NEW must fail.
+$ npx vitest run src/tests/surfaces/zz-old-qq.infra.test.ts -t "label suffix dropped"
+ ✓ src/tests/surfaces/zz-old-qq.infra.test.ts (17 tests | 16 skipped) 929ms
+   ✓ canary a (a-now): "at least" and a disclosure are dropped from real output > RED: the ", at least" label suffix dropped in core.ts is reported at_least by the golden compare (report-render.logic) and the capture compare (report-generated-only) 803ms
+ Test Files  1 passed (1)
+      Tests  1 passed | 16 skipped (17)
 
-## Green after the folds: src/tests/surfaces/ (targeted)
+$ npx vitest run src/tests/surfaces/zz-new-qq.infra.test.ts -t "label suffix dropped"
+   × canary a (a-now): "at least" and a disclosure are dropped from real output > RED: the ", at least" label suffix dropped in core.ts is reported at_least by the golden compare (report-render.logic) and the capture compare (report-generated-only) 792ms
+     → expected '\n RUN  v2.1.9 /private/var/folders/8…' to match /^\+\s+"label": "GFA \(flat roof\)",?$/m
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected '\n RUN  v2.1.9 /private/var/folders/8…' to match /^\+\s+"label": "GFA \(flat roof\)",?$/m
+ ✓ src/tests/surfaces/report-honest.logic.test.ts (50 tests) 22ms
+   × T1 buildTree reproduces every golden (the capture) > at_least.mobile 4ms
+     → expected { nodes: [ { …(8) } ] } to deeply equal { nodes: [ { …(8) } ] }
+   × T1 buildTree reproduces every golden (the capture) > at_least.web 1ms
+     → expected { nodes: [ { …(8) } ] } to deeply equal { nodes: [ { …(8) } ] }
+   × T1 buildTree reproduces every golden (the capture) > at_least.admin 0ms
+     → expected { nodes: [ { …(8) } ] } to deeply equal { nodes: [ { …(8) } ] }
+   × T1 buildTree reproduces every golden (the capture) > at_least.pdf 0ms
+     → expected { nodes: [ { …(8) } ] } to deeply equal { nodes: [ { …(8) } ] }
+   × T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files 4ms
+     → expected '{\\n  \"harness\": \"mf12-report-golden\",…' to be '{\\n  \"harness\": \"mf12-report-golden\",…' // Object.is equality
+ ✓ src/tests/surfaces/report-view.ui.test.tsx (12 tests) 65ms
+ ✓ src/tests/surfaces/parity.golden.test.ts (16 tests) 227ms
+   × FE-02 controls: an untouched copy is current in every class > the golden class reproduces from the capture (no stale file; every file of the manifest compared) 19ms
+     → expected [ 'at_least.admin.json', …(3) ] to deeply equal []
+   × FE-02 RED: a hand edit of a golden file > one target file: the compare names exactly that file 14ms
+     → expected [ 'at_least.admin.json', …(4) ] to deeply equal [ 'permitted.web.json' ]
+   × FE-02 RED: a hand edit of a golden file > the same edit made identically in all four targets of a state: all four are named (the gate does not see this; card MF-16-F1) 16ms
+     → expected [ 'at_least.admin.json', …(7) ] to deeply equal [ 'permitted.admin.json', …(3) ]
+ Test Files  2 failed | 3 passed (5)
+      Tests  8 failed | 153 passed (161)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [ 'at_least.admin.json', …(3) ] to deeply equal []
+AssertionError: expected [ 'at_least.admin.json', …(4) ] to deeply equal [ 'permitted.web.json' ]
+AssertionError: expected [ 'at_least.admin.json', …(7) ] to deeply equal [ 'permitted.admin.json', …(3) ]
+AssertionError: expected { nodes: [ { …(8) } ] } to deeply equal { nodes: [ { …(8) } ] }
+AssertionError: expected '{\\n  \"harness\": \"mf12-report-golden\",…' to be '{\\n  \"harness\": \"mf12-report-golden\",…' // Object.is equality
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+
+## Fold 2 (grounded reviewer 1): plant = an unknown key no longer throws in buildTree (only the probe's 'an unknown key throws' case fails). OLD token 'MF23 PROBE' counts it as the canary-c red; NEW token 'MF23 PROBE reaches' must not.
+$ npx vitest run src/tests/surfaces/zz-old-unk.infra.test.ts -t "renderer that filters"
+ ✓ src/tests/surfaces/zz-old-unk.infra.test.ts (17 tests | 16 skipped) 657ms
+   ✓ canary c: a new catalogue row reaches every target with no front-end code > RED: a renderer that filters fields through a hard-coded list loses the new row: the probe names it 505ms
+ Test Files  1 passed (1)
+      Tests  1 passed | 16 skipped (17)
+
+$ npx vitest run src/tests/surfaces/zz-new-unk.infra.test.ts -t "renderer that filters"
+   × canary c: a new catalogue row reaches every target with no front-end code > RED: a renderer that filters fields through a hard-coded list loses the new row: the probe names it 490ms
+     → expected false to be true // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected false to be true // Object.is equality
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+
+## Fold 3 and fold 4 (scratch cases; each OLD case is expected to FAIL its 'not vacuous' assertion, i.e. the old form passed vacuously where noted):
+$ npx vitest run src/tests/surfaces/zz-folds34.infra.test.ts
+   × fold 3: green() on a zero-test run that lists a failure > NEW green rejects it 3ms
+     → expected [ { file: 'x', …(1) } ] to deeply equal []
+   × fold 4: the renderer-untouched hash when a generator writes a NEW file under src/components/report > OLD 3-file hash does not see the new file (vacuous) 0ms
+     → expected 'a0506e3d68c277c4c7e399b4479ac7bde64a3…' not to be 'a0506e3d68c277c4c7e399b4479ac7bde64a3…' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 2 passed (4)
+
+## Green after the folds: src/tests/surfaces/ (targeted; the new file 17 tests)
  Test Files  14 passed (14)
       Tests  392 passed (392)
    Duration  14.05s (transform 509ms, setup 246ms, collect 1.44s, tests 29.20s, environment 692ms, prepare 556ms)
