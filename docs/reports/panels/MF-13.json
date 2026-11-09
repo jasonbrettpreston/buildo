@@ -4,9 +4,12 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "TBD",
+  "head": "6afdee23f",
   "commits_reviewed": [
-    "TBD"
+    "5f079aded",
+    "a7453c00a",
+    "1dfe0a8d6",
+    "6afdee23f"
   ],
   "cards": [
     "Operator answers 2026-11-09: \"Agreed and capture this as rulings\", \"yes - looks good now\" (D0 simplified), \"agreed\" (C-1, C-2, C-4; D-3 c; D-5).",
@@ -14,11 +17,30 @@
     "Register row FE-30; prereg-MF-13-2 (rules[] FE-30; prereg 1 kept unedited)."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-13/plan.v2.md with its trailing dated note; plan panel PASS-WITH-FOLDS.",
-  "output": "OUTPUT (stage 8): pending",
-  "seats": [],
-  "verdict": "TBD",
+  "output": "OUTPUT (stage 8): targeted tests green (src/tests/surfaces/ + report-schema + bylaw-exc-w2-apply: 174 tests; fields lock 27, MF-11 file 12); red evidence docs/reports/red-evidence/MF-13/ (fields 24 of 25 red, MF-11 7 of 12 red, C-2 membership red, parity red before the 40-golden re-stamp); report-schema RS-0..RS-11 PASS; seed --check current. Counts: 111 decl fields = catalogue 47 + content 37 + parcels 27; not_in_report 0; 45 labels owed (headline lists ship empty).",
+  "seats": [
+    "regression-guardian",
+    "grounded-reviewer",
+    "ds-spec (deepseek-chat --fast)",
+    "ds-compliance (deepseek-chat --fast)",
+    "ds-idempotency (deepseek-chat --fast)"
+  ],
+  "verdict": "PASS-WITH-FOLDS: no blocker; no code fold made (every defect found is fail-open-ish or a design question needing a ruling, listed under followups)",
   "blockers": [],
-  "followups": [],
+  "followups": [
+    "Unknown switch state (not on/off, e.g. ON or pending) is treated as OFF with no GEN line (reproduced by the grounded reviewer). A fix needs a new code (e.g. GEN-ROW-BAD-STATE): the GEN-* grammar is ratified, so it needs an operator ruling.",
+    "Duplicate catalogue row ids are silent in the generator (Map, last wins); confirm the McBylaws catalogue tests own id uniqueness, else ask for a code.",
+    "The bare building-type key (detached_house) counts as a scenario because 14 rows carry no design option; whether it is a valid headline key is a design question for MF-14 when the lists are authored.",
+    "Authored files: a whitespace-only label counts as a label; an array in place of an object is accepted; a missing or null authored file or a non-array list throws a raw error (before any write, so fail-closed) instead of a GEN line.",
+    "A hand edit combined with an input change shows GEN-STALE only and --write overwrites the hand edit (design: the class is chosen by the digest).",
+    "The generated schema.md lost the gfa_flat_m2 note 'payload-only; feeds roof_form_alternate'; nothing reads it (roof_form_alternate is derived in scripts/lib/maxbld-main-building.js); documentation only.",
+    "MF-14 handoff: author the headline lists with the operator-approved starter list per scenario, add row-presentation.json to the golden fingerprint, and label only those rows.",
+    "C-2 as ruled: a row with no design option may lead the plain, flat and pitched lists; a row with one leads its own scenario only (locks in report-generator-fields.logic.test.ts).",
+    "Red tests landed inside the code commit (the pre-commit related run refuses a red commit), ratified by the orchestrator, as MF-12 did."
+  ],
   "evidence": "docs/reports/red-evidence/MF-13/",
-  "notes": []
+  "notes": [
+    "Refuted DeepSeek claims, each checked: retired-rows read (git grep: no such code); permitted unit none treated as unknown (form status gives text, G5 asserts it); splice index before filter (earlier entries are non-catalogue, output is deterministic and --check reproduces it); deleted generated file classed as stale (it is HAND-EDIT, reproduced); digest read inside the expression (static files).",
+    "D-5 ratified GEN-* grammar recorded here and in the FE-24 dated note (commit 5f079aded)."
+  ]
 }
