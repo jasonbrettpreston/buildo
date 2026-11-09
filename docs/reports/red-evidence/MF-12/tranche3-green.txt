@@ -1,0 +1,26 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-nm
+
+ ✓ src/tests/surfaces/report-golden-parity.logic.test.ts (41 tests) 34ms
+ ✓ src/tests/surfaces/report-honest.logic.test.ts (50 tests) 40ms
+ ✓ src/tests/surfaces/new-row-zero-code.golden.test.ts (10 tests) 101ms
+ ✓ src/tests/surfaces/report-render.logic.test.ts (74 tests) 138ms
+ ✓ src/tests/surfaces/report-view.ui.test.tsx (12 tests) 185ms
+ ✓ src/tests/surfaces/report-generator.logic.test.ts (12 tests) 958ms
+ ✓ src/tests/surfaces/report-binding.logic.test.ts (13 tests) 679ms
+ ✓ src/tests/surfaces/report-generator-building-type-list.logic.test.ts (14 tests) 1640ms
+ ✓ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests) 3673ms
+   ✓ G3b a switch row whose state is not on or off (fail closed) > RED: `GEN-ROW-BAD-STATE <switch id> <state>`, exit 1, nothing written, never treated as OFF 320ms
+   ✓ P3 headline label (D0-8) > RED: a listed row with no label: `GEN-ROW-NO-LABEL <row>`, exit 1; with a label exits 0; the same row unlisted shows its id and exits 0 303ms
+ ✓ src/tests/surfaces/surface-validate.logic.test.ts (46 tests) 9730ms
+   ✓ FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting 352ms
+   ✓ usage, output and read-only > no flag is the same run as --check 338ms
+   ✓ usage, output and read-only > the real tree twice from two cwd: byte-identical output, and no input file changes 603ms
+   ✓ usage, output and read-only > a two-defect tree twice (fresh copy each time): identical findings in a fixed order 346ms
+
+ Test Files  10 passed (10)
+      Tests  300 passed (300)
+   Start at  13:38:05
+   Duration  10.23s (transform 771ms, setup 430ms, collect 1.82s, tests 17.18s, environment 426ms, prepare 524ms)
+

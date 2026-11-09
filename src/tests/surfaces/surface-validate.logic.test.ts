@@ -58,7 +58,7 @@ describe('FE-13 surface-validate gate: real tree', () => {
     const r = spawnSync(process.execPath, [path.join(REPO, GATE), '--check'], { cwd: os.tmpdir(), encoding: 'utf8' });
     expect(r.stderr).toBe('');
     expect(r.status).toBe(0);
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (11 states x 4; owed 16 states / 64 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08\n');
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (12 states x 4; owed 15 states / 60 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08\n');
   });
 
   it('the real goldens cover each lifecycle state and an at_least tree (guards against a vacuous status arm)', () => {
@@ -131,7 +131,7 @@ describe('S-golden: existence and fingerprint', () => {
       const r = run(root);
       expect(r.code).toBe(1);
       const stale = r.lines.filter((l) => l.endsWith(`fingerprint stale: ${f}`));
-      expect(stale).toHaveLength(44);
+      expect(stale).toHaveLength(48);
       expect(stale).toContain(`SV-GOLDEN at_least.web.json: fingerprint stale: ${f}`);
     });
   }

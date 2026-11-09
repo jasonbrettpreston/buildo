@@ -1,6 +1,6 @@
 {
   "surface": "report",
-  "tranche": 2,
+  "tranche": 3,
   "targets": [
     "mobile",
     "web",
@@ -18,8 +18,9 @@
     "loading",
     "miss",
     "error",
-    "not_buildable"
+    "not_buildable",
+    "not_modelled"
   ],
-  "owed_states": 16,
-  "owed_files": 64
+  "owed_states": 15,
+  "owed_files": 60
 }

@@ -26,8 +26,8 @@ const CODES = Object.keys(PRESENTATION.disclosure_texts).filter((k) => !DISCLOSU
 const goldens = fs.existsSync(DIR) ? fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== 'states.json').sort() : [];
 
 describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
-  it('there are 44 goldens to check', () => {
-    expect(goldens).toHaveLength(44);
+  it('there are 48 goldens to check', () => {
+    expect(goldens).toHaveLength(48);
   });
 
   for (const f of goldens) {

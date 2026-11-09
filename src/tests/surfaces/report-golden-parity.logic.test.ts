@@ -16,7 +16,7 @@ const ROOT = process.cwd();
 const DIR = path.join(ROOT, 'src/tests/fixtures/surfaces/report');
 const STATES = [
   'permitted', 'not_permitted', 'not_evaluated', 'variant_flat', 'variant_pitched_a',
-  'variant_pitched_b', 'at_least', 'loading', 'miss', 'error', 'not_buildable',
+  'variant_pitched_b', 'at_least', 'loading', 'miss', 'error', 'not_buildable', 'not_modelled',
 ];
 const readJson = (p: string): Json => JSON.parse(fs.readFileSync(p, 'utf8'));
 const file = (s: string, t: string): string => path.join(DIR, `${s}.${t}.json`);

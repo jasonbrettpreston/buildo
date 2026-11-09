@@ -42,12 +42,20 @@ describe('T1 buildTree reproduces every golden (the capture)', () => {
     const a = captureAll(ROOT);
     const b = captureAll(ROOT);
     expect([...a.entries()]).toEqual([...b.entries()]);
-    expect(a.size).toBe(44);
+    expect(a.size).toBe(48);
     for (const [file, text] of a) expect(fs.readFileSync(path.join(GOLD, file), 'utf8')).toBe(text);
   });
   it('no maths: a float is shown as the producer sent it', () => {
     const t = buildTree({ status: 'permitted', gfa_flat_m2: 0.30000000000000004 }, reportCtx);
     expect(t.nodes.find((n: Json) => n.field === 'gfa_flat_m2')?.value).toBe('0.30000000000000004 m²');
+  });
+  it('not_modelled shows its registry text and no figure (tranche 3)', () => {
+    const t = buildTree({ status: 'not_modelled' }, reportCtx);
+    expect(t.nodes.length).toBe(1);
+    expect(t.nodes[0].field).toBe('status_text');
+    expect(t.nodes[0].status).toBe('not_modelled');
+    expect(t.nodes[0].value).toBe(reportCtx.content.status_text.not_modelled);
+    expect(t.nodes[0].value).toBeTruthy();
   });
   it('lifecycle text comes from the registry, never null', () => {
     for (const l of ['loading', 'miss', 'error']) {

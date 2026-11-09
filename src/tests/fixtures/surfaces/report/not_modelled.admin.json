@@ -1,0 +1,34 @@
+{
+  "harness": "mf12-report-golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md#11a.7",
+  "surface": "report",
+  "state": "not_modelled",
+  "target": "admin",
+  "response_fixture": {
+    "synthetic": true,
+    "status": "not_modelled"
+  },
+  "rendered_tree": {
+    "nodes": [
+      {
+        "field": "status_text",
+        "source": "content",
+        "label": "Status reason (plain words)",
+        "value": "This option is not modelled yet, so no figure is shown.",
+        "status": "not_modelled",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      }
+    ]
+  },
+  "fingerprint": {
+    "response_fixture": "ecdb5307f3abffdd",
+    "files": {
+      "scripts/surfaces/_schema/binding-sources.json": "642da823d9ba45b5",
+      "scripts/surfaces/_schema/report-presentation.json": "5f1a69353c23f635",
+      "scripts/surfaces/_schema/report-tree.schema.json": "d19f855fc21d5f39",
+      "scripts/surfaces/_schema/report-v2.decl.json": "f9643b081b6e9e37"
+    }
+  }
+}

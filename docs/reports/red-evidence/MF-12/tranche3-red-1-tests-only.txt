@@ -1,0 +1,303 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-nm
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts (41 tests | 5 failed) 41ms
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > manifest pins the tranche-1 states and the four targets 3ms
+     → expected [ 'permitted', 'not_permitted', …(9) ] to deeply equal [ 'permitted', 'not_permitted', …(10) ]
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > every state x target file exists and nothing extra sits beside them 1ms
+     → expected [ 'at_least.admin.json', …(44) ] to deeply equal [ 'at_least.admin.json', …(48) ]
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_modelled > S-parity: the four target files carry the same fixture and tree 2ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_modelled > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock) 1ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_modelled > fingerprint is fresh (response_fixture hash and the three input files) 1ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-nm/src/tests/fixtures/surfaces/report/not_modelled.mobile.json'
+ ❯ src/tests/surfaces/report-honest.logic.test.ts (46 tests | 1 failed) 101ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > there are 48 goldens to check 10ms
+     → expected [ 'at_least.admin.json', …(43) ] to have a length of 48 but got 44
+ ✓ src/tests/surfaces/new-row-zero-code.golden.test.ts (10 tests) 108ms
+ ❯ src/tests/surfaces/report-render.logic.test.ts (70 tests | 2 failed) 124ms
+   × T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files 12ms
+     → expected 44 to be 48 // Object.is equality
+   × T1 buildTree reproduces every golden (the capture) > not_modelled shows its registry text and no figure (tranche 3) 0ms
+     → expected +0 to be 1 // Object.is equality
+ ✓ src/tests/surfaces/report-generator.logic.test.ts (12 tests) 985ms
+ ✓ src/tests/surfaces/report-view.ui.test.tsx (12 tests) 209ms
+ ✓ src/tests/surfaces/report-binding.logic.test.ts (13 tests) 672ms
+ ✓ src/tests/surfaces/report-generator-building-type-list.logic.test.ts (14 tests) 1763ms
+ ✓ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests) 3847ms
+   ✓ G3b a switch row whose state is not on or off (fail closed) > RED: `GEN-ROW-BAD-STATE <switch id> <state>`, exit 1, nothing written, never treated as OFF 373ms
+   ✓ P3 headline label (D0-8) > RED: a listed row with no label: `GEN-ROW-NO-LABEL <row>`, exit 1; with a label exits 0; the same row unlisted shows its id and exits 0 300ms
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts (46 tests | 5 failed) 9354ms
+   × FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting 443ms
+     → expected 'surface-validate current; S-gen ok · …' to be 'surface-validate current; S-gen ok · …' // Object.is equality
+   × S-golden: existence and fingerprint > one byte changed in binding-sources.json: every golden is stale on it 195ms
+     → expected [ …(44) ] to have a length of 48 but got 44
+   × S-golden: existence and fingerprint > one byte changed in report-presentation.json: every golden is stale on it 181ms
+     → expected [ …(44) ] to have a length of 48 but got 44
+   × S-golden: existence and fingerprint > one byte changed in report-tree.schema.json: every golden is stale on it 178ms
+     → expected [ …(44) ] to have a length of 48 but got 44
+   × S-golden: existence and fingerprint > one byte changed in report-v2.decl.json: every golden is stale on it 187ms
+     → expected [ …(44) ] to have a length of 48 but got 44
+   ✓ usage, output and read-only > no flag is the same run as --check 309ms
+   ✓ usage, output and read-only > the real tree twice from two cwd: byte-identical output, and no input file changes 584ms
+   ✓ usage, output and read-only > a two-defect tree twice (fresh copy each time): identical findings in a fixed order 333ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > manifest pins the tranche-1 states and the four targets
+AssertionError: expected [ 'permitted', 'not_permitted', …(9) ] to deeply equal [ 'permitted', 'not_permitted', …(10) ]
+
+- Expected
++ Received
+
+  Array [
+    "permitted",
+    "not_permitted",
+    "not_evaluated",
+    "variant_flat",
+    "variant_pitched_a",
+    "variant_pitched_b",
+    "at_least",
+    "loading",
+    "miss",
+    "error",
+    "not_buildable",
+-   "not_modelled",
+  ]
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:29:22
+     27|     const m = readJson(path.join(DIR, 'states.json'));
+     28|     expect(m.targets).toEqual(TARGETS);
+     29|     expect(m.states).toEqual(STATES);
+       |                      ^
+     30|   });
+     31| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > every state x target file exists and nothing extra sits beside them
+AssertionError: expected [ 'at_least.admin.json', …(44) ] to deeply equal [ 'at_least.admin.json', …(48) ]
+
+- Expected
++ Received
+
+  Array [
+    "at_least.admin.json",
+    "at_least.mobile.json",
+    "at_least.pdf.json",
+    "at_least.web.json",
+    "error.admin.json",
+    "error.mobile.json",
+    "error.pdf.json",
+    "error.web.json",
+    "loading.admin.json",
+    "loading.mobile.json",
+    "loading.pdf.json",
+    "loading.web.json",
+    "miss.admin.json",
+    "miss.mobile.json",
+    "miss.pdf.json",
+    "miss.web.json",
+    "not_buildable.admin.json",
+    "not_buildable.mobile.json",
+    "not_buildable.pdf.json",
+    "not_buildable.web.json",
+    "not_evaluated.admin.json",
+    "not_evaluated.mobile.json",
+    "not_evaluated.pdf.json",
+    "not_evaluated.web.json",
+-   "not_modelled.admin.json",
+-   "not_modelled.mobile.json",
+-   "not_modelled.pdf.json",
+-   "not_modelled.web.json",
+    "not_permitted.admin.json",
+    "not_permitted.mobile.json",
+    "not_permitted.pdf.json",
+    "not_permitted.web.json",
+    "permitted.admin.json",
+    "permitted.mobile.json",
+    "permitted.pdf.json",
+    "permitted.web.json",
+    "states.json",
+    "variant_flat.admin.json",
+    "variant_flat.mobile.json",
+    "variant_flat.pdf.json",
+    "variant_flat.web.json",
+    "variant_pitched_a.admin.json",
+    "variant_pitched_a.mobile.json",
+    "variant_pitched_a.pdf.json",
+    "variant_pitched_a.web.json",
+    "variant_pitched_b.admin.json",
+    "variant_pitched_b.mobile.json",
+    "variant_pitched_b.pdf.json",
+    "variant_pitched_b.web.json",
+  ]
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:34:40
+     32|   it('every state x target file exists and nothing extra sits beside t…
+     33|     const want = STATES.flatMap((s) => TARGETS.map((t) => `${s}.${t}.j…
+     34|     expect(fs.readdirSync(DIR).sort()).toEqual(want);
+       |                                        ^
+     35|   });
+     36| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_modelled > S-parity: the four target files carry the same fixture and tree
+AssertionError: expected [] to have a length of 4 but got +0
+
+- Expected
++ Received
+
+- 4
++ 0
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:41:23
+     39|       it('S-parity: the four target files carry the same fixture and t…
+     40|         const files = TARGETS.filter((t) => have(s, t)).map((t) => rea…
+     41|         expect(files).toHaveLength(4);
+       |                       ^
+     42|         expect(parityOk(files.map((f) => f.rendered_tree))).toBe(true);
+     43|         expect(parityOk(files.map((f) => f.response_fixture))).toBe(tr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_modelled > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:52:30
+     50|         const kindOf = (name: string): string | undefined => decls.fin…
+     51|         for (const t of TARGETS) {
+     52|           expect(have(s, t)).toBe(true);
+       |                              ^
+     53|           const g = readJson(file(s, t));
+     54|           expect(g.state).toBe(s);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_modelled > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-nm/src/tests/fixtures/surfaces/report/not_modelled.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:21:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:73:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > there are 48 goldens to check
+AssertionError: expected [ 'at_least.admin.json', …(43) ] to have a length of 48 but got 44
+
+- Expected
++ Received
+
+- 48
++ 44
+
+ ❯ src/tests/surfaces/report-honest.logic.test.ts:30:21
+     28| describe('FE-06 report-honest lock (schema: report-tree.schema.json)',…
+     29|   it('there are 48 goldens to check', () => {
+     30|     expect(goldens).toHaveLength(48);
+       |                     ^
+     31|   });
+     32| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files
+AssertionError: expected 44 to be 48 // Object.is equality
+
+- Expected
++ Received
+
+- 48
++ 44
+
+ ❯ src/tests/surfaces/report-render.logic.test.ts:45:20
+     43|     const b = captureAll(ROOT);
+     44|     expect([...a.entries()]).toEqual([...b.entries()]);
+     45|     expect(a.size).toBe(48);
+       |                    ^
+     46|     for (const [file, text] of a) expect(fs.readFileSync(path.join(GOL…
+     47|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > not_modelled shows its registry text and no figure (tranche 3)
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/surfaces/report-render.logic.test.ts:54:28
+     52|   it('not_modelled shows its registry text and no figure (tranche 3)',…
+     53|     const t = buildTree({ status: 'not_modelled' }, reportCtx);
+     54|     expect(t.nodes.length).toBe(1);
+       |                            ^
+     55|     expect(t.nodes[0].field).toBe('status_text');
+     56|     expect(t.nodes[0].status).toBe('not_modelled');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting
+AssertionError: expected 'surface-validate current; S-gen ok · …' to be 'surface-validate current; S-gen ok · …' // Object.is equality
+
+- Expected
++ Received
+
+- surface-validate current; S-gen ok · S-golden ok (12 states x 4; owed 15 states / 60 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08
++ surface-validate current; S-gen ok · S-golden ok (11 states x 4; owed 16 states / 64 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08
+
+
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:61:22
+     59|     expect(r.stderr).toBe('');
+     60|     expect(r.status).toBe(0);
+     61|     expect(r.stdout).toBe('surface-validate current; S-gen ok · S-gold…
+       |                      ^
+     62|   });
+     63| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in binding-sources.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-presentation.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-tree.schema.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-v2.decl.json: every golden is stale on it
+AssertionError: expected [ …(44) ] to have a length of 48 but got 44
+
+- Expected
++ Received
+
+- 48
++ 44
+
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:134:21
+    132|       expect(r.code).toBe(1);
+    133|       const stale = r.lines.filter((l) => l.endsWith(`fingerprint stal…
+    134|       expect(stale).toHaveLength(48);
+       |                     ^
+    135|       expect(stale).toContain(`SV-GOLDEN at_least.web.json: fingerprin…
+    136|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ Test Files  4 failed | 6 passed (10)
+      Tests  13 failed | 279 passed (292)
+   Start at  13:37:35
+   Duration  9.77s (transform 634ms, setup 279ms, collect 1.63s, tests 17.20s, environment 551ms, prepare 491ms)
+

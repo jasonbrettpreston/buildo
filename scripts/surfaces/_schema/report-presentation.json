@@ -16,6 +16,7 @@
     "permitted": "Allowed as of right.",
     "not_permitted": "Not allowed in this zone ({clause}).",
     "not_buildable": "Allowed, but nothing fits on this lot as of right.",
+    "not_modelled": "This option is not modelled yet, so no figure is shown.",
     "not_applicable": "Does not apply to this lot.",
     "not_evaluated:exception_not_authored": "A site-specific exception applies; not yet evaluated.",
     "not_evaluated:no_existing_house": "There is no existing house on this lot to renovate.",

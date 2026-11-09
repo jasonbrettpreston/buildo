@@ -1,0 +1,114 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-nm
+
+ ❯ src/tests/surfaces/report-render.logic.test.ts (74 tests | 6 failed) 74ms
+   × T1 buildTree reproduces every golden (the capture) > not_modelled.mobile 3ms
+     → expected { nodes: [] } to deeply equal undefined
+   × T1 buildTree reproduces every golden (the capture) > not_modelled.web 0ms
+     → expected { nodes: [] } to deeply equal undefined
+   × T1 buildTree reproduces every golden (the capture) > not_modelled.admin 0ms
+     → expected { nodes: [] } to deeply equal undefined
+   × T1 buildTree reproduces every golden (the capture) > not_modelled.pdf 0ms
+     → expected { nodes: [] } to deeply equal undefined
+   × T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files 8ms
+     → expected '{\n  "harness": "mf12-report-golden",…' to be '{\n  "harness": "mf12-report-golden",…' // Object.is equality
+   × T1 buildTree reproduces every golden (the capture) > not_modelled shows its registry text and no figure (tranche 3) 1ms
+     → expected +0 to be 1 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > not_modelled.mobile
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > not_modelled.web
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > not_modelled.admin
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > not_modelled.pdf
+AssertionError: expected { nodes: [] } to deeply equal undefined
+
+- Expected: 
+undefined
+
++ Received: 
+Object {
+  "nodes": Array [],
+}
+
+ ❯ src/tests/surfaces/report-render.logic.test.ts:37:56
+     35|     it(`${s}.${t}`, () => {
+     36|       const g = golden(s, t);
+     37|       expect(buildTree(g.response_fixture, reportCtx)).toEqual(g.rende…
+       |                                                        ^
+     38|       expect(() => assertTree(g.rendered_tree, reportCtx)).not.toThrow…
+     39|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files
+AssertionError: expected '{\n  "harness": "mf12-report-golden",…' to be '{\n  "harness": "mf12-report-golden",…' // Object.is equality
+
+- Expected
++ Received
+
+  {
+    "harness": "mf12-report-golden",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md#11a.7",
+    "surface": "report",
+    "state": "not_modelled",
+    "target": "mobile",
+    "response_fixture": {
+      "synthetic": true,
+      "status": "not_modelled"
+-   },
+-   "rendered_tree": {
+-     "nodes": []
+-   },
+-   "fingerprint": {
+-     "response_fixture": "ecdb5307f3abffdd",
+-     "files": {
+-       "scripts/surfaces/_schema/binding-sources.json": "642da823d9ba45b5",
+-       "scripts/surfaces/_schema/report-presentation.json": "964a9c5f94ceb4d9",
+-       "scripts/surfaces/_schema/report-tree.schema.json": "d19f855fc21d5f39",
+-       "scripts/surfaces/_schema/report-v2.decl.json": "f9643b081b6e9e37"
+-     }
+    }
+  }
+
+
+ ❯ src/tests/surfaces/report-render.logic.test.ts:46:90
+     44|     expect([...a.entries()]).toEqual([...b.entries()]);
+     45|     expect(a.size).toBe(48);
+     46|     for (const [file, text] of a) expect(fs.readFileSync(path.join(GOL…
+       |                                                                                          ^
+     47|   });
+     48|   it('no maths: a float is shown as the producer sent it', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > not_modelled shows its registry text and no figure (tranche 3)
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/surfaces/report-render.logic.test.ts:54:28
+     52|   it('not_modelled shows its registry text and no figure (tranche 3)',…
+     53|     const t = buildTree({ status: 'not_modelled' }, reportCtx);
+     54|     expect(t.nodes.length).toBe(1);
+       |                            ^
+     55|     expect(t.nodes[0].field).toBe('status_text');
+     56|     expect(t.nodes[0].status).toBe('not_modelled');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 68 passed (74)
+   Start at  13:37:49
+   Duration  472ms (transform 98ms, setup 15ms, collect 83ms, tests 74ms, environment 0ms, prepare 35ms)
+
+CAPTURE-STALE not_modelled.mobile.json
+CAPTURE-STALE not_modelled.web.json
+CAPTURE-STALE not_modelled.admin.json
+CAPTURE-STALE not_modelled.pdf.json
+report-capture checked 48 goldens; 4 stale

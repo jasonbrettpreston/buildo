@@ -1,0 +1,9 @@
+# capture 1
+report-capture wrote 48 goldens; 48 changed
+exit 0
+# capture 2 (must print 0 changed)
+report-capture wrote 48 goldens; 0 changed
+exit 0
+# --check
+report-capture checked 48 goldens; 0 stale
+exit 0
