@@ -1,0 +1,150 @@
+{
+  "$comment": "M-321 pre-registration, task MB-27, prereg 40 (Spec 124a R-MA; round 122), the revert round of increment 1 that lands the increment-3 E8 content rows (operator 2026-11-08 E8 ruling: units form (i), 2a, 3a, 5a, SIMPLE; 2026-11-09 blockers ruling): eight houseplex-only rows in the EXISTING Layer 3 grammar (no dsl.mjs change, no evaluator change): basement_livable_m2 = (1 ratio - circulation share) x footprint_max_m2; basement_units = floor(basement_livable_m2 / minimum unit size); units_flat, units_pitched_a and units_pitched_b = min(wall_storeys; storeys_max) x floor(livable footprint / minimum unit size) + the upper floor (flat: storeys_above_wall x floor(livable set-back plate / minimum unit size); pitched: floor(livable counted attic / minimum unit size)) + basement_units; unit_count = min(units_max; best_of(units_flat; units_pitched_a; units_pitched_b)); houseplex_bedrooms = if(unit_count = bt_units; l2(bedrooms); refuse(units_differ_from_phase2)); unit_area_m2 = (1 ratio - circulation share) x (gfa_max_m2 + footprint_max_m2) / unit_count, unrounded. Their eight formula switches, the two settings entries (houseplex_circulation_share, houseplex_unit_min_net_m2) in the catalogue, the two settings declared in the step descriptor and the closed-bounds gate (named move 3), the 123 E12 owed checks promoted into checks (units, bedrooms, basement line, per-unit area; the uncapped reading and the A0399 side-yard cell stay owed), and the lock increment3-units-branches (cases a to d, hand arithmetic, not golden lots). The generated report files regenerate in the McFrontend regeneration commit. Named move 2 (validateCatalogue increments list gains '3') landed in the RM-fix commit. One table_version move, no evaluator_version move, zero scorer moves, no detached_house cell moves. Red lock first: src/tests/steps/compute_maxbld_scenarios/increment3-units-branches.logic.test.ts.",
+  "schema": "coa-round-prereg-v1",
+  "round": 122,
+  "task": "MB-27",
+  "rules": [
+    "R-MA"
+  ],
+  "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/ready-20261108/prereg-E8-rows-DRAFT.md; ~/Buildo-scratch/mcbylaws/inc3/build/ready-20261108/07-E8-rows.patch",
+  "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+  "expected_moves": [],
+  "expected_totals": {
+    "ANSWERED": 7,
+    "MATCH": 407,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals": {
+    "ANSWERED": 7,
+    "MATCH": 407,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes": [],
+  "expected_moves_4d": [],
+  "expected_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 283,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 283,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes_4d": [],
+  "expected_moves_cumulative": [],
+  "expected_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 459,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 459,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes_cumulative": [],
+  "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+  "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+  "expected_repin": [
+    "docs/reference/bylaw-layer2-input.json table_version 5fedbba88fc5 -> dfb248b5a9f2 (evaluator_version unchanged)",
+    "docs/reference/maxbld-amendment-index.json layer2_table_version 5fedbba88fc5 -> dfb248b5a9f2",
+    "docs/reference/maxbld-report-field-inventory.{md,json}: the version hash fields only",
+    "expected-172.json and expected-4d.json re-pinned through coa-scorecard.mjs --pin, totals equal",
+    "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version re-bound to dfb248b5a9f2 (RP-SW2 a)"
+  ],
+  "increment": "1",
+  "expected_assertion_changes": [
+    {
+      "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+      "line": "96-102",
+      "row": "catalogue rows and their building_type / increment",
+      "from": "47 rows; every row lists both types; increments 1 and 2",
+      "to": "55 rows; the eight increment-3 rows list the houseplex alone; increment '3'",
+      "rule": "DL-21 a (rows) with the E8 rows ruling",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md E8 2a/3a/4a/5a and the blockers ruling 2026-11-09"
+    },
+    {
+      "file": "src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts",
+      "line": "41",
+      "row": "switchboard rows",
+      "from": "65",
+      "to": "73 (eight formula switches)",
+      "rule": "DL-21 a consequence of the rows",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md E8 rows ruling 2026-11-09"
+    },
+    {
+      "file": "src/tests/steps/compute_maxbld_scenarios/determinism.logic.test.ts",
+      "line": "76-77",
+      "row": "rows per parcel",
+      "from": "94",
+      "to": "102",
+      "rule": "DL-21 a consequence of the rows",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md E8 rows ruling 2026-11-09"
+    },
+    {
+      "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+      "line": "PINNED_SHA",
+      "row": "catalogue and switchboard sha pins",
+      "from": "previous hashes",
+      "to": "new hashes (E1C-S)",
+      "rule": "E1C-S",
+      "authority": "~/Buildo-scratch/mcbylaws/open-questions.md E1C / E1C-S"
+    },
+    {
+      "file": "scripts/compute-maxbld-scenarios.descriptor.json and scripts/analysis/gates/closed-bounds.mjs",
+      "line": "settings",
+      "row": "the two 5a settings are declared where settings-drift.logic.test.ts:159 reads them",
+      "from": "not declared",
+      "to": "declared (min = max = default)",
+      "rule": "named move 3",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md Operator ruling 2026-11-09 (morning): E8 rows blockers (blocker 3)"
+    },
+    {
+      "file": "src/tests/fixtures/layer3/increment-3/examples.json",
+      "line": "owed_checks",
+      "row": "123 owed checks promoted into checks",
+      "from": "owed_checks: units, bedrooms, basement line, per-unit area",
+      "to": "checks on unit_count, houseplex_bedrooms, basement_livable_m2, basement_units, unit_area_m2",
+      "rule": "DL-21 a (E12 note: lane E promotes each as a stated assertion change)",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/examples/D3-NOTE-FOR-LANE-E.md"
+    }
+  ],
+  "expected_value_changes": []
+}
