@@ -4,18 +4,33 @@
   "class": "T",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "PENDING",
-  "commits_reviewed": [],
+  "head": "c4acc49dd",
+  "commits_reviewed": [
+    "95b9b63ed (docs: queue note)",
+    "f00bd60b5 (prereg-MF-43-1)",
+    "d96f3fecf (code: six locks, red evidence, five rows flip to RULED, Spec 136 and rule map regenerated)",
+    "c4acc49dd (output folds)"
+  ],
   "cards": [
     "Operator 2026-11-09, Wave 1 decision batch: \"approved except for 9 - ...\" (item 10: same-commit flip of the owned rows; item 11: FE-16 stays with MF-43, D-14; MF-43 D-1, D-3..D-8 approved as recommended).",
     "CARD-red-evidence-nonempty stays a standalone McBylaws-owner card (MF-43 D-7); the evidence files here were checked by hand: non-empty and containing FAIL."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-43/plan.md (regression-guardian, code-reviewer-grounded, compliance seat: PASS-WITH-FOLDS, section 11); prereg-MF-43-1 (rules[] FE-01, FE-09, FE-11, FE-14, FE-16).",
-  "output": "PENDING: OUTPUT panel (regression-guardian, code-reviewer-grounded) not yet run.",
-  "seats": [],
-  "verdict": "PENDING",
+  "output": "OUTPUT (stage 8): six locks, 51 tests green after folds (45 at d96f3fecf); src/tests/surfaces 23 files 555 tests green at d96f3fecf (regression guardian run); generate-surface-handbook --check clean; gate dry run before the code commit: --staged GATE OK, --commit-msg (parent and own register views) GATE OK, --ci over ffb6b0610..d96f3fecf GATE OK. Red then green in docs/reports/red-evidence/MF-43/. No full suite run (lane brief).",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded"
+  ],
+  "verdict": "PASS-WITH-FOLDS: no blocker. Regression guardian PASS-WITH-FOLDS (flip form matches precedent, prior text kept, one lock per cell; Spec 136 and map exactly five status moves; FLIP_PENDING fails loudly both ways). Grounded reviewer PASS-WITH-FOLDS (34 of 38 rule mutants red, every real-tree mutation caught). Folds executed in c4acc49dd, red first: the fence no longer crashes when the whole group moves out of (app), the comment stripper ends a quote at a newline, the FE-09 lock resolves RULED locks against the whole tracked tree, and the four unprotected rules have planted cases.",
   "blockers": [],
-  "followups": [],
-  "evidence": "docs/reports/red-evidence/MF-43/",
-  "notes": []
+  "followups": [
+    "Lane R FE-10 flip: remove FE-10 from FLIP_PENDING in src/tests/surfaces/register-locks-resolve.infra.test.ts in the same commit (the lock is red both ways otherwise).",
+    "The five flipped cells say the sha is on the McFrontend queue heading: the DONE heading carries MF-43@d96f3fecf.",
+    "Optional, not done (minimum): a Spec 135 rule 5 prose note on the shrink-only pending-flip list; the FE-09 cell note already records it.",
+    "MF-25: the .db.test.ts CI clause of rule 5 (prose-only, D-4). MF-49: per-app extension of the fence. CARD-red-evidence-nonempty stays a McBylaws-owner card (expires 2026-11-16)."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-43/; raw seat reports in ~/Buildo-scratch/mcfrontend/MF-43/output-panel/",
+  "notes": [
+    "2026-11-09: the fence lock stays structural (a dead-branch gate return would pass; D-6, header). The admin-task convention (admin named outside parentheses) is stated in the queue lock header (reviewer finding 7, no code change)."
+  ]
 }
