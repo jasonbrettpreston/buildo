@@ -31,7 +31,7 @@ const loadSeeds = (): Json => ({
 });
 
 const FIX = 'src/tests/fixtures/layer3/golden-25';
-const MANIFEST_SHA = '51898d41bc7d6e1a11eaeab241ca13bef67494cb9fa6d4434bbaae46fb942301'; // RP-G25S (the increment-2 switch-on, operator D-2, G25-D c, FC-1 a): the loader reads the option cells, phase2 gains the increment-2 targets, the 25 gfa flag sets re-keyed; mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in; RP-n (MB-27 R2): inputs.jsonl gains phase2_options; RP-L (MB-18 (l)): the R-zone side yard on 5 cases
+const MANIFEST_SHA = '2305bf297d2e5d72ea9021dc16a08bb30723d08097065019118126aa63913b3b'; // RP-G25H (MB-27 inc3 E11, DL-14 a): inputs.jsonl and expected.jsonl gain the detached houseplex class (phase2_houseplex, phase2_options_houseplex; expected houseplex); was RP-G25S '+old.slice(0,12)+''; // RP-G25S (the increment-2 switch-on, operator D-2, G25-D c, FC-1 a): the loader reads the option cells, phase2 gains the increment-2 targets, the 25 gfa flag sets re-keyed; mode B (MB-31 inc1 plan 2.2): MB-18 (i) and (j) in; RP-n (MB-27 R2): inputs.jsonl gains phase2_options; RP-L (MB-18 (l)): the R-zone side yard on 5 cases
 const META: Json = { layer2_table_version: 'golden-25', settings_sha: 'golden-25' };
 const MANIFESTED = ['inputs.jsonl', 'expected.jsonl', 'refusals.json', 'mcproof-e25.json', 'source-inputs.jsonl', 'parcels-rows.json', 'flag-corrections.json', 'mode-b-derivation.md'];
 /** The tolerances of the independent McProof check (front, footprint, gfa, height, storeys, units). */
@@ -58,20 +58,20 @@ const toCell = (c: Json): Json => {
 };
 
 /** RP-G25S (operator D-2): a phase2_options record as the option view row R2's decodeOptionCells reads (the OR-7 form). */
-const optionRow = (o: Json): Json => ({
-  class: 'detached_house', structure: 'principal', target: o.target, option: o.option, shared_with_base: o.shared === true, status: o.status,
+const optionRow = (o: Json, cls = 'detached_house'): Json => ({
+  class: cls, structure: 'principal', target: o.target, option: o.option, shared_with_base: o.shared === true, status: o.status,
   value_kind: o.kind === '' ? null : o.kind, value: o.value, reason: o.reason === '' ? null : o.reason, winner_unit_id: o.clause === '' ? null : o.clause,
 });
 const VOCAB = readJson('scripts/seeds/bylaw/vocab.json');
 
 /** One `inputs.jsonl` line + the case's expected parcel id -> the parcel input `buildParcelRows` reads. */
-const parcelInput = (line: Json, parcelId: number): Json => {
+const parcelInput = (line: Json, parcelId: number, hp = false): Json => {
   const C = req(path.join(ROOT, 'scripts/lib/compute/maxbld/layer2-cells.js')) as Json;
   const MZ = req(path.join(ROOT, 'scripts/lib/bylaw-materialize.js')) as Json;
-  const l2Options = C.decodeOptionCells((line.phase2_options || []).map(optionRow), 'detached_house', 'principal', { designOptions: VOCAB.design_options, notAbove: MZ.withNotAbove });
+  const l2Options = C.decodeOptionCells(((hp ? line.phase2_options_houseplex : line.phase2_options) || []).map((o: Json) => optionRow(o, hp ? 'detached_houseplex' : 'detached_house')), hp ? 'detached_houseplex' : 'detached_house', 'principal', { designOptions: VOCAB.design_options, notAbove: MZ.withNotAbove });
   const parcel = line.parcel || {};
   const l2: Json = {};
-  for (const [target, c] of Object.entries(line.phase2 || {})) l2[target] = toCell(c as Json);
+  for (const [target, c] of Object.entries((hp ? line.phase2_houseplex : line.phase2) || {})) l2[target] = toCell(c as Json);
   const neighbours = (line.abutments || []).map((a: Json) => ({
     same_street: a.sameStreet,
     residential: a.res,
@@ -87,7 +87,7 @@ const parcelInput = (line: Json, parcelId: number): Json => {
     perm: { code: line.permitted_word.code, gate: line.permitted_word.gate },
     geometry: { lot_frontage_m: parcel.frontage, lot_depth_m: parcel.depth, lot_area_m2: parcel.area },
     flags: { corner_lot: parcel.corner },
-    neighbours: { user: [], neighbours, own: null, street, zone: [], ring: [], bt_units: 1 },
+    neighbours: { user: [], neighbours, own: null, street, zone: [], ring: [], bt_units: hp ? 4 : 1 },
   };
 };
 
@@ -186,6 +186,43 @@ describe('MB-31 increment 1 acceptance: the 25 golden cases (mode B: MB-18 (k) (
           expect(stems.some((s: string) => reason.includes(s)), `${where}: reason ${JSON.stringify(reason)} carries one of ${JSON.stringify(stems)}`).toBe(true);
         }
         expect(sorted((row as Json).flags), `${where}: flags`).toEqual(sorted(expectedCell.flags ?? []));
+      }
+    });
+  }
+
+  // MB-27 increment 3 E11 (RP-G25H, DL-14 a, operator 2026-11-08): the same 25 cases for the detached houseplex, replayed through the step's own
+  // compute on the houseplex class cells (base + D5 option slots, recomputed by the pure core) and compared with the folded McProof key
+  // (expected.jsonl `houseplex`: height, storeys, footprint, gfa, units where the key states them). Stop rule: the house loop above is unchanged.
+  const HP_FIELDS: [string, string][] = [
+    ['height_max_m', 'height'],
+    ['storeys_max', 'storeys'],
+    ['footprint_max_m2', 'footprint'],
+    ['gfa_max_m2', 'gfa'],
+    ['unit_count', 'units'],
+  ];
+  for (const expectedCase of expected) {
+    it(`houseplex case ${expectedCase.case}`, () => {
+      const line = cases.find((c: Json) => c.case === expectedCase.case);
+      expect(line, `houseplex case ${expectedCase.case}: a line in inputs.jsonl`).toBeDefined();
+      expect(Object.keys((line as Json).phase2_houseplex || {}).length, `houseplex case ${expectedCase.case}: houseplex cells`).toBeGreaterThan(0);
+      const rows: Json[] = S.buildParcelRows(parcelInput(line as Json, expectedCase.parcel_id, true), SEEDS, META);
+      const hp = rows.filter((r: Json) => r.building_type === 'detached_houseplex');
+      const byField = new Map(hp.map((r: Json) => [r.field_id, r]));
+      const key: Json = expectedCase.houseplex || {};
+      expect(Object.keys(key).length, `houseplex case ${expectedCase.case}: a key`).toBeGreaterThan(0);
+      for (const [field, k] of HP_FIELDS) {
+        const cell = key[k];
+        if (!cell) continue; // the key states nothing for this cell (A0166 footprint)
+        const where = `houseplex case ${expectedCase.case}/${k}`;
+        const row = byField.get(field) as Json;
+        expect(row, `${where}: a row for ${field}`).toBeDefined();
+        if (cell.s === 'number') {
+          expect(row.status, `${where}: computed status`).toBe('computed');
+          const tol = k === 'units' ? 0 : TOL[k] ?? 0;
+          expect(Math.abs(row.value - cell.v), `${where}: value ${row.value} vs ${cell.v} (tol ${tol})`).toBeLessThanOrEqual(tol);
+        } else {
+          expect(row.status, `${where}: not_evaluated status`).toBe('not_evaluated');
+        }
       }
     });
   }

@@ -1,0 +1,26 @@
+== MB-27 increment 3 item E11 (the golden-25 for the detached houseplex, RP-G25H) red: the houseplex cases of src/tests/steps/compute_maxbld_scenarios/golden-25.logic.test.ts run on the parent fixtures (inputs.jsonl and expected.jsonl without the houseplex class), the cases added; 25 of 54 red (the 25 houseplex cases), 29 green; on this tree 54 of 54 green
+   × houseplex case A0067_26SC
+   × houseplex case A0094_26SC
+   × houseplex case A0097_26SC
+   × houseplex case A0166_26EYK
+   × houseplex case A0170_26EYK
+   × houseplex case A0175_26NY
+   × houseplex case A0179_26EYK
+   × houseplex case A0182_26EYK
+   × houseplex case A0193_26EYK
+   × houseplex case A0203_26NY
+   × houseplex case A0205_26NY
+   × houseplex case A0229_26NY
+   × houseplex case A0277_26NY
+   × houseplex case A0289_26TEY
+   × houseplex case A0354_26TEY
+   × houseplex case A0375_26TEY
+   × houseplex case A0388_26TEY
+   × houseplex case A0399_24EYK
+   × houseplex case A0457_25EYK
+   × houseplex case A0461_26TEY
+   × houseplex case A0464_26TEY
+   × houseplex case A0553_26TEY
+   × houseplex case A0561_26TEY
+   × houseplex case A0562_26TEY
+   × houseplex case A0578_26TEY

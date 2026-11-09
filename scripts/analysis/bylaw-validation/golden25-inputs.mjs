@@ -85,6 +85,8 @@ function recomputePhase2(rows) {
   const optionPairs = rb.optionPairs(SCOPE, VOCAB.design_options);
   const byParcel = new Map();
   const optionsByParcel = new Map();
+  const hpByParcel = new Map(); // MB-27 inc3 E11 (RP-G25H): the detached houseplex class of the same lots, base cells and D5 option slots
+  const hpOptionsByParcel = new Map();
   for (const lot of out.rows.lots) {
     const decoded = lr.decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs });
     // The case is the principal detached house (the representative class of the golden lot).
@@ -93,8 +95,11 @@ function recomputePhase2(rows) {
     const opts = lr.decodeOptionResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs })
       .filter((d) => d.class === 'detached_house' && d.structure === 'principal');
     optionsByParcel.set(lot.parcel_id, opts);
+    hpByParcel.set(lot.parcel_id, new Map(decoded.filter((d) => !d.option && d.class === 'detached_houseplex' && d.structure === 'principal').map((d) => [d.target, d])));
+    hpOptionsByParcel.set(lot.parcel_id, lr.decodeOptionResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs })
+      .filter((d) => d.class === 'detached_houseplex' && d.structure === 'principal'));
   }
-  return { byParcel, optionsByParcel };
+  return { byParcel, optionsByParcel, hpByParcel, hpOptionsByParcel };
 }
 
 /** The source `parcel` block against the parcels row it is supposed to be (a fixture that drifted stops the run). */
@@ -121,7 +126,7 @@ function main() {
   const rows = JSON.parse(fs.readFileSync(path.join(dir, 'parcels-rows.json'), 'utf8'));
   const source = readJsonl(path.join(dir, 'source-inputs.jsonl'));
   const expected = readJsonl(path.join(dir, 'expected.jsonl'));
-  const { byParcel, optionsByParcel } = recomputePhase2(rows);
+  const { byParcel, optionsByParcel, hpByParcel, hpOptionsByParcel } = recomputePhase2(rows);
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const idByCase = new Map(expected.map((e) => [e.case, e.parcel_id]));
 
@@ -170,12 +175,20 @@ function main() {
     const phase2Options = (optionsByParcel.get(parcelId) || [])
       .map((d) => ({ target: d.target, option: d.option, shared: d.shared_with_base === true, ...cellOf(d) }))
       .sort((a, b) => (a.target < b.target ? -1 : a.target > b.target ? 1 : String(a.option ?? '') < String(b.option ?? '') ? -1 : String(a.option ?? '') > String(b.option ?? '') ? 1 : 0));
-    // Only phase2 is replaced (and phase2_options written after it); every other key keeps the source line's order.
+    // MB-27 inc3 E11 (RP-G25H, DL-14 a): the same targets for the detached houseplex class, an absent cell stays absent
+    const hpRecs = hpByParcel.get(parcelId) || new Map();
+    const phase2Houseplex = {};
+    // every stored base cell of the class (the step decodes them all; the Layer 3 unit rows read the base main-wall cell that the house rows never need)
+    for (const target of [...hpRecs.keys()].sort()) phase2Houseplex[target] = cellOf(hpRecs.get(target));
+    const phase2OptionsHouseplex = (hpOptionsByParcel.get(parcelId) || [])
+      .map((d) => ({ target: d.target, option: d.option, shared: d.shared_with_base === true, ...cellOf(d) }))
+      .sort((a, b) => (a.target < b.target ? -1 : a.target > b.target ? 1 : String(a.option ?? '') < String(b.option ?? '') ? -1 : String(a.option ?? '') > String(b.option ?? '') ? 1 : 0));
+    // Only phase2 is replaced (and phase2_options, phase2_houseplex, phase2_options_houseplex written after it); every other key keeps the source line's order.
     const out = {};
     for (const [k, v] of Object.entries(line)) {
-      if (k === 'phase2_options') continue;
+      if (k === 'phase2_options' || k === 'phase2_houseplex' || k === 'phase2_options_houseplex') continue;
       out[k] = k === 'phase2' ? phase2 : v;
-      if (k === 'phase2') out.phase2_options = phase2Options;
+      if (k === 'phase2') { out.phase2_options = phase2Options; out.phase2_houseplex = phase2Houseplex; out.phase2_options_houseplex = phase2OptionsHouseplex; }
     }
     if (!Object.prototype.hasOwnProperty.call(out, 'phase2')) throw new Error(`${caseName}: the source line has no phase2 key to replace`);
     lines.push(JSON.stringify(out));
