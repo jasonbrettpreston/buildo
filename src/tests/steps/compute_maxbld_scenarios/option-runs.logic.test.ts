@@ -178,8 +178,8 @@ describe('OR-3: a row is evaluated in the run its own design_option names, never
   // The pitched set-back is not_applicable and so is the base one; only the flat run has 1.4 m.
   const inputs = (): Json => ({
     seeds: SEEDS,
-    l2: { upper_storey_setback_m: na('base'), fsi: num(0.6), gfa_m2: { s: 'applies', kind: 'unregulated', value: null, clause: null, reason: null } },
-    l2Options: { runs: { [FLAT]: { upper_storey_setback_m: num(1.4, 'flat') }, [PITCHED]: { upper_storey_setback_m: na('flat') } }, shared: {}, flags: {} },
+    l2: { main_wall_height_m: num(7.2, 'base'), upper_storey_setback_m: na('base'), fsi: num(0.6), gfa_m2: { s: 'applies', kind: 'unregulated', value: null, clause: null, reason: null } },
+    l2Options: { runs: { [FLAT]: { upper_storey_setback_m: num(1.4, 'flat'), main_wall_height_m: num(7.2, 'flat') }, [PITCHED]: { upper_storey_setback_m: na('flat'), main_wall_height_m: num(7.2, 'flat') } }, shared: {}, flags: {} }, // MB-27 inc3 RM fix (H1): the set-back plate revision reads regulated(main_wall_height_m), so the house fixture carries the cell (input only)
     rows: { footprint_max_m2: { value: 100 }, buildable_depth_m: { value: 10 } },
     geometry: { lot_area_m2: 400 },
     switches: HEADLINE_ON,
@@ -219,8 +219,9 @@ describe('OR-4: Q-r1 a, an option-less row is evaluated in the run of the row re
     const inputs = lotInputs('A0094');
     const flat = R.runRowIn('wall_storeys', FLAT, inputs);
     const pitched = R.runRowIn('wall_storeys', PITCHED, inputs);
-    expect(l2Entry(flat, 'main_wall_height_m')).toEqual([expect.objectContaining({ value: 7.2, clause: '10.20.40.10(4)#(4)(A)', run: FLAT })]);
-    expect(l2Entry(pitched, 'main_wall_height_m')).toEqual([expect.objectContaining({ value: 7, clause: '10.20.40.10(2)#(2)(A)', run: PITCHED })]);
+    // MB-27 inc3 RM fix (named move, trace only): the revision's regulated(main_wall_height_m) read adds a second l2 entry for the same cell; the value read is still the first
+    expect(l2Entry(flat, 'main_wall_height_m')).toEqual([expect.objectContaining({ value: 7.2, clause: '10.20.40.10(4)#(4)(A)', run: FLAT }), expect.objectContaining({ run: FLAT })]);
+    expect(l2Entry(pitched, 'main_wall_height_m')).toEqual([expect.objectContaining({ value: 7, clause: '10.20.40.10(2)#(2)(A)', run: PITCHED }), expect.objectContaining({ run: PITCHED })]);
     // floor((7.2 − 0.212) ÷ 2.512) = 2 and floor((7.0 − 0.212) ÷ 2.512) = 2
     expect([flat.status, flat.value, pitched.status, pitched.value]).toEqual(['computed', 2, 'computed', 2]);
     // attic_eave_clearance_m has no design option (Q-K2 settlement): in the pitched run it is 7.0 − 2 × 2.512 = 1.976 m, the

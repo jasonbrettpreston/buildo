@@ -20,6 +20,7 @@ const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROO
 const clone = (x: unknown): Json => JSON.parse(JSON.stringify(x));
 
 const SEED_FILES = {
+  // re-pinned 2026-11-09 (MB-27 inc3 RM fix, operator "RM fix if grounded go with the recommendation", E1C-S, hash fields only): three increment-3 revisions on wall_storeys, storeys_above_wall and setback_plate_m2
   catalogue: 'scripts/seeds/bylaw/layer3-catalogue.json',
   switchboard: 'scripts/seeds/bylaw/switchboard.json',
   buildingTypes: 'scripts/seeds/bylaw/building-types.json',
@@ -33,7 +34,7 @@ const PINNED_SHA: Record<string, string> = {
   // re-pinned 2026-11-04 (MB-27 Layer 3 forms, operator RP-10 'RP-10 approved, switchboard pin approved, shape low yes'): the lexicon gained refuse, best_of, ceiling, headline_, headline_lower_bound_, dropped_, unknown_reason, semi, syntax and three best_of syntax phrases, and the catalogue gained the declared lists refuse_reasons, drop_reasons, flag_words and flag_params (M-480, with its Q-K5 a dated note).
   // re-pinned 2026-11-04 (MB-27 increment-2 rows + R1, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 37 increment-2 rows (M-457..M-487), the revisions of buildable_width_m (M-458) and gfa_max_m2 (M-476), the R1 design_option tags, 8 rafter settings (M-462), the flag word attic_outside_gfa and the refuse word no_permitted_gfa_base (M-480, Q-MECH0).
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): every row's building_type becomes a list (Q2 a); was catalogue: '
-  catalogue: '86d7911e7ce759f21e15c3f3e493ac0dc2ea15f8749fff42af578214b1691889',
+  catalogue: 'bb68816ea1e1f4b2e3046a1b58dd6a459d95bbcbf5623a5ff0738fe5aa942c50',
   // re-pinned 2026-11-04 (MB-27 switchboard confidence, operator Q-CONF a 'Q CONF a' and 'RP-10 approved, switchboard pin approved, shape low yes'): schema switchboard-v2; every reading row gained confidence and evidence; the seven increment-2 register readings C1-C7 joined as reading rows (M-481).
   // re-pinned 2026-11-04 (MB-27 increment-2 rows, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 39 formula switches (37 rows, 2 revisions; M-378, M-476), four off by "Q-default a".
   // re-pinned 2026-11-06 (MB-27 the switch-on, operator RP-SW "all recommended" (D-9) and RP-SW2 "a", version and hash fields only): the four Q-DEFAULT switches off -> on, their reason text; was 4aa44e44
@@ -148,7 +149,7 @@ describe('MB-31 catalogue invariants (B8)', () => {
   });
 
   it('validateCatalogue on the real seeds: no violation', () => {
-    expect(C.validateCatalogue(SEEDS, ['1', '2'])).toHaveLength(0); // Q-K-ASSERT a (M-457): the increment-2 rows; was ['1']
+    expect(C.validateCatalogue(SEEDS, ['1', '2', '3'])).toHaveLength(0); // Q-K-ASSERT a (M-457): the increment-2 rows; was ['1']
   });
 
   it('validateCatalogue rejects a renamed fact, a deleted switchboard row, a 6 ratio and a fact named fsi', () => {

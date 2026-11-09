@@ -1,0 +1,10 @@
+== MB-27 increment 3 RM houseplex main-wall rows (operator 2026-11-09, option (a)) red, measured on the prototype (three increment-3 revisions on wall_storeys, storeys_above_wall, setback_plate_m2 behind reading:rm_houseplex_no_main_wall_limit) BEFORE the named input and assertion moves, then green after them (584 of 584 here). The six RM examples of the folded key are red on the parent and become green in the E12 commit.
+   × increment2-worked-examples FLAT-2: setback_plate_m2 not_evaluated:missing_input:absent_target (house l2 without main_wall_height_m)
+   × increment2-worked-examples FLAT-12: same cause
+   × increment2-worked-examples FLAT-13: same cause
+   × option-runs OR-3 (setback_plate_m2 = 72 m2 from the flat set-back): not_evaluated, same cause
+   × option-runs OR-3 (a runner that resolved setback_plate_m2 in its caller's run): same cause
+   × option-runs OR-4 (wall_storeys reads main_wall_height_m once): two l2 entries (the regulated read), a named trace consequence
+   × increment2-revisions V1: the revised-row list gains wall_storeys, storeys_above_wall, setback_plate_m2
+   × layer3-catalogue sha pin and validateCatalogue increments list ['1','2'] (the revision is increment 3)
+   × detached_house golden-25: value, status and reason unchanged on 1175 of 1175 row results; trace and switches differ on 724 (named consequence)

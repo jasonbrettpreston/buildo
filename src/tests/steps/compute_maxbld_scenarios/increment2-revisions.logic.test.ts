@@ -48,8 +48,16 @@ describe('MB-27 increment 2: revisions and the switchboard (M-476, M-458)', () =
     const ids = SEEDS.catalogue.rows.map((r: Json) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
     const revised = SEEDS.catalogue.rows.filter((r: Json) => Array.isArray(r.revisions)).map((r: Json) => r.id);
-    expect(revised).toEqual(['buildable_width_m', 'gfa_max_m2']);
-    for (const id of revised) {
+    // MB-27 inc3 RM fix (named move): wall_storeys, storeys_above_wall and setback_plate_m2 each carry one increment-3 revision behind the RM reading; the two increment-2 revisions are unchanged
+    expect(revised).toEqual(['buildable_width_m', 'gfa_max_m2', 'wall_storeys', 'storeys_above_wall', 'setback_plate_m2']);
+    const RM_READING = 'reading:rm_houseplex_no_main_wall_limit';
+    for (const id of revised.filter((x: string) => ['wall_storeys', 'storeys_above_wall', 'setback_plate_m2'].includes(x))) {
+      const row = SEEDS.catalogue.rows.find((r: Json) => r.id === id);
+      expect(row.revisions).toHaveLength(1);
+      expect([row.revisions[0].increment, row.revisions[0].switch]).toEqual(['3', RM_READING]);
+      expect(SEEDS.switchboard.rows.map((s: Json) => s.id)).toContain(RM_READING);
+    }
+    for (const id of revised.filter((x: string) => ['buildable_width_m', 'gfa_max_m2'].includes(x))) {
       const row = SEEDS.catalogue.rows.find((r: Json) => r.id === id);
       expect(row.increment).toBe('1');
       expect(row.revisions).toHaveLength(1);

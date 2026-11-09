@@ -1449,6 +1449,7 @@
   "key_answer": "170.4 m2",
   "inputs": {
    "l2": {
+    "main_wall_height_m": 7.2,
     "upper_storey_setback_m": 1.4
    },
    "geometry": {},
@@ -1820,6 +1821,7 @@
   "key_answer": "plate 0 m2: the additional storey is not built; flat form = n_w x F, disclosed (item 4)",
   "inputs": {
    "l2": {
+    "main_wall_height_m": 7.2,
     "upper_storey_setback_m": 1.4
    },
    "geometry": {},
@@ -1856,6 +1858,7 @@
   "key_answer": "plate floored at 0 (raw -3.36): the additional storey is not built; flat form = n_w x F, disclosed (item 4; never not_buildable)",
   "inputs": {
    "l2": {
+    "main_wall_height_m": 7.2,
     "upper_storey_setback_m": 1.4
    },
    "geometry": {},
