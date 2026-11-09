@@ -643,12 +643,6 @@
     "RM": { "citation": "10.80.30.1(1), 10.80.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
     "by_unit_count": { "$comment": "Spec 69a M-252 (operator approved 2026-10-21, 2026-10-21-chat-batch-g#CHAT-29.F-SC-8): an exception clause written before By-law 648-2025 names a duplex or triplex; on the lot that is a detached houseplex of 2 or 3 dwelling units (vars.dwelling_units), and the clause binds it as its own type (not the M-180(1) substitution, so M-180(2) does not compare it).", "duplex": { "type": "detached_houseplex", "dwelling_units": 2 }, "triplex": { "type": "detached_houseplex", "dwelling_units": 3 } }
   },
-  "exception_type_binding": {
-    "$comment": "Spec 69a M-252 dated note 2026-10-29 (operator MB17-Q1, 2026-10-29-batch-ah#CHAT-209.MB17-Q1; MB-18): \"An exception applies only to the building types it names.\" mode named_only, read for the targets listed: an exception-layer unit whose every target is listed binds a building type only when its application.building_types (or its by_type entry) names that type, or the duplex / triplex unit-count name of by_unit_count; it is not inherited from the parent type (building_type_parent) and it is not carried over to the houseplex by the M-180(1) alias. The ruling's own instance is a setback (A0399: the RM 23 side yard 0.6 m is written for a detached house and does not set a detached houseplex's side yard; base 1.2 m, 10.80.40.70(3)(A)), so the listed targets are the setbacks; every other target keeps the M-180(1) substitution and the M-180(2) comparison (heights, FSI, coverage, storeys, and the lot minimums of x.30.1(1) such as the RM 252 lot frontage of A0289) until the operator rules that the sentence reaches them too.",
-    "mode": "named_only",
-    "targets": ["front_setback_m", "rear_setback_m", "side_setback_m", "side_setback_street_m"],
-    "ruling": "M-252 dated note 2026-10-29 (2026-10-29-batch-ah#CHAT-209.MB17-Q1)"
-  },
   "label_absence_unregulated": {
     "$comment": "Spec 69a M-220 / M-202(3): when no unit applies to the target and the lot's zone label carries no such letter, the answer is unregulated (no label cap), not no_candidate.",
     "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }

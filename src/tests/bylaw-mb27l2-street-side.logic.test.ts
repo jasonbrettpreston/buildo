@@ -113,8 +113,8 @@ describe('M-475 exceptions: an exception that carries a street-side clause keeps
     expect(show(eff(lot('RS', 'detached_house', {}, '900.4.10(24)')))).toEqual(['value', 3.6, null, '900.4.10(24)#(24)[SSP](C)(v)', null, null]);
     expect(show(eff(lot('RS', 'semi_detached_house', {}, '900.4.10(24)')))).toEqual(['value', 3.6, null, '900.4.10(24)#(24)[SSP](B)(v)', null, null]);
   });
-  it('RS 900.4.10(24): a houseplex, which no clause of the exception or the zone names, is unregulated by absence (rule 7a v2, per type)', () => {
-    expect(show(eff(lot('RS', 'detached_houseplex', {}, '900.4.10(24)')))).toEqual(['value', 'unregulated', null, null, 'absence', (rulingOf('RS') as Json).id]);
+  it('RS 900.4.10(24): a houseplex takes the detached-house street-side clause 3.6 m (M-180 alias; MB17-Q1 withdrawn)', () => {
+    expect(show(eff(lot('RS', 'detached_houseplex', {}, '900.4.10(24)')))).toEqual(['value', 3.6, null, '900.4.10(24)#(24)[SSP](C)(v)', null, null]);
   });
   it('an unauthored exception stays not_evaluated:exception_not_authored, never unregulated', () => {
     for (const z of ZONES) expect(show(eff(lot(z, 'detached_house', {}, '900.4.10(99999)')))).toEqual(['not_evaluated', null, 'exception_not_authored:900.4.10(99999)', null, null, null]);

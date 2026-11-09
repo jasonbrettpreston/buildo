@@ -51,15 +51,12 @@ describe('MB-18 / 10.5.40.50(2): a platform meets the zone setbacks per side and
 });
 
 describe('MB-18 / MB17-Q1: an exception applies only to the building types it names (M-252 dated note 2026-10-29)', () => {
-  it('the rule is data: vocab.exception_type_binding names the mode and the setback targets it reads', () => {
-    expect(I.vocab.exception_type_binding).toMatchObject({ mode: 'named_only', targets: ['front_setback_m', 'rear_setback_m', 'side_setback_m', 'side_setback_street_m'] });
-  });
-  it('A0399: RM exception 23 (900.6.10(23)(D)(i): 0.6 m for a detached house) sets the detached house, not a 4-unit detached houseplex (base 1.2 m, 10.80.40.70(3)(A))', () => {
+  it('A0399: RM exception 23 (900.6.10(23)(D)(i): 0.6 m for a detached house) sets the detached house and, by the M-180(1) substitution, the 4-unit detached houseplex (MB17-Q1 withdrawn, CHAT-210.MB17-Q1R)', () => {
     const house = lot('RM', 'detached_house', { exception: '900.6.10(23)', label: { u: 4, d: 0.6 }, vars: { dwelling_units: 1 } });
     const plex = lot('RM', 'detached_houseplex', { exception: '900.6.10(23)', label: { u: 4, d: 0.6 }, vars: { dwelling_units: 4 } });
     const h = eff(house, 'side_setback_m'); const p = eff(plex, 'side_setback_m');
     expect([h.value, h.winner]).toEqual([0.6, '900.6.10(23)#(23)[SSP](D)(i)']);
-    expect([p.value, p.winner]).toEqual([1.2, '10.80.40.70(3)#(3)(A)']);
+    expect([p.value, p.winner]).toEqual([0.6, '900.6.10(23)#(23)[SSP](D)(i)']);
   });
   it('the exception still sets the detached house height and the lot minimums of a houseplex are kept (M-180(1) outside the setbacks): RM 23 height 9.5 m for the house, RM 252 lot frontage 8.0 m for a 2-unit houseplex (A0289)', () => {
     const house = lot('RM', 'detached_house', { exception: '900.6.10(23)', label: { u: 4, d: 0.6 } });
