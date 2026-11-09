@@ -4,12 +4,12 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "6afdee23f",
+  "head": "d70cf3d81",
   "commits_reviewed": [
-    "5f079aded",
-    "a7453c00a",
-    "1dfe0a8d6",
-    "6afdee23f"
+    "9106f0b9e (register row FE-30, dated notes)",
+    "e12ea9192 (prereg-MF-13-1, superseded, kept unedited)",
+    "c12bae461 (prereg-MF-13-2)",
+    "d70cf3d81 (MF-13 code commit)"
   ],
   "cards": [
     "Operator answers 2026-11-09: \"Agreed and capture this as rulings\", \"yes - looks good now\" (D0 simplified), \"agreed\" (C-1, C-2, C-4; D-3 c; D-5).",
@@ -41,6 +41,7 @@
   "evidence": "docs/reports/red-evidence/MF-13/",
   "notes": [
     "Refuted DeepSeek claims, each checked: retired-rows read (git grep: no such code); permitted unit none treated as unknown (form status gives text, G5 asserts it); splice index before filter (earlier entries are non-catalogue, output is deterministic and --check reproduces it); deleted generated file classed as stale (it is HAND-EDIT, reproduced); digest read inside the expression (static files).",
-    "D-5 ratified GEN-* grammar recorded here and in the FE-24 dated note (commit 5f079aded)."
+    "D-5 ratified GEN-* grammar recorded here and in the FE-24 dated note (commit 5f079aded).",
+    "2026-11-09 touch-up after cherry-pick onto the push stack (prior values kept): {\"head\":\"6afdee23f\",\"commits_reviewed\":[\"5f079aded\",\"a7453c00a\",\"1dfe0a8d6\",\"6afdee23f\"]}. The commit shas 5f079aded, a7453c00a, 1dfe0a8d6 and 6afdee23f became 9106f0b9e, e12ea9192, c12bae461 and d70cf3d81 (the MF-13 panel record commit is ca4f15eed)."
   ]
 }

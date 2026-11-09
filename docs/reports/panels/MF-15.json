@@ -4,11 +4,11 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "TBD",
+  "head": "97462b5b8",
   "commits_reviewed": [
-    "76cfefb49 (dated notes: FE-13, Spec 127, queue, system map)",
-    "f59ca9a7f (prereg-MF-15-1, alone)",
-    "MF-15 code commit (TBD)"
+    "3186b1dac (dated notes: FE-13, Spec 127, queue, system map)",
+    "8d801854f (prereg-MF-15-1, alone)",
+    "97462b5b8 (MF-15 code commit)"
   ],
   "cards": [
     "Operator \"I agree with Mf-13 and Mf-15\" (2026-11-09): MF-15 D-1 a shared module report-checks.mjs read by the gate and the landed honest and parity locks; D-2 a S-gen spawns the committed generators' --check; D-3 a no budget code, prints budget WAITS MF-08; D-4 a output SV-<ARM> <subject>: <problem>, exit 0/1/2; D-5 TRIMMED to --check only; D-6 a FE-13 dated note, no new FE row. Operator: as simple as possible, limiting scope creep, straightforward.",
@@ -48,5 +48,7 @@
   ],
   "owner_signoff": "OWED (operator): McBylaws owner sign-off on the gate code is recorded here before the code commit is shown to the operator.",
   "evidence": "docs/reports/red-evidence/MF-15/red-green.txt; ~/Buildo-scratch/mcfrontend/MF-15/output-panel/",
-  "notes": []
+  "notes": [
+    "2026-11-09 touch-up after cherry-pick onto the push stack (prior values kept): {\"head\":\"TBD\",\"commits_reviewed\":[\"76cfefb49 (dated notes: FE-13, Spec 127, queue, system map)\",\"f59ca9a7f (prereg-MF-15-1, alone)\",\"MF-15 code commit (TBD)\"]}. Commit order: 3186b1dac (dated notes, FE-13, Spec 127, queue, system map), 8d801854f (prereg-MF-15-1, alone, directly under the code), 97462b5b8 (MF-15 code commit)."
+  ]
 }
