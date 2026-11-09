@@ -152,8 +152,8 @@ const all = (fix: (r: Raw) => Raw): Emit => (t, tree, sc, ctx) => fix(emit(t, tr
 const FLAT = 'detached_house/flat_or_shallow_roof';
 
 describe('FE-07 parity: the real output of every target (goldens)', () => {
-  it('covers the manifest: 11 states x 3 picks, four targets', () => {
-    expect(manifest.states).toHaveLength(11);
+  it('covers the manifest: 12 states x 3 picks, four targets', () => {
+    expect(manifest.states).toHaveLength(12);
     expect(PICKS).toHaveLength(3);
     expect(TARGETS).toHaveLength(4);
   });
@@ -168,7 +168,7 @@ describe('FE-07 parity: the real output of every target (goldens)', () => {
       if (tree.lifecycle) expect(expected(tree, null, reportCtx).map((r) => r.field)).toEqual([REASON]);
     }
   });
-  it('the four targets and the golden tree agree on all 33 combinations', () => {
+  it('the four targets and the golden tree agree on all 36 combinations', () => {
     expect(goldenFindings(emit)).toEqual([]);
   });
   it('a hand-written literal pins the at_least state apart from the generator', () => {
