@@ -45,4 +45,18 @@ describe('FE-24: a new catalogue row needs no front-end code', () => {
   it('an unknown status throws', () => {
     expect(() => buildTree({ status: 'maybe', zz_new_row_m2: 1 }, ctxWith(NEW))).toThrow(ReportRenderError);
   });
+  // OUTPUT-panel folds (code-reviewer-grounded 1-3): the throw is total, not only for status responses
+  it('a lifecycle response with an unknown field throws RR-FIELD', () => {
+    expect(() => buildTree({ lifecycle: 'loading', bogus: 1 }, ctxWith(NEW))).toThrow(/^RR-FIELD/);
+  });
+  it('a response may not carry the renderer\'s own reason field, and a tree may not repeat a field', () => {
+    expect(() => buildTree({ status: 'permitted', status_text: 'hello' }, ctxWith(NEW))).toThrow(/^RR-FIELD status_text/);
+    const t = buildTree({ status: 'permitted' }, ctxWith(NEW));
+    t.nodes.push(JSON.parse(JSON.stringify(t.nodes[0])));
+    expect(() => viewOf(t, { scenario: null, target: 'web' }, ctxWith(NEW))).toThrow(/RR-FIELD status_text: duplicate node/);
+  });
+  it('a status clause is inserted literally, never as a replacement pattern', () => {
+    const t = buildTree({ status: 'not_permitted:$&' }, ctxWith(NEW));
+    expect(t.nodes[0].value).toBe('Not allowed in this zone ($&).');
+  });
 });

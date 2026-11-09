@@ -1,0 +1,9 @@
+# RED 3: OUTPUT-panel fold tests (code-reviewer-grounded findings 1-3) run against the unfixed core.ts
+   × FE-24: a new catalogue row needs no front-end code > a lifecycle response with an unknown field throws RR-FIELD 2ms
+   × FE-24: a new catalogue row needs no front-end code > a response may not carry the renderer's own reason field, and a tree may not repeat a field 0ms
+   × FE-24: a new catalogue row needs no front-end code > a status clause is inserted literally, never as a replacement pattern 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw an error
+AssertionError: expected [Function] to throw an error
+AssertionError: expected 'Not allowed in this zone ({clause}).' to be 'Not allowed in this zone ($&).' // Object.is equality
+      Tests  3 failed | 7 passed (10)

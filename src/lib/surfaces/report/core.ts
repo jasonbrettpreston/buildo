@@ -45,7 +45,8 @@ const textKey = (status: string): string => (status.startsWith('not_permitted:')
 const statusPattern = (schema: Json): RegExp => new RegExp(schema.$defs.node.properties.status.pattern);
 const registryText = (content: Json, status: string): string | undefined => {
   const t = content.status_text?.[textKey(status)];
-  return typeof t === 'string' ? t.replace('{clause}', status.split(':')[1] ?? '') : undefined;
+  const clause = status.split(':')[1] ?? '';
+  return typeof t === 'string' ? t.replace('{clause}', () => clause) : undefined; // a function replacer: the clause is literal, never a pattern
 };
 const disclosureCodes = (content: Json): string[] =>
   Object.entries(content.disclosure_texts ?? {}).filter(([, v]) => v !== null && typeof v === 'object').map(([k]) => k);
@@ -66,6 +67,7 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
     const text = life[response.lifecycle];
     if (typeof text !== 'string' || text === '') out.push(`RR-LIFECYCLE response: unknown lifecycle: ${String(response.lifecycle)}`);
     if (!reason) out.push(`RR-FIELD declaration: no field ${REASON_FIELD}`);
+    for (const k of Object.keys(response)) if (k !== 'lifecycle' && !INFO_KEYS.includes(k)) out.push(`RR-FIELD unexpected field on a lifecycle response: ${k}`);
     if (out.length) throw new ReportRenderError(out);
     return { lifecycle: response.lifecycle, nodes: [mk(reason as Json, text, 'none')] };
   }
@@ -77,7 +79,8 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
   for (const k of keys) {
     const hits = fields.filter((f) => f.name === k);
     const v = response[k];
-    if (hits.length === 0) out.push(`RR-FIELD unknown field: ${k}`);
+    if (k === REASON_FIELD) out.push(`RR-FIELD ${k}: produced by the renderer, not accepted from a response`);
+    else if (hits.length === 0) out.push(`RR-FIELD unknown field: ${k}`);
     else if (hits.length > 1) out.push(`RR-FIELD ambiguous field name: ${k}`);
     else if (!(v === null || typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v)))) out.push(`RR-FIELD ${k}: value is not a scalar`);
     else picked.push(hits[0] as Json);
@@ -108,7 +111,10 @@ export const assertTree = (tree: Json, ctx: ReportCtx): void => {
   const codes = disclosureCodes(ctx.content);
   const isLife = tree?.lifecycle !== undefined;
   if (isLife && nodes.length !== 1) out.push('RR-LIFECYCLE tree: a lifecycle tree carries exactly one message node');
+  const seen = new Set<string>();
   nodes.forEach((n, i) => {
+    if (seen.has(n?.field)) out.push(`RR-FIELD ${String(n?.field)}: duplicate node`);
+    seen.add(n?.field);
     const hits = fields.filter((f) => f.name === n?.field);
     if (hits.length === 0) out.push(`RR-FIELD ${String(n?.field)}: node ${i} field is not declared`);
     else if (!hits.some((f) => kindOf(f) === n.source)) out.push(`RR-SOURCE ${String(n.field)}: node ${i} source ${String(n.source)} is not the declared kind`);

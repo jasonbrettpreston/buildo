@@ -1,0 +1,6 @@
+# GREEN after the OUTPUT folds
+surface-validate current; S-gen ok · S-golden ok (10 states x 4; owed 17 states / 68 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08
+exit 0
+report-capture checked 40 goldens; 0 stale
+ Test Files  11 passed (11)
+      Tests  284 passed (284)
