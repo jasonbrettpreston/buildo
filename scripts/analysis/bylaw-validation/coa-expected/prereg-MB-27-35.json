@@ -1,0 +1,230 @@
+{
+  "$comment": "M-321 pre-registration, task MB-27, prereg 35 (Spec 124a R-MA; round 115), the revert round of increment 1 that lands increment-3 item E3: the houseplex roof option rows (D5) and the RC-1 guards (DL-7 a). layer2-scope.json options.roof_form.classes gains detached_houseplex; bylaw-materialize.js and bylaw-lot-row.js write and decode a class override at an option slot where a listed class differs from the representative (RC-1 as amended by DL-7 a), and a class that lists no option slot keeps its base results; migration 297 (a FILE, not applied: operator DB job) widens the option view to the listed classes at width 61. One table_version move, no evaluator_version move, zero scorer moves. Named assertion moves are the DL-7 a inversions listed in expected_assertion_changes; the oracle-class file bylaw-mb27l2-roof is listed line for line (door token bylaw-mb27l2-roof on M-465). Red locks first: src/tests/steps/resolve_bylaws/d5-houseplex-option-slots.logic.test.ts and migration-297.logic.test.ts.",
+  "schema": "coa-round-prereg-v1",
+  "round": 115,
+  "task": "MB-27",
+  "rules": [
+    "M-465",
+    "R-MA"
+  ],
+  "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/build-plan.md row E3; ~/Buildo-scratch/mcbylaws/inc3/build/ready-20261108/02-E3.patch",
+  "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+  "expected_moves": [],
+  "expected_totals": {
+    "ANSWERED": 7,
+    "MATCH": 407,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals": {
+    "ANSWERED": 7,
+    "MATCH": 407,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes": [],
+  "expected_moves_4d": [],
+  "expected_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 283,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 283,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes_4d": [],
+  "expected_moves_cumulative": [],
+  "expected_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 459,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 459,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes_cumulative": [],
+  "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+  "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+  "expected_repin": [
+    "docs/reference/bylaw-layer2-input.json table_version 44dbbfa2b5e5 -> 4841e1587aab (evaluator_version unchanged)",
+    "docs/reference/maxbld-amendment-index.json layer2_table_version 44dbbfa2b5e5 -> 4841e1587aab",
+    "docs/reference/maxbld-report-field-inventory.{md,json}: the version hash fields only (report-fields.mjs --write)",
+    "expected-172.json and expected-4d.json commit and inputs.table_version re-pinned through coa-scorecard.mjs --pin, totals equal",
+    "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version re-bound to 4841e1587aab (RP-SW2 a)"
+  ],
+  "increment": "1",
+  "expected_assertion_changes": [
+    {
+      "file": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "line": "R5, R6, R11, R12",
+      "row": "roof option rows: base slots byte-identical, RT shared, another class decodes no option row, A0166 flag",
+      "from": "single-class option slots (detached_house only)",
+      "to": "the listed houseplex also stores overrides at the option slots and decodes its own option rows; checks compare the base indexes, filter to detached_house, and expect both listed classes",
+      "rule": "DL-7 a",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md DL-7 a (RC-1 guards, option overrides for the listed classes), approved 2026-11-06"
+    },
+    {
+      "file": "src/tests/steps/resolve_bylaws/materialize-roof-axis.logic.test.ts",
+      "line": "B2, B3",
+      "row": "option rows are the 7 slots for each listed class; no class_results entry at slots 55-61 for the representative class",
+      "from": "7 option rows, class detached_house only; no class override at 55-61",
+      "to": "14 option rows (both listed classes); overrides allowed for the houseplex",
+      "rule": "DL-7 a",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md DL-7 a (RC-1 guards, option overrides for the listed classes), approved 2026-11-06"
+    },
+    {
+      "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+      "line": "class_results length; winner_layers",
+      "row": "a differing class stores only the positions that differ; winner_layers counts the representative class option slots",
+      "from": "houseplex override keys = principal pairs; winner count over all option rows",
+      "to": "principal pairs + the 7 option slots; winner count over the representative class option rows",
+      "rule": "DL-7 a",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md DL-7 a (RC-1 guards, option overrides for the listed classes), approved 2026-11-06"
+    },
+    {
+      "file": "src/tests/steps/resolve_bylaws/migration-295.logic.test.ts",
+      "line": "option view classes",
+      "row": "migration 295 option view lists detached_house; the scope lists the houseplex too (297 widens the view)",
+      "from": "view classes equal scope classes (detached_house)",
+      "to": "view of 295 stays detached_house; the scope lists both",
+      "rule": "DL-7 a",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md DL-7 a (RC-1 guards, option overrides for the listed classes), approved 2026-11-06"
+    }
+  ],
+  "expected_value_changes": [
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "// DL-7 a (M-494): a listed class writes overrides at the option slots (index >= n); only the base indexes are compared"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "const baseOnly = (cr: Json | null): Json | null => (cr === null ? null : Object.fromEntries(Object.entries(cr).map(([c, ov]) => [c, Object.fromEntries(Object.entries(ov as Json).filter(([k]) => Number(k) < n))])));"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(l.class_results, `${p.parcel_id} class_results`).toEqual(p.class_results);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(baseOnly(l.class_results), `${p.parcel_id} class_results`).toEqual(p.class_results);"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "for (const r of rows.filter((x) => x.option !== null)) expect([r.target, r.option, r.shared_with_base]).toEqual([r.target, r.option, true]);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "for (const r of rows.filter((x) => x.option !== null && x.class === 'detached_house')) expect([r.target, r.option, r.shared_with_base]).toEqual([r.target, r.option, true]);"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house']));",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "for (const lot of out.rows.lots) if (lot.class_results) for (const ov of Object.values(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) expect(Number(k)).toBeLessThan(env.pairs.length);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex']));"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "for (const lot of out.rows.lots) if (lot.class_results) for (const [c, ov] of Object.entries(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) if (c !== 'detached_houseplex') expect(Number(k)).toBeLessThan(env.pairs.length);"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof';",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+      "case": "bylaw-mb27l2-roof R5 R6 R11 R12 a listed houseplex writes option overrides and decodes its own option rows (RC-1 as amended by DL-7 a)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof' && r.class === 'detached_house';"
+    }
+  ]
+}
