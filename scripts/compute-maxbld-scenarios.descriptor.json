@@ -25,7 +25,8 @@
         { "step": "link_parcel_abutments" },
         { "step": "parcels" },
         { "step": "enrich_parcels" },
-        { "step": "enrich_centreline" }
+        { "step": "enrich_centreline" },
+        { "step": "enrich_heritage" }
       ],
       "tables": [
         {
@@ -38,7 +39,7 @@
         },
         {
           "table": "bylaw_resolution_lot_stamps",
-          "columns": ["parcel_id", "lot_gate", "permitted", "permitted_text_ids", "table_version"]
+          "columns": ["parcel_id", "lot_gate", "permitted", "permitted_text_ids", "table_version", "evaluator_version"]
         },
         {
           "table": "bylaw_resolution_units",
@@ -56,7 +57,7 @@
         },
         {
           "table": "parcels",
-          "columns": ["id", "lot_size_sqm", "frontage_m", "depth_m", "is_corner_lot", "zoning_class", "primary_frontage_street_name", "geom"]
+          "columns": ["id", "parcel_id", "lot_size_sqm", "frontage_m", "depth_m", "is_corner_lot", "zoning_class", "zoning_zn_string", "exception_number", "zoning_overlays", "on_policy_road", "is_through_lot", "abuts_laneway", "zoning_is_ambiguous", "in_sixplex_area", "is_heritage_designated", "primary_frontage_street_name", "geom"]
         },
         {
           "table": "parcel_abutments",

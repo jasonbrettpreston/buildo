@@ -38,9 +38,15 @@ const READ_SQL = Object.freeze({
  WHERE o.parcel_id = ANY($1::int[]) AND o.class = $2 AND o.structure = $3
  ORDER BY o.parcel_id, o.target, o.option`,
   // Q-STOR a (migration 295): the lot stamps are stored as bytea; Layer 3 reads them as hex through the view bylaw_resolution_lot_stamps
-  lots: `SELECT l.parcel_id, l.lot_gate, l.permitted, l.permitted_text_ids, l.table_version
+  lots: `SELECT l.parcel_id, l.lot_gate, l.permitted, l.permitted_text_ids, l.table_version, l.evaluator_version
   FROM bylaw_resolution_lot_stamps l
  WHERE l.parcel_id = ANY($1::int[])`,
+  // MB-27 increment 3, DL-21 a (D-8 read wiring): the parcels columns resolve_bylaws reads (resolve-bylaws.js buildSourceSql), so buildLotVector can rebuild the lot vector
+  parcel: `SELECT p.id, p.parcel_id, p.zoning_class, p.zoning_zn_string, p.exception_number, p.zoning_overlays, p.on_policy_road, p.is_corner_lot,
+       p.is_through_lot, p.abuts_laneway, p.frontage_m, p.depth_m, p.lot_size_sqm, p.zoning_is_ambiguous, p.in_sixplex_area, p.is_heritage_designated,
+       ST_NPoints(p.geom)::int AS geom_npoints
+  FROM parcels p
+ WHERE p.id = ANY($1::int[])`,
   geometry: `SELECT p.id, p.lot_size_sqm, p.frontage_m, p.depth_m, p.is_corner_lot, p.zoning_class, p.primary_frontage_street_name
   FROM parcels p
  WHERE p.id = ANY($1::int[])`,

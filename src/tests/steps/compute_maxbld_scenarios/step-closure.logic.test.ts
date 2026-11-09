@@ -51,15 +51,26 @@ const EXPECTED_TABLES = [
   'parcel_abutments',
   'parcels',
 ];
+// MB-27 increment 3, DL-21 a (D-8 read wiring, the step-closure ALLOWED assertion): the buildLotVector columns join the parcels read
 const PARCEL_COLUMNS = [
+  'abuts_laneway',
   'depth_m',
+  'exception_number',
   'frontage_m',
   'geom',
   'id',
+  'in_sixplex_area',
   'is_corner_lot',
+  'is_heritage_designated',
+  'is_through_lot',
   'lot_size_sqm',
+  'on_policy_road',
+  'parcel_id',
   'primary_frontage_street_name',
   'zoning_class',
+  'zoning_is_ambiguous',
+  'zoning_overlays',
+  'zoning_zn_string',
 ];
 const FORBIDDEN_SNIPPETS = [
   'process.env',
