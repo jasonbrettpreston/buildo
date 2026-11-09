@@ -49,6 +49,31 @@ for (const [label, arm, run] of usage ? [] : arms) {
   if (f.length === 0) ok.push(label);
 }
 
+// MF-42 (FE-31, FE-13 dated note): the generic arms DESC, SCREEN and SBIND, loaded after the usage check by an awaited import inside their own guard,
+// so a missing module or validator is a stated finding per arm and the REPORT arms above still report. Each returns {findings, note}; a WAITS note is
+// read from the manifest and is never `ok`.
+const screenNotes = [];
+const guardedAsync = async (arm, run) => {
+  try { return await run(); } catch (e) { return { findings: [`SV-${arm} arm: input of the wrong shape: ${e.message}`], note: '' }; }
+};
+if (!usage) {
+  let mod = null;
+  let ctx = null;
+  let unavailable = '';
+  try {
+    mod = await import('./screen-checks.mjs');
+    ctx = await mod.loadContext(REPO);
+  } catch (e) {
+    unavailable = `${e?.message ?? e}`.split('\n')[0];
+  }
+  for (const arm of ['DESC', 'SCREEN', 'SBIND']) {
+    const r = unavailable ? { findings: [`SV-${arm} arm: screen-checks.mjs unavailable: ${unavailable}`], note: '' }
+      : await guardedAsync(arm, async () => mod.ARMS.find(([, a]) => a === arm)[2](ctx));
+    findings.push(...r.findings);
+    if (r.findings.length === 0) screenNotes.push(r.note);
+  }
+}
+
 if (usage) {
   // exit code 2 already set
 } else if (findings.length > 0) {
@@ -57,5 +82,5 @@ if (usage) {
 } else {
 const m = manifestOf();
 const owed = Number.isInteger(m?.owed_states) && Number.isInteger(m?.owed_files) ? `; owed ${m.owed_states} states / ${m.owed_files} files` : '';
-console.log(`surface-validate current; ${ok.map((l) => (l === 'S-golden' ? `${l} ok (${m.states.length} states x ${TARGETS.length}${owed})` : `${l} ok`)).join(' · ')} · budget WAITS MF-08`);
+console.log(`surface-validate current; ${ok.map((l) => (l === 'S-golden' ? `${l} ok (${m.states.length} states x ${TARGETS.length}${owed})` : `${l} ok`)).join(' · ')} · budget WAITS MF-08 · ${screenNotes.join(' · ')}`);
 }

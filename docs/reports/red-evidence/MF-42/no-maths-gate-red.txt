@@ -1,0 +1,15 @@
+MF-42 lock edits, red first (2026-11-09, ~/Buildo-wt-mf42 on ffb6b0610).
+
+FE-13 src/tests/surfaces/surface-validate.logic.test.ts against the PRIOR gate (scripts/surfaces/surface-validate.mjs at ffb6b0610, no generic arms): the amended exact toBe success string, the missing-module case and the WAITS case fail. Green after: 49 of 49.
+   × FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting 182ms
+   × FE-13 surface-validate gate: real tree > MF-42: a missing screen-checks.mjs gives three unavailable lines, the REPORT arms still report, exit 1 (no stack) 112ms
+   × FE-13 surface-validate gate: real tree > MF-42: a temp tree that examines nothing prints WAITS for the generic arms, never a finding 112ms
+AssertionError: expected 'surface-validate current; S-gen ok · …' to be 'surface-validate current; S-gen ok · …' // Object.is equality
+AssertionError: expected [] to deeply equal [ …(3) ]
+AssertionError: expected 'surface-validate current; S-gen ok · …' to contain '· budget WAITS MF-08 · S-desc ok (exa…'
+      Tests  3 failed | 46 passed (49)
+
+FE-05 src/tests/surfaces/report-no-maths.logic.test.ts with the module scan stubbed to the prior behaviour (no binding module read): the planted a + b module is not reported. Green after: 52 of 52. The real-tree half is vacuous at MF-42 (bindings.json modules is empty until MF-37).
+   × FE-05 widened to binding modules (MF-42): bindings.json modules are scanned, fail closed > RED: a + b in a listed module is reported 3ms
+AssertionError: expected [] to deeply equal [ [ …(2) ] ]
+      Tests  1 failed | 51 passed (52)

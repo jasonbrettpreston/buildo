@@ -1,0 +1,21 @@
+MF-42 FE-31 lock src/tests/surfaces/surface-conformance.logic.test.ts, red first (2026-11-09, ~/Buildo-wt-mf42 on ffb6b0610).
+Stub: scripts/surfaces/screen-checks.mjs replaced by a module with the same exports and no checks, plus the PRIOR surface.schema.json and d.ts (no render.form, no columns, no cutover condition). Green after: 23 of 23.
+C-2, C-2b, C-3 and C-5 keep their checker inside the lock: each planted case there asserts its exact red line on a planted temp tree or in-memory input (the green run proves those reds).
+
+   × C-1 the arms on the real tree, and the queue state > SV-DESC is clean with the exact counts (20 in scope: 0 converted, 7 pending, 9 parked, 4 report); SCREEN and SBIND WAIT on the named row 4ms
+   × C-1 the arms on the real tree, and the queue state > RED (in memory): a DONE waits row, an absent pending row, and a missing queue file 1ms
+   × C-4 a converted surface owns no component > RED: a converted fixture that owns src/components/Foo.tsx 9ms
+   × C-5 the vendored Reusables manifest (unmodified, both directions) > RED: an added file, an edited file, a listed file deleted, an absent manifest, cli missing 3ms
+   × C-6 the generated types and validator equal a fresh emit > a temp emit is byte-identical to the committed d.ts and validator; RED: a hand edit of the d.ts differs 114ms
+   × C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > controls: each converted fixture is valid with 0 sentinels; every live descriptor is valid; a non-generated FORM and LIST need no new key 1ms
+   × C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > RED: an extra key in render.form, in a form field and in a column is refused 1ms
+   × C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > RED: the sentinel loophole is closed (render.form and render.list must be objects once generated), golden "none" refused, a label owed 1ms
+AssertionError: expected 'stub' to be 'S-desc ok (examined 20 in scope: conv…' // Object.is equality
+AssertionError: expected [] to deeply equal [ …(2) ]
+AssertionError: expected [] to deeply equal [ Array(1) ]
+AssertionError: expected [] to deeply equal [ Array(1) ]
+AssertionError: expected '// GENERATED FROM scripts/surfaces/_s…' to contain 'columns?: Array<{'
+AssertionError: expected [ 'FORM', …(2) ] to deeply equal [ 'FORM', [], +0 ]
+AssertionError: expected [ Array(1) ] to include '/render/form must NOT have additional…'
+AssertionError: expected [ Array(1) ] to include '/render/form must be object'
+      Tests  8 failed | 15 passed (23)

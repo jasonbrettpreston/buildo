@@ -1,0 +1,86 @@
+MF-42 src/tests/surfaces/screen-checks.logic.test.ts (cites FE-13, FE-31), red first (2026-11-09, ~/Buildo-wt-mf42 on ffb6b0610).
+Stub: scripts/surfaces/screen-checks.mjs with the same exports and no checks: every planted case misses its line. Green after: 42 of 42.
+
+   × clean: every arm is green on the four converted fixtures > no finding, and each note counts what it examined 9ms
+   × clean: every arm is green on the four converted fixtures > an empty manifest with waits is a stated WAITS, never ok 14ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > an invalid widget is refused by the schema 9ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a generated FORM without render.form 10ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a generated LIST (projection list) without columns 7ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a generated LIST whose render.list is the sentinel 6ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > an UNRESEARCHED left where the schema allows it (STATIC programme.phase) 8ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > golden "none" on a generated descriptor 8ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a converted descriptor whose status is not generated 7ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a dangling schema_ref 8ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a contract property with no field, and a field that is no property 8ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a keyword outside the closed subset (items), and a format outside it 6ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a widget that does not fit the property type 7ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a select over no enum, and an option value outside [a-z0-9_]+ 8ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > a missing manifest 6ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > an empty converted list without waits 6ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > waits that names no row id 7ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > waits beside a non-empty converted list 7ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > a duplicate id inside converted (schema uniqueItems) 7ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > expected_count off by one 5ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > an in-scope id in no list (and, generated, not in converted) 5ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > one id in two lists (pending_conversion and parked: cross-list exclusivity is hand code, MIN-5) 8ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > a manifest id with no descriptor 6ms
+   × SV-DESC: the manifest (schema shape, then totality over the descriptor walk) > a REPORT outside report, and a non-REPORT inside it 8ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a declared target with no golden 7ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > states[].golden naming no file 7ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a stray file, and a golden for an undeclared target, print the same line 5ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a dangling covers entry 5ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > an uncovered state 5ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a target field that names another target 5ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a golden of the wrong shape 5ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a stale fingerprint (the content file changed, goldens not re-stamped) 5ms
+   × SV-SCREEN: one golden per state per declared target, covers, nothing stray, fingerprints > a fingerprint over the wrong file set 5ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > a label key with no content 6ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > an empty content value is refused by the schema 7ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > an orphan content key 6ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > a column (and a sort field) off the whitelist 8ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > display text written into a golden (a child, and a library default string such as noRecordsText) 5ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > a content ref to an unknown key 5ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > a ref of a kind not in ref_kinds 5ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > a non-string value under a display key (MIN-2) 5ms
+AssertionError: expected 'stub' to be 'S-desc ok (examined 4 in scope: conve…' // Object.is equality
+AssertionError: expected [ [], 'stub', 'stub' ] to deeply equal [ [], 'S-screen WAITS MF-37', …(1) ]
+AssertionError: SV-DESC admin_placements: /render/form/fields/0/widget  in
+AssertionError: expected [] to include 'SV-DESC admin_placements: /render mus…'
+AssertionError: expected [] to include 'SV-DESC admin_surface_registry: /rend…'
+AssertionError: expected [] to include 'SV-DESC admin_surface_registry: /rend…'
+AssertionError: expected [] to include 'SV-DESC web_landing: 1 UNRESEARCHED l…'
+AssertionError: expected [] to include 'SV-DESC mobile_parcel_search: /states…'
+AssertionError: expected [] to include 'SV-DESC mobile_parcel_search: status …'
+AssertionError: expected [] to include 'SV-DESC admin_placements: schema_ref …'
+AssertionError: expected [] to include 'SV-DESC admin_placements: property ex…'
+AssertionError: expected [] to include 'SV-DESC admin_placements: schema keyw…'
+AssertionError: expected [] to include 'SV-DESC admin_placements: field place…'
+AssertionError: expected [] to include 'SV-DESC admin_placements: field place…'
+AssertionError: expected [] to include 'SV-DESC converted-surfaces.json: miss…'
+AssertionError: expected [] to include 'SV-DESC converted-surfaces.json: / mu…'
+AssertionError: expected [] to include 'SV-DESC converted-surfaces.json: /wai…'
+AssertionError: expected [] to include 'SV-DESC converted-surfaces.json: / mu…'
+AssertionError: SV-DESC converted-surfaces.json: /converted must NOT have duplicate items in
+AssertionError: expected [] to include 'SV-DESC scope: 4 in-scope SURFACE des…'
+AssertionError: expected [] to include 'SV-DESC web_landing: in no list'
+AssertionError: expected [] to include 'SV-DESC web_landing: in 2 lists (pend…'
+AssertionError: expected [] to include 'SV-DESC ghost_surface: listed but no …'
+AssertionError: expected [] to include 'SV-DESC web_landing: REPORT outside r…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements/loading.mo…'
+AssertionError: expected [] to include 'SV-SCREEN web_landing: state static: …'
+AssertionError: expected [] to include 'SV-SCREEN web_landing/notes.json: not…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements/hit.web.js…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements: state loa…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements/hit.web.js…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements/hit.web.js…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements/hit.web.js…'
+AssertionError: expected [] to include 'SV-SCREEN admin_placements/hit.web.js…'
+AssertionError: expected [] to include 'SV-SBIND admin_placements: content ke…'
+AssertionError: expected [] to include 'SV-SBIND admin_placements.content.jso…'
+AssertionError: expected [] to include 'SV-SBIND mobile_parcel_search: orphan…'
+AssertionError: expected [] to include 'SV-SBIND admin_surface_registry: colu…'
+AssertionError: expected [] to include 'SV-SBIND admin_surface_registry/empty…'
+AssertionError: expected [] to include 'SV-SBIND web_landing/static.web.json:…'
+AssertionError: expected [] to include 'SV-SBIND web_landing/static.web.json:…'
+AssertionError: expected [] to include 'SV-SBIND web_landing/static.web.json:…'
+      Tests  41 failed | 1 passed (42)

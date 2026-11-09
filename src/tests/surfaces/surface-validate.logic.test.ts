@@ -30,12 +30,19 @@ const sha16 = (p: string): string => crypto.createHash('sha256').update(fs.readF
 const stub = (root: string, rel: string, body: string): void => { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), body); };
 
 // A temp tree: the gate, the module, the four input files, the goldens, exit-0 stub generators, node_modules linked for ajv.
+// MF-42: plus screen-checks.mjs, the generated validator, the schemas, bindings.json and a manifest that examines nothing and WAITS MF-37, so the
+// three generic arms print a stated waiting and never a finding here; every REPORT-arm assertion below is unchanged.
+const SCREEN_INPUTS = ['surface.schema.json', 'screen-data.schema.json', 'bindings.json'];
+const EMPTY_MANIFEST = { scope: { programme_scopes: ['parcel_product', 'parcel_admin'], expected_count: 0 }, converted: [], pending_conversion: [], parked: [], report: [], waits: 'MF-37', queue: '.cursor/MCFRONTEND-QUEUE.md' };
 const mkRoot = (): string => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mf15-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, SCHEMA), { recursive: true });
-  for (const f of ['surface-validate.mjs', 'report-checks.mjs']) fs.copyFileSync(path.join(REPO, 'scripts/surfaces', f), path.join(root, 'scripts/surfaces', f));
+  for (const f of ['surface-validate.mjs', 'report-checks.mjs', 'screen-checks.mjs']) fs.copyFileSync(path.join(REPO, 'scripts/surfaces', f), path.join(root, 'scripts/surfaces', f));
   for (const f of FP) fs.copyFileSync(path.join(REPO, SCHEMA, f), path.join(root, SCHEMA, f));
+  for (const f of SCREEN_INPUTS) fs.copyFileSync(path.join(REPO, SCHEMA, f), path.join(root, SCHEMA, f));
+  wj(path.join(root, SCHEMA, 'converted-surfaces.json'), EMPTY_MANIFEST);
+  fs.cpSync(path.join(REPO, 'src/lib/surfaces/generated'), path.join(root, 'src/lib/surfaces/generated'), { recursive: true });
   fs.cpSync(path.join(REPO, GOLD), path.join(root, GOLD), { recursive: true });
   fs.symlinkSync(path.join(REPO, 'node_modules'), path.join(root, 'node_modules'));
   stub(root, SEED_GEN, 'process.exit(0);\n');
@@ -58,7 +65,26 @@ describe('FE-13 surface-validate gate: real tree', () => {
     const r = spawnSync(process.execPath, [path.join(REPO, GATE), '--check'], { cwd: os.tmpdir(), encoding: 'utf8' });
     expect(r.stderr).toBe('');
     expect(r.status).toBe(0);
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08\n');
+    // MF-42 (FE-13 dated note): amended deliberately to the new full string, still an exact toBe (never toContain or a regex); the REPORT prefix is unchanged.
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 20 in scope: converted 0, pending 7, parked 9, report 4) · S-screen WAITS MF-37 · S-sbind WAITS MF-37\n');
+    expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+    expect(r.stdout).toContain('S-desc ok (examined 20 in scope:');
+  });
+
+  it('MF-42: a missing screen-checks.mjs gives three unavailable lines, the REPORT arms still report, exit 1 (no stack)', () => {
+    const root = mkRoot();
+    fs.rmSync(path.join(root, 'scripts/surfaces/screen-checks.mjs'));
+    fs.rmSync(gold(root, 'at_least', 'pdf'));
+    const r = run(root);
+    expect(r.code).toBe(1);
+    expect(r.lines[0]).toBe('SV-GOLDEN at_least.pdf.json: missing');
+    expect(r.lines.slice(1).map((l) => l.replace(/unavailable: .*$/, 'unavailable:'))).toEqual(['SV-DESC arm: screen-checks.mjs unavailable:', 'SV-SCREEN arm: screen-checks.mjs unavailable:', 'SV-SBIND arm: screen-checks.mjs unavailable:']);
+    expect(r.err).not.toContain('    at ');
+  });
+  it('MF-42: a temp tree that examines nothing prints WAITS for the generic arms, never a finding', () => {
+    const r = run(mkRoot());
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('· budget WAITS MF-08 · S-desc ok (examined 0 in scope: converted 0, pending 0, parked 0, report 0) · S-screen WAITS MF-37 · S-sbind WAITS MF-37\n');
   });
 
   it('the real goldens cover each lifecycle state and an at_least tree (guards against a vacuous status arm)', () => {

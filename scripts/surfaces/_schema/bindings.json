@@ -1,0 +1,29 @@
+{
+  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a, P42-D15): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks.",
+  "libraries": {
+    "web": ["@mantine/core", "@mantine/hooks", "@mantine/dates", "@mantine/dropzone", "@mantine/carousel", "mantine-datatable", "@rjsf/core", "@rjsf/mantine", "@rjsf/utils", "@rjsf/validator-ajv8"],
+    "mobile": ["@rn-primitives/*"]
+  },
+  "vendor_dir": "mobile/src/vendor/rnr",
+  "vendor_manifest": "scripts/surfaces/_schema/vendor-rnr.manifest.json",
+  "framework": ["react", "react-dom", "next", "next/*", "expo-router"],
+  "mount_internal": ["@/lib/", "@/components/surfaces/"],
+  "module_roots": ["src/components/surfaces/web/", "mobile/src/components/surfaces/"],
+  "modules": [],
+  "mounts": [],
+  "providers": [],
+  "promoted_entries": [],
+  "test_globs": ["src/tests/**", "mobile/__tests__/**", "mobile/__mocks__/**"],
+  "widget_types": {
+    "text": ["string"],
+    "textarea": ["string"],
+    "date": ["string"],
+    "file": ["string"],
+    "number": ["number", "integer"],
+    "select": ["string", "number", "integer"],
+    "checkbox": ["boolean"],
+    "hidden": ["*"]
+  },
+  "ref_kinds": ["content"],
+  "non_display_keys": ["id", "component", "widget", "variant", "size", "accessor", "idAccessor", "name", "type", "testID", "className", "href", "to", "key", "value", "defaultValue", "color", "radius", "textAlign", "role", "autoComplete", "inputMode", "orientation", "icon"]
+}

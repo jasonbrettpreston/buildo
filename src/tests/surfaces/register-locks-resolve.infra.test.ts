@@ -97,6 +97,27 @@ const mutateRow = (text: string, id: string, from: string, to: string) => {
   return mutate(text, line, mutate(line, from, to));
 };
 
+/**
+ * The planted OWED stand-in, chosen at test time (D-21): the first register row the gate's own parser reads OWED with exactly one lock,
+ * a src/tests/surfaces path that is not yet tracked. If no row qualifies, a synthetic OWED row is appended to the temp copy, so the
+ * planted cases never depend on a particular row staying OWED (a row flipping RULED once broke them).
+ */
+type StandIn = { text: string; id: string; lock: string };
+function owedStandIn(text: string, tracked: ReadonlySet<string>): StandIn {
+  const rows = parseRegisterRows(text) as Map<string, Row>;
+  for (const [id, row] of rows) {
+    if (!/^FE-\d+$/.test(id) || row.status !== 'OWED' || row.locks.length !== 1) continue;
+    const lock = row.locks[0]!;
+    if (OWED_LOCK_RE.test(lock) && !tracked.has(lock) && rowLine(text, id)?.includes(`\`${lock}\``)) return { text, id, lock };
+  }
+  let n = 98;
+  while (rows.has(`FE-${n}`)) n -= 1;
+  const id = `FE-${n}`;
+  const lock = 'src/tests/surfaces/planted-stand-in.logic.test.ts';
+  return { text: `${text.trimEnd()}\n| ${id} | planted stand-in | n/a | n/a | planted | OWED \`${lock}\` |\n`, id, lock };
+}
+const STANDIN = owedStandIn(REAL, TRACKED);
+
 describe('FE-09: the Spec 135 Lock column resolves (rule 5)', () => {
   it('the real register and tree have no problem', () => {
     expect(registerLockProblems(REAL, TRACKED)).toEqual([]);
@@ -129,19 +150,33 @@ describe('FE-09: the Spec 135 Lock column resolves (rule 5)', () => {
     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-08: RULED, "see FE-99" names no register row/);
   });
 
+  it('the planted OWED stand-in is chosen from the register at test time, or is synthetic, and is clean as planted', () => {
+    expect(STANDIN.lock).toMatch(OWED_LOCK_RE);
+    expect(TRACKED.has(STANDIN.lock)).toBe(false);
+    expect((parseRegisterRows(STANDIN.text) as Map<string, Row>).get(STANDIN.id)?.status).toBe('OWED');
+    expect(registerLockProblems(STANDIN.text, TRACKED)).toEqual([]);
+    const owedLocks = [...(parseRegisterRows(REAL) as Map<string, Row>).values()].filter((r) => r.status === 'OWED').flatMap((r) => r.locks);
+    const synthetic = owedStandIn(REAL, new Set([...TRACKED, ...owedLocks]));
+    expect((parseRegisterRows(REAL) as Map<string, Row>).has(synthetic.id)).toBe(false);
+    expect((parseRegisterRows(synthetic.text) as Map<string, Row>).get(synthetic.id)).toMatchObject({ status: 'OWED', locks: [synthetic.lock] });
+  });
+
   it('planted: an OWED row whose lock already exists', () => {
-    const tracked = new Set([...TRACKED, 'src/tests/surfaces/surface-validate.infra.test.ts']);
-    expect(registerLockProblems(REAL, tracked).join('\n')).toMatch(/FE-03: OWED but its lock already exists/);
+    const { text, id, lock } = STANDIN;
+    const tracked = new Set([...TRACKED, lock]);
+    expect(registerLockProblems(text, tracked).join('\n')).toContain(`${id}: OWED but its lock already exists`);
   });
 
   it('planted: an OWED lock outside src/tests/surfaces', () => {
-    const bad = mutateRow(REAL, 'FE-03', 'src/tests/surfaces/surface-validate.infra.test.ts', 'scripts/surfaces/surface-validate.test.mjs');
-    expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-03: OWED lock is not a src\/tests\/surfaces/);
+    const { text, id, lock } = STANDIN;
+    const bad = mutateRow(text, id, lock, 'scripts/surfaces/planted-outside.test.mjs');
+    expect(registerLockProblems(bad, TRACKED).join('\n')).toContain(`${id}: OWED lock is not a src/tests/surfaces`);
   });
 
   it('planted: an OWED row with no lock path', () => {
-    const bad = mutateRow(REAL, 'FE-03', '`src/tests/surfaces/surface-validate.infra.test.ts`', 'surface-validate');
-    expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-03: OWED with no lock path/);
+    const { text, id, lock } = STANDIN;
+    const bad = mutateRow(text, id, `\`${lock}\``, 'planted-no-path');
+    expect(registerLockProblems(bad, TRACKED).join('\n')).toContain(`${id}: OWED with no lock path`);
   });
 
   it('planted: a duplicated row id', () => {
@@ -158,11 +193,13 @@ describe('FE-09: the Spec 135 Lock column resolves (rule 5)', () => {
 
   it('FLIP_PENDING is exact: on the list a RULED row, an unlanded lock or a missing row is red; off the list a landed OWED lock is red', () => {
     expect(registerLockProblems(REAL, TRACKED, ['FE-02']).join('\n')).toMatch(/FE-02: reads RULED but is still on FLIP_PENDING/);
-    expect(registerLockProblems(REAL, TRACKED, ['FE-03']).join('\n')).toMatch(/FE-03: on FLIP_PENDING but its lock is not landed/);
+    const { text, id, lock } = STANDIN;
+    expect(registerLockProblems(text, TRACKED, [id]).join('\n')).toContain(`${id}: on FLIP_PENDING but its lock is not landed`);
     expect(registerLockProblems(REAL, TRACKED, ['FE-99']).join('\n')).toMatch(/FE-99: on FLIP_PENDING but not a register row/);
-    const tracked = new Set([...TRACKED, 'src/tests/surfaces/surface-validate.infra.test.ts']);
-    expect(registerLockProblems(REAL, tracked, ['FE-03'])).not.toContain('FE-03: OWED but its lock already exists: src/tests/surfaces/surface-validate.infra.test.ts (rule 5; flip the row)');
-    expect(registerLockProblems(REAL, tracked, []).join('\n')).toMatch(/FE-03: OWED but its lock already exists/);
+    const tracked = new Set([...TRACKED, lock]);
+    expect(registerLockProblems(text, tracked, [id])).not.toContain(`${id}: OWED but its lock already exists: ${lock} (rule 5; flip the row)`);
+    expect(registerLockProblems(text, tracked, [id])).toEqual([]);
+    expect(registerLockProblems(text, tracked, []).join('\n')).toContain(`${id}: OWED but its lock already exists`);
   });
 
   it('fold: a row head the gate parser reads but this lock head count does not (bold id) is red', () => {

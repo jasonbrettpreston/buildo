@@ -1,0 +1,7 @@
+{
+  "$comment": "MF-42 (FE-31 'vendored files pass the manifest'; Spec 90 §6): the React Native Reusables files vendored UNMODIFIED under mobile/src/vendor/rnr, one entry per file with its sha256, both directions. Empty until MF-35 runs the CLI; waits names that row. Shape: screen-data.schema.json#/definitions/vendor_manifest. Checked by surface-conformance.logic.test.ts C-5.",
+  "cli": "@react-native-reusables/cli@0.7.1",
+  "registry": "nativewind",
+  "files": [],
+  "waits": "MF-35"
+}

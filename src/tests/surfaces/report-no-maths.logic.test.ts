@@ -12,6 +12,10 @@
 // producer sent it" and is not copied here. Panel folds: also ban element access and destructured names of the banned methods, reduceRight, toLocaleString, Intl, BigInt, globalThis; the walk reads .js/.jsx/.mjs/.cjs/.mts/.cts too.
 // Left to review (named, not scanned): eval, new Function, an import of maths from outside the three directories, isNaN, Date.
 // Each ban has a planted case (in memory), one is planted in a copy of the REAL core.ts, and the walk is proven on disk. No DB, no network.
+// MF-42 widening (card 2.4 "No maths (FE-05) | binding modules"; Spec 128 2.2a dated note): the same scan also reads every binding module listed in
+// scripts/surfaces/_schema/bindings.json `modules`, as files, failing closed when the file is missing or not JSON, `modules` is not a list, or a listed
+// module is not on disk. DIRS and coverageProblems are untouched. At MF-42 the list is empty (the first module is MF-37's), so the real-tree half is
+// vacuous by design and says so; the planted half proves the read.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -82,6 +86,19 @@ const coverageProblems = (root: string, files: string[]): string[] =>
   DIRS.filter((d) => !files.some((f) => f.startsWith(path.join(root, d) + path.sep))).map((d) => `no .ts/.tsx file under ${d}`);
 
 const rulesOf = (src: string): string[] => scanSource(src, 'probe.ts').map((f) => f.rule);
+
+// MF-42: the binding modules named in bindings.json, as absolute file paths. Throws (fails closed) on any read problem.
+const BINDINGS = 'scripts/surfaces/_schema/bindings.json';
+const moduleFiles = (root: string): string[] => {
+  const modules = (JSON.parse(fs.readFileSync(path.join(root, BINDINGS), 'utf8')) as { modules?: unknown }).modules;
+  if (!Array.isArray(modules)) throw new Error('bindings.json modules is not a list');
+  return modules.map((m: { path?: unknown }) => {
+    const p = path.join(root, String(m?.path));
+    if (!fs.existsSync(p) || !fs.statSync(p).isFile()) throw new Error(`binding module missing: ${String(m?.path)}`);
+    return p;
+  });
+};
+const scanModules = (root: string): Finding[] => moduleFiles(root).flatMap((f) => scanSource(fs.readFileSync(f, 'utf8'), path.relative(root, f)));
 
 let tmpRoot = '';
 beforeAll(() => { tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mf16-nomaths-')); });
@@ -201,5 +218,31 @@ describe('FE-05 RED on disk: the walk reaches a violating file in a new subdirec
     fs.mkdirSync(path.join(root, DIRS[0] as string), { recursive: true });
     const { files } = scanTree(root);
     expect(coverageProblems(root, files)).toEqual([`no .ts/.tsx file under ${DIRS[0]}`, `no .ts/.tsx file under ${DIRS[1]}`, `no .ts/.tsx file under ${DIRS[2]}`]);
+  });
+});
+
+describe('FE-05 widened to binding modules (MF-42): bindings.json modules are scanned, fail closed', () => {
+  it('the real tree: bindings.json reads, every listed module exists, and none carries maths (0 modules at MF-42: vacuous until MF-37 lists one)', () => {
+    const files = moduleFiles(ROOT);
+    expect(Array.isArray(files)).toBe(true);
+    expect(scanModules(ROOT)).toEqual([]);
+  });
+  it('RED: a + b in a listed module is reported', () => {
+    const root = fs.mkdtempSync(path.join(tmpRoot, 'mod-'));
+    const rel = 'src/components/surfaces/web/FormBinding.tsx';
+    fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+    fs.writeFileSync(path.join(root, rel), 'export const f = (a: number, b: number) => a + b;\n');
+    fs.mkdirSync(path.join(root, path.dirname(BINDINGS)), { recursive: true });
+    fs.writeFileSync(path.join(root, BINDINGS), JSON.stringify({ modules: [{ path: rel }] }));
+    expect(scanModules(root).map((f) => [f.file, f.rule])).toEqual([[rel, 'operator']]);
+  });
+  it('RED: a missing bindings.json, a non-list modules and a listed module not on disk each fail closed', () => {
+    const root = fs.mkdtempSync(path.join(tmpRoot, 'nomod-'));
+    expect(() => moduleFiles(root)).toThrow(/bindings\.json/);
+    fs.mkdirSync(path.join(root, path.dirname(BINDINGS)), { recursive: true });
+    fs.writeFileSync(path.join(root, BINDINGS), JSON.stringify({ modules: 'x' }));
+    expect(() => moduleFiles(root)).toThrow('bindings.json modules is not a list');
+    fs.writeFileSync(path.join(root, BINDINGS), JSON.stringify({ modules: [{ path: 'src/components/surfaces/web/Gone.tsx' }] }));
+    expect(() => moduleFiles(root)).toThrow('binding module missing: src/components/surfaces/web/Gone.tsx');
   });
 });

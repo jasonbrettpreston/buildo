@@ -1,0 +1,31 @@
+{
+  "$comment": "MF-42 (FE-31, P42-D5 a, P42-D8): the converted manifest. Every in-scope SURFACE descriptor (kind SURFACE, programme.scope in scope.programme_scopes) is in exactly one list; REPORT archetypes only in report. converted lists surfaces rendered from descriptors (status generated); pending_conversion names the queue row that converts each; parked and report are declared, not derived. waits is required while converted is empty and names the open row that converts the first surface; the lock (surface-conformance.logic.test.ts C-1) checks each named row is an open queue heading. Shape: screen-data.schema.json#/definitions/manifest. Read by scripts/surfaces/screen-checks.mjs (SV-DESC). overlay_sponsor_slot (Spec 126 11b.3: through MF-20) is listed under parked, not pending: MF-20 is DONE (MF-20@7b152d7e1) and rendered the ad slots through the REPORT path, while this SLOT descriptor stays status exists; a pending entry naming a DONE row is the stale state the C-1 queue check refuses (measured at build, ffb6b0610). Parked until a row converts it; operator confirmation owed (MF-42 hand-back).",
+  "scope": {
+    "programme_scopes": ["parcel_product", "parcel_admin"],
+    "expected_count": 20
+  },
+  "converted": [],
+  "pending_conversion": [
+    { "id": "admin_placements", "row": "MF-40" },
+    { "id": "mobile_parcel_search", "row": "MF-35" },
+    { "id": "mobile_parcel_disambiguation_map", "row": "MF-35" },
+    { "id": "web_landing", "row": "MF-46" },
+    { "id": "admin_surface_registry", "row": "MF-30" },
+    { "id": "admin_drift_status", "row": "MF-30" },
+    { "id": "admin_orphan_panel", "row": "MF-30" }
+  ],
+  "parked": [
+    "admin_parcel_cost",
+    "admin_advertiser_accounts",
+    "advertiser_self_metrics",
+    "admin_export_audit",
+    "admin_run_ledger",
+    "mobile_tracked_lots",
+    "mobile_parcel_account",
+    "shell_parcel_tool_stack",
+    "overlay_sponsor_slot"
+  ],
+  "report": ["admin_contract_fanout", "admin_ledger_visualiser", "admin_role_matrix", "mobile_parcel_detail"],
+  "waits": "MF-37",
+  "queue": ".cursor/MCFRONTEND-QUEUE.md"
+}

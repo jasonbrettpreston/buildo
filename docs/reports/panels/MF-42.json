@@ -1,0 +1,25 @@
+{
+  "task": "MF-42",
+  "item": "McFrontend foundation (minimum plan): the render.form / render.list.columns schema escalation, the generic gate arms SV-DESC, SV-SCREEN, SV-SBIND (scripts/surfaces/screen-checks.mjs), the converted manifest, bindings.json and the vendored manifest, the FE-31 lock surface-conformance.logic.test.ts and the FE-03 lock surface-validate.infra.test.ts, the FE-13 and FE-05 lock edits",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "pending",
+  "cards": [
+    "Operator 2026-11-09: \"P42 decisions approved\" (Part A P42-D1, D2, D3, D4, D5, D9 (a); Part B as recommended).",
+    "Operator 2026-11-09: \"approved smaller version\" (MF-42 built from plan.min.md).",
+    "Operator 2026-11-09: \"approved except for 9 ...\" (Wave 1 decision batch: conflicts C-1, C-3, C-4, C-11, C-12 resolved as the batch file proposes)."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-42/plan.min.md (plan.md v3 as reference); two PLAN panel rounds (regression-guardian, code-reviewer-grounded, observability-reviewer, compliance) plus a delta seat on the minimum variant (code-reviewer-grounded, CONDITIONAL PASS, all folded); reports in ~/Buildo-scratch/mcfrontend/MF-42/panel/.",
+  "output": "PENDING: the OUTPUT panel is filled before the push.",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "compliance (general-purpose, Spec 08 A9/A10)"
+  ],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-42/",
+  "notes": []
+}

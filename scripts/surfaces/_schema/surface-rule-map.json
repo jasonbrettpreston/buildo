@@ -155,6 +155,10 @@
     {
       "id": "fe.32",
       "section": "rules"
+    },
+    {
+      "id": "fe.33",
+      "section": "rules"
     }
   ],
   "rules": [
@@ -183,7 +187,7 @@
     {
       "id": "FE-03",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.03",
       "source": {
         "register": true,
@@ -491,7 +495,7 @@
     {
       "id": "FE-31",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.31",
       "source": {
         "register": true,
@@ -508,6 +512,17 @@
         "register": true,
         "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
         "anchor": "FE-32"
+      }
+    },
+    {
+      "id": "FE-33",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.33",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-33"
       }
     }
   ]

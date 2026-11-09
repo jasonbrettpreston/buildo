@@ -1,0 +1,100 @@
+# MF-42 red evidence (D-21): the register lock's planted cases on this tree, before the stand-in fix
+# tree: wf1/push15b-1109 at 8db40f02b + the MF-42 code commit staged (FE-03 reads RULED); command: npx vitest run src/tests/surfaces/register-locks-resolve.infra.test.ts
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 ~/Buildo-wt-push15b
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts (14 tests | 4 failed) 10ms
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row whose lock already exists 2ms
+     → expected '' to match /FE-03: OWED but its lock already exis…/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED lock outside src/tests/surfaces 1ms
+     → expected 'FE-03: RULED but its lock is not trac…' to match /FE-03: OWED lock is not a src\/…/tests\
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row with no lock path 1ms
+     → expected 'FE-03: RULED with no lock path and no…' to match /FE-03: OWED with no lock path/
+   × FE-09: the Spec 135 Lock column resolves (rule 5) > FLIP_PENDING is exact: on the list a RULED row, an unlanded lock or a missing row is red; off the list a landed OWED lock is red 1ms
+     → expected 'FE-03: reads RULED but is still on FL…' to match /FE-03: on FLIP_PENDING but its lock i…/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row whose lock already exists
+AssertionError: expected '' to match /FE-03: OWED but its lock already exis…/
+
+- Expected: 
+/FE-03: OWED but its lock already exists/
+
++ Received: 
+""
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:134:60
+    132|   it('planted: an OWED row whose lock already exists', () => {
+    133|     const tracked = new Set([...TRACKED, 'src/tests/surfaces/surface-v…
+    134|     expect(registerLockProblems(REAL, tracked).join('\n')).toMatch(/FE…
+       |                                                            ^
+    135|   });
+    136| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED lock outside src/tests/surfaces
+AssertionError: expected 'FE-03: RULED but its lock is not trac…' to match /FE-03: OWED lock is not a src\/…/tests\
+
+- Expected: 
+/FE-03: OWED lock is not a src\/tests\/surfaces/
+
++ Received: 
+"FE-03: RULED but its lock is not tracked: scripts/surfaces/surface-validate.test.mjs (rule 5)"
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:139:59
+    137|   it('planted: an OWED lock outside src/tests/surfaces', () => {
+    138|     const bad = mutateRow(REAL, 'FE-03', 'src/tests/surfaces/surface-v…
+    139|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    140|   });
+    141| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > planted: an OWED row with no lock path
+AssertionError: expected 'FE-03: RULED with no lock path and no…' to match /FE-03: OWED with no lock path/
+
+- Expected: 
+/FE-03: OWED with no lock path/
+
++ Received: 
+"FE-03: RULED with no lock path and no \"see FE-nn\" (rule 2)"
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:144:59
+    142|   it('planted: an OWED row with no lock path', () => {
+    143|     const bad = mutateRow(REAL, 'FE-03', '`src/tests/surfaces/surface-…
+    144|     expect(registerLockProblems(bad, TRACKED).join('\n')).toMatch(/FE-…
+       |                                                           ^
+    145|   });
+    146| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > FLIP_PENDING is exact: on the list a RULED row, an unlanded lock or a missing row is red; off the list a landed OWED lock is red
+AssertionError: expected 'FE-03: reads RULED but is still on FL…' to match /FE-03: on FLIP_PENDING but its lock i…/
+
+- Expected: 
+/FE-03: on FLIP_PENDING but its lock is not landed/
+
++ Received: 
+"FE-03: reads RULED but is still on FLIP_PENDING (remove it in the flip commit)"
+
+ ❯ src/tests/surfaces/register-locks-resolve.infra.test.ts:161:71
+    159|   it('FLIP_PENDING is exact: on the list a RULED row, an unlanded lock…
+    160|     expect(registerLockProblems(REAL, TRACKED, ['FE-02']).join('\n')).…
+    161|     expect(registerLockProblems(REAL, TRACKED, ['FE-03']).join('\n')).…
+       |                                                                       ^
+    162|     expect(registerLockProblems(REAL, TRACKED, ['FE-99']).join('\n')).…
+    163|     const tracked = new Set([...TRACKED, 'src/tests/surfaces/surface-v…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 10 passed (14)
+   Start at  18:42:06
+   Duration  196ms (transform 35ms, setup 6ms, collect 13ms, tests 10ms, environment 0ms, prepare 25ms)
+

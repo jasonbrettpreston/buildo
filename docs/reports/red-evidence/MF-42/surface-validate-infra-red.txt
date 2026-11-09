@@ -1,0 +1,11 @@
+MF-42 FE-03 lock src/tests/surfaces/surface-validate.infra.test.ts, red first (2026-11-09, ~/Buildo-wt-mf42 on ffb6b0610).
+Stub: scripts/surfaces/screen-checks.mjs with the same exports and no checks. The four planted bad descriptors (FORM widget, LIST columns, SEARCH debounce_ms, STATIC UNRESEARCHED) exit 0 under the stub; the clean cases fail on the arm notes. Green after: 9 of 9.
+
+   × FE-03: the clean fixture tree exits 0 through every arm > exit 0, nothing on stderr, and the generic arms examined the four converted fixtures 121ms
+   × FE-03 FORM: clean exits 0, a planted bad descriptor exits 1 > an invalid widget: exit 1, the SV-DESC line, no other arm fires 123ms
+   × FE-03 LIST: clean exits 0, a planted bad descriptor exits 1 > columns dropped: exit 1, the SV-DESC line, no other arm fires 118ms
+   × FE-03 SEARCH: clean exits 0, a planted bad descriptor exits 1 > config.debounce_ms deleted: exit 1, the SV-DESC line, no other arm fires 124ms
+   × FE-03 STATIC: clean exits 0, a planted bad descriptor exits 1 > an UNRESEARCHED left: exit 1, the SV-DESC line, no other arm fires 120ms
+AssertionError: expected 'surface-validate current; S-gen ok · …' to contain '· S-desc ok (examined 4 in scope: con…'
+AssertionError: expected +0 to be 1 // Object.is equality
+      Tests  5 failed | 4 passed (9)
