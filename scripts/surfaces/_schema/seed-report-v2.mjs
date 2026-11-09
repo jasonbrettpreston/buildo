@@ -12,6 +12,8 @@
 // into report-v2.decl.json, report-presentation.json and report-v2.rulings.json (beside this file). The review is
 // encoded below as rules, so nothing is hand-copied into the JSON; edit the rules or the inputs, then --write.
 //
+// MF-13 follow-up (operator "approve generator fix", 2026-11-09; DL-21 a / Q2 a, C-2, C-4, D-1 b): a catalogue row's building_type is a LIST (a string is a one-item list): one scenario per (building type,
+// design option), one switch id per listed type, off beats on per type, a row is a field when ON for at least one listed type (one field per row; the card scopes the type).
 // MF-13 (Spec 126 11a.1 dated note 2026-11-09, Spec 135 FE-30): every effective-ON catalogue row (its switch row ON and its building type ON) is a
 // report field, generated into report-v2-seed/catalogue-fields.json and taken into the declaration. Authored inputs: report-v2-seed/row-presentation.json
 // (one ordered headline list per scenario; a row not listed is detail) and report-v2-seed/row-labels.json (label per row id, content).
@@ -61,25 +63,30 @@ const SW = new Map(JSON.parse(swText).rows.map((r) => [r.id, r.state]));
 const LISTS = JSON.parse(presInText);
 const LABELS = JSON.parse(labelsText);
 const rel = (abs) => path.relative(ROOT, abs).split(path.sep).join('/');
-const scenarioOf = (r) => (r.design_option ? `${r.building_type}/${Object.values(r.design_option).join('/')}` : r.building_type);
+// DL-21 a / Q2 a: a row's building_type is a list of building-type ids; a string is a one-item list
+const typesOf = (r) => (Array.isArray(r.building_type) && r.building_type.length ? r.building_type : [r.building_type]); // an empty list falls to GEN-ROW-NO-SWITCH, never a silent drop
+const scenariosOf = (r) => typesOf(r).map((t) => (r.design_option ? `${t}/${Object.values(r.design_option).join('/')}` : t)); // one scenario per (building type, design option)
+const typeOfScenario = (scenario) => scenario.split('/')[0]; // building-type ids carry no slash
 // C-2: a row with no design option belongs to every scenario of its building type; a row with one belongs to its own scenario only
-const inScenario = (r, scenario) => (r.design_option ? scenarioOf(r) === scenario : scenario === r.building_type || scenario.startsWith(`${r.building_type}/`));
+const inScenario = (r, scenario) => (r.design_option ? scenariosOf(r).includes(scenario) : typesOf(r).some((t) => scenario === t || scenario.startsWith(`${t}/`)));
 const UNIT_TYPE = new Map([['m2', ['number', 'm²']], ['m', ['number', 'm']], ['storeys', ['number']], ['units', ['number']], ['ratio', ['number']]]);
 const typeOfRow = (r) => (r.form === 'status' ? ['text'] : UNIT_TYPE.get(r.unit) || null);
 const findings = [];
 const flag = (line) => { if (!findings.includes(line)) findings.push(line); };
 // MF-13 follow-up 1: a switch state other than exactly 'on' or 'off' is a finding, never read as OFF
 for (const [id, st] of SW) if (st !== 'on' && st !== 'off') flag(`GEN-ROW-BAD-STATE ${id} ${st}`);
+// off beats on per type: a row is effective-ON for a type when its formula switch and that type's switch are both ON; it is a field when ON for at least one listed type
+const typeOn = (r, t) => SW.get(r.switch || `formula:${r.id}`) === 'on' && SW.get(`building_type:${t}`) === 'on';
 const STATE = new Map(); // row id -> on | off | noswitch
 for (const r of CAT.values()) {
-  const ids = [r.switch || `formula:${r.id}`, `building_type:${r.building_type}`];
+  const ids = [r.switch || `formula:${r.id}`, ...typesOf(r).map((t) => `building_type:${t}`)];
   const missing = ids.filter((id) => !SW.has(id));
   for (const id of missing) flag(`GEN-ROW-NO-SWITCH ${id}`);
-  STATE.set(r.id, missing.length ? 'noswitch' : ids.every((id) => SW.get(id) === 'on') ? 'on' : 'off');
+  STATE.set(r.id, missing.length ? 'noswitch' : typesOf(r).some((t) => typeOn(r, t)) ? 'on' : 'off');
 }
 const ON_ROWS = [...CAT.values()].filter((r) => STATE.get(r.id) === 'on');
 for (const r of ON_ROWS) if (!typeOfRow(r)) flag(`GEN-UNIT-UNKNOWN ${r.id} ${r.unit}`);
-const SCENARIOS = new Set([...CAT.values()].map(scenarioOf));
+const SCENARIOS = new Set([...CAT.values()].flatMap(scenariosOf));
 const hasLabel = (id) => typeof LABELS[id] === 'string' && LABELS[id] !== '';
 const headline = new Set();
 for (const [scenario, list] of Object.entries(LISTS)) {
@@ -91,7 +98,7 @@ for (const [scenario, list] of Object.entries(LISTS)) {
     seen.add(id);
     const row = CAT.get(id);
     if (!row || !inScenario(row, scenario)) { flag(`GEN-LIST-NO-ROW ${scenario} ${id}`); continue; }
-    if (STATE.get(id) === 'off') flag(`GEN-LIST-OFF ${scenario} ${id}`);
+    if (STATE.get(id) !== 'noswitch' && !typeOn(row, typeOfScenario(scenario))) flag(`GEN-LIST-OFF ${scenario} ${id}`);
     headline.add(id);
     if (!hasLabel(id)) flag(`GEN-ROW-NO-LABEL ${id}`);
   }

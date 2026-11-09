@@ -83,7 +83,7 @@ describe('G1 totality (FE-30, 126 11a.1)', () => {
   it('RED: the committed declaration holds one catalogue field per effective-ON row, in catalogue order, and not_in_report is empty', () => {
     const decl = readJson(ROOT, DECL);
     expect(catFieldsOf(ROOT).map((f) => f.name)).toEqual(ON_IDS());
-    expect(catFieldsOf(ROOT)).toHaveLength(47);
+    expect(catFieldsOf(ROOT)).toHaveLength(catalogue().length); // the count follows the catalogue (47 on the tip); the line above already pins the names
     expect(decl.not_in_report).toEqual([]);
   });
   it('RED: one row switched OFF loses exactly that field and lands in not_in_report; back ON restores the bytes', () => {
@@ -107,7 +107,8 @@ describe('G2 off beats on (126 11a.1)', () => {
   it('RED: the building type OFF yields zero catalogue fields even with every row ON', () => {
     const dir = sandbox();
     setLists(dir, { [FLAT]: [], [PITCHED]: [] }); // MF-14: the committed headline lists name rows of this type, which would be GEN-LIST-OFF
-    setSwitch(dir, 'building_type:detached_house', 'off');
+    // DL-21 a: off beats on per type, so "the building type off" is every building_type switch row off (one row on this tip, two once rows list houseplex)
+    for (const r of readJson(dir, SWITCHBOARD).rows.filter((x: Json) => x.kind === 'building_type')) setSwitch(dir, r.id, 'off');
     expect(run(dir, '--write').status).toBe(0);
     expect(catFieldsOf(dir)).toEqual([]);
     expect(readJson(dir, DECL).not_in_report).toHaveLength(ON_IDS().length);

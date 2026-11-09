@@ -1,0 +1,55 @@
+# GENLIST red: the new test file against the UNMODIFIED generator (base 2f6879c3d), 2026-11-09
+$ npx vitest run src/tests/surfaces/report-generator-building-type-list.logic.test.ts
+   × L1 a list is read (DL-21 a, FE-30) > RED: every row lists both types: --write exits 0, one field per ROW (not per row and type), in catalogue order; --check exits 0 37ms
+     → expected 'GEN-ROW-NO-SWITCH building_type:detac…' to be '' // Object.is equality
+   × L1 a list is read (DL-21 a, FE-30) > RED: a string row is a one-item list: the string tree and the list tree emit the same catalogue fields, byte for byte 72ms
+     → expected 1 to be +0 // Object.is equality
+   × L2 one scenario per (building type, design option) > RED: the houseplex plain, flat and pitched scenarios are valid headline keys; an option no row carries is GEN-LIST-NO-SCENARIO 36ms
+     → expected 1 to be +0 // Object.is equality
+   × L3 C-2 per listed type > RED: a row with no design option leads the plain, flat and pitched lists of EACH listed type 34ms
+     → expected 1 to be +0 // Object.is equality
+   × L3 C-2 per listed type > RED: a row with a design option belongs to its own option of each listed type only 35ms
+     → expected 'GEN-ROW-NO-SWITCH building_type:detac…' to contain 'GEN-LIST-NO-ROW detached_houseplex/fl…'
+   × L3 C-2 per listed type > RED: a row that lists only the house is not in a houseplex scenario (mixed catalogue: a string row beside list rows) 34ms
+     → expected 'GEN-ROW-NO-SWITCH building_type:detac…' to contain 'GEN-LIST-NO-ROW detached_houseplex gf…'
+   × L4 off beats on, per type (126 11a.1) > RED: one listed type OFF removes the row from that type only: every row stays a field while the other type is ON 33ms
+     → expected 1 to be +0 // Object.is equality
+   × L4 off beats on, per type (126 11a.1) > RED: every listed type OFF yields zero catalogue fields, all in not_in_report 33ms
+     → expected 1 to be +0 // Object.is equality
+   × L4 off beats on, per type (126 11a.1) > RED: a listed row of an OFF type is GEN-LIST-OFF for that type's scenario and for no other 34ms
+     → expected 'GEN-ROW-NO-SWITCH building_type:detac…' to contain 'GEN-LIST-OFF detached_houseplex heigh…'
+   × L4 off beats on, per type (126 11a.1) > RED: house OFF, houseplex ON: a row listed under a house scenario is GEN-LIST-OFF although it is still a field via houseplex 35ms
+     → expected 'GEN-ROW-NO-SWITCH building_type:detac…' to contain 'GEN-LIST-OFF detached_house height_ma…'
+   × L4 off beats on, per type (126 11a.1) > RED: a listed type with no switch row: exactly `GEN-ROW-NO-SWITCH building_type:<type>`, nothing written 37ms
+     → expected 'GEN-ROW-NO-SWITCH building_type:detac…' to contain 'GEN-ROW-NO-SWITCH building_type:detac…'
+   × L5 houseplex scenarios ship with empty headline lists (C-4, D-1 b) > RED: no houseplex list: --write exits 0 and each unlabelled row prints once as `labels owed`, never twice 34ms
+     → expected 1 to be +0 // Object.is equality
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
++ GEN-ROW-NO-SWITCH building_type:detached_house,detached_houseplex
++ GEN-LIST-NO-SCENARIO detached_house
++ GEN-LIST-NO-SCENARIO detached_house/flat_or_shallow_roof
++ GEN-LIST-NO-SCENARIO detached_house/pitched
++ GEN-ROW-NO-SWITCH building_type:detached_house,detached_houseplex
++ GEN-LIST-NO-SCENARIO detached_house
++ GEN-LIST-NO-SCENARIO detached_house/flat_or_shallow_roof
++ GEN-LIST-NO-SCENARIO detached_house/pitched
++ GEN-LIST-NO-SCENARIO detached_houseplex/flat_or_shallow_roof
++ GEN-ROW-NO-SWITCH building_type:detached_house,detached_houseplex
++ GEN-LIST-NO-SCENARIO detached_house/flat_or_shallow_roof
++ GEN-LIST-NO-SCENARIO detached_house/pitched
++ GEN-LIST-NO-SCENARIO detached_houseplex
++ GEN-ROW-NO-SWITCH building_type:detached_house,detached_houseplex
++ GEN-LIST-NO-SCENARIO detached_house
++ GEN-LIST-NO-SCENARIO detached_house/flat_or_shallow_roof
++ GEN-LIST-NO-SCENARIO detached_house/pitched
++ GEN-LIST-NO-SCENARIO detached_houseplex
++ GEN-ROW-NO-SWITCH building_type:detached_house,detached_houseplex
++ GEN-LIST-NO-SCENARIO detached_house
++ GEN-LIST-NO-SCENARIO detached_house/flat_or_shallow_roof
++ GEN-LIST-NO-SCENARIO detached_house/pitched
++ GEN-ROW-NO-SWITCH building_type:detached_house,detached_houseplex
++ GEN-LIST-NO-SCENARIO detached_house
++ GEN-LIST-NO-SCENARIO detached_house/flat_or_shallow_roof
++ GEN-LIST-NO-SCENARIO detached_house/pitched
+ Test Files  1 failed (1)
+      Tests  12 failed | 2 passed (14)

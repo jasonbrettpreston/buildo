@@ -1,0 +1,18 @@
+# GENLIST green: after the generator change, tip tree (strings), 2026-11-09
+$ npx vitest run src/tests/surfaces
+ ✓ src/tests/surfaces/report-honest.logic.test.ts (46 tests) 26ms
+ ✓ src/tests/surfaces/report-golden-parity.logic.test.ts (38 tests) 32ms
+ ✓ src/tests/surfaces/report-render.logic.test.ts (69 tests) 73ms
+ ✓ src/tests/surfaces/new-row-zero-code.golden.test.ts (10 tests) 69ms
+ ✓ src/tests/surfaces/report-view.ui.test.tsx (12 tests) 77ms
+ ✓ src/tests/surfaces/report-binding.logic.test.ts (13 tests) 306ms
+ ✓ src/tests/surfaces/report-generator.logic.test.ts (12 tests) 712ms
+ ✓ src/tests/surfaces/report-generator-building-type-list.logic.test.ts (14 tests) 1169ms
+ ✓ src/tests/surfaces/report-generator-fields.logic.test.ts (28 tests) 2393ms
+ ✓ src/tests/surfaces/surface-validate.logic.test.ts (46 tests) 5713ms
+ Test Files  10 passed (10)
+$ node scripts/surfaces/_schema/seed-report-v2.mjs --check
+seed-report-v2 current (decl, presentation, rulings, catalogue fields reproduce from report-v2-seed/)
+$ node scripts/surfaces/surface-validate.mjs
+surface-validate current; S-gen ok · S-golden ok (11 states x 4; owed 16 states / 64 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08
+       1
