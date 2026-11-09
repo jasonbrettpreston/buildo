@@ -93,10 +93,10 @@ describe('M-465 (1)-(4): width 61, the closed code shared, the base view unchang
     expect(v).toContain('r.shared AS shared_with_base');
     expect(v).toContain(`WHERE cardinality(l.codes) = ${width()}`);
   });
-  it('the option view lists exactly the scope option classes (RC-1: detached_house), never a neighbouring class', () => {
+  it('migration 295 option view lists the detached_house only (RC-1 as written there); the scope lists the houseplex too and migration 297 widens the view (DL-7 a)', () => {
     const m = /CROSS JOIN \(VALUES ((?:\('[a-z_]+'\)(?:, )?)+)\) AS c \(class\)/.exec(view('bylaw_resolution_option_results'));
-    expect([...(m as RegExpExecArray)[1]!.matchAll(/'([a-z_]+)'/g)].map((x) => x[1])).toEqual(SCOPE.options.roof_form.classes);
-    expect(SCOPE.options.roof_form.classes).toEqual(['detached_house']);
+    expect([...(m as RegExpExecArray)[1]!.matchAll(/'([a-z_]+)'/g)].map((x) => x[1])).toEqual(['detached_house']);
+    expect(SCOPE.options.roof_form.classes).toEqual(['detached_house', 'detached_houseplex']);
   });
 });
 

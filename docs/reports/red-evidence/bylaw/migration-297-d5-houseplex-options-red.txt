@@ -1,0 +1,9 @@
+== MB-27 increment 3 item E3 (the houseplex roof option rows D5, the class-override guards, migration 297 file) red: src/tests/steps/resolve_bylaws/d5-houseplex-option-slots.logic.test.ts and migration-297.logic.test.ts run on the parent code (no houseplex class in the scope, no 297 file), the locks added; 8 of 10 red on the parent, 10 of 10 green here
+   × migration 297 (written, not applied) > exists as one file
+   × migration 297 (written, not applied) > the option view lists exactly the scope's roof_form classes
+   × migration 297 (written, not applied) > every width CHECK and view filter is one ruled width: 61 (form b, DL-3 b) or 63 (form a, Q-M1 b+), with the 54 base pairs and 7 option slots of 295 kept (M-465) (literal anchors, not read from the encoder)
+   × migration 297 (written, not applied) > the migration width equals the encoder width (the second, independent check)
+   × DL-7 a: the scope lists the houseplex for the roof-form option slots > options.roof_form.classes = [detached_house, detached_houseplex]
+   × DL-7 a: houseplex option rows round-trip through encode and decode (Q-STOR F) > every ungated golden lot decodes option rows for both listed classes
+   × DL-7 a: houseplex option rows round-trip through encode and decode (Q-STOR F) > the decoded houseplex option rows equal Layer 2's own traceOption for the houseplex class
+   × DL-7 a: houseplex option rows round-trip through encode and decode (Q-STOR F) > a class override is written only where the houseplex option tuple differs from the representative slot (RR-01 / Q-STOR F)

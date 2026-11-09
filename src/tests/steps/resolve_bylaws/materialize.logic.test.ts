@@ -298,7 +298,7 @@ describe('classes by stub: a differing class stores only the positions that diff
     expect(out.rows.lots[0].codes.slice(PAIRS.length, -1).every((c: number) => c === lr().sharedCode(MAP))).toBe(true);
     const cr = out.rows.lots[0].class_results;
     expect(Object.keys(cr).sort()).toEqual(['detached_houseplex', 'semi_detached_houseplex']);
-    expect(Object.keys(cr.detached_houseplex)).toHaveLength(PAIRS.filter((p) => p.structure === 'principal').length); // only the principal structure carries the class vector
+    expect(Object.keys(cr.detached_houseplex)).toHaveLength(PAIRS.filter((p) => p.structure === 'principal').length + OPTS.length); // only the principal structure carries the class vector; DL-7 a: the listed houseplex also stores its option slots where they differ (all 7 here)
     const dec = decoded(out);
     expect(dec.find((r) => r.class === 'detached_houseplex' && r.structure === 'principal')).toMatchObject({ status: 'applies', value: 12 });
     expect(dec.find((r) => r.class === 'semi_detached_house' && r.structure === 'principal')).toMatchObject({ status: 'applies', value: 10 });
@@ -430,7 +430,7 @@ describe('Q-F / I13 and the winner-layer histogram: tallies the descriptor check
     const total = Object.values(out.matched.winner_layers as Record<string, number>).reduce((a, b) => a + b, 0);
     const opt = lr().decodeOptionResults({ lot: out.rows.lots[0], pairs: PAIRS, classes: SCOPE.classes, map: MAP, dicts: lr().makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts }), optionPairs: OPTS }) as Json[];
     // the M-465 option slots are results written too (a shared slot carries its base pair's winner)
-    expect(total).toBe(repOf(out).filter((c) => c.winner_unit_id !== null).length + opt.filter((c) => c.winner_unit_id !== null).length);
+    expect(total).toBe(repOf(out).filter((c) => c.winner_unit_id !== null).length + opt.filter((c) => c.class === SCOPE.classes[0] && c.winner_unit_id !== null).length);
     expect(Object.values(out.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(WIDTH); // every result written, the M-465 option slots included
     for (const k of Object.keys(out.matched.winner_layers)) expect(['base', 'overlay', 'exception', 'provincial']).toContain(k);
   });

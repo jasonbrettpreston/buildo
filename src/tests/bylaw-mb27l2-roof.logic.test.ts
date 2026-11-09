@@ -170,10 +170,12 @@ describe('R5 / R6 / R7: nothing else moves; RT; I13', () => {
     const { options: _o, ...noOpt } = SCOPE; // eslint-disable-line @typescript-eslint/no-unused-vars
     const plain = mz.materializeBatch(ROWS, mkEnv(noOpt));
     const n = env.pairs.length;
+    // DL-7 a (M-494): a listed class writes overrides at the option slots (index >= n); only the base indexes are compared
+    const baseOnly = (cr: Json | null): Json | null => (cr === null ? null : Object.fromEntries(Object.entries(cr).map(([c, ov]) => [c, Object.fromEntries(Object.entries(ov as Json).filter(([k]) => Number(k) < n))])));
     plain.rows.lots.forEach((p: Json, i: number) => {
       const l = out.rows.lots[i];
       for (const k of ['codes', 'numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) expect(l[k] === null ? null : l[k].slice(0, n), `${p.parcel_id} ${k}`).toEqual(p[k]);
-      expect(l.class_results, `${p.parcel_id} class_results`).toEqual(p.class_results);
+      expect(baseOnly(l.class_results), `${p.parcel_id} class_results`).toEqual(p.class_results);
       expect(l.permitted).toEqual(p.permitted);
     });
   });
@@ -182,7 +184,7 @@ describe('R5 / R6 / R7: nothing else moves; RT; I13', () => {
     const o = mz.materializeBatch([rt], env);
     const d = lr.makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts });
     const rows = lr.decodeOptionResults({ lot: o.rows.lots[0], pairs: env.pairs, classes: env.classes, map: MAP, dicts: d, optionPairs: env.optionPairs }) as Json[];
-    for (const r of rows.filter((x) => x.option !== null)) expect([r.target, r.option, r.shared_with_base]).toEqual([r.target, r.option, true]);
+    for (const r of rows.filter((x) => x.option !== null && x.class === 'detached_house')) expect([r.target, r.option, r.shared_with_base]).toEqual([r.target, r.option, true]);
     const thr = rows.find((x) => x.option === null) as Json;
     expect([thr.status, thr.value_kind, thr.evidence_kind]).toEqual(['applies', 'unregulated', 'absence']);
   });
@@ -228,8 +230,8 @@ describe('R10: the pitched step-back (M-465 (3), a dated note on M-183)', () => 
 
 describe('R11 / R12: the class and ROOF-5', () => {
   it('R11: another class decodes no option row (R3-11: never a neighbouring class\'s option)', () => {
-    for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house']));
-    for (const lot of out.rows.lots) if (lot.class_results) for (const ov of Object.values(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) expect(Number(k)).toBeLessThan(env.pairs.length);
+    for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex']));
+    for (const lot of out.rows.lots) if (lot.class_results) for (const [c, ov] of Object.entries(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) if (c !== 'detached_houseplex') expect(Number(k)).toBeLessThan(env.pairs.length);
   });
   it('R12: on A0166 the flat main-wall row (7.2 m) above the flat height (6.5 m) carries main_wall_limit_above_height; no other row of the 25 does', () => {
     for (const lot of out.rows.lots) {
@@ -237,7 +239,7 @@ describe('R11 / R12: the class and ROOF-5', () => {
       const v = mz.logicalRowsOf(row, lot, dicts, env) as Json;
       for (const r of v.option_rows as Json[]) {
         const has = (r.disclosures || []).includes('main_wall_limit_above_height');
-        const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof';
+        const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof' && r.class === 'detached_house';
         expect([CASE.get(lot.parcel_id), r.target, r.option, has]).toEqual([CASE.get(lot.parcel_id), r.target, r.option, want]);
       }
     }

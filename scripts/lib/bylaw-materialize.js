@@ -106,9 +106,14 @@ function makeEnv({ body, map, scope, vocab, zoneList, versions, hooks = {}, audi
   }
   const unitInfo = {};
   for (const u of body.units) unitInfo[u.unit_id] = { regulation_id: u.regulation_id, layer: u.layer };
-  // M-465 (RC-1): the option slots after the base pairs, stored for the representative class only (layer2-scope.json options)
+  // M-465 (RC-1) as amended by DL-7 a (M-494): the option slots after the base pairs, evaluated for the representative class and, where a
+  // class's tuple differs from that slot, stored as a class override at the slot. Every listed class must be a scope class, and the
+  // representative must be listed (its results are the slot's own tuple).
   const optionPairs = rb.optionPairs(scope, vocab.design_options);
-  for (const p of optionPairs) if (p.classes.length !== 1 || p.classes[0] !== classes[0]) throw new Error(`makeEnv: option ${p.option_name} must list exactly the representative class ${classes[0]} (RC-1)`);
+  for (const p of optionPairs) {
+    for (const c of p.classes) if (!classes.includes(c)) throw new Error(`makeEnv: option ${p.option_name} lists ${c}, which is not a layer2-scope.json class (DL-7 a)`);
+    if (!p.classes.includes(classes[0])) throw new Error(`makeEnv: option ${p.option_name} must list the representative class ${classes[0]} (RC-1, DL-7 a)`);
+  }
   return {
     units: body.units, unitInfo, ctx, authored: body.authored, map, scope, classes, classVectors, versions, isIn, audit,
     pairs: rb.scopePairs(scope),
@@ -312,12 +317,20 @@ function resolveRow(row, env) {
         return normalizeResult(env.hooks.evaluate(l, p.target, cand.candidates), cand, env);
       });
     }
-    // M-465 (RC-1): the option slots, evaluated for the representative class (the slots' only listed class)
+    // M-465 (RC-1) as amended by DL-7 a (M-494): the option slots, evaluated for the representative class (its results are the slot's
+    // own tuple) and for every other listed class, whose tuple the encoder stores as a class override where it differs from the slot
     const rc = env.classes[0];
-    byClass[rc] = [...byClass[rc], ...env.optionPairs.map((p) => {
-      const l = rb.optionLot(rb.classLot(lot, { structure: p.structure, classKey: rc, vector: env.classVectors[rc] }), p);
+    const optionResultsFor = (c) => env.optionPairs.map((p) => {
+      const l = rb.optionLot(rb.classLot(lot, { structure: p.structure, classKey: c, vector: env.classVectors[c] }), p);
       return normalizeResult(env.hooks.evaluate(l, p.target, cand.candidates), cand, env, { option: true });
-    })];
+    });
+    byClass[rc] = [...byClass[rc], ...optionResultsFor(rc)];
+    for (const c of env.classes.slice(1)) {
+      const listed = env.optionPairs.some((p) => p.classes.includes(c));
+      if (!listed) continue; // a class that lists no option slot keeps its base results as they are (null = same as the representative)
+      const base = byClass[c] === null ? byClass[rc].slice(0, env.pairs.length) : byClass[c];
+      byClass[c] = [...base, ...optionResultsFor(c)];
+    }
     for (const c of env.classes) {
       const l = rb.classLot(lot, { structure: 'principal', classKey: c, vector: env.classVectors[c] });
       words[c] = permittedCached(l, env.classVectors[c].building_type, cand, c, env);

@@ -124,17 +124,21 @@ function sharedCode(map) {
 }
 
 /**
- * byClass: class -> results in pair order (null = same as the representative, i.e. the first class). With optionPairs (M-465, RC-1), the
- * representative's results run over the base pairs then the option slots; another class carries the base pairs only, and no class override
- * is written at an option slot (the slots are stored for the representative class alone, layer2-scope.json options). `share` false (a gated
- * lot) writes every option slot in full.
+ * byClass: class -> results in pair order (null = same as the representative, i.e. the first class). With optionPairs (M-465, RC-1 as
+ * amended by DL-7 a, M-494), the representative's results run over the base pairs then the option slots; every other listed class runs
+ * over the base pairs then the option slots, and writes a class override at an option slot only where its tuple differs from the
+ * representative's. A class that lists no option slot carries the base pairs only. `share` false (a gated lot) writes every option slot
+ * in full.
  */
 function encodeLotResults({ pairs, classes, byClass, map, dict, unitInfo, optionPairs = [], share = true }) {
   for (const c of classes) if (byClass[c] === undefined) throw new Error(`encodeLotResults: missing class ${c}`);
   const rep = byClass[classes[0]];
   const width = pairs.length + optionPairs.length;
   if (!rep || rep.length !== width) throw new Error(`encodeLotResults: length ${rep ? rep.length : 'null'} != ${width} slots`);
-  for (const p of optionPairs) if (!Array.isArray(p.classes) || p.classes.length !== 1 || p.classes[0] !== classes[0]) throw new Error(`encodeLotResults: option slot ${p.target} is stored for the representative class only (RC-1)`);
+  for (const p of optionPairs) {
+    for (const c of p.classes) if (!classes.includes(c)) throw new Error(`encodeLotResults: option slot ${p.target} lists ${c}, which is not an encoded class (DL-7 a)`);
+    if (!p.classes.includes(classes[0])) throw new Error(`encodeLotResults: option slot ${p.target} must list the representative class ${classes[0]} (RC-1, DL-7 a)`);
+  }
   const tuples = rep.map((r) => encodeOne(r, map, dict, unitInfo));
   // a gated lot shares nothing: its rows are all not_evaluated (the I4 CHECK of migration 282 holds codes to not_evaluated there)
   if (optionPairs.length && share) {
@@ -149,7 +153,10 @@ function encodeLotResults({ pairs, classes, byClass, map, dict, unitInfo, option
   for (const c of classes.slice(1)) {
     const rs = byClass[c];
     if (rs === null) continue;
-    if (rs.length !== pairs.length) throw new Error(`encodeLotResults: length ${rs.length} != ${pairs.length} base pairs for ${c}`);
+    // a class that lists no option slot carries the base pairs only (R3-11: never a neighbouring class's option)
+    const listed = optionPairs.some((p) => p.classes.includes(c));
+    const want = listed ? width : pairs.length;
+    if (rs.length !== want) throw new Error(`encodeLotResults: length ${rs.length} != ${want} slots for ${c}`);
     const o = {};
     rs.forEach((r, i) => {
       const t = encodeOne(r, map, dict, unitInfo);
@@ -201,8 +208,9 @@ function lotColumns(lot, n) {
 
 /**
  * M-465: the option slots decoded, one row per option slot per listed class: `option` (null for the threshold), `option_name` and
- * `shared_with_base`. A shared slot reads its own class's base cell (class override first, then the representative's array). A class the
- * slot does not list gets no row (R3-11: never a neighbouring class's option).
+ * `shared_with_base`. A stored class override at the slot is read first (DL-7 a, M-494); a shared slot then reads its own class's base
+ * cell (class override first, then the representative's array). A class the slot does not list gets no row (R3-11: never a neighbouring
+ * class's option).
  */
 function decodeOptionResults({ lot, pairs, classes, map, dicts, optionPairs }) {
   const n = pairs.length;
@@ -215,8 +223,7 @@ function decodeOptionResults({ lot, pairs, classes, map, dicts, optionPairs }) {
     optionPairs.forEach((p, k) => {
       if (!p.classes.includes(cls)) return;
       const i = n + k;
-      if (ov[i] !== undefined) throw new Error(`decodeOptionResults: class override at option slot ${i + 1} (RC-1 writes none)`);
-      const t = at(i);
+      const t = ov[i] !== undefined ? ov[i].map((x) => (x === undefined ? null : x)) : at(i);
       const shared = t[0] === SH;
       if (shared && p.base_index === null) throw new Error(`decodeOptionResults: shared code at the threshold slot ${i + 1}`);
       const src = shared ? (ov[p.base_index] || at(p.base_index)) : t;

@@ -79,9 +79,9 @@
   },
   "deferred": {},
   "options": {
-    "$comment": "M-465 (M-400's first design option): option slots appended after the base pairs, in this order: for each option, for each structure and target listed, one slot per vocab.design_options value (in its order); then the option's threshold pair (option null). Stored for the listed classes only (M-465 (6), RC-1): the representative arrays hold the first listed class's results and no class override is written at these slots; another class reads no option row (R3-11). The base pairs and their positions are unchanged (M-60). Read through the view bylaw_resolution_option_results (migration 295).",
+    "$comment": "M-465 (M-400's first design option) as amended by DL-7 a (M-494, D5): option slots appended after the base pairs, in this order: for each option, for each structure and target listed, one slot per vocab.design_options value (in its order); then the option's threshold pair (option null). Stored for the listed classes (M-465 (6), RC-1, DL-7 a): the representative arrays hold the first listed class's results, and another listed class writes a class override at a slot only where its tuple differs from the representative's (stored only where they differ, Q-STOR a F); a class not listed reads no option row (R3-11). The base pairs and their positions are unchanged (M-60). Read through the view bylaw_resolution_option_results (migration 295; the listed classes and the override read are migration 297).",
     "roof_form": {
-      "classes": ["detached_house"],
+      "classes": ["detached_house", "detached_houseplex"],
       "targets": {
         "principal": ["height_m", "main_wall_height_m", "upper_storey_setback_m"]
       },
