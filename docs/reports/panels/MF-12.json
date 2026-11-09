@@ -4,9 +4,12 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-08",
-  "head": "TBD",
+  "head": "496417d3aec23ca275ea3818de42bf4c7f77a930",
   "commits_reviewed": [
-    "TBD"
+    "b786599d1 (prereg-MF-12-1, superseded, kept unedited)",
+    "0be5d06d1 (dated notes, FE-28, FE-29)",
+    "cb95231e0 (prereg-MF-12-2)",
+    "496417d3a (MF-12 code commit)"
   ],
   "cards": [
     "Operator answer MF-12 D-1..D-4 (2026-11-08): \"I approve all the recommendations on the condition you are highly confident in each\". D-1 a, D-2 a, D-3 a, D-4 a.",
@@ -33,5 +36,7 @@
     "17 owed states with blockers: ~/Buildo-scratch/mcfrontend/MF-12/owed.md"
   ],
   "evidence": "docs/reports/red-evidence/MF-12/; ~/Buildo-scratch/mcfrontend/MF-12/",
-  "notes": []
+  "notes": [
+    "2026-11-08 touch-up (prior values kept): {\"head\":\"TBD\",\"commits_reviewed\":[\"TBD\"]}. Commit order: b786599d1 (prereg-MF-12-1, alone; superseded, kept unedited), 0be5d06d1 (dated notes, FE-28, FE-29, FE-06 note), cb95231e0 (prereg-MF-12-2, alone, directly under the code), 496417d3aec23ca275ea3818de42bf4c7f77a930 (MF-12 code commit)."
+  ]
 }
