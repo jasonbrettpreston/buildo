@@ -18,6 +18,8 @@ This single Expo codebase targets three environments (Minimum OS requirements: i
 
 **Theme Constraint:** The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components.
 
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, no `.tsx` file under `mobile/src` or `mobile/app` uses a `dark:` class, and the brand-primary surfaces are dark-mode-only (Spec 117 §3.4). How the React Native Reusables components carry their dark values is MF-35's to rule (coordinator direction, pending operator confirmation). Measured fact only; no rule changes.
+
 ## 3. The Prime Directive: "Dumb Glass" Architecture
 You are an expert React Native / Expo developer. You are operating strictly in the **Mobile Domain**. 
 This mobile application is a "Dumb Glass" client. It **MUST NOT** perform complex data mutation, geographic PostGIS math, or algorithmic sorting. All heavy computational lifting is handled entirely by the Next.js API Backend. 
@@ -59,6 +61,8 @@ If you attempt to use any of the following web paradigms in this project, you ha
 
 ## 6. The Component Philosophy: React Native Reusables
 We do not npm-install generic UI components. We use **React Native Reusables** (via `npx rn-reusables add [component]`). The code lives inside our repository, giving us full ownership of Tailwind styling and native dependency adjustments without version conflicts.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): the command named above is not the CLI's package name: the CLI is `@react-native-reusables/cli` (version 0.7.1, registry `nativewind`; measured by the MF-42 plan lane), recorded in `scripts/surfaces/_schema/vendor-rnr.manifest.json`, with `mobile/components.json` aliases into the protected vendor dir `mobile/src/vendor/rnr/` (Spec 126 §11b.4). MF-35 runs it.
 
 > Dated note 2026-11-09 (McFrontend Phase 2; M-246, prior text kept; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): React Native Reusables is confirmed as the mobile library for MaxBLD pages (D-3). The CLI output is generated and never edited; it is vendored unmodified under a protected manifest (the vendor folder and its rule: Spec 126 §11b.4). It is installed by MF-35.
 

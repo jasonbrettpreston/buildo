@@ -218,6 +218,8 @@ The admin uses PostGIS for geospatial queries (`/api/admin/leads/test-feed` cons
 
 Mobile Spec 98 §4 explicitly excludes UI snapshot testing. Web-admin DOES use RTL but selectively — admin UI is hand-rolled from Tailwind + native elements (no third-party UI kit; Spec 33 §6), so compositions get RTL coverage only when their internal state machine is non-trivial (e.g., the `<HealthTile>` component with three render states, or the Flight Center bulk-select → confirm flow). Snapshot tests are BANNED — they encode current behavior as truth and produce noise on every visual change.
 
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): for the surfaces of Spec 126 §11b.3 the admin UI is no longer hand-rolled: the standard library components are not RTL-tested; a binding module is tested by its props goldens (Spec 135 FE-31) and the render smoke (FE-33). The selective-RTL rule above stands for every other admin component.
+
 ---
 
 **Cross-spec dependencies:**

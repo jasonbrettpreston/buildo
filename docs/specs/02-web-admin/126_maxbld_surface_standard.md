@@ -254,6 +254,8 @@ Each block lives in `scripts/steps/_schema/step.schema.json`. That is what "UI a
 *A second JOB archetype (`DISPATCH`) was drafted and removed: its only two candidate members — `scripts/dispatch-notifications.js` and `scripts/classify-lifecycle-phase.js` — are **chained pipeline steps** already governed by `step.schema.json`, so they are out of scope here (Spec 126 Operating Boundaries). An archetype with no member this spec owns is a vocabulary nobody uses.*
 <!-- /generated:mirror:126-surface-profiles -->
 
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"; Spec 128 §4 route, recorded under Spec 135 FE-31): the FORM and LIST profiles gain, in `scripts/surfaces/_schema/surface.schema.json`: a `status: "generated"` FORM MUST carry `render.form` (a contract `schema_ref` plus a closed field list; widgets text, textarea, number, select, checkbox, date, file, hidden); a generated LIST MUST carry `render.list` as an object, and with `render.projection: "list"` its `columns` (field, content-key label, display text/boolean/enum, optional sort_field); a generated surface has no golden `"none"` or `UNRESEARCHED`. The generated table above is NOT regenerated: its mirror `scripts/violations/generate-spec-mirror.mjs` throws at the tip ("an x-profile block names no archetype"), so this note carries the new MUST until the mirror is fixed (follow-up, `docs/reports/review_followups.md`). The closed render vocabulary grows only by the 128 §4 route; the FE-31 lock case C-7 is its lock.
+
 **Three vocabulary decisions, each measured:**
 - **`MAP` is not an archetype** — `map.tsx` and `index.tsx` share hook, contract and Zod schema; the difference is `render.projection: "map"` on a LIST. Making it an archetype would have created a second descriptor for one payload.
 - **`PREVIEW+OFFERS` is `REPORT` + the `offers` category**, not a further archetype. `offers` is required-and-may-be-`"none"` on REPORT — the way `checks[]` may never be `"none"` but everything else may, provided it is written down.
@@ -877,6 +879,8 @@ descriptor → content → generator → standard library component (through ONE
 
 A converted-surfaces manifest has two-direction totality against the MaxBLD-scope descriptors marked converted; an empty manifest is a finding.
 
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): as ruled (P42-D1 a, D2 a, D5 a, D8): (1) `render.form` is a contract schema reference plus a closed field list, and the binding GENERATES the library uiSchema (no uiSchema file); (2) `render.wizard.steps` is deferred (no consumer); (3) the manifest is `scripts/surfaces/_schema/converted-surfaces.json`; an empty `converted` list is a finding except while `waits` names an open queue row (checked by the FE-31 lock); (4) the parked and report lists are declared data in that manifest, never derived; (5) "one render smoke per archetype per platform" is its own row, Spec 135 FE-33 (MF-37 web, MF-35 mobile). (6) `status: "generated"` also covers a surface converted in place to be rendered from descriptors (the schema's description reads "from its first commit"; the schema and the generated registry are unchanged).
+
 ### 11b.3 The pages (card §1.1, §1.2)
 
 | Descriptor | Archetype | Disposition | Queue |
@@ -891,6 +895,8 @@ A converted-surfaces manifest has two-direction totality against the MaxBLD-scop
 | `web_login` | existing, shared | existing literals exempt by listed path; new MaxBLD strings from content; on the MaxBLD host the persona picker is hidden (Spec 116 N4) and the post-login target is the MaxBLD search page, never `/dashboard` | MF-46 |
 | terms | FORM field | a checkbox in the sign-up form writing `tos_accepted_at` only, never `onboarding_complete` (D-10) | MF-46 |
 | `web_subscribe*` | hosted | Stripe-hosted Checkout and Customer Portal for `parcel_tool` | MF-47 |
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, MF-20 is DONE (MF-20@7b152d7e1) and rendered the ad slots through the REPORT path, while the `overlay_sponsor_slot` descriptor stays `status: exists`. The converted manifest therefore lists it under `parked`, not under a DONE row, until a row converts it; operator confirmation owed (MF-42 hand-back).
 
 - **Parked (9, "left out, not faked"):** `mobile_tracked_lots`, `mobile_parcel_account`, `shell_parcel_tool_stack` (move with MF-49, convert on touch), `admin_parcel_cost`, `admin_advertiser_accounts`, `advertiser_self_metrics`, `admin_export_audit`, `admin_run_ledger`, `admin_ledger_visualiser`.
 - **OUT (fences unchanged):** scope D (§2.0; Spec 128 R-03); Buildo's onboarding, auth, paywall, tab shells and settings; the anonymous teaser, advertiser self-serve, PDF send, `usage_events`, `app_outputs`.

@@ -37,6 +37,8 @@ The full set of `account_preset` values (Spec 95 §3.1):
 **Directory Structure & Component Library**
 Located primarily in `mobile/app/(app)/index.tsx` and `mobile/src/components/feed/`. It leverages React Native Reusables and NativeWind.
 
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, the tree holds no React Native Reusables component (no `@rn-primitives/*` import, no vendor dir); the feed components under `mobile/src/components/feed/` are hand-built Buildo code, converted on touch (Spec 126 §11b). Measured fact only.
+
 * `app/(app)/index.tsx` *(Container)*: The orchestrating screen. Uses `@shopify/flash-list` for native GPU memory recycling to allow infinite scrolling of 1,000+ cards without crashing. Integrates `<RefreshControl>` for pull-to-refresh mechanics.
 * `components/feed/FilterTriggerRow.tsx`: Sticky `ListHeaderComponent` rendered above all FlashList items. Always visible. Contains a `"Filters"` pressable and the active radius chip. Tapping opens `LeadFilterSheet`. When filters are active the label reads `"Filters · {n}"` in amber. **This is the primary filter entry point** — the filter sheet must never be the only way to access filtering. Industry standard: Airbnb, LinkedIn, Zillow, and all discovery apps surface filters in a persistent header row.
 * `components/feed/LeadFilterSheet.tsx`: A `@gorhom/bottom-sheet` (Reanimated) overlay to adjust TanStack Query parameters (trade type, radius). Snap points: `['50%', '85%']` — 50% for radius-only quick-filter, 85% for full trade chip grid.

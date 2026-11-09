@@ -107,6 +107,8 @@ Added by the McFrontend Phase 0 documents (Spec 126 §11a; Spec 135; rulings in 
 
 S-gen and S-golden join the zero-is-a-hard-stop set with S6-S8.
 
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): the gate gains three generic arms for non-REPORT surfaces, in `scripts/surfaces/screen-checks.mjs`: SV-DESC (the converted manifest and each converted descriptor), SV-SCREEN (one golden per state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, covers, nothing stray, fresh fingerprints) and SV-SBIND (content keys, whitelisted columns, no display text in golden props). The REPORT steps above are unchanged.
+
 ## 4. The commit form
 
 <!-- generated:mirror:127-commits -->
