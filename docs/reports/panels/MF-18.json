@@ -4,19 +4,32 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "pending",
+  "head": "b8b54bee4",
   "cards": [
     "Operator 2026-11-09: \"Wf-18 proceed if compliant and meets the 5 principle standard\" (D-1..D-5 as recommended; MF-18 owns FE-10 only)."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-18/plan.md section 11; regression-guardian and code-reviewer-grounded, both APPROVE WITH FOLDS, no blocker; reports in ~/Buildo-scratch/mcfrontend/MF-18/plan-panel/.",
-  "output": "PENDING: the OUTPUT panel is filled before the push.",
+  "output": "OUTPUT (stage 8): src/tests/surfaces 14 files 396 tests plus spec133 handbook suite 23 green (419); handbook-rule-map lock 21 tests; Spec 133 CLI output byte-identical before and after (characterization); generate-bylaw-layer2-input --check clean (table_version 44dbbfa2b5e5); estate-literals gate 0 findings. Red then green in docs/reports/red-evidence/MF-18/. No full suite run (lane brief).",
   "seats": [
     "regression-guardian",
     "code-reviewer-grounded"
   ],
-  "verdict": "PENDING",
+  "verdict": "PASS-WITH-FOLDS: no blocker. Regression guardian PASS (133 behaviour preserved, no hashed path touched). Grounded reviewer: lock not vacuous (22 of 24 mutants red); folds executed in b8b54bee4: closed status word required in the reader, lock no longer pins FE-10's live status or the row count, dead fields and constants removed, duplicate-id case matched by message.",
   "blockers": [],
-  "followups": [],
-  "evidence": "docs/reports/red-evidence/MF-18/",
-  "notes": []
+  "followups": [
+    "Spec 136 must be regenerated (--write) by whichever of MF-18 and MF-41 lands second, and on every Spec 135 edit (lane R flips of FE-10 included).",
+    "MF-25: pre-commit line, hooks-composition list, protected globs. MF-26: citation check and size cap for 136.",
+    "Spec 132 generator keeps its own CLI shell (third copy), deferred.",
+    "runHandbookCli sets process.exitCode on an injected `process` parameter (plan F-4 said return only; estate-literals gate allows only the literal `process.exitCode = n`)."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-18/; raw seat reports in ~/Buildo-scratch/mcfrontend/MF-18/output-panel/",
+  "notes": [
+    "2026-11-09 D-17: on the push-12 re-apply the fold commit was carried inside the code commit; the reviewed content is unchanged."
+  ],
+  "commits_reviewed": [
+    "5d1800ad1 (docs: queue note)",
+    "6a9e8aa10 (prereg-MF-18-1)",
+    "c038b96c3 (code: generator, shared shell, lock, generated map and Spec 136, red evidence)",
+    "b8b54bee4 (output folds)"
+  ]
 }
