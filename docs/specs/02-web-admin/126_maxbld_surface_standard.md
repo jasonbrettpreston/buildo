@@ -945,7 +945,7 @@ Operator, verbatim (four messages):
 
 Reading (record, same section): A = the report detail is the expanded card; B = login in the app too, the app keeps the session; C = PDF/share later; "1-6" = sign-up and password reset, Terms and Privacy, delete account in Account, notification settings in Account, the report-limit state on the Report page, a support contact link.
 
-**Ownership.** Spec 126 owns which pages exist and how they connect; Spec 117 owns how they look (colours, type, tokens). A page here takes its look only from 117 via the generated theme (Spec 117 §7 dated note 2026-11-09; §11b.4).
+**Ownership.** Spec 126 owns which pages exist and how they connect; Spec 117 owns how they look (colours, type, tokens). A page here takes its look only from 117 via the generated theme (Spec 117 §7 dated note 2026-11-09; §11b.4). Spec 117 §6 already holds per-page layout guidance: §6.1 the search page (S-002, incl. the suggestion chips), §6.2 the shelf (S-004: Lookup · Tracked Lots · Account) and §6.3 Tracked Lots (S-072, its tokens and layout). Per-page layouts live in Spec 117 §6; the page set lives here. The page name "Tracked Lots" follows the app (`mobile/app/(app)/parcel-tool/_layout.tsx:12`, `tracked.tsx:7`) and Spec 117 §6.2-§6.3.
 
 **Phone app.** Routes are today's routes in the Buildo app's `parcel-tool` group and the shared `(auth)` group; the group moves to the MaxBLD app with MF-49.
 
@@ -955,7 +955,7 @@ Reading (record, same section): A = the report detail is the expanded card; B = 
 | A2 | Search | `/(app)/parcel-tool` (index) | address entry, Toronto only; shows the reports left this month | MF-35 |
 | A3 | Choose your parcel | `/(app)/parcel-tool/disambiguate?q=&kind=` | shown when an address matches two or more parcels; pick on a map or list; a stub today (Back button only) | MF-35 |
 | A4 | Report | `/(app)/parcel-tool/[parcelId]` | scenario cards with headline numbers; each card expands to every field (no detail page); one Street View photo, the photo space collapses when none is available; per-scenario ad slot and report images from admin; each new report counts toward the monthly limit, with a "limit reached" state; a Save button; PDF and share later | MF-48 (also MF-20 ad slot, MF-38 images, MF-39 photo, MF-45 limit) |
-| A5 | Saved reports | `/(app)/parcel-tool/tracked` | the lots the customer saved; a CoA update on a saved lot sends an alert and marks the lot; today example rows, no API | MF-51 |
+| A5 | Tracked Lots (saved reports) | `/(app)/parcel-tool/tracked` | the lots the customer tracks (the Save button on the Report adds one); a CoA update on a tracked lot sends an alert and marks the lot; today example rows, no API | MF-51 |
 | A6 | Account | `/(app)/parcel-tool/account` | profile, plan and reports used; notification settings for the CoA alerts; delete account (app-store rule); support, Terms, Privacy, sign out; plan changes link to the web, no purchase in the app | MF-52 |
 
 **Web (maxbld.ca).**
@@ -968,7 +968,7 @@ Reading (record, same section): A = the report detail is the expanded card; B = 
 | W4 | Search | not set (under the nested `(maxbld)` layout) | A2 rendered for the browser from the same descriptor | MF-44 |
 | W5 | Choose your parcel | not set (same) | A3 for the browser | MF-44 |
 | W6 | Report | not set (same) | A4 for the browser, same rules | MF-44 |
-| W7 | Saved reports | not set | A5 for the browser | MF-51 |
+| W7 | Tracked Lots | not set | A5 for the browser | MF-51 |
 | W8 | Account | not set | A6 for the browser; Manage plan opens the Stripe portal directly | MF-52 |
 | W9 | Terms, Privacy | not set | plain pages; the app stores need a privacy link and Stripe needs terms | MF-46 |
 | W10 | Onboarding: builder or realtor | not set | optional, later; not in the first version | none (later) |
@@ -991,8 +991,8 @@ Reading (record, same section): A = the report detail is the expanded card; B = 
 - Sign in -> Search (has a plan)
 - Search -> Report (one parcel matches)
 - Search -> Choose your parcel (two or more match) -> Report
-- Report -> Saved reports (Save) -> Report (open a saved lot)
-- CoA update on a saved lot -> Saved reports (alert, content)
+- Report -> Tracked Lots (Save) -> Report (open a tracked lot)
+- CoA update on a tracked lot -> Tracked Lots (alert, content)
 - Report -> "Limit reached: upgrade on the web" (monthly limit reached)
 - Search -> Account (menu)
 - Account -> Checkout (manage plan, web only)
@@ -1012,7 +1012,7 @@ Reading (record, same section): A = the report detail is the expanded card; B = 
 8. Delete account and notification settings live in Account (MF-52).
 9. Terms, Privacy and a support contact are required (MF-46 web; linked from Account).
 10. Onboarding (builder or realtor) is optional and later; no row now.
-11. Layouts are sent per page, just before its row builds, in this order: (1) Search and Choose your parcel (MF-35); (2) Report, the card order and highlights only, since the report schema sets its contents (MF-48, MF-44); (3) Landing, Sign in and Checkout (MF-46, MF-47; Stripe supplies the checkout screens); (4) Saved reports and Account, once their rows exist (MF-51, MF-52). A rough sketch or an annotated screenshot is enough; the standard components set the look.
+11. Layouts are sent per page, just before its row builds, in this order: (1) Search and Choose your parcel (MF-35); (2) Report, the card order and highlights only, since the report schema sets its contents (MF-48, MF-44); (3) Landing, Sign in and Checkout (MF-46, MF-47; Stripe supplies the checkout screens); (4) Tracked Lots and Account, once their rows exist (MF-51, MF-52). A rough sketch or an annotated screenshot is enough; the standard components set the look.
 
 **Outside the MaxBLD set.** Buildo's lead-gen pages are not MaxBLD pages and are not listed above: web `/dashboard`, `/builders`, `/builders/[id]`, `/permits/[id]`; mobile lead feed `/(app)/` (index), lead detail `/(app)/[lead]?id=`, `/(app)/map`, `/(app)/settings`, the flight board `/(app)/flight-board` and `/(app)/[flight-job]?id=`; the trade onboarding `/(onboarding)/` screens (`profession`, `path`, `address`, `supplier`, `first-permit`, `terms`, `complete`, `manufacturer-hold`). Admin pages other than D1-D4 are estate admin, not MaxBLD pages.
 
