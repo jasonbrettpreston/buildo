@@ -1,4 +1,6 @@
 {
   "gfa_flat_m2": "GFA (flat roof)",
-  "gfa_pitched_m2": "GFA (pitched roof)"
+  "gfa_pitched_m2": "GFA (pitched roof)",
+  "storeys_max": "Storeys (max)",
+  "height_max_m": "Height (max)"
 }

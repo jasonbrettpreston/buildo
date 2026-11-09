@@ -575,6 +575,8 @@ const pres = {
     hidden: ['not_permitted', 'not_applicable', 'not_buildable'],
     shown: ['permitted', 'not_evaluated'],
     null_value: '—',
+    // MF-14 (operator T-1): the visible message of a lifecycle tree, by lifecycle state; Spec 33:130-131 (never a blank canvas)
+    lifecycle: { loading: 'Loading the report…', miss: 'No report for this lot yet.', error: 'Could not load this report. Try again.' },
     semi_needs_input: 'This lot looks like half of a semi-detached house. Tell us about your house to see what you can add.',
     semi_correction: "This isn't a semi — it's detached",
     note: 'Spec 78 §6.6 rules 1, 5, 8: hidden states are counted, never shown as cards; null renders "—", never 0 or "no"',

@@ -11,7 +11,7 @@
     },
     "review": "scratchpad/report-review/REVIEW.md §6",
     "seeded": "2026-10-20",
-    "inputs_sha256_16": "0ea57f82d5942c09"
+    "inputs_sha256_16": "5f2a46a679cce079"
   },
   "inputs": {
     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
@@ -207,7 +207,7 @@
         {
           "path": "scenarios.cards[].height_max_m",
           "name": "height_max_m",
-          "label": "height_max_m",
+          "label": "Height (max)",
           "type": "number",
           "unit": "m",
           "status": "planned",
@@ -217,7 +217,7 @@
         {
           "path": "scenarios.cards[].storeys_max",
           "name": "storeys_max",
-          "label": "storeys_max",
+          "label": "Storeys (max)",
           "type": "number",
           "status": "planned",
           "source": "catalogue:storeys_max",

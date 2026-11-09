@@ -1,0 +1,54 @@
+# PLANTED DEFECTS (each applied to the working tree, test run, then reverted; no mutant is committed)
+
+## D1: renderer with a hard-coded field list (the thing FE-24 forbids)
+defect: buildTree keeps only response keys in ['gfa_flat_m2','gfa_pitched_m2']
+   × FE-24: a new catalogue row needs no front-end code > reaches mobile in the detail block with its label, value and unit 18ms
+   × FE-24: a new catalogue row needs no front-end code > reaches web in the detail block with its label, value and unit 7ms
+   × FE-24: a new catalogue row needs no front-end code > reaches admin in the detail block with its label, value and unit 4ms
+   × FE-24: a new catalogue row needs no front-end code > reaches pdf in the detail block with its label, value and unit 4ms
+   × FE-24: a new catalogue row needs no front-end code > a declared field absent from the response renders nothing; a null shows the dash 8ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/new-row-zero-code.golden.test.ts > FE-24: a new catalogue row needs no front-end code > reaches mobile in the detail block with its label, value and unit
+ FAIL  src/tests/surfaces/new-row-zero-code.golden.test.ts > FE-24: a new catalogue row needs no front-end code > reaches web in the detail block with its label, value and unit
+ FAIL  src/tests/surfaces/new-row-zero-code.golden.test.ts > FE-24: a new catalogue row needs no front-end code > reaches admin in the detail block with its label, value and unit
+ FAIL  src/tests/surfaces/new-row-zero-code.golden.test.ts > FE-24: a new catalogue row needs no front-end code > reaches pdf in the detail block with its label, value and unit
+AssertionError: expected '<div data-report="true" data-target="…' to contain 'Brand new row'
+ FAIL  src/tests/surfaces/new-row-zero-code.golden.test.ts > FE-24: a new catalogue row needs no front-end code > a declared field absent from the response renders nothing; a null shows the dash
+AssertionError: expected '<div data-report="true" data-target="…' to match /Brand new row[\s\S]*—/
+      Tests  5 failed | 2 passed (7)
+
+## D2: builder rounds a value (breaks no-maths, Spec 128 Rule 16)
+defect: String(Math.round(v))
+   × T1 buildTree reproduces every golden (the capture) > permitted.mobile 4ms
+   × T1 buildTree reproduces every golden (the capture) > permitted.web 1ms
+   × T1 buildTree reproduces every golden (the capture) > permitted.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > permitted.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.mobile 1ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_b.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_b.web 0ms
+
+## D3: component compares target to a literal and hard-codes a field
+defect: if (view.target === 'pdf') and 'gfa_flat_m2' in ReportView.tsx
+   × one component, four layout rows > mobile: data attributes equal the layout row 23ms
+   × T18 the component holds no target literal, status word or field name > source scan 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/report-view.ui.test.tsx > one component, four layout rows > mobile: data attributes equal the layout row
+AssertionError: expected +0 to be 1 // Object.is equality
+ FAIL  src/tests/surfaces/report-view.ui.test.tsx > T18 the component holds no target literal, status word or field name > source scan
+AssertionError: expected 'import type { ReactElement } from \'r…' not to match /['"`]web['"`]/
+      Tests  2 failed | 10 passed (12)
+
+## D4: scenario typo accepted (viewOf skips the scenario check)
+defect: scenario check removed
+   × T7 viewOf > a bad scenario or target throws, and scenario pre-empts a bad tree 5ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T7 viewOf > a bad scenario or target throws, and scenario pre-empts a bad tree
+TypeError: Cannot read properties of undefined (reading 'map')
+      Tests  1 failed | 5 passed | 59 skipped (65)

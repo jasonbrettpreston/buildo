@@ -1,0 +1,51 @@
+# RED 2: renderer code present, goldens not yet recaptured (24 trees and 40 fingerprints are stale against the new data and rule)
+# cmd: node scripts/surfaces/surface-validate.mjs --check ; npx vitest run src/tests/surfaces/report-render.logic.test.ts -t T1
+SV-GOLDEN permitted.mobile.json: fingerprint stale: report-presentation.json
+SV-GOLDEN permitted.mobile.json: fingerprint stale: report-v2.decl.json
+SV-GOLDEN permitted.web.json: fingerprint stale: report-presentation.json
+SV-GOLDEN permitted.web.json: fingerprint stale: report-v2.decl.json
+SV-GOLDEN permitted.admin.json: fingerprint stale: report-presentation.json
+SV-GOLDEN permitted.admin.json: fingerprint stale: report-v2.decl.json
+SV-GOLDEN permitted.pdf.json: fingerprint stale: report-presentation.json
+SV-GOLDEN permitted.pdf.json: fingerprint stale: report-v2.decl.json
+... (80 SV lines)
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.mobile 2ms
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_flat.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_a.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_b.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_b.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_b.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > variant_pitched_b.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > miss.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > miss.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > miss.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > miss.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > error.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > error.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > error.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > error.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files 3ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 25 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_flat.mobile
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_flat.web
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_flat.admin
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_flat.pdf
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_a.mobile
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_a.web
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_a.admin
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_a.pdf
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_b.mobile
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_b.web
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_b.admin
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > variant_pitched_b.pdf
+AssertionError: expected { nodes: [ { …(8) }, { …(8) } ] } to deeply equal { nodes: [ { …(8) } ] }
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > loading.mobile

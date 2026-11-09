@@ -7814,7 +7814,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 60 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 12 of 61 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -7827,6 +7827,7 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 | `src/components/admin/LeadDetailInspector.tsx` | **none** |
 | `src/components/admin/lead-inspector/CoaClassificationPanel.tsx` | **none** |
 | `src/components/admin/lead-inspector/LifecycleTimelinePanel.tsx` | **none** |
+| `src/components/report/ReportView.tsx` | **none** |
 | `src/components/ui/Badge.tsx` | **none** |
 | `src/components/ui/ScoreBadge.tsx` | **none** |
 

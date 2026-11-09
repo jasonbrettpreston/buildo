@@ -63,7 +63,7 @@
     {
       "path": "scenarios.cards[].height_max_m",
       "name": "height_max_m",
-      "label": "height_max_m",
+      "label": "Height (max)",
       "type": "number",
       "unit": "m",
       "status": "planned",
@@ -73,7 +73,7 @@
     {
       "path": "scenarios.cards[].storeys_max",
       "name": "storeys_max",
-      "label": "storeys_max",
+      "label": "Storeys (max)",
       "type": "number",
       "status": "planned",
       "source": "catalogue:storeys_max",

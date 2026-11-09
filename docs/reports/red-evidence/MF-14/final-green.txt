@@ -1,0 +1,12 @@
+# GREEN on the tip (working tree for the code commit)
+$ node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (10 states x 4; owed 17 states / 68 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08
+exit 0
+$ node scripts/surfaces/_schema/seed-report-v2.mjs --check (labels owed lines omitted)
+seed-report-v2 current (decl, presentation, rulings, catalogue fields reproduce from report-v2-seed/)
+exit 0
+$ node scripts/analysis/report-schema.mjs --check
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+$ npx vitest run src/tests/surfaces src/tests/report-preview.ui.test.tsx src/tests/ParcelCostTool.ui.test.tsx
+ Test Files  11 passed (11)
+      Tests  281 passed (281)

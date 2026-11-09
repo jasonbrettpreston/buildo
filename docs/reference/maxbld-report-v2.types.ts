@@ -156,7 +156,7 @@ export type ReportV2Scenarios = {
     half_span_a_m: number | null;
     /** half_span_b_m — catalogue:half_span_b_m (m) */
     half_span_b_m: number | null;
-    /** height_max_m — catalogue:height_max_m (m) */
+    /** Height (max) — catalogue:height_max_m (m) */
     height_max_m: number | null;
     illustrations: Array<{
       /** Alt text — content:illustrations */
@@ -192,7 +192,7 @@ export type ReportV2Scenarios = {
     status_text: string | null;
     /** storeys_above_wall — catalogue:storeys_above_wall */
     storeys_above_wall: number | null;
-    /** storeys_max — catalogue:storeys_max */
+    /** Storeys (max) — catalogue:storeys_max */
     storeys_max: number | null;
     /** total_floor_area_pitched_a_m2 — catalogue:total_floor_area_pitched_a_m2 (m²) */
     total_floor_area_pitched_a_m2: number | null;

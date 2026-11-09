@@ -1,5 +1,4 @@
 {
-  "detached_house": [],
-  "detached_house/flat_or_shallow_roof": [],
-  "detached_house/pitched": []
+  "detached_house/flat_or_shallow_roof": ["gfa_flat_m2", "storeys_max", "height_max_m"],
+  "detached_house/pitched": ["gfa_pitched_m2", "storeys_max", "height_max_m"]
 }

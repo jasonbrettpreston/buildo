@@ -88,16 +88,16 @@ describe('G1 totality (FE-30, 126 11a.1)', () => {
   });
   it('RED: one row switched OFF loses exactly that field and lands in not_in_report; back ON restores the bytes', () => {
     const dir = sandbox();
-    setSwitch(dir, 'formula:height_max_m', 'on'); // normalise the file formatting the same way the later toggles do (the digest covers the file bytes)
+    setSwitch(dir, 'formula:units_max', 'on'); // normalise the file formatting the same way the later toggles do (the digest covers the file bytes)
     expect(run(dir, '--write').status).toBe(0);
     const on = snapshot(dir);
-    setSwitch(dir, 'formula:height_max_m', 'off');
+    setSwitch(dir, 'formula:units_max', 'off');
     expect(run(dir, '--write').status).toBe(0);
     const names = catFieldsOf(dir).map((f) => f.name);
-    expect(names).not.toContain('height_max_m');
+    expect(names).not.toContain('units_max');
     expect(names).toHaveLength(ON_IDS().length - 1);
-    expect(readJson(dir, DECL).not_in_report.map((n: Json) => n.field)).toEqual(['height_max_m']);
-    setSwitch(dir, 'formula:height_max_m', 'on');
+    expect(readJson(dir, DECL).not_in_report.map((n: Json) => n.field)).toEqual(['units_max']);
+    setSwitch(dir, 'formula:units_max', 'on');
     expect(run(dir, '--write').status).toBe(0);
     expect(snapshot(dir)).toBe(on);
   });
@@ -106,6 +106,7 @@ describe('G1 totality (FE-30, 126 11a.1)', () => {
 describe('G2 off beats on (126 11a.1)', () => {
   it('RED: the building type OFF yields zero catalogue fields even with every row ON', () => {
     const dir = sandbox();
+    setLists(dir, { [FLAT]: [], [PITCHED]: [] }); // MF-14: the committed headline lists name rows of this type, which would be GEN-LIST-OFF
     setSwitch(dir, 'building_type:detached_house', 'off');
     expect(run(dir, '--write').status).toBe(0);
     expect(catFieldsOf(dir)).toEqual([]);
@@ -163,12 +164,12 @@ describe('G4 labels (126 11a.7, FE-30)', () => {
     const w = run(dir, '--write');
     expect(w.status).toBe(0);
     const by = Object.fromEntries(catFieldsOf(dir).map((f) => [f.name, f]));
-    expect(Object.keys(by)).toContain('height_max_m'); // every effective-ON row is a field
+    expect(Object.keys(by)).toContain('units_max'); // every effective-ON row is a field
     expect(by.gfa_flat_m2.label).toBe('GFA (flat roof)');
-    expect(by.height_max_m.label).toBe('height_max_m');
-    expect(owed(w.stdout)).toContain('height_max_m');
+    expect(by.units_max.label).toBe('units_max');
+    expect(owed(w.stdout)).toContain('units_max');
     expect(owed(w.stdout)).not.toContain('gfa_flat_m2');
-    expect(owed(run(dir, '--check').stdout)).toContain('height_max_m');
+    expect(owed(run(dir, '--check').stdout)).toContain('units_max');
   });
   it('RED: a fully labelled tree prints zero owed lines', () => {
     const dir = sandbox();
@@ -180,11 +181,11 @@ describe('G4 labels (126 11a.7, FE-30)', () => {
   });
   it('RED: a headline row with no label is never on the owed list (it is the GEN-ROW-NO-LABEL failure)', () => {
     const dir = sandbox();
-    setLists(dir, { [PLAIN]: ['height_max_m'], [FLAT]: [], [PITCHED]: [] });
+    setLists(dir, { [PLAIN]: ['units_max'], [FLAT]: [], [PITCHED]: [] });
     const c = run(dir, '--check');
     expect(c.status).toBe(1);
-    expect(c.err).toContain('GEN-ROW-NO-LABEL height_max_m');
-    expect(owed(c.stdout)).not.toContain('height_max_m');
+    expect(c.err).toContain('GEN-ROW-NO-LABEL units_max');
+    expect(owed(c.stdout)).not.toContain('units_max');
   });
 });
 

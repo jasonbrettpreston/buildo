@@ -501,7 +501,7 @@
                 ]
               },
               "height_max_m": {
-                "description": "height_max_m",
+                "description": "Height (max)",
                 "x-source": "catalogue:height_max_m",
                 "x-status": "planned",
                 "x-render": "rendered",
@@ -696,7 +696,7 @@
                 ]
               },
               "storeys_max": {
-                "description": "storeys_max",
+                "description": "Storeys (max)",
                 "x-source": "catalogue:storeys_max",
                 "x-status": "planned",
                 "x-render": "rendered",

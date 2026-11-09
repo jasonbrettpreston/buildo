@@ -1,0 +1,54 @@
+# RED 1: new tests run before any renderer code exists (parent = data commit state; core.ts, data.ts, ReportView.tsx, page.tsx, report-capture.ts absent)
+# cmd: npx vitest run src/tests/surfaces/report-render.logic.test.ts src/tests/surfaces/new-row-zero-code.golden.test.ts src/tests/surfaces/report-view.ui.test.tsx src/tests/report-preview.ui.test.tsx
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf14
+ ❯ src/tests/surfaces/report-render.logic.test.ts (0 test)
+ ❯ src/tests/surfaces/new-row-zero-code.golden.test.ts (0 test)
+ ❯ src/tests/report-preview.ui.test.tsx (0 test)
+ ❯ src/tests/surfaces/report-view.ui.test.tsx (0 test)
+⎯⎯⎯⎯⎯⎯ Failed Suites 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/report-preview.ui.test.tsx [ src/tests/report-preview.ui.test.tsx ]
+Error: Failed to resolve import "../app/admin/report-preview/page" from "src/tests/report-preview.ui.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/brettpreston_macmini/Buildo-wt-mf14/src/tests/report-preview.ui.test.tsx:8:30
+  1  |  import { afterEach, describe, expect, it } from "vitest";
+  2  |  import { cleanup, render } from "@testing-library/react";
+  3  |  import ReportPreviewPage from "../app/admin/report-preview/page";
+     |                                 ^
+  4  |  const open = async (q = {}) => render(await ReportPreviewPage({ searchParams: Promise.resolve(q) }));
+  5  |  afterEach(cleanup);
+ ❯ TransformPluginContext._formatError ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41
+ ❯ TransformPluginContext.error ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16
+ ❯ normalizeUrl ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23
+ ❯ ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+ ❯ TransformPluginContext.transform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7
+ ❯ PluginContainer.transform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+ FAIL  src/tests/surfaces/new-row-zero-code.golden.test.ts [ src/tests/surfaces/new-row-zero-code.golden.test.ts ]
+ FAIL  src/tests/surfaces/report-render.logic.test.ts [ src/tests/surfaces/report-render.logic.test.ts ]
+Error: Failed to load url ../../lib/surfaces/report/core (resolved id: ../../lib/surfaces/report/core) in /Users/brettpreston_macmini/Buildo-wt-mf14/src/tests/surfaces/report-render.logic.test.ts. Does the file exist?
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+ FAIL  src/tests/surfaces/report-view.ui.test.tsx [ src/tests/surfaces/report-view.ui.test.tsx ]
+Error: Failed to resolve import "../../lib/surfaces/report/core" from "src/tests/surfaces/report-view.ui.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/brettpreston_macmini/Buildo-wt-mf14/src/tests/surfaces/report-view.ui.test.tsx:12:34
+  4  |  import fs from "node:fs";
+  5  |  import path from "node:path";
+  6  |  import { buildTree, viewOf } from "../../lib/surfaces/report/core";
+     |                                     ^
+  7  |  import { reportCtx } from "../../lib/surfaces/report/data";
+  8  |  import { ReportView } from "../../components/report/ReportView";
+ ❯ TransformPluginContext._formatError ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41
+ ❯ TransformPluginContext.error ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16
+ ❯ normalizeUrl ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23
+ ❯ ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+ ❯ TransformPluginContext.transform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7
+ ❯ PluginContainer.transform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18
+ ❯ loadAndTransform ../Buildo/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+ Test Files  4 failed (4)
+      Tests  no tests
+   Start at  11:51:36
+   Duration  421ms (transform 45ms, setup 36ms, collect 0ms, tests 0ms, environment 422ms, prepare 100ms)

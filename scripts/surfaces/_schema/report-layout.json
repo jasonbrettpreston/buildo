@@ -1,0 +1,15 @@
+{
+  "$comment": "MF-14 · THE one closed layout table of the REPORT renderer (Spec 126 11a.7 dated note 2026-11-09; operator T-1..T-4). One row per target; the renderer reads it and holds no copy (R-27). columns = count at the widest breakpoint (1 at phone width everywhere); details = the non-headline block; meta = when the confidence and provenance line shows; page_break = where print breaks. No per-field or per-state entry. Closed value sets are in `closed`; a lock checks the rows against them and the keys against TARGETS.",
+  "closed": {
+    "columns": [1, 2, 3],
+    "details": ["collapsed", "expanded"],
+    "meta": ["when_set", "always"],
+    "page_break": ["none", "after_headline"]
+  },
+  "targets": {
+    "mobile": { "columns": 1, "details": "collapsed", "meta": "when_set", "page_break": "none" },
+    "web": { "columns": 2, "details": "collapsed", "meta": "when_set", "page_break": "none" },
+    "admin": { "columns": 3, "details": "expanded", "meta": "always", "page_break": "none" },
+    "pdf": { "columns": 2, "details": "expanded", "meta": "when_set", "page_break": "after_headline" }
+  }
+}

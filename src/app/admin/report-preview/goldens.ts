@@ -1,0 +1,17 @@
+// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md 11a.7 (golden = fixture + rendered tree), 127 4.3.
+//
+// MF-14 · lane E-MF14. The ten committed synthetic golden states for the preview page, imported (not read from disk) so they bundle with the server build.
+// The four target files of a state carry the same tree (S-parity), so the web file stands for the state.
+import permitted from '../../../tests/fixtures/surfaces/report/permitted.web.json';
+import not_permitted from '../../../tests/fixtures/surfaces/report/not_permitted.web.json';
+import not_evaluated from '../../../tests/fixtures/surfaces/report/not_evaluated.web.json';
+import variant_flat from '../../../tests/fixtures/surfaces/report/variant_flat.web.json';
+import variant_pitched_a from '../../../tests/fixtures/surfaces/report/variant_pitched_a.web.json';
+import variant_pitched_b from '../../../tests/fixtures/surfaces/report/variant_pitched_b.web.json';
+import at_least from '../../../tests/fixtures/surfaces/report/at_least.web.json';
+import loading from '../../../tests/fixtures/surfaces/report/loading.web.json';
+import miss from '../../../tests/fixtures/surfaces/report/miss.web.json';
+import error from '../../../tests/fixtures/surfaces/report/error.web.json';
+
+export const GOLDENS: Record<string, unknown> = { permitted, not_permitted, not_evaluated, variant_flat, variant_pitched_a, variant_pitched_b, at_least, loading, miss, error };
+export const STATES: string[] = Object.keys(GOLDENS);

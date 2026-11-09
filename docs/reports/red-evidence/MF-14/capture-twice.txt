@@ -1,0 +1,11 @@
+# capture-twice proof
+$ npx tsx scripts/surfaces/report-capture.ts
+report-capture wrote 40 goldens; 40 changed
+$ npx tsx scripts/surfaces/report-capture.ts   (second run)
+report-capture wrote 40 goldens; 0 changed
+IDENTICAL: sha256 of all 41 files equal after run 1 and run 2 (      41 files)
+$ ... --check
+report-capture checked 40 goldens; 0 stale
+exit 0
+run-1 digest: c53c5894e433779d
+run-2 digest: c53c5894e433779d

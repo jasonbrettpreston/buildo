@@ -87,8 +87,8 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | buildable_width_m | `scenarios.cards[].buildable_width_m` | number | m | planned | rendered | `catalogue:buildable_width_m` |  |
 | buildable_depth_m | `scenarios.cards[].buildable_depth_m` | number | m | planned | rendered | `catalogue:buildable_depth_m` |  |
 | footprint_max_m2 | `scenarios.cards[].footprint_max_m2` | number | m² | planned | rendered | `catalogue:footprint_max_m2` |  |
-| height_max_m | `scenarios.cards[].height_max_m` | number | m | planned | rendered | `catalogue:height_max_m` |  |
-| storeys_max | `scenarios.cards[].storeys_max` | number |  | planned | rendered | `catalogue:storeys_max` |  |
+| Height (max) | `scenarios.cards[].height_max_m` | number | m | planned | rendered | `catalogue:height_max_m` |  |
+| Storeys (max) | `scenarios.cards[].storeys_max` | number |  | planned | rendered | `catalogue:storeys_max` |  |
 | gfa_max_m2 | `scenarios.cards[].gfa_max_m2` | number | m² | planned | rendered | `catalogue:gfa_max_m2` |  |
 | units_max | `scenarios.cards[].units_max` | number |  | planned | rendered | `catalogue:units_max` |  |
 | front_rear_wall_width_m | `scenarios.cards[].front_rear_wall_width_m` | number | m | planned | rendered | `catalogue:front_rear_wall_width_m` |  |
