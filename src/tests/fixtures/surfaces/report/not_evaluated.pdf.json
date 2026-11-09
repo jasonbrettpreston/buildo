@@ -26,7 +26,7 @@
     "response_fixture": "d4089ad23fa8c4b3",
     "files": {
       "scripts/surfaces/_schema/binding-sources.json": "642da823d9ba45b5",
-      "scripts/surfaces/_schema/report-v2.decl.json": "42084c696161e8c0",
+      "scripts/surfaces/_schema/report-v2.decl.json": "8de8860eb8e809b8",
       "scripts/surfaces/_schema/report-presentation.json": "7ebd1825435db648",
       "scripts/surfaces/_schema/report-tree.schema.json": "d19f855fc21d5f39"
     }

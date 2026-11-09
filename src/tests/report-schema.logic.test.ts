@@ -160,7 +160,7 @@ describe('RS-8 sponsored slots', () => {
 describe('RS-9 catalogue totality', () => {
   it('FAILs when a catalogue row is neither declared nor listed not_in_report', () => {
     const inp = fresh();
-    inp.decl.not_in_report = inp.decl.not_in_report.filter((x: Json) => x.field !== 'front_setback_used_m');
+    for (const sec of inp.decl.sections) sec.fields = sec.fields.filter((x: Json) => x.source !== 'catalogue:front_setback_used_m'); // MF-13: the row is declared, so drop its field
     expect(gate(inp, 'RS-9').failing.join('\n')).toContain('front_setback_used_m');
   });
 });

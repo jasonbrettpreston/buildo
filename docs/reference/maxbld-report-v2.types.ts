@@ -82,6 +82,46 @@ export type DisclosureCode =
 
 export type ReportV2Scenarios = {
   cards: Array<{
+    /** attic_counted_a_m2 — catalogue:attic_counted_a_m2 (m²) */
+    attic_counted_a_m2: number | null;
+    /** attic_counted_b_m2 — catalogue:attic_counted_b_m2 (m²) */
+    attic_counted_b_m2: number | null;
+    /** attic_counted_floor_a_m2 — catalogue:attic_counted_floor_a_m2 (m²) */
+    attic_counted_floor_a_m2: number | null;
+    /** attic_counted_floor_b_m2 — catalogue:attic_counted_floor_b_m2 (m²) */
+    attic_counted_floor_b_m2: number | null;
+    /** attic_eave_clearance_m — catalogue:attic_eave_clearance_m (m) */
+    attic_eave_clearance_m: number | null;
+    /** attic_high_floor_a_m2 — catalogue:attic_high_floor_a_m2 (m²) */
+    attic_high_floor_a_m2: number | null;
+    /** attic_high_floor_b_m2 — catalogue:attic_high_floor_b_m2 (m²) */
+    attic_high_floor_b_m2: number | null;
+    /** attic_high_strip_a_m — catalogue:attic_high_strip_a_m (m) */
+    attic_high_strip_a_m: number | null;
+    /** attic_high_strip_b_m — catalogue:attic_high_strip_b_m (m) */
+    attic_high_strip_b_m: number | null;
+    /** attic_low_strip_a_m — catalogue:attic_low_strip_a_m (m) */
+    attic_low_strip_a_m: number | null;
+    /** attic_low_strip_b_m — catalogue:attic_low_strip_b_m (m) */
+    attic_low_strip_b_m: number | null;
+    /** attic_outside_gfa_a_m2 — catalogue:attic_outside_gfa_a_m2 (m²) */
+    attic_outside_gfa_a_m2: number | null;
+    /** attic_outside_gfa_b_m2 — catalogue:attic_outside_gfa_b_m2 (m²) */
+    attic_outside_gfa_b_m2: number | null;
+    /** attic_variant_block_a_m2 — catalogue:attic_variant_block_a_m2 (m²) */
+    attic_variant_block_a_m2: number | null;
+    /** attic_variant_block_b_m2 — catalogue:attic_variant_block_b_m2 (m²) */
+    attic_variant_block_b_m2: number | null;
+    /** attic_variant_noblock_a_m2 — catalogue:attic_variant_noblock_a_m2 (m²) */
+    attic_variant_noblock_a_m2: number | null;
+    /** attic_variant_noblock_b_m2 — catalogue:attic_variant_noblock_b_m2 (m²) */
+    attic_variant_noblock_b_m2: number | null;
+    /** buildable_depth_m — catalogue:buildable_depth_m (m) */
+    buildable_depth_m: number | null;
+    /** buildable_width_m — catalogue:buildable_width_m (m) */
+    buildable_width_m: number | null;
+    /** depth_room_m — catalogue:depth_room_m (m) */
+    depth_room_m: number | null;
     disclosure_texts: Array<{
       /** Disclosure code — content:disclosure_texts */
       code: DisclosureCode;
@@ -96,10 +136,28 @@ export type ReportV2Scenarios = {
     display_label: string | null;
     /** Per-field trust tier — content:field_trust */
     field_trust: unknown;
+    /** footprint_max_m2 — catalogue:footprint_max_m2 (m²) */
+    footprint_max_m2: number | null;
+    /** front_rear_wall_width_m — catalogue:front_rear_wall_width_m (m) */
+    front_rear_wall_width_m: number | null;
+    /** front_setback_used_m — catalogue:front_setback_used_m (m) */
+    front_setback_used_m: number | null;
     /** GFA (flat roof) — catalogue:gfa_flat_m2 (m²) */
     gfa_flat_m2: number | null;
+    /** gfa_max_m2 — catalogue:gfa_max_m2 (m²) */
+    gfa_max_m2: number | null;
+    /** gfa_pitched_a_m2 — catalogue:gfa_pitched_a_m2 (m²) */
+    gfa_pitched_a_m2: number | null;
+    /** gfa_pitched_b_m2 — catalogue:gfa_pitched_b_m2 (m²) */
+    gfa_pitched_b_m2: number | null;
     /** GFA (pitched roof) — catalogue:gfa_pitched_m2 (m²) */
     gfa_pitched_m2: number | null;
+    /** half_span_a_m — catalogue:half_span_a_m (m) */
+    half_span_a_m: number | null;
+    /** half_span_b_m — catalogue:half_span_b_m (m) */
+    half_span_b_m: number | null;
+    /** height_max_m — catalogue:height_max_m (m) */
+    height_max_m: number | null;
     illustrations: Array<{
       /** Alt text — content:illustrations */
       alt: string | null;
@@ -110,10 +168,42 @@ export type ReportV2Scenarios = {
       /** Kind — content:illustrations */
       kind: "illustration" | "massing_diagram" | "street_view" | null;
     }>;
+    /** mechanical_attic_outside_gfa_a_m2 — catalogue:mechanical_attic_outside_gfa_a_m2 (m²) */
+    mechanical_attic_outside_gfa_a_m2: number | null;
+    /** mechanical_attic_outside_gfa_b_m2 — catalogue:mechanical_attic_outside_gfa_b_m2 (m²) */
+    mechanical_attic_outside_gfa_b_m2: number | null;
+    /** permitted — catalogue:permitted */
+    permitted: string | null;
+    /** roof_assembly_depth_a_m — catalogue:roof_assembly_depth_a_m (m) */
+    roof_assembly_depth_a_m: number | null;
+    /** roof_assembly_depth_b_m — catalogue:roof_assembly_depth_b_m (m) */
+    roof_assembly_depth_b_m: number | null;
+    /** roof_pitch_a — catalogue:roof_pitch_a */
+    roof_pitch_a: number | null;
+    /** roof_pitch_b — catalogue:roof_pitch_b */
+    roof_pitch_b: number | null;
+    /** roof_vertical_thickness_a_m — catalogue:roof_vertical_thickness_a_m (m) */
+    roof_vertical_thickness_a_m: number | null;
+    /** roof_vertical_thickness_b_m — catalogue:roof_vertical_thickness_b_m (m) */
+    roof_vertical_thickness_b_m: number | null;
+    /** setback_plate_m2 — catalogue:setback_plate_m2 (m²) */
+    setback_plate_m2: number | null;
     /** Status reason (plain words) — content:status_text */
     status_text: string | null;
+    /** storeys_above_wall — catalogue:storeys_above_wall */
+    storeys_above_wall: number | null;
+    /** storeys_max — catalogue:storeys_max */
+    storeys_max: number | null;
+    /** total_floor_area_pitched_a_m2 — catalogue:total_floor_area_pitched_a_m2 (m²) */
+    total_floor_area_pitched_a_m2: number | null;
+    /** total_floor_area_pitched_b_m2 — catalogue:total_floor_area_pitched_b_m2 (m²) */
+    total_floor_area_pitched_b_m2: number | null;
     /** Trust label (plain words) — content:trust_label */
     trust_label: string | null;
+    /** units_max — catalogue:units_max */
+    units_max: number | null;
+    /** wall_storeys — catalogue:wall_storeys */
+    wall_storeys: number | null;
   }>;
   lot_disclosure_texts: Array<{
     /** Lot-level disclosure code — content:disclosure_texts */

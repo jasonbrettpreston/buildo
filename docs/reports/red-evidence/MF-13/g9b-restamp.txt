@@ -1,0 +1,4 @@
+G9b restamp invariant (MF-13): 40 goldens, only fingerprint.files[report-v2.decl.json] changed
+old 42084c696161e8c0 -> new 8de8860eb8e809b8 (sha256 first 16 hex of the regenerated declaration)
+  40 -      "scripts/surfaces/_schema/report-v2.decl.json": "42084c696161e8c0",
+  40 +      "scripts/surfaces/_schema/report-v2.decl.json": "8de8860eb8e809b8",

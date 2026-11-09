@@ -12,8 +12,14 @@
 // into report-v2.decl.json, report-presentation.json and report-v2.rulings.json (beside this file). The review is
 // encoded below as rules, so nothing is hand-copied into the JSON; edit the rules or the inputs, then --write.
 //
-//   node scripts/surfaces/_schema/seed-report-v2.mjs --write   regenerate the three files
-//   node scripts/surfaces/_schema/seed-report-v2.mjs --check   exit 1 when a committed file differs; 2 = usage
+// MF-13 (Spec 126 11a.1 dated note 2026-11-09, Spec 135 FE-30): every effective-ON catalogue row (its switch row ON and its building type ON) is a
+// report field, generated into report-v2-seed/catalogue-fields.json and taken into the declaration. Authored inputs: report-v2-seed/row-presentation.json
+// (one ordered headline list per scenario; a row not listed is detail) and report-v2-seed/row-labels.json (label per row id, content).
+//
+//   node scripts/surfaces/_schema/seed-report-v2.mjs --write   regenerate the four files (refuses on a finding, writes nothing)
+//   node scripts/surfaces/_schema/seed-report-v2.mjs --check   exit 1 on a finding or a differing committed file; 2 = usage
+// A finding is one stderr line `GEN-<CODE> <subject>` (Spec 135 FE-24 dated note 2026-11-09): ROW-NO-FIELD, FIELD-NO-ROW, HAND-EDIT, STALE, ROW-NO-SWITCH,
+// UNIT-UNKNOWN, LIST-NO-ROW, LIST-NO-SCENARIO, LIST-DUP, LIST-OFF, ROW-NO-LABEL. stdout lists `labels owed: <row id>` for detail rows with no label.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -32,13 +38,69 @@ function main(mode) {
 const proposalPath = path.join(SEED_DIR, 'schema-v2-proposal.json');
 const entriesPath = path.join(SEED_DIR, 'entries.json');
 const catPath = path.join(ROOT, 'scripts/seeds/bylaw/layer3-catalogue.json');
+const swPath = path.join(ROOT, 'scripts/seeds/bylaw/switchboard.json');
+const bindPath = path.join(HERE, 'binding-sources.json');
+const presInPath = path.join(SEED_DIR, 'row-presentation.json');
+const labelsPath = path.join(SEED_DIR, 'row-labels.json');
+const declPath = path.join(HERE, 'report-v2.decl.json');
+const CATFIELDS = 'report-v2-seed/catalogue-fields.json';
 const outFiles = {};
 const proposalText = fs.readFileSync(proposalPath, 'utf8');
 const entriesText = fs.readFileSync(entriesPath, 'utf8');
 const P = JSON.parse(proposalText);
 const E = JSON.parse(entriesText);
-const CAT = new Map(JSON.parse(fs.readFileSync(catPath, 'utf8')).rows.map((r) => [r.id, r]));
+const catText = fs.readFileSync(catPath, 'utf8');
+const CAT = new Map(JSON.parse(catText).rows.map((r) => [r.id, r]));
 const sha = (t) => crypto.createHash('sha256').update(t).digest('hex').slice(0, 16);
+
+// ---- MF-13: the catalogue-to-report fields (every effective-ON row is a field) and the findings that stop a run
+const swText = fs.readFileSync(swPath, 'utf8');
+const presInText = fs.readFileSync(presInPath, 'utf8');
+const labelsText = fs.readFileSync(labelsPath, 'utf8');
+const SW = new Map(JSON.parse(swText).rows.map((r) => [r.id, r.state]));
+const LISTS = JSON.parse(presInText);
+const LABELS = JSON.parse(labelsText);
+const rel = (abs) => path.relative(ROOT, abs).split(path.sep).join('/');
+const scenarioOf = (r) => (r.design_option ? `${r.building_type}/${Object.values(r.design_option).join('/')}` : r.building_type);
+// C-2: a row with no design option belongs to every scenario of its building type; a row with one belongs to its own scenario only
+const inScenario = (r, scenario) => (r.design_option ? scenarioOf(r) === scenario : scenario === r.building_type || scenario.startsWith(`${r.building_type}/`));
+const UNIT_TYPE = new Map([['m2', ['number', 'm²']], ['m', ['number', 'm']], ['storeys', ['number']], ['units', ['number']], ['ratio', ['number']]]);
+const typeOfRow = (r) => (r.form === 'status' ? ['text'] : UNIT_TYPE.get(r.unit) || null);
+const findings = [];
+const flag = (line) => { if (!findings.includes(line)) findings.push(line); };
+const STATE = new Map(); // row id -> on | off | noswitch
+for (const r of CAT.values()) {
+  const ids = [r.switch || `formula:${r.id}`, `building_type:${r.building_type}`];
+  const missing = ids.filter((id) => !SW.has(id));
+  for (const id of missing) flag(`GEN-ROW-NO-SWITCH ${id}`);
+  STATE.set(r.id, missing.length ? 'noswitch' : ids.every((id) => SW.get(id) === 'on') ? 'on' : 'off');
+}
+const ON_ROWS = [...CAT.values()].filter((r) => STATE.get(r.id) === 'on');
+for (const r of ON_ROWS) if (!typeOfRow(r)) flag(`GEN-UNIT-UNKNOWN ${r.id} ${r.unit}`);
+const SCENARIOS = new Set([...CAT.values()].map(scenarioOf));
+const hasLabel = (id) => typeof LABELS[id] === 'string' && LABELS[id] !== '';
+const headline = new Set();
+for (const [scenario, list] of Object.entries(LISTS)) {
+  if (!Array.isArray(list)) throw new Error(`row-presentation.json: ${scenario} is not a list`);
+  if (!SCENARIOS.has(scenario)) { flag(`GEN-LIST-NO-SCENARIO ${scenario}`); continue; }
+  const seen = new Set();
+  for (const id of list) {
+    if (seen.has(id)) { flag(`GEN-LIST-DUP ${scenario} ${id}`); continue; }
+    seen.add(id);
+    const row = CAT.get(id);
+    if (!row || !inScenario(row, scenario)) { flag(`GEN-LIST-NO-ROW ${scenario} ${id}`); continue; }
+    if (STATE.get(id) === 'off') flag(`GEN-LIST-OFF ${scenario} ${id}`);
+    headline.add(id);
+    if (!hasLabel(id)) flag(`GEN-ROW-NO-LABEL ${id}`);
+  }
+}
+const committedDecl = fs.existsSync(declPath) ? JSON.parse(fs.readFileSync(declPath, 'utf8')) : null;
+const committedRows = new Set(((committedDecl || {}).sections || []).flatMap((sec) => sec.fields).filter((fl) => String(fl.source).startsWith('catalogue:')).map((fl) => fl.source.slice(10)));
+for (const id of committedRows) if (!CAT.has(id)) flag(`GEN-FIELD-NO-ROW ${id}`);
+if (mode === 'check') for (const r of ON_ROWS) if (!committedRows.has(r.id)) flag(`GEN-ROW-NO-FIELD ${r.id}`);
+if (findings.length) { for (const l of findings) console.error(l); process.exitCode = 1; return; }
+const catalogueFields = ON_ROWS.map((r) => { const [type, unit] = typeOfRow(r); return { path: `scenarios.cards[].${r.id}`, name: r.id, label: hasLabel(r.id) ? LABELS[r.id] : r.id, type, ...(unit ? { unit } : {}), status: 'planned', source: `catalogue:${r.id}`, render: 'rendered' }; });
+const owed = ON_ROWS.filter((r) => !headline.has(r.id) && !hasLabel(r.id)).map((r) => `labels owed: ${r.id}`);
 
 // ---- type normalisation of proposal unit strings
 const T = {
@@ -380,18 +442,25 @@ for (let i = cards.length - 1; i >= 0; i -= 1) {
   if (!cards[i].source.startsWith('catalogue:')) { leftOut.push(`card ${cards[i].code}: no catalogue row`); cards.splice(i, 1); }
 }
 log.push(`binding: ${leftOut.length} fields/cards left out until their row or column lands (D-3 b)`);
+// MF-13: every catalogue-bound field comes from the generated catalogue fields (one home); they take the place of the first one in the card section
+const cardSec = out.find((x) => x.id === 'card');
+const at = cardSec.fields.findIndex((fl) => fl.source.startsWith('catalogue:'));
+for (const sec of out) sec.fields = sec.fields.filter((fl) => !fl.source.startsWith('catalogue:'));
+cardSec.fields.splice(at < 0 ? cardSec.fields.length : at, 0, ...catalogueFields);
+log.push(`catalogue: ${catalogueFields.length} effective-ON rows are fields, ${owed.length} detail rows owe a label`);
 
 // not_in_report: catalogue rows the report does not declare (RS-9)
 const declared = new Set();
 for (const s of out) for (const f of s.fields) if (f.source.startsWith('catalogue:')) declared.add(f.source.slice(10));
-const NIR_REASON = 'no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1)';
+const NIR_REASON = 'switched OFF in the switchboard (the row or its building type): off yields no field (Spec 126 11a.1)';
 const not_in_report = [...CAT.keys()].filter((id) => !declared.has(id)).map((id) => ({ field: id, reason: NIR_REASON }));
 
 const ANS_DIR = path.join(path.dirname(entriesPath), 'answers', 'report_decisions');
 const ansFiles = fs.readdirSync(ANS_DIR).filter((f) => f.endsWith('.json')).sort();
 const ansText = ansFiles.map((f) => fs.readFileSync(path.join(ANS_DIR, f), 'utf8')).join('\n');
 const DEC = Object.fromEntries(ansFiles.map((f) => { const a = JSON.parse(fs.readFileSync(path.join(ANS_DIR, f), 'utf8')); return [a.ref, { decision: a.decision, note: a.note || null, recorded_by: a.recorded_by || 'operator (Rulings page)', updated_at: a.updated_at, via: 'page export' }]; }));
-const CHAT = JSON.parse(fs.readFileSync(path.join(SEED_DIR, 'decisions-chat.json'), 'utf8')).decisions;
+const chatText = fs.readFileSync(path.join(SEED_DIR, 'decisions-chat.json'), 'utf8');
+const CHAT = JSON.parse(chatText).decisions;
 for (const [k, v] of Object.entries(CHAT)) DEC[k] = { ...v, via: 'chat relay (supersedes page export)', page_export: DEC[k] || null };
 // The checkable consequence of each decided ruling: presentation-registry values RS-11 pins (report-schema.mjs).
 const PINS = {
@@ -428,7 +497,7 @@ const decl = {
   $schema: './report-v2.decl.schema.json',
   $comment: 'THE single declaration of the MaxBLD lot report v2 (sections → fields, each with exactly one source). Input of scripts/analysis/report-schema.mjs (--check validates gates RS-0..RS-11 and output drift; --write renders docs/reference/maxbld-report-v2-*). GENERATED by scripts/surfaces/_schema/seed-report-v2.mjs --write from report-v2-seed/ (the reviewed proposal + the operator ruling export); change the seed rules or inputs, never this file by hand, and never the generated outputs. SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-HM (drafted as R-RS; operator CHAT-4, 2026-10-20: one field declaration per report surface, one source per field, a --check generator, generated outputs; docs/reports/decisions/2026-10-20-chat-batch-a.json, 2026-10-20-chat-batch-a#CHAT-4), docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers), R-27 (one home, generated tables), R-17 (SLOT disclosure); docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.12 (closed disclosure codes).',
   version: 1,
-  provenance: { seed: 'scripts/surfaces/_schema/seed-report-v2.mjs', proposal: { path: 'scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json', version: P.version, sha256_16: sha(proposalText) }, review: 'scratchpad/report-review/REVIEW.md §6', seeded: '2026-10-20' },
+  provenance: { seed: 'scripts/surfaces/_schema/seed-report-v2.mjs', proposal: { path: 'scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json', version: P.version, sha256_16: sha(proposalText) }, review: 'scratchpad/report-review/REVIEW.md §6', seeded: '2026-10-20', inputs_sha256_16: sha([proposalText, entriesText, ansText, chatText, Q7_LOG_TEXT, catText, swText, presInText, labelsText, fs.readFileSync(bindPath, 'utf8')].join('\u0000')) },
   inputs: {
     binding_sources: 'scripts/surfaces/_schema/binding-sources.json',
     catalogue: 'scripts/seeds/bylaw/layer3-catalogue.json',
@@ -453,6 +522,7 @@ const decl = {
 };
 outFiles['report-v2.decl.json'] = `${JSON.stringify(decl, null, 2)}\n`;
 outFiles['report-v2.rulings.json'] = `${JSON.stringify(rulings, null, 2)}\n`;
+outFiles[CATFIELDS] = `${JSON.stringify({ $comment: 'GENERATED by scripts/surfaces/_schema/seed-report-v2.mjs --write: one field per effective-ON catalogue row (switch row ON and building type ON), in catalogue order, label from row-labels.json else the row id. Never edit by hand (Spec 135 FE-30).', fields: catalogueFields }, null, 2)}\n`;
 
 // ---------------------------------------------------------------- presentation registry
 const titleOf = (c) => c.title.replace(/ \(only where[^)]*\)/, '').replace(/ — 4 units \/ 6 units \(label by eligibility\)/, ' — {dwelling_units} units');
@@ -571,9 +641,15 @@ const drift = [];
 for (const [name, text] of Object.entries(outFiles)) {
   const abs = path.join(HERE, name);
   if (mode === 'write') fs.writeFileSync(abs, text);
-  else if (!fs.existsSync(abs) || fs.readFileSync(abs, 'utf8') !== text) drift.push(name);
+  else if (!fs.existsSync(abs) || fs.readFileSync(abs, 'utf8') !== text) drift.push(abs);
 }
 if (mode === 'write') { for (const l of log) console.log(`  ${l}`); console.log(`seed-report-v2 wrote ${Object.keys(outFiles).length} files; presentation: ${Object.keys(pres).length - 2} keys, ${assets.length} illustration assets`); }
-else if (drift.length) { console.error(`seed-report-v2 DRIFT: ${drift.join(', ')} — rerun with --write`); process.exitCode = 1; }
-else console.log('seed-report-v2 current (decl, presentation, rulings reproduce from report-v2-seed/)');
+else if (drift.length) {
+  // inputs unchanged since the committed declaration was written: the file was edited by hand; otherwise an input moved (run --write)
+  const cls = (committedDecl || {}).provenance?.inputs_sha256_16 === decl.provenance.inputs_sha256_16 ? 'GEN-HAND-EDIT' : 'GEN-STALE';
+  for (const abs of drift) console.error(`${cls} ${rel(abs)}`);
+  process.exitCode = 1;
+  return;
+} else console.log('seed-report-v2 current (decl, presentation, rulings, catalogue fields reproduce from report-v2-seed/)');
+for (const l of owed) console.log(l);
 }

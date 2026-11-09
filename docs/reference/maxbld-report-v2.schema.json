@@ -47,16 +47,281 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
+              "attic_counted_a_m2",
+              "attic_counted_b_m2",
+              "attic_counted_floor_a_m2",
+              "attic_counted_floor_b_m2",
+              "attic_eave_clearance_m",
+              "attic_high_floor_a_m2",
+              "attic_high_floor_b_m2",
+              "attic_high_strip_a_m",
+              "attic_high_strip_b_m",
+              "attic_low_strip_a_m",
+              "attic_low_strip_b_m",
+              "attic_outside_gfa_a_m2",
+              "attic_outside_gfa_b_m2",
+              "attic_variant_block_a_m2",
+              "attic_variant_block_b_m2",
+              "attic_variant_noblock_a_m2",
+              "attic_variant_noblock_b_m2",
+              "buildable_depth_m",
+              "buildable_width_m",
+              "depth_room_m",
               "disclosure_texts",
               "display_label",
               "field_trust",
+              "footprint_max_m2",
+              "front_rear_wall_width_m",
+              "front_setback_used_m",
               "gfa_flat_m2",
+              "gfa_max_m2",
+              "gfa_pitched_a_m2",
+              "gfa_pitched_b_m2",
               "gfa_pitched_m2",
+              "half_span_a_m",
+              "half_span_b_m",
+              "height_max_m",
               "illustrations",
+              "mechanical_attic_outside_gfa_a_m2",
+              "mechanical_attic_outside_gfa_b_m2",
+              "permitted",
+              "roof_assembly_depth_a_m",
+              "roof_assembly_depth_b_m",
+              "roof_pitch_a",
+              "roof_pitch_b",
+              "roof_vertical_thickness_a_m",
+              "roof_vertical_thickness_b_m",
+              "setback_plate_m2",
               "status_text",
-              "trust_label"
+              "storeys_above_wall",
+              "storeys_max",
+              "total_floor_area_pitched_a_m2",
+              "total_floor_area_pitched_b_m2",
+              "trust_label",
+              "units_max",
+              "wall_storeys"
             ],
             "properties": {
+              "attic_counted_a_m2": {
+                "description": "attic_counted_a_m2",
+                "x-source": "catalogue:attic_counted_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_counted_b_m2": {
+                "description": "attic_counted_b_m2",
+                "x-source": "catalogue:attic_counted_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_counted_floor_a_m2": {
+                "description": "attic_counted_floor_a_m2",
+                "x-source": "catalogue:attic_counted_floor_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_counted_floor_b_m2": {
+                "description": "attic_counted_floor_b_m2",
+                "x-source": "catalogue:attic_counted_floor_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_eave_clearance_m": {
+                "description": "attic_eave_clearance_m",
+                "x-source": "catalogue:attic_eave_clearance_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_high_floor_a_m2": {
+                "description": "attic_high_floor_a_m2",
+                "x-source": "catalogue:attic_high_floor_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_high_floor_b_m2": {
+                "description": "attic_high_floor_b_m2",
+                "x-source": "catalogue:attic_high_floor_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_high_strip_a_m": {
+                "description": "attic_high_strip_a_m",
+                "x-source": "catalogue:attic_high_strip_a_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_high_strip_b_m": {
+                "description": "attic_high_strip_b_m",
+                "x-source": "catalogue:attic_high_strip_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_low_strip_a_m": {
+                "description": "attic_low_strip_a_m",
+                "x-source": "catalogue:attic_low_strip_a_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_low_strip_b_m": {
+                "description": "attic_low_strip_b_m",
+                "x-source": "catalogue:attic_low_strip_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_outside_gfa_a_m2": {
+                "description": "attic_outside_gfa_a_m2",
+                "x-source": "catalogue:attic_outside_gfa_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_outside_gfa_b_m2": {
+                "description": "attic_outside_gfa_b_m2",
+                "x-source": "catalogue:attic_outside_gfa_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_variant_block_a_m2": {
+                "description": "attic_variant_block_a_m2",
+                "x-source": "catalogue:attic_variant_block_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_variant_block_b_m2": {
+                "description": "attic_variant_block_b_m2",
+                "x-source": "catalogue:attic_variant_block_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_variant_noblock_a_m2": {
+                "description": "attic_variant_noblock_a_m2",
+                "x-source": "catalogue:attic_variant_noblock_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attic_variant_noblock_b_m2": {
+                "description": "attic_variant_noblock_b_m2",
+                "x-source": "catalogue:attic_variant_noblock_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "buildable_depth_m": {
+                "description": "buildable_depth_m",
+                "x-source": "catalogue:buildable_depth_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "buildable_width_m": {
+                "description": "buildable_width_m",
+                "x-source": "catalogue:buildable_width_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "depth_room_m": {
+                "description": "depth_room_m",
+                "x-source": "catalogue:depth_room_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "disclosure_texts": {
                 "type": "array",
                 "items": {
@@ -125,9 +390,75 @@
                 "x-status": "proposed",
                 "x-render": "payload_only"
               },
+              "footprint_max_m2": {
+                "description": "footprint_max_m2",
+                "x-source": "catalogue:footprint_max_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "front_rear_wall_width_m": {
+                "description": "front_rear_wall_width_m",
+                "x-source": "catalogue:front_rear_wall_width_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "front_setback_used_m": {
+                "description": "front_setback_used_m",
+                "x-source": "catalogue:front_setback_used_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "gfa_flat_m2": {
                 "description": "GFA (flat roof)",
                 "x-source": "catalogue:gfa_flat_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "gfa_max_m2": {
+                "description": "gfa_max_m2",
+                "x-source": "catalogue:gfa_max_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "gfa_pitched_a_m2": {
+                "description": "gfa_pitched_a_m2",
+                "x-source": "catalogue:gfa_pitched_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "gfa_pitched_b_m2": {
+                "description": "gfa_pitched_b_m2",
+                "x-source": "catalogue:gfa_pitched_b_m2",
                 "x-status": "planned",
                 "x-render": "rendered",
                 "x-unit": "m²",
@@ -142,6 +473,39 @@
                 "x-status": "planned",
                 "x-render": "rendered",
                 "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "half_span_a_m": {
+                "description": "half_span_a_m",
+                "x-source": "catalogue:half_span_a_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "half_span_b_m": {
+                "description": "half_span_b_m",
+                "x-source": "catalogue:half_span_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "height_max_m": {
+                "description": "height_max_m",
+                "x-source": "catalogue:height_max_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
                 "type": [
                   "number",
                   "null"
@@ -204,6 +568,113 @@
                   }
                 }
               },
+              "mechanical_attic_outside_gfa_a_m2": {
+                "description": "mechanical_attic_outside_gfa_a_m2",
+                "x-source": "catalogue:mechanical_attic_outside_gfa_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mechanical_attic_outside_gfa_b_m2": {
+                "description": "mechanical_attic_outside_gfa_b_m2",
+                "x-source": "catalogue:mechanical_attic_outside_gfa_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "permitted": {
+                "description": "permitted",
+                "x-source": "catalogue:permitted",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "roof_assembly_depth_a_m": {
+                "description": "roof_assembly_depth_a_m",
+                "x-source": "catalogue:roof_assembly_depth_a_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "roof_assembly_depth_b_m": {
+                "description": "roof_assembly_depth_b_m",
+                "x-source": "catalogue:roof_assembly_depth_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "roof_pitch_a": {
+                "description": "roof_pitch_a",
+                "x-source": "catalogue:roof_pitch_a",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "roof_pitch_b": {
+                "description": "roof_pitch_b",
+                "x-source": "catalogue:roof_pitch_b",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "roof_vertical_thickness_a_m": {
+                "description": "roof_vertical_thickness_a_m",
+                "x-source": "catalogue:roof_vertical_thickness_a_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "roof_vertical_thickness_b_m": {
+                "description": "roof_vertical_thickness_b_m",
+                "x-source": "catalogue:roof_vertical_thickness_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "setback_plate_m2": {
+                "description": "setback_plate_m2",
+                "x-source": "catalogue:setback_plate_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "status_text": {
                 "description": "Status reason (plain words)",
                 "x-source": "content:status_text",
@@ -214,6 +685,48 @@
                   "null"
                 ]
               },
+              "storeys_above_wall": {
+                "description": "storeys_above_wall",
+                "x-source": "catalogue:storeys_above_wall",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "storeys_max": {
+                "description": "storeys_max",
+                "x-source": "catalogue:storeys_max",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "total_floor_area_pitched_a_m2": {
+                "description": "total_floor_area_pitched_a_m2",
+                "x-source": "catalogue:total_floor_area_pitched_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "total_floor_area_pitched_b_m2": {
+                "description": "total_floor_area_pitched_b_m2",
+                "x-source": "catalogue:total_floor_area_pitched_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "trust_label": {
                 "description": "Trust label (plain words)",
                 "x-source": "content:trust_label",
@@ -221,6 +734,26 @@
                 "x-render": "rendered",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "units_max": {
+                "description": "units_max",
+                "x-source": "catalogue:units_max",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "wall_storeys": {
+                "description": "wall_storeys",
+                "x-source": "catalogue:wall_storeys",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
                   "null"
                 ]
               }

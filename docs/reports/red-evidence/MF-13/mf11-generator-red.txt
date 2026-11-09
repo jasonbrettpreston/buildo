@@ -1,0 +1,158 @@
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf13
+
+ ❯ src/tests/surfaces/report-generator.logic.test.ts (12 tests | 7 failed) 467ms
+   × Case 1: a catalogue row with no field (FE-24, 126 11a.1) > RED: --check names an ON row that has no field: exit 1 and `GEN-ROW-NO-FIELD <row>`, and no other class 36ms
+     → expected 'seed-report-v2 DRIFT: report-v2.decl.…' to contain 'GEN-ROW-NO-FIELD zz_mf11_probe_m2'
+   × Case 1: a catalogue row with no field (FE-24, 126 11a.1) > RED: --write gives an ON row a field of its own, bound `catalogue:<row>`, and does not park it in not_in_report 35ms
+     → expected 0 to be greater than or equal to 1
+   × Case 2: a field with no catalogue row (FE-18, FE-24) > RED: --check names a field whose row was removed: exit 1 and `GEN-FIELD-NO-ROW <row>`, and no other class 33ms
+     → expected 'seed-report-v2 DRIFT: report-v2.decl.…' to contain 'GEN-FIELD-NO-ROW gfa_flat_m2'
+   × Case 2: a field with no catalogue row (FE-18, FE-24) > RED: --write refuses (exit 1) rather than silently dropping the field, and leaves the generated files as they were 35ms
+     → expected +0 to be 1 // Object.is equality
+   × Case 3: a hand edit of generated output (R-HM, FE-02) > RED: a hand edit of scripts/surfaces/_schema/report-v2.decl.json: exit 1 and `GEN-HAND-EDIT <file>`, and no input-class finding 34ms
+     → expected 'seed-report-v2 DRIFT: report-v2.decl.…' to contain 'GEN-HAND-EDIT scripts/surfaces/_schem…'
+   × Case 3: a hand edit of generated output (R-HM, FE-02) > RED: a hand edit of scripts/surfaces/_schema/report-presentation.json: exit 1 and `GEN-HAND-EDIT <file>`, and no input-class finding 34ms
+     → expected 'seed-report-v2 DRIFT: report-presenta…' to contain 'GEN-HAND-EDIT scripts/surfaces/_schem…'
+   × Case 3: a hand edit of generated output (R-HM, FE-02) > RED: a hand edit of scripts/surfaces/_schema/report-v2.rulings.json: exit 1 and `GEN-HAND-EDIT <file>`, and no input-class finding 34ms
+     → expected 'seed-report-v2 DRIFT: report-v2.rulin…' to contain 'GEN-HAND-EDIT scripts/surfaces/_schem…'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/report-generator.logic.test.ts > Case 1: a catalogue row with no field (FE-24, 126 11a.1) > RED: --check names an ON row that has no field: exit 1 and `GEN-ROW-NO-FIELD <row>`, and no other class
+AssertionError: expected 'seed-report-v2 DRIFT: report-v2.decl.…' to contain 'GEN-ROW-NO-FIELD zz_mf11_probe_m2'
+
+- Expected
++ Received
+
+- GEN-ROW-NO-FIELD zz_mf11_probe_m2
++ seed-report-v2 DRIFT: report-v2.decl.json — rerun with --write
++
+
+ ❯ src/tests/surfaces/report-generator.logic.test.ts:93:19
+     91|     const r = run(dir, '--check');
+     92|     expect(r.status).toBe(1);
+     93|     expect(r.out).toContain(`GEN-ROW-NO-FIELD ${PROBE}`); // red today…
+       |                   ^
+     94|     expect(r.out).not.toContain('GEN-HAND-EDIT'); // the inputs moved,…
+     95|     expect(r.out).not.toContain('GEN-FIELD-NO-ROW');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/tests/surfaces/report-generator.logic.test.ts > Case 1: a catalogue row with no field (FE-24, 126 11a.1) > RED: --write gives an ON row a field of its own, bound `catalogue:<row>`, and does not park it in not_in_report
+AssertionError: expected 0 to be greater than or equal to 1
+ ❯ src/tests/surfaces/report-generator.logic.test.ts:103:26
+    101|     const decl = readJson(dir, GENERATED[0]);
+    102|     const bound = fieldsOf(decl).filter((f) => f.source === `catalogue…
+    103|     expect(bound.length).toBeGreaterThanOrEqual(1); // red today: the …
+       |                          ^
+    104|     expect(JSON.stringify(decl.not_in_report)).not.toContain(PROBE);
+    105|     expect(run(dir, '--check').status).toBe(0); // and the written tre…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/tests/surfaces/report-generator.logic.test.ts > Case 2: a field with no catalogue row (FE-18, FE-24) > RED: --check names a field whose row was removed: exit 1 and `GEN-FIELD-NO-ROW <row>`, and no other class
+AssertionError: expected 'seed-report-v2 DRIFT: report-v2.decl.…' to contain 'GEN-FIELD-NO-ROW gfa_flat_m2'
+
+- Expected
++ Received
+
+- GEN-FIELD-NO-ROW gfa_flat_m2
++ seed-report-v2 DRIFT: report-v2.decl.json — rerun with --write
++
+
+ ❯ src/tests/surfaces/report-generator.logic.test.ts:139:19
+    137|     const r = run(dir, '--check');
+    138|     expect(r.status).toBe(1);
+    139|     expect(r.out).toContain(`GEN-FIELD-NO-ROW ${field}`); // red today…
+       |                   ^
+    140|     expect(r.out).not.toContain('GEN-HAND-EDIT');
+    141|     expect(r.out).not.toContain('GEN-ROW-NO-FIELD');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/tests/surfaces/report-generator.logic.test.ts > Case 2: a field with no catalogue row (FE-18, FE-24) > RED: --write refuses (exit 1) rather than silently dropping the field, and leaves the generated files as they were
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/surfaces/report-generator.logic.test.ts:148:22
+    146|     dropRow(dir);
+    147|     const r = run(dir, '--write');
+    148|     expect(r.status).toBe(1); // red today: --write exits 0 and the fi…
+       |                      ^
+    149|     expect(r.out).toContain(`GEN-FIELD-NO-ROW ${field}`);
+    150|     expect(GENERATED.map((f) => sha(dir, f))).toEqual(before);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  src/tests/surfaces/report-generator.logic.test.ts > Case 3: a hand edit of generated output (R-HM, FE-02) > RED: a hand edit of scripts/surfaces/_schema/report-v2.decl.json: exit 1 and `GEN-HAND-EDIT <file>`, and no input-class finding
+AssertionError: expected 'seed-report-v2 DRIFT: report-v2.decl.…' to contain 'GEN-HAND-EDIT scripts/surfaces/_schem…'
+
+- Expected
++ Received
+
+- GEN-HAND-EDIT scripts/surfaces/_schema/report-v2.decl.json
++ seed-report-v2 DRIFT: report-v2.decl.json — rerun with --write
++
+
+ ❯ src/tests/surfaces/report-generator.logic.test.ts:167:19
+    165|     const r = run(dir, '--check');
+    166|     expect(r.status).toBe(1);
+    167|     expect(r.out).toContain(`GEN-HAND-EDIT ${rel}`); // red today: gen…
+       |                   ^
+    168|     expect(r.out).not.toContain('GEN-ROW-NO-FIELD');
+    169|     expect(r.out).not.toContain('GEN-FIELD-NO-ROW');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  src/tests/surfaces/report-generator.logic.test.ts > Case 3: a hand edit of generated output (R-HM, FE-02) > RED: a hand edit of scripts/surfaces/_schema/report-presentation.json: exit 1 and `GEN-HAND-EDIT <file>`, and no input-class finding
+AssertionError: expected 'seed-report-v2 DRIFT: report-presenta…' to contain 'GEN-HAND-EDIT scripts/surfaces/_schem…'
+
+- Expected
++ Received
+
+- GEN-HAND-EDIT scripts/surfaces/_schema/report-presentation.json
++ seed-report-v2 DRIFT: report-presentation.json — rerun with --write
++
+
+ ❯ src/tests/surfaces/report-generator.logic.test.ts:167:19
+    165|     const r = run(dir, '--check');
+    166|     expect(r.status).toBe(1);
+    167|     expect(r.out).toContain(`GEN-HAND-EDIT ${rel}`); // red today: gen…
+       |                   ^
+    168|     expect(r.out).not.toContain('GEN-ROW-NO-FIELD');
+    169|     expect(r.out).not.toContain('GEN-FIELD-NO-ROW');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  src/tests/surfaces/report-generator.logic.test.ts > Case 3: a hand edit of generated output (R-HM, FE-02) > RED: a hand edit of scripts/surfaces/_schema/report-v2.rulings.json: exit 1 and `GEN-HAND-EDIT <file>`, and no input-class finding
+AssertionError: expected 'seed-report-v2 DRIFT: report-v2.rulin…' to contain 'GEN-HAND-EDIT scripts/surfaces/_schem…'
+
+- Expected
++ Received
+
+- GEN-HAND-EDIT scripts/surfaces/_schema/report-v2.rulings.json
++ seed-report-v2 DRIFT: report-v2.rulings.json — rerun with --write
++
+
+ ❯ src/tests/surfaces/report-generator.logic.test.ts:167:19
+    165|     const r = run(dir, '--check');
+    166|     expect(r.status).toBe(1);
+    167|     expect(r.out).toContain(`GEN-HAND-EDIT ${rel}`); // red today: gen…
+       |                   ^
+    168|     expect(r.out).not.toContain('GEN-ROW-NO-FIELD');
+    169|     expect(r.out).not.toContain('GEN-FIELD-NO-ROW');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 5 passed (12)
+   Start at  10:03:05
+   Duration  621ms (transform 27ms, setup 6ms, collect 4ms, tests 467ms, environment 0ms, prepare 21ms)
+

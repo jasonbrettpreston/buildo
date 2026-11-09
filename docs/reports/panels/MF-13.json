@@ -1,0 +1,24 @@
+{
+  "task": "MF-13",
+  "item": "Catalogue-to-report generator: every effective-ON catalogue row is a report field (seed-report-v2.mjs), authored headline lists and labels, the GEN-* findings",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "TBD",
+  "commits_reviewed": [
+    "TBD"
+  ],
+  "cards": [
+    "Operator answers 2026-11-09: \"Agreed and capture this as rulings\", \"yes - looks good now\" (D0 simplified), \"agreed\" (C-1, C-2, C-4; D-3 c; D-5).",
+    "D-5 ratified: the GEN-* grammar is GEN-ROW-NO-FIELD, GEN-FIELD-NO-ROW, GEN-HAND-EDIT, GEN-STALE, GEN-ROW-NO-SWITCH, GEN-UNIT-UNKNOWN, GEN-LIST-NO-ROW, GEN-LIST-NO-SCENARIO, GEN-LIST-DUP, GEN-LIST-OFF, GEN-ROW-NO-LABEL; recorded here and in the dated note on the Spec 135 FE-24 row.",
+    "Register row FE-30; prereg-MF-13-2 (rules[] FE-30; prereg 1 kept unedited)."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-13/plan.v2.md with its trailing dated note; plan panel PASS-WITH-FOLDS.",
+  "output": "OUTPUT (stage 8): pending",
+  "seats": [],
+  "verdict": "TBD",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-13/",
+  "notes": []
+}

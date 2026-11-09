@@ -8,11 +8,11 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-66 fields in 15 sections; 0 scenario cards; 45 catalogue rows not in the report.
+111 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
-| `catalogue` | 2 |
+| `catalogue` | 47 |
 | `content` | 37 |
 | `parcels` | 27 |
 
@@ -81,7 +81,52 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 |---|---|---|---|---|---|---|---|
 | Card title | `scenarios.cards[].display_label` | text |  | proposed | rendered | `content:display_label` | content registry: label template per scenario × dwelling_units, e.g. "Houseplex — 6 units" |
 | Status reason (plain words) | `scenarios.cards[].status_text` | text |  | proposed | rendered | `content:status_text` | PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback |
-| GFA (flat roof) | `scenarios.cards[].gfa_flat_m2` | number | m² | planned | rendered | `catalogue:gfa_flat_m2` | payload-only; feeds roof_form_alternate |
+| permitted | `scenarios.cards[].permitted` | text |  | planned | rendered | `catalogue:permitted` |  |
+| front_setback_used_m | `scenarios.cards[].front_setback_used_m` | number | m | planned | rendered | `catalogue:front_setback_used_m` |  |
+| depth_room_m | `scenarios.cards[].depth_room_m` | number | m | planned | rendered | `catalogue:depth_room_m` |  |
+| buildable_width_m | `scenarios.cards[].buildable_width_m` | number | m | planned | rendered | `catalogue:buildable_width_m` |  |
+| buildable_depth_m | `scenarios.cards[].buildable_depth_m` | number | m | planned | rendered | `catalogue:buildable_depth_m` |  |
+| footprint_max_m2 | `scenarios.cards[].footprint_max_m2` | number | m² | planned | rendered | `catalogue:footprint_max_m2` |  |
+| height_max_m | `scenarios.cards[].height_max_m` | number | m | planned | rendered | `catalogue:height_max_m` |  |
+| storeys_max | `scenarios.cards[].storeys_max` | number |  | planned | rendered | `catalogue:storeys_max` |  |
+| gfa_max_m2 | `scenarios.cards[].gfa_max_m2` | number | m² | planned | rendered | `catalogue:gfa_max_m2` |  |
+| units_max | `scenarios.cards[].units_max` | number |  | planned | rendered | `catalogue:units_max` |  |
+| front_rear_wall_width_m | `scenarios.cards[].front_rear_wall_width_m` | number | m | planned | rendered | `catalogue:front_rear_wall_width_m` |  |
+| wall_storeys | `scenarios.cards[].wall_storeys` | number |  | planned | rendered | `catalogue:wall_storeys` |  |
+| storeys_above_wall | `scenarios.cards[].storeys_above_wall` | number |  | planned | rendered | `catalogue:storeys_above_wall` |  |
+| setback_plate_m2 | `scenarios.cards[].setback_plate_m2` | number | m² | planned | rendered | `catalogue:setback_plate_m2` |  |
+| GFA (flat roof) | `scenarios.cards[].gfa_flat_m2` | number | m² | planned | rendered | `catalogue:gfa_flat_m2` |  |
+| attic_eave_clearance_m | `scenarios.cards[].attic_eave_clearance_m` | number | m | planned | rendered | `catalogue:attic_eave_clearance_m` |  |
+| half_span_a_m | `scenarios.cards[].half_span_a_m` | number | m | planned | rendered | `catalogue:half_span_a_m` |  |
+| roof_pitch_a | `scenarios.cards[].roof_pitch_a` | number |  | planned | rendered | `catalogue:roof_pitch_a` |  |
+| roof_assembly_depth_a_m | `scenarios.cards[].roof_assembly_depth_a_m` | number | m | planned | rendered | `catalogue:roof_assembly_depth_a_m` |  |
+| roof_vertical_thickness_a_m | `scenarios.cards[].roof_vertical_thickness_a_m` | number | m | planned | rendered | `catalogue:roof_vertical_thickness_a_m` |  |
+| attic_low_strip_a_m | `scenarios.cards[].attic_low_strip_a_m` | number | m | planned | rendered | `catalogue:attic_low_strip_a_m` |  |
+| attic_high_strip_a_m | `scenarios.cards[].attic_high_strip_a_m` | number | m | planned | rendered | `catalogue:attic_high_strip_a_m` |  |
+| attic_counted_floor_a_m2 | `scenarios.cards[].attic_counted_floor_a_m2` | number | m² | planned | rendered | `catalogue:attic_counted_floor_a_m2` |  |
+| attic_high_floor_a_m2 | `scenarios.cards[].attic_high_floor_a_m2` | number | m² | planned | rendered | `catalogue:attic_high_floor_a_m2` |  |
+| attic_variant_noblock_a_m2 | `scenarios.cards[].attic_variant_noblock_a_m2` | number | m² | planned | rendered | `catalogue:attic_variant_noblock_a_m2` |  |
+| attic_variant_block_a_m2 | `scenarios.cards[].attic_variant_block_a_m2` | number | m² | planned | rendered | `catalogue:attic_variant_block_a_m2` |  |
+| gfa_pitched_a_m2 | `scenarios.cards[].gfa_pitched_a_m2` | number | m² | planned | rendered | `catalogue:gfa_pitched_a_m2` |  |
+| attic_counted_a_m2 | `scenarios.cards[].attic_counted_a_m2` | number | m² | planned | rendered | `catalogue:attic_counted_a_m2` |  |
+| attic_outside_gfa_a_m2 | `scenarios.cards[].attic_outside_gfa_a_m2` | number | m² | planned | rendered | `catalogue:attic_outside_gfa_a_m2` |  |
+| mechanical_attic_outside_gfa_a_m2 | `scenarios.cards[].mechanical_attic_outside_gfa_a_m2` | number | m² | planned | rendered | `catalogue:mechanical_attic_outside_gfa_a_m2` |  |
+| total_floor_area_pitched_a_m2 | `scenarios.cards[].total_floor_area_pitched_a_m2` | number | m² | planned | rendered | `catalogue:total_floor_area_pitched_a_m2` |  |
+| half_span_b_m | `scenarios.cards[].half_span_b_m` | number | m | planned | rendered | `catalogue:half_span_b_m` |  |
+| roof_pitch_b | `scenarios.cards[].roof_pitch_b` | number |  | planned | rendered | `catalogue:roof_pitch_b` |  |
+| roof_assembly_depth_b_m | `scenarios.cards[].roof_assembly_depth_b_m` | number | m | planned | rendered | `catalogue:roof_assembly_depth_b_m` |  |
+| roof_vertical_thickness_b_m | `scenarios.cards[].roof_vertical_thickness_b_m` | number | m | planned | rendered | `catalogue:roof_vertical_thickness_b_m` |  |
+| attic_low_strip_b_m | `scenarios.cards[].attic_low_strip_b_m` | number | m | planned | rendered | `catalogue:attic_low_strip_b_m` |  |
+| attic_high_strip_b_m | `scenarios.cards[].attic_high_strip_b_m` | number | m | planned | rendered | `catalogue:attic_high_strip_b_m` |  |
+| attic_counted_floor_b_m2 | `scenarios.cards[].attic_counted_floor_b_m2` | number | m² | planned | rendered | `catalogue:attic_counted_floor_b_m2` |  |
+| attic_high_floor_b_m2 | `scenarios.cards[].attic_high_floor_b_m2` | number | m² | planned | rendered | `catalogue:attic_high_floor_b_m2` |  |
+| attic_variant_noblock_b_m2 | `scenarios.cards[].attic_variant_noblock_b_m2` | number | m² | planned | rendered | `catalogue:attic_variant_noblock_b_m2` |  |
+| attic_variant_block_b_m2 | `scenarios.cards[].attic_variant_block_b_m2` | number | m² | planned | rendered | `catalogue:attic_variant_block_b_m2` |  |
+| gfa_pitched_b_m2 | `scenarios.cards[].gfa_pitched_b_m2` | number | m² | planned | rendered | `catalogue:gfa_pitched_b_m2` |  |
+| attic_counted_b_m2 | `scenarios.cards[].attic_counted_b_m2` | number | m² | planned | rendered | `catalogue:attic_counted_b_m2` |  |
+| attic_outside_gfa_b_m2 | `scenarios.cards[].attic_outside_gfa_b_m2` | number | m² | planned | rendered | `catalogue:attic_outside_gfa_b_m2` |  |
+| mechanical_attic_outside_gfa_b_m2 | `scenarios.cards[].mechanical_attic_outside_gfa_b_m2` | number | m² | planned | rendered | `catalogue:mechanical_attic_outside_gfa_b_m2` |  |
+| total_floor_area_pitched_b_m2 | `scenarios.cards[].total_floor_area_pitched_b_m2` | number | m² | planned | rendered | `catalogue:total_floor_area_pitched_b_m2` |  |
 | GFA (pitched roof) | `scenarios.cards[].gfa_pitched_m2` | number | m² | planned | rendered | `catalogue:gfa_pitched_m2` |  |
 | Per-field trust tier | `scenarios.cards[].field_trust` | jsonb |  | proposed | payload_only | `content:field_trust` | per-field trust (O-17); not generated yet: the catalogue rows carry no trust tier |
 | Trust label (plain words) | `scenarios.cards[].trust_label` | text |  | proposed | rendered | `content:trust_label` | PRESENTATION: high → "By-law derived", disclosed → "By-law derived, see notes", low → "Estimate", CoA → "Precedent estimate" |
@@ -198,51 +243,6 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 | Field | Reason |
 |---|---|
-| `permitted` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `front_setback_used_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `depth_room_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `buildable_width_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `buildable_depth_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `footprint_max_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `height_max_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `storeys_max` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `gfa_max_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `units_max` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `front_rear_wall_width_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `wall_storeys` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `storeys_above_wall` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `setback_plate_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_eave_clearance_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `half_span_a_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `roof_pitch_a` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `roof_assembly_depth_a_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `roof_vertical_thickness_a_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_low_strip_a_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_high_strip_a_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_counted_floor_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_high_floor_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_variant_noblock_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_variant_block_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `gfa_pitched_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_counted_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_outside_gfa_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `mechanical_attic_outside_gfa_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `total_floor_area_pitched_a_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `half_span_b_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `roof_pitch_b` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `roof_assembly_depth_b_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `roof_vertical_thickness_b_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_low_strip_b_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_high_strip_b_m` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_counted_floor_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_high_floor_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_variant_noblock_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_variant_block_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `gfa_pitched_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_counted_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `attic_outside_gfa_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `mechanical_attic_outside_gfa_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
-| `total_floor_area_pitched_b_m2` | no report field yet: the report binds a catalogue row only when it needs it (Spec 126 11a.1) |
 
 ## Disclosure templates (Spec 78 P5.12)
 
