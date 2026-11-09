@@ -35,6 +35,7 @@
     "Image creatives, creative_asset and the scenario image carousel: MF-37 and MF-38. Income targeting denied pending a human-rights review."
   ],
   "notes": [
-    "Reports: ~/Buildo-scratch/mcfrontend/MF-20/output-panel/regression-guardian.md, code-reviewer-grounded.md, observability-reviewer.md."
+    "Reports: ~/Buildo-scratch/mcfrontend/MF-20/output-panel/regression-guardian.md, code-reviewer-grounded.md, observability-reviewer.md.",
+    "Dated note 2026-11-09 (prior text kept): D-7 was reversed by the operator (\"4. D-7 yes\") in d43c96d25: no per-scenario ad beside a card whose scenario is not_permitted or not_evaluated; report-level slots unchanged. This closes the reviewer follow-up on D-7 above."
   ]
 }
