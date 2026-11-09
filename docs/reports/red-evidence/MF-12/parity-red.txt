@@ -1,0 +1,348 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf12
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts (33 tests | 32 failed) 9ms
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > manifest pins the tranche-1 states and the four targets 2ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/states.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > every state x target file exists and nothing extra sits beside them 2ms
+     → expected [] to deeply equal [ 'at_least.admin.json', …(40) ]
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > S-parity: the four target files carry the same fixture and tree 1ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 1ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/permitted.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/not_permitted.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_evaluated > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_evaluated > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_evaluated > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/not_evaluated.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_flat > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_flat > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_flat > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/variant_flat.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_a > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_a > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_a > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/variant_pitched_a.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_b > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_b > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_b > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/variant_pitched_b.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/at_least.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > loading > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > loading > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > loading > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/loading.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > miss > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > miss > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > miss > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/miss.mobile.json'
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > error > S-parity: the four target files carry the same fixture and tree 0ms
+     → expected [] to have a length of 4 but got +0
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > error > shape: pair + fingerprint, state and target named, node keys exact, bound fields only 0ms
+     → expected false to be true // Object.is equality
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > error > fingerprint is fresh (response_fixture hash and the three input files) 0ms
+     → ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/error.mobile.json'
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 32 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > manifest pins the tranche-1 states and the four targets
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/states.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:31:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > every state x target file exists and nothing extra sits beside them
+AssertionError: expected [] to deeply equal [ 'at_least.admin.json', …(40) ]
+
+- Expected
++ Received
+
+- Array [
+-   "at_least.admin.json",
+-   "at_least.mobile.json",
+-   "at_least.pdf.json",
+-   "at_least.web.json",
+-   "error.admin.json",
+-   "error.mobile.json",
+-   "error.pdf.json",
+-   "error.web.json",
+-   "loading.admin.json",
+-   "loading.mobile.json",
+-   "loading.pdf.json",
+-   "loading.web.json",
+-   "miss.admin.json",
+-   "miss.mobile.json",
+-   "miss.pdf.json",
+-   "miss.web.json",
+-   "not_evaluated.admin.json",
+-   "not_evaluated.mobile.json",
+-   "not_evaluated.pdf.json",
+-   "not_evaluated.web.json",
+-   "not_permitted.admin.json",
+-   "not_permitted.mobile.json",
+-   "not_permitted.pdf.json",
+-   "not_permitted.web.json",
+-   "permitted.admin.json",
+-   "permitted.mobile.json",
+-   "permitted.pdf.json",
+-   "permitted.web.json",
+-   "states.json",
+-   "variant_flat.admin.json",
+-   "variant_flat.mobile.json",
+-   "variant_flat.pdf.json",
+-   "variant_flat.web.json",
+-   "variant_pitched_a.admin.json",
+-   "variant_pitched_a.mobile.json",
+-   "variant_pitched_a.pdf.json",
+-   "variant_pitched_a.web.json",
+-   "variant_pitched_b.admin.json",
+-   "variant_pitched_b.mobile.json",
+-   "variant_pitched_b.pdf.json",
+-   "variant_pitched_b.web.json",
+- ]
++ Array []
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:38:40
+     36|   it('every state x target file exists and nothing extra sits beside t…
+     37|     const want = STATES.flatMap((s) => TARGETS.map((t) => `${s}.${t}.j…
+     38|     expect(fs.readdirSync(DIR).sort()).toEqual(want);
+       |                                        ^
+     39|   });
+     40| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_evaluated > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_flat > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_a > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_b > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > loading > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > miss > S-parity: the four target files carry the same fixture and tree
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > error > S-parity: the four target files carry the same fixture and tree
+AssertionError: expected [] to have a length of 4 but got +0
+
+- Expected
++ Received
+
+- 4
++ 0
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:45:23
+     43|       it('S-parity: the four target files carry the same fixture and t…
+     44|         const files = TARGETS.filter((t) => have(s, t)).map((t) => rea…
+     45|         expect(files).toHaveLength(4);
+       |                       ^
+     46|         expect(parityOk(files.map((f) => f.rendered_tree))).toBe(true);
+     47|         expect(parityOk(files.map((f) => f.response_fixture))).toBe(tr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_evaluated > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_flat > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_a > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_b > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > loading > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > miss > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > error > shape: pair + fingerprint, state and target named, node keys exact, bound fields only
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:55:30
+     53|         const declared = new Set<string>(decl.sections.flatMap((x: Jso…
+     54|         for (const t of TARGETS) {
+     55|           expect(have(s, t)).toBe(true);
+       |                              ^
+     56|           const g = readJson(file(s, t));
+     57|           expect(g.state).toBe(s);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/permitted.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/not_permitted.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > not_evaluated > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/not_evaluated.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_flat > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/variant_flat.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_a > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/variant_pitched_a.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > variant_pitched_b > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/variant_pitched_b.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/at_least.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > loading > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/loading.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > miss > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/miss.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/32]⎯
+
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > error > fingerprint is fresh (response_fixture hash and the three input files)
+Error: ENOENT: no such file or directory, open '~/Buildo-wt-mf12/src/tests/fixtures/surfaces/report/error.mobile.json'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readJson src/tests/surfaces/report-golden-parity.logic.test.ts:22:53
+ ❯ src/tests/surfaces/report-golden-parity.logic.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/32]⎯
+
+ Test Files  1 failed (1)
+      Tests  32 failed | 1 passed (33)
+   Start at  20:27:06
+   Duration  201ms (transform 35ms, setup 6ms, collect 4ms, tests 9ms, environment 0ms, prepare 24ms)
+

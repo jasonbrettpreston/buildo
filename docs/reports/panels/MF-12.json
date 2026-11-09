@@ -1,0 +1,37 @@
+{
+  "task": "MF-12",
+  "item": "Goldens: structured trees, one per state per target. TRANCHE 1: 10 states x 4 targets = 40 files + states.json manifest; 17 states (68 files) OWED with named blockers; MF-12 stays RUNNING until 108",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-08",
+  "head": "TBD",
+  "commits_reviewed": [
+    "TBD"
+  ],
+  "cards": [
+    "Operator answer MF-12 D-1..D-4 (2026-11-08): \"I approve all the recommendations on the condition you are highly confident in each\". D-1 a, D-2 a, D-3 a, D-4 a.",
+    "Operator answer MF-12 L-1 (2026-11-08 night): \"L-1C\": lifecycle message node keeps status with the closed value none; tree carries lifecycle (loading|miss|error); 11a.3 gains none via Spec 128 4 (FE-28, dated notes, FE-06 lock red first).",
+    "Protected dir: src/tests/fixtures/surfaces/** is in mcbylaws/protected-paths.json; this commit adds files there with red-evidence docs/reports/red-evidence/MF-12/ and register cites FE-06, FE-28, FE-17.",
+    "Operator answer MF-12 G-1, G-2 (2026-11-08 night): \"G-1 a, G-2 a\": the node contract lives in scripts/surfaces/_schema/report-tree.schema.json (FE-29); confidence and provenance take the closed value none; MF-14/MF-15 stay later in queue order (queue notes by lane R)."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-12/plan.md; seats ds-spec, ds-idempotency, ds-compliance, grounded Sonnet; PASS-WITH-FOLDS F1-F7.",
+  "output": "OUTPUT (stage 8): report-golden-parity.logic.test.ts RED 32 of 33 before the goldens, 33 of 33 after; report-honest.logic.test.ts RED 12 of 42 (the 12 lifecycle goldens, status null) before the status none change, 42 of 42 after; 75 of 75 on the final tree; a one-value mutation fails only that state's S-parity. Output panel: ~/Buildo-scratch/mcfrontend/MF-12/output-panel/adjudication.md, PASS-WITH-FOLDS, folds applied. G-2 a folded after the panel: the honest lock now validates every golden against report-tree.schema.json (Ajv 2020, no inline copy), RED 41 of 42 before the goldens carried none, 42 of 42 after; parity fingerprint adds the schema; final 75 of 75. The schema is a shape-only change of the panel-reviewed lock (same checks, one source); not re-panelled.",
+  "seats": [
+    "ds-spec",
+    "ds-compliance",
+    "ds-idempotency",
+    "grounded-reviewer"
+  ],
+  "verdict": "PASS-WITH-FOLDS (plan panel); PASS-WITH-FOLDS (output panel, folds applied)",
+  "blockers": [],
+  "followups": [
+    "All 10 tranche fixtures are synthetic: true; no 25-lot map (lots.json has 178).",
+    "confidence and provenance are `none` in every node until a bound field carries them.",
+    "at_least has no disclosure: headline_lower_bound is not bound.",
+    "Fingerprint carries 3 inputs; generator, catalogue, switchboard and closed-status-list inputs are owed.",
+    "not_permitted nodes show a status_text node; the MF-14 renderer decides against the hidden-state list.",
+    "17 owed states with blockers: ~/Buildo-scratch/mcfrontend/MF-12/owed.md"
+  ],
+  "evidence": "docs/reports/red-evidence/MF-12/; ~/Buildo-scratch/mcfrontend/MF-12/",
+  "notes": []
+}

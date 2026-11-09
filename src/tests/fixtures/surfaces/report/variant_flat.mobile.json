@@ -1,0 +1,36 @@
+{
+  "harness": "mf12-report-golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md#11a.7",
+  "surface": "report",
+  "state": "variant_flat",
+  "target": "mobile",
+  "response_fixture": {
+    "synthetic": true,
+    "status": "permitted",
+    "roof_form": "flat",
+    "gfa_flat_m2": 212.4
+  },
+  "rendered_tree": {
+    "nodes": [
+      {
+        "field": "gfa_flat_m2",
+        "source": "catalogue",
+        "label": "GFA (flat roof)",
+        "value": "212.4 m²",
+        "status": "permitted",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      }
+    ]
+  },
+  "fingerprint": {
+    "response_fixture": "0ced7889e9aca152",
+    "files": {
+      "scripts/surfaces/_schema/binding-sources.json": "642da823d9ba45b5",
+      "scripts/surfaces/_schema/report-v2.decl.json": "42084c696161e8c0",
+      "scripts/surfaces/_schema/report-presentation.json": "7ebd1825435db648",
+      "scripts/surfaces/_schema/report-tree.schema.json": "d19f855fc21d5f39"
+    }
+  }
+}

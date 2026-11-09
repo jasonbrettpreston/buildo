@@ -1,0 +1,70 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf12
+
+ ❯ src/tests/surfaces/report-honest.logic.test.ts (42 tests | 12 failed) 11ms
+   × FE-06 report-honest lock > error.admin.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 2ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > error.mobile.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > error.pdf.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > error.web.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > loading.admin.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > loading.mobile.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > loading.pdf.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > loading.web.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > miss.admin.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > miss.mobile.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > miss.pdf.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock > miss.web.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > error.admin.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > error.mobile.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > error.pdf.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > error.web.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > loading.admin.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > loading.mobile.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > loading.pdf.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > loading.web.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > miss.admin.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > miss.mobile.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > miss.pdf.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock > miss.web.json: every node has status in the closed list plus none; none only in lifecycle trees; lifecycle closed
+AssertionError: expected [ …(2) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "node 0: status outside the closed list: null",
++   "node 0: lifecycle node must carry none",
++ ]
+
+ ❯ src/tests/surfaces/report-honest.logic.test.ts:45:47
+     43|     it(`${f}: every node has status in the closed list plus none; none…
+     44|       const g: Json = JSON.parse(fs.readFileSync(path.join(DIR, f), 'u…
+     45|       expect(honestProblems(g.rendered_tree)).toEqual([]);
+       |                                               ^
+     46|       const life = LIFECYCLE.includes(g.state);
+     47|       expect('lifecycle' in g.rendered_tree).toBe(life);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ Test Files  1 failed (1)
+      Tests  12 failed | 30 passed (42)
+   Start at  20:48:29
+   Duration  233ms (transform 31ms, setup 8ms, collect 4ms, tests 11ms, environment 0ms, prepare 21ms)
+

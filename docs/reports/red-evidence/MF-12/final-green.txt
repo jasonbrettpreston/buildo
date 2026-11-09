@@ -1,0 +1,7 @@
+ ✓ src/tests/surfaces/report-golden-parity.logic.test.ts (33 tests) 16ms
+
+ Test Files  2 passed (2)
+      Tests  75 passed (75)
+   Start at  20:50:19
+   Duration  216ms (transform 32ms, setup 15ms, collect 9ms, tests 20ms, environment 0ms, prepare 57ms)
+

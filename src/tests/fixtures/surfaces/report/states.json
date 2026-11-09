@@ -1,0 +1,24 @@
+{
+  "surface": "report",
+  "tranche": 1,
+  "targets": [
+    "mobile",
+    "web",
+    "admin",
+    "pdf"
+  ],
+  "states": [
+    "permitted",
+    "not_permitted",
+    "not_evaluated",
+    "variant_flat",
+    "variant_pitched_a",
+    "variant_pitched_b",
+    "at_least",
+    "loading",
+    "miss",
+    "error"
+  ],
+  "owed_states": 17,
+  "owed_files": 68
+}

@@ -1,0 +1,12 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf12
+
+ ✓ src/tests/surfaces/report-golden-parity.logic.test.ts (33 tests) 13ms
+ ✓ src/tests/surfaces/report-honest.logic.test.ts (42 tests) 6ms
+
+ Test Files  2 passed (2)
+      Tests  75 passed (75)
+   Start at  20:54:03
+   Duration  260ms (transform 34ms, setup 11ms, collect 33ms, tests 19ms, environment 0ms, prepare 50ms)
+

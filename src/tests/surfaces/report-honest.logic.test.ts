@@ -1,0 +1,77 @@
+// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md 11a.3 (closed status list, with the 2026-11-08 dated note: `none`),
+//            11a.4 (confidence, provenance), 11a.7 (structured tree), 126:295 (inherits Spec 122 1.2: omission is a build failure, "none" is valid per field),
+//            126:552 (R-27: one home), docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-06 (the lock), FE-28 (`none`, `lifecycle`), FE-29 (the node contract file).
+//
+// MF-12 tranche 1 · McFrontend queue · lane T. The FE-06 honest-display lock over the committed report goldens (operator L-1C and G-2 a, 2026-11-08).
+// The node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json; this file holds no copy of its key list or closed sets.
+// A golden tree must validate against it; on top of it: `none` appears only in a lifecycle tree, a lifecycle tree carries one message node,
+// and a `not_evaluated:<reason>` has text in the content registry. Each check is proven RED on a mutated tree. No DB, no network.
+import { describe, expect, it } from 'vitest';
+import Ajv2020 from 'ajv/dist/2020';
+import fs from 'node:fs';
+import path from 'node:path';
+
+type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
+const ROOT = process.cwd();
+const DIR = path.join(ROOT, 'src/tests/fixtures/surfaces/report');
+const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+const SCHEMA: Json = readJson('scripts/surfaces/_schema/report-tree.schema.json');
+const validate = new Ajv2020({ allErrors: true, strict: true }).compile(SCHEMA);
+const LIFECYCLE: string[] = SCHEMA.properties.lifecycle.enum;
+const REASONS = Object.keys(readJson('scripts/surfaces/_schema/report-presentation.json').status_text);
+
+export const honestProblems = (tree: Json): string[] => {
+  const out: string[] = [];
+  if (!validate(tree)) out.push(...(validate.errors ?? []).map((e) => `${e.instancePath} ${e.message}`));
+  const nodes: Json[] = Array.isArray(tree?.nodes) ? tree.nodes : [];
+  const isLife = LIFECYCLE.includes(tree?.lifecycle);
+  if (isLife && nodes.length !== 1) out.push('a lifecycle tree carries exactly one message node');
+  nodes.forEach((n, i) => {
+    const s = n?.status;
+    if (typeof s === 'string' && s.startsWith('not_evaluated:') && !REASONS.includes(s)) out.push(`node ${i}: not_evaluated reason has no content text: ${s}`);
+    if (s === 'none' && !isLife) out.push(`node ${i}: none outside a lifecycle tree`);
+    if (isLife && s !== 'none') out.push(`node ${i}: lifecycle node must carry none`);
+  });
+  return out;
+};
+
+const goldens = fs.existsSync(DIR) ? fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== 'states.json').sort() : [];
+
+describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
+  it('there are 40 goldens to check', () => {
+    expect(goldens).toHaveLength(40);
+  });
+
+  for (const f of goldens) {
+    it(`${f}: validates against the node contract; none only in lifecycle trees; lifecycle closed`, () => {
+      const g: Json = readJson(path.join('src/tests/fixtures/surfaces/report', f));
+      expect(honestProblems(g.rendered_tree)).toEqual([]);
+      const life = LIFECYCLE.includes(g.state);
+      expect('lifecycle' in g.rendered_tree).toBe(life);
+      if (life) expect(g.rendered_tree.lifecycle).toBe(g.state);
+    });
+  }
+
+  it('RED fixtures: each defect is caught', () => {
+    const ok: Json = { nodes: [{ field: 'status_text', source: 'content', label: 'l', value: 'v', status: 'permitted', confidence: 'none', provenance: 'none', disclosures: [] }] };
+    const life: Json = { lifecycle: 'miss', nodes: [{ ...ok.nodes[0], value: null, status: 'none' }] };
+    const mut = (t: Json, over: Json, tree: Json = {}): Json => ({ ...t, ...tree, nodes: [{ ...t.nodes[0], ...over }] });
+    const drop = (t: Json, key: string): Json => { const { [key]: _gone, ...rest } = t.nodes[0]; return { ...t, nodes: [rest] }; }; // eslint-disable-line @typescript-eslint/no-unused-vars
+    expect(honestProblems(ok)).toEqual([]);
+    expect(honestProblems(life)).toEqual([]);
+    for (const key of SCHEMA.$defs.node.required as string[]) expect(honestProblems(drop(ok, key)), `missing ${key}`).not.toEqual([]);
+    expect(honestProblems(mut(ok, { extra: 1 }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { status: null }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { status: 'loading' }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { status: 'none' }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { status: 'not_evaluated:made_up' }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { confidence: null }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { confidence: 'very-high' }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { provenance: 'guess' }))).not.toEqual([]);
+    expect(honestProblems(mut(ok, { value: 5 }))).not.toEqual([]);
+    expect(honestProblems(mut(life, { status: 'permitted' }))).not.toEqual([]);
+    expect(honestProblems(mut(life, {}, { lifecycle: 'empty' }))).not.toEqual([]);
+    expect(honestProblems({ ...life, nodes: [life.nodes[0], life.nodes[0]] })).not.toEqual([]);
+    expect(honestProblems({ nodes: [] })).not.toEqual([]);
+  });
+});

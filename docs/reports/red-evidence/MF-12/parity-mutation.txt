@@ -1,0 +1,3 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > at_least > S-parity: the four target files carry the same fixture and tree
+      Tests  1 failed | 32 passed (33)

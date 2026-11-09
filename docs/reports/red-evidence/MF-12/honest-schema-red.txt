@@ -1,0 +1,202 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 ~/Buildo-wt-mf12
+
+ ❯ src/tests/surfaces/report-honest.logic.test.ts (42 tests | 41 failed) 9ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 3ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > error.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > error.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > error.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > error.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > miss.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > miss.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > miss.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > miss.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(6) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(6) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(6) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(6) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 1ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+     → expected [ …(2) ] to deeply equal []
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > RED fixtures: each defect is caught 0ms
+     → expected [ Array(1) ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 41 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > at_least.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > error.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > error.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > error.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > error.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > loading.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > loading.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > loading.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > loading.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > miss.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > miss.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > miss.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > miss.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_evaluated.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > not_permitted.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_flat.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_a.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > variant_pitched_b.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+AssertionError: expected [ …(2) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "/nodes/0/confidence must be equal to one of the allowed values",
++   "/nodes/0/provenance must be equal to one of the allowed values",
++ ]
+
+ ❯ src/tests/surfaces/report-honest.logic.test.ts:48:47
+     46|     it(`${f}: validates against the node contract; none only in lifecy…
+     47|       const g: Json = readJson(path.join('src/tests/fixtures/surfaces/…
+     48|       expect(honestProblems(g.rendered_tree)).toEqual([]);
+       |                                               ^
+     49|       const life = LIFECYCLE.includes(g.state);
+     50|       expect('lifecycle' in g.rendered_tree).toBe(life);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/41]⎯
+
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > permitted.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+AssertionError: expected [ …(6) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "/nodes/0/confidence must be equal to one of the allowed values",
++   "/nodes/0/provenance must be equal to one of the allowed values",
++   "/nodes/1/confidence must be equal to one of the allowed values",
++   "/nodes/1/provenance must be equal to one of the allowed values",
++   "/nodes/2/confidence must be equal to one of the allowed values",
++   "/nodes/2/provenance must be equal to one of the allowed values",
++ ]
+
+ ❯ src/tests/surfaces/report-honest.logic.test.ts:48:47
+     46|     it(`${f}: validates against the node contract; none only in lifecy…
+     47|       const g: Json = readJson(path.join('src/tests/fixtures/surfaces/…
+     48|       expect(honestProblems(g.rendered_tree)).toEqual([]);
+       |                                               ^
+     49|       const life = LIFECYCLE.includes(g.state);
+     50|       expect('lifecycle' in g.rendered_tree).toBe(life);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/41]⎯
+
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > RED fixtures: each defect is caught
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "/nodes must NOT have fewer than 1 items",
++ ]
+
+ ❯ src/tests/surfaces/report-honest.logic.test.ts:75:43
+     73|     expect(honestProblems(mut(life, {}, { lifecycle: 'empty' }))).not.…
+     74|     expect(honestProblems({ ...life, nodes: [life.nodes[0], life.nodes…
+     75|     expect(honestProblems({ nodes: [] })).toEqual([]); // an empty nod…
+       |                                           ^
+     76|   });
+     77| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/41]⎯
+
+ Test Files  1 failed (1)
+      Tests  41 failed | 1 passed (42)
+   Start at  20:53:53
+   Duration  234ms (transform 27ms, setup 7ms, collect 24ms, tests 9ms, environment 0ms, prepare 21ms)
+
