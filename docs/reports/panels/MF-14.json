@@ -1,0 +1,19 @@
+{
+  "task": "MF-14",
+  "item": "One REPORT renderer (trimmed): core buildTree/assertTree/viewOf, closed layout table, ReportView, /admin/report-preview, FE-24 lock",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": null,
+  "commits_reviewed": [],
+  "cards": [
+    "Operator 2026-11-09: \"approved 1. MF-14 T-1 to T-4 (the trimmed renderer decisions above): approve as recommended?\"",
+    "Mechanical decisions D-09 (~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md)."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-14/plan.md as amended by ~/Buildo-scratch/mcfrontend/MF-14/grounding.md (grounding wins; cut list binding).",
+  "output": "PENDING: the OUTPUT panel (stage 8) record replaces this placeholder.",
+  "seats": [],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": []
+}
