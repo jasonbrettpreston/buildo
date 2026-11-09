@@ -440,7 +440,7 @@ describe('Permit Detail Neighbourhood Query', () => {
   });
 });
 
-describe('Street View URL Validation', () => {
+describe('Toronto Coordinate Validation', () => {
   function validateTorontoCoord(
     lat: number | null,
     lng: number | null
@@ -451,10 +451,6 @@ describe('Street View URL Validation', () => {
     if (lat < 43.0 || lat > 44.5) return { valid: false, error: 'Latitude out of Toronto range (43.0-44.5)' };
     if (lng < -80.5 || lng > -78.5) return { valid: false, error: 'Longitude out of Toronto range (-80.5 to -78.5)' };
     return { valid: true };
-  }
-
-  function buildStreetViewUrl(lat: number, lng: number, apiKey: string): string {
-    return `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${lat},${lng}&fov=90&key=${apiKey}`;
   }
 
   it('accepts valid Toronto latitude (43.0-44.5)', () => {
@@ -487,16 +483,6 @@ describe('Street View URL Validation', () => {
     expect(validateTorontoCoord(null, -79.3).valid).toBe(false);
   });
 
-  it('URL contains size=600x400 and fov=90', () => {
-    const url = buildStreetViewUrl(43.6519, -79.3911, 'KEY');
-    expect(url).toContain('size=600x400');
-    expect(url).toContain('fov=90');
-  });
-
-  it('URL contains correct location format', () => {
-    const url = buildStreetViewUrl(43.6519, -79.3911, 'KEY');
-    expect(url).toContain('location=43.6519,-79.3911');
-  });
 });
 
 describe('Database Schema Constraints', () => {

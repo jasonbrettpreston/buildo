@@ -160,6 +160,7 @@ Competitive research showed our current PermitCard has 10-12 visible data points
 **Left border:** 4px solid in timing color (amber/green/blue/gray). Dashed if heuristic estimate.
 
 **Thumbnail:** 80x60px Google Street View image, rounded 6px corners. Falls back to neighbourhood map outline if no geocode. Positioned left of address for horizontal scanning.
+- History note 2026-11-09 (MB-87, operator ruling "Drop it (Recommended)"): `PropertyPhoto.tsx` (a direct browser Street View URL with the public key) is removed from the public permit page and the browser key is retired. None of the cost fences above was ever built (`feature_streetview_enabled`, caps, lazy load, pano cache). The MaxBLD report photo (one per signed-in counted report) is MF-39, server-side, by its own ruling; Q-9 and Q-MF8 stand for the report.
 
 **Street View cost and caching (Google TOS compliant + multi-layer cost cap):**
 - Street View Static API costs **$7 per 1,000 requests** (as of 2026).
@@ -172,6 +173,7 @@ Competitive research showed our current PermitCard has 10-12 visible data points
   - **Per-IP daily cap:** 1,000 image requests/day per IP (catches multi-account abuse from a single source)
   - **Per-region hourly circuit breaker:** If aggregate requests exceed $100/hour for any city, the API returns placeholder tiles for all subsequent requests until the next hour. Hard ceiling = $2,400/day per region.
   - **Global daily kill switch:** A feature flag (`feature_streetview_enabled`) can disable Street View entirely without a deploy. Falls back to neighbourhood map outline + initial-letter avatars for permit cards.
+  - History note 2026-11-09 (MB-87): this flag was never implemented; see the note under Thumbnail.
 - **Cost projections with caps:**
   - 1,000 active users × 50 unique panos/day = 50K requests/day = ~$10/day = **~$300/month**
   - At 100,000 users without caps = ~$30,000/month (catastrophic)
@@ -431,4 +433,5 @@ Desktop shows feed + map side-by-side for spatial context when planning at home.
 - **Implements:** `70_lead_feed.md` (architecture), `73_builder_leads.md` (builder card)
 - **Data from:** `71_lead_timing_engine.md` (timing badges), `72_lead_cost_model.md` (cost display)
 - **Extends:** Existing `PermitCard.tsx` component patterns, `PropertyPhoto.tsx` (Street View), Google Maps integration
+  - History note 2026-11-09 (MB-87): `PropertyPhoto.tsx` was removed; see the note under Thumbnail.
 - **Constrained by:** `00_engineering_standards.md` §1.1 (mobile-first), §4.3 (no secrets in client), §10 (frontend/backend boundary)

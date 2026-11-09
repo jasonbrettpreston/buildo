@@ -38,8 +38,9 @@ Provide REST API endpoints to query permits with filtering, pagination, full-tex
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Infra** (`api.infra.test.ts`): API Permit Filter Validation; Permit ID Parsing; Parameterized Query Builder; Geo Bounding Box Validation; Permit Detail Parcel Query; Permit Detail Neighbourhood Query; Street View URL Validation; Database Schema Constraints; API Route Exports; Middleware Route Protection; Pre-Permit API Integration; API Error Handling Hardening; Centralized Error Logging; Performance Index Coverage
+- **Infra** (`api.infra.test.ts`): API Permit Filter Validation; Permit ID Parsing; Parameterized Query Builder; Geo Bounding Box Validation; Permit Detail Parcel Query; Permit Detail Neighbourhood Query; Toronto Coordinate Validation; Database Schema Constraints; API Route Exports; Middleware Route Protection; Pre-Permit API Integration; API Error Handling Hardening; Centralized Error Logging; Performance Index Coverage
 <!-- TEST_INJECT_END -->
+- Dated note 2026-11-09 (MB-87, operator ruling "Drop it (Recommended)", M-246): the Street View photo (`PropertyPhoto.tsx`) is removed from the public permit page `/permits/[id]` and the browser Maps key is retired. The `api.infra.test.ts` block "Street View URL Validation" lost its two URL cases (they tested a local copy of the URL builder, never the component) and keeps its six coordinate-range cases as "Toronto Coordinate Validation". The lock `streetview-key.infra.test.ts` forbids the Street View URL, any `NEXT_PUBLIC_*MAPS` name and any Google API key string in non-test `src/`, `scripts/` and `mobile/`. Scope: the public permit page only; Q-9 (`scripts/surfaces/_schema/report-v2.rulings.json`) and Q-MF8 (`docs/reports/decisions/2026-11-04-batch-ay.json`) stand for the MaxBLD report photo (one per signed-in counted report, MF-39).
 
 </testing>
 

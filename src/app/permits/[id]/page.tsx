@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
-import PropertyPhoto from '@/components/permits/PropertyPhoto';
 import NeighbourhoodProfile from '@/components/permits/NeighbourhoodProfile';
 import BuildingMassing from '@/components/permits/BuildingMassing';
 import type { BuildingMassingInfo } from '@/lib/massing/types';
@@ -138,13 +137,6 @@ export default function PermitDetailPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Property Photo */}
-        <PropertyPhoto
-          lat={p.latitude as number | null}
-          lng={p.longitude as number | null}
-          address={[p.street_num, p.street_name, p.street_type].filter(Boolean).join(' ')}
-        />
-
         {/* Trade Matches */}
         {data.trades.length > 0 && (
           <Section title="Trade Classification">

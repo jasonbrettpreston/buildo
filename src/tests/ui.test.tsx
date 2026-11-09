@@ -405,69 +405,6 @@ describe('OnboardingWizard Logic', () => {
   });
 });
 
-describe('PropertyPhoto Logic', () => {
-  // Pure logic extracted from src/components/permits/PropertyPhoto.tsx
-  function getStreetViewUrl(
-    lat: number,
-    lng: number,
-    apiKey: string | undefined,
-    isDev: boolean
-  ): string | null {
-    if (isDev) return null;
-    if (!apiKey) return null;
-    return `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${lat},${lng}&fov=90&key=${apiKey}`;
-  }
-
-  function getDisplayState(
-    lat: number | null,
-    lng: number | null,
-    isDev: boolean
-  ): 'placeholder' | 'unavailable' | 'image' {
-    if (isDev) return 'placeholder';
-    if (lat == null || lng == null) return 'unavailable';
-    return 'image';
-  }
-
-  it('returns null in dev mode', () => {
-    expect(getStreetViewUrl(43.65, -79.38, 'test-key', true)).toBeNull();
-  });
-
-  it('returns null when no API key', () => {
-    expect(getStreetViewUrl(43.65, -79.38, undefined, false)).toBeNull();
-  });
-
-  it('builds correct URL format in production', () => {
-    const url = getStreetViewUrl(43.65, -79.38, 'MY_KEY', false);
-    expect(url).toBe(
-      'https://maps.googleapis.com/maps/api/streetview?size=600x400&location=43.65,-79.38&fov=90&key=MY_KEY'
-    );
-  });
-
-  it('URL contains correct size, fov, and location params', () => {
-    const url = getStreetViewUrl(43.6519, -79.3911, 'KEY123', false)!;
-    expect(url).toContain('size=600x400');
-    expect(url).toContain('fov=90');
-    expect(url).toContain('location=43.6519,-79.3911');
-  });
-
-  it('display state: dev mode returns placeholder', () => {
-    expect(getDisplayState(43.65, -79.38, true)).toBe('placeholder');
-  });
-
-  it('display state: null coords returns unavailable', () => {
-    expect(getDisplayState(null, -79.38, false)).toBe('unavailable');
-    expect(getDisplayState(43.65, null, false)).toBe('unavailable');
-  });
-
-  it('display state: prod with coords returns image', () => {
-    expect(getDisplayState(43.65, -79.38, false)).toBe('image');
-  });
-
-  it('display state: dev mode with null coords still returns placeholder', () => {
-    expect(getDisplayState(null, null, true)).toBe('placeholder');
-  });
-});
-
 describe('PropertyDetails Display Logic', () => {
   // Extracted from src/app/permits/[id]/page.tsx lines 213-232
   function formatLotSize(sqft: number | null): string {

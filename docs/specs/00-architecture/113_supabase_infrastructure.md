@@ -115,16 +115,17 @@ TWO-TIER check over every `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` var, both tiers indepe
   `error`, never printing the value. A known-PUBLIC shape is exempted first
   (`sb_publishable_*`, the project https URL, a Sentry ingest DSN, a `phc_*` PostHog key —
   false-positive suppression; Tier 2 still name-checks such a var).
-- **Tier 2 — NAME allowlist:** the legitimate public var names are the census-frozen 8
+- **Tier 2 — NAME allowlist:** the legitimate public var names are the census-frozen 7
   (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
   `NEXT_PUBLIC_SUPABASE_ANON_KEY` legacy, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_DEV_MODE`,
-  `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`) plus
+  `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`) plus
   the platform-injected `NEXT_PUBLIC_VERCEL_*` prefix. Any OTHER public-prefixed name —
   including a novel-format secret Tier 1's shapes can't recognize — is `error` on production
   AND preview, `warn` on development (exposure-tier: preview shares the cloud project and bakes
   values into durable bundles at build time; `vercel dev` yields no deployed bundle). Drift is
   test-enforced (census-sync + REQUIRED_GROUPS-subset invariants) — a new public var requires
   its allowlist entry in the same commit.
+- Dated note 2026-11-09 (MB-87, operator ruling "Drop it (Recommended)", M-246): the census was 8 names (P4 hardening H1, `4a3899bae`, 2026-07-22); the eighth, `NEXT_PUBLIC_GOOGLE_MAPS_KEY` (the browser Street View key read only by `PropertyPhoto.tsx`), is retired with that component, so the census is 7 and the name is now an unknown-name finding (`error` on production and preview, `warn` on development). Operator console steps: delete the Vercel variable in production and preview BEFORE deploying this change, else the check reports it; revoke the browser key in Google Cloud after ship (it was public in client bundles).
 </architecture>
 
 ---

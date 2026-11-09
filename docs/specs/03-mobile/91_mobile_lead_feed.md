@@ -181,6 +181,7 @@ A custom React Native SVG circular progress indicator:
 Whether tapped from the feed or the map, the user is routed to a comprehensive, full-screen detail view powered by a discrete TanStack Query (`useLeadDetail`).
 
 * **Header:** Full Address, `OpportunityRing` score, and a Street View Image (cached via `expo-image`).
+    * Dated note 2026-11-09 (MB-87, operator ruling "Drop it (Recommended)", M-246; prior text kept): no Street View photo on the public or mobile permit views; the browser Maps key is retired and the MB-87 lock (`streetview-key.infra.test.ts`) forbids the Street View URL in `mobile/`. The MaxBLD report photo (one per signed-in counted report) is MF-39, fetched server-side; Q-9 and Q-MF8 stand for the report.
 * **Core Project Intelligence:**
     * **Project Details:** Full permit description and builder/applicant entity (if unmasked).
     * **Cost Estimate:** The algorithmic `estimated_cost` and designated `cost_tier`.

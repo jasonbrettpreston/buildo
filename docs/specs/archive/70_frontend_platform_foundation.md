@@ -51,6 +51,7 @@ src/
 **Environment Variables** *(Secrets excluded)*
 - `DATABASE_URL`: Primary PostgreSQL connection string.
 - `NEXT_PUBLIC_GOOGLE_MAPS_KEY`: Client-side key for `@vis.gl/react-google-maps` rendering.
+  - History note 2026-11-09 (MB-87, operator ruling "Drop it (Recommended)"): `@vis.gl/react-google-maps` was never used; the key was read only by `PropertyPhoto.tsx` (Street View on the public permit page), which is removed, and the key is retired.
 - `NEXT_PUBLIC_DEV_MODE`: Toggles local authentication bypasses.
 - `NEXT_PUBLIC_FIREBASE_API_KEY` (and `PROJECT_ID`): Firebase identity configuration.
 - `NEXT_PUBLIC_POSTHOG_KEY`: Opt-in UI telemetry ingestion.

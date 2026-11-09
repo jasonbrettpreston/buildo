@@ -371,9 +371,19 @@ describe('verify-vercel-env — H1 Tier 2 name allowlist (P4 hardening WF2)', ()
     }
   });
 
+  it('NEXT_PUBLIC_GOOGLE_MAPS_KEY is retired (MB-87, operator 2026-11-09): an unknown-name ERROR in production AND preview, WARN in development', () => {
+    for (const [envName, level] of [['production', 'error'], ['preview', 'error'], ['development', 'warn']] as const) {
+      const env = validEnv();
+      env.NEXT_PUBLIC_GOOGLE_MAPS_KEY = 'some-browser-maps-key-value';
+      const result = vve.evaluateEnv(env, envName);
+      const hit = result.findings.find((f) => f.name === 'NEXT_PUBLIC_GOOGLE_MAPS_KEY' && f.check === 'public_var_name');
+      expect(hit?.level).toBe(level);
+      expect(result.ok).toBe(level !== 'error');
+    }
+  });
+
   it('every allowlisted name passes the name tier (no public_var_name finding)', () => {
     const env = validEnv();
-    env.NEXT_PUBLIC_GOOGLE_MAPS_KEY = 'AIzaSyA1234567890abcdefghijklmnopqrstu'; // 39 chars — evades the 40-char blob regex
     env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_abc123';
     env.NEXT_PUBLIC_POSTHOG_HOST = 'https://us.i.posthog.com';
     const result = vve.evaluateEnv(env, 'production');

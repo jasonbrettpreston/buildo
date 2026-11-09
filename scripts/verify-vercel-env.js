@@ -162,9 +162,9 @@ const PUBLIC_VAR_PREFIXES = ['NEXT_PUBLIC_', 'EXPO_PUBLIC_'];
 // test-enforced (census-sync + REQUIRED_GROUPS-subset invariants in
 // src/tests/verify-vercel-env.logic.test.ts) — add the entry AND the reading
 // code in the same commit.
-// NB: NEXT_PUBLIC_GOOGLE_MAPS_KEY's 39-char AIza… value narrowly evades the
-// 40-char blob regex in secretShapeReason — this name tier is the only check
-// that ever sees it (PropertyPhoto.tsx:41).
+// 2026-11-09 (MB-87, operator ruling "Drop it (Recommended)"): the browser
+// Street View key name was retired with PropertyPhoto.tsx (census 8 -> 7); it
+// is now an unknown-name finding like any other.
 const PUBLIC_VAR_NAME_ALLOWLIST = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
@@ -173,7 +173,6 @@ const PUBLIC_VAR_NAME_ALLOWLIST = [
   'NEXT_PUBLIC_DEV_MODE', // value policed by the dev_mode check, not here
   'NEXT_PUBLIC_POSTHOG_KEY',
   'NEXT_PUBLIC_POSTHOG_HOST',
-  'NEXT_PUBLIC_GOOGLE_MAPS_KEY',
 ];
 
 // Vercel's "Automatically expose System Environment Variables" injects

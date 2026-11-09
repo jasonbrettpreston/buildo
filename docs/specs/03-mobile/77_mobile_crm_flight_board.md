@@ -117,6 +117,7 @@ Tapping a flight board card pushes a new detail screen to the navigation stack.
 **Header**
 * Full Address (`address`) — `text-zinc-100 text-xl font-bold`
 * Street View Image — **UNBUILT** (deferred; not in the `FlightBoardDetail` type or the current API response)
+  * Dated note 2026-11-09 (MB-87, operator ruling "Drop it (Recommended)", M-246; prior text kept): no Street View photo on the public or mobile permit views; the browser Maps key is retired and the MB-87 lock (`streetview-key.infra.test.ts`) forbids the Street View URL in `mobile/`. The MaxBLD report photo (one per signed-in counted report) is MF-39, fetched server-side; Q-9 and Q-MF8 stand for the report.
 
 **Timeline Engine Data**
 * Target Date: `predicted_start` — `font-mono text-amber-500 text-2xl font-bold`
