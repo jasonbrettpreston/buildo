@@ -1,0 +1,60 @@
+MF-15 surface-validate.mjs, red then green, 2026-11-09 (real command output, tail of each run; stubs and mutations restored after each run)
+
+## RED 1: stub gate (exits 0) and stub module (every check returns no findings): the new test file
+⎯⎯⎯⎯⎯⎯ Failed Tests 37 ⎯⎯⎯⎯⎯⎯⎯
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > binding: each node binds to a declared field and the closed source set > a node field not in the declaration
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > binding: each node binds to a declared field and the closed source set > a node source not in binding-sources.json
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > binding: each node binds to a declared field and the closed source set > a node source unequal to the declaration's kind
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > binding: each node binds to a declared field and the closed source set > a status_text value that is not the content text
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > binding: each node binds to a declared field and the closed source set > a wrong base label
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > binding: each node binds to a declared field and the closed source set > an at_least label without the suffix
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > closed-status: the node contract and the honest extras > a disclosure code not in disclosure_texts
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > closed-status: the node contract and the honest extras > a lifecycle tree with two nodes
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > closed-status: the node contract and the honest extras > a not_evaluated reason with no content text
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > closed-status: the node contract and the honest extras > a status outside the closed list fails the schema
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > closed-status: the node contract and the honest extras > an extra node key fails the schema
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > closed-status: the node contract and the honest extras > none outside a lifecycle tree
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > closed-status: the node contract and the honest extras > the lifecycle key missing on a lifecycle state
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > done-condition: a planted bad descriptor exits 1 > case A: fingerprints left stale: the stale line and the bind line
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > done-condition: a planted bad descriptor exits 1 > case B: goldens re-stamped so the hash is clean: the descriptor itself is judged, SV-BIND lines alone
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-gen: the committed generators' --check > a failing report-schema --check is relayed line by line; the warning line is not taken for the finding
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-gen: the committed generators' --check > a missing generator is a finding
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a changed response_fixture value: fixture hash (and parity, which sees the same change)
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a deleted target file
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a dropped fingerprint.files key
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a missing file and a bad target list together give two lines in the fixed order
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a missing manifest is a finding, not a usage error
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a stale declaration and a dropped key together: two lines for that file
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a state dropped from the manifest while its files remain: each file is not in manifest
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a stray file beside the goldens
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > manifest targets are three
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in binding-sources.json: every golden is stale on it
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-presentation.json: every golden is stale on it
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-tree.schema.json: every golden is stale on it
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-v2.decl.json: every golden is stale on it
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-parity: the four target files agree > a changed response_fixture in one target
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-parity: the four target files agree > one node value changed in one target
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-parity: the four target files agree > the state field names the wrong state
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-parity: the four target files agree > the target field names the wrong target
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > usage, output and read-only > a two-defect tree twice (fresh copy each time): identical findings in a fixed order
+FAIL  src/tests/surfaces/surface-validate.logic.test.ts > usage, output and read-only > any flag but --check exits 2
+Test Files  1 failed (1)
+Tests  37 failed | 5 passed (42)
+
+## RED 2: lock import swap proven live: module honestProblems returns no findings and parityOk always true; the two landed locks
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > RED fixture: a tree that differs from its siblings is caught by the parity check
+FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > RED fixtures: each defect is caught
+Test Files  2 failed (2)
+Tests  2 failed | 75 passed (77)
+
+Note: the 4 tests added after the output panel (malformed input is a finding; empty state list) were not part of RED 1; they assert findings a stub gate (exit 0, no findings) cannot produce.
+
+## GREEN: real module and gate; src/tests/surfaces (baseline before MF-15: honest 42 + parity 35 + binding 13 = 90; locks unchanged at 42/35/13)
+✓ src/tests/surfaces/report-golden-parity.logic.test.ts (35 tests) 13ms
+✓ src/tests/surfaces/report-honest.logic.test.ts (42 tests) 22ms
+✓ src/tests/surfaces/report-binding.logic.test.ts (13 tests) 210ms
+✓ src/tests/surfaces/surface-validate.logic.test.ts (46 tests) 5009ms
+Test Files  4 passed (4)
+Tests  136 passed (136)

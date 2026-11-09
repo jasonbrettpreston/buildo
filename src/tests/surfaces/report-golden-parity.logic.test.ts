@@ -9,36 +9,18 @@ import { describe, expect, it } from 'vitest';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { FP_FILES, SOURCE_KINDS, TARGETS, TRANCHE1_KINDS, parityOk, sha16, sourceProblems } from '../../../scripts/surfaces/report-checks.mjs'; // MF-15 D-1 a: one home, shared with surface-validate.mjs (R-27)
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
 const ROOT = process.cwd();
 const DIR = path.join(ROOT, 'src/tests/fixtures/surfaces/report');
-const TARGETS = ['mobile', 'web', 'admin', 'pdf'];
 const STATES = [
   'permitted', 'not_permitted', 'not_evaluated', 'variant_flat', 'variant_pitched_a',
   'variant_pitched_b', 'at_least', 'loading', 'miss', 'error',
 ];
-const FP_FILES = [
-  'scripts/surfaces/_schema/binding-sources.json',
-  'scripts/surfaces/_schema/report-presentation.json',
-  'scripts/surfaces/_schema/report-tree.schema.json',
-  'scripts/surfaces/_schema/report-v2.decl.json',
-];
 const readJson = (p: string): Json => JSON.parse(fs.readFileSync(p, 'utf8'));
-// Source kinds are the keys of binding-sources.json `sources` (the closed binding set; MF-12 panel 2 F-5), read at run time, never copied.
-const SOURCE_KINDS = Object.keys(readJson(path.join(ROOT, 'scripts/surfaces/_schema/binding-sources.json')).sources);
-// Tranche-1 constraint (decision D-3 b, 2026-11-08): tranche-1 nodes bind only to catalogue or content. A named subset of SOURCE_KINDS, to widen by its own ruling.
-const TRANCHE1_KINDS = ['catalogue', 'content'];
-const sha16 = (p: string): string => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex').slice(0, 16);
 const file = (s: string, t: string): string => path.join(DIR, `${s}.${t}.json`);
 const have = (s: string, t: string): boolean => fs.existsSync(file(s, t));
-
-export const sourceProblems = (kind: string): string[] => [
-  ...(SOURCE_KINDS.includes(kind) ? [] : [`source kind not in binding-sources.json: ${kind}`]),
-  ...(TRANCHE1_KINDS.includes(kind) ? [] : [`source kind outside the tranche-1 constraint (D-3 b): ${kind}`]),
-];
-
-export const parityOk = (trees: Json[]): boolean => trees.every((t) => JSON.stringify(t) === JSON.stringify(trees[0]));
 
 describe('MF-12 tranche 1 goldens (S-golden, S-parity)', () => {
   it('manifest pins the tranche-1 states and the four targets', () => {
