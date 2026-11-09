@@ -1,0 +1,214 @@
+{
+  "$comment": "M-321 pre-registration, task MB-27, prereg 32 (Spec 124a R-MA; round 100; it supersedes the unlanded prereg 34 of branch wf1/inc3-e, round 95; the street-side case text names the file stem bylaw-mb27l2-street-side, the case token the oracle door reads from the pushed Spec 69a M-180 dated note, and this is the one the E4 landing runs over), the revert round of increment 1 that lands increment-3 item E4, the MB17-Q1 reversal (B-1, DL-5 a; Spec 69a M-180 dated note 2026-10-30: \"An exception applies to the building types it names and to those the by-law's applicability clause extends it to (M-180); MB17-Q1 is withdrawn\"). vocab.exception_type_binding, the evaluator's exceptionNamedOnly / namedOnlyFor / env.namedOnly reading and the evaluatorVocab line are removed, so the M-180(1) alias binds a detached houseplex to the exception clause written for the detached house on the four setback targets. Reach (re-measured on the 2 percent sample, inc3 build measure/dl5-reach.out): about 22,700 Layer 2 cells citywide on about 8,600 lots, all detached_houseplex and semi_detached_houseplex, in both directions: A0399 RM exception 23 houseplex side yard 1.2 m (10.80.40.70(3)(A)) to 0.6 m (900.6.10(23)(D)(i)); RS exception 24 semi-detached houseplex 1.5 to 2.4; RS exception 24 detached houseplex street side unregulated (ABS-9.2) to 3.6 m from 900.4.10(24)#(24)[SSP](C)(v). Zero scorer moves (class totals equal on the 172 and 4d sets). Three named assertion moves (B-1 and the 2026-11-08 ruling E4 2a). Red lock first: src/tests/bylaw-mb18-q1r-exception-binding.logic.test.ts. One table_version move and one evaluator_version move.",
+  "schema": "coa-round-prereg-v1",
+  "round": 100,
+  "task": "MB-27",
+  "rules": [
+    "M-180",
+    "M-252",
+    "R-MA"
+  ],
+  "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/delta-20261108/plan-delta.md row E4; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md B-1 and Decision list 2026-11-08 (E4 2a)",
+  "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+  "expected_moves": [],
+  "expected_totals": {
+    "ANSWERED": 7,
+    "MATCH": 407,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals": {
+    "ANSWERED": 7,
+    "MATCH": 407,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes": [],
+  "expected_moves_4d": [],
+  "expected_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 283,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 283,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes_4d": [],
+  "expected_moves_cumulative": [],
+  "expected_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 459,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_before_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 459,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 3
+  },
+  "expected_figure_changes_cumulative": [],
+  "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+  "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+  "expected_repin": [
+    "docs/reference/bylaw-layer2-input.json table_version e1fdd437bde4 -> 44dbbfa2b5e5 and evaluator_version 0075647ff2b0 -> 81042395ee14 (E1C-S, mechanical result of the ruled data change)",
+    "docs/reference/maxbld-amendment-index.json layer2_table_version e1fdd437bde4 -> 44dbbfa2b5e5",
+    "docs/reference/maxbld-report-field-inventory.{md,json}: the version hash fields only (report-fields.mjs --write)",
+    "expected-172.json and expected-4d.json commit and inputs.table_version / evaluator_version re-pinned through coa-scorecard.mjs --pin, totals equal",
+    "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version and evaluator_version re-bound to the same values (RP-SW2 a)"
+  ],
+  "increment": "1",
+  "expected_assertion_changes": [
+    {
+      "file": "src/tests/bylaw-mb18.logic.test.ts",
+      "line": "53-55",
+      "row": "MB17-Q1: the rule is data: vocab.exception_type_binding names the mode and the setback targets",
+      "from": "asserts vocab.exception_type_binding is { mode named_only, targets [four setbacks] }",
+      "to": "retired (the binding is withdrawn)",
+      "rule": "B-1; M-180 dated note 2026-10-30",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md B-1 (\"land the ruled MB-18 Q1R reversal in increment 3\") and Decision list 2026-11-08, E4 (2) a"
+    },
+    {
+      "file": "src/tests/bylaw-mb18.logic.test.ts",
+      "line": "57-63",
+      "row": "A0399: RM exception 23 side yard of a 4-unit detached houseplex",
+      "from": "[1.2, 10.80.40.70(3)#(3)(A)]",
+      "to": "[0.6, 900.6.10(23)#(23)[SSP](D)(i)]",
+      "rule": "B-1; M-180(1)",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md B-1 (\"land the ruled MB-18 Q1R reversal in increment 3\") and Decision list 2026-11-08, E4 (2) a"
+    },
+    {
+      "file": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+      "line": "116-117",
+      "row": "RS 900.4.10(24): a houseplex street side",
+      "from": "[value, unregulated, null, null, absence, ABS-9.2]",
+      "to": "[value, 3.6, null, 900.4.10(24)#(24)[SSP](C)(v), null, null]",
+      "rule": "B-1 (third change); M-180 dated note 2026-10-30",
+      "authority": "~/Buildo-scratch/mcbylaws/inc3/open-questions.md B-1 (\"land the ruled MB-18 Q1R reversal in increment 3\") and Decision list 2026-11-08, E4 (2) a"
+    }
+  ],
+  "expected_value_changes": [
+    {
+      "path": "src/tests/bylaw-mb18.logic.test.ts",
+      "case": "A0399 RM exception 23 houseplex side yard under the withdrawn MB17-Q1 binding (bylaw-mb18 oracle)",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": "it('the rule is data: vocab.exception_type_binding names the mode and the setback targets it reads', () => {",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb18.logic.test.ts",
+      "case": "A0399 RM exception 23 houseplex side yard under the withdrawn MB17-Q1 binding (bylaw-mb18 oracle)",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": "expect(I.vocab.exception_type_binding).toMatchObject({ mode: 'named_only', targets: ['front_setback_m', 'rear_setback_m', 'side_setback_m', 'side_setback_street_m'] });",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb18.logic.test.ts",
+      "case": "A0399 RM exception 23 houseplex side yard under the withdrawn MB17-Q1 binding (bylaw-mb18 oracle)",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": "});",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb18.logic.test.ts",
+      "case": "A0399 RM exception 23 houseplex side yard under the withdrawn MB17-Q1 binding (bylaw-mb18 oracle)",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": "it('A0399: RM exception 23 (900.6.10(23)(D)(i): 0.6 m for a detached house) sets the detached house, not a 4-unit detached houseplex (base 1.2 m, 10.80.40.70(3)(A))', () => {",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb18.logic.test.ts",
+      "case": "A0399 RM exception 23 houseplex side yard under the withdrawn MB17-Q1 binding (bylaw-mb18 oracle)",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": null,
+      "new": "it('A0399: RM exception 23 (900.6.10(23)(D)(i): 0.6 m for a detached house) sets the detached house and, by the M-180(1) substitution, the 4-unit detached houseplex (MB17-Q1 withdrawn, CHAT-210.MB17-Q1R)', () => {"
+    },
+    {
+      "path": "src/tests/bylaw-mb18.logic.test.ts",
+      "case": "A0399 RM exception 23 houseplex side yard under the withdrawn MB17-Q1 binding (bylaw-mb18 oracle)",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": "expect([p.value, p.winner]).toEqual([1.2, '10.80.40.70(3)#(3)(A)']);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb18.logic.test.ts",
+      "case": "A0399 RM exception 23 houseplex side yard under the withdrawn MB17-Q1 binding (bylaw-mb18 oracle)",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": null,
+      "new": "expect([p.value, p.winner]).toEqual([0.6, '900.6.10(23)#(23)[SSP](D)(i)']);"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+      "case": "bylaw-mb27l2-street-side RS 900.4.10(24) houseplex street side takes the detached-house 3.6 m clause",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": "it('RS 900.4.10(24): a houseplex, which no clause of the exception or the zone names, is unregulated by absence (rule 7a v2, per type)', () => {",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+      "case": "bylaw-mb27l2-street-side RS 900.4.10(24) houseplex street side takes the detached-house 3.6 m clause",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": "expect(show(eff(lot('RS', 'detached_houseplex', {}, '900.4.10(24)')))).toEqual(['value', 'unregulated', null, null, 'absence', (rulingOf('RS') as Json).id]);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+      "case": "bylaw-mb27l2-street-side RS 900.4.10(24) houseplex street side takes the detached-house 3.6 m clause",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": null,
+      "new": "it('RS 900.4.10(24): a houseplex takes the detached-house street-side clause 3.6 m (M-180 alias; MB17-Q1 withdrawn)', () => {"
+    },
+    {
+      "path": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+      "case": "bylaw-mb27l2-street-side RS 900.4.10(24) houseplex street side takes the detached-house 3.6 m clause",
+      "ruling": "M-180",
+      "ruling_ref": "CHAT-210.MB17-Q1R",
+      "old": null,
+      "new": "expect(show(eff(lot('RS', 'detached_houseplex', {}, '900.4.10(24)')))).toEqual(['value', 3.6, null, '900.4.10(24)#(24)[SSP](C)(v)', null, null]);"
+    }
+  ]
+}
