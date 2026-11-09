@@ -932,6 +932,90 @@ The first consumer of an archetype on a platform adds its binding entry, golden 
 
 The six McFrontend principles (§0a) are answered per row in the Spec 135 `Six` cells.
 
+### 11b.7 MaxBLD page set (operator 2026-11-09)
+
+> Dated addition 2026-11-09 (MaxBLD page set · McFrontend queue · lane R; M-246, prior text kept, nothing above changed; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator direction 2026-11-09: the MaxBLD page set" and the two operator lines below it; source: the master list the operator approved, `maxbld-pages.html`, and the page inventory `pages-inventory.json`, read at `67d47542f`). This subsection commits the page set, as the last message below asks. §11b.3 stays the descriptor table; this subsection is the page list, its connections and the rules the operator gave for it.
+
+Operator, verbatim (four messages):
+
+- "some of these pages are confused between the MaxBLd and Buildo. MaxBld for the appt (1) Search Page (2) Search Page if two parcels selected (3) Report Page (4) Report Detail Page Still Needed (1) Account Profile Info (2) Saved Reports (provide Notifications to these lots COA updates) Web Only (3) Login Web: (1) Landing Page (2) Login (3) all the mobile pages (4) check-out (ie buy / cancel subscription / trial (5) onboarding is option - builder/realtor (but not necessary. Can you think of another others?"
+- "A. just expanded B. Im not sure but sometimes on a phone you get logged out - I dont know why - if you buy on the web - you would need to log in once on your phone. c. should come later. Let's get it working. your right we need 1-6 as well. Can you make a master list of all the MAxblf pages required and perhaps how they are connected as well. We need to add this to a spec. maybe even the McFront-end. also when should I provide the layout for these pages? Let's organize what we have here into a master list and how they connect and anything unique about them. however , it is normally done"
+- "As part of the sunscriptions we want to offer a free trial"
+- "Looks great! Commit the page set - we already have a brand spec - they should work together"
+
+Reading (record, same section): A = the report detail is the expanded card; B = login in the app too, the app keeps the session; C = PDF/share later; "1-6" = sign-up and password reset, Terms and Privacy, delete account in Account, notification settings in Account, the report-limit state on the Report page, a support contact link.
+
+**Ownership.** Spec 126 owns which pages exist and how they connect; Spec 117 owns how they look (colours, type, tokens). A page here takes its look only from 117 via the generated theme (Spec 117 §7 dated note 2026-11-09; §11b.4).
+
+**Phone app.** Routes are today's routes in the Buildo app's `parcel-tool` group and the shared `(auth)` group; the group moves to the MaxBLD app with MF-49.
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| A1 | Sign in, sign up, reset password | `/(auth)/sign-in`, `/(auth)/sign-up`, `/(auth)/confirm?code=`; reset: not set | shared with Buildo; a customer who bought on the web signs in once on the phone; the app keeps the session, and an unexpected sign-out is a bug | MF-49 |
+| A2 | Search | `/(app)/parcel-tool` (index) | address entry, Toronto only; shows the reports left this month | MF-35 |
+| A3 | Choose your parcel | `/(app)/parcel-tool/disambiguate?q=&kind=` | shown when an address matches two or more parcels; pick on a map or list; a stub today (Back button only) | MF-35 |
+| A4 | Report | `/(app)/parcel-tool/[parcelId]` | scenario cards with headline numbers; each card expands to every field (no detail page); one Street View photo, the photo space collapses when none is available; per-scenario ad slot and report images from admin; each new report counts toward the monthly limit, with a "limit reached" state; a Save button; PDF and share later | MF-48 (also MF-20 ad slot, MF-38 images, MF-39 photo, MF-45 limit) |
+| A5 | Saved reports | `/(app)/parcel-tool/tracked` | the lots the customer saved; a CoA update on a saved lot sends an alert and marks the lot; today example rows, no API | MF-51 |
+| A6 | Account | `/(app)/parcel-tool/account` | profile, plan and reports used; notification settings for the CoA alerts; delete account (app-store rule); support, Terms, Privacy, sign out; plan changes link to the web, no purchase in the app | MF-52 |
+
+**Web (maxbld.ca).**
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| W1 | Landing | `/` | the front door: what MaxBLD does, Sign in and Start trial; today it still sells Buildo ("Find Construction Leads") | MF-46 |
+| W2 | Sign in, sign up, reset password | `/login`; `/signup` (listed public in `src/lib/auth/route-guard.ts:46`, no page); reset: not set | the same account as the app, MaxBLD wording | MF-46 |
+| W3 | Checkout | `/subscribe`, `/subscribe/success`, `/subscribe/cancel` | buy, start a trial or cancel through Stripe-hosted Checkout and Customer Portal; sells Buildo lead-gen today | MF-47 |
+| W4 | Search | not set (under the nested `(maxbld)` layout) | A2 rendered for the browser from the same descriptor | MF-44 |
+| W5 | Choose your parcel | not set (same) | A3 for the browser | MF-44 |
+| W6 | Report | not set (same) | A4 for the browser, same rules | MF-44 |
+| W7 | Saved reports | not set | A5 for the browser | MF-51 |
+| W8 | Account | not set | A6 for the browser; Manage plan opens the Stripe portal directly | MF-52 |
+| W9 | Terms, Privacy | not set | plain pages; the app stores need a privacy link and Stripe needs terms | MF-46 |
+| W10 | Onboarding: builder or realtor | not set | optional, later; not in the first version | none (later) |
+
+**Admin pages that feed MaxBLD.**
+
+| Id | Page | Route | What is special | Queue |
+|---|---|---|---|---|
+| D1 | Report preview | `/admin/report-preview` | shows the report exactly as customers see it; the only page already on the shared report renderer | none (exists) |
+| D2 | Media library | not set | upload report images and advertiser creatives | MF-37 |
+| D3 | Ads and placements | not set | which offer appears in each scenario's ad slot | MF-40 |
+| D4 | Parcel cost | `/admin/parcel-cost` | checks the cost numbers the report shows | none (parked, §11b.3) |
+
+**Connections** (solid = a link the customer follows; content = reaches the page from elsewhere):
+
+- Landing -> Sign in / sign up / reset (front door)
+- Sign in -> Checkout (no plan yet, web)
+- Sign in -> "Subscribe at maxbld.ca" message (no plan yet, app; no purchase in the app)
+- Checkout -> Search (plan bought)
+- Sign in -> Search (has a plan)
+- Search -> Report (one parcel matches)
+- Search -> Choose your parcel (two or more match) -> Report
+- Report -> Saved reports (Save) -> Report (open a saved lot)
+- CoA update on a saved lot -> Saved reports (alert, content)
+- Report -> "Limit reached: upgrade on the web" (monthly limit reached)
+- Search -> Account (menu)
+- Account -> Checkout (manage plan, web only)
+- Account -> Terms / Privacy / Support
+- Admin media library -> Report (report images, content)
+- Admin ads and placements -> Report (ad slot, content)
+
+**Rules from the rulings:**
+
+1. The report detail is the expanded card; there is no separate detail page (A).
+2. Login is on the phone too: buy on the web, sign in once on the phone, and the app keeps the session (B).
+3. No purchase inside the app; plan changes link to the web (D-11, unchanged).
+4. PDF and share come later (C).
+5. The subscription offers a free trial (Stripe trial on the price, MF-47). Owed before MF-47 builds: the trial length, whether a card is required up front, and the report allowance during the trial.
+6. The basic plan allows 15-20 reports a month; the exact number is owed (MF-45).
+7. One Street View photo per report; when none is available the report still shows and the photo space collapses (operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; MF-39).
+8. Delete account and notification settings live in Account (MF-52).
+9. Terms, Privacy and a support contact are required (MF-46 web; linked from Account).
+10. Onboarding (builder or realtor) is optional and later; no row now.
+11. Layouts are sent per page, just before its row builds, in this order: (1) Search and Choose your parcel (MF-35); (2) Report, the card order and highlights only, since the report schema sets its contents (MF-48, MF-44); (3) Landing, Sign in and Checkout (MF-46, MF-47; Stripe supplies the checkout screens); (4) Saved reports and Account, once their rows exist (MF-51, MF-52). A rough sketch or an annotated screenshot is enough; the standard components set the look.
+
+**Outside the MaxBLD set.** Buildo's lead-gen pages are not MaxBLD pages and are not listed above: web `/dashboard`, `/builders`, `/builders/[id]`, `/permits/[id]`; mobile lead feed `/(app)/` (index), lead detail `/(app)/[lead]?id=`, `/(app)/map`, `/(app)/settings`, the flight board `/(app)/flight-board` and `/(app)/[flight-job]?id=`; the trade onboarding `/(onboarding)/` screens (`profession`, `path`, `address`, `supplier`, `first-permit`, `terms`, `complete`, `manufacturer-hold`). Admin pages other than D1-D4 are estate admin, not MaxBLD pages.
+
 ## 12. Phases
 
 **There is ONE sequence in this programme, and it lives in Spec 127 §4.4** (batching by archetype). The table below is that sequence rendered at spec altitude — same rows, same order, same ids. It is not a second plan: if a batch moves, it moves in Spec 127 and this table follows. The one thing stated *here* rather than there is the rule that reordered it.
