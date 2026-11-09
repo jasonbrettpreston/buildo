@@ -5,19 +5,28 @@
   "stage": 8,
   "date": "2026-11-09",
   "head": "0c32c502f",
-  "commits_reviewed": ["0c32c502f"],
+  "commits_reviewed": [
+    "0c32c502f"
+  ],
   "cards": [
     "Operator ruling 2026-11-09: MF-34 D-1..D-8, verbatim \"approve D-1 - D-8 as recommended\" (~/Buildo-scratch/mcfrontend/phase1/open-questions.md)"
   ],
   "plan": "PLAN v3: ~/Buildo-scratch/mcfrontend/MF-34/plan-v3.md; panel inputs and folds in ~/Buildo-scratch/mcfrontend/MF-34/plan-panel/; fold validation v3-fold-validation.md PASS-WITH-FOLDS, folds N-1..N-4 applied (none changes a decision).",
   "output": "OUTPUT (stage 8), reports in ~/Buildo-scratch/mcfrontend/MF-34/output-panel/: regression-guardian PASS (MB verdicts and Q order unchanged, gate.mjs import-only, no consumer or cycle issue, test edit not loosened); code-reviewer-grounded PASS-WITH-FOLDS (no BLOCKER or MAJOR, 14 of 15 mutations killed, survivor equivalent, four MINOR, no fold needed); DeepSeek error-paths FAIL adjudicated not upheld (seat saw the diff only; its points are ruled behaviour or pinned by P4/P5/P6/P7; see the adjudication note in ds-error-paths.md). Real data: queueCheck on the real MF queue at 0c32c502f returns [] (~/Buildo-scratch/mcfrontend/MF-34/real-data.txt). Tests: mcbylaws-queue-fe 10, mcbylaws-frontend 30, mcbylaws-gate 59, mcbylaws-queue 10, all green; red-first evidence docs/reports/red-evidence/MF-34/red.txt (7 of 10 red against a stub).",
-  "seats": ["regression-guardian", "code-reviewer-grounded", "ds-error-paths"],
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "ds-error-paths"
+  ],
   "verdict": "PASS",
-  "mb67_owner_signoff": "OWED (operator)",
+  "owner_signoff": "Operator sign-off 2026-11-09, verbatim: \"MF-34 sign-off\" (MF-34 queue-check code, commit 0c32c502f).",
   "blockers": [],
   "followups": [
     "MF-34-F1 coverage: every OWED FE row has exactly one owner; a task owns every OWED id in its own prereg",
     "MF-34 and MF-24 headings flip DONE only after the owner review",
     "P8 is an identity assertion; a readAt spy and a withFe behaviour test were in the plan text but gate.mjs is unchanged and the existing gate tests cover withFe"
+  ],
+  "notes": [
+    "2026-11-09 owner sign-off recorded (prior value kept): {\"mb67_owner_signoff\":\"OWED (operator)\"}"
   ]
 }
