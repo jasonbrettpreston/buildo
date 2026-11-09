@@ -1,0 +1,5 @@
+# fold cases (slot label, declared member) run against the pre-fold renderer (5fa8ed830 core.ts, report-checks.mjs): the renderer case for the label is RED
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/ad-slot.golden.test.ts > FE-23 RED: the renderer and the gate refuse a bad slot (R-17, R-34, the contract) > renderer: a label that is not the declared label
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 67 passed (68)

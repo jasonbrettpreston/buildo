@@ -133,7 +133,6 @@ const slotProblems = (tree: Json, ctx: ReportCtx): string[] => {
   if (tree?.lifecycle !== undefined && slots.length) out.push('RR-SLOT a lifecycle tree carries no slots');
   for (const n of nodes) if (n?.source === AD_KIND) out.push(`RR-SLOT ${String(n.field)}: an ad_slot source is never a node (R-34)`);
   const seen = new Set<string>();
-  const places = new Set<string>(); // max_slots is 1 for every placement (the ad lock pins it): one slot per (slot id, scenario)
   for (const sl of slots) {
     const at = `RR-SLOT ${String(sl?.field)}:`;
     if (seen.has(sl?.field)) out.push(`${at} duplicate slot`);
@@ -141,13 +140,11 @@ const slotProblems = (tree: Json, ctx: ReportCtx): string[] => {
     const hit = fields.find((f) => f.name === sl?.field);
     if (!hit || kindOf(hit) !== AD_KIND) out.push(`${at} field is not declared with kind ${AD_KIND}`);
     else if (String(hit.source).split(':')[1] !== sl.slot) out.push(`${at} slot ${String(sl.slot)} is not the declared member`);
+    else if (sl.label !== hit.label) out.push(`${at} label is not the declared label`);
     if (ad && !(ad.slots ?? []).includes(sl?.slot)) out.push(`${at} slot ${String(sl?.slot)} is not in the ad contract`);
     const want = ad ? Object.entries(ad.scenario_fields ?? {}).find(([, name]) => name === sl?.field)?.[0] : undefined;
     if (sl?.slot === 'scenario_card' ? sl.scenario === undefined || sl.scenario !== want : sl?.scenario !== undefined) out.push(`${at} scenario ${String(sl?.scenario)} does not match the contract`);
     if (sl?.disclosure !== ctx.content.sponsored_label) out.push(`${at} disclosure is not content.sponsored_label (R-17)`);
-    const k = `${String(sl?.slot)}|${String(sl?.scenario ?? '')}`;
-    if (places.has(k)) out.push(`${at} more slots than max_slots for ${String(sl?.slot)}`);
-    places.add(k);
   }
   return out;
 };

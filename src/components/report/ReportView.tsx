@@ -29,7 +29,7 @@ const Block = ({ name, nodes, columns }: { name: string; nodes: ViewNode[]; colu
 // MF-20 (Spec 126 11a.10, Spec 128 R-17, R-34): a sponsored slot is an <aside> that is a SIBLING of the card, never inside it; the disclosure is always visible.
 // It carries no data-field: it is not a report field.
 const Slot = ({ s }: { s: ViewSlot }): ReactElement => (
-  <aside data-block="ad-slot" data-slot={s.slot} data-ad-field={s.field} data-placement={s.placement} data-scenario={s.scenario ?? ''} className="rounded border p-3 md:w-64">
+  <aside data-block="ad-slot" data-slot={s.slot} data-ad-field={s.field} data-placement={s.placement} aria-label={s.disclosure} data-scenario={s.scenario ?? ''} className="rounded border p-3 md:w-64">
     <p data-disclosure className="text-xs uppercase text-gray-600">{s.disclosure}</p>
     <p className="text-base">{s.text}</p>
   </aside>
@@ -59,22 +59,22 @@ export function ReportView({ view }: { view: View }): ReactElement {
         </p>
       ) : null}
       <div data-block="card-row" className="flex flex-col gap-4 md:flex-row">
-      <div data-block="card" className="min-w-0 flex-1 space-y-4">
-      {view.headline.length > 0 ? <Block name="headline" nodes={view.headline} columns={layout.columns} /> : null}
-      {hasDetail ? (
-        collapsed ? (
-          <details data-block="details-wrap" className={layout.page_break === 'after_headline' ? 'break-before-page' : ''}>
-            <summary className="cursor-pointer text-sm text-gray-600">Details</summary>
-            <Block name="detail" nodes={view.detail} columns={layout.columns} />
-          </details>
-        ) : (
-          <div data-block="details-wrap" className={layout.page_break === 'after_headline' ? 'break-before-page' : ''}>
-            <Block name="detail" nodes={view.detail} columns={layout.columns} />
-          </div>
-        )
-      ) : null}
-      </div>
-      {beside.map((x) => <Slot key={x.field} s={x} />)}
+        <div data-block="card" className="min-w-0 flex-1 space-y-4">
+          {view.headline.length > 0 ? <Block name="headline" nodes={view.headline} columns={layout.columns} /> : null}
+          {hasDetail ? (
+            collapsed ? (
+              <details data-block="details-wrap" className={layout.page_break === 'after_headline' ? 'break-before-page' : ''}>
+                <summary className="cursor-pointer text-sm text-gray-600">Details</summary>
+                <Block name="detail" nodes={view.detail} columns={layout.columns} />
+              </details>
+            ) : (
+              <div data-block="details-wrap" className={layout.page_break === 'after_headline' ? 'break-before-page' : ''}>
+                <Block name="detail" nodes={view.detail} columns={layout.columns} />
+              </div>
+            )
+          ) : null}
+        </div>
+        {beside.map((x) => <Slot key={x.field} s={x} />)}
       </div>
       {after.map((x) => <Slot key={x.field} s={x} />)}
     </div>

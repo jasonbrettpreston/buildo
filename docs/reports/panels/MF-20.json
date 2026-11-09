@@ -4,17 +4,37 @@
   "class": "E",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "PLACEHOLDER",
-  "commits_reviewed": [],
+  "head": "5fa8ed830",
+  "commits_reviewed": [
+    "00f96b374 (rows, dated notes)",
+    "0d114edae (prereg-MF-20-1)",
+    "0d114edae (code)",
+    "5fa8ed830 (output folds)",
+    "(OUTPUT panel record)"
+  ],
   "cards": [
     "Operator 2026-11-09: \"all approved as recommended.\" (item 1: MF-20 D-3, D-4, D-5, D-6, D-10, D-12)",
     "Operator rulings 2026-11-09: scenario images and per-scenario ads (open-questions.md)"
   ],
-  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-20/plan.v2.md (sections 13 and 14 win); panel reports in plan-panel/ and plan-panel-v2/.",
-  "output": "PLACEHOLDER: the OUTPUT panel record is written in the panel record commit.",
-  "seats": [],
-  "verdict": "PLACEHOLDER",
+  "plan": "PLAN (stage 3-5): ~/Buildo-scratch/mcfrontend/MF-20/plan.v2.md (sections 13 and 14 win); plan-panel/ (regression-guardian, code-reviewer-grounded, DeepSeek compliance) and plan-panel-v2/ (regression-guardian PASS-WITH-FOLDS, code-reviewer-grounded PASS-WITH-FOLDS).",
+  "output": "OUTPUT (stage 8): src/tests/surfaces + report-preview 471 tests green (16 files; new locks ad-slot.golden 55, ad-targeting-keys.logic 13); surface-validate --check exit 0 (14 states x 4; owed 13 states / 52 files); report-capture --check 0 stale of 56; report-schema --check and seed --check current; capture twice byte-identical; 48 existing goldens restamped as fingerprints only (red-evidence/MF-20/restamp-fingerprint-only.txt). No full suite (lane scope).",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "observability-reviewer"
+  ],
+  "verdict": "PASS-WITH-FOLDS: no blocker from any seat. Folded in the output-folds commit: renderer gains the slot label and declared-member checks (locked red by mutation), unreachable max_slots branch removed from core.ts and report-checks.mjs, aside aria-label, wrapper re-indent, renovation_section targeting pinned empty, evidence README notes.",
   "blockers": [],
-  "followups": [],
-  "notes": ["Placeholder committed with the code so the pre-commit panel arm finds a record for MF-20 (MF-14 precedent); replaced by the panel record commit."]
+  "followups": [
+    "D-7 (ad shows regardless of lot status) was taken by the orchestrator in plan section 12; the grounded plan reviewer recommended the reverse (no ads beside a not_permitted or not_evaluated card). Orchestrator may reverse.",
+    "The renderer and the gate keep twin slotProblems (core.ts, report-checks.mjs); they are held together by one lock that runs both on the same mutations. A shared function is the alternative.",
+    "FE-22 targeting is enforced by vitest only (ad-targeting-keys.logic), not by surface-validate --check.",
+    "A null or empty creative yields no slot and no trace; add a slots-built versus slots-declared count when real creatives arrive (MF-37).",
+    "The fingerprint covers five data files, not the renderer code.",
+    "FE-22 and FE-23 stay OWED until the operator-approved flip rows commit (D-12); MF-20 reads DONE only then.",
+    "Image creatives, creative_asset and the scenario image carousel: MF-37 and MF-38. Income targeting denied pending a human-rights review."
+  ],
+  "notes": [
+    "Reports: ~/Buildo-scratch/mcfrontend/MF-20/output-panel/regression-guardian.md, code-reviewer-grounded.md, observability-reviewer.md."
+  ]
 }

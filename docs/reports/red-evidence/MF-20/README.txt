@@ -6,3 +6,8 @@ ad-slot-red.txt                   the FE-23 lock (ad-slot.golden.test.ts) agains
 ad-slot-red-renderer-only.txt     the FE-23 lock against the MF-20 data files with the base renderer: RED
 targeting-red.txt                 the FE-22 lock (ad-targeting-keys.logic.test.ts) against the base tree: RED
 *-green.txt                       the same locks on the tip
+
+Notes from the output panel folds:
+- targeting-red.txt is red because the contract file is absent at the base tree (ENOENT); the lock catching a bad key is shown by its mutated-copy cases, RED then GREEN in targeting-green.txt (12 cases).
+- ad-slot-red.txt is partly red on schema wording at the base tree; each RR-SLOT branch is shown by the tip run (53 cases, each defect asserted by name).
+- The fingerprint covers the five data files only, not the renderer code (core.ts, ReportView.tsx, report-checks.mjs): a renderer change is caught by the vitest goldens (parity.golden, ad-slot.golden), so 0 stale does not mean the renderer is unchanged.

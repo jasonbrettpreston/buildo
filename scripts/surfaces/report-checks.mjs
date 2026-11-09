@@ -96,7 +96,6 @@ const slotProblems = (tree, c) => {
   (Array.isArray(tree?.nodes) ? tree.nodes : []).forEach((n, i) => { if (n?.source === 'ad_slot') out.push(`node ${i}: an ad_slot source is never a node (R-34)`); });
   const decls = c.decl.sections.flatMap((x) => x.fields);
   const seen = new Set();
-  const count = new Set(); // max_slots is 1 for every placement (the ad lock pins it)
   slots.forEach((sl, i) => {
     const at = `slot ${i}:`;
     if (seen.has(sl?.field)) out.push(`${at} duplicate slot ${sl?.field}`);
@@ -109,9 +108,6 @@ const slotProblems = (tree, c) => {
     const want = Object.entries(c.ad.scenario_fields).find(([, name]) => name === sl?.field)?.[0];
     if (sl?.slot === 'scenario_card' ? sl.scenario === undefined || sl.scenario !== want : sl?.scenario !== undefined) out.push(`${at} scenario does not match the contract`);
     if (sl?.disclosure !== c.sponsored) out.push(`${at} disclosure is not content.sponsored_label (R-17)`);
-    const k = `${sl?.slot}|${sl?.scenario ?? ''}`;
-    if (count.has(k)) out.push(`${at} more slots than max_slots for ${sl?.slot}`);
-    count.add(k);
   });
   return out;
 };

@@ -67,6 +67,9 @@ describe('FE-22 ad targeting keys: GREEN on the committed files', () => {
     expect(PARCEL_COLS.has('zoning_class')).toBe(true);
     expect(CATALOGUE_ROWS.some((r) => 'building_type' in r) && CATALOGUE_ROWS.some((r) => 'design_option' in r)).toBe(true);
   });
+  it('renovation_section targets nothing today (re-adding a key is a conscious edit)', () => {
+    expect(real().pres.ad_placements.placements.find((p: Json) => p.key === 'renovation_section').targeting).toEqual([]);
+  });
   it('an empty targeting list is GREEN (renovation_section targets nothing)', () => {
     const f = real();
     f.pres.ad_placements.placements.find((p: Json) => p.key === 'renovation_section').targeting = [];
