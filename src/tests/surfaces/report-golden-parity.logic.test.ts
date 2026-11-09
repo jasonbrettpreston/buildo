@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { FP_FILES, SOURCE_KINDS, TARGETS, TRANCHE1_KINDS, parityOk, sha16, sourceProblems } from '../../../scripts/surfaces/report-checks.mjs'; // MF-15 D-1 a: one home, shared with surface-validate.mjs (R-27)
+import { FP_FILES, SOURCE_KINDS, TARGETS, TRANCHE1_KINDS, bindProblems, parityOk, sha16, sourceProblems } from '../../../scripts/surfaces/report-checks.mjs'; // MF-15 D-1 a: one home, shared with surface-validate.mjs (R-27)
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
 const ROOT = process.cwd();
@@ -53,14 +53,17 @@ describe('MF-12 tranche 1 goldens (S-golden, S-parity)', () => {
           const g = readJson(file(s, t));
           expect(g.state).toBe(s);
           expect(g.response_fixture).toBeTypeOf('object');
+          expect(g.response_fixture).not.toBeNull(); // MF-16 D-5 (F-12 a): typeof null is 'object'
           expect(g.rendered_tree.nodes.length).toBeGreaterThan(0);
           for (const n of g.rendered_tree.nodes) {
             expect(kindOf(n.field)).toBe(n.source);
+            if (g.rendered_tree.lifecycle !== undefined) { expect(n.field).toBe('status_text'); expect(n.source).toBe('content'); } // MF-16 D-5 (F-12 c): FE-28, the lifecycle node
             const base = decls.find((f) => f.name === n.field)?.label;
             expect(n.label).toBe(n.status === 'at_least' ? `${base}, at least` : base);
             if (n.field === 'status_text' && g.rendered_tree.lifecycle === undefined) {
               const texts = readJson(path.join(ROOT, 'scripts/surfaces/_schema/report-presentation.json')).status_text;
               const key = String(n.status).startsWith('not_permitted:') ? 'not_permitted' : n.status;
+              expect(typeof n.value).toBe('string'); // MF-16 D-5 (F-12 f): a string, not whatever String() would turn into one
               expect(n.value).toBe(String(texts[key]).replace('{clause}', String(n.status).split(':')[1] ?? ''));
             }
             expect(sourceProblems(n.source)).toEqual([]); // the closed binding set, then the tranche-1 constraint (D-3 b)
@@ -79,6 +82,10 @@ describe('MF-12 tranche 1 goldens (S-golden, S-parity)', () => {
       });
     });
   }
+
+  it('MF-16 D-5: the shared bind check (the one the gate runs) finds no problem in the committed goldens; the inline expects above stay for per-state attribution', () => {
+    expect(bindProblems()).toEqual([]);
+  });
 
   it('tranche-1 constraint is a subset of the binding set', () => {
     for (const k of TRANCHE1_KINDS) expect(SOURCE_KINDS).toContain(k);

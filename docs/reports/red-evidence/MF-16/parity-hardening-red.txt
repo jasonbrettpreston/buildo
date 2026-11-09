@@ -1,0 +1,41 @@
+# RED (MF-16 D-5, FE-28/FE-29): report-golden-parity.logic.test.ts hardening. Each defect is planted in the four golden files of one state, the OLD test file (parent commit) and the NEW one are run, then the goldens are restored (git status clean).
+# cmd: npx vitest run <old|new file>; lines shown: the shape test of the state, plus totals
+
+## F-12 a: response_fixture is null (typeof null is object) (state permitted; all four target files changed)
+-- OLD test file:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 37 passed (38)
+-- NEW test file:
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock) 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 37 passed (39)
+
+## F-12 c: lifecycle node is the wrong field (display_label, a content field) (state miss; all four target files changed)
+-- OLD test file:
+      Tests  38 passed (38)
+-- NEW test file:
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > miss > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock) 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 38 passed (39)
+
+## F-12 f: status_text value is a number, not a string (state not_permitted; all four target files changed)
+-- OLD test file:
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock) 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 37 passed (38)
+-- NEW test file:
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > not_permitted > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock) 2ms
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > MF-16 D-5: the shared bind check (the one the gate runs) finds no problem in the committed goldens; the inline expects above stay for per-state attr
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 37 passed (39)
+
+## MF-15 follow-up: node with an invented field (shared bind check) (state permitted; all four target files changed)
+-- OLD test file:
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock) 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 37 passed (38)
+-- NEW test file:
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > permitted > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock) 2ms
+   × MF-12 tranche 1 goldens (S-golden, S-parity) > MF-16 D-5: the shared bind check (the one the gate runs) finds no problem in the committed goldens; the inline expects above stay for per-state attr
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 37 passed (39)
