@@ -36863,9 +36863,7 @@
        "applied": [
         "150.7.60.20(5)#(5)(B)"
        ],
-       "disclosures": [
-        "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
-       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }
@@ -37122,9 +37120,7 @@
        "applied": [
         "150.7.60.20(5)#(5)(B)"
        ],
-       "disclosures": [
-        "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
-       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }
@@ -54719,9 +54715,7 @@
         "150.8.60.20(3)#(3)(A)",
         "150.8.60.20(3)#(3)(D)"
        ],
-       "disclosures": [
-        "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
-       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }
@@ -55590,9 +55584,7 @@
         "150.8.60.20(3)#(3)(A)",
         "150.8.60.20(3)#(3)(D)"
        ],
-       "disclosures": [
-        "If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors."
-       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }

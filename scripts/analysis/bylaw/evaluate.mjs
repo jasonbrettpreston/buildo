@@ -1059,6 +1059,7 @@ function effCore(lot, target, candidates, C, env) {
   const knownFalse = (C.absenceIgnore && C.absenceIgnore.known_false_lot_conditions) || []; // Q-KG3
   const condFalse = new Set();
   const optOut = []; // M-465 (3): value units out only because a design-option token is false, in candidate order
+  const droppedArms = []; // M-435 / Census decision a: {u, at}: a design-default arm not taken, disclosed in resolveSet only where the unit it varies survives rule 4
   for (const u of consideredOrdered) {
     const t = [];
     const a = applies(lot, u, C, resolveVariable, reads, t, target);
@@ -1066,7 +1067,7 @@ function effCore(lot, target, candidates, C, env) {
     if (a.ok === true) A.add(u);
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
     else if (a.disclosure && !disclosures.includes(a.disclosure)) disclosures.push(a.disclosure); // M-224 literal reading
-    else if (a.ok === false && droppedArmDisclosure(lot, u, C) && !disclosures.includes(u.disclosure)) disclosures.push(u.disclosure); // M-435 / M435-EMIT 1a: a design-default arm not taken discloses itself
+    else if (a.ok === false && droppedArmDisclosure(lot, u, C) && !disclosures.includes(u.disclosure)) droppedArms.push({ u, at: disclosures.length }); // M-435 / M435-EMIT 1a: a design-default arm not taken discloses itself (Census decision a: placed in resolveSet)
     if (a.ok === false && valueSet.has(u)) condLosers.push({ unit_id: u.unit_id, dropped_by: 'condition_false', by: null });
     if (a.ok === false && knownFalse.includes(a.known_false_condition)) condFalse.add(u); // Q-KG3
     // M-465 (3) "only because": the same unit applies on the lot with that token held; every other input it reads is this lot's own value, so
@@ -1081,7 +1082,7 @@ function effCore(lot, target, candidates, C, env) {
   }
   // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
   const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
-  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive, condLosers, condFalse, optOut };
+  const base = { lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive, condLosers, condFalse, optOut, droppedArms };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -1163,7 +1164,7 @@ function droppedArmDisclosure(lot, u, C) {
   return falseTokens.length > 0 && falseTokens.every((t) => D.tokens[t] && !D.tokens[t].excludes.includes(u.unit_id));
 }
 
-function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [], condFalse = null, optOut = [] }, A, trace, disclosures) {
+function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariableWith, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [], condLosers = [], condFalse = null, optOut = [], droppedArms = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const losers = [...condLosers]; // L2-LOSERS: structured beside the trace; DROPPED_BY names the reasons
   const lose = (u, dropped_by, by, extra = {}) => { if (!losers.some((l) => l.unit_id === u && l.dropped_by === dropped_by && l.by === by && l.arg === extra.arg)) losers.push({ unit_id: u, dropped_by, by, ...extra }); };
@@ -1319,6 +1320,15 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, resolveVariab
   }
   const survivors = new Set(Object.values(kept).flat().map((u) => u.unit_id));
   for (const { v, note } of variationNotes) if (survivors.has(v.unit_id) && !disclosures.includes(note)) disclosures.push(note);
+  // M-435 / Census decision a (operator 2026-11-10; the LQ-1 form): a dropped design-default arm is disclosed only where a value unit it
+  // displaces (its rule-2 pairs, A-independent) survives rule 4, at the place effCore met it. Generic: no id, layer or zone named.
+  let placed = 0;
+  for (const { u, at } of droppedArms) {
+    if (disclosures.includes(u.disclosure)) continue;
+    if (![...r2, ...ro].some((p) => p.d === u && p.v && survivors.has(p.v.unit_id))) continue;
+    disclosures.splice(at + placed, 0, u.disclosure);
+    placed += 1;
+  }
 
   // evaluate + rule 4a
   const ev1 = (s, args, u) => {
