@@ -23,7 +23,7 @@ const gateTree = (): Fixture => {
   for (const f of ['surface-validate.mjs', 'report-checks.mjs', 'screen-checks.mjs']) fs.cpSync(path.join(REPO, 'scripts/surfaces', f), path.join(fx.root, 'scripts/surfaces', f));
   for (const f of FP_FILES as string[]) fs.cpSync(path.join(REPO, f), path.join(fx.root, f));
   fs.cpSync(path.join(REPO, 'src/tests/fixtures/surfaces/report'), path.join(fx.root, 'src/tests/fixtures/surfaces/report'), { recursive: true });
-  for (const g of [`${SCHEMA}/seed-report-v2.mjs`, 'scripts/analysis/report-schema.mjs']) { fs.mkdirSync(path.dirname(path.join(fx.root, g)), { recursive: true }); fs.writeFileSync(path.join(fx.root, g), 'process.exit(0);\n'); }
+  for (const g of [`${SCHEMA}/seed-report-v2.mjs`, 'scripts/analysis/report-schema.mjs', 'scripts/surfaces/emit-mobile-theme.mjs']) { fs.mkdirSync(path.dirname(path.join(fx.root, g)), { recursive: true }); fs.writeFileSync(path.join(fx.root, g), 'process.exit(0);\n'); }
   return fx;
 };
 const run = (fx: Fixture): { code: number | null; out: string; lines: string[] } => {

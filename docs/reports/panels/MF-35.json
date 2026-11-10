@@ -1,0 +1,28 @@
+{
+  "task": "MF-35",
+  "item": "The MaxBLD mobile parcel search page and its address list on React Native Reusables: the library (five vendored parts and the docs cn helper under the filled vendored manifest, the generated mobile theme emit-mobile-theme.mjs with mobile-theme.json, the S-gen generator line, the jest transform fix), then the conversion of mobile_parcel_search to the operator layout with recent searches and the inline address list",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-10",
+  "head": "pending",
+  "cards": [
+    "Operator 2026-11-10: \"D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a\" (P35-D15 b no area line; D16 a recent searches on the phone; D17 a inline address list, amber = today's rule; D18 a the report link with MF-46).",
+    "Operator 2026-11-09: \"approved except for 9 ...\" (Wave 1 decision batch: P35-D1..D3, D5..D14 as recommended).",
+    "Operator 2026-11-10: \"3. 20 1. yes as long as it complaint and properly researched.\" (expo-linking ~8.0.12, landed on the base branch wf1/expo-linking-1110).",
+    "Operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\" (the spike phone check and the plan v3 section 11 device run are OWED, UNVERIFIED on device; never claimed)."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md (section 16 operator rulings 2026-11-10 win; plan.v2.md read where v3 says UNCHANGED); PLAN panel v2 (regression-guardian, code-reviewer-grounded, compliance) record ~/Buildo-scratch/mcfrontend/MF-35/panel-v2/record.md; v3 delta seat (code-reviewer-grounded, APPROVE WITH FOLDS) record ~/Buildo-scratch/mcfrontend/MF-35/panel-v3/record.md; spike ~/Buildo-scratch/mcfrontend/MF-35/spike/log.md.",
+  "output": "PENDING: the OUTPUT panel is filled before the push.",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "compliance (general-purpose, Spec 08 A9/A10)"
+  ],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-35/",
+  "notes": [
+    "OWED, UNVERIFIED on device: the spike phone check (spike/OPERATOR-PHONE-CHECK.md (a)-(h)) and the post-build device run (plan v3 section 11, 13 steps). Lane checks only: tsc, mobile jest, root targeted vitest, surface-validate --check."
+  ]
+}

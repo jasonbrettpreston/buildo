@@ -11,6 +11,7 @@
 //   C-2b no display text in mount files and binding modules (JSX text, string children, string display attributes);
 //   C-3  bindings.json integrity (modules, owners, promoted entries, roots, policy globs);  C-4 a converted surface owns no component;
 //   C-5  the vendored manifest both directions;  C-6 the generated types and validator equal a fresh emit;  C-7 schema closedness and the cutover plants.
+//   C-11m (MF-35) the generated mobile library theme: scripts/surfaces/emit-mobile-theme.mjs --check on the real tree, and its planted RED cases.
 // Each check is a function here, run GREEN on the real tree and RED on a planted temp tree or in-memory input. Counts are printed so a vacuous pass
 // (0 modules, 0 vendored files) reads as a stated WAITS. No DB, no network.
 import { afterAll, describe, expect, it } from 'vitest';
@@ -353,12 +354,19 @@ describe('C-4 a converted surface owns no component', () => {
 });
 
 describe('C-5 the vendored Reusables manifest (unmodified, both directions)', () => {
-  it('the real tree: the manifest exists and is valid; 0 vendored files WAITS MF-35', () => {
+  it('the real tree: the manifest exists and is valid; MF-35 vendored 6 files (5 CLI parts with their registry sha256, the docs cn helper), no waits', () => {
     const r = vendorProblems(REPO, B);
     expect(r.lines).toEqual([]);
-    expect(rj(path.join(REPO, B.vendor_manifest)).cli).toBe('@react-native-reusables/cli@0.7.1');
+    const m = rj(path.join(REPO, B.vendor_manifest));
+    expect(m.cli).toBe('@react-native-reusables/cli@0.7.1');
     console.log(r.files === 0 ? `C-5: vendored 0 files WAITS ${r.waits}` : `C-5: vendored ${r.files} files`);
-    expect(r.files > 0 || r.waits === 'MF-35').toBe(true);
+    // MF-35 (dated 2026-11-10; P35-D8 a, P35-D9): the manifest was empty with waits MF-35 until the library commit. The CLI pin does not pin the
+    // output (shadcn@latest), so the resolved shadcn version and each CLI file's registry JSON sha256 are recorded; the cn helper is source docs.
+    expect([r.files, r.waits, m.shadcn_version]).toEqual([6, undefined, '4.23.0']);
+    expect(m.files.map((f: Json) => [f.path.slice(B.vendor_dir.length + 1), f.source, typeof f.registry_sha256])).toEqual([
+      ['components/ui/alert.tsx', 'cli', 'string'], ['components/ui/button.tsx', 'cli', 'string'], ['components/ui/icon.tsx', 'cli', 'string'],
+      ['components/ui/input.tsx', 'cli', 'string'], ['components/ui/text.tsx', 'cli', 'string'], ['lib/utils.ts', 'docs', 'undefined'],
+    ]);
   });
   const oneFile = (): string => {
     const root = tmp();
@@ -582,5 +590,41 @@ describe('C-11 the generated web theme (scripts/surfaces/emit-web-theme.mjs --ch
     expect(withSpec((s) => { s.on_primary = '#ffffff'; })).toContain('THEME-CONTRAST on_primary/amber.5: 2.14 < 4.5');
     expect(withSpec((s) => { s.contrast.pairs = []; })).toContain('THEME-CONTRAST: no pairs');
     expect(withSpec((s) => { s.contrast.pairs = s.contrast.pairs.filter((p: Json) => p.bg !== 'amber.3'); })).toContain('THEME-CONTRAST amber.3: no pair');
+  });
+});
+
+describe('C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-theme.mjs --check)', () => {
+  it('--check exits 0 and prints theme ok (N roles, P pairs) with N = 18 and P > 0', () => {
+    const r = spawnSync(process.execPath, [path.join(REPO, 'scripts/surfaces/emit-mobile-theme.mjs'), '--check'], { cwd: REPO, encoding: 'utf8' });
+    expect([r.status, r.stderr]).toEqual([0, '']);
+    const m = /^theme ok \((\d+) roles, (\d+) pairs\)$/m.exec(r.stdout);
+    expect(m).not.toBeNull();
+    expect([Number(m?.[1]), Number(m?.[2]) > 0]).toEqual([18, true]);
+  });
+  it('the three @tailwind directives stay byte-identical at the top of mobile/global.css; :root and .dark:root carry the same values', () => {
+    const css = fs.readFileSync(path.join(REPO, 'mobile/global.css'), 'utf8');
+    expect(css.startsWith('@tailwind base;\n@tailwind components;\n@tailwind utilities;\n')).toBe(true);
+    const block = (sel: string): string => (new RegExp(`${sel.replace(/[.:]/g, '\\$&')} \\{([^}]*)\\}`).exec(css)?.[1] ?? 'absent');
+    expect(block('.dark:root')).toBe(block(':root'));
+    expect(block(':root')).not.toBe('absent');
+  });
+  it('RED: a hand edit of either output, a changed source hex, an import in the constants file, an unknown source key, a 2:1 pair, an HSL that does not round-trip', async () => {
+    const T = await import('../../../scripts/surfaces/emit-mobile-theme.mjs');
+    const css = fs.readFileSync(path.join(REPO, 'mobile/global.css'), 'utf8');
+    const js = fs.readFileSync(path.join(REPO, 'mobile/theme.rnr.generated.js'), 'utf8');
+    const cfg = fs.readFileSync(path.join(REPO, 'mobile/tailwind.config.js'), 'utf8');
+    const consts = fs.readFileSync(path.join(REPO, 'mobile/src/constants/parcelSearch.ts'), 'utf8');
+    const spec = rj(path.join(REPO, SCHEMA, 'mobile-theme.json'));
+    const withSpec = (f: (s: Json) => void): string[] => { const s = structuredClone(spec); f(s); return T.checkTheme(REPO, { specText: JSON.stringify(s) }).lines; };
+    expect(T.checkTheme(REPO, { cssText: css.replace('--input: ', '--input:  ') }).lines).toEqual(['GEN-HAND-EDIT mobile/global.css']);
+    expect(T.checkTheme(REPO, { jsText: js.replace("card: {", "borderRadius: { lg: '8px' },\n  card: {") }).lines).toEqual(['GEN-HAND-EDIT mobile/theme.rnr.generated.js']);
+    expect(T.checkTheme(REPO, { configText: cfg.replace("'red-alert': '#ef4444'", "'red-alert': '#ef4445'") }).lines).toEqual(['GEN-STALE mobile/global.css', 'GEN-STALE mobile/theme.rnr.generated.js']);
+    expect(T.checkTheme(REPO, { constantsText: `import x from 'y';\n${consts}` }).lines).toContain('GEN-SOURCE-IMPORT mobile/src/constants/parcelSearch.ts: the constants file must stay import-free');
+    expect(withSpec((s) => { s.roles['--destructive'] = { file: 'mobile/tailwind.config.js', key: 'red-gone' }; })).toContain('GEN-SOURCE --destructive: mobile/tailwind.config.js has no colour key red-gone');
+    expect(withSpec((s) => { s.roles['--muted-foreground'] = { file: 'mobile/tailwind.config.js', key: 'text-muted' }; s.contrast.pairs.push({ fg: '--muted-foreground', bg: '--secondary', role: 'text' }); }))
+      .toContain('THEME-CONTRAST --muted-foreground/--secondary: 3.08 < 4.5');
+    expect(T.toHsl('#f59e0b', 0)).toBe('38 92% 50%');
+    expect(T.hslToHex('38 92% 50%')).not.toBe('#f59e0b');
+    expect(T.hslToHex(T.toHsl('#f59e0b'))).toBe('#f59e0b');
   });
 });

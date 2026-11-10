@@ -1,7 +1,43 @@
 {
-  "$comment": "MF-42 (FE-31 'vendored files pass the manifest'; Spec 90 §6): the React Native Reusables files vendored UNMODIFIED under mobile/src/vendor/rnr, one entry per file with its sha256, both directions. Empty until MF-35 runs the CLI; waits names that row. Shape: screen-data.schema.json#/definitions/vendor_manifest. Checked by surface-conformance.logic.test.ts C-5.",
+  "$comment": "MF-42 (FE-31 'vendored files pass the manifest'; Spec 90 §6): the React Native Reusables files vendored UNMODIFIED under mobile/src/vendor/rnr, one entry per file with its sha256, both directions. Empty until MF-35 runs the CLI; waits names that row. Shape: screen-data.schema.json#/definitions/vendor_manifest. Checked by surface-conformance.logic.test.ts C-5. Dated note 2026-11-10 (MF-35; P35-D8 a, P35-D9; plan v3 section 3 step 6; prior text kept): filled from the MF-35 library commit. `npx --yes @react-native-reusables/cli@0.7.1 add text input button alert icon --yes` ran shadcn@latest, resolved to 4.23.0 (shadcn_version); each CLI file is the registry JSON's content with only the import aliases rewritten to @/vendor/rnr, and registry_sha256 is the sha256 of https://reactnativereusables.com/r/nativewind/<part>.json as fetched before the run. lib/utils.ts is the cn helper copied verbatim from the Reusables manual-install page (source docs; the CLI only checks it exists). Every sha256 equals the 2026-11-09 spike lock (~/Buildo-scratch/mcfrontend/MF-35/spike/log.md section 2 LOCK). waits is removed now that files is not empty. A re-run that yields other bytes is a manifest change with its own panel.",
   "cli": "@react-native-reusables/cli@0.7.1",
   "registry": "nativewind",
-  "files": [],
-  "waits": "MF-35"
+  "shadcn_version": "4.23.0",
+  "files": [
+    {
+      "path": "mobile/src/vendor/rnr/components/ui/alert.tsx",
+      "sha256": "d889691ebdafc9096a9298bf49b63db17c0a6eba047e63afe93569ab5568a759",
+      "source": "cli",
+      "registry_sha256": "3450a704da47669f9b4d2fb87812d20adc27021a24323a3df3436be1fc9a6638"
+    },
+    {
+      "path": "mobile/src/vendor/rnr/components/ui/button.tsx",
+      "sha256": "df12a1ca5b03b2140f1e4993c2ab32fe992c66eef0d4b3ef64becdae309ee0f1",
+      "source": "cli",
+      "registry_sha256": "6bb63ca59925658478c5aca2afea9f392acc44d24b2257de321d10b6e67bfad2"
+    },
+    {
+      "path": "mobile/src/vendor/rnr/components/ui/icon.tsx",
+      "sha256": "adf12940f4c8faa351a65aa61c93605b2d17c079eb7776dd769e8bc2c959a84d",
+      "source": "cli",
+      "registry_sha256": "27fb215a53b8650b0e0b5a9a17c84fd86fc933e9e12c24218dde96523cac3bb6"
+    },
+    {
+      "path": "mobile/src/vendor/rnr/components/ui/input.tsx",
+      "sha256": "c0bb9e597e7907a8e8e7986e09442356512589971c12ac85740532f1d57620c1",
+      "source": "cli",
+      "registry_sha256": "aae7921aed7287335e926855b3c2ac4503dd4ece52f7ec3c4374166dec764b66"
+    },
+    {
+      "path": "mobile/src/vendor/rnr/components/ui/text.tsx",
+      "sha256": "779fac3dcb07d7c57359659ede3f4401a49cbaaf573228285026a65e24356199",
+      "source": "cli",
+      "registry_sha256": "802a73d128e6f793c0e6ff91b28dea7b6900a99efda40ab65dffd84545ed0373"
+    },
+    {
+      "path": "mobile/src/vendor/rnr/lib/utils.ts",
+      "sha256": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d",
+      "source": "docs"
+    }
+  ]
 }

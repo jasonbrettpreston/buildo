@@ -1,0 +1,37 @@
+{
+  "$comment": "Mobile library (React Native Reusables) theme source, Spec 117 §7 dated note 2026-11-10 (MF-35; X6) and §6.1 (the S-002 shades); Spec 126 §11b.4. Each RNR colour role names ONE source token, so every hex keeps one definition site: a quoted colour key of mobile/tailwind.config.js ({file, key}) or a member of an exported object of mobile/src/constants/parcelSearch.ts ({file, object, key}; a class-string member yields its one -[#rrggbb] value). The role list is the plan v2 section 5 table: --destructive-foreground has no value and no consumer, so it is left out (plan v3 section 5). The same values go under :root and .dark:root (P35-D2 a). Contrast minimums are WCAG 2.1 AA (text 4.5, non_text 3), as web-theme.json. Generator: scripts/surfaces/emit-mobile-theme.mjs (--write after any edit here or to a source token).",
+  "roles": {
+    "--background": { "file": "mobile/src/constants/parcelSearch.ts", "object": "PARCEL_SEARCH_TOKENS", "key": "screenBg" },
+    "--foreground": { "file": "mobile/tailwind.config.js", "key": "text-primary" },
+    "--card-foreground": { "file": "mobile/tailwind.config.js", "key": "text-primary" },
+    "--popover-foreground": { "file": "mobile/tailwind.config.js", "key": "text-primary" },
+    "--accent-foreground": { "file": "mobile/tailwind.config.js", "key": "text-primary" },
+    "--secondary-foreground": { "file": "mobile/tailwind.config.js", "key": "text-primary" },
+    "--card": { "file": "mobile/tailwind.config.js", "key": "bg-card" },
+    "--popover": { "file": "mobile/tailwind.config.js", "key": "bg-card" },
+    "--primary": { "file": "mobile/tailwind.config.js", "key": "amber-hardhat" },
+    "--ring": { "file": "mobile/tailwind.config.js", "key": "amber-hardhat" },
+    "--primary-foreground": { "file": "mobile/src/constants/parcelSearch.ts", "object": "PARCEL_SEARCH_HEX", "key": "onPrimary" },
+    "--secondary": { "file": "mobile/tailwind.config.js", "key": "bg-elevated" },
+    "--muted": { "file": "mobile/tailwind.config.js", "key": "bg-elevated" },
+    "--accent": { "file": "mobile/tailwind.config.js", "key": "bg-elevated" },
+    "--muted-foreground": { "file": "mobile/tailwind.config.js", "key": "text-secondary" },
+    "--destructive": { "file": "mobile/tailwind.config.js", "key": "red-alert" },
+    "--border": { "file": "mobile/src/constants/parcelSearch.ts", "object": "PARCEL_SEARCH_TOKENS", "key": "borderChip" },
+    "--input": { "file": "mobile/src/constants/parcelSearch.ts", "object": "PARCEL_SEARCH_TOKENS", "key": "borderSearch" }
+  },
+  "contrast": {
+    "minimum": { "text": 4.5, "non_text": 3 },
+    "pairs": [
+      { "fg": "--foreground", "bg": "--background", "role": "text" },
+      { "fg": "--card-foreground", "bg": "--card", "role": "text" },
+      { "fg": "--accent-foreground", "bg": "--accent", "role": "text" },
+      { "fg": "--muted-foreground", "bg": "--background", "role": "text" },
+      { "fg": "--muted-foreground", "bg": "--card", "role": "text" },
+      { "fg": "--primary-foreground", "bg": "--primary", "role": "text" },
+      { "fg": "--primary", "bg": "--background", "role": "text" },
+      { "fg": "--destructive", "bg": "--background", "role": "text" },
+      { "fg": "--ring", "bg": "--background", "role": "non_text" }
+    ]
+  }
+}

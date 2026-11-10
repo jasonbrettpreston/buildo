@@ -1,0 +1,21 @@
+MF-35 library commit red run (root vitest: src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts), 2026-11-10, worktree on ca8f2874d with the pins installed and the CLI output vendored, BEFORE the manifest was filled, before scripts/surfaces/emit-mobile-theme.mjs, mobile-theme.json and the generated theme existed, and before the S-gen GENERATORS line.
+Expected red: C-5 (6 vendored files not in the empty manifest; waits still MF-35), C-11m x3 (generator and outputs absent), S-gen (no finding for a missing mobile theme generator).
+
+   × C-5 the vendored Reusables manifest (unmodified, both directions) > the real tree: the manifest exists and is valid; MF-35 vendored 6 files (5 CLI parts with their registry sha256, the docs cn helper), no waits 7ms
+   × C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-theme.mjs --check) > --check exits 0 and prints theme ok (N roles, P pairs) with N = 18 and P > 0 47ms
+   × C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-theme.mjs --check) > the three @tailwind directives stay byte-identical at the top of mobile/global.css; :root and .dark:root carry the same values 1ms
+   × C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-theme.mjs --check) > RED: a hand edit of either output, a changed source hex, an import in the constants file, an unknown source key, a 2:1 pair, an HSL that does not round-trip 4ms
+   × S-gen: the committed generators' --check > MF-35: a missing mobile theme generator is a finding, and a failing one is relayed 326ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  2 failed (2)
+      Tests  5 failed | 78 passed (83)
+AssertionError: expected [ …(6) ] to deeply equal []
+AssertionError: expected [ 1, …(1) ] to deeply equal [ +0, '' ]
++ Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-mf35-build/scripts/surfaces/emit-mobile-theme.mjs'
+AssertionError: expected 'absent' not to be 'absent' // Object.is equality
+Error: Failed to load url ../../../scripts/surfaces/emit-mobile-theme.mjs (resolved id: ../../../scripts/surfaces/emit-mobile-theme.mjs) in /Users/brettpreston_macmini/Buildo-wt-mf35-build/src/tests/surfaces/surface-conformance.logic.test.ts. Does the file exist?
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+GREEN after the manifest fill, the generator + mobile-theme.json + --write, the GENERATORS line and the fixture stub: Tests  92 passed (92) across the two files plus surface-validate.infra.test.ts; surface-validate --check exit 0; emit-mobile-theme --check: theme ok (18 roles, 9 pairs). Mobile: tsc exit 0; jest --ci 37 suites / 577 tests passed.
+Correction during green: the planted 2:1 pair expectation was first written as 3.36; the measured ratio of #71717a on #27272a is 3.08 (< 4.5 either way), and the expected line was corrected to the measured value.
+Re-made 2026-11-10 on the base 2e7976367 (branch wf1/mf35-build2-1110) by applying the first build's library diff (ac836bccd on 1e87de532) with git apply --3way and re-running the pins for the lock; the red run above is the first build's. Green re-run on the new base is recorded in the commit body.

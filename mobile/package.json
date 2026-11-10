@@ -21,12 +21,15 @@
     "@react-native-community/slider": "5.0.1",
     "@react-native-google-signin/google-signin": "13.3.1",
     "@react-navigation/bottom-tabs": "^7.15.11",
+    "@rn-primitives/slot": "1.5.2",
     "@sentry/react-native": "~7.2.0",
     "@shopify/flash-list": "^2.3.1",
     "@supabase/supabase-js": "2.110.7",
     "@tanstack/query-async-storage-persister": "^5.99.2",
     "@tanstack/react-query": "^5.99.2",
     "@tanstack/react-query-persist-client": "^5.99.2",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
     "expo": "~54.0.33",
     "expo-apple-authentication": "~8.0.8",
     "expo-blur": "~15.0.8",
@@ -59,17 +62,20 @@
     "react-native-svg": "15.12.1",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-worklets": "~0.8.1",
+    "tailwind-merge": "3.7.0",
     "tailwindcss": "^3.4.19",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@tanstack/query-sync-storage-persister": "^5.100.9",
+    "@testing-library/react-native": "13.3.3",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^55.0.18",
     "jest": "^30.3.0",
     "jest-expo": "~54.0.0",
+    "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true,
@@ -81,7 +87,7 @@
       "^expo/src/winter(.*)$": "<rootDir>/__mocks__/expo-winter.js"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@shopify/flash-list|@gorhom/bottom-sheet|nativewind|react-native-mmkv|react-native-reanimated|react-native-gesture-handler|react-native-screens|react-native-safe-area-context|react-native-svg|posthog-react-native|@sentry/react-native|input-otp-native|lucide-react-native)"
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@shopify/flash-list|@gorhom/bottom-sheet|nativewind|react-native-mmkv|react-native-reanimated|react-native-gesture-handler|react-native-screens|react-native-safe-area-context|react-native-svg|posthog-react-native|@sentry/react-native|input-otp-native|lucide-react-native|@rn-primitives/.*)"
     ]
   }
 }

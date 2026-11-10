@@ -21,6 +21,8 @@ const FP: string[] = FP_FILES.map((p: string) => path.basename(p));
 const GOLD = 'src/tests/fixtures/surfaces/report';
 const SEED_GEN = `${SCHEMA}/seed-report-v2.mjs`;
 const RS_GEN = 'scripts/analysis/report-schema.mjs';
+// MF-35 (dated 2026-11-10; plan v2 section 5, v3 section 10 step 3): the generated mobile library theme is the third S-gen generator.
+const MT_GEN = 'scripts/surfaces/emit-mobile-theme.mjs';
 const roots: string[] = [];
 afterAll(() => { for (const r of roots) fs.rmSync(r, { recursive: true, force: true }); });
 
@@ -47,6 +49,7 @@ const mkRoot = (): string => {
   fs.symlinkSync(path.join(REPO, 'node_modules'), path.join(root, 'node_modules'));
   stub(root, SEED_GEN, 'process.exit(0);\n');
   stub(root, RS_GEN, 'process.exit(0);\n');
+  stub(root, MT_GEN, 'process.exit(0);\n');
   return root;
 };
 const run = (root: string, args: string[] = ['--check'], cwd = root): { code: number | null; out: string; err: string; lines: string[] } => {
@@ -109,7 +112,14 @@ describe('S-gen: the committed generators\' --check', () => {
     expect(r.code).toBe(1);
     expect(r.lines).toEqual(['SV-GEN seed-report-v2.mjs: missing']);
   });
-  it('both generators exit 0: the GEN arm is clean', () => {
+  it('MF-35: a missing mobile theme generator is a finding, and a failing one is relayed', () => {
+    const root = mkRoot();
+    fs.rmSync(path.join(root, MT_GEN));
+    expect(run(root).lines).toEqual(['SV-GEN emit-mobile-theme.mjs: missing']);
+    stub(root, MT_GEN, "console.error('GEN-STALE mobile/global.css'); process.exit(1);\n");
+    expect(run(root).lines).toEqual(['SV-GEN emit-mobile-theme.mjs: exit 1', 'SV-GEN emit-mobile-theme.mjs: GEN-STALE mobile/global.css']);
+  });
+  it('every generator exits 0: the GEN arm is clean', () => {
     expect(run(mkRoot()).code).toBe(0);
   });
 });
