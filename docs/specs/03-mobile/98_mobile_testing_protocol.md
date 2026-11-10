@@ -78,6 +78,8 @@ maestro studio
 
 Unit tests focus strictly on business logic, state machines, and Expo Router guards. UI component snapshot testing is deliberately excluded (Maestro handles UI validation).
 
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; H9, P35-D6 as recommended; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots. React Native Testing Library is the tool Spec 90 names for logic hooks (90:88); MF-35 extends its use to the mobile binding and the parcel search screen, and adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0). No Maestro flow covers parcel-tool today.
+
 ### 4.1 Required Test Boundaries
 
 This section is **non-exhaustive**. The normative test mandate set lives in **Spec 99 §8 (Test Mandates)** — every implementation MUST satisfy:
@@ -97,6 +99,8 @@ The boundaries below are illustrative examples within those mandates.
 **Zustand Stores (`store.test.ts`)** — Spec 99 §8.1 (idempotency) + §8.5 (store-enumeration)
 - `authStore`: `signOut()` must trigger the §B5 fan-out (`filterStore.reset()`, `userProfileStore.reset()`, `paywallStore.reset()`, `notificationStore.reset()`, `onboardingStore.reset()`, `flightBoardSeenStore.reset()` + `queryClient.clear()` + `mmkvPersister.removeClient()`).
 - `paywallStore`: Must default to `visible: false, dismissed: false` on cold boot. Method renamed `clear()` → `reset()` on 2026-05-03 per Spec 99 §3.4 + §9.19.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the §B5 fan-out above also calls `recentSearchesStore.reset()` (MF-35; Spec 99 §3.4c). `mobile/__tests__/recentSearchesStore.test.ts` pins the store's own reset, and `storeReset.coverage.test.ts` finds it with no count change.
 
 **Data Transformations (`utils.test.ts`)**
 - `snapCoord.ts`: Verify 500m snapping logic and Toronto bounding box re-validation.

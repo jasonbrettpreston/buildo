@@ -160,6 +160,8 @@ Tapping "Sign Out" in Settings:
 - **Resets** every peer Zustand store via `clearLocalSessionState()` (§5 Step 2): `usePaywallStore`, `useFilterStore`, `useNotificationStore`, `useOnboardingStore`, `useUserProfileStore`, `useFlightBoardSeenStore`, plus `queryClient.clear()`, `mmkvPersister.removeClient()`, `Sentry.setUser(null)`, and the PostHog `resetIdentity()` — so no stale data or user attribution is visible if a different user signs in on the same device (Spec 99 §B5 PIPEDA). This is a superset of the SDK-agnostic reset fan-out the prior spec text described — the mechanism (`auth().signOut()` → `supabase.auth.signOut()`) is the only part that changed.
 - Redirects to sign-in screen
 
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the fan-out above also resets `useRecentSearchesStore` (the MaxBLD search page's recent searches, P35-D16 a; Spec 99 §3.4c), so a different user on the same device sees no earlier searches.
+
 On next sign-in, `user_profiles` fetch overwrites local state cleanly. The reset + server hydration ensures stale data is never presented to a different user. Unchanged from the Firebase version.
 
 ### 3.5 Offline Behaviour
@@ -443,6 +445,8 @@ plus the native `android/build.gradle:9` and `android/app/build.gradle:186` goog
 - `signOut()`: (1) calls `supabase.auth.signOut()`; (2) the `clearLocalSessionState()` fan-out (Spec 99 §B5) resets every peer Zustand store — `filterStore.reset()`, `userProfileStore.reset()`, `paywallStore.reset()`, `notificationStore.reset()`, `onboardingStore.reset()`, `flightBoardSeenStore.reset()` — plus `queryClient.clear()`, `mmkvPersister.removeClient()`, `Sentry.setUser(null)`, and `resetIdentity()` (PostHog); (3) resets this store. Same fan-out as the Firebase version, called from the same two places (`signOut()` and the listener's null-session branch) — only the auth call at step (1) changed.
 - **`paywallStore.reset()` is required in sign-out** (unchanged rule, Spec 99 §3.4/§9.19/§B5) — without it, a user who dismissed the paywall and then signed out on a shared device would leave `dismissed: true` in memory, causing the next user to start in inline blur mode.
 - The module-scoped `lastKnownUid` staleness guard (cold-boot first-fire vs genuine UID change, gating the `['user-profile']` cache-invalidation telemetry) is **preserved as-is** — it is not Firebase-specific; it exists to distinguish "first ever fire" from "a different user signed in on this device," which applies identically under `onAuthStateChange`'s `INITIAL_SESSION`/`SIGNED_IN` events. Key off `session.user.id` instead of `firebaseUser.uid`.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the fan-out above also resets `useRecentSearchesStore` (the MaxBLD search page's recent searches, P35-D16 a; Spec 99 §3.4c), so a different user on the same device sees no earlier searches.
 
 ---
 
