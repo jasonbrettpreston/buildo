@@ -1027,6 +1027,10 @@ Reading (record, same section): A = the report detail is the expanded card; B = 
 > 3. **Card frame** (REPORT-LAYOUT-v2 §C, same for every scenario): headline, confidence badge and reason, as-of-right per option, "+X m² with a CoA" (an estimate, after the as-of-right line, never the headline; §11a and the Q-MF7 a rules), photos, CoA decisions for this scenario, then More detail (collapsed).
 > 4. **Placement** (D0 SIMPLIFIED, 2026-11-09, recorded in the same record): one ordered headline list per scenario in `scripts/surfaces/_schema/report-v2-seed/row-presentation.json`; a row not listed is detail, in catalogue order; no priority numbers and no groups. This replaces the six tiers of REPORT-LAYOUT-v2 §C ("Tier is data").
 > 5. **Field names.** Taken from the field generator `~/Buildo-scratch/mcfrontend/fields/extract-fields.mjs` (read-only on origin) and its summary builder `build-stitch-summary.mjs`; every field binds to a DB field (§11a.1, Q-MF3). The brief and the summary are references, not copied into the repo.
+>
+> Dated note 2026-11-10 (MF-53, prior text kept, items 1-5 unchanged). Operator, verbatim: "they need the address but not a map - they already know where it is..".
+>
+> 6. **Lot card location.** The lot card shows the address and no map. This amends REPORT-LAYOUT-v2 §B row 2 "Address / map pin": the lot-card location fields (`parcel.lot.centroid_lat`, `parcel.lot.centroid_lng`, `parcel.lot.outline_geojson`) and the map embed (the FE-21 `external_embed` map tiles) are dropped from the lot card.
 
 ## 12. Phases
 
