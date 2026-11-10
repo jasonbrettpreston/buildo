@@ -1,0 +1,87 @@
+{
+ "$comment": "Pre-registration, task MF-40, prereg 1, committed ALONE directly before the shared binding-standard commit (MF-40 plan delta 1, option C; it also unblocks MF-35; operator, verbatim: \"y recommendation: C, with the four trims. approved\"; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-10: the shared binding standard (MF-40 plan delta 1, also unblocks MF-35)\"). rules[]: FE-31 (RULED; its lock surface-conformance.logic.test.ts C-6 plant follows the column display union), FE-32 (RULED; its lock contract-binding.logic.test.ts gains the path and error-detail cases) and FE-33 (RULED; cited by the new binding-standard test, its lock untouched). No row flips, no new FE id. Zero scorer moves; totals and floors copied from prereg-MF-37-3.json and equal key for key to prereg-MB-27-43.json (the newest prereg on the tip). In-file round 132 (129 is MF-37 prereg 3; 130 and 131 are MB-27 preregs 42 and 43 on the tip, and 130 is also MF-35 prereg 1 on its branch; no branch uses 132; the round field is only checked as an integer).",
+ "schema": "coa-round-prereg-v1",
+ "round": 132,
+ "task": "MF-40",
+ "rules": [
+  "FE-31",
+  "FE-32",
+  "FE-33"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/MF-40/plan.delta-1.md (section 3 with the section 8 folds; section 6 option C step 1); ~/Buildo-scratch/mcfrontend/MF-40/panel/delta-1-code-reviewer-grounded.md; ~/Buildo-scratch/mcfrontend/phase1/open-questions.md (Operator ruling 2026-11-10: the shared binding standard)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
