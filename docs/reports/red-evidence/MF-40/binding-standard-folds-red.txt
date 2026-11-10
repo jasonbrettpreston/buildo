@@ -1,0 +1,30 @@
+Binding standard OUTPUT panel folds (MF-40; panel ~/Buildo-scratch/mcfrontend/MF-40/panel/binding-std-output-code-reviewer.md, PASS-WITH-FOLDS, LOW-1..LOW-3), red runs, 2026-11-10.
+Method: the new cases were added first and run against the unchanged code (run 1); the default-sort case, which locks behaviour the code already has, was run against two planted defects in ListBinding.tsx, each reverted after its run (runs 2 and 3). Green after the fix: binding-standard-folds-green.txt.
+Expected red: run 1, the FE-32 lock case 'contract_fx.candidates.01.address' (accepted by INDEX_SEG /^[0-9]+$/) and the image-column-without-alt_field throw (the code used an empty-path fallback); run 2, default sort = columns[0]; run 3, a fallback to columns[0] when no column has a sort_field.
+
+== run 1: npx vitest run src/tests/surfaces/contract-binding.logic.test.ts src/tests/surfaces/binding-standard.logic.test.ts (unchanged code)
+   × (a) the generic LIST > RED: an image column without alt_field throws (no empty-path fallback)
+   × FE-32 (d) the binding standard: contract paths and error details > RED: an index first, an index after an index, a bad segment, an unknown name inside a path
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw an error
+ ❯ src/tests/surfaces/binding-standard.logic.test.ts:92:49
+AssertionError: expected [] to deeply equal [ Array(1) ]
+ ❯ src/tests/surfaces/contract-binding.logic.test.ts:83:85
+ Test Files  2 failed (2)
+      Tests  2 failed | 20 passed (22)
+
+== run 2: plant const first = list.columns[0]?.field; npx vitest run src/tests/surfaces/binding-standard.logic.test.ts -t 'default sort'
+   × (a) the generic LIST > default sort: the first column with a sort_field (not an image), ascending; none sorts nothing
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected 20252 to be less than 18709
+ ❯ src/tests/surfaces/binding-standard.logic.test.ts:85:16
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)
+
+== run 3: plant ... ?.field ?? list.columns[0]?.field; same command
+   × (a) the generic LIST > default sort: the first column with a sort_field (not an image), ascending; none sorts nothing
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected 19700 to be less than 18157
+ ❯ src/tests/surfaces/binding-standard.logic.test.ts:88:16
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)

@@ -6,7 +6,8 @@
 // Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"; section 8 folds 2, 9, 13).
 // The generic bindings on planted descriptors (the live admin_media stays the T7 byte-identity case):
 //   (a) LIST: rows path -> record refs <rows>.0.<field>; row actions delete | edit | toggle_active (only delete red; delete and edit get a Modal);
-//       boolean and enum cells show <label>.option.<value> from content, null shows nothing, a value outside the options throws;
+//       boolean and enum cells show <label>.option.<value> from content, null shows nothing, a value outside the options throws; the default sort
+//       is the first column with a sort_field that is not an image, ascending, and none without one; an image column without alt_field throws;
 //   (b) FORM: an options_from select carries contract refs in the golden and takes its options from FormRuntime.options as data.
 // Not an FE lock of its own (the locks are surface-conformance, contract-binding and render-smoke). No DB, no network.
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -71,6 +72,24 @@ describe('(a) the generic LIST', () => {
     const c = { ...C }; delete c['fx_offers.col.over_cap.option.true'];
     const q = listProps(LIST as never, listTree(LIST as never, 'hit'), ROWS, c) as Json;
     expect(() => ((q.columns as Json[])[1] as Json).render(ROWS[0])).toThrow('ListBinding: missing content key fx_offers.col.over_cap.option.true');
+  });
+  it('default sort: the first column with a sort_field (not an image), ascending; none sorts nothing', () => {
+    const order = (d: Json): [number, number] => {
+      const html = ssr(h(ListBinding, { descriptor: d as never, tree: listTree(d as never, 'hit'), rows: ROWS, content: C }));
+      return [html.indexOf('Scenario card'), html.indexOf('Detail footer')];
+    };
+    const [s, d] = order(LIST);
+    expect(d).toBeLessThan(s);
+    const later = structuredClone(LIST); later.render.list.columns.reverse();
+    const [s2, d2] = order(later);
+    expect(d2).toBeLessThan(s2);
+    const none = structuredClone(LIST); delete none.render.list.columns[0].sort_field;
+    const [s3, d3] = order(none);
+    expect(s3).toBeLessThan(d3);
+  });
+  it('RED: an image column without alt_field throws (no empty-path fallback)', () => {
+    const img = structuredClone(LIST); img.render.list.columns.unshift({ field: 'preview', label: 'fx_offers.col.preview', display: 'image' });
+    expect(() => listTree(img as never, 'hit')).toThrow('ListBinding: image column preview has no alt_field');
   });
   it('renders: both action labels and the option texts from content, every button lg', () => {
     const html = ssr(h(ListBinding, { descriptor: LIST as never, tree: listTree(LIST as never, 'hit'), rows: ROWS, content: C }));

@@ -40,6 +40,12 @@ const optionsOf = (c: Column): Option[] | undefined => {
   return values?.map((v) => ({ value: v, label: { content: `${c.label}.option.${v}` } }));
 };
 
+/** The alt_field of an image column; SV-DESC requires it on a converted descriptor, so its absence throws (never an empty path). */
+const altOf = (c: Column): string => {
+  if (c.alt_field === undefined) throw new Error(`ListBinding: image column ${c.field} has no alt_field`);
+  return c.alt_field;
+};
+
 /** The props golden of one LIST surface in one state: the record is the contract projection (one item of `rows` when declared), by ref. */
 export function listTree(d: Descriptor, state: ListState): Node {
   const id = d.identity.id;
@@ -60,7 +66,7 @@ export function listTree(d: Descriptor, state: ListState): Node {
   const children: Node[] = [
     { component: 'DataTable', props: { idAccessor: list.id_field, columns, records: WITH_ROWS.includes(state) ? [record] : [], noRecordsText: { content: `${id}.empty` }, loadingText: { content: `${id}.loading` }, fetching: false } },
     ...actions.map((a): Node => ({ component: 'Button', props: { size: 'lg', variant: 'light', ...(ACTION_COLOR[a.kind] ? { color: ACTION_COLOR[a.kind] } : {}) }, children: [{ content: a.label }] })),
-    ...(image ? [{ component: 'Image', props: { alt: ref(image.alt_field ?? ''), fallback: { content: `${id}.preview.unavailable` } } }] : []),
+    ...(image ? [{ component: 'Image', props: { alt: ref(altOf(image)), fallback: { content: `${id}.preview.unavailable` } } }] : []),
     ...actions.filter((a) => MODAL_KINDS.includes(a.kind)).map((a): Node => ({ component: 'Modal', props: { title: { content: `${id}.${a.kind}.title` }, closeButtonProps: { size: 'xl', 'aria-label': { content: `${id}.${a.kind}.close` } } } })),
   ];
   const color = STATE_COLOR[state];
@@ -150,7 +156,7 @@ export function ListBinding({ descriptor, tree, rows, content, onAction, actionF
   const imageCol = list.columns.find((c) => c.display === 'image');
   if (imageCol) {
     const image = nodeOf(tree, 'Image');
-    const alt = imageCol.alt_field ?? '';
+    const alt = altOf(imageCol);
     cells[imageCol.field] = (r: Row) => (r[imageCol.field] ? <Image src={String(r[imageCol.field])} alt={String(r[alt])} className="h-12 w-auto object-contain" /> : text(content, image.props.fallback, 'preview fallback'));
   }
   if (actions.length > 0) {

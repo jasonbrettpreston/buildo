@@ -1,0 +1,5 @@
+Binding standard OUTPUT panel folds (MF-40), green run, 2026-11-10: INDEX_SEG /^(0|[1-9][0-9]*)$/, altOf throws on a missing alt_field, the default-sort case unchanged code.
+
+== npx vitest run src/tests/surfaces/contract-binding.logic.test.ts src/tests/surfaces/binding-standard.logic.test.ts
+ Test Files  2 passed (2)
+      Tests  22 passed (22)

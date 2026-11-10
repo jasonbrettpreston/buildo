@@ -10,7 +10,8 @@
 //   (d) binding standard (MF-40 plan delta 1, option C, operator 2026-11-10; section 8 folds 1, 7, 8): the ref is a PATH
 //       `<contract_id>.<name|index>...` (names on the whitelist, as sent, camelCase kept; an index only after a name; checked by name only); the
 //       second segment `errors` is reserved for `<contract_id>.errors.<class>.<field>` (field in that class's `fields`). The two-part form and
-//       its messages are unchanged. RED: index first, index after index, a bad segment, an unknown name in a path, the errors grammar.
+//       its messages are unchanged. RED: index first, index after index, a bad segment, an unknown name in a path, the errors grammar, an index
+//       with a leading zero (MF-40 OUTPUT panel LOW-1: an index is 0 or a number without a leading zero).
 // Pure over committed files and in-memory copies. No DB, no network.
 import { parseRegisterRows } from '../../../scripts/analysis/mcbylaws/cite-parse.mjs';
 import { describe, expect, it } from 'vitest';
@@ -79,6 +80,7 @@ describe('FE-32 (d) the binding standard: contract paths and error details', () 
     expect(contractRefProblems('contract_fx.candidates.0.1', '/props/x', c)).toEqual(['contract ref contract_fx.candidates.0.1: an index must follow a name at /props/x']);
     expect(contractRefProblems('contract_fx.candidates[0].address', '/props/x', c)).toEqual(['contract ref contract_fx.candidates[0].address is not <contract_id>.<field> at /props/x']);
     expect(contractRefProblems('contract_fx.candidates.', '/props/x', c)).toEqual(['contract ref contract_fx.candidates. is not <contract_id>.<field> at /props/x']);
+    expect(contractRefProblems('contract_fx.candidates.01.address', '/props/x', c)).toEqual(['contract ref contract_fx.candidates.01.address is not <contract_id>.<field> at /props/x']);
     expect(contractRefProblems('contract_fx.candidates.0.lotArea', '/props/x', c)).toEqual(['unknown contract field contract_fx.candidates.0.lotArea at /props/x']);
   });
   it('RED: the errors grammar (wrong length, unknown class, a field the class does not declare, a class with no fields)', async () => {
