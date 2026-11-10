@@ -399,7 +399,8 @@ describe('C-6 the generated types and validator equal a fresh emit', () => {
     expect(fresh.dts).toBe(dts);
     expect(fresh.val).toBe(fs.readFileSync(path.join(REPO, 'src/lib/surfaces/generated/validate-descriptor.mjs'), 'utf8'));
     expect(dts).toContain('columns?: Array<{');
-    expect(fresh.dts).not.toBe(dts.replace('display: "text" | "boolean" | "enum";', 'display: string;'));
+    // Binding standard (MF-40 plan delta 1, option C, 2026-11-10): the column display union gains "image"; the plant follows it.
+    expect(fresh.dts).not.toBe(dts.replace('display: "text" | "boolean" | "enum" | "image";', 'display: string;'));
   }, 60000);
 });
 

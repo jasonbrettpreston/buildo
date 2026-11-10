@@ -71,6 +71,8 @@ const FORM_FIELDS = [
   { field: 'flight_start', widget: 'date', label: 'admin_placements.field.flight_start' },
 ];
 
+export const LIST_STATUS = ['new', 'generated'];
+
 export interface Fixture { root: string; ids: Record<Arch, string>; files: Record<Arch, string> }
 
 /** A converted copy of one live descriptor (validity and sentinels are asserted by the callers through the ONE validator). */
@@ -81,7 +83,11 @@ export const convert = (arch: Arch): Json => {
   for (const [ptr, v] of PATCHES[arch]) patch(d, ptr, v);
   for (const s of d.states) s.golden = s.name;
   if (arch === 'FORM') patch(d, '/render/form', { schema_ref: FORM_REF, fields: structuredClone(FORM_FIELDS), submit: 'admin_placements.submit' }, true);
-  if (arch === 'LIST') d.render.list.columns = [{ field: 'id', label: 'admin_surface_registry.col.id', display: 'text', sort_field: 'id' }, { field: 'status', label: 'admin_surface_registry.col.status', display: 'enum' }];
+  // Binding standard (MF-40 plan delta 1 section 8 fold 5): a converted web LIST with columns names its id_field; an enum column declares its values.
+  if (arch === 'LIST') {
+    d.render.list.columns = [{ field: 'id', label: 'admin_surface_registry.col.id', display: 'text', sort_field: 'id' }, { field: 'status', label: 'admin_surface_registry.col.status', display: 'enum', values: LIST_STATUS }];
+    d.render.list.id_field = 'id';
+  }
   return d;
 };
 
@@ -89,7 +95,7 @@ export const convert = (arch: Arch): Json => {
 const contentOf = (arch: Arch, id: string): Record<string, string> => {
   const keys = [`${id}.title`];
   if (arch === 'FORM') keys.push(...FORM_FIELDS.flatMap((f) => [f.label, ...(f.help ? [f.help] : [])]), 'admin_placements.submit', 'admin_placements.field.surface_archetype.option.slot', 'admin_placements.field.surface_archetype.option.feed');
-  if (arch === 'LIST') keys.push('admin_surface_registry.col.id', 'admin_surface_registry.col.status');
+  if (arch === 'LIST') keys.push('admin_surface_registry.col.id', 'admin_surface_registry.col.status', ...LIST_STATUS.map((v) => `admin_surface_registry.col.status.option.${v}`));
   return Object.fromEntries(keys.map((k) => [k, `Text for ${k}`]));
 };
 

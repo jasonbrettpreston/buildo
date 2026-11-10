@@ -5103,6 +5103,12 @@
         "recycling": "none",
         "columns": [
           {
+            "field": "signed_url",
+            "label": "admin_media.col.preview",
+            "display": "image",
+            "alt_field": "alt"
+          },
+          {
             "field": "kind",
             "label": "admin_media.col.kind",
             "display": "text",
@@ -5143,6 +5149,13 @@
             "label": "admin_media.col.created",
             "display": "text",
             "sort_field": "created_at"
+          }
+        ],
+        "id_field": "asset_id",
+        "row_actions": [
+          {
+            "kind": "delete",
+            "label": "admin_media.action.delete"
           }
         ]
       }

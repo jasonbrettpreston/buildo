@@ -1519,6 +1519,10 @@
                           {
                             "const": "enum",
                             "description": "A closed value shown through the content keys <label>.option.<value>."
+                          },
+                          {
+                            "const": "image",
+                            "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): an image cell; the value is the image URL as sent, its alt text is the row's alt_field; no sort."
                           }
                         ]
                       },
@@ -1526,6 +1530,67 @@
                         "type": "string",
                         "minLength": 1,
                         "description": "Optional comparison-only client sort; a member of inputs.field_whitelist."
+                      },
+                      "alt_field": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): for display image, the member of inputs.field_whitelist holding the image's alt text."
+                      },
+                      "values": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[a-z0-9_]+$"
+                        },
+                        "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): for display enum, the closed values; each shows the content key <label>.option.<value>."
+                      }
+                    }
+                  }
+                },
+                "id_field": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): the member of inputs.field_whitelist that identifies a row (required by SV-DESC for a converted web LIST with columns)."
+                },
+                "rows": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): a contract path <contract_id>.<name|index>... to the array of rows; absent means the response is the rows."
+                },
+                "row_actions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): one Button per row per action, in this order. Keys derived by convention: <id>.col.actions (the column), <id>.<kind>.title and <id>.<kind>.close (the Modal of delete and edit).",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "label"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "oneOf": [
+                          {
+                            "const": "delete",
+                            "description": "Opens a Modal holding the delete FORM; a red Button."
+                          },
+                          {
+                            "const": "edit",
+                            "description": "Opens a Modal holding the edit FORM."
+                          },
+                          {
+                            "const": "toggle_active",
+                            "description": "Writes the row on or off directly; no Modal."
+                          }
+                        ]
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A content key of this surface (its sibling <id>.content.json); never display text."
                       }
                     }
                   }
@@ -1623,6 +1688,33 @@
                         "type": "string",
                         "minLength": 1,
                         "description": "A content key of this surface (its sibling <id>.content.json); never display text."
+                      },
+                      "options_from": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "items",
+                          "value",
+                          "label"
+                        ],
+                        "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): a select's options read at run time from a declared contract, in place of a static enum. Labels are data shown as sent.",
+                        "properties": {
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "A contract path <contract_id>.<name|index>... to the array of options."
+                          },
+                          "value": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "The item field submitted (on the contract field whitelist)."
+                          },
+                          "label": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "The item field shown (on the contract field whitelist)."
+                          }
+                        }
                       },
                       "read_only": {
                         "type": "boolean",
@@ -2075,6 +2167,16 @@
               "ui": {
                 "type": "string",
                 "minLength": 1
+              },
+              "fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                },
+                "description": "Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 \"y recommendation: C, with the four trims. approved\"): the detail fields of this error class a golden may bind as <contract_id>.errors.<class>.<field>; the row says where each comes from."
               }
             }
           }

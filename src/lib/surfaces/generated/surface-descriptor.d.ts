@@ -152,9 +152,23 @@ export type SurfaceDescriptor = {
   field: string;
   /** A content key of this surface (its sibling <id>.content.json); never display text. */
   label: string;
-  display: "text" | "boolean" | "enum";
+  display: "text" | "boolean" | "enum" | "image";
   /** Optional comparison-only client sort; a member of inputs.field_whitelist. */
   sort_field?: string;
+  /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): for display image, the member of inputs.field_whitelist holding the image's alt text. */
+  alt_field?: string;
+  /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): for display enum, the closed values; each shows the content key <label>.option.<value>. */
+  values?: Array<string>;
+}>;
+  /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): the member of inputs.field_whitelist that identifies a row (required by SV-DESC for a converted web LIST with columns */
+  id_field?: string;
+  /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): a contract path <contract_id>.<name|index>... to the array of rows; absent means the response is the rows. */
+  rows?: string;
+  /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): one Button per row per action, in this order. Keys derived by convention: <id>.col.actions (the column), <id>.<kind>. */
+  row_actions?: Array<{
+  kind: "delete" | "edit" | "toggle_active";
+  /** A content key of this surface (its sibling <id>.content.json); never display text. */
+  label: string;
 }>;
 };
   /** MF-42 (P42-D1 a): a FORM rendered by the standard form library. A reference to the write contract's JSON Schema plus a closed per-field list; the binding GENERATES the library uiSchema from it. No uiSchema file, no props object, no passthro */
@@ -172,6 +186,15 @@ export type SurfaceDescriptor = {
   help?: string;
   /** A content key of this surface (its sibling <id>.content.json); never display text. */
   placeholder?: string;
+  /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): a select's options read at run time from a declared contract, in place of a static enum. Labels are data shown as sen */
+  options_from?: {
+  /** A contract path <contract_id>.<name|index>... to the array of options. */
+  items: string;
+  /** The item field submitted (on the contract field whitelist). */
+  value: string;
+  /** The item field shown (on the contract field whitelist). */
+  label: string;
+};
   /** Shown, not editable. */
   read_only?: boolean;
 }>;
@@ -249,6 +272,8 @@ export type SurfaceDescriptor = {
   classes?: Array<{
   class: "400" | "401" | "403" | "429" | "500" | "schema_drift" | "offline" | "404";
   ui: string;
+  /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): the detail fields of this error class a golden may bind as <contract_id>.errors.<class>.<field>; the row says where e */
+  fields?: Array<string>;
 }>;
   no_retry?: Array<string>;
 };

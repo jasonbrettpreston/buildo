@@ -33,7 +33,7 @@ export function MediaPageClient({ rows, state }: { rows: Row[]; state: ListState
         tree={listTree(list, state)}
         rows={rows}
         content={MEDIA_CONTENT}
-        deleteForm={(row, close) => (
+        actionForm={(row, close) => (
           <FormBinding
             tree={formTree(MEDIA_SURFACES.remove as unknown as FormDescriptor, MEDIA_SCHEMAS.remove as FormSchema, removeState)}
             schema={MEDIA_SCHEMAS.remove as FormSchema}

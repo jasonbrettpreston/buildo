@@ -6,14 +6,18 @@
 //   (a) binding-sources.json names `contract` (register FE-32, resolver contract_projection, a non-null file); bindings.json ref_kinds has it;
 //   (b) the golden side (SV-SBIND): `{"contract": "<contract_id>.<field>"}` resolves to inputs.field_whitelist; an unknown field, an unknown
 //       contract and a malformed ref are RED; the real admin_media goldens carry contract refs and SV-SBIND is clean on them;
-//   (c) the REPORT side (RS-1): a REPORT field bound `contract:` is refused until a ruling widens it.
+//   (c) the REPORT side (RS-1): a REPORT field bound `contract:` is refused until a ruling widens it;
+//   (d) binding standard (MF-40 plan delta 1, option C, operator 2026-11-10; section 8 folds 1, 7, 8): the ref is a PATH
+//       `<contract_id>.<name|index>...` (names on the whitelist, as sent, camelCase kept; an index only after a name; checked by name only); the
+//       second segment `errors` is reserved for `<contract_id>.errors.<class>.<field>` (field in that class's `fields`). The two-part form and
+//       its messages are unchanged. RED: index first, index after index, a bad segment, an unknown name in a path, the errors grammar.
 // Pure over committed files and in-memory copies. No DB, no network.
 import { parseRegisterRows } from '../../../scripts/analysis/mcbylaws/cite-parse.mjs';
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { contractRefProblems, loadContext, propsProblems, sbindArm } from '../../../scripts/surfaces/screen-checks.mjs';
+import { contractRefProblems, descArm, loadContext, propsProblems, sbindArm } from '../../../scripts/surfaces/screen-checks.mjs';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped JSON and .mjs module surface
 const ROOT = process.cwd();
@@ -50,6 +54,52 @@ describe('FE-32 (b) the golden side (SV-SBIND)', () => {
     expect(propsProblems({ component: 'Text', children: [{ contract: 'contract_admin_media_list.alt' }] }, '/props', walk)).toEqual([]);
     expect(propsProblems({ component: 'Text', children: [{ contract: 'contract_admin_media_list.secret' }] }, '/props', walk))
       .toEqual(['unknown contract field contract_admin_media_list.secret at /props/children/0']);
+  });
+});
+
+describe('FE-32 (d) the binding standard: contract paths and error details', () => {
+  // An in-memory contract set: the live media list contract plus one with an array, a camelCase name and a 429 class with a declared field.
+  const contracts = async (): Promise<Map<string, Json>> => {
+    const m = new Map((await loadContext(ROOT)).contracts as Map<string, Json>);
+    m.set('contract_fx', { kind: 'CONTRACT', identity: { id: 'contract_fx' }, inputs: { field_whitelist: ['candidates', 'address', 'parcelId'] },
+      errors: { classes: [{ class: '429', ui: 'x', fields: ['retryAfterSeconds'] }, { class: '500', ui: 'y' }] } });
+    return m;
+  };
+  it('the two-part form stays valid; a path of names and indexes resolves; camelCase is used as sent', async () => {
+    const c = await contracts();
+    for (const ref of ['contract_admin_media_list.alt', 'contract_fx.candidates', 'contract_fx.candidates.0.address', 'contract_fx.candidates.12.parcelId'])
+      expect([ref, contractRefProblems(ref, '/props/x', c)]).toEqual([ref, []]);
+  });
+  it('an error detail resolves through its class\'s fields', async () => {
+    expect(contractRefProblems('contract_fx.errors.429.retryAfterSeconds', '/props/x', await contracts())).toEqual([]);
+  });
+  it('RED: an index first, an index after an index, a bad segment, an unknown name inside a path', async () => {
+    const c = await contracts();
+    expect(contractRefProblems('contract_fx.0.address', '/props/x', c)).toEqual(['contract ref contract_fx.0.address: an index must follow a name at /props/x']);
+    expect(contractRefProblems('contract_fx.candidates.0.1', '/props/x', c)).toEqual(['contract ref contract_fx.candidates.0.1: an index must follow a name at /props/x']);
+    expect(contractRefProblems('contract_fx.candidates[0].address', '/props/x', c)).toEqual(['contract ref contract_fx.candidates[0].address is not <contract_id>.<field> at /props/x']);
+    expect(contractRefProblems('contract_fx.candidates.', '/props/x', c)).toEqual(['contract ref contract_fx.candidates. is not <contract_id>.<field> at /props/x']);
+    expect(contractRefProblems('contract_fx.candidates.0.lotArea', '/props/x', c)).toEqual(['unknown contract field contract_fx.candidates.0.lotArea at /props/x']);
+  });
+  it('RED: the errors grammar (wrong length, unknown class, a field the class does not declare, a class with no fields)', async () => {
+    const c = await contracts();
+    expect(contractRefProblems('contract_fx.errors.429', '/props/x', c)).toEqual(['contract ref contract_fx.errors.429 is not <contract_id>.errors.<class>.<field> at /props/x']);
+    expect(contractRefProblems('contract_fx.errors.403.retryAfterSeconds', '/props/x', c)).toEqual(['unknown error class 403 of contract_fx at /props/x']);
+    expect(contractRefProblems('contract_fx.errors.429.remaining', '/props/x', c)).toEqual(['unknown error field contract_fx.errors.429.remaining at /props/x']);
+    expect(contractRefProblems('contract_fx.errors.500.code', '/props/x', c)).toEqual(['unknown error field contract_fx.errors.500.code at /props/x']);
+  });
+  it('RED (walk): a path ref planted in golden props is judged where it sits', async () => {
+    const ctx = await loadContext(ROOT);
+    const walk = { kinds: ['content', 'contract'], nonDisplay: ctx.bindings.non_display_keys, content: {}, used: new Set(), contracts: await contracts() };
+    expect(propsProblems({ component: 'Text', children: [{ contract: 'contract_fx.candidates.0.address' }] }, '/props', walk)).toEqual([]);
+    expect(propsProblems({ component: 'Text', children: [{ contract: 'contract_fx.0.address' }] }, '/props', walk))
+      .toEqual(['contract ref contract_fx.0.address: an index must follow a name at /props/children/0']);
+  });
+  it('the real tree: no CONTRACT field whitelist names the reserved segment errors (SV-DESC)', async () => {
+    const ctx = await loadContext(ROOT);
+    expect(descArm(ctx).findings.filter((f: string) => f.includes('reserved segment'))).toEqual([]);
+    const planted = { ...ctx, contracts: new Map([...ctx.contracts, ['contract_fx', { inputs: { field_whitelist: ['errors'] } }]]) };
+    expect(descArm(planted).findings).toContain('SV-DESC contract_fx: field_whitelist names the reserved segment errors');
   });
 });
 

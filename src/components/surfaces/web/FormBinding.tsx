@@ -8,6 +8,9 @@
 //   formProps(tree, schema, content, rt) -> the RJSF props: uiSchema GENERATED from the tree, enum titles from option keys, transformErrors -> content;
 //   <FormBinding/>                       -> <Form {...formProps}/> plus the state alert, nothing hand-built.
 // No display text lives here; a missing content key or an unknown widget throws.
+// Binding standard (MF-40 plan delta 1, option C): a select may take its options at run time from a declared contract (options_from) instead of a
+// static enum. The golden carries data {contract: <items path>} and option {value, label} as contract refs; FormRuntime.options[field] supplies the
+// rows; labels are data shown as sent (as LIST cells), never content strings. The server still validates the submitted value.
 import { Alert, Stack } from '@mantine/core';
 import Form from '@rjsf/mantine';
 import type { FormProps, IChangeEvent } from '@rjsf/core';
@@ -15,9 +18,10 @@ import type { RJSFSchema, RJSFValidationError, UiSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 
 export type Ref = { content: string };
+type ContractRef = { contract: string };
 export type Node = { component: string; props: Record<string, unknown>; children?: Array<Node | Ref> };
 type Schema = { type?: string; properties: Record<string, Record<string, unknown>>; required?: string[]; additionalProperties?: boolean };
-type Field = { field: string; widget: string; label?: string; help?: string; placeholder?: string };
+type Field = { field: string; widget: string; label?: string; help?: string; placeholder?: string; options_from?: { items: string; value: string; label: string } };
 type Descriptor = { identity: { id: string }; render: { form: { fields: Field[]; submit: string } } };
 export type FormState = 'static' | 'loading' | 'error' | 'hit' | 'unauthorized' | 'offline';
 
@@ -56,6 +60,11 @@ export function formTree(d: Descriptor, schema: Schema, state: FormState): Node 
     if (f.placeholder) props.placeholder = { content: f.placeholder };
     const options = schema.properties[f.field]?.enum;
     if (f.widget === 'select' && Array.isArray(options)) props.data = options.map((v) => ({ value: String(v), label: { content: `${f.label}.option.${String(v)}` } }));
+    const from = f.options_from;
+    if (f.widget === 'select' && from) {
+      props.data = { contract: from.items };
+      props.option = { value: { contract: `${from.items}.0.${from.value}` }, label: { contract: `${from.items}.0.${from.label}` } };
+    }
     return { component: w[0], props };
   });
   const errors = Object.fromEntries(keywordsOf(schema).map((k) => [ERROR_KEYS[k], { content: `${id}.errors.${ERROR_KEYS[k]}` }]));
@@ -87,6 +96,8 @@ export interface FormRuntime {
   disabled?: boolean;
   /** Run-time `const` per field (the delete confirm: the row's alt text), re-checked by the server. */
   constants?: Record<string, string>;
+  /** Run-time option rows per options_from select (the contract read's array, as sent). */
+  options?: Record<string, Array<Record<string, unknown>>>;
   onSubmit?: (data: Record<string, unknown>) => void;
 }
 
@@ -105,8 +116,16 @@ export function formProps(tree: Node, schema: Schema, content: Record<string, st
     if (n.props.description) ui['ui:description'] = text(content, n.props.description, `${name} help`);
     if (n.props.placeholder) ui['ui:placeholder'] = text(content, n.props.placeholder, `${name} placeholder`);
     uiSchema[name] = ui;
-    const data = n.props.data as Array<{ value: string; label: Ref }> | undefined;
-    if (data && props[name]) {
+    const fieldOf = (r: unknown): string => String((r as ContractRef).contract).split('.').at(-1) ?? '';
+    const option = n.props.option as { value: ContractRef; label: ContractRef } | undefined;
+    const rows = rt.options?.[name] ?? [];
+    if (option && props[name] && rows.length > 0) {
+      const [v, l] = [fieldOf(option.value), fieldOf(option.label)];
+      props[name] = { ...props[name], oneOf: rows.map((r) => ({ const: String(r[v]), title: String(r[l]) })) };
+      continue;
+    }
+    const data = n.props.data as Array<{ value: string; label: Ref }> | ContractRef | undefined;
+    if (Array.isArray(data) && props[name]) {
       const { enum: _drop, ...rest } = props[name]; // eslint-disable-line @typescript-eslint/no-unused-vars -- enum is replaced by oneOf with titles
       props[name] = { ...rest, oneOf: data.map((o) => ({ const: o.value, title: text(content, o.label, `${name} option ${o.value}`) })) };
     }

@@ -31,6 +31,14 @@ export const FORM_KEYWORDS = ['type', 'properties', 'required', 'enum', 'const',
   'readOnly', 'additionalProperties', '$comment'];
 export const FORM_FORMATS = ['date', 'date-time', 'email', 'uri', 'uuid'];
 const OPTION_VALUE = /^[a-z0-9_]+$/;
+// The binding standard (MF-40 plan delta 1, option C; FE-32): a contract path is <contract_id>.<seg>(.<seg>)*; a name segment is a wire key as sent
+// (camelCase allowed, never mapped) and must be on the contract's field whitelist; an index segment may only follow a name. The second segment
+// `errors` is RESERVED: <contract_id>.errors.<class>.<field> names a detail field of one declared error class.
+const CONTRACT_ID = /^[a-z0-9_]+$/;
+const NAME_SEG = /^[A-Za-z][A-Za-z0-9_]*$/;
+const INDEX_SEG = /^[0-9]+$/;
+export const ERRORS_SEG = 'errors';
+const whitelistOf = (d) => (Array.isArray(d?.inputs?.field_whitelist) ? d.inputs.field_whitelist : []);
 
 const tryJson = (p) => { try { return readJson(p); } catch { return undefined; } };
 const sorted = (xs) => [...xs].sort();
@@ -115,8 +123,8 @@ const keywordProblems = (node, at) => {
   return out;
 };
 
-/** The render.form checks of one descriptor against its contract schema and the widget/type table (P42-D1 a). */
-export const formProblems = (root, d, widgetTypes) => {
+/** The render.form checks of one descriptor against its contract schema and the widget/type table (P42-D1 a); options_from resolves in `contracts`. */
+export const formProblems = (root, d, widgetTypes, contracts) => {
   const form = d.render?.form;
   if (form === undefined || form === null || typeof form !== 'object') return [];
   const r = resolveSchemaRef(root, form.schema_ref);
@@ -133,11 +141,48 @@ export const formProblems = (root, d, widgetTypes) => {
     const allowed = widgetTypes?.[f.widget] ?? [];
     const types = [].concat(p.type ?? []).filter((t) => t !== 'null');
     if (!allowed.includes('*') && (types.length === 0 || types.some((t) => !allowed.includes(t)))) out.push(`field ${f.field}: widget ${f.widget} does not fit type ${types.join('|') || 'none'}`);
+    if (f.options_from !== undefined && f.widget !== 'select') out.push(`field ${f.field}: options_from needs widget select`);
     if (f.widget === 'select') {
-      if (!Array.isArray(p.enum)) out.push(`field ${f.field}: select needs an enum`);
+      const from = f.options_from;
+      if (from !== undefined && Array.isArray(p.enum)) out.push(`field ${f.field}: select has both an enum and options_from`);
+      else if (from !== undefined) out.push(...optionsFromProblems(f.field, from, contracts));
+      else if (!Array.isArray(p.enum)) out.push(`field ${f.field}: select needs an enum or options_from`);
       else for (const v of p.enum) if (!OPTION_VALUE.test(String(v))) out.push(`field ${f.field}: option value ${v} is not [a-z0-9_]+`);
     }
   }
+  return out;
+};
+
+/** options_from: items is a contract path; value and label are on that contract's field whitelist. */
+const optionsFromProblems = (field, from, contracts) => {
+  const out = contractRefProblems(from.items, `field ${field} options_from`, contracts);
+  if (out.length > 0) return out;
+  const wl = whitelistOf(contracts.get(String(from.items).split('.')[0]));
+  for (const k of ['value', 'label']) if (!wl.includes(from[k])) out.push(`field ${field}: options_from ${k} ${from[k]} not on the contract field whitelist`);
+  return out;
+};
+
+/**
+ * The render.list checks of a converted web LIST with columns (binding standard): id_field on the whitelist; rows a contract path; an image column
+ * has an alt_field on the whitelist and no sort_field; an enum column declares its values; each row action kind once.
+ */
+export const listProblems = (d, contracts) => {
+  const list = d.render?.list;
+  if (list === null || typeof list !== 'object' || !Array.isArray(list.columns) || !targetsOf(d).includes('web')) return [];
+  const wl = whitelistOf(d);
+  const out = [];
+  if (list.id_field === undefined) out.push('render.list needs id_field');
+  else if (!wl.includes(list.id_field)) out.push(`id_field ${list.id_field} not in inputs.field_whitelist`);
+  if (list.rows !== undefined) out.push(...contractRefProblems(list.rows, 'render.list.rows', contracts));
+  for (const c of list.columns) {
+    if (c.display === 'image') {
+      if (c.alt_field === undefined || !wl.includes(c.alt_field)) out.push(`column ${c.field}: an image column needs an alt_field in inputs.field_whitelist`);
+      if (c.sort_field !== undefined) out.push(`column ${c.field}: an image column takes no sort_field`);
+    }
+    if (c.display === 'enum' && !Array.isArray(c.values)) out.push(`column ${c.field}: an enum column needs values`);
+  }
+  const kinds = (list.row_actions ?? []).map((a) => a.kind);
+  for (const k of new Set(kinds.filter((x, i) => kinds.indexOf(x) !== i))) out.push(`row action ${k} declared twice`);
   return out;
 };
 
@@ -161,6 +206,7 @@ export function descArm(ctx) {
     if (d.status === 'generated' && !ls.includes('converted')) out.push(`SV-DESC ${id}: status generated but not in converted`);
   }
   for (const id of sorted(where.keys())) if (!ctx.inScope.has(id)) out.push(`SV-DESC ${id}: listed but no in-scope SURFACE descriptor`);
+  for (const id of sorted(ctx.contracts.keys())) if (whitelistOf(ctx.contracts.get(id)).includes(ERRORS_SEG)) out.push(`SV-DESC ${id}: field_whitelist names the reserved segment errors`);
   for (const id of m.converted) {
     const e = ctx.inScope.get(id);
     if (!e) continue;
@@ -169,7 +215,8 @@ export function descArm(ctx) {
     const n = ctx.validator.unresearchedCount(d);
     if (n > 0) out.push(`SV-DESC ${id}: ${n} UNRESEARCHED left`);
     if (d.status !== 'generated') out.push(`SV-DESC ${id}: status is ${d.status}, not generated`);
-    out.push(...formProblems(ctx.root, d, ctx.bindings.widget_types).map((x) => `SV-DESC ${id}: ${x}`));
+    out.push(...formProblems(ctx.root, d, ctx.bindings.widget_types, ctx.contracts).map((x) => `SV-DESC ${id}: ${x}`));
+    out.push(...listProblems(d, ctx.contracts).map((x) => `SV-DESC ${id}: ${x}`));
   }
   const c = Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, v.length]));
   return { findings: out, note: `S-desc ok (examined ${ctx.inScope.size} in scope: converted ${c.converted}, pending ${c.pending_conversion}, parked ${c.parked}, report ${c.report})` };
@@ -269,7 +316,14 @@ export const usedKeys = (root, d) => {
     }
   }
   const list = d.render?.list;
-  if (list && typeof list === 'object') for (const c of list.columns ?? []) keys.add(c.label);
+  if (list && typeof list === 'object') {
+    for (const c of list.columns ?? []) {
+      keys.add(c.label);
+      const values = c.display === 'boolean' ? ['true', 'false'] : c.display === 'enum' && Array.isArray(c.values) ? c.values : [];
+      for (const v of values) keys.add(`${c.label}.option.${v}`);
+    }
+    for (const a of list.row_actions ?? []) keys.add(a.label);
+  }
   return keys;
 };
 
@@ -281,14 +335,25 @@ export const usedKeys = (root, d) => {
 /**
  * MF-37 (FE-32): a golden `{"contract": "<contract_id>.<field>"}` names a field of a declared CONTRACT descriptor's response projection
  * (inputs.field_whitelist); an unknown contract or field is a finding, and so is a walk that was given no contract set.
+ * Binding standard (MF-40 plan delta 1, option C): the ref is a PATH `<contract_id>.<seg>(.<seg>)*` (the two-part form unchanged). A name segment is
+ * a wire key as sent and must be on the whitelist (checked by name only: the whitelist is flat); an index may only follow a name. A second segment
+ * `errors` is reserved: `<contract_id>.errors.<class>.<field>`, the class one of the contract's errors.classes[] and the field in its `fields`.
  */
 export const contractRefProblems = (ref, at, contracts) => {
-  const m = typeof ref === 'string' ? /^([a-z0-9_]+)\.([a-z0-9_]+)$/.exec(ref) : null;
-  if (!m) return [`contract ref ${ref} is not <contract_id>.<field> at ${at}`];
-  const d = contracts instanceof Map ? contracts.get(m[1]) : undefined;
-  if (!d) return [`unknown contract ${m[1]} at ${at}`];
-  const fields = Array.isArray(d.inputs?.field_whitelist) ? d.inputs.field_whitelist : [];
-  return fields.includes(m[2]) ? [] : [`unknown contract field ${ref} at ${at}`];
+  const segs = typeof ref === 'string' ? ref.split('.') : [];
+  const [id, ...rest] = segs;
+  if (rest.length === 0 || !CONTRACT_ID.test(id) || !rest.every((s) => NAME_SEG.test(s) || INDEX_SEG.test(s))) return [`contract ref ${ref} is not <contract_id>.<field> at ${at}`];
+  const d = contracts instanceof Map ? contracts.get(id) : undefined;
+  if (!d) return [`unknown contract ${id} at ${at}`];
+  if (rest[0] === ERRORS_SEG) {
+    if (rest.length !== 3) return [`contract ref ${ref} is not <contract_id>.errors.<class>.<field> at ${at}`];
+    const cls = (Array.isArray(d.errors?.classes) ? d.errors.classes : []).find((c) => c.class === rest[1]);
+    if (!cls) return [`unknown error class ${rest[1]} of ${id} at ${at}`];
+    return Array.isArray(cls.fields) && cls.fields.includes(rest[2]) ? [] : [`unknown error field ${ref} at ${at}`];
+  }
+  if (rest.some((s, i) => INDEX_SEG.test(s) && (i === 0 || INDEX_SEG.test(rest[i - 1])))) return [`contract ref ${ref}: an index must follow a name at ${at}`];
+  const fields = whitelistOf(d);
+  return rest.every((s) => INDEX_SEG.test(s) || fields.includes(s)) ? [] : [`unknown contract field ${ref} at ${at}`];
 };
 export const propsProblems = (value, at, ctx) => {
   const { kinds, nonDisplay, content, used } = ctx;

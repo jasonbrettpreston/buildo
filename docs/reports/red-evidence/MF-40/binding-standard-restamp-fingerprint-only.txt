@@ -1,0 +1,23 @@
+Binding standard (MF-40 plan delta 1 section 8 fold 2, the STOP rule): the 17 goldens of the converted manifest rebuilt by the generalised builder (src/tests/surfaces/surface-goldens.ts) from the GENERIC ListBinding (image column, id_field, delete row action declared in the admin_media census row) and compared with the committed files. Props, surface, state, target and covers identical in all 17; the 7 admin_media goldens differ only in the descriptor fingerprint (the descriptor changed); upload and delete goldens unchanged. Result: no STOP.
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media/hit.web.json  fingerprint restamped
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media/empty.web.json  fingerprint restamped
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media/partial.web.json  fingerprint restamped
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media/degraded.web.json  fingerprint restamped
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media/error.web.json  fingerprint restamped
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media/unauthorized.web.json  fingerprint restamped
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media/offline.web.json  fingerprint restamped
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_upload/static.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_upload/loading.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_upload/error.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_upload/hit.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_upload/unauthorized.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_upload/offline.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_delete/static.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_delete/loading.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_delete/error.web.json  fingerprint same
+IDENTICAL props+surface/state/target/covers  src/tests/fixtures/surfaces/admin_media_delete/hit.web.json  fingerprint same
+17 goldens built; 17 identical apart from the fingerprint; 0 different
+
+git diff of the goldens after the rewrite (every changed line):
+   7 -      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media.descriptor.json": "35518f0751439254"
+   7 +      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media.descriptor.json": "e01ee89b0b4f2aca"

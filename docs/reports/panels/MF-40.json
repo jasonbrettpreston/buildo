@@ -1,0 +1,24 @@
+{
+  "task": "MF-40",
+  "item": "The shared binding standard (MF-40 plan delta 1, option C, step 1; also unblocks MF-35): contract refs as paths (names as sent, an index after a name), the reserved errors segment with per-class fields, options_from selects, the generic LIST (id_field, rows, image column, enum values, row actions delete/edit/toggle_active), the golden builder over the converted manifest; admin_media rebuilt from the generic LIST with identical props; FE-31 and FE-32 lock edits. MF-40 own build (offer and advertiser surfaces, contracts, routes) follows in later commits under this record.",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-10",
+  "head": "pending",
+  "cards": [
+    "Operator 2026-11-10: \"y recommendation: C, with the four trims. approved\" (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-10: the shared binding standard\").",
+    "Operator 2026-11-10: \"Mf-D1 - we will just input the ads via the admin\" and \"Mf-40 agreed\" (D-1, D-3, D-6, D-7)."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-40/plan.md with ~/Buildo-scratch/mcfrontend/MF-40/plan.delta-1.md (section 8 folds win); PLAN panel ~/Buildo-scratch/mcfrontend/MF-40/panel/ (code-reviewer-grounded, compliance, observability-reviewer, regression-guardian) and the delta-1 seat (code-reviewer-grounded, PASS-WITH-FOLDS, all folded); record ~/Buildo-scratch/mcfrontend/MF-40/record.md.",
+  "output": "PENDING: the OUTPUT panel on the binding-standard commit (and later the MF-40 build) is filled before the push.",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "compliance (general-purpose, Spec 08 A9/A10)"
+  ],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-40/",
+  "notes": []
+}

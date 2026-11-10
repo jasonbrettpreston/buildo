@@ -109,8 +109,77 @@ describe('SV-DESC: the descriptor (the ONE validator, cutover, render.form)', ()
     contract(fx, (s) => { s.properties.surface_archetype.enum = ['a.b']; });
     editDescriptor(fx, 'FORM', (d) => { d.render.form.fields[0].widget = 'select'; });
     const l = await lines(fx);
-    expect(l).toContain('SV-DESC admin_placements: field placement_key: select needs an enum');
+    expect(l).toContain('SV-DESC admin_placements: field placement_key: select needs an enum or options_from');
     expect(l).toContain('SV-DESC admin_placements: field surface_archetype: option value a.b is not [a-z0-9_]+');
+  });
+});
+
+// The binding standard (MF-40 plan delta 1, option C; section 8 folds 1, 5, 6): options_from selects, the generic LIST keys, the reserved errors segment.
+const FX_CONTRACT = 'scripts/surfaces/fixture/contracts/contract_fx_list.descriptor.json';
+const withContract = (fx: Fixture, whitelist = ['advertisers', 'advertiser_id', 'name', 'offers', 'offer_id']): void => {
+  wj(path.join(fx.root, FX_CONTRACT), { kind: 'CONTRACT', identity: { id: 'contract_fx_list' }, inputs: { field_whitelist: whitelist } });
+};
+const pickFrom = (fx: Fixture, from: Record<string, string>, dropEnum = true): void => {
+  if (dropEnum) contract(fx, (s) => { delete s.properties.surface_archetype.enum; });
+  editDescriptor(fx, 'FORM', (d) => { d.render.form.fields[1].options_from = from; });
+};
+const OK_FROM = { items: 'contract_fx_list.advertisers', value: 'advertiser_id', label: 'name' };
+
+describe('SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment)', () => {
+  it('clean: a select whose options come from a declared contract array (no enum)', async () => {
+    const fx = fresh(); withContract(fx); pickFrom(fx, OK_FROM);
+    expect((await lines(fx)).filter((x) => x.startsWith('SV-DESC'))).toEqual([]);
+  });
+  it('RED: options_from on an unknown contract, an index-first path, a value and a label off the whitelist', async () => {
+    const a = fresh(); withContract(a); pickFrom(a, { ...OK_FROM, items: 'contract_no_such.advertisers' });
+    await has(a, 'SV-DESC admin_placements: unknown contract contract_no_such at field surface_archetype options_from');
+    const b = fresh(); withContract(b); pickFrom(b, { ...OK_FROM, items: 'contract_fx_list.0.advertisers' });
+    await has(b, 'SV-DESC admin_placements: contract ref contract_fx_list.0.advertisers: an index must follow a name at field surface_archetype options_from');
+    const c = fresh(); withContract(c); pickFrom(c, { ...OK_FROM, value: 'uuid', label: 'title' });
+    const l = await lines(c);
+    expect(l).toContain('SV-DESC admin_placements: field surface_archetype: options_from value uuid not on the contract field whitelist');
+    expect(l).toContain('SV-DESC admin_placements: field surface_archetype: options_from label title not on the contract field whitelist');
+  });
+  it('RED: a select with both an enum and options_from; options_from on a widget that is not a select', async () => {
+    const a = fresh(); withContract(a); pickFrom(a, OK_FROM, false);
+    await has(a, 'SV-DESC admin_placements: field surface_archetype: select has both an enum and options_from');
+    const b = fresh(); withContract(b);
+    editDescriptor(b, 'FORM', (d) => { d.render.form.fields[0].options_from = OK_FROM; });
+    await has(b, 'SV-DESC admin_placements: field placement_key: options_from needs widget select');
+  });
+  it('RED: a converted web LIST with columns and no id_field; an id_field off the whitelist', async () => {
+    const a = fresh(); editDescriptor(a, 'LIST', (d) => { delete d.render.list.id_field; });
+    await has(a, 'SV-DESC admin_surface_registry: render.list needs id_field');
+    const b = fresh(); editDescriptor(b, 'LIST', (d) => { d.render.list.id_field = 'secret'; });
+    await has(b, 'SV-DESC admin_surface_registry: id_field secret not in inputs.field_whitelist');
+  });
+  it('rows: clean on a declared contract array; RED on an unknown field', async () => {
+    const a = fresh(); withContract(a); editDescriptor(a, 'LIST', (d) => { d.render.list.rows = 'contract_fx_list.offers'; });
+    expect((await lines(a)).filter((x) => x.startsWith('SV-DESC'))).toEqual([]);
+    const b = fresh(); withContract(b); editDescriptor(b, 'LIST', (d) => { d.render.list.rows = 'contract_fx_list.rowz'; });
+    await has(b, 'SV-DESC admin_surface_registry: unknown contract field contract_fx_list.rowz at render.list.rows');
+  });
+  it('RED: an image column with no alt_field and with a sort_field; an enum column with no values; a row action kind twice', async () => {
+    const fx = fresh();
+    editDescriptor(fx, 'LIST', (d) => {
+      d.render.list.columns[0].display = 'image';
+      delete d.render.list.columns[1].values;
+      d.render.list.row_actions = [{ kind: 'edit', label: 'admin_surface_registry.col.id' }, { kind: 'edit', label: 'admin_surface_registry.col.id' }];
+    });
+    const l = await lines(fx);
+    expect(l).toContain('SV-DESC admin_surface_registry: column id: an image column needs an alt_field in inputs.field_whitelist');
+    expect(l).toContain('SV-DESC admin_surface_registry: column id: an image column takes no sort_field');
+    expect(l).toContain('SV-DESC admin_surface_registry: column status: an enum column needs values');
+    expect(l).toContain('SV-DESC admin_surface_registry: row action edit declared twice');
+  });
+  it('RED: a CONTRACT whose field whitelist names the reserved segment errors', async () => {
+    const fx = fresh(); withContract(fx, ['errors', 'name']);
+    await has(fx, 'SV-DESC contract_fx_list: field_whitelist names the reserved segment errors');
+  });
+  it('SV-SBIND: an enum column\'s option keys and a row action label are used content keys', async () => {
+    const fx = fresh();
+    const p = contentFile(fx, 'LIST'); const c = rj(p); delete c['admin_surface_registry.col.status.option.new']; wj(p, c); restamp(fx);
+    await has(fx, 'SV-SBIND admin_surface_registry: content key missing: admin_surface_registry.col.status.option.new');
   });
 });
 

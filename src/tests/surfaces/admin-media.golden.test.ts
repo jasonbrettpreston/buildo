@@ -5,10 +5,14 @@
 // MF-37 · T7. (a) the 17 committed admin media goldens equal a fresh build from the bindings byte for byte (RED: a hand edit differs);
 // (b) each golden covers its own state and every declared state has one; (c) the server page hands the client mount plain data only
 // (JSON values: no function, Date, Map, class instance or undefined), RED on a planted function prop. No DB, no network.
+// Binding standard (MF-40 plan delta 1 section 8 folds 2 and 4): the builder is surface-goldens.ts over the converted manifest, and admin_media is
+// built by the GENERIC LIST from its declared image column, id_field and delete row action; (a) is the fold-2 plant (the 7 admin_media goldens
+// regenerate equal to the committed files), and (a2) shows the generic code is what decides it (RED: a sort_field on the image column differs).
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildGoldens, descriptorFile, MEDIA_IDS } from './admin-media-goldens';
+import { listTree } from '../../components/surfaces/web/ListBinding';
+import { buildGoldens, convertedIds, descriptorFile } from './surface-goldens';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
 const ROOT = process.cwd();
@@ -34,10 +38,27 @@ describe('T7 (a) the committed goldens equal a fresh build', () => {
   });
 });
 
+describe('T7 (a2) admin_media comes from the generic LIST', () => {
+  it('the descriptor declares the image column first, id_field and one delete action; the hit golden props equal listTree of it', () => {
+    const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, 'admin_media')), 'utf8'));
+    expect([d.render.list.columns[0], d.render.list.id_field, d.render.list.row_actions]).toEqual([
+      { field: 'signed_url', label: 'admin_media.col.preview', display: 'image', alt_field: 'alt' }, 'asset_id', [{ kind: 'delete', label: 'admin_media.action.delete' }]]);
+    const g: Json = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/tests/fixtures/surfaces/admin_media/hit.web.json'), 'utf8'));
+    expect(listTree(d as never, 'hit')).toEqual(g.props);
+  });
+  it('RED: a sort_field planted on the image column changes the props (the generic map, not a hard-coded preview)', () => {
+    const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, 'admin_media')), 'utf8'));
+    const g: Json = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/tests/fixtures/surfaces/admin_media/hit.web.json'), 'utf8'));
+    d.render.list.columns[0].display = 'text'; d.render.list.columns[0].sort_field = 'signed_url';
+    expect(listTree(d as never, 'hit')).not.toEqual(g.props);
+  });
+});
+
 describe('T7 (b) coverage', () => {
   it('each golden covers its state, every state of the three surfaces has one', () => {
-    for (const id of MEDIA_IDS) {
-      const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(id)), 'utf8'));
+    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete']);
+    for (const id of convertedIds(ROOT)) {
+      const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {
         const g: Json = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/tests/fixtures/surfaces', id, `${s.golden}.web.json`), 'utf8'));
         expect([g.surface, g.state, g.covers]).toEqual([id, s.name, [s.name]]);

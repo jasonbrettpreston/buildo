@@ -1,0 +1,42 @@
+Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"), red run, 2026-11-10.
+Method: the new and edited test files of the binding-standard commit (contract-binding.logic FE-32 lock, surface-conformance.logic FE-31 lock C-6 plant, screen-checks.logic, screen-fixture.ts, admin-media.golden T7, binding-standard.logic, surface-goldens.ts) copied onto a throwaway detached worktree of the parent tip 84c0f43db, which has none of the code, schema or descriptor changes; run there; the worktree removed after.
+Expected red: every new case (the code is absent), C-6 (the plant names the "image" display the parent schema lacks), C-7 controls and FE-03 clean copies and the screen-checks clean case (the parent schema refuses the fixture's id_field and values), the select message (renamed).
+
+   × T7 (a2) admin_media comes from the generic LIST > the descriptor declares the image column first, id_field and one delete action; the hit golden props equal listTree of it 4ms
+   × T7 (a2) admin_media comes from the generic LIST > RED: a sort_field planted on the image column changes the props (the generic map, not a hard-coded preview) 2ms
+   × (a) the generic LIST > rows path: every record ref is <rows>.0.<field>; idAccessor is id_field 4ms
+   × (a) the generic LIST > row actions: one Button each in order, none red unless delete; one Modal for edit only; derived keys; no Image without an image column 1ms
+   × (a) the generic LIST > boolean and enum cells show the content text of their option; null shows nothing 0ms
+   × (a) the generic LIST > RED: a value outside the declared options throws; a missing option key throws 0ms
+   × (a) the generic LIST > renders: both action labels and the option texts from content, every button lg 4ms
+   × (b) the options_from select > the golden carries contract refs, never option content keys 1ms
+   × (b) the options_from select > the options are the run-time rows, labels shown as sent; with no rows the property is unchanged 0ms
+   × FE-32 (d) the binding standard: contract paths and error details > the two-part form stays valid; a path of names and indexes resolves; camelCase is used as sent 21ms
+   × FE-32 (d) the binding standard: contract paths and error details > an error detail resolves through its class's fields 12ms
+   × FE-32 (d) the binding standard: contract paths and error details > RED: an index first, an index after an index, a bad segment, an unknown name inside a path 10ms
+   × FE-32 (d) the binding standard: contract paths and error details > RED: the errors grammar (wrong length, unknown class, a field the class does not declare, a class with no fields) 20ms
+   × FE-32 (d) the binding standard: contract paths and error details > RED (walk): a path ref planted in golden props is judged where it sits 40ms
+   × FE-32 (d) the binding standard: contract paths and error details > the real tree: no CONTRACT field whitelist names the reserved segment errors (SV-DESC) 35ms
+   ✓ C-2 the import boundary (one tier: libraries only in binding modules, providers, tests and the vendor dir) > the real tree: no finding; the pinned D-2/D-3 libraries are listed; the walk examined files 1221ms
+   × C-6 the generated types and validator equal a fresh emit > a temp emit is byte-identical to the committed d.ts and validator; RED: a hand edit of the d.ts differs 155ms
+   × C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > controls: each converted fixture is valid with 0 sentinels; every live descriptor is valid; a non-generated FORM and LIST need no new key 2ms
+   × C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > X4: a generated LIST whose projection is not list needs no columns 1ms
+   × FE-03: the clean fixture tree exits 0 through every arm > exit 0, nothing on stderr, and the generic arms examined the four converted fixtures 310ms
+   × FE-03 FORM: clean exits 0, a planted bad descriptor exits 1 > the clean copy exits 0 343ms
+   × FE-03 LIST: clean exits 0, a planted bad descriptor exits 1 > the clean copy exits 0 247ms
+   × FE-03 SEARCH: clean exits 0, a planted bad descriptor exits 1 > the clean copy exits 0 228ms
+   × FE-03 STATIC: clean exits 0, a planted bad descriptor exits 1 > the clean copy exits 0 213ms
+   × clean: every arm is green on the four converted fixtures > no finding, and each note counts what it examined 123ms
+   × SV-DESC: the descriptor (the ONE validator, cutover, render.form) > a select over no enum, and an option value outside [a-z0-9_]+ 53ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > clean: a select whose options come from a declared contract array (no enum) 72ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > RED: options_from on an unknown contract, an index-first path, a value and a label off the whitelist 48ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > RED: a select with both an enum and options_from; options_from on a widget that is not a select 45ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > RED: a converted web LIST with columns and no id_field; an id_field off the whitelist 46ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > rows: clean on a declared contract array; RED on an unknown field 48ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > RED: an image column with no alt_field and with a sort_field; an enum column with no values; a row action kind twice 51ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > RED: a CONTRACT whose field whitelist names the reserved segment errors 43ms
+   × SV-DESC: the binding standard (options_from, the generic LIST, the reserved errors segment) > SV-SBIND: an enum column's option keys and a row action label are used content keys 48ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > control: a string under a non-display key (variant) and a boolean are not display text 37ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 34 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  6 failed (6)
+      Tests  34 failed | 88 passed (122)
