@@ -1,0 +1,23 @@
+MF-40 build red evidence: the RULED locks the admin placements conversion moves (FE-03 screen-checks fixture coupling, FE-13 surface-validate success line, FE-31 surface-conformance counts and mounts, T7 golden builder), run on the tree with the three surfaces converted and BEFORE the lock edits.
+Command: VITEST_MIN_FORKS=4 VITEST_MAX_FORKS=4 npx vitest run src/tests/surfaces/
+RED (7 of 709):
+   x C-1 ... SV-DESC is clean with the exact counts (23 in scope: 3 converted, 7 pending, 9 parked, 4 report): Received "S-desc ok (examined 25 in scope: converted 6, pending 6, parked 9, report 4)"
+   x C-3 bindings.json integrity ... the real tree: expected [ 2, 2, 9 ] to deeply equal [ 2, 2, 4 ] (mounts)
+   x C-7 ... controls: expected 154 to be 149 (descriptor count: +2 SURFACE, +3 CONTRACT)
+   x SV-SCREEN ... a state name declared twice: the F6 fixture copies the live admin_placements, whose first state is now static (expected "state loading declared twice")
+   x T7 (a) 17 goldens, byte for byte (the builder now covers 34)
+   x T7 (b) coverage: convertedIds lists six surfaces
+   x FE-13 surface-validate gate: real tree: the exact success line moves to 25 in scope, 6 surfaces, 34 goldens, 131 strings
+Each edit keeps its exact toBe / toEqual form (never loosened) and moves the expected value to the measured one with a dated comment; C-7's non-generated FORM control moves to binding_web_form (status new, no render.form) because admin_placements is now generated.
+GREEN after the lock edits: VITEST_MIN_FORKS=4 VITEST_MAX_FORKS=4 npx vitest run src/tests/surfaces/ -> Test Files 30 passed (30), Tests 709 passed (709).
+
+RE-MEASURE on the MF-35 tip (restack, wf1/mf40-build3-1110 on f3b372615): the same locks, MF-35's edits kept, red before the MF-40 figures were applied:
+   × C-1 the arms on the real tree, and the queue state > SV-DESC is clean with the exact counts (23 in scope: 3 converted, 7 pending, 9 parked, 4 report); SCREEN and SBIND judge the three MF-37 surfaces 34ms
+   × C-3 bindings.json integrity > the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid 2ms
+   × C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > controls: each converted fixture is valid with 0 sentinels; every live descriptor is valid; a non-generated FORM and LIST need no new key 3ms
+   × T7 (a) the committed goldens equal a fresh build > 17 goldens, byte for byte 14ms
+   × T7 (b) coverage > each golden covers its state, every state of the three surfaces has one 1ms
+   × FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting 523ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  6 failed | 719 passed (725)
+Figures applied (exact asserts kept): C-1 S-desc 25 in scope, converted 7, pending 5, parked 9, report 4; S-screen 7 surfaces, 44 goldens; S-sbind 7 surfaces, 154 strings; C-3 [4, 3, 10]; C-7 155 descriptors and the binding_web_form control; T7 34 web goldens and seven converted ids; FE-13 the success line with those figures. GREEN: src/tests/surfaces/ 31 files, 725 passed.

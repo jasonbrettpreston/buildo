@@ -1,0 +1,223 @@
+{
+  "surface": "admin_offers",
+  "state": "offline",
+  "target": "web",
+  "covers": [
+    "offline"
+  ],
+  "props": {
+    "component": "Stack",
+    "props": {},
+    "children": [
+      {
+        "component": "Alert",
+        "props": {
+          "color": "yellow"
+        },
+        "children": [
+          {
+            "content": "admin_offers.state.offline"
+          }
+        ]
+      },
+      {
+        "component": "DataTable",
+        "props": {
+          "idAccessor": "offer_id",
+          "columns": [
+            {
+              "accessor": "placement_key",
+              "title": {
+                "content": "admin_offers.col.placement_key"
+              },
+              "sortable": true,
+              "options": [
+                {
+                  "value": "detail_footer",
+                  "label": {
+                    "content": "admin_offers.col.placement_key.option.detail_footer"
+                  }
+                },
+                {
+                  "value": "renovation_section",
+                  "label": {
+                    "content": "admin_offers.col.placement_key.option.renovation_section"
+                  }
+                },
+                {
+                  "value": "scenario_card",
+                  "label": {
+                    "content": "admin_offers.col.placement_key.option.scenario_card"
+                  }
+                }
+              ]
+            },
+            {
+              "accessor": "advertiser_name",
+              "title": {
+                "content": "admin_offers.col.advertiser_name"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "building_type",
+              "title": {
+                "content": "admin_offers.col.building_type"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "design_option",
+              "title": {
+                "content": "admin_offers.col.design_option"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "creative_text",
+              "title": {
+                "content": "admin_offers.col.creative_text"
+              },
+              "sortable": false
+            },
+            {
+              "accessor": "flight_start",
+              "title": {
+                "content": "admin_offers.col.flight_start"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "flight_end",
+              "title": {
+                "content": "admin_offers.col.flight_end"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "active",
+              "title": {
+                "content": "admin_offers.col.active"
+              },
+              "sortable": true,
+              "options": [
+                {
+                  "value": "true",
+                  "label": {
+                    "content": "admin_offers.col.active.option.true"
+                  }
+                },
+                {
+                  "value": "false",
+                  "label": {
+                    "content": "admin_offers.col.active.option.false"
+                  }
+                }
+              ]
+            },
+            {
+              "accessor": "over_cap",
+              "title": {
+                "content": "admin_offers.col.over_cap"
+              },
+              "sortable": true,
+              "options": [
+                {
+                  "value": "true",
+                  "label": {
+                    "content": "admin_offers.col.over_cap.option.true"
+                  }
+                },
+                {
+                  "value": "false",
+                  "label": {
+                    "content": "admin_offers.col.over_cap.option.false"
+                  }
+                }
+              ]
+            },
+            {
+              "accessor": "resolvable",
+              "title": {
+                "content": "admin_offers.col.resolvable"
+              },
+              "sortable": true,
+              "options": [
+                {
+                  "value": "true",
+                  "label": {
+                    "content": "admin_offers.col.resolvable.option.true"
+                  }
+                },
+                {
+                  "value": "false",
+                  "label": {
+                    "content": "admin_offers.col.resolvable.option.false"
+                  }
+                }
+              ]
+            },
+            {
+              "accessor": "actions",
+              "title": {
+                "content": "admin_offers.col.actions"
+              }
+            }
+          ],
+          "records": [],
+          "noRecordsText": {
+            "content": "admin_offers.empty"
+          },
+          "loadingText": {
+            "content": "admin_offers.loading"
+          },
+          "fetching": false
+        }
+      },
+      {
+        "component": "Button",
+        "props": {
+          "size": "lg",
+          "variant": "light"
+        },
+        "children": [
+          {
+            "content": "admin_offers.action.edit"
+          }
+        ]
+      },
+      {
+        "component": "Button",
+        "props": {
+          "size": "lg",
+          "variant": "light"
+        },
+        "children": [
+          {
+            "content": "admin_offers.action.toggle_active"
+          }
+        ]
+      },
+      {
+        "component": "Modal",
+        "props": {
+          "title": {
+            "content": "admin_offers.edit.title"
+          },
+          "closeButtonProps": {
+            "size": "xl",
+            "aria-label": {
+              "content": "admin_offers.edit.close"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_admin/F04/surfaces/admin_offers.content.json": "67909e7f45d40626",
+      "scripts/surfaces/parcel_admin/F04/surfaces/admin_offers.descriptor.json": "dcf3fa95f17c5bf2"
+    }
+  }
+}

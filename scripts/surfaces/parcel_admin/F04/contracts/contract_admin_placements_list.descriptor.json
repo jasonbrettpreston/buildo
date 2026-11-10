@@ -1,0 +1,368 @@
+{
+  "kind": "CONTRACT",
+  "status": "new",
+  "docs": {
+    "purpose": "Returns every offer with its advertiser, targeting, flight days and the over_cap and resolvable flags, the active advertisers, and the offer form's flight defaults.",
+    "data_story": "One read of offers joined to advertisers and placements (over_cap by a window count against max_slots), one read of active advertisers, and the default flight length from logic_variables.",
+    "under_126": "A QUERY CONTRACT; the RSC page calls the same function (listPlacements)."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/admin/placements/route.ts"
+    ],
+    "contracts": [
+      "src/app/api/admin/placements/route.ts — GET export"
+    ],
+    "tables": [
+      "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+    ],
+    "gate": [
+      "src/app/api/admin/placements/route.ts — verifyAdminAuth first"
+    ],
+    "states": [
+      "the envelope classes in errors.classes"
+    ],
+    "emits": [
+      "src/lib/admin/admin-audit.ts — writeAdminAudit inside withTransaction"
+    ]
+  },
+  "identity": {
+    "id": "contract_admin_placements_list",
+    "ref": "C-066",
+    "route": "/api/admin/placements",
+    "archetype": "QUERY",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route.",
+      "evidence": [
+        "src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx",
+        "src/lib/placements/usePlacementWrites.ts"
+      ]
+    }
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads offers, advertisers and placements (written only by these admin routes and migration 302, never by a pipeline step) and the Admin Placements logic_variables rows.",
+    "evidence": [
+      "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables",
+      "src/lib/placements/contract.ts — readPlacementLimits"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "offers",
+      "advertisers",
+      "defaults",
+      "offer_id",
+      "placement_key",
+      "advertiser_id",
+      "advertiser_name",
+      "building_type",
+      "design_option",
+      "creative_text",
+      "flight_start",
+      "flight_end",
+      "active",
+      "over_cap",
+      "resolvable",
+      "updated_at",
+      "name"
+    ],
+    "tables": [
+      {
+        "table": "offers",
+        "columns": [
+          "offer_id",
+          "advertiser_id",
+          "placement_key",
+          "targeting",
+          "flight_start",
+          "flight_end",
+          "active",
+          "creative_text",
+          "creative_asset_id",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+        ]
+      },
+      {
+        "table": "advertisers",
+        "columns": [
+          "advertiser_id",
+          "name",
+          "contact_user_id",
+          "active",
+          "created_at",
+          "updated_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+        ]
+      },
+      {
+        "table": "placements",
+        "columns": [
+          "placement_key",
+          "surface_archetype",
+          "max_slots",
+          "disclosure_required"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A read: it writes no table.",
+    "evidence": [
+      "src/lib/placements/list.ts"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server.",
+    "evidence": [
+      "src/app/api/admin/media/route.ts — GET export: verifyAdminAuth first, then the media handler"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Read per request; Cache-Control private, no-store.",
+    "evidence": [
+      "src/app/api/admin/placements/route.ts"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "classifyRoute(\"/api/admin/placements\") returns \"admin\" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts — the /api/admin/ prefix returns \"admin\"",
+        "src/app/api/admin/placements/route.ts — verifyAdminAuth first"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "The page writes offers and advertisers, Class B by Spec 114 §2 with the ONE ruled admin-read pattern (RLS on, one <table>_select_admin policy, no write policy); MF-40 D-1 (operator 2026-11-10) drops the move to an advertiser class (admin input only). placements, which it reads, is Class E (one public select policy, seed-only). The routes read and write through the owner connection, so the policies are defence in depth.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E",
+        "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_admin_placements_list__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/admin/placements\") → \"admin\" plus verifyAdminAuth on the first line; locked by src/tests/admin-placements.infra.test.ts."
+    },
+    {
+      "id": "contract_admin_placements_list__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class arrives in the { data, error, meta } envelope (src/tests/admin-placements.infra.test.ts)."
+    },
+    {
+      "id": "contract_admin_placements_list__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is a pick-by-name projection equal to inputs.field_whitelist (src/app/api/admin/placements/types.ts Zod schemas)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts",
+      "src/app/api/admin/media/route.ts — GET export: verifyAdminAuth first, then the media handler"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "The page is not reachable without an admin session (requireAdminPage); a client call gets UNAUTHORIZED."
+      },
+      {
+        "class": "500",
+        "ui": "The list renders its error state from content; the request is logged."
+      }
+    ]
+  },
+  "emits": {
+    "answer": "events",
+    "why": "A read writes no ledger row; it logs one info line per read.",
+    "evidence": [
+      "src/app/api/admin/placements/route.ts — logInfo"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "An admin endpoint renders no sponsored placement.",
+    "evidence": [
+      "src/app/api/admin/placements/route.ts"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Admin placements operations are not metered.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "Reads the Admin Placements tunables.",
+    "evidence": [
+      "scripts/seeds/logic_variables.json — group Admin Placements"
+    ],
+    "logic_variables": [
+      {
+        "name": "admin_placement_default_flight_days",
+        "min": 1,
+        "max": 365,
+        "on_invalid": "default",
+        "why": "It pre-fills the form's flight end; the admin confirms it."
+      },
+      {
+        "name": "admin_placement_max_horizon_days",
+        "min": 1,
+        "max": 1095,
+        "on_invalid": "fail",
+        "why": "Read with the default: a bad horizon fails the read loudly rather than serving a form the route will refuse."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Called by the admin placements page only (the serving row, D-7, will read offers for the report).",
+    "evidence": [
+      "src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx"
+    ],
+    "surfaces": [
+      "admin_offers",
+      "admin_placements"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target (the existing contract rows carry the same limitation).",
+      "check_id": "contract_admin_placements_list__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "MF-40. One CONTRACT descriptor per handler file (126 §3.1). The 126 §6.2 rls block is not representable in surface.schema.json yet; guards.rls_class carries the ruled pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10).",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/admin/placements/route.ts"
+    ],
+    "methods": [
+      "GET"
+    ],
+    "consumers": [
+      "admin_offers",
+      "admin_placements"
+    ],
+    "writes_audit_row": "n/a",
+    "consumers_verified": [
+      "src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx"
+    ],
+    "auth_class_executed": "admin",
+    "locking_tests": [
+      "src/tests/admin-placements.infra.test.ts",
+      "src/tests/api.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B2",
+    "why": "The admin placements page (MF-40): first-party offers into the declared report slots.",
+    "feature": "F04",
+    "build_order": 2043,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

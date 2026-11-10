@@ -1,0 +1,89 @@
+{
+  "surface": "admin_advertiser_entry",
+  "state": "error",
+  "target": "web",
+  "covers": [
+    "error"
+  ],
+  "props": {
+    "component": "Form",
+    "props": {
+      "name": "admin_advertiser_entry",
+      "errors": {
+        "required": {
+          "content": "admin_advertiser_entry.errors.required"
+        },
+        "type": {
+          "content": "admin_advertiser_entry.errors.type"
+        },
+        "const": {
+          "content": "admin_advertiser_entry.errors.const"
+        },
+        "pattern": {
+          "content": "admin_advertiser_entry.errors.pattern"
+        },
+        "min_length": {
+          "content": "admin_advertiser_entry.errors.min_length"
+        },
+        "max_length": {
+          "content": "admin_advertiser_entry.errors.max_length"
+        },
+        "additional_properties": {
+          "content": "admin_advertiser_entry.errors.additional_properties"
+        }
+      }
+    },
+    "children": [
+      {
+        "component": "Alert",
+        "props": {
+          "color": "red"
+        },
+        "children": [
+          {
+            "content": "admin_advertiser_entry.state.error"
+          }
+        ]
+      },
+      {
+        "component": "hidden",
+        "props": {
+          "name": "advertiser_id"
+        }
+      },
+      {
+        "component": "TextInput",
+        "props": {
+          "name": "name",
+          "size": "lg",
+          "label": {
+            "content": "admin_advertiser_entry.field.name"
+          },
+          "description": {
+            "content": "admin_advertiser_entry.help.name"
+          }
+        }
+      },
+      {
+        "component": "Button",
+        "props": {
+          "type": "submit",
+          "size": "lg",
+          "loading": false
+        },
+        "children": [
+          {
+            "content": "admin_advertiser_entry.submit"
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/_schema/placements-contract.json": "d1ce8b1484e5ce54",
+      "scripts/surfaces/parcel_admin/F04/surfaces/admin_advertiser_entry.content.json": "f1a0d8f9abbaf2a0",
+      "scripts/surfaces/parcel_admin/F04/surfaces/admin_advertiser_entry.descriptor.json": "c34a1eb2f4b5d1f8"
+    }
+  }
+}

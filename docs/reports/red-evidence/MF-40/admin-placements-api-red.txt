@@ -1,0 +1,18 @@
+MF-40 build red evidence: src/tests/admin-placements.infra.test.ts (the placements routes), planted defects on the uncommitted route file, each restored after its run
+== plant 1: the PUT create inserts the offer ACTIVE (trim 3/4: offers save inactive)
+   × PUT /api/admin/placements/offers > create: BEGIN, advertiser, FOR UPDATE, INSERT inactive, audit offer_schedule, COMMIT 3ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 17 passed (18)
+== plant 2: the PUT writes no audit row (R-12)
+   × PUT /api/admin/placements/offers > create: BEGIN, advertiser, FOR UPDATE, INSERT inactive, audit offer_schedule, COMMIT 3ms
+   × PUT /api/admin/placements/offers > edit: UPDATE WHERE updated_at; the audit carries the before and after 1ms
+   × PUT /api/admin/placements/offers > an audit failure rolls the offer back and fails the request (R-12) 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 15 passed (18)
+== plant 3: the session gate is removed from PATCH
+   × auth: 401 and 403 on every write, before any transaction > 403 SESSION_REQUIRED for admin_key: no transaction, no audit row 3ms
+   × auth: 401 and 403 on every write, before any transaction > 403 SESSION_REQUIRED for dev_bypass: no transaction, no audit row 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 16 passed (18)
+== restored
+      Tests  18 passed (18)

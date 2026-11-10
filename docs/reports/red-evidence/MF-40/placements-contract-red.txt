@@ -1,0 +1,7 @@
+MF-40 build red evidence: src/tests/placements-contract.logic.test.ts (the placements contract join lock and the offer validator)
+Base: 48e3e11bc, before src/lib/placements/contract.ts existed. Command: npx vitest run src/tests/placements-contract.logic.test.ts
+RED:
+ FAIL  src/tests/placements-contract.logic.test.ts [ src/tests/placements-contract.logic.test.ts ]
+Error: Cannot find module '@/lib/placements/contract' imported from '/Users/brettpreston_macmini/Buildo-wt-mf40-build2/src/tests/placements-contract.logic.test.ts'.
+      Tests  no tests
+GREEN after src/lib/placements/contract.ts: 6 passed (6). The in-test plants (an extra slot, a dropped slot, a design option outside the scenario keys, a zone_class field, an income field; income, user-entered, zone_class, active and disclosure keys in a payload) are each refused.

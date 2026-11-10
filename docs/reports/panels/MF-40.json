@@ -20,10 +20,13 @@
   "followups": [
     "Not seated on the binding-standard OUTPUT: compliance (general-purpose, Spec 08 A9/A10), named in this record before the panel ran.",
     "code-reviewer sub-threshold: Row type is string|number|null, so a real boolean cell relies on String(true); formProps String(r[v]) yields \"undefined\" for a missing option field; the edit and toggle_active ListBinding paths are covered by SSR render only, not click-through.",
-    "regression-guardian LOW-3 (optional, not folded): the FE-31 C-6 plant hard-codes the column display union; it could derive the union from the emitted schema."
+    "regression-guardian LOW-3 (optional, not folded): the FE-31 C-6 plant hard-codes the column display union; it could derive the union from the emitted schema.",
+    "MF-40 build: the closed errors.classes list has no 409, so STALE_OFFER and ADVERTISER_ID_TAKEN are recorded inside the 400 class row (contract_admin_offer_upsert, contract_admin_advertiser_upsert); growing the list is a Spec 128 section 4 escalation, not done here.",
+    "MF-40 build: the FORM state alert has one error text per surface, so the 409 and each named 400 share the surface error text (content); a per-code toast needs content keys the SV-SBIND orphan rule would refuse today."
   ],
   "evidence": "docs/reports/red-evidence/MF-40/",
   "notes": [
-    "Refuted: none. LOW-3 folded as an explicit throw (altOf) rather than a plain removal, since alt_field is optional in the Column type; SV-DESC keeps it required on a converted descriptor."
+    "Refuted: none. LOW-3 folded as an explicit throw (altOf) rather than a plain removal, since alt_field is optional in the Column type; SV-DESC keeps it required on a converted descriptor.",
+    "MF-40 own build (plan delta 1 step 3, lane wf1/mf40-build2-1110): docs c0c9added (dated notes, re-made from ac1d64d3d with hooks), DB files b60ab4bac (migration 302 written, not applied; re-made from c8605a1c2), trims docs 48e3e11bc, prereg 2 at round 135, then the code commit (three surfaces admin_placements, admin_offers, admin_advertiser_entry; contracts contract_admin_placements_list, contract_admin_offer_upsert, contract_admin_advertiser_upsert; placements-contract.json; the placements routes; the saved-offer preview page). Its OUTPUT panel is PENDING; the DB test runs in the operator DB job after the increment-3 night."
   ]
 }

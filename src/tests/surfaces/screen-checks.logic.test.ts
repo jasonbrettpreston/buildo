@@ -267,7 +267,8 @@ describe('SV-SCREEN: one golden per state per declared target, covers, nothing s
   });
   it('a state name declared twice', async () => {
     const fx = fresh(); editDescriptor(fx, 'FORM', (d) => { d.states.push({ ...d.states[0] }); });
-    await has(fx, 'SV-SCREEN admin_placements: state loading declared twice');
+    // MF-40 (F6 coupling, 2026-11-10): the live admin_placements now declares the FormBinding six, static first.
+    await has(fx, 'SV-SCREEN admin_placements: state static declared twice');
   });
   it('a dangling covers entry', async () => {
     const fx = fresh(); editGolden(fx, 'FORM', 'hit.web.json', (g) => { g.covers.push('nowhere'); });

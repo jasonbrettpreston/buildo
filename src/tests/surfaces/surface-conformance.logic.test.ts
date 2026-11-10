@@ -207,14 +207,16 @@ const walkAll = (dir: string, rel = ''): string[] => (fs.existsSync(dir) ? fs.re
 // ---- the cases -------------------------------------------------------------------------------------------------------------------------------------
 
 describe('C-1 the arms on the real tree, and the queue state', () => {
-  it('SV-DESC is clean with the exact counts (23 in scope: 3 converted, 7 pending, 9 parked, 4 report); SCREEN and SBIND judge the three MF-37 surfaces', async () => {
+  it('SV-DESC is clean with the exact counts (25 in scope: 7 converted, 5 pending, 9 parked, 4 report); SCREEN and SBIND judge the MF-37, MF-35 and MF-40 surfaces', async () => {
     const ctx = await loadContext(REPO);
     const d = descArm(ctx);
     expect(d.findings).toEqual([]);
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted (converted 3 -> 4, pending 7 -> 6); its 10 mobile goldens and 23 content strings join.
-    expect(d.note).toBe('S-desc ok (examined 23 in scope: converted 4, pending 6, parked 9, report 4)');
+    // MF-40 (dated 2026-11-10; operator "y recommendation: C, with the four trims. approved"): admin_placements converted from pending, admin_offers and
+    // admin_advertiser_entry new (25 in scope, converted 4 -> 7, pending 6 -> 5); 17 web goldens and 75 content strings join (re-measured on the MF-35 tip).
+    expect(d.note).toBe('S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4)');
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (4 surfaces, 27 goldens)' }, { findings: [], note: 'S-sbind ok (4 surfaces, 79 strings)' }]);
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (7 surfaces, 44 goldens)' }, { findings: [], note: 'S-sbind ok (7 surfaces, 154 strings)' }]);
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -321,7 +323,7 @@ describe('C-3 bindings.json integrity', () => {
     expect(bindingsProblems(real)).toEqual([]);
     console.log(`C-3: ${B.modules.length} modules`);
     // MF-35 (dated 2026-11-10): + the two mobile modules, their promoted entry shared_mobile_surface_binding and the search screen mount.
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([4, 3, 5]);
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([4, 3, 10]); // MF-40: +5 mounts (the placements page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -427,9 +429,10 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     for (const a of ARCHETYPES) { const d = convert(a); expect([a, v(d), unresearchedCount(d)]).toEqual([a, [], 0]); }
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
-    expect(all.length).toBe(150); // MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding)
+    expect(all.length).toBe(155); // MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
-    const form = rj(path.join(REPO, 'scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.descriptor.json'));
+    // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
+    const form = rj(path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_form.descriptor.json'));
     expect([form.status, form.render.form]).toEqual(['new', undefined]);
   });
   it('X4: a generated LIST whose projection is not list needs no columns', () => {

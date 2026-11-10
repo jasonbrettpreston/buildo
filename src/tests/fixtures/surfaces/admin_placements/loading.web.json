@@ -1,0 +1,215 @@
+{
+  "surface": "admin_placements",
+  "state": "loading",
+  "target": "web",
+  "covers": [
+    "loading"
+  ],
+  "props": {
+    "component": "Form",
+    "props": {
+      "name": "admin_placements",
+      "errors": {
+        "required": {
+          "content": "admin_placements.errors.required"
+        },
+        "type": {
+          "content": "admin_placements.errors.type"
+        },
+        "enum": {
+          "content": "admin_placements.errors.enum"
+        },
+        "const": {
+          "content": "admin_placements.errors.const"
+        },
+        "pattern": {
+          "content": "admin_placements.errors.pattern"
+        },
+        "min_length": {
+          "content": "admin_placements.errors.min_length"
+        },
+        "max_length": {
+          "content": "admin_placements.errors.max_length"
+        },
+        "additional_properties": {
+          "content": "admin_placements.errors.additional_properties"
+        }
+      }
+    },
+    "children": [
+      {
+        "component": "hidden",
+        "props": {
+          "name": "offer_id"
+        }
+      },
+      {
+        "component": "hidden",
+        "props": {
+          "name": "updated_at"
+        }
+      },
+      {
+        "component": "Select",
+        "props": {
+          "name": "placement_key",
+          "size": "lg",
+          "label": {
+            "content": "admin_placements.field.placement_key"
+          },
+          "description": {
+            "content": "admin_placements.help.placement_key"
+          },
+          "data": [
+            {
+              "value": "detail_footer",
+              "label": {
+                "content": "admin_placements.field.placement_key.option.detail_footer"
+              }
+            },
+            {
+              "value": "renovation_section",
+              "label": {
+                "content": "admin_placements.field.placement_key.option.renovation_section"
+              }
+            },
+            {
+              "value": "scenario_card",
+              "label": {
+                "content": "admin_placements.field.placement_key.option.scenario_card"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "component": "Select",
+        "props": {
+          "name": "advertiser_id",
+          "size": "lg",
+          "label": {
+            "content": "admin_placements.field.advertiser_id"
+          },
+          "description": {
+            "content": "admin_placements.help.advertiser_id"
+          },
+          "data": {
+            "contract": "contract_admin_placements_list.advertisers"
+          },
+          "option": {
+            "value": {
+              "contract": "contract_admin_placements_list.advertisers.0.advertiser_id"
+            },
+            "label": {
+              "contract": "contract_admin_placements_list.advertisers.0.name"
+            }
+          }
+        }
+      },
+      {
+        "component": "Select",
+        "props": {
+          "name": "building_type",
+          "size": "lg",
+          "label": {
+            "content": "admin_placements.field.building_type"
+          },
+          "description": {
+            "content": "admin_placements.help.building_type"
+          },
+          "data": [
+            {
+              "value": "detached_house",
+              "label": {
+                "content": "admin_placements.field.building_type.option.detached_house"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "component": "Select",
+        "props": {
+          "name": "design_option",
+          "size": "lg",
+          "label": {
+            "content": "admin_placements.field.design_option"
+          },
+          "description": {
+            "content": "admin_placements.help.design_option"
+          },
+          "data": [
+            {
+              "value": "flat_or_shallow_roof",
+              "label": {
+                "content": "admin_placements.field.design_option.option.flat_or_shallow_roof"
+              }
+            },
+            {
+              "value": "pitched",
+              "label": {
+                "content": "admin_placements.field.design_option.option.pitched"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "component": "Textarea",
+        "props": {
+          "name": "creative_text",
+          "size": "lg",
+          "label": {
+            "content": "admin_placements.field.creative_text"
+          },
+          "description": {
+            "content": "admin_placements.help.creative_text"
+          }
+        }
+      },
+      {
+        "component": "DateInput",
+        "props": {
+          "name": "flight_start",
+          "size": "lg",
+          "label": {
+            "content": "admin_placements.field.flight_start"
+          }
+        }
+      },
+      {
+        "component": "DateInput",
+        "props": {
+          "name": "flight_end",
+          "size": "lg",
+          "label": {
+            "content": "admin_placements.field.flight_end"
+          },
+          "description": {
+            "content": "admin_placements.help.flight_end"
+          }
+        }
+      },
+      {
+        "component": "Button",
+        "props": {
+          "type": "submit",
+          "size": "lg",
+          "loading": true
+        },
+        "children": [
+          {
+            "content": "admin_placements.submit"
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/_schema/placements-contract.json": "d1ce8b1484e5ce54",
+      "scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.content.json": "34d51be48a17377d",
+      "scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.descriptor.json": "d1b4616dcf0cf8cf"
+    }
+  }
+}

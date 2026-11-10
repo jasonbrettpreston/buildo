@@ -1,0 +1,392 @@
+{
+  "kind": "SURFACE",
+  "status": "generated",
+  "docs": {
+    "purpose": "The list of every scheduled offer: its placement, advertiser, targeting, flight days, whether it is on, whether its placement is oversubscribed and whether its target resolves to a report scenario. Each row opens the offer in the form or turns it on or off.",
+    "data_story": "It reads offers joined to advertisers and placements through the placements read; over_cap and resolvable are computed on the server.",
+    "under_126": "**GENERATED.** Rendered by the web LIST binding (mantine-datatable) from render.list on the shared binding standard: rows from the read's offers array, an edit action that opens the offer FORM in the Modal and a toggle_active action (a 50 px button, trim 4)."
+  },
+  "evidence": {
+    "files": [
+      "~/Buildo-scratch/mcfrontend/MF-40/plan.md (section 12) and plan.delta-1.md (sections 5 and 8)"
+    ],
+    "contracts": [
+      "contract_admin_placements_list",
+      "contract_admin_offer_upsert"
+    ],
+    "tables": [
+      "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+    ],
+    "gate": [
+      "src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page"
+    ],
+    "states": [
+      "src/components/surfaces/web/ListBinding.tsx — the LIST states"
+    ],
+    "emits": [
+      "src/lib/admin/admin-audit.ts — writeAdminAudit"
+    ]
+  },
+  "identity": {
+    "id": "admin_offers",
+    "archetype": "LIST",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains a promise at its C9 cutover, when its golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — listed among the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR is what pins a shape"
+      ]
+    },
+    "ref": "S-079"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One QUERY contract returns the offers with server-computed flags; the page reads it on the server first and passes plain data.",
+    "evidence": [
+      "src/lib/placements/list.ts — listPlacements()"
+    ],
+    "contract_ref": [
+      "contract_admin_placements_list"
+    ],
+    "query_key": [
+      "admin",
+      "placements"
+    ],
+    "field_whitelist": [
+      "offer_id",
+      "placement_key",
+      "advertiser_name",
+      "building_type",
+      "design_option",
+      "creative_text",
+      "flight_start",
+      "flight_end",
+      "active",
+      "over_cap",
+      "resolvable",
+      "updated_at"
+    ]
+  },
+  "outputs": {
+    "answer": "contract_only",
+    "why": "The writes are the edit (the offer FORM) and the toggle (PATCH on the offer contract); the list refreshes from the server after each.",
+    "evidence": [
+      "contract_admin_offer_upsert"
+    ],
+    "contract_ref": [
+      "contract_admin_offer_upsert"
+    ],
+    "tables": [],
+    "rollback": "None is applied locally, so none is undone: the list re-reads after the server answers."
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "An RSC page: the rows arrive from the server per request and refresh after a mutation; sort state is a local view choice.",
+    "evidence": [
+      "src/app/(maxbld)/admin/placements/page.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Read per request (no-store); a stale toggle is refused with 409 by the updated_at check.",
+    "evidence": [
+      "src/app/api/admin/placements/route.ts — Cache-Control private, no-store"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "admin",
+      "why": "An /admin/** page: classifyRoute returns \"admin\" for any pathname starting with /admin/, and \"admin\" is the profiles.is_admin flag checked in-predicate, not a Postgres role.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:162 — pathname === \"/admin\" || pathname.startsWith(\"/admin/\") returns \"admin\"",
+        "src/lib/auth/route-guard.ts:159 — /api/admin/ returns \"admin\" for the contract half",
+        "migrations/226_profiles_admin_bootstrap.sql:27 — is_admin BOOLEAN NOT NULL DEFAULT false",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 — there is no admin Postgres role; admin is a column flag checked inside the policy predicate"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "The page writes offers and advertisers, Class B by Spec 114 §2 with the ONE ruled admin-read pattern (RLS on, one <table>_select_admin policy, no write policy); MF-40 D-1 (operator 2026-11-10) drops the move to an advertiser class (admin input only). placements, which it reads, is Class E (one public select policy, seed-only). The routes read and write through the owner connection, so the policies are defence in depth.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E",
+        "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "desktop_first_md",
+    "export": "none",
+    "list": {
+      "item_archetype": "row",
+      "pagination": "none",
+      "recycling": "none",
+      "id_field": "offer_id",
+      "rows": "contract_admin_placements_list.offers",
+      "columns": [
+        {
+          "field": "placement_key",
+          "label": "admin_offers.col.placement_key",
+          "display": "enum",
+          "values": [
+            "detail_footer",
+            "renovation_section",
+            "scenario_card"
+          ],
+          "sort_field": "placement_key"
+        },
+        {
+          "field": "advertiser_name",
+          "label": "admin_offers.col.advertiser_name",
+          "display": "text",
+          "sort_field": "advertiser_name"
+        },
+        {
+          "field": "building_type",
+          "label": "admin_offers.col.building_type",
+          "display": "text",
+          "sort_field": "building_type"
+        },
+        {
+          "field": "design_option",
+          "label": "admin_offers.col.design_option",
+          "display": "text",
+          "sort_field": "design_option"
+        },
+        {
+          "field": "creative_text",
+          "label": "admin_offers.col.creative_text",
+          "display": "text"
+        },
+        {
+          "field": "flight_start",
+          "label": "admin_offers.col.flight_start",
+          "display": "text",
+          "sort_field": "flight_start"
+        },
+        {
+          "field": "flight_end",
+          "label": "admin_offers.col.flight_end",
+          "display": "text",
+          "sort_field": "flight_end"
+        },
+        {
+          "field": "active",
+          "label": "admin_offers.col.active",
+          "display": "boolean",
+          "sort_field": "active"
+        },
+        {
+          "field": "over_cap",
+          "label": "admin_offers.col.over_cap",
+          "display": "boolean",
+          "sort_field": "over_cap"
+        },
+        {
+          "field": "resolvable",
+          "label": "admin_offers.col.resolvable",
+          "display": "boolean",
+          "sort_field": "resolvable"
+        }
+      ],
+      "row_actions": [
+        {
+          "kind": "edit",
+          "label": "admin_offers.action.edit"
+        },
+        {
+          "kind": "toggle_active",
+          "label": "admin_offers.action.toggle_active"
+        }
+      ]
+    }
+  },
+  "checks": [
+    {
+      "id": "offers_audit_row_present",
+      "kind": "ledger_row_present",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "R-12: each toggle writes exactly one admin_audit_log row (offer_activate or offer_deactivate) in the same transaction (src/tests/admin-placements.infra.test.ts)."
+    },
+    {
+      "id": "offers_empty_state",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Spec 33: a deliberate empty state from content, never a blank canvas (golden empty)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "hit"
+    },
+    {
+      "name": "empty",
+      "golden": "empty"
+    },
+    {
+      "name": "error",
+      "golden": "error"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "unauthorized"
+    },
+    {
+      "name": "offline",
+      "golden": "offline"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope rather than from a raw exception.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+      "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+      },
+      {
+        "class": "403",
+        "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+      },
+      {
+        "class": "500",
+        "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "The row that failed to parse renders as a red schema_drift row; the rest of the table still renders."
+      }
+    ],
+    "no_retry": [
+      "401",
+      "403"
+    ]
+  },
+  "emits": {
+    "answer": "ledger",
+    "why": "The toggle writes admin_audit_log rows; the list itself writes nothing.",
+    "evidence": [
+      "src/lib/admin/admin-audit.ts — writeAdminAudit",
+      "src/app/api/admin/placements/offers/route.ts — PATCH"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": [
+      "admin_audit_log: action offer_schedule | offer_activate | offer_deactivate | advertiser_upsert, target_uid = offer_id or advertiser_id (text), reason a fixed string per action, old_value/new_value the whitelisted columns (contact fields never)"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It lists the inventory; it renders no sponsored placement itself.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "An operator act, not a metered product action.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "The list reads no tunable: the over_cap cap is placements.max_slots (a column, one home in ad_placements).",
+    "evidence": [
+      "migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables"
+    ]
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "The offers rows are written by the offer FORM and toggled here.",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built"
+    ],
+    "surfaces": [
+      "admin_placements"
+    ],
+    "varies_by_surface": "The form edits one offer; the list shows all and toggles active."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "The admin_audit_log row this surface writes cannot be named in emits.ledger_events[].",
+      "measured": "surface.schema.json's emits.ledger_events[] is closed to usage_events events; admin_audit_log is the second append-only ledger with no token, so emits.answer is \"ledger\" and the audit row is carried in breadcrumbs[] plus a ledger_row_present check (the admin_placements precedent).",
+      "check_id": "offers_audit_row_present"
+    },
+    {
+      "what": "Saved offers are not served into reports yet.",
+      "measured": "No non-test source outside src/lib/placements and src/app/api/admin/placements reads offers (tripwire src/tests/placements-serving-tripwire.logic.test.ts); serving offers into the report response is the follow-up row (MF-40 D-7), which flips the tripwire deliberately.",
+      "check_id": "offers_empty_state"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "MF-40 (plan delta 1 section 5, folds 9 and 13). over_cap: an active offer whose group (the placement, plus the scenario pair for scenario_card) holds more active offers than max_slots (plan fold 8). resolvable: false for a scenario_card pair that is not a report scenario. Boolean and enum cells show content text <label>.option.<value>.",
+  "x-draft": {
+    "shard": "admin-new",
+    "files": [],
+    "role": "admin",
+    "generated": "100%",
+    "net_new_tables": [
+      "offers",
+      "advertisers",
+      "placements"
+    ],
+    "designed": true
+  },
+  "programme": {
+    "scope": "parcel_admin",
+    "phase": "B2",
+    "why": "The scheduled first-party offers of the admin placements page (MF-40).",
+    "feature": "F04",
+    "build_order": 2044,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -72,9 +72,10 @@ describe('FE-13 surface-validate gate: real tree', () => {
     expect(r.status).toBe(0);
     // MF-42 (FE-13 dated note): amended deliberately to the new full string, still an exact toBe (never toContain or a regex); the REPORT prefix is unchanged.
     // MF-37 (FE-13 dated note 2026-11-09): amended deliberately again, still an exact toBe: the first three converted surfaces (23 in scope, 17 goldens, 56 strings).
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 23 in scope: converted 4, pending 6, parked 9, report 4) · S-screen ok (4 surfaces, 27 goldens) · S-sbind ok (4 surfaces, 79 strings)\n');
+    // MF-40 (FE-13 dated note 2026-11-10): amended deliberately again, still an exact toBe: three admin placements surfaces join (re-measured on the MF-35 tip).
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4) · S-screen ok (7 surfaces, 44 goldens) · S-sbind ok (7 surfaces, 154 strings)\n');
     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
-    expect(r.stdout).toContain('S-desc ok (examined 23 in scope:');
+    expect(r.stdout).toContain('S-desc ok (examined 25 in scope:');
   });
 
   it('MF-42: a missing screen-checks.mjs gives three unavailable lines, the REPORT arms still report, exit 1 (no stack)', () => {

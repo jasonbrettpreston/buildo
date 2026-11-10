@@ -1,11 +1,13 @@
 // SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b (the provider), docs/specs/02-web-admin/33_web_admin_engineering_protocol.md
 //            (Spec 33 amendment 2026-11-09: Mantine CSS in @layer mantine beside Tailwind 4), batch C-2.
 //
+// MF-40 (plan delta 1 S3a): the dates sheet joins for the offer form's date widgets (RJSF DateWidget renders @mantine/dates DateInput).
 // MF-37 · the admin MaxBLD provider layout (listed in bindings.json providers): the layered library sheets, the colour-scheme script, the one
 // provider module (forced light for admin, COMPONENT-ALIGNMENT T6) and one Toaster. It reads nothing and gates nothing: each page gates itself
 // first (requireAdminPage, Spec 33 section 8 dated note 2026-11-09).
 import type { ReactNode } from 'react';
 import '@mantine/core/styles.layer.css';
+import '@mantine/dates/styles.layer.css';
 import 'mantine-datatable/styles.layer.css';
 import { ColorSchemeScript } from '@mantine/core';
 import { Toaster } from 'sonner';

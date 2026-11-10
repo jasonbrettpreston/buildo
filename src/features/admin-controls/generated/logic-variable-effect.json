@@ -5,16 +5,6 @@
     "Derived from the seeds, converted.json stages, the descriptors, the live code and the copy migrations (scripts/analysis/gates/variable-effect.mjs); locked by step-validate fast invariant #53."
   ],
   "entries": {
-    "admin_placement_default_flight_days": {
-      "badge": "not_read_scheduled_for_retirement",
-      "label": "Not read — scheduled for retirement",
-      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
-    "admin_placement_max_horizon_days": {
-      "badge": "not_read_scheduled_for_retirement",
-      "label": "Not read — scheduled for retirement",
-      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
     "assert_lifecycle_phase_distribution_cross_active_inspection_threshold": {
       "badge": "takes_effect_at_cutover",
       "label": "Takes effect at cutover",

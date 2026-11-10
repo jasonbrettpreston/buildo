@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **79 surfaces, 65 contracts and 6 jobs** in it today.
+There are **81 surfaces, 68 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 79 |
-| CONTRACT | 65 |
+| SURFACE | 81 |
+| CONTRACT | 68 |
 | JOB | 6 |
-| **Total** | **150** |
+| **Total** | **155** |
 
 ### 2.1 By archetype
 
@@ -217,11 +217,11 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `COMMAND` | CONTRACT | 8 | 0 | 0 | 8 |
 | `DASHBOARD` | SURFACE | 3 | 2 | 0 | 5 |
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
-| `FORM` | SURFACE | 6 | 2 | 2 | 10 |
+| `FORM` | SURFACE | 6 | 1 | 4 | 11 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 10 | 6 | 1 | 17 |
-| `MUTATION` | CONTRACT | 20 | 3 | 0 | 23 |
-| `QUERY` | CONTRACT | 32 | 1 | 0 | 33 |
+| `LIST` | SURFACE | 10 | 6 | 2 | 18 |
+| `MUTATION` | CONTRACT | 20 | 5 | 0 | 25 |
+| `QUERY` | CONTRACT | 32 | 2 | 0 | 34 |
 | `REPORT` | SURFACE | 2 | 3 | 0 | 5 |
 | `SCHEDULED` | JOB | 6 | 0 | 0 | 6 |
 | `SEARCH` | SURFACE | 3 | 1 | 1 | 5 |
@@ -233,7 +233,7 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**16 of 150 rows fully researched · 134 still open · 436 unresearched fields in total.**
+**19 of 155 rows fully researched · 136 still open · 437 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
@@ -242,10 +242,10 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | `mobile-product.json` | 38 | 8 | 30 | 63 |
 | `web-product.json` | 12 | 2 | 10 | 89 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
-| `admin-new.json` | 14 | 5 | 9 | 17 |
-| `contracts.json` | 65 | 1 | 64 | 162 |
+| `admin-new.json` | 16 | 8 | 8 | 15 |
+| `contracts.json` | 68 | 1 | 67 | 165 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **150** | **16** | **134** | **436** |
+| **total** | **155** | **19** | **136** | **437** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -254,19 +254,19 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | **no owner spec** | 42 | The file carries no `SPEC LINK` header and the System Map has no row for it — so there is nothing to cite. Closing it means **writing or assigning a spec**, not finding one. Three of these cite a spec path that does not exist (a dead citation is filed as a defect, not resolved here). |
 | **no lineage producer** | 25 | The table is absent from `docs/reference/data-lineage-map.md`, so no pipeline step declares it as a write. Either it is written by an API route or a migration seed (answer `none`), or a step writes it without declaring it — which is a pipeline defect, not a research gap. |
 | **no declared owner** | 15 | Nobody is recorded as owning it. This is an organisational answer, not a measurable one. |
-| **vocabulary escalation** | 108 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
+| **vocabulary escalation** | 110 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
 | **archetype profile field, newly required** | 52 | ASK-22 made the archetype profiles REAL, so these fields became required AFTER the research pass ran. The field must now be present; it may hold the sentinel. Each is a short, well-defined lookup — the pagination idiom, the poll interval, the debounce, the resume key. |
 | **measurement not yet made** | 23 | An ordinary lookup nobody has done yet — read the query, name the columns, cite the line. |
-| **other** | 171 | Fields at paths this grouping does not name: see the per-row badges. |
-| | **436** | |
+| **other** | 170 | Fields at paths this grouping does not name: see the per-row badges. |
+| | **437** | |
 
 ### 2.3 By status
 
 | Status | Count | Meaning |
 |---|---:|---|
 | exists | 128 | the code is in the tree today |
-| new | 18 | specified, not built |
-| generated | 4 | will be rendered from descriptors, not hand-written |
+| new | 20 | specified, not built |
+| generated | 7 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -277,10 +277,10 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
 | **A** | `parcel_product` | 10 | 8 (80%) | 7 | yes |
-| **B** | `parcel_admin` | 19 | 5 (26%) | 19 | yes |
+| **B** | `parcel_admin` | 24 | 8 (33%) | 19 | yes |
 | **C** | `platform_shared` | 75 | 3 (4%) | 43 | yes |
 | **D** | `estate_other` | 46 | 0 (0%) | 40 | **no** — inventory + seam only (R-03) |
-| | **total** | **150** | **16** | | |
+| | **total** | **155** | **19** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -335,14 +335,19 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`C-062`](#c-062) | contract | `contract_parcels_tracked` | `MUTATION` | `F17` tracked-lots | 1172 | 100% | [detail](#c-062) |
 | [`S-072`](#s-072) | surface | `mobile_tracked_lots` | `LIST` | `F17` tracked-lots | 1173 | 100% | [detail](#s-072) |
 
-**§B `parcel_admin` (19)**
+**§B `parcel_admin` (24)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
 | [`S-009`](#s-009) | surface | `admin_export_audit` | `LIST` | `F03` pdf-export | 2033 | 94% | [detail](#s-009) |
 | [`S-006`](#s-006) | surface | `admin_advertiser_accounts` | `LIST` | `F04` sponsor-placements | 2043 | 94% | [detail](#s-006) |
-| [`S-013`](#s-013) | surface | `admin_placements` | `FORM` | `F04` sponsor-placements | 2043 | 94% | [detail](#s-013) |
+| [`S-013`](#s-013) | surface | `admin_placements` | `FORM` | `F04` sponsor-placements | 2043 | 100% | [detail](#s-013) |
 | [`S-017`](#s-017) | surface | `advertiser_self_metrics` | `DASHBOARD` | `F04` sponsor-placements | 2043 | 88% | [detail](#s-017) |
+| [`C-068`](#c-068) | contract | `contract_admin_advertiser_upsert` | `MUTATION` | `F04` sponsor-placements | 2043 | 97% | [detail](#c-068) |
+| [`C-067`](#c-067) | contract | `contract_admin_offer_upsert` | `MUTATION` | `F04` sponsor-placements | 2043 | 97% | [detail](#c-067) |
+| [`C-066`](#c-066) | contract | `contract_admin_placements_list` | `QUERY` | `F04` sponsor-placements | 2043 | 97% | [detail](#c-066) |
+| [`S-079`](#s-079) | surface | `admin_offers` | `LIST` | `F04` sponsor-placements | 2044 | 100% | [detail](#s-079) |
+| [`S-080`](#s-080) | surface | `admin_advertiser_entry` | `FORM` | `F04` sponsor-placements | 2045 | 100% | [detail](#s-080) |
 | [`S-010`](#s-010) | surface | `admin_ledger_visualiser` | `REPORT` | `F07` app-outputs-materialisation | 2073 | 97% | [detail](#s-010) |
 | [`S-015`](#s-015) | surface | `admin_run_ledger` | `LIST` | `F07` app-outputs-materialisation | 2073 | 94% | [detail](#s-015) |
 | [`C-002`](#c-002) | contract | `contract_admin_parcels_lookup` | `QUERY` | `F08` admin-parcel-operations | 2082 | 97% | [detail](#c-002) |
@@ -503,7 +508,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) | 1 | 6 | 2 descriptor(s), 1 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
-| **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) | 0 | 5 | 4 descriptor(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
+| **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-079`](#s-079) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
 | **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) | 0 | 0 | 1 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F07** app-outputs-materialisation | `parcel_admin` | [`S-010`](#s-010) · [`S-015`](#s-015) | 0 | 4 | 2 descriptor(s), and would orphan 1 table(s): `app_outputs` |
@@ -1350,7 +1355,7 @@ DATA. The contract C-062 and the `user_tracked_lots` table are DESIGNED, not bui
 
 THE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA BUILD = `parcels.max_newbuild_coa_gfa_sqm` (real). New Nearby CoA Ruling = NO COLUMN EXISTS; derivable from decided `coa_applications` in the parcel’s neighbourhood, declared nullable, rendered "—" while null. See `limitations` and the blocking check.
 
-### §B `parcel_admin` — admin surfaces that operate the parcel product (19)
+### §B `parcel_admin` — admin surfaces that operate the parcel product (24)
 
 Usage and entitlements, placements and advertiser accounts, the PDF audit, the `app_outputs` recompute, and the descriptor-native registry / drift / roles pages. These convert **with** the product, not after it — an unobservable product is not shipped.
 
@@ -1505,19 +1510,19 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 
 ###### `S-013` `admin_placements`
 
-**Programme.** `S-013` · scope `parcel_admin` · feature `F04` · build order 2043 · batch **UNRESEARCHED** · review `unreviewed` — Operates the ad-placement half of the parcel product (business requirement 3) — advertiser accounts, the closed placement vocabulary, and the advertiser's own scoped metrics.
+**Programme.** `S-013` · scope `parcel_admin` · feature `F04` · build order 2043 · batch `B2` · review `unreviewed` — Operates the ad-placement half of the parcel product: the admin schedules first-party offers into the declared report slots (MF-40).
 
 **What it is.** The form on which an operator assigns a specific advertiser to a specific advertising slot in the product — which sponsor appears where, and for how long. The list of valid slots is a closed, declared set rather than free text, so a placement cannot be pointed at a slot that does not exist. Today the component that would display a sponsor renders nothing at all, so there is no way to sell or schedule a placement.
 
-**What it reads and writes.** Nothing is built yet, so nothing is measured here. As specified it would read `placements` — of which `placements` does **not exist yet** and must be declared, migrated and drift-asserted before this page can render a single row.
+**What it reads and writes.** It writes one offers row (created inactive) and one admin_audit_log row per save through the offer contract; the advertiser select lists the active advertisers from the placements read.
 
-**Under Spec 126.** **NEW.** It does not exist; it is generated from descriptors from its first commit, through the FORM renderer (every field carrying its Spec 99 §3 ownership row as data, with a declared rollback). It is **100% generated** — which is the point: if the descriptor set is incomplete or an archetype profile is wrong, this page is visibly empty or visibly wrong on commit 1, and cannot be faked by hand.
+**Under Spec 126.** **GENERATED.** Rendered by the web FORM binding (RJSF with the Mantine theme) from render.form and offer_request in placements-contract.json; the advertiser select takes its options from the placements read (options_from, the shared binding standard). The SLOT this configures is still not served (D-7).
 
-**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** new · **shard** `admin-new` · **unresearched fields: 2**
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** generated · **shard** `admin-new` · **researched** ✅ every field
 
 **Gate.** auth class **admin** (An /admin/** page: classifyRoute returns "admin" for any pathname starting with /admin/, and "admin" is the profiles.is_admin flag checked in-predicate — there is no admin Postgres role.) · role **admin**
 
-**Calls.** —
+**Calls.** `contract_admin_offer_upsert`
 
 **Components owned.** —
 
@@ -1537,20 +1542,20 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 14 — NEW; no page exists` · `mobile/src/components/parcel/SponsorSlot.tsx — the SLOT this form configures, returning null on both branches` |
-| `contracts` | `DESIGNED: GET + PUT /api/admin/placements, PUT /api/admin/placements/offers — absent from the census` |
-| `tables` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 5-6 — placements and offers (both net-new)` · `src/lib/db/generated/schema.ts:1812 — admin_audit_log (exists)` |
-| `gate` | `src/lib/auth/route-guard.ts:162` |
-| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 5 — FORM states[] must include error` |
+| `files` | `~/Buildo-scratch/mcfrontend/MF-40/plan.md (section 12) and plan.delta-1.md (sections 5 and 8)` · `mobile/src/components/parcel/SponsorSlot.tsx — the SLOT this form configures, returning null on both branches` |
+| `contracts` | `contract_admin_offer_upsert` · `contract_admin_placements_list` |
+| `tables` | `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables` · `src/lib/db/generated/schema.ts:1812 — admin_audit_log (exists)` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `src/components/surfaces/web/FormBinding.tsx — the six FORM states` |
 | `emits` | `src/lib/admin/admin-audit.ts:66` · `docs/specs/02-web-admin/128_surface_standard_policy.md §5 R-17 — the disclosure check at severity FAIL, blocking true` |
-| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group D — admin_placements FORM (gen, NEW)` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 5 — placements: the closed placement vocabulary — where a SLOT may render` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 6 — offers: the inventory a SLOT renders, a table and never a literal` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 9 — the SLOT profile this form populates (placement, inventory_source, targeting, disclosure, max_slots)` · `docs/specs/02-web-admin/128_surface_standard_policy.md §5 R-17 / R-34 — ad policy is a checks[] entry and the placements table, never plausibility[]` · `docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 14` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 group D — admin_placements FORM (gen, NEW)` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 5 — placements: the closed placement vocabulary — where a SLOT may render` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 6 — offers: the inventory a SLOT renders, a table and never a literal` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 9 — the SLOT profile this form populates (placement, inventory_source, targeting, disclosure, max_slots)` · `docs/specs/02-web-admin/128_surface_standard_policy.md §5 R-17 / R-34 — ad policy is a checks[] entry and the placements table, never plausibility[]` · `docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 14` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
 
 <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
 
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `contract` | The form is driven by two declarations: the placements table (the closed set of slots a SLOT may render in, so a placement cannot be pointed at a slot that does not exist) and the offers rows being scheduled against them. Both arrive through one designed contract; neither is a literal in the component. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 5 — PK (placement_key); surface_archetype, max_slots, disclosure_required NOT NULL`, `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 9 — inventory_source is a TABLE, never a literal list` |
+| 2 | `inputs` | `contract` | The fields and their rules come from offer_request in placements-contract.json, the schema the offer route validates; the advertiser options arrive from the placements read. — `scripts/surfaces/_schema/placements-contract.json — offer_request`, `src/lib/placements/list.ts — listPlacements() (advertisers)` |
 | 3 | `outputs` | `contract_only` | Assigning an advertiser to a slot is revenue-affecting and legally disclosed content: it goes through a declared MUTATION contract and waits for the server. There is no optimistic flip, because a placement that appeared to save and did not is an advertiser billed for an impression that never rendered. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 9 — the SLOT this form populates`, `docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 8 — a write target's discipline class, guard and scope are declared per write target` |
 | 4 | `state` | `server_only` | The FORM profile requires each field to carry its Spec 99 §3 row as data, and every one of them is owner_layer 1_server: this is a web RSC form whose canonical writer is the mutation contract, with no device layer, no persistence and nothing to reset at sign-out. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 row 5 — FORM: fields[] each carrying the Spec 99 §3 row as data`, `docs/specs/02-web-admin/128_surface_standard_policy.md §2.1 — the five client-side carve-outs, none of which applies to a desktop admin form` |
 | 5 | `staleness` | `live` | Read per request. A stale flight window on this form would let an operator schedule over a placement that was already sold. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 6 — the targeting read is placement + active + flight window` |
@@ -1561,11 +1566,11 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 | 10 | `plausibility` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
-| 13 | `emits` | `ledger` | Every placement and flight change writes exactly one admin_audit_log row through writeAdminAudit. No usage_events row is written here — the impression and click rows are written by the SLOT render path and the click contract, not by the form that schedules them. — `docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6 / §5 R-12`, `src/lib/admin/admin-audit.ts:66`, `docs/specs/02-web-admin/126_maxbld_surface_standard.md §7 — offer_impression and offer_click are written at render/click time` |
+| 13 | `emits` | `ledger` | Every placement and flight change writes exactly one admin_audit_log row through writeAdminAudit. No usage_events row is written here — the impression and click rows are written by the SLOT render path and the click contract, not by the form that schedules them. — `docs/specs/02-web-admin/128_surface_standard_policy.md §3 rule B6 / §5 R-12`, `src/lib/admin/admin-audit.ts — writeAdminAudit`, `src/app/api/admin/placements/offers/route.ts` |
 | 14 | `offers` | `none` | It CONFIGURES the inventory; it does not render it. The surface that renders a sponsored placement is the SLOT (mobile/src/components/parcel/SponsorSlot.tsx), whose descriptor carries offers.answer "slots" — and which returns null on both branches today. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — SLOT is the archetype that renders inventory; this surface is not one`, `docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 6 — "none" is legal; silence is not` |
 | 15 | `metering` | `none` | Scheduling a placement is an operator act, not a metered product action; the meter fires when the slot renders (offer_impression) and when it is tapped (offer_click), both owned by the SLOT path. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §7 — the closed event vocabulary`, `docs/specs/02-web-admin/126_maxbld_surface_standard.md §7.1 — offer_impression is the one anon write in the estate` |
 | 16 | `config` | `logic_variables` | The default flight length and the maximum schedulable horizon are numbers a human would argue about; max_slots is NOT one of them, because Spec 126 §6.3 row 5 makes it a column of placements — a per-placement declaration, not a global tunable. — `docs/specs/02-web-admin/128_surface_standard_policy.md §2 rule 3`, `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 row 5 — max_slots is a column on placements`, `scripts/seeds/logic_variables.json — both keys are NET-NEW` |
-| 17 | `sharing` | `shared` | placements and offers are read by the SLOT that renders them and by the advertiser's own metrics dashboard; this form is the write projection of the same two tables. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 5-6 — read by placement key at projection time; the targeting read is placement + active + flight window` |
+| 17 | `sharing` | `shared` | offers is written by this form and the offers list toggle; the serving row (D-7) will read it for the report. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -1575,7 +1580,7 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
 
-> ⚠️ Report §1.1 row 14. Measured defect it makes visible: SponsorSlot returns null on both branches, i.e. the slot is dead in the product. TREE CORRECTION: the report writes this file as `SponsorSlot.tsx (21L)` with no path; the file actually lives at mobile/src/components/parcel/SponsorSlot.tsx (there is no src/components/SponsorSlot.tsx), so this is a MOBILE component even though the managing surface is web. VERIFIED: no CREATE TABLE for placements in migrations/. DESIGNED, NOT MEASURED. guards.rls_class is deliberately UNRESEARCHED: Spec 126 §6.3 row 5 gives placements an anon-readable posture that Spec 114 §2's closed four-class taxonomy has no value for, and inventing a fifth class per-row is exactly the escalation the research brief §4 rule 1 forbids. The disclosure check is FAIL + blocking as SEPARATE fields per R-17/R-34 — the schema models them separately because they are orthogonal, and blocking true forces when "pre".
+> ⚠️ MF-40 (plan delta 1, option C; the four trims). The offer FORM of the admin placements page. No disclosure field (placements is seed-only); no active field (offers save inactive and toggle from the offers list, trim 4); no zone_class (serving row, trim 1); no image picker (ad contract v2, trim 2). building_type and design_option are static selects; which a placement accepts and the scenario_card pair are checked by the route (the media precedent: conditionals in the route). Measured defect it keeps visible: SponsorSlot returns null on both branches (mobile/src/components/parcel/SponsorSlot.tsx); the report ad slot replaces it when serving lands.
 
 <a id="s-017"></a>
 
@@ -1650,6 +1655,360 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
 
 > ⚠️ Report §1.1 row 15: reads usage_events filtered to `event IN (offer_impression, offer_click)` AND the viewer's own advertiser_id; RLS-scoped, not is_admin-gated. §4.2 classifies this as the new RLS class D (owner-scoped by a key that is not auth.uid()). VERIFIED: no CREATE TABLE for usage_events in migrations/. No admin-side defect named for this row. DESIGNED, NOT MEASURED. THE ONE ROW WHOSE GUARD CANNOT BE STATED: guards.session is UNRESEARCHED because the closed vocabulary (anon | authenticated | entitled | admin) has no `advertiser` value, and Spec 126 draws the line deliberately — agent IS an entitlement (R-09), advertiser IS a role (R-10) — so "entitled" would contradict the ruling and "admin" contradicts the report. Also note the route is NOT under /admin/, so classifyRoute would return "authenticated" for it, which is the second half of the same gap.
+
+<a id="c-068"></a>
+
+###### `C-068` `contract_admin_advertiser_upsert`
+
+**Programme.** `C-068` · scope `parcel_admin` · feature `F04` · build order 2043 · batch `B2` · review `unreviewed` — The admin placements page (MF-40): first-party offers into the declared report slots.
+
+**What it is.** Creates one advertiser by name (created active). A repeat of the same entry writes nothing; the same id with another name is refused.
+
+**What it reads and writes.** It validates the body against placements-contract.json and inserts one advertisers row and one admin_audit_log row in one transaction.
+
+**Under Spec 126.** A MUTATION CONTRACT with one audit row per created advertiser (advertiser_upsert); idempotency by a page-generated advertiser_id.
+
+**kind** CONTRACT · **archetype** `MUTATION` · **platforms** `web` · **status** new · **path** `/api/admin/placements/advertisers` · **methods** `PUT` · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **admin** (classifyRoute("/api/admin/placements/advertisers") returns "admin" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin.)
+
+**Called by.** `admin_advertiser_entry`
+
+**Emits.** —
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `advertisers` **(net-new)** | `advertiser_id` · `name` · `contact_user_id` · `active` · `created_at` · `updated_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/admin/placements/advertisers/route.ts` |
+| `contracts` | `src/app/api/admin/placements/advertisers/route.ts — PUT export` |
+| `tables` | `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables` |
+| `gate` | `src/app/api/admin/placements/advertisers/route.ts — verifyAdminAuth first` |
+| `states` | `the envelope classes in errors.classes` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit inside withTransaction` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads advertisers (written only by this route) to tell a repeat from a conflict. — `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables`, `src/lib/placements/contract.ts — readPlacementLimits` |
+| 3 | `outputs` | `direct_db` | It inserts one advertisers row and one admin_audit_log row in one transaction. — `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables`, `src/lib/admin/admin-audit.ts` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 5 | `staleness` | `live` | A write; nothing is cached. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code. — `src/lib/api/with-api-envelope.ts`, `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 13 | `emits` | `both` | A created advertiser writes one admin_audit_log row. — `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| 14 | `offers` | `none` | An admin endpoint renders no sponsored placement. — `src/app/api/admin/placements/advertisers/route.ts` |
+| 15 | `metering` | `none` | Admin placements operations are not metered. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 16 | `config` | `none` | No tunable: the name length is a schema bound. — `scripts/surfaces/_schema/placements-contract.json — advertiser_request` |
+| 17 | `sharing` | `sole` | Called by the admin placements page only (the serving row, D-7, will read offers for the report). — `src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/admin/placements/advertisers/route.ts`
+
+> ⚠️ MF-40. One CONTRACT descriptor per handler file (126 §3.1). The 126 §6.2 rls block is not representable in surface.schema.json yet; guards.rls_class carries the ruled pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10).
+
+<a id="c-067"></a>
+
+###### `C-067` `contract_admin_offer_upsert`
+
+**Programme.** `C-067` · scope `parcel_admin` · feature `F04` · build order 2043 · batch `B2` · review `unreviewed` — The admin placements page (MF-40): first-party offers into the declared report slots.
+
+**What it is.** PUT creates or edits one offer (created inactive); PATCH turns one offer on or off. Both check the updated_at the page read.
+
+**What it reads and writes.** It validates the body against placements-contract.json, applies the placement targeting rules, the scenario_card pair, the flight order and the horizon, then writes offers and one admin_audit_log row in one transaction.
+
+**Under Spec 126.** A MUTATION CONTRACT with one audit row per accepted request (offer_schedule, offer_activate, offer_deactivate); idempotency by a page-generated offer_id and the updated_at check.
+
+**kind** CONTRACT · **archetype** `MUTATION` · **platforms** `web` · **status** new · **path** `/api/admin/placements/offers` · **methods** `PUT` · `PATCH` · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **admin** (classifyRoute("/api/admin/placements/offers") returns "admin" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin.)
+
+**Called by.** `admin_placements` · `admin_offers`
+
+**Emits.** —
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `offers` **(net-new)** | `offer_id` · `advertiser_id` · `placement_key` · `targeting` · `flight_start` · `flight_end` · `active` · `creative_text` · `creative_asset_id` · `created_at` · `updated_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+| reads | `advertisers` **(net-new)** | `advertiser_id` · `name` · `contact_user_id` · `active` · `created_at` · `updated_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+| reads | `placements` **(net-new)** | `placement_key` · `surface_archetype` · `max_slots` · `disclosure_required` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/admin/placements/offers/route.ts` |
+| `contracts` | `src/app/api/admin/placements/offers/route.ts — PUT and PATCH exports` |
+| `tables` | `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables` |
+| `gate` | `src/app/api/admin/placements/offers/route.ts — verifyAdminAuth first` |
+| `states` | `the envelope classes in errors.classes` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit inside withTransaction` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads offers, advertisers and placements (written only by these admin routes and migration 302, never by a pipeline step) and the Admin Placements logic_variables rows. — `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables`, `src/lib/placements/contract.ts — readPlacementLimits` |
+| 3 | `outputs` | `direct_db` | It inserts or updates one offers row and inserts one admin_audit_log row in one transaction. — `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables`, `src/lib/admin/admin-audit.ts` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 5 | `staleness` | `live` | A write; nothing is cached. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code. — `src/lib/api/with-api-envelope.ts`, `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 13 | `emits` | `both` | Each accepted request writes one admin_audit_log row; refusals on a placement rule log a structured warn. — `src/lib/admin/admin-audit.ts — writeAdminAudit`, `src/app/api/admin/placements/offers/route.ts — logWarn` |
+| 14 | `offers` | `none` | An admin endpoint renders no sponsored placement. — `src/app/api/admin/placements/offers/route.ts` |
+| 15 | `metering` | `none` | Admin placements operations are not metered. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 16 | `config` | `logic_variables` | Reads the Admin Placements tunables. — `scripts/seeds/logic_variables.json — group Admin Placements` |
+| 17 | `sharing` | `sole` | Called by the admin placements page only (the serving row, D-7, will read offers for the report). — `src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/admin/placements/offers/route.ts`
+
+> ⚠️ MF-40. One CONTRACT descriptor per handler file (126 §3.1). The 126 §6.2 rls block is not representable in surface.schema.json yet; guards.rls_class carries the ruled pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10).
+
+<a id="c-066"></a>
+
+###### `C-066` `contract_admin_placements_list`
+
+**Programme.** `C-066` · scope `parcel_admin` · feature `F04` · build order 2043 · batch `B2` · review `unreviewed` — The admin placements page (MF-40): first-party offers into the declared report slots.
+
+**What it is.** Returns every offer with its advertiser, targeting, flight days and the over_cap and resolvable flags, the active advertisers, and the offer form's flight defaults.
+
+**What it reads and writes.** One read of offers joined to advertisers and placements (over_cap by a window count against max_slots), one read of active advertisers, and the default flight length from logic_variables.
+
+**Under Spec 126.** A QUERY CONTRACT; the RSC page calls the same function (listPlacements).
+
+**kind** CONTRACT · **archetype** `QUERY` · **platforms** `web` · **status** new · **path** `/api/admin/placements` · **methods** `GET` · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **admin** (classifyRoute("/api/admin/placements") returns "admin" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin.)
+
+**Called by.** `admin_offers` · `admin_placements`
+
+**Emits.** —
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `offers` **(net-new)** | `offer_id` · `advertiser_id` · `placement_key` · `targeting` · `flight_start` · `flight_end` · `active` · `creative_text` · `creative_asset_id` · `created_at` · `updated_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+| reads | `advertisers` **(net-new)** | `advertiser_id` · `name` · `contact_user_id` · `active` · `created_at` · `updated_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+| reads | `placements` **(net-new)** | `placement_key` · `surface_archetype` · `max_slots` · `disclosure_required` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/admin/placements/route.ts` |
+| `contracts` | `src/app/api/admin/placements/route.ts — GET export` |
+| `tables` | `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables` |
+| `gate` | `src/app/api/admin/placements/route.ts — verifyAdminAuth first` |
+| `states` | `the envelope classes in errors.classes` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit inside withTransaction` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads offers, advertisers and placements (written only by these admin routes and migration 302, never by a pipeline step) and the Admin Placements logic_variables rows. — `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables`, `src/lib/placements/contract.ts — readPlacementLimits` |
+| 3 | `outputs` | `none` | A read: it writes no table. — `src/lib/placements/list.ts` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server. — `src/app/api/admin/media/route.ts — GET export: verifyAdminAuth first, then the media handler` |
+| 5 | `staleness` | `live` | Read per request; Cache-Control private, no-store. — `src/app/api/admin/placements/route.ts` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code. — `src/lib/api/with-api-envelope.ts`, `src/app/api/admin/media/route.ts — GET export: verifyAdminAuth first, then the media handler` |
+| 13 | `emits` | `events` | A read writes no ledger row; it logs one info line per read. — `src/app/api/admin/placements/route.ts — logInfo` |
+| 14 | `offers` | `none` | An admin endpoint renders no sponsored placement. — `src/app/api/admin/placements/route.ts` |
+| 15 | `metering` | `none` | Admin placements operations are not metered. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 16 | `config` | `logic_variables` | Reads the Admin Placements tunables. — `scripts/seeds/logic_variables.json — group Admin Placements` |
+| 17 | `sharing` | `sole` | Called by the admin placements page only (the serving row, D-7, will read offers for the report). — `src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/admin/placements/route.ts`
+
+> ⚠️ MF-40. One CONTRACT descriptor per handler file (126 §3.1). The 126 §6.2 rls block is not representable in surface.schema.json yet; guards.rls_class carries the ruled pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10).
+
+<a id="s-079"></a>
+
+###### `S-079` `admin_offers`
+
+**Programme.** `S-079` · scope `parcel_admin` · feature `F04` · build order 2044 · batch `B2` · review `unreviewed` — The scheduled first-party offers of the admin placements page (MF-40).
+
+**What it is.** The list of every scheduled offer: its placement, advertiser, targeting, flight days, whether it is on, whether its placement is oversubscribed and whether its target resolves to a report scenario. Each row opens the offer in the form or turns it on or off.
+
+**What it reads and writes.** It reads offers joined to advertisers and placements through the placements read; over_cap and resolvable are computed on the server.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web LIST binding (mantine-datatable) from render.list on the shared binding standard: rows from the read's offers array, an edit action that opens the offer FORM in the Modal and a toggle_active action (a 50 px button, trim 4).
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `web` · **status** generated · **shard** `admin-new` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (An /admin/** page: classifyRoute returns "admin" for any pathname starting with /admin/, and "admin" is the profiles.is_admin flag checked in-predicate, not a Postgres role.) · role **admin**
+
+**Calls.** `contract_admin_placements_list`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-40/plan.md (section 12) and plan.delta-1.md (sections 5 and 8)` |
+| `contracts` | `contract_admin_placements_list` · `contract_admin_offer_upsert` |
+| `tables` | `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `src/components/surfaces/web/ListBinding.tsx — the LIST states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | One QUERY contract returns the offers with server-computed flags; the page reads it on the server first and passes plain data. — `src/lib/placements/list.ts — listPlacements()` |
+| 3 | `outputs` | `contract_only` | The writes are the edit (the offer FORM) and the toggle (PATCH on the offer contract); the list refreshes from the server after each. — `contract_admin_offer_upsert` |
+| 4 | `state` | `server_only` | An RSC page: the rows arrive from the server per request and refresh after a mutation; sort state is a local view choice. — `src/app/(maxbld)/admin/placements/page.tsx` |
+| 5 | `staleness` | `live` | Read per request (no-store); a stale toggle is refused with 409 by the updated_at check. — `src/app/api/admin/placements/route.ts — Cache-Control private, no-store` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope rather than from a raw exception. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `ledger` | The toggle writes admin_audit_log rows; the list itself writes nothing. — `src/lib/admin/admin-audit.ts — writeAdminAudit`, `src/app/api/admin/placements/offers/route.ts — PATCH` |
+| 14 | `offers` | `none` | It lists the inventory; it renders no sponsored placement itself. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 15 | `metering` | `none` | An operator act, not a metered product action. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 16 | `config` | `none` | The list reads no tunable: the over_cap cap is placements.max_slots (a column, one home in ad_placements). — `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables` |
+| 17 | `sharing` | `shared` | The offers rows are written by the offer FORM and toggled here. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-40 (plan delta 1 section 5, folds 9 and 13). over_cap: an active offer whose group (the placement, plus the scenario pair for scenario_card) holds more active offers than max_slots (plan fold 8). resolvable: false for a scenario_card pair that is not a report scenario. Boolean and enum cells show content text <label>.option.<value>.
+
+<a id="s-080"></a>
+
+###### `S-080` `admin_advertiser_entry`
+
+**Programme.** `S-080` · scope `parcel_admin` · feature `F04` · build order 2045 · batch `B2` · review `unreviewed` — The advertiser entry of the admin placements page (MF-40 D-3).
+
+**What it is.** The small form on the placements page that adds one advertiser by name, so an offer can name it (D-3). It is not the parked advertiser accounts list.
+
+**What it reads and writes.** It writes one advertisers row (created active) and one admin_audit_log row through the advertiser contract; a second submit of the same entry writes nothing.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web FORM binding from render.form and advertiser_request in placements-contract.json.
+
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** generated · **shard** `admin-new` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (An /admin/** page: classifyRoute returns "admin" for any pathname starting with /admin/, and "admin" is the profiles.is_admin flag checked in-predicate, not a Postgres role.) · role **admin**
+
+**Calls.** `contract_admin_advertiser_upsert`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-40/plan.md (section 12) and plan.delta-1.md (sections 5 and 8)` |
+| `contracts` | `contract_admin_advertiser_upsert` |
+| `tables` | `migrations/302_admin_ads_placements.sql — advertisers, placements (Class E, seeded), offers; RLS and the two Admin Placements variables` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `src/components/surfaces/web/FormBinding.tsx — the six FORM states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated notes 2026-11-09 and 2026-11-10 — the admin-read pattern (offers, advertisers); placements Class E` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | The fields come from advertiser_request in placements-contract.json, the schema the advertiser route validates. — `scripts/surfaces/_schema/placements-contract.json — advertiser_request` |
+| 3 | `outputs` | `contract_only` | The write goes through a declared MUTATION contract and the page waits for the server. — `src/app/api/admin/placements/advertisers/route.ts` |
+| 4 | `state` | `server_only` | A web admin form whose canonical writer is the mutation contract; nothing persists on the device. — `src/lib/placements/usePlacementWrites.ts` |
+| 5 | `staleness` | `live` | Submitted per request; the page re-reads after success. — `src/lib/placements/usePlacementWrites.ts — router.refresh() on success` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `ledger` | A created advertiser writes one admin_audit_log row (advertiser_upsert). — `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| 14 | `offers` | `none` | It adds the advertisers an offer names; it renders no sponsored placement. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 15 | `metering` | `none` | An operator act, not a metered product action. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 16 | `config` | `none` | No tunable: the name length is a schema bound. — `scripts/surfaces/_schema/placements-contract.json — advertiser_request` |
+| 17 | `sharing` | `shared` | advertisers is read by the offer FORM's advertiser select. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3 rows 4-6 dated notes 2026-11-10 — advertisers, placements, offers as built` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-40 D-3 (minimal advertisers entry on the placements page, no LIST or DETAIL; admin_advertiser_accounts stays parked). Trim 4: created active, no deactivation or rename in v1. advertiser_id is generated by the page (idempotent create).
 
 <a id="s-010"></a>
 
@@ -8430,7 +8789,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 |---|---|---|---|
 | `(dynamic) manifest.scripts[slug].telemetry_tables[0]` | _net-new — no introspected columns_ | `admin_pipeline_step_output` | — |
 | `<dynamic: manifest telemetry_tables[0] allow-list>` | _net-new — no introspected columns_ | `contract_admin_pipeline_step_output` | — |
-| `advertisers` | _net-new — no introspected columns_ | `admin_advertiser_accounts` · `advertiser_self_metrics` | `admin_advertiser_accounts` |
+| `advertisers` | _net-new — no introspected columns_ | `admin_advertiser_accounts` · `advertiser_self_metrics` · `contract_admin_placements_list` · `contract_admin_offer_upsert` · `contract_admin_advertiser_upsert` | `admin_advertiser_accounts` |
 | `app_outputs` | _net-new — no introspected columns_ | `admin_ledger_visualiser` | — |
 | `archetype_registry` | _net-new — no introspected columns_ | `admin_surface_registry` | — |
 | `auth.users` | _net-new — no introspected columns_ | — | `job_offboarding_sweep_30day` |
@@ -8438,14 +8797,14 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `information_schema.columns` | _net-new — no introspected columns_ | `admin_data_quality` · `admin_pipeline_step_output` · `contract_admin_pipeline_step_output` · `contract_admin_stats` · `contract_quality_refresh` | — |
 | `media_assets` | _net-new — no introspected columns_ | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` | — |
 | `mv_monthly_permit_stats` | _net-new — no introspected columns_ | `admin_market_metrics` · `contract_admin_market_metrics` | `job_mv_monthly_permit_stats_refresh` |
-| `offers` | _net-new — no introspected columns_ | `admin_placements` · `advertiser_self_metrics` | `admin_placements` |
+| `offers` | _net-new — no introspected columns_ | `admin_placements` · `advertiser_self_metrics` · `contract_admin_placements_list` · `contract_admin_offer_upsert` | `admin_placements` |
 | `pdf_exports` | _net-new — no introspected columns_ | `admin_export_audit` | — |
 | `pg_class` | _net-new — no introspected columns_ | `admin_data_quality` · `admin_pipeline_step_output` · `contract_admin_pipeline_step_output` · `contract_admin_stats` | — |
 | `pg_extension` | _net-new — no introspected columns_ | `admin_lead_feed` · `contract_admin_leads_test_feed` · `contract_leads_feed` | — |
 | `pg_namespace` | _net-new — no introspected columns_ | `contract_admin_pipeline_step_output` | — |
 | `pg_policies` | _net-new — no introspected columns_ | `admin_role_matrix` | — |
 | `pg_stat_user_tables` | _net-new — no introspected columns_ | `admin_data_quality` · `contract_quality` | — |
-| `placements` | _net-new — no introspected columns_ | `admin_placements` | `admin_placements` |
+| `placements` | _net-new — no introspected columns_ | `admin_placements` · `contract_admin_placements_list` · `contract_admin_offer_upsert` | `admin_placements` |
 | `surface_descriptors` | _net-new — no introspected columns_ | `admin_contract_fanout` · `admin_orphan_panel` · `admin_surface_registry` | — |
 | `usage_events` | _net-new — no introspected columns_ | `admin_export_audit` · `admin_ledger_visualiser` · `admin_surface_registry` · `advertiser_self_metrics` | — |
 | `user_tracked_lots` | _net-new — no introspected columns_ | `contract_parcels_tracked` | `contract_parcels_tracked` |
@@ -8494,4 +8853,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 150 census rows and 271 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 155 census rows and 271 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

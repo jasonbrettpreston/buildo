@@ -171,6 +171,32 @@ export default function AdminPage() {
               Upload and remove report images and ad creatives (private bucket, signed previews; MF-37)
             </p>
           </Link>
+
+          <Link
+            href="/admin/placements"
+            className="group bg-white rounded-xl border border-gray-200 p-8 hover:border-blue-300 hover:shadow-lg transition-all"
+          >
+            <div className="text-4xl mb-4">📣</div>
+            <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              Ads and Placements
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Schedule first-party offers into the report ad slots, add advertisers, turn offers on or off (MF-40)
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/placements-preview"
+            className="group bg-white rounded-xl border border-gray-200 p-8 hover:border-blue-300 hover:shadow-lg transition-all"
+          >
+            <div className="text-4xl mb-4">👁️</div>
+            <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              Ad Preview
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              A saved offer rendered in a synthetic report through the real renderer (MF-40)
+            </p>
+          </Link>
         </div>
       </main>
     </div>

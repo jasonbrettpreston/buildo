@@ -1,0 +1,16 @@
+{
+  "admin_advertiser_entry.field.name": "New advertiser name",
+  "admin_advertiser_entry.help.name": "Adds an advertiser you can pick in the offer form. It is created active.",
+  "admin_advertiser_entry.submit": "Add advertiser",
+  "admin_advertiser_entry.errors.required": "This field is required.",
+  "admin_advertiser_entry.errors.type": "This value has the wrong type.",
+  "admin_advertiser_entry.errors.const": "This value does not match.",
+  "admin_advertiser_entry.errors.pattern": "The name cannot contain < or >.",
+  "admin_advertiser_entry.errors.min_length": "This field cannot be empty.",
+  "admin_advertiser_entry.errors.max_length": "Keep this under 200 characters.",
+  "admin_advertiser_entry.errors.additional_properties": "This form sent a field it does not know.",
+  "admin_advertiser_entry.state.error": "The advertiser was not added. Check the name and try again.",
+  "admin_advertiser_entry.state.hit": "Advertiser added. Pick it in the offer form.",
+  "admin_advertiser_entry.state.unauthorized": "Your session has expired or you are not an admin. Sign in again to add advertisers.",
+  "admin_advertiser_entry.state.offline": "You are offline. Add the advertiser when the connection returns."
+}

@@ -318,6 +318,81 @@
       "reads": {},
       "writes": {}
     },
+    "src/app/api/admin/placements/advertisers/route.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "9c44aab201ed8953",
+        "be2b93b79d3fd412"
+      ],
+      "reads": {
+        "advertisers": [
+          "advertiser_id",
+          "name"
+        ]
+      },
+      "writes": {
+        "advertisers": [
+          "active",
+          "advertiser_id",
+          "name"
+        ]
+      }
+    },
+    "src/app/api/admin/placements/offers/route.ts": {
+      "class": "static",
+      "statements": 7,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "083541357c100835",
+        "1b9bbd56224b47d5",
+        "1e162b50b7070a2f",
+        "3f723e74bdc1179f",
+        "82ee6f374a2a8edf",
+        "c7b52f726f4f459e"
+      ],
+      "reads": {
+        "advertisers": [
+          "active",
+          "advertiser_id"
+        ],
+        "offers": [
+          "active",
+          "advertiser_id",
+          "creative_asset_id",
+          "creative_text",
+          "flight_end",
+          "flight_start",
+          "offer_id",
+          "placement_key",
+          "targeting"
+        ],
+        "placements": [
+          "max_slots",
+          "placement_key"
+        ]
+      },
+      "writes": {
+        "offers": [
+          "active",
+          "advertiser_id",
+          "creative_text",
+          "flight_end",
+          "flight_start",
+          "offer_id",
+          "placement_key",
+          "targeting",
+          "updated_at"
+        ]
+      }
+    },
     "src/app/api/admin/rules/route.ts": {
       "class": "interpolated",
       "statements": 3,
@@ -2355,6 +2430,55 @@
           "mime",
           "position",
           "scenario_key"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/placements/contract.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "b5a1b0d462a3ba3c"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/placements/list.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "6ee6ab297f3efc73",
+        "f8e7bfdf4f86b817"
+      ],
+      "reads": {
+        "advertisers": [
+          "active",
+          "advertiser_id",
+          "name"
+        ],
+        "offers": [
+          "active",
+          "advertiser_id",
+          "created_at",
+          "creative_text",
+          "flight_end",
+          "flight_start",
+          "offer_id",
+          "placement_key",
+          "targeting",
+          "updated_at"
+        ],
+        "placements": [
+          "max_slots",
+          "placement_key"
         ]
       },
       "writes": {}
