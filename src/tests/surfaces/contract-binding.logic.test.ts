@@ -11,7 +11,8 @@
 //       `<contract_id>.<name|index>...` (names on the whitelist, as sent, camelCase kept; an index only after a name; checked by name only); the
 //       second segment `errors` is reserved for `<contract_id>.errors.<class>.<field>` (field in that class's `fields`). The two-part form and
 //       its messages are unchanged. RED: index first, index after index, a bad segment, an unknown name in a path, the errors grammar, an index
-//       with a leading zero (MF-40 OUTPUT panel LOW-1: an index is 0 or a number without a leading zero).
+//       with a leading zero (MF-40 OUTPUT panel LOW-1: an index is 0 or a number without a leading zero). A name may start with an underscore
+//       (`_debug`, as contract_admin_leads_test_feed names it; regression-guardian LOW-1).
 // Pure over committed files and in-memory copies. No DB, no network.
 import { parseRegisterRows } from '../../../scripts/analysis/mcbylaws/cite-parse.mjs';
 import { describe, expect, it } from 'vitest';
@@ -62,13 +63,13 @@ describe('FE-32 (d) the binding standard: contract paths and error details', () 
   // An in-memory contract set: the live media list contract plus one with an array, a camelCase name and a 429 class with a declared field.
   const contracts = async (): Promise<Map<string, Json>> => {
     const m = new Map((await loadContext(ROOT)).contracts as Map<string, Json>);
-    m.set('contract_fx', { kind: 'CONTRACT', identity: { id: 'contract_fx' }, inputs: { field_whitelist: ['candidates', 'address', 'parcelId'] },
+    m.set('contract_fx', { kind: 'CONTRACT', identity: { id: 'contract_fx' }, inputs: { field_whitelist: ['candidates', 'address', 'parcelId', '_debug'] },
       errors: { classes: [{ class: '429', ui: 'x', fields: ['retryAfterSeconds'] }, { class: '500', ui: 'y' }] } });
     return m;
   };
-  it('the two-part form stays valid; a path of names and indexes resolves; camelCase is used as sent', async () => {
+  it('the two-part form stays valid; a path of names and indexes resolves; camelCase and a leading underscore are used as sent', async () => {
     const c = await contracts();
-    for (const ref of ['contract_admin_media_list.alt', 'contract_fx.candidates', 'contract_fx.candidates.0.address', 'contract_fx.candidates.12.parcelId'])
+    for (const ref of ['contract_admin_media_list.alt', 'contract_fx.candidates', 'contract_fx.candidates.0.address', 'contract_fx.candidates.12.parcelId', 'contract_fx._debug'])
       expect([ref, contractRefProblems(ref, '/props/x', c)]).toEqual([ref, []]);
   });
   it('an error detail resolves through its class\'s fields', async () => {

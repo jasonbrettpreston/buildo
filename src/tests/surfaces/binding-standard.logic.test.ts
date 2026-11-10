@@ -8,14 +8,19 @@
 //   (a) LIST: rows path -> record refs <rows>.0.<field>; row actions delete | edit | toggle_active (only delete red; delete and edit get a Modal);
 //       boolean and enum cells show <label>.option.<value> from content, null shows nothing, a value outside the options throws; the default sort
 //       is the first column with a sort_field that is not an image, ascending, and none without one; an image column without alt_field throws;
-//   (b) FORM: an options_from select carries contract refs in the golden and takes its options from FormRuntime.options as data.
+//   (b) FORM: an options_from select carries contract refs in the golden and takes its options from FormRuntime.options as data;
+//   (c) admin_media through the generic LIST (OUTPUT regression-guardian MEDIUM-1, LOW-2; MF-37 behaviours): a truthy signed_url renders an <img>
+//       with that src and the alt_field text and no fallback; a click on the delete row action calls actionForm with the row and kind delete and
+//       shows the Modal title from content.
 // Not an FE lock of its own (the locks are surface-conformance, contract-binding and render-smoke). No DB, no network.
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createElement as h, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { AdminMantineProvider } from '../../components/surfaces/web/AdminMantineProvider';
 import { formProps, formTree, type Node } from '../../components/surfaces/web/FormBinding';
 import { ListBinding, listProps, listTree, type Row } from '../../components/surfaces/web/ListBinding';
+import { MEDIA_CONTENT as MC, MEDIA_SURFACES } from '../../lib/media/surfaces';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON and library props
 const ssr = (el: ReactElement): string => renderToStaticMarkup(h(AdminMantineProvider, { scheme: 'light', children: el })).replace(/&#x27;|&#39;/g, "'");
@@ -44,6 +49,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', { writable: true, value: (q: string) => ({ matches: false, media: q, onchange: null, addListener: () => undefined, removeListener: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined, dispatchEvent: () => false }) });
   if (!('ResizeObserver' in globalThis)) Object.defineProperty(globalThis, 'ResizeObserver', { writable: true, value: class { observe(): void { /* jsdom stub */ } unobserve(): void { /* jsdom stub */ } disconnect(): void { /* jsdom stub */ } } });
 });
+afterEach(() => cleanup());
 
 describe('(a) the generic LIST', () => {
   it('rows path: every record ref is <rows>.0.<field>; idAccessor is id_field', () => {
@@ -117,5 +123,30 @@ describe('(b) the options_from select', () => {
     const p = formProps(tree, SCHEMA as never, FC, { options: { advertiser_id: rows } }) as Json;
     expect(p.schema.properties.advertiser_id.oneOf).toEqual([{ const: 'a-1', title: 'North Co' }, { const: 'a-2', title: 'South Co' }]);
     expect((formProps(tree, SCHEMA as never, FC) as Json).schema.properties.advertiser_id).toEqual(SCHEMA.properties.advertiser_id);
+  });
+});
+
+describe('(c) admin_media through the generic LIST (MF-37 behaviours)', () => {
+  const media = MEDIA_SURFACES.list as unknown as Json;
+  const ROW: Row = { asset_id: 'a1', kind: 'ad_creative', scenario_key: null, position: null, alt: 'A', mime: 'image/png', bytes: 1, bytes_display: '1 B', created_at: '2026-11-09T00:00:00Z', created_display: '2026-11-09 00:00 UTC', signed_url: 'https://x/y.png' };
+  it('a truthy signed_url renders an <img> with that src and the alt_field text, and no preview fallback', () => {
+    const html = ssr(h(ListBinding, { descriptor: media as never, tree: listTree(media as never, 'hit'), rows: [ROW], content: MC }));
+    const imgs = [...html.matchAll(/<img[^>]*>/g)].map((m) => m[0]);
+    expect(imgs.filter((t) => t.includes('src="https://x/y.png"') && t.includes('alt="A"')).length).toBe(1);
+    expect(html).not.toContain(MC['admin_media.preview.unavailable'] as string);
+  });
+  it('a click on the delete row action calls actionForm once with the row and kind delete; the Modal title comes from content', async () => {
+    const actionForm = vi.fn(() => null);
+    // mantine-datatable hides a column whose media query does not match; the shared jsdom stub matches nothing, so this case matches every query.
+    const stub = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ ...stub(q), matches: true })) as typeof window.matchMedia;
+    onTestFinished(() => { window.matchMedia = stub; });
+    render(h(AdminMantineProvider, { scheme: 'light', children: h(ListBinding, { descriptor: media as never, tree: listTree(media as never, 'hit'), rows: [ROW], content: MC, actionForm }) }));
+    expect(actionForm).not.toHaveBeenCalled();
+    expect(screen.queryByText(MC['admin_media.delete.title'] as string)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: MC['admin_media.action.delete'] as string }));
+    expect(actionForm).toHaveBeenCalledTimes(1);
+    expect(actionForm).toHaveBeenCalledWith(ROW, expect.any(Function), 'delete');
+    expect(await screen.findByText(MC['admin_media.delete.title'] as string)).toBeTruthy();
   });
 });

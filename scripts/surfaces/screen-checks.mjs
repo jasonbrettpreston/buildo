@@ -32,11 +32,10 @@ export const FORM_KEYWORDS = ['type', 'properties', 'required', 'enum', 'const',
 export const FORM_FORMATS = ['date', 'date-time', 'email', 'uri', 'uuid'];
 const OPTION_VALUE = /^[a-z0-9_]+$/;
 // The binding standard (MF-40 plan delta 1, option C; FE-32): a contract path is <contract_id>.<seg>(.<seg>)*; a name segment is a wire key as sent
-// (camelCase allowed, never mapped) and must be on the contract's field whitelist; an index segment (0 or a number without a leading zero) may
-// only follow a name. The second segment
-// `errors` is RESERVED: <contract_id>.errors.<class>.<field> names a detail field of one declared error class.
+// (camelCase and a leading underscore allowed, never mapped) and must be on the contract's field whitelist; an index segment (0 or a number
+// without a leading zero) may only follow a name. The second segment `errors` is RESERVED: <contract_id>.errors.<class>.<field> names a detail field of one declared error class.
 const CONTRACT_ID = /^[a-z0-9_]+$/;
-const NAME_SEG = /^[A-Za-z][A-Za-z0-9_]*$/;
+const NAME_SEG = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const INDEX_SEG = /^(0|[1-9][0-9]*)$/;
 export const ERRORS_SEG = 'errors';
 const whitelistOf = (d) => (Array.isArray(d?.inputs?.field_whitelist) ? d.inputs.field_whitelist : []);

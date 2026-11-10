@@ -1,0 +1,49 @@
+Binding standard OUTPUT panel, regression-guardian folds (MF-40; report ~/Buildo-scratch/mcfrontend/MF-40/panel/binding-std-output-regression-guardian.md, PASS-WITH-FOLDS: MEDIUM-1, LOW-1, LOW-2), red runs, 2026-11-10.
+Method: the two (c) render cases in binding-standard.logic.test.ts lock MF-37 behaviour the code already has, so each was run against a planted defect in ListBinding.tsx, reverted after its run (A, B, C). The FE-32 (d) case contract_fx._debug was added first and run against the unchanged NAME_SEG (D). Green: binding-standard-rg-folds-green.txt.
+Expected red: A, the image cell ignoring src (src={undefined}); B, the Modal not calling actionForm ({null}); C, no Modal node in listTree (LOW-2: the generic code skips a missing node); D, NAME_SEG /^[A-Za-z][A-Za-z0-9_]*$/ refusing a leading underscore.
+
+== A: plant <Image src={undefined}; npx vitest run src/tests/surfaces/binding-standard.logic.test.ts -t 'admin_media through'
+   × (c) admin_media through the generic LIST (MF-37 behaviours) > a truthy signed_url renders an <img> with that src and the alt_field text, and no preview fallback
+     → expected +0 to be 1 // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected +0 to be 1 // Object.is equality
+- Expected
++ Received
+- 1
++ 0
+ ❯ src/tests/surfaces/binding-standard.logic.test.ts:135:101
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 9 skipped (11)
+
+== B: plant the Modal body {null}; same command
+   × (c) admin_media through the generic LIST (MF-37 behaviours) > a click on the delete row action calls actionForm once with the row and kind delete; the Modal title comes from content
+     → expected "spy" to be called 1 times, but got 0 times
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected "spy" to be called 1 times, but got 0 times
+ ❯ src/tests/surfaces/binding-standard.logic.test.ts:148:24
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 9 skipped (11)
+
+== C: plant actions.filter(() => false) for the Modal nodes; same command
+   × (c) admin_media through the generic LIST (MF-37 behaviours) > a click on the delete row action calls actionForm once with the row and kind delete; the Modal title comes from content
+     → expected "spy" to be called 1 times, but got 0 times
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected "spy" to be called 1 times, but got 0 times
+ ❯ src/tests/surfaces/binding-standard.logic.test.ts:148:24
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 9 skipped (11)
+
+== D: npx vitest run src/tests/surfaces/contract-binding.logic.test.ts (unchanged code)
+   × FE-32 (d) the binding standard: contract paths and error details > the two-part form stays valid; a path of names and indexes resolves; camelCase and a leading underscore are used as sent
+     → expected [ 'contract_fx._debug', …(1) ] to deeply equal [ 'contract_fx._debug', [] ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [ 'contract_fx._debug', …(1) ] to deeply equal [ 'contract_fx._debug', [] ]
+- Expected
++ Received
+-   Array [],
++   Array [
++     "contract ref contract_fx._debug is not <contract_id>.<field> at /props/x",
++   ],
+ ❯ src/tests/surfaces/contract-binding.logic.test.ts:73:62
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)

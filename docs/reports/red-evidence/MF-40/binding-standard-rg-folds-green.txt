@@ -1,0 +1,5 @@
+Binding standard regression-guardian folds (MF-40), green run, 2026-11-10: NAME_SEG /^[A-Za-z_][A-Za-z0-9_]*$/; ListBinding unchanged.
+
+== npx vitest run src/tests/surfaces/contract-binding.logic.test.ts src/tests/surfaces/binding-standard.logic.test.ts
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
