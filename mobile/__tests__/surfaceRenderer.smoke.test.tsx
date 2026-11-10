@@ -10,7 +10,7 @@ require('react-native-css-interop/test');
 import * as React from 'react';
 import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
-import { SurfaceRenderer, type SurfaceActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+import { resolveValue, SurfaceRenderer, type SurfaceActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { SEARCH_SLICE, searchData, searchProps } from '@/components/surfaces/SearchBinding';
 import { SEARCH_MAX_WIDTH, SEARCH_BOTTOM_PADDING } from '@/constants/parcelSearch';
 import type { SearchSituation } from '@/lib/parcelSearchMatch';
@@ -94,6 +94,13 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
     expect(a.open_account).toHaveBeenCalledWith();
     fireEvent.changeText(screen.getByTestId('parcel-search-input'), '26 Hu');
     expect(a.change_input).toHaveBeenCalledWith('26 Hu');
+  });
+  it('OUTPUT fold LOW: an unresolved contract or derived ref throws (nothing is skipped silently); null is allowed; template vars are own keys only', () => {
+    const ctx = { content: { 'x.t': 'a {toString} b {n}' }, data: { contract: { c: { v: null } }, derived: { n: 0 } }, actions: actions() };
+    expect(() => resolveValue({ contract: 'c.gone' }, ctx)).toThrow('unresolved ref {"contract":"c.gone"}');
+    expect(() => resolveValue({ derived: 'recent.7' }, ctx)).toThrow('unresolved ref {"derived":"recent.7"}');
+    expect(resolveValue({ contract: 'c.v' }, ctx)).toBeNull();
+    expect(resolveValue({ text: { content: 'x.t' }, vars: { n: { derived: 'n' } } }, ctx)).toBe('a {toString} b 0');
   });
   it('RED: an unmapped component, an unknown icon, an unknown content key, an unknown action all throw', () => {
     jest.spyOn(console, 'error').mockImplementation(() => undefined);

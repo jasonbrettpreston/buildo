@@ -310,6 +310,12 @@ describe('C-2b no display text in mount files and binding modules (the exempt li
 describe('C-3 bindings.json integrity', () => {
   const rootsTexts = ['src/tests/surface-registry.infra.test.ts', 'scripts/violations/generate-surface-registry.mjs'].map((p) => fs.readFileSync(path.join(REPO, p), 'utf8'));
   const real: C3In = { b: B, exists: (p) => fs.existsSync(path.join(REPO, p)), descriptor: realDescriptor, policy: POLICY, rootsTexts, converted: B_CONVERTED };
+  it('MF-35 OUTPUT fold MEDIUM 3 (operator "MF-35 a"): each promoted entry carries the one archetype of the modules it owns', () => {
+    for (const id of B.promoted_entries as string[]) {
+      const arch = [...new Set<string>(B.modules.filter((m: Json) => m.owner === id).flatMap((m: Json) => m.archetypes))];
+      expect([id, arch]).toEqual([id, [(DESCRIPTORS.get(id) as Json).identity.archetype]]);
+    }
+  });
   it('the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid', () => {
     expect(shapeProblems(REPO, 'bindings', B)).toEqual([]);
     expect(bindingsProblems(real)).toEqual([]);

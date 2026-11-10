@@ -97,6 +97,16 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/P2');
     expect(useRecentSearchesStore.getState().recent).toEqual(['Bathurst St']);
   });
+  it('OUTPUT fold MEDIUM 1 (P35-D17 a, nothing pre-checked): a new debounced query clears the checked card, even when the same lot is listed again', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: list };
+    type('Bathurst St');
+    fireEvent.press(screen.getByTestId('parcel-candidate-P2'));
+    expect(screen.getByTestId('parcel-candidate-P2').props.accessibilityState).toMatchObject({ checked: true });
+    type('Bathurst Street');
+    expect(screen.getByTestId('parcel-candidate-P2').props.accessibilityState).toMatchObject({ checked: false });
+    expect(screen.getByTestId('parcel-search-select').props.accessibilityState).toMatchObject({ disabled: true });
+  });
   it('an intersection pushes the map route (the list never renders) and records', () => {
     render(<Screen />);
     mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null } };

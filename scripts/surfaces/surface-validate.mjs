@@ -22,9 +22,9 @@ if (usage) {
   process.exitCode = 2;
 }
 
-// MF-35 (dated 2026-11-10; plan v2 section 5): the generated mobile library theme (Spec 117 section 7 dated note 2026-11-10) is the third generator.
+// MF-35 (dated 2026-11-10): the third generator is the mobile library theme (plan v2 section 5; Spec 117 section 7 dated note 2026-11-10) and the
+// fourth the mobile slice and golden copy (plan v3 section 10 step 6).
 const GENERATORS = ['scripts/surfaces/_schema/seed-report-v2.mjs', 'scripts/analysis/report-schema.mjs', 'scripts/surfaces/emit-mobile-theme.mjs', 'scripts/surfaces/emit-mobile-surfaces.mjs'];
-// MF-35 (dated 2026-11-10; plan v3 §10 step 6): the fourth, the mobile slice and golden-copy generator.
 const genProblems = () => GENERATORS.flatMap((rel) => {
   const name = path.basename(rel);
   if (!fs.existsSync(path.join(REPO, rel))) return [`SV-GEN ${name}: missing`];

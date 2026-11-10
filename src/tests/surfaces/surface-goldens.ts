@@ -32,6 +32,22 @@ export const descriptorFile = (root: string, id: string): string => {
   return found[0] as string;
 };
 
+/**
+ * MF-35 OUTPUT fold MEDIUM 2 (Spec 126 §11b.2 item (6)): the converted surfaces whose MOBILE goldens are built and checked by a mobile jest test,
+ * because root vitest cannot import the mobile binding (test.yml). A converted mobile target not declared here makes the build throw.
+ */
+export const MOBILE_GOLDEN_TESTS: Record<string, string> = {
+  mobile_parcel_search: 'mobile/__tests__/parcelScreens.golden.test.ts',
+};
+
+/** A non-web target: the declared mobile golden test of `id`, else a throw (fail closed; never a silent skip). */
+export const otherTarget = (id: string, target: string): string => {
+  if (target !== 'mobile') throw new Error(`surface-goldens: no ${target} binding for ${id}`);
+  const t = MOBILE_GOLDEN_TESTS[id];
+  if (!t) throw new Error(`surface-goldens: no mobile golden test declared for ${id}`);
+  return t;
+};
+
 /** The props tree of one surface in one state on one target. */
 export const treeOf = (root: string, d: Json, state: string, target = 'web'): Json => {
   if (target !== 'web') throw new Error(`surface-goldens: no ${target} binding for ${d.identity.id}`);
@@ -49,9 +65,9 @@ export const buildGoldens = (root: string): Map<string, string> => {
     const file = descriptorFile(root, id);
     const d = rj(root, file);
     const files = Object.fromEntries(fingerprintFiles(id, { d, file }).map((p: string) => [p, sha16(path.join(root, p))]));
-    // MF-35 (dated 2026-11-10): a mobile target's goldens are built by the mobile binding, which root vitest cannot import (mobile jest only,
-    // test.yml); mobile/__tests__/parcelScreens.golden.test.ts asserts them equal searchProps(situation). This builder covers the web target.
-    for (const target of (d.identity.platforms as string[]).filter((p) => p === 'web')) {
+    for (const target of d.identity.platforms as string[]) {
+      // MF-35 (dated 2026-11-10; OUTPUT fold MEDIUM 2): a non-web target is checked by its declared mobile golden test, or the build throws.
+      if (target !== 'web') { otherTarget(id, target); continue; }
       for (const s of d.states) {
         const doc = { surface: id, state: s.name, target, covers: [s.name], props: treeOf(root, d, s.name, target), fingerprint: { files } };
         out.set(`${GOLDEN_ROOT}/${id}/${s.golden}.${target}.json`, `${JSON.stringify(doc, null, 2)}\n`);

@@ -3536,7 +3536,7 @@ It is 1 of 7 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s
 
 Registry detail: [`S-079`](../../../docs/reports/generated/127-surface-registry.md#s-079) `shared_mobile_surface_binding`.
 
-`SURFACE` · `LIST` · scope `platform_shared` · feature `F14` navigation-shells · build order 3145 · batch B2 · **review: `unreviewed`**
+`SURFACE` · `SEARCH` · scope `platform_shared` · feature `F14` navigation-shells · build order 3145 · batch B2 · **review: `unreviewed`**
 
 **1. What does it do, and for whom?**
 
@@ -3556,7 +3556,7 @@ session `entitled` — Its only consumer today is the MaxBLD search page; each c
 
 **5. What archetype, and why that one?**
 
-`LIST` — its profile makes specific fields mandatory (see [the schema](../../../scripts/surfaces/_schema/surface.schema.json)). If this archetype is wrong, the wrong fields are being demanded and the right ones are not.
+`SEARCH` — its profile makes specific fields mandatory (see [the schema](../../../scripts/surfaces/_schema/surface.schema.json)). If this archetype is wrong, the wrong fields are being demanded and the right ones are not.
 
 **6. Is any behaviour here lead-gen leakage?**
 

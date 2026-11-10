@@ -219,12 +219,12 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
 | `FORM` | SURFACE | 6 | 2 | 2 | 10 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 10 | 7 | 1 | 18 |
+| `LIST` | SURFACE | 10 | 6 | 1 | 17 |
 | `MUTATION` | CONTRACT | 20 | 3 | 0 | 23 |
 | `QUERY` | CONTRACT | 32 | 1 | 0 | 33 |
 | `REPORT` | SURFACE | 2 | 3 | 0 | 5 |
 | `SCHEDULED` | JOB | 6 | 0 | 0 | 6 |
-| `SEARCH` | SURFACE | 3 | 0 | 1 | 4 |
+| `SEARCH` | SURFACE | 3 | 1 | 1 | 5 |
 | `SHELL` | SURFACE | 6 | 0 | 0 | 6 |
 | `SLOT` | SURFACE | 1 | 0 | 0 | 1 |
 | `STATIC` | SURFACE | 6 | 0 | 0 | 6 |
@@ -404,7 +404,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-049`](#s-049) | surface | `shell_web_root` | `SHELL` | `F14` navigation-shells | 3143 | 91% | [detail](#s-049) |
 | [`S-077`](#s-077) | surface | `binding_web_form` | `FORM` | `F14` navigation-shells | 3144 | 100% | [detail](#s-077) |
 | [`S-078`](#s-078) | surface | `binding_web_list` | `LIST` | `F14` navigation-shells | 3144 | 100% | [detail](#s-078) |
-| [`S-079`](#s-079) | surface | `shared_mobile_surface_binding` | `LIST` | `F14` navigation-shells | 3145 | 100% | [detail](#s-079) |
+| [`S-079`](#s-079) | surface | `shared_mobile_surface_binding` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-079) |
 | [`C-027`](#c-027) | contract | `contract_products` | `QUERY` | `F15` user-profile-settings | 3152 | 88% | [detail](#c-027) |
 | [`C-034`](#c-034) | contract | `contract_trades` | `QUERY` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-034) |
 | [`C-035`](#c-035) | contract | `contract_user_profile` | `MUTATION` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-035) |
@@ -5757,7 +5757,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Under Spec 126.** **PROMOTED BINDING ENTRY** (P42-D9 a; MF-35 plan v2 §2.3): a platform_shared census entry that owns the binding modules, so R-13 totality holds while the converted surfaces own no component.
 
-**kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** new · **shard** `mobile-product` · **researched** ✅ every field
+**kind** SURFACE · **archetype** `SEARCH` · **platforms** `mobile` · **status** new · **shard** `mobile-product` · **researched** ✅ every field
 
 **Gate.** auth class **entitled** (Its only consumer today is the MaxBLD search page; each consumer declares its own guard.) · role **shared**
 
@@ -5802,7 +5802,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 13 | `emits` | `none` | Rendering emits nothing. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
 | 14 | `offers` | `none` | It renders no sponsored placement. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
 | 15 | `metering` | `none` | Rendering is not a metered product action. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
-| 16 | `config` | `none` | No tunable. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 16 | `config` | `none` | No tunable of its own. The SEARCH profile requires debounce_ms and min_query_len, which have no "none" value: 0 states that the binding itself neither debounces nor gates on length. The consuming surface declares its own (mobile_parcel_search: 400 ms, 3 characters), and the screen applies them. — `mobile/src/components/surfaces/SearchBinding.tsx — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN re-exported from the consumer slice`, `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3` |
 | 17 | `sharing` | `shared` | Every converted mobile surface (the parcel search page first). — `scripts/surfaces/_schema/bindings.json — modules` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
@@ -5813,7 +5813,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `mobile/src/components/surfaces/SurfaceRenderer.tsx` · `mobile/src/components/surfaces/SearchBinding.tsx`
 
-> ⚠️ MF-35 (P42-D9 a; P35-D10 a; the binding standard 2026-11-10).
+> ⚠️ MF-35 (P42-D9 a; P35-D10 a; the binding standard 2026-11-10). Archetype SEARCH by operator ruling 2026-11-10 "MF-35 a" (OUTPUT fold MEDIUM 3): the entry carries the archetype of the modules it owns; the SEARCH-gated fields describe the consuming surface, not this binding, and are answered none with a why.
 
 <a id="c-027"></a>
 

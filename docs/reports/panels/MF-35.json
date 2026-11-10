@@ -4,25 +4,31 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-10",
-  "head": "pending",
+  "head": "77ce6571a",
   "cards": [
     "Operator 2026-11-10: \"D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a\" (P35-D15 b no area line; D16 a recent searches on the phone; D17 a inline address list, amber = today's rule; D18 a the report link with MF-46).",
     "Operator 2026-11-09: \"approved except for 9 ...\" (Wave 1 decision batch: P35-D1..D3, D5..D14 as recommended).",
     "Operator 2026-11-10: \"3. 20 1. yes as long as it complaint and properly researched.\" (expo-linking ~8.0.12, landed on the base branch wf1/expo-linking-1110).",
-    "Operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\" (the spike phone check and the plan v3 section 11 device run are OWED, UNVERIFIED on device; never claimed)."
+    "Operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\" (the spike phone check and the plan v3 section 11 device run are OWED, UNVERIFIED on device; never claimed).",
+    "Operator 2026-11-10: \"MF-35 a\" (OUTPUT panel item 5: the promoted entry shared_mobile_surface_binding is archetype SEARCH). Lane choices 1-4 accepted as pre-approved D-27 (~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md)."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md (section 16 operator rulings 2026-11-10 win; plan.v2.md read where v3 says UNCHANGED); PLAN panel v2 (regression-guardian, code-reviewer-grounded, compliance) record ~/Buildo-scratch/mcfrontend/MF-35/panel-v2/record.md; v3 delta seat (code-reviewer-grounded, APPROVE WITH FOLDS) record ~/Buildo-scratch/mcfrontend/MF-35/panel-v3/record.md; spike ~/Buildo-scratch/mcfrontend/MF-35/spike/log.md.",
-  "output": "PENDING: the OUTPUT panel is filled before the push.",
+  "output": "OUTPUT panel on d4194a034..77ce6571a (base 2e7976367), report ~/Buildo-scratch/mcfrontend/MF-35/panel-out/output-panel.md: code review, regression and compliance seats, APPROVE WITH FOLDS, no HIGH. The seats re-ran mobile jest, tsc, eslint, both mobile generators --check, surface-validate --check and the root surface tests, and confirmed every lane plant RED plus their own (store dedupe, cap, order, reset; each of the four navigation guards; the 429 key and ref path). Full suite on 77ce6571a green (24,919 passed). Folds: MEDIUM 1 (a new debounced query clears the checked card), MEDIUM 2 (fail-closed mobile golden coverage: MOBILE_GOLDEN_TESTS, T7(b) by platform), MEDIUM 3 (the promoted entry is SEARCH; the copied render.list and versioning evidence fixed) and the LOWs (an unresolved ref throws, Object.hasOwn for template vars, the dead derived name query dropped, debounce and minimum length re-exported from the slice, the surface-validate comment, the Spec 117 and Spec 100 note corrections, the Spec 126 note on the global non_display_keys), each RED first: docs/reports/red-evidence/MF-35/output-folds-red.txt. Notes in 971f12152; code in the fold commit after it.",
   "seats": [
-    "regression-guardian",
-    "code-reviewer-grounded",
-    "compliance (general-purpose, Spec 08 A9/A10)"
+    "code review (code-reviewer-grounded): APPROVE WITH FOLDS (MEDIUM 1-3, LOWs)",
+    "regression: PASS (lane plants and extra plants RED; the four navigation guards kept)",
+    "compliance (general-purpose, Spec 08 A9/A10): APPROVE WITH FOLDS (lane choices 1-4 accepted; choice 5 to the operator, ruled \"MF-35 a\"; device run recorded OWED, not claimed)"
   ],
-  "verdict": "PENDING",
+  "verdict": "APPROVE WITH FOLDS: every MEDIUM and LOW folded with red evidence. Owed before DONE: the post-build device run (plan v3 §11), UNVERIFIED on device (operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\"). Owed at push: owner y on the protected paths (bindings.json, converted-surfaces.json, the mobile goldens, mcbylaws/protected-paths.json, this record).",
   "blockers": [],
-  "followups": [],
+  "followups": [
+    "Device run (plan v3 §11, 13 steps) and the spike phone check: OWED, UNVERIFIED on device.",
+    "§8 anchor re-pointing of the 19 parcel-tool/index.tsx anchors in the mobile_parcel_search census row and generate-spec-mirror.mjs:156; the optional freshness lock (a plan cut).",
+    "Optional hex tie test between PARCEL_SEARCH_LAYOUT literals and PARCEL_SEARCH_TOKENS (panel LOW, optional)."
+  ],
   "evidence": "docs/reports/red-evidence/MF-35/",
   "notes": [
-    "OWED, UNVERIFIED on device: the spike phone check (spike/OPERATOR-PHONE-CHECK.md (a)-(h)) and the post-build device run (plan v3 section 11, 13 steps). Lane checks only: tsc, mobile jest, root targeted vitest, surface-validate --check."
+    "Lane choices (D-27): the tenth state static; safe-area edges {top: additive}; the tagline text-[11px]; derived names input and label.<i>. Choice 5 ruled \"MF-35 a\".",
+    "Refuted: none."
   ]
 }

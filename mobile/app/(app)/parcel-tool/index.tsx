@@ -41,6 +41,11 @@ export default function ParcelSearchScreen() {
     return () => clearTimeout(t);
   }, [input]);
 
+  // P35-D17 a (nothing pre-checked; OUTPUT fold MEDIUM 1): a new debounced query clears the checked address card.
+  useEffect(() => {
+    setSelectedParcelId(null);
+  }, [debounced]);
+
   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).
   const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));
 

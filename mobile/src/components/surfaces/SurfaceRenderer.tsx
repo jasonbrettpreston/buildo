@@ -50,11 +50,15 @@ export function resolveValue(v: unknown, ctx: Ctx): unknown {
     if (!Object.hasOwn(ctx.content, k)) throw new Error(`SurfaceRenderer: unknown content key "${k}"`);
     return ctx.content[k];
   }
-  if (keys.length === 1 && keys[0] === 'contract') return walk(ctx.data.contract, String(v.contract).split('.'));
-  if (keys.length === 1 && keys[0] === 'derived') return walk(ctx.data.derived, String(v.derived).split('.'));
+  if (keys.length === 1 && (keys[0] === 'contract' || keys[0] === 'derived')) {
+    const found = walk(keys[0] === 'contract' ? ctx.data.contract : ctx.data.derived, String(v[keys[0]]).split('.'));
+    // OUTPUT fold LOW: a ref that resolves to nothing is a gap, never rendered as ''; a null value (a field sent as null) is allowed.
+    if (found === undefined) throw new Error(`SurfaceRenderer: unresolved ref ${JSON.stringify(v)}`);
+    return found;
+  }
   if (keys.every((k) => k === 'text' || k === 'vars') && 'text' in v && 'vars' in v && isObj(v.vars)) {
     const vars = v.vars;
-    return String(resolveValue(v.text, ctx)).replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(resolveValue(vars[name], ctx) ?? '') : m));
+    return String(resolveValue(v.text, ctx)).replace(/\{(\w+)\}/g, (m, name: string) => (Object.hasOwn(vars, name) ? String(resolveValue(vars[name], ctx) ?? '') : m));
   }
   return v;
 }

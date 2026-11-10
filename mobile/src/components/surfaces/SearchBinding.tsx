@@ -11,7 +11,7 @@
 //   {"contract": p}   a path in the lookup response (`contract_parcels_lookup.candidates.<i>.<field>`) or an error detail
 //                     (`contract_parcels_lookup.errors.429.retryAfterSeconds`), the binding standard's grammar;
 //   {"derived": n}    a value derived on the client by mobile/src/lib/parcelSearchMatch.ts (P35-D14 a: a declared deviation with the closed
-//                     list DERIVED_NAMES below; the mobile golden test refuses any other name).
+//                     list DERIVED_NAMES below; the mobile golden test refuses any other name and any declared name no tree uses).
 // A template is `{text: ref, vars: {name: ref}}`. Actions are data `{action, ...}`; the screen supplies the callbacks (SurfaceRenderer.tsx).
 // Class strings, sizes and hexes come from the layout table (PARCEL_SEARCH_LAYOUT, mobile/src/constants/parcelSearch.ts).
 // FE-05 (a listed binding module): no numeric literal but 0 and 1, no arithmetic; lengths and caps are decided in parcelSearchMatch.ts.
@@ -22,17 +22,19 @@ import {
   PARCEL_SEARCH_LAYOUT as L,
   SEARCH_BOTTOM_PADDING,
   SEARCH_CANDIDATE_LIMIT,
-  SEARCH_DEBOUNCE_MS,
   SEARCH_MAX_WIDTH,
-  SEARCH_MIN_QUERY_LEN,
 } from '@/constants/parcelSearch';
 import { diffCandidateAddress, parcelSearchRoute, type AddressSegment, type SearchSituation } from '@/lib/parcelSearchMatch';
 
-// CR3-10: the screen reads the debounce, the minimum length and the cap through the binding, never from @/constants/.
-export { SEARCH_CANDIDATE_LIMIT, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN };
-
 /** The generated slice: the descriptor's config values and the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
 export const SEARCH_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string> } = slice;
+
+// CR3-10 (OUTPUT fold LOW): the screen reads the debounce and the minimum length from the slice, i.e. from the descriptor's config.debounce_ms and
+// config.min_query_len (their one declared home), and the cap (not a descriptor config value) from the constants file, all through the binding.
+// The constants of the same names stay for the non-binding readers; parcelScreens.golden.test.ts pins them equal to the slice.
+export const SEARCH_DEBOUNCE_MS = SEARCH_SLICE.config.debounce_ms;
+export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE.config.min_query_len;
+export { SEARCH_CANDIDATE_LIMIT };
 
 export type Ref = { content: string } | { contract: string } | { derived: string };
 export type Template = { text: Ref; vars: Record<string, Ref> };
@@ -40,7 +42,7 @@ export type PropsNode = { component: string; props: Record<string, unknown>; chi
 export type Child = PropsNode | Ref | Template;
 
 /** P35-D14 a: the closed list of derived names (patterns), declared in the descriptor's deviation entry. */
-export const DERIVED_NAMES = [/^input$/, /^query$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
+export const DERIVED_NAMES = [/^input$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
 
 const CONTRACT = 'contract_parcels_lookup';
 const content = (key: string): Ref => ({ content: key });
@@ -224,7 +226,6 @@ export function searchData(s: SearchSituation): BindingData {
     contract: { [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } } },
     derived: {
       input: s.input,
-      query: s.query,
       candidate_count: s.candidates.length,
       recent: s.recent,
       label: s.candidates.map((c) => c.address || c.parcelId),

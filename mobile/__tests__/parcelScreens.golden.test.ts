@@ -100,6 +100,10 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
     expect(Object.keys(situations).filter((k) => k !== '$comment' && !used.has(k))).toEqual([]);
     expect([...used].filter((k) => !(k in situations))).toEqual([]);
   });
+  it('OUTPUT fold LOW: every declared derived name is used by some golden or named case (no dead name)', () => {
+    const used = [...names.map((n) => goldens[n]!.situation as string), ...NAMED_CASES].flatMap((k) => refs(searchProps(situations[k] as SearchSituation), 'derived'));
+    expect(DERIVED_NAMES.filter((re) => !used.some((u) => re.test(u))).map(String)).toEqual([]);
+  });
   it('every content key is used by a committed golden, and every content ref names a key (CR3-2)', () => {
     const used = new Set(Object.values(goldens).flatMap((g) => refs(g.props, 'content')));
     expect(Object.keys(SEARCH_SLICE.content).filter((k) => !used.has(k))).toEqual([]);
@@ -180,6 +184,11 @@ describe('named cases (plan v3 §7; must-survive rows 7-17)', () => {
 });
 
 describe('one home for the config values (row 24, RG-14)', () => {
+  it('OUTPUT fold LOW: the binding re-exports the debounce and the minimum length from the slice (the descriptor is their one home)', () => {
+    const src = fs.readFileSync(path.join(MOBILE, 'src/components/surfaces/SearchBinding.tsx'), 'utf8');
+    expect(/export const SEARCH_DEBOUNCE_MS = SEARCH_SLICE\.config\.debounce_ms/.test(src)).toBe(true);
+    expect(/export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len/.test(src)).toBe(true);
+  });
   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
     expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN });
     expect(SEARCH_SLICE.content['search.prompt']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);

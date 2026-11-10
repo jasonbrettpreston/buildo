@@ -1,0 +1,16 @@
+MF-35 OUTPUT panel folds, red evidence, 2026-11-10, worktree wf1/mf35-build2-1110 : red captured on 77ce6571a with the new tests written and the code unchanged; green on 971f12152 plus the folds.
+
+Mobile jest (parcelScreens.golden, surfaceRenderer.smoke, parcelSearchScreen.behaviour):
+  ● mobile render smoke (FE-33 mobile case) › OUTPUT fold LOW: an unresolved contract or derived ref throws (nothing is skipped silently); null is allowed; template vars are own keys only
+  ● mobile_parcel_search goldens (FE-31; plan v3 §7) › OUTPUT fold LOW: every declared derived name is used by some golden or named case (no dead name)
+  ● one home for the config values (row 24, RG-14) › OUTPUT fold LOW: the binding re-exports the debounce and the minimum length from the slice (the descriptor is their one home)
+  ● parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28) › OUTPUT fold MEDIUM 1 (P35-D17 a, nothing pre-checked): a new debounced query clears the checked card, even when the same lot is listed again
+Tests:       4 failed, 40 passed, 44 total
+
+Root vitest (admin-media.golden T7 (d), surface-conformance C-3):
+   × T7 (d) non-web targets fail closed > every converted surface with a mobile target names its mobile golden test, and that file exists 5ms
+   × T7 (d) non-web targets fail closed > RED: a mobile target with no declared test, and a pdf target, throw 2ms
+   × C-3 bindings.json integrity > MF-35 OUTPUT fold MEDIUM 3 (operator "MF-35 a"): each promoted entry carries the one archetype of the modules it owns 3ms
+      Tests  3 failed | 45 passed (48)
+
+GREEN after the folds: mobile tsc 0; mobile jest --ci 41 suites / 633 tests; root src/tests/surfaces/ + mcbylaws-frontend 757/757; surface-validate --check exit 0; emit-mobile-theme and emit-mobile-surfaces --check ok. The 10 mobile goldens change only in the descriptor fingerprint (props identical).

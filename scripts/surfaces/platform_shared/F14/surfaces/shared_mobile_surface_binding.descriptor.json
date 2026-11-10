@@ -22,7 +22,7 @@
   },
   "identity": {
     "id": "shared_mobile_surface_binding",
-    "archetype": "LIST",
+    "archetype": "SEARCH",
     "platforms": [
       "mobile"
     ],
@@ -40,10 +40,10 @@
     "spec_version": "0-draft",
     "versioning": {
       "answer": "none",
-      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains a promise at its C9 cutover, when its golden pair is captured.",
+      "why": "A binding module has no wire contract of its own: its input is a props tree whose shape is pinned by the consuming surface's goldens (mobile_parcel_search, src/tests/fixtures/surfaces/mobile_parcel_search) and its output is library parts. A change shows up as a golden or render-smoke failure of the consumer.",
       "evidence": [
-        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — listed among the 11 NEW admin surfaces",
-        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR is what pins a shape"
+        "mobile/__tests__/parcelScreens.golden.test.ts — the consumer goldens equal searchProps(situation)",
+        "mobile/__tests__/surfaceRenderer.smoke.test.tsx — the mobile render smoke (FE-33 mobile case)"
       ]
     },
     "ref": "S-079"
@@ -115,12 +115,7 @@
     ],
     "projection": "list",
     "breakpoints": "mobile_first",
-    "export": "none",
-    "list": {
-      "item_archetype": "row",
-      "pagination": "none",
-      "recycling": "none"
-    }
+    "export": "none"
   },
   "checks": [
     {
@@ -174,11 +169,13 @@
   },
   "config": {
     "answer": "none",
-    "why": "No tunable.",
+    "why": "No tunable of its own. The SEARCH profile requires debounce_ms and min_query_len, which have no \"none\" value: 0 states that the binding itself neither debounces nor gates on length. The consuming surface declares its own (mobile_parcel_search: 400 ms, 3 characters), and the screen applies them.",
     "evidence": [
-      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
-      "mobile/src/components/surfaces/SearchBinding.tsx"
-    ]
+      "mobile/src/components/surfaces/SearchBinding.tsx — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN re-exported from the consumer slice",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3"
+    ],
+    "debounce_ms": 0,
+    "min_query_len": 0
   },
   "sharing": {
     "answer": "shared",
@@ -200,7 +197,7 @@
   "deviations": "none",
   "limitations": [],
   "interpretation": "none",
-  "notes": "MF-35 (P42-D9 a; P35-D10 a; the binding standard 2026-11-10).",
+  "notes": "MF-35 (P42-D9 a; P35-D10 a; the binding standard 2026-11-10). Archetype SEARCH by operator ruling 2026-11-10 \"MF-35 a\" (OUTPUT fold MEDIUM 3): the entry carries the archetype of the modules it owns; the SEARCH-gated fields describe the consuming surface, not this binding, and are answered none with a why.",
   "x-draft": {
     "shard": "mobile-product",
     "files": [

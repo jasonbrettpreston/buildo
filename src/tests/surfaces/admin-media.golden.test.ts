@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { listTree } from '../../components/surfaces/web/ListBinding';
-import { buildGoldens, convertedIds, descriptorFile } from './surface-goldens';
+import { buildGoldens, convertedIds, descriptorFile, MOBILE_GOLDEN_TESTS, otherTarget } from './surface-goldens';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
 const ROOT = process.cwd();
@@ -59,7 +59,7 @@ describe('T7 (b) coverage', () => {
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted too; its mobile goldens are built and checked by mobile jest
     // (mobile/__tests__/parcelScreens.golden.test.ts), so this web coverage case reads the web surfaces only.
     expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search']);
-    for (const id of convertedIds(ROOT).filter((x) => x !== 'mobile_parcel_search')) {
+    for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {
         const g: Json = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/tests/fixtures/surfaces', id, `${s.golden}.web.json`), 'utf8'));
@@ -78,5 +78,20 @@ describe('T7 (c) the page passes plain data only', () => {
   });
   it('RED: a function prop, a Date and undefined are refused', () => {
     expect(plainProblems({ ...page, onDelete: () => undefined, at: new Date(0), gone: undefined })).toEqual(['/onDelete/: function is not plain data', '/at/: Date is not plain data', '/gone/: undefined is not plain data']);
+  });
+});
+
+// MF-35 OUTPUT fold MEDIUM 2 (Spec 126 §11b.2 item (6): the builder covers every converted surface): a target the root builder cannot build is
+// either declared in MOBILE_GOLDEN_TESTS (a mobile jest test that checks those goldens) or the build throws; never a silent skip.
+describe('T7 (d) non-web targets fail closed', () => {
+  it('every converted surface with a mobile target names its mobile golden test, and that file exists', () => {
+    const mobile = convertedIds(ROOT).filter((id) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8')).identity.platforms.includes('mobile'));
+    expect(mobile).toEqual(['mobile_parcel_search']);
+    for (const id of mobile) expect([id, fs.existsSync(path.join(ROOT, MOBILE_GOLDEN_TESTS[id] ?? 'none'))]).toEqual([id, true]);
+  });
+  it('RED: a mobile target with no declared test, and a pdf target, throw', () => {
+    expect(() => otherTarget('mobile_new_page', 'mobile')).toThrow('no mobile golden test declared for mobile_new_page');
+    expect(() => otherTarget('mobile_parcel_search', 'pdf')).toThrow('no pdf binding for mobile_parcel_search');
+    expect(otherTarget('mobile_parcel_search', 'mobile')).toBe('mobile/__tests__/parcelScreens.golden.test.ts');
   });
 });
