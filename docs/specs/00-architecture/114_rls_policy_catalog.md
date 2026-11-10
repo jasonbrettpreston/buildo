@@ -56,6 +56,8 @@ table inventory is known-stale (Spec 113 G1 — missing `lead_view_events`, `sub
 minimum), and an enumerated Class B catalog would inherit that staleness as a live RLS gap. A
 definitional default-deny rule cannot go stale the same way (§6).
 
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch item 1); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): the ONE ruled admin-read pattern. `media_assets` (MF-37), `offers` and `advertisers` (MF-40) are Class B by the rule above and also carry `ENABLE ROW LEVEL SECURITY` plus exactly one `<table>_select_admin` policy, `USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))`, and no write policy (writes are denied to every Data API role). Writes and admin reads go through the owner connection (§4, D1); the policy is defence in depth and matches Spec 126 §6.3 row 8 ("admin select; everyone else none"). The policies are hand-written because `scripts/seeds/roles.json` and its generator do not exist: an explicit, ruled departure from Spec 126 §6.2 rule 6 and from the closed Class A list of §3. `offers` and `advertisers` move to the ruled advertiser class when that principal (`roles.json`, `current_advertiser_id()`) exists. MF-40 cites this note for its two tables.
+
 
 > ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — a FOURTH class. Additive: the three classes below are unchanged, and every existing table keeps its classification.**
 >
@@ -194,6 +196,8 @@ acted on), not a live identity relationship, and it is not one of the 10 tables/
 for D6 conversion. It does not get a `uuid` conversion and does not get an `auth.uid()`-based
 policy; the PII-FACT redaction convention (migration `217`) already governs what it may contain
 post-scrub, and that is Spec 21/§217's domain, not this spec's.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch item 1); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): the §2 admin-read pattern (`media_assets`, `offers`, `advertisers`) reuses this subsection's `profiles.is_admin` predicate for SELECT only. Those tables are not Class A and are not added to the list of 10; they hold no per-admin rows.
 </architecture>
 
 ---
@@ -367,6 +371,8 @@ same `profiles.is_admin`-gated shape as §3.2's `admin_watchlist`, substituting 
 predicate for the table.
 
 > Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-7, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; records Spec 128 R-31, no new ruling): the first bucket (`surface-exports`) uses the owner template above, and an EXPORT route may mint a signed URL with a declared TTL for a recipient who is not the owner; the `pdf_exports` row is the authority on who may request one (Spec 126 §6.5; Spec 128 R-31). The admin media bucket of McFrontend Phase 2 (`surface-media`, MF-37) is private with `public: false` asserted and admin-gated.
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch items 2, 4); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): the first live bucket is `surface-media` (MF-37, migration `media_assets_surface_media`), created private by migration with `public = false` asserted in the same migration. It uses the `admin` scope, not the owner template above: three policies `surface_media_select_admin`, `surface_media_insert_admin`, `surface_media_delete_admin` (`bucket_id = 'surface-media'` and the `profiles.is_admin` predicate), no UPDATE policy. This departs from the "same shape as `admin_watchlist`" (own_admin) sentence because the objects are shared admin content, not per-admin rows. Path `<kind>/<asset_id>.<ext>`, no uid segment. Admins see objects through signed URLs minted by the admin list call; the TTL and the list cap are `logic_variables` rows. A `usage_events` ledger for admin previews is deferred. Signing for entitled users (`report_image` on the report) is a ruling owed by MF-38 (batch item 4).
 
 </architecture>
 

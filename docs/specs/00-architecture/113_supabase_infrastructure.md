@@ -465,6 +465,8 @@ and where the dump lands.
 in the current architecture needs it through Phase 5 (Philosophy A, Decision D1: Next.js is the
 single API gateway; `supabase-js` is for auth only; the pipeline and admin keep raw `pg`).
 
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch items 2, 4); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): `supabase-js` gains a second use beside auth: Supabase Storage for the private `surface-media` bucket (MF-37). The admin routes call Storage with the session client (the admin's own JWT, so the storage policies judge the request); every table read and write stays on raw `pg`. The Data API stays disabled. The test image's Storage coverage is measured by the MF-37 db test, not assumed.
+
 **Verification method (S2 correction, P4-F0 fold 2026-07-22 — proven live):** an UNKEYED curl
 of the REST endpoint (`curl -i https://<project>.supabase.co/rest/v1/`) **cannot distinguish
 enabled from disabled** — the API gateway rejects a key-less request identically (401) either
