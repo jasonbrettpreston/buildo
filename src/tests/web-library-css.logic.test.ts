@@ -8,6 +8,8 @@
 //   (b) every rule of the three layer sheets the provider imports sits inside @layer mantine / mantine-datatable (read from fixed paths);
 //   (c) globals.css imports no library sheet and its compiled output carries no Mantine selector;
 //   (d) each library package is pinned exactly in package.json and equals the lockfile; dropzone and carousel are not installed.
+//   Dated 2026-11-09 (operator "a, 1-3 approved"): Mantine 8.3.18 / mantine-datatable 8.3.13 replace 9.8.0 / 9.7.5 (Next 15.5.15 bundles a React
+//   19.2 canary without useEffectEvent/Activity); the react ^19.2.0 range pinned in acce4018a stays.
 // Each check is a pure function, GREEN on the real tree and RED on an in-memory plant. No DB, no network.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -70,7 +72,7 @@ export const pinProblems = (pkg: Record<string, any>, lock: Record<string, any>)
     if (locked !== v.replace(/^[\^~]/, '')) out.push(`${n}: package.json ${v} vs lockfile ${locked}`);
   }
   for (const n of NOT_INSTALLED) if (deps[n] !== undefined || lock.packages?.[`node_modules/${n}`] !== undefined) out.push(`${n}: installed`);
-  if (deps.react !== '^19.2.0' || deps['react-dom'] !== '^19.2.0') out.push(`react range ${deps.react} / ${deps['react-dom']}: Mantine 9 needs ^19.2.0`);
+  if (deps.react !== '^19.2.0' || deps['react-dom'] !== '^19.2.0') out.push(`react range ${deps.react} / ${deps['react-dom']}: the pinned range is ^19.2.0`);
   return out;
 };
 const readJson = (p: string): Record<string, any> => JSON.parse(fs.readFileSync(path.join(REPO, p), 'utf8')); // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped JSON documents
@@ -119,7 +121,7 @@ describe('T1 (d) exact pins equal to the lockfile; dropzone and carousel not ins
   it('RED: a caret pin, dropzone added, the old react range', () => {
     const pkg = readJson('package.json');
     const lock = readJson('package-lock.json');
-    const bad = { ...pkg, dependencies: { ...pkg.dependencies, '@mantine/core': '^9.8.0', '@mantine/dropzone': '9.8.0', react: '^19.0.0' } };
-    expect(pinProblems(bad, lock)).toEqual(['@mantine/core: ^9.8.0 is not an exact pin', '@mantine/dropzone: installed', 'react range ^19.0.0 / ^19.2.0: Mantine 9 needs ^19.2.0']);
+    const bad = { ...pkg, dependencies: { ...pkg.dependencies, '@mantine/core': '^8.3.18', '@mantine/dropzone': '8.3.18', react: '^19.0.0' } };
+    expect(pinProblems(bad, lock)).toEqual(['@mantine/core: ^8.3.18 is not an exact pin', '@mantine/dropzone: installed', 'react range ^19.0.0 / ^19.2.0: the pinned range is ^19.2.0']);
   });
 });

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPEC LINK: docs/specs/00-architecture/117_maxbld_brand.md §7 dated notes 2026-11-09 (the web library theme is a GENERATED third place;
 //            the generator and its coupling), §3.2 (On-primary #472a00), §3.5 (WCAG AA), §3.3 dated note 2026-11-09 (#D97E06 measured finding),
-//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.4 (Mantine 9 web archetype set).
+//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.4 (the web archetype set; Mantine 8.3 since the 2026-11-09 switch, operator "a, 1-3 approved").
 //
 // MF-37 · McFrontend queue. Emits the Mantine theme from ONE token source: the @theme `--color-*` hex vars of src/app/globals.css
 // plus scripts/surfaces/_schema/web-theme.json (amber tuple, on-primary, contrast pairs). The output holds JSON only (colour keys +
