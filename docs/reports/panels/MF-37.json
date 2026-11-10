@@ -4,7 +4,7 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-09",
-  "head": "fd97c0973",
+  "head": "dab35c2b6",
   "cards": [
     "Operator 2026-11-09: \"approved except for 9 ...\" (Wave 1 decision batch items 1-6, conflicts C-1..C-12).",
     "Operator 2026-11-09: \"approved smaller version\" (MF-42 size: the theme generator, web C-8 and C-9 move to MF-37; the string checks go to FE-33).",
@@ -12,18 +12,16 @@
     "Pre-approved D-22 and D-23 (~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): migrations 300/301; optional mapping and touch_targets on the bindings shape; hooks under src/lib/media/."
   ],
   "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md (section 12 wins; plan.md v2 kept); PLAN panel (observability-reviewer, code-reviewer-grounded, compliance, regression-guardian) and a v3 delta seat (code-reviewer-grounded, CONDITIONAL PASS, all folded); record ~/Buildo-scratch/mcfrontend/MF-37/record.md.",
-  "output": "OUTPUT panel on 245980248..7ad4ec42c (reports ~/Buildo-scratch/mcfrontend/MF-37/output-panel/: regression-guardian.md, code-reviewer-grounded.md, compliance-general-purpose.md, security.md). Folds in fd97c0973 (prereg 2 at 5575795ba), each verified first-hand before folding. Open: the provider spike (next build) FAILS on Next 15.5.15's bundled React (no useEffectEvent/Activity for Mantine 9.8.0) - plan STOP, options owed to the operator; mcbylaws/protected-paths.json pending_globs must drop src/components/surfaces/** and src/app/(maxbld)/** (MB-67 owner commit) or mcbylaws-frontend.logic.test.ts C2 stays red.",
+  "output": "OUTPUT panel on 245980248..7ad4ec42c (reports ~/Buildo-scratch/mcfrontend/MF-37/output-panel/: regression-guardian.md, code-reviewer-grounded.md, compliance-general-purpose.md, security.md). Folds in fd97c0973 (prereg 2 at 5575795ba), each verified first-hand before folding. Open: the provider spike (next build) FAILS on Next 15.5.15's bundled React (no useEffectEvent/Activity for Mantine 9.8.0) - plan STOP, options owed to the operator; mcbylaws/protected-paths.json pending_globs must drop src/components/surfaces/** and src/app/(maxbld)/** (MB-67 owner commit) or mcbylaws-frontend.logic.test.ts C2 stays red. Session 3 (operator \"a, 1-3 approved\"): B1 resolved by the Mantine 8.3 switch (dab35c2b6; next build compiles; first-HTML checks in provider-spike.txt); the MB-67 pending-glob flip landed (5db90788b); FE-32 and FE-33 flipped to RULED (75aaa0aaf, prereg 3 at 03cf51490). Delta seat on the switch: code-reviewer-grounded APPROVE WITH FOLDS (delta-mantine8-code-reviewer-grounded.md; F1/F2 documentation-only, not folded).",
   "seats": [
     "regression-guardian: PASS-WITH-FOLDS (4 minor, no lock weakened)",
     "code-reviewer-grounded: APPROVE WITH FOLDS (F1 orphan on timeout, F2 C-8 import source, F3-F8 low/nits)",
     "compliance (general-purpose, Spec 08 A9/A10): FAIL (B1 spike STOP, B2 copied contract rows, B3 126 note overclaims rls block, B4 403 code/helpers; 13 folds)",
-    "Security (Wave 1 batch item 5): PASS-WITH-FOLDS (F1 blocker: limits not range-checked; F2-F8 folds; F3 MFA-level policies as a queue item)"
+    "Security (Wave 1 batch item 5): PASS-WITH-FOLDS (F1 blocker: limits not range-checked; F2-F8 folds; F3 MFA-level policies as a queue item)",
+    "delta (Mantine 8.3 switch), code-reviewer-grounded: APPROVE WITH FOLDS (no blocking defect; F1 quote-prefix wording, F2 a pointer at 126:141; both documentation-only, recorded)"
   ],
-  "verdict": "BLOCKED: B1 (provider spike fails at next build; plan STOP rule) and the MB-67 pending-glob flip; every other blocker folded (B2, B3, B4, security F1).",
-  "blockers": [
-    "B1 provider spike: next build fails (Mantine 9.8.0 needs React 19.2 useEffectEvent/Activity; Next 15.5.15 bundles React 19.2.0-canary-0bdb9206-20250818 without them). Options owed to the operator: Mantine 8.3.x with mantine-datatable 8.3.x (peers measured), or a Next upgrade, or another.",
-    "MB-67: mcbylaws/protected-paths.json pending_globs still lists src/components/surfaces/** and src/app/(maxbld)/**; mcbylaws-frontend.logic.test.ts C2 fails until the MB-67 owner flips them."
-  ],
+  "verdict": "PASS-WITH-FOLDS after session 3: every blocker folded or resolved (B1 by the operator-ruled Mantine 8.3 switch; MB-67 pending globs flipped). Owed before push: the DB job and the operator scorecard --write (see followups); owner y on the protected paths.",
+  "blockers": [],
   "followups": [
     "security F3: add an aal2 check to the media_assets and surface_media_* policies when ADMIN_MFA_ENFORCED flips (queue item).",
     "code-reviewer F3: DELETE route outcome event on a DB error (low).",
@@ -31,7 +29,9 @@
     "compliance F9: the 29 step scorecards carry hand-applied migration-count lines (21 hand-edited in 5c727a7c8); the operator runs step-validate --all --write --fast before the push.",
     "compliance F12: observability-reviewer (plan section 7 step 7) was not seated; the coordinator named four seats.",
     "compliance F5: T1 sits outside src/tests/surfaces (not a surface path).",
-    "FE-32 and FE-33 flip to RULED after operator approval (remove them from FLIP_PENDING in that commit); MF-37 DONE after that."
+    "provider spike: hydration, opened-portal styling and computed styles after a soft navigation need a browser (not checked); static finding: Mantine core sets body font-family and line-height inside @layer mantine, so a soft navigation from /admin/media to /admin may change them; suggested fold (theme fontFamily inherit, lineHeights md 1.5) owed to a decision.",
+    "First Load JS of /admin/media is 489 kB (REPORT-only budget 250 KB; recorded, not gated).",
+    "delta F1/F2: documentation-only wording pointers (not folded)."
   ],
   "evidence": "docs/reports/red-evidence/MF-37/",
   "notes": [
