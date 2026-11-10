@@ -1,0 +1,16 @@
+MF-37 FE-18/FE-27 lock edit (src/tests/surfaces/report-binding.logic.test.ts: the closed set is seven with contract) red run, 2026-11-09. Plant: the contract source removed from binding-sources.json. Restored after the run.
+   × FE-32 (a) the contract kind is declared on both sides > binding-sources.json: contract, register FE-32, resolver contract_projection, file set; bindings.json ref_kinds has contract 1ms
+     → Cannot read properties of undefined (reading 'register')
+   × FE-32 (c) the REPORT side (RS-1): contract is not ruled for REPORT fields > RED: a REPORT field rebound to contract:contract_admin_media_list.alt fails RS-1 19ms
+     → expected 'scenarios.cards[].display_label: sour…' to contain 'the contract binding kind is not rule…'
+   × FE-18 / Rule 20: the closed binding set (binding-sources.json) > names exactly the seven sources: catalogue, content, user_input, ad_slot, external_embed, parcels, contract (FE-18, FE-21, FE-23, FE-27, FE-32) 3ms
+     → expected [ 'ad_slot', 'catalogue', …(4) ] to deeply equal [ 'ad_slot', 'catalogue', …(5) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/contract-binding.logic.test.ts > FE-32 (a) the contract kind is declared on both sides > binding-sources.json: contract, register FE-32, resolver contract_projection, file set; bindings.json ref_kinds has contract
+TypeError: Cannot read properties of undefined (reading 'register')
+ FAIL  src/tests/surfaces/contract-binding.logic.test.ts > FE-32 (c) the REPORT side (RS-1): contract is not ruled for REPORT fields > RED: a REPORT field rebound to contract:contract_admin_media_list.alt fails RS-1
+AssertionError: expected 'scenarios.cards[].display_label: sour…' to contain 'the contract binding kind is not rule…'
+ FAIL  src/tests/surfaces/report-binding.logic.test.ts > FE-18 / Rule 20: the closed binding set (binding-sources.json) > names exactly the seven sources: catalogue, content, user_input, ad_slot, external_embed, parcels, contract (FE-18, FE-21, FE-23, FE-27, F
+AssertionError: expected [ 'ad_slot', 'catalogue', …(4) ] to deeply equal [ 'ad_slot', 'catalogue', …(5) ]
+ Test Files  2 failed (2)
+      Tests  3 failed | 18 passed (21)

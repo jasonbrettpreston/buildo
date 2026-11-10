@@ -45,9 +45,10 @@ const SEED_SIDE = [
 ];
 
 describe('FE-18 / Rule 20: the closed binding set (binding-sources.json)', () => {
-  it('names exactly the six sources: catalogue, content, user_input, ad_slot, external_embed, parcels (FE-18, FE-21, FE-23, FE-27)', () => {
+  it('names exactly the seven sources: catalogue, content, user_input, ad_slot, external_embed, parcels, contract (FE-18, FE-21, FE-23, FE-27, FE-32)', () => {
     const bs = readJson(BINDING);
-    expect(Object.keys(bs.sources).sort()).toEqual(['ad_slot', 'catalogue', 'content', 'external_embed', 'parcels', 'user_input']);
+    // MF-37 (FE-32): contract joins the set; RS-1 refuses it for REPORT fields (contract-binding.logic.test.ts).
+    expect(Object.keys(bs.sources).sort()).toEqual(['ad_slot', 'catalogue', 'content', 'contract', 'external_embed', 'parcels', 'user_input']);
   });
   it('the committed declaration binds every field and card to a source in the set, and RS-1 is green', () => {
     expect(RS.importError).toBeUndefined();

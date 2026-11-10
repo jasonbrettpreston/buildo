@@ -1,5 +1,5 @@
 {
-  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks.",
+  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks. Dated note 2026-11-09 (MF-37; D-23, ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): mapping.web is the closed list of JSX element names each web binding module may render per archetype (FE-31 C-8); RJSF's Mantine theme renders FileInput, NumberInput, TextInput, Select and the submit Button itself, so those names document what a FORM shows rather than JSX in our modules. touch_targets.web lists the Mantine size values that reach 44 px (FE-31 C-9), measured from @mantine/core 9.8.0: inputs and Button lg 50 px, xl 60 px; CloseButton and ActionIcon lg 34 px, xl 44 px. ref_kinds gains contract (FE-32): a golden value {\"contract\": \"<contract_id>.<field>\"} names a field of a CONTRACT descriptor's inputs.field_whitelist.",
   "libraries": {
     "web": ["@mantine/core", "@mantine/hooks", "@mantine/dates", "@mantine/dropzone", "@mantine/carousel", "mantine-datatable", "@rjsf/core", "@rjsf/mantine", "@rjsf/utils", "@rjsf/validator-ajv8"],
     "mobile": ["@rn-primitives/*"]
@@ -9,10 +9,30 @@
   "framework": ["react", "react-dom", "next", "next/*", "expo-router"],
   "mount_internal": ["@/lib/", "@/components/surfaces/"],
   "module_roots": ["src/components/surfaces/web/", "mobile/src/components/surfaces/"],
-  "modules": [],
-  "mounts": [],
-  "providers": [],
-  "promoted_entries": [],
+  "modules": [
+    { "path": "src/components/surfaces/web/FormBinding.tsx", "platform": "web", "archetypes": ["FORM"], "owner": "binding_web_form", "exports": ["formTree", "formProps", "errorTransformer", "FormBinding"] },
+    { "path": "src/components/surfaces/web/ListBinding.tsx", "platform": "web", "archetypes": ["LIST"], "owner": "binding_web_list", "exports": ["listTree", "listProps", "compareBy", "ListBinding"] }
+  ],
+  "mounts": [
+    { "surface": "admin_media", "path": "src/app/(maxbld)/admin/media/page.tsx" },
+    { "surface": "admin_media", "path": "src/app/(maxbld)/admin/media/error.tsx" },
+    { "surface": "admin_media_upload", "path": "src/app/(maxbld)/admin/media/MediaPageClient.tsx" },
+    { "surface": "admin_media_delete", "path": "src/app/(maxbld)/admin/media/MediaPageClient.tsx" }
+  ],
+  "providers": ["src/components/surfaces/web/AdminMantineProvider.tsx", "src/app/(maxbld)/admin/layout.tsx"],
+  "promoted_entries": ["binding_web_form", "binding_web_list"],
+  "mapping": {
+    "web": {
+      "FORM": ["Stack", "Alert", "Form", "FileInput", "NumberInput", "TextInput", "Select", "Button"],
+      "LIST": ["Stack", "Alert", "DataTable", "Button", "Image", "Modal"]
+    }
+  },
+  "touch_targets": {
+    "web": {
+      "Button": ["lg", "xl"], "TextInput": ["lg", "xl"], "NumberInput": ["lg", "xl"], "Select": ["lg", "xl"], "FileInput": ["lg", "xl"],
+      "Textarea": ["lg", "xl"], "CloseButton": ["xl"], "ActionIcon": ["xl"]
+    }
+  },
   "test_globs": ["src/tests/**", "mobile/__tests__/**", "mobile/__mocks__/**"],
   "widget_types": {
     "text": ["string"],
@@ -24,6 +44,6 @@
     "checkbox": ["boolean"],
     "hidden": ["*"]
   },
-  "ref_kinds": ["content"],
+  "ref_kinds": ["content", "contract"],
   "non_display_keys": ["id", "component", "widget", "variant", "size", "accessor", "idAccessor", "name", "type", "testID", "className", "href", "to", "key", "value", "defaultValue", "color", "radius", "textAlign", "role", "autoComplete", "inputMode", "orientation", "icon"]
 }

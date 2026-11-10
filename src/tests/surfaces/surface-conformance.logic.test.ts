@@ -137,6 +137,16 @@ export const textProblems = (text: string, file: string, nonDisplay: string[]): 
   return out;
 };
 
+/** Every emitted descriptor by id (the real tree). */
+const DESCRIPTORS: Map<string, Json> = (() => {
+  const out = new Map<string, Json>();
+  const walkD = (d: string): void => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walkD(p); else if (e.name.endsWith('.descriptor.json')) { const j = rj(p); out.set(j.identity.id, j); } } };
+  walkD(path.join(REPO, 'scripts/surfaces'));
+  return out;
+})();
+const realDescriptor = (id: string): Json | undefined => DESCRIPTORS.get(id);
+const B_CONVERTED: Json[] = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json')).converted.map((id: string) => DESCRIPTORS.get(id));
+
 // ---- C-3 / C-4 / C-5 -------------------------------------------------------------------------------------------------------------------------------
 const rootsLiteral = (text: string): string | null => /const COMPONENT_ROOTS = (\[[^\]]*\]);/.exec(text)?.[1] ?? null;
 interface C3In { b: Json; exists: (p: string) => boolean; descriptor: (id: string) => Json | undefined; policy: Json; rootsTexts: string[]; converted: Json[] }
@@ -195,12 +205,13 @@ const walkAll = (dir: string, rel = ''): string[] => (fs.existsSync(dir) ? fs.re
 // ---- the cases -------------------------------------------------------------------------------------------------------------------------------------
 
 describe('C-1 the arms on the real tree, and the queue state', () => {
-  it('SV-DESC is clean with the exact counts (20 in scope: 0 converted, 7 pending, 9 parked, 4 report); SCREEN and SBIND WAIT on the named row', async () => {
+  it('SV-DESC is clean with the exact counts (23 in scope: 3 converted, 7 pending, 9 parked, 4 report); SCREEN and SBIND judge the three MF-37 surfaces', async () => {
     const ctx = await loadContext(REPO);
     const d = descArm(ctx);
     expect(d.findings).toEqual([]);
-    expect(d.note).toBe('S-desc ok (examined 20 in scope: converted 0, pending 7, parked 9, report 4)');
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen WAITS MF-37' }, { findings: [], note: 'S-sbind WAITS MF-37' }]);
+    expect(d.note).toBe('S-desc ok (examined 23 in scope: converted 3, pending 7, parked 9, report 4)');
+    // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (3 surfaces, 17 goldens)' }, { findings: [], note: 'S-sbind ok (3 surfaces, 54 strings)' }]);
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -274,10 +285,11 @@ describe('C-2 the import boundary (one tier: libraries only in binding modules, 
 });
 
 describe('C-2b no display text in mount files and binding modules (the exempt list: tests, the vendor dir, non_display_keys attributes)', () => {
-  it('the real tree: 0 mount files and 0 binding modules at MF-42 (WAITS the first binding row)', () => {
+  it('the real tree: the mount files and binding modules bindings.json lists hold no display text (MF-37: 4 mounts, 2 modules)', () => {
     const files = [...B.mounts.map((m: Json) => m.path), ...B.modules.map((m: Json) => m.path)];
     const lines = files.flatMap((f: string) => textProblems(fs.readFileSync(path.join(REPO, f), 'utf8'), f, B.non_display_keys));
-    console.log(files.length === 0 ? `C-2b: 0 files WAITS ${rj(path.join(REPO, SCHEMA, 'converted-surfaces.json')).waits}` : `C-2b: ${files.length} files`);
+    console.log(`C-2b: ${files.length} files`);
+    expect(files.length).toBeGreaterThan(0);
     expect(lines).toEqual([]);
   });
   it('RED: JSX text, a string child and a string display attribute; a non-display attribute and a content binding are allowed', () => {
@@ -294,11 +306,12 @@ describe('C-2b no display text in mount files and binding modules (the exempt li
 
 describe('C-3 bindings.json integrity', () => {
   const rootsTexts = ['src/tests/surface-registry.infra.test.ts', 'scripts/violations/generate-surface-registry.mjs'].map((p) => fs.readFileSync(path.join(REPO, p), 'utf8'));
-  const real: C3In = { b: B, exists: (p) => fs.existsSync(path.join(REPO, p)), descriptor: () => undefined, policy: POLICY, rootsTexts, converted: [] };
-  it('the real tree: no finding; 0 modules WAITS the first binding row; the shape is valid', () => {
+  const real: C3In = { b: B, exists: (p) => fs.existsSync(path.join(REPO, p)), descriptor: realDescriptor, policy: POLICY, rootsTexts, converted: B_CONVERTED };
+  it('the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid', () => {
     expect(shapeProblems(REPO, 'bindings', B)).toEqual([]);
     expect(bindingsProblems(real)).toEqual([]);
-    console.log(B.modules.length === 0 ? 'C-3: 0 modules WAITS MF-37' : `C-3: ${B.modules.length} modules`);
+    console.log(`C-3: ${B.modules.length} modules`);
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([2, 2, 4]);
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -321,7 +334,8 @@ describe('C-3 bindings.json integrity', () => {
     expect(bindingsProblems({ ...real, policy })).toEqual(['C-3 mobile/src/vendor/rnr/ is not a frontend glob in mcbylaws/protected-paths.json']);
   });
   it('RED (in memory): a converted surface with no binding module for its platform and archetype', () => {
-    expect(bindingsProblems({ ...real, converted: [{ identity: { id: 'admin_media', platforms: ['web'], archetype: 'FORM' } }] })).toEqual(['C-3 admin_media: no web binding module for FORM']);
+    const none = { ...B, modules: [], mounts: [], promoted_entries: [] };
+    expect(bindingsProblems({ ...real, b: none, converted: [{ identity: { id: 'admin_media', platforms: ['web'], archetype: 'FORM' } }] })).toEqual(['C-3 admin_media: no web binding module for FORM']);
   });
 });
 
@@ -395,7 +409,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     for (const a of ARCHETYPES) { const d = convert(a); expect([a, v(d), unresearchedCount(d)]).toEqual([a, [], 0]); }
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
-    expect(all.length).toBe(141);
+    expect(all.length).toBe(149); // MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42)
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     const form = rj(path.join(REPO, 'scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.descriptor.json'));
     expect([form.status, form.render.form]).toEqual(['new', undefined]);
@@ -423,5 +437,141 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     expect(v(g)).toContain("/render/form/fields/0 must have required property 'label'");
     const h = convert('FORM'); h.render.form.fields[0].widget = 'hidden'; delete h.render.form.fields[0].label;
     expect(v(h).filter((e) => e.startsWith('/render/form/fields/0'))).toEqual([]);
+  });
+});
+
+// ---- C-8 / C-9 / C-11 (MF-37; MF-42 size ruling and batch C-1, C-11: the web closed mapping, the web 44 px case and the theme check) -------------
+
+/** C-8: every JSX element a web binding module renders is a library component listed in bindings.json mapping.web for its archetypes. */
+export const mappingProblems = (text: string, file: string, allowed: string[]): string[] => {
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const imported = new Map<string, string>(); // local name -> imported name, for every named or default import
+  const locals = new Set<string>(); // names declared in the module itself (functions, consts, classes)
+  const out: string[] = [];
+  const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+  for (const s of sf.statements) {
+    if (ts.isImportDeclaration(s) && s.importClause) {
+      const c = s.importClause;
+      if (c.name) imported.set(c.name.text, c.name.text);
+      if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) imported.set(e.name.text, (e.propertyName ?? e.name).text);
+      if (c.namedBindings && ts.isNamespaceImport(c.namedBindings)) imported.set(c.namedBindings.name.text, `${c.namedBindings.name.text}.*`);
+    }
+  }
+  const declare = (n: ts.Node): void => {
+    if ((ts.isFunctionDeclaration(n) || ts.isClassDeclaration(n)) && n.name) locals.add(n.name.text);
+    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name)) locals.add(n.name.text);
+    ts.forEachChild(n, declare);
+  };
+  declare(sf);
+  const tagOf = (tag: ts.JsxTagNameExpression): string => {
+    if (ts.isIdentifier(tag)) return imported.get(tag.text) ?? (locals.has(tag.text) ? `local:${tag.text}` : tag.text);
+    if (ts.isPropertyAccessExpression(tag)) { const base = tagOf(tag.expression as ts.JsxTagNameExpression); return `${base.replace(/\.\*$/, '')}.${tag.name.text}`; }
+    return tag.getText(sf);
+  };
+  const visit = (n: ts.Node): void => {
+    if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) {
+      const name = tagOf(n.tagName);
+      if (name.startsWith('local:')) out.push(`C-8 ${file}:${at(n)}: hand-built component ${name.slice(6)}`);
+      else if (/^[a-z]/.test(name)) out.push(`C-8 ${file}:${at(n)}: intrinsic element <${name}>`);
+      else if (!allowed.includes(name)) out.push(`C-8 ${file}:${at(n)}: ${name} is not in mapping.web`);
+    }
+    if (ts.isCallExpression(n)) {
+      const e = n.expression;
+      const callee = ts.isIdentifier(e) ? imported.get(e.text) ?? e.text : ts.isPropertyAccessExpression(e) ? e.name.text : '';
+      if (callee === 'createElement' || callee === 'jsx' || callee === 'jsxs') out.push(`C-8 ${file}:${at(n)}: ${callee}() call (JSX only, so the mapping can judge it)`);
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return out;
+};
+const allowedFor = (m: Json): string[] => [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping?.web?.[a] ?? []))];
+
+describe('C-8 the web closed mapping (every JSX element of a web binding module is a listed library component)', () => {
+  it('the real tree: each web module renders only mapping.web names for its archetypes', () => {
+    const mods = B.modules.filter((m: Json) => m.platform === 'web');
+    console.log(`C-8: ${mods.length} web modules`);
+    expect(mods.length).toBeGreaterThan(0);
+    for (const m of mods) expect([m.path, mappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowedFor(m))]).toEqual([m.path, []]);
+  });
+  it('RED: an unexported in-binding component, React.createElement of a table, an unmapped <Card/>, an intrinsic <div>, an aliased import', () => {
+    const allowed = ['Stack', 'Button'];
+    const src = [
+      "import React from 'react';", "import { Card, Stack, Button as Btn } from '@mantine/core';",
+      'const Row = () => <Stack />;', 'export const P = () => (', '  <Stack>', '    <Row />', '    <Card />', '    <Btn />', '    <div />', "    {React.createElement('table')}", '  </Stack>', ');', '',
+    ].join('\n');
+    expect(mappingProblems(src, 'm.tsx', allowed)).toEqual([
+      'C-8 m.tsx:6: hand-built component Row',
+      'C-8 m.tsx:7: Card is not in mapping.web',
+      'C-8 m.tsx:9: intrinsic element <div>',
+      "C-8 m.tsx:10: createElement() call (JSX only, so the mapping can judge it)",
+    ]);
+  });
+});
+
+/** C-9: every golden node whose component is in touch_targets.web carries a listed size; returns the problems and the nodes examined. */
+export const touchProblems = (node: unknown, at: string, sizes: Record<string, string[]>): { lines: string[]; n: number } => {
+  if (Array.isArray(node)) return node.reduce((acc: { lines: string[]; n: number }, x, i) => { const r = touchProblems(x, `${at}/${i}`, sizes); return { lines: [...acc.lines, ...r.lines], n: acc.n + r.n }; }, { lines: [], n: 0 });
+  if (node === null || typeof node !== 'object') return { lines: [], n: 0 };
+  const o = node as Json;
+  let lines: string[] = [];
+  let n = 0;
+  if (typeof o.component === 'string' && sizes[o.component]) {
+    n += 1;
+    const s = o.props?.size;
+    if (!sizes[o.component]?.includes(s)) lines.push(`C-9 ${at}: ${o.component} size ${s ?? 'none'} (needs ${sizes[o.component]?.join('|')})`);
+  }
+  for (const [k, v] of Object.entries(o)) { const r = touchProblems(v, `${at}/${k}`, sizes); lines = [...lines, ...r.lines]; n += r.n; }
+  return { lines, n };
+};
+
+describe('C-9 the web 44 px case (golden nodes of a sized component carry a 44 px size)', () => {
+  it('the real tree: every converted web golden passes, with a non-vacuous count per archetype', () => {
+    const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+    const per: Record<string, number> = {};
+    for (const id of m.converted) {
+      const d = DESCRIPTORS.get(id) as Json;
+      for (const s of d.states) {
+        const g = rj(path.join(REPO, 'src/tests/fixtures/surfaces', id, `${s.golden}.web.json`));
+        const r = touchProblems(g.props, `${id}/${s.golden}`, B.touch_targets.web);
+        expect(r.lines).toEqual([]);
+        per[d.identity.archetype] = (per[d.identity.archetype] ?? 0) + r.n;
+      }
+    }
+    console.log(`C-9: sized nodes per archetype ${JSON.stringify(per)}`);
+    expect(Object.keys(per).sort()).toEqual(['FORM', 'LIST']);
+    for (const v of Object.values(per)) expect(v).toBeGreaterThan(0);
+  });
+  it('RED: Button size sm, a Button with no size, ActionIcon lg, a bare Select', () => {
+    const tree = { component: 'Stack', props: {}, children: [
+      { component: 'Button', props: { size: 'sm' } }, { component: 'Button', props: {} }, { component: 'ActionIcon', props: { size: 'lg' } }, { component: 'Select', props: { name: 'x' } }, { component: 'Button', props: { size: 'lg' } },
+    ] };
+    expect(touchProblems(tree, 'g', B.touch_targets.web)).toEqual({ n: 5, lines: [
+      'C-9 g/children/0: Button size sm (needs lg|xl)', 'C-9 g/children/1: Button size none (needs lg|xl)',
+      'C-9 g/children/2: ActionIcon size lg (needs xl)', 'C-9 g/children/3: Select size none (needs lg|xl)',
+    ] });
+  });
+});
+
+describe('C-11 the generated web theme (scripts/surfaces/emit-web-theme.mjs --check)', () => {
+  it('--check exits 0 and prints theme ok (N pairs, S shades) with N > 0', () => {
+    const r = spawnSync(process.execPath, [path.join(REPO, 'scripts/surfaces/emit-web-theme.mjs'), '--check'], { cwd: REPO, encoding: 'utf8' });
+    expect([r.status, r.stderr]).toEqual([0, '']);
+    const m = /^theme ok \((\d+) pairs, (\d+) shades\)$/m.exec(r.stdout);
+    expect(m).not.toBeNull();
+    expect(Number(m?.[1])).toBeGreaterThan(0);
+  });
+  it('RED: a hand edit, a stale token, a pair below its minimum, no pairs, a shade in no pair', async () => {
+    const T = await import('../../../scripts/surfaces/emit-web-theme.mjs');
+    const gen = fs.readFileSync(path.join(REPO, 'src/lib/surfaces/web/theme.generated.json'), 'utf8');
+    const css = fs.readFileSync(path.join(REPO, 'src/app/globals.css'), 'utf8');
+    const spec = rj(path.join(REPO, SCHEMA, 'web-theme.json'));
+    const withSpec = (f: (s: Json) => void): string[] => { const s = structuredClone(spec); f(s); return T.checkTheme(REPO, { specText: JSON.stringify(s) }).lines; };
+    expect(T.checkTheme(REPO, { generatedText: gen.replace('#b45309', '#b45300') }).lines).toEqual(['GEN-HAND-EDIT src/lib/surfaces/web/theme.generated.json']);
+    expect(T.checkTheme(REPO, { cssText: css.replace('--color-action-primary: #F59E0B', '--color-action-primary: #F59E0C') }).lines).toEqual(['GEN-STALE src/lib/surfaces/web/theme.generated.json']);
+    expect(withSpec((s) => { s.amber[5] = { token: '--color-action-gone' }; })).toContain('THEME-TOKEN --color-action-gone: not in globals.css');
+    expect(withSpec((s) => { s.on_primary = '#ffffff'; })).toContain('THEME-CONTRAST on_primary/amber.5: 2.14 < 4.5');
+    expect(withSpec((s) => { s.contrast.pairs = []; })).toContain('THEME-CONTRAST: no pairs');
+    expect(withSpec((s) => { s.contrast.pairs = s.contrast.pairs.filter((p: Json) => p.bg !== 'amber.3'); })).toContain('THEME-CONTRAST amber.3: no pair');
   });
 });

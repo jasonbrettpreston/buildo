@@ -1,0 +1,90 @@
+{
+  "$comment": "MF-37 admin media library contract (Spec 126 section 6.5, Spec 114 section 6 dated notes 2026-11-09; plan ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md section 3.2). One private bucket; one object per media_assets row at path_template; limits name logic_variables keys (values live in the table); request_schema is the POST /api/admin/media body in MF-42's keyword subset (no format, no conditionals) and the route builds its validator from it with z.fromJSONSchema, then applies kinds[kind].requires and the strict data-URL decode with magic bytes. scenario_key enum = the keys of report-v2-seed/row-presentation.json (T2 join lock). Read by src/lib/media/contract.ts; locked by src/tests/media-contract.logic.test.ts.",
+  "bucket": {
+    "id": "surface-media",
+    "public": false
+  },
+  "path_template": "{kind}/{asset_id}.{ext}",
+  "ext_by_mime": {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/webp": "webp"
+  },
+  "kinds": {
+    "report_image": {
+      "requires": [
+        "scenario_key",
+        "position"
+      ],
+      "alt_required": true
+    },
+    "ad_creative": {
+      "requires": [],
+      "alt_required": true
+    }
+  },
+  "limits": {
+    "max_bytes": "media_upload_max_bytes",
+    "signed_url_ttl_seconds": "media_signed_url_ttl_seconds",
+    "list_page_max": "media_list_page_max",
+    "list_cache_seconds": "media_list_cache_seconds",
+    "storage_timeout_ms": "media_storage_timeout_ms"
+  },
+  "request_schema": {
+    "$comment": "The POST body. file is a data URL (RJSF FileWidget stores data:<mime>;name=<enc>;base64,<data>); the pattern only gates the MIME prefix, the server decode enforces the rest.",
+    "type": "object",
+    "properties": {
+      "kind": {
+        "type": "string",
+        "enum": [
+          "report_image",
+          "ad_creative"
+        ]
+      },
+      "scenario_key": {
+        "type": "string",
+        "enum": [
+          "detached_house/flat_or_shallow_roof",
+          "detached_house/pitched"
+        ]
+      },
+      "position": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "alt": {
+        "type": "string",
+        "minLength": 1
+      },
+      "file": {
+        "type": "string",
+        "pattern": "^data:image/(png|jpeg|webp);"
+      }
+    },
+    "required": [
+      "kind",
+      "alt",
+      "file"
+    ],
+    "additionalProperties": false
+  },
+  "delete_schema": {
+    "$comment": "The DELETE /api/admin/media/<asset_id> body, validated as {asset_id: <path param>, confirm: <body.confirm>}; confirm must equal the row alt (checked under FOR UPDATE in the route).",
+    "type": "object",
+    "properties": {
+      "asset_id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "confirm": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": [
+      "asset_id",
+      "confirm"
+    ],
+    "additionalProperties": false
+  }
+}

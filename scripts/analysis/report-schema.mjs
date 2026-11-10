@@ -147,6 +147,8 @@ export function evaluate(inputs) {
     const src = bs[kind];
     if (!src) { bad1.push(`${where}: ${role} ${kind}:${ref} — ${kind} is not in the closed set (${Object.keys(bs).join(' | ')})`); return null; }
     if (src.file === null) { bad1.push(`${where}: ${role} ${kind}:${ref} — the ${kind} contract has not landed, so no member resolves`); return null; }
+    // MF-37 (FE-32): the `contract` kind binds SURFACE goldens to a CONTRACT projection; a REPORT field may not use it until a ruling widens it.
+    if (src.resolver === 'contract_projection') { bad1.push(`${where}: ${role} ${kind}:${ref} — the contract binding kind is not ruled for REPORT fields (FE-32 binds SURFACE goldens)`); return null; }
     if (src.resolver === 'contract_id' && kind === 'ad_slot' && !(inputs.adContract?.slots ?? []).includes(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a slot id in the ad contract`);
     if (src.resolver === 'registry_key' && getPath(presentation, ref) === undefined) bad1.push(`${where}: ${role} ${kind}:${ref} is not in the content registry`);
     if (src.resolver === 'migration_column' && !pcols.has(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a parcels migration column`);

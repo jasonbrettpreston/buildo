@@ -1,0 +1,10 @@
+# PLANT: POST /api/admin/media session gate removed (forbiddenNonSessionWrite call dropped; restored after this run)
+   × admin media routes — auth boundary > POST: 403 FORBIDDEN for admin_key, no audit, no telemetry, no write 29ms
+   × admin media routes — auth boundary > POST: 403 FORBIDDEN for dev_bypass, no audit, no telemetry, no write 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/admin-media.security.test.ts > admin media routes — auth boundary > POST: 403 FORBIDDEN for admin_key, no audit, no telemetry, no write
+ FAIL  src/tests/admin-media.security.test.ts > admin media routes — auth boundary > POST: 403 FORBIDDEN for dev_bypass, no audit, no telemetry, no write
+AssertionError: expected 200 to be 403 // Object.is equality
+- Expected
++ Received
+      Tests  2 failed | 18 passed (20)

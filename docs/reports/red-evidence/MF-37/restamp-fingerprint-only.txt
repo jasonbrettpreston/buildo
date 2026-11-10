@@ -1,0 +1,6 @@
+MF-37 REPORT golden re-stamp (fingerprint only), 2026-11-09. binding-sources.json gained the FE-32 'contract' source. It is a REPORT fingerprint input (scripts/surfaces/report-checks.mjs FP_FILES) and an input of seed-report-v2.mjs, whose --write moved only report-v2.decl.json inputs_sha256_16 (841c9b3b3444fc6c -> a414da2494a3f717). Then: npx tsx scripts/surfaces/report-capture.ts -> 'report-capture wrote 56 goldens; 56 changed'. Diff summary (hashes masked as H):
+  56 -      "scripts/surfaces/_schema/binding-sources.json": "H",
+  56 -      "scripts/surfaces/_schema/report-v2.decl.json": "H"
+  56 +      "scripts/surfaces/_schema/binding-sources.json": "H",
+  56 +      "scripts/surfaces/_schema/report-v2.decl.json": "H"
+Files: 56 goldens (counts measured on this tip, none edited down); only the binding-sources.json and report-v2.decl.json fingerprint lines moved; no rendered_tree or response_fixture line changed. report-schema --check: current, RS-0..RS-11 PASS. surface-validate: S-golden ok (14 states x 4).

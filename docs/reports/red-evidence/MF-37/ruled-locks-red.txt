@@ -1,0 +1,7 @@
+MF-37 red run of the RULED locks this commit edits, before their edits, on the MF-37 tree (from the targeted run of 2026-11-09): FE-13 (src/tests/surfaces/surface-validate.logic.test.ts, the exact success line), FE-15 (src/tests/surfaces/mcfront-proof.infra.test.ts, canary b control: the temp copy lacked src/components/surfaces, so FE-05's fail-closed module scan exited 1), and the src-sql-ledger catalog membership (media_assets not yet in the DB-captured catalog). Each lock was then amended as recorded in its dated comment and is green.
+ FAIL  src/tests/src-sql-ledger.logic.test.ts > src-sql-ledger — committed ledger (live) > live: every column the ledger reads/writes on a catalogued table exists in the catalog; only the matview is skipped
+AssertionError: expected [ 'media_assets', …(1) ] to deeply equal [ 'mv_monthly_permit_stats' ]
+ FAIL  src/tests/surfaces/mcfront-proof.infra.test.ts > canary b: a hand edit, an invented field and a bare number > control: a clean copy passes the generator --check, the gate --check and the three locks
+AssertionError: expected 1 to be +0 // Object.is equality
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting
+AssertionError: expected 'surface-validate current; S-gen ok · …' to be 'surface-validate current; S-gen ok · …' // Object.is equality

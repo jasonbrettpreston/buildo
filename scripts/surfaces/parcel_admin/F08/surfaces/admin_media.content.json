@@ -1,0 +1,22 @@
+{
+  "admin_media.col.preview": "Preview",
+  "admin_media.col.kind": "Kind",
+  "admin_media.col.scenario_key": "Scenario key",
+  "admin_media.col.position": "Position",
+  "admin_media.col.alt": "Alt text",
+  "admin_media.col.mime": "Type",
+  "admin_media.col.bytes": "Size",
+  "admin_media.col.created": "Uploaded",
+  "admin_media.col.actions": "Actions",
+  "admin_media.empty": "No images uploaded yet. Use the form above to add a report image or an ad creative.",
+  "admin_media.loading": "Loading the media library…",
+  "admin_media.action.delete": "Delete",
+  "admin_media.preview.unavailable": "Preview unavailable",
+  "admin_media.delete.title": "Delete this image?",
+  "admin_media.delete.close": "Close",
+  "admin_media.state.partial": "Showing the first images only: the library holds more than the list limit.",
+  "admin_media.state.degraded": "Some previews could not be loaded. The images are still stored; reload to try again.",
+  "admin_media.state.error": "The media library could not be loaded. Reload the page to try again.",
+  "admin_media.state.unauthorized": "Your session has expired or you are not an admin. Sign in again to manage media.",
+  "admin_media.state.offline": "You are offline. The media library will load when the connection returns."
+}

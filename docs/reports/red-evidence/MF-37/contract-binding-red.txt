@@ -1,0 +1,12 @@
+MF-37 FE-32 lock (src/tests/surfaces/contract-binding.logic.test.ts) red run, 2026-11-09. Plants: RS-1's contract_projection refusal disabled in scripts/analysis/report-schema.mjs; SV-SBIND's contract ref resolution replaced by 'accept anything' in scripts/surfaces/screen-checks.mjs. Both restored after the run (cmp-verified).
+   × FE-32 (b) the golden side (SV-SBIND) > RED (walk): a planted golden value with an unknown field is reported where it sits; a known one is not 11ms
+     → expected [] to deeply equal [ Array(1) ]
+   × FE-32 (c) the REPORT side (RS-1): contract is not ruled for REPORT fields > RED: a REPORT field rebound to contract:contract_admin_media_list.alt fails RS-1 17ms
+     → expected 'PASS' to be 'FAIL' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/contract-binding.logic.test.ts > FE-32 (b) the golden side (SV-SBIND) > RED (walk): a planted golden value with an unknown field is reported where it sits; a known one is not
+AssertionError: expected [] to deeply equal [ Array(1) ]
+ FAIL  src/tests/surfaces/contract-binding.logic.test.ts > FE-32 (c) the REPORT side (RS-1): contract is not ruled for REPORT fields > RED: a REPORT field rebound to contract:contract_admin_media_list.alt fails RS-1
+AssertionError: expected 'PASS' to be 'FAIL' // Object.is equality
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)

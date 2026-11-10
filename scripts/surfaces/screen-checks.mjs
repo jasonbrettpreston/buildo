@@ -73,14 +73,16 @@ export async function loadContext(root) {
   const validator = await import(pathToFileURL(path.join(root, VALIDATOR)).href);
   const scopes = Array.isArray(manifest?.scope?.programme_scopes) ? manifest.scope.programme_scopes : [];
   const all = new Map(); // id -> {d, file} for every SURFACE descriptor; inScope filters it
+  const contracts = new Map(); // id -> d for every CONTRACT descriptor (MF-37, FE-32: the golden-side `contract` ref resolves here)
   for (const file of walkDescriptors(path.join(root, 'scripts/surfaces')).sort()) {
     const d = tryJson(file);
     const rel = path.relative(root, file);
     if (d === undefined) { problems.push(`${rel}: not JSON`); continue; }
     if (d?.kind === 'SURFACE' && typeof d?.identity?.id === 'string') all.set(d.identity.id, { d, file: rel });
+    if (d?.kind === 'CONTRACT' && typeof d?.identity?.id === 'string') contracts.set(d.identity.id, d);
   }
   const inScope = new Map([...all].filter(([, v]) => scopes.includes(v.d.programme?.scope)));
-  return { root, manifest, bindings, validator, inScope, problems, ok: problems.length === 0 };
+  return { root, manifest, bindings, validator, inScope, contracts, problems, ok: problems.length === 0 };
 }
 
 const listsOf = (m) => ({
@@ -276,6 +278,18 @@ export const usedKeys = (root, d) => {
  * of those, or true/false/null. A string is display text written into the golden; a number is a value that skipped a binding. Keys in
  * non_display_keys carry no display text and are not judged.
  */
+/**
+ * MF-37 (FE-32): a golden `{"contract": "<contract_id>.<field>"}` names a field of a declared CONTRACT descriptor's response projection
+ * (inputs.field_whitelist); an unknown contract or field is a finding, and so is a walk that was given no contract set.
+ */
+export const contractRefProblems = (ref, at, contracts) => {
+  const m = typeof ref === 'string' ? /^([a-z0-9_]+)\.([a-z0-9_]+)$/.exec(ref) : null;
+  if (!m) return [`contract ref ${ref} is not <contract_id>.<field> at ${at}`];
+  const d = contracts instanceof Map ? contracts.get(m[1]) : undefined;
+  if (!d) return [`unknown contract ${m[1]} at ${at}`];
+  const fields = Array.isArray(d.inputs?.field_whitelist) ? d.inputs.field_whitelist : [];
+  return fields.includes(m[2]) ? [] : [`unknown contract field ${ref} at ${at}`];
+};
 export const propsProblems = (value, at, ctx) => {
   const { kinds, nonDisplay, content, used } = ctx;
   if (typeof value === 'string') return [`raw string at ${at}`];
@@ -289,6 +303,7 @@ export const propsProblems = (value, at, ctx) => {
       used.add(ref);
       return typeof ref === 'string' && Object.hasOwn(content, ref) ? [] : [`unknown content key ${ref} at ${at}`];
     }
+    if (keys[0] === 'contract') return contractRefProblems(ref, at, ctx.contracts);
     return [];
   }
   if (keys.length === 1 && !nonDisplay.includes(keys[0]) && typeof value[keys[0]] === 'string') return [`unknown binding kind ${keys[0]} at ${at}`];
@@ -316,7 +331,7 @@ export function sbindArm(ctx) {
       if (!whitelist.includes(c.field)) out.push(`SV-SBIND ${id}: column ${c.field} not in inputs.field_whitelist`);
       if (c.sort_field !== undefined && !whitelist.includes(c.sort_field)) out.push(`SV-SBIND ${id}: sort_field ${c.sort_field} not in inputs.field_whitelist`);
     }
-    const walk = { kinds: ctx.bindings.ref_kinds, nonDisplay: ctx.bindings.non_display_keys, content, used };
+    const walk = { kinds: ctx.bindings.ref_kinds, nonDisplay: ctx.bindings.non_display_keys, content, used, contracts: ctx.contracts };
     for (const { f, doc } of goldensOf(ctx, id)) {
       if (!doc || typeof doc.props !== 'object') continue; // shape is SV-SCREEN's
       out.push(...propsProblems(doc.props, '/props', walk).map((p) => `SV-SBIND ${id}/${f}: ${p}`));

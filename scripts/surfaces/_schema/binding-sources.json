@@ -32,6 +32,12 @@
       "resolver": "contract_id",
       "file": null
     },
+    "contract": {
+      "register": "FE-32",
+      "member": "<contract_id>.<field>: a field of a declared CONTRACT descriptor's response projection (its inputs.field_whitelist); MF-37. Refused for REPORT fields (RS-1) until a ruling widens it; SURFACE goldens resolve it in SV-SBIND",
+      "resolver": "contract_projection",
+      "file": "scripts/surfaces"
+    },
     "parcels": {
       "register": "FE-27",
       "member": "a column of the parcels table, in the migrations, on the Spec 100 section 3.2 consumer whitelist",

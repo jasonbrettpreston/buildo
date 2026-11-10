@@ -1,0 +1,72 @@
+{
+  "surface": "admin_media_delete",
+  "state": "static",
+  "target": "web",
+  "covers": [
+    "static"
+  ],
+  "props": {
+    "component": "Form",
+    "props": {
+      "name": "admin_media_delete",
+      "errors": {
+        "required": {
+          "content": "admin_media_delete.errors.required"
+        },
+        "type": {
+          "content": "admin_media_delete.errors.type"
+        },
+        "const": {
+          "content": "admin_media_delete.errors.const"
+        },
+        "min_length": {
+          "content": "admin_media_delete.errors.min_length"
+        },
+        "additional_properties": {
+          "content": "admin_media_delete.errors.additional_properties"
+        }
+      }
+    },
+    "children": [
+      {
+        "component": "hidden",
+        "props": {
+          "name": "asset_id"
+        }
+      },
+      {
+        "component": "TextInput",
+        "props": {
+          "name": "confirm",
+          "size": "lg",
+          "label": {
+            "content": "admin_media_delete.field.confirm"
+          },
+          "description": {
+            "content": "admin_media_delete.help.confirm"
+          }
+        }
+      },
+      {
+        "component": "Button",
+        "props": {
+          "type": "submit",
+          "size": "lg",
+          "loading": false
+        },
+        "children": [
+          {
+            "content": "admin_media_delete.submit"
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/_schema/media-contract.json": "12792dad5cc3fc6d",
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media_delete.content.json": "f4da6ec056080f59",
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media_delete.descriptor.json": "6b98aea2b1d14f2c"
+    }
+  }
+}

@@ -3478,5 +3478,453 @@
         "status": "unreviewed"
       }
     }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "new",
+    "docs": {
+      "purpose": "The one web FORM binding: it turns a FORM descriptor and its content file into props for the standard library (RJSF with the Mantine theme). Every converted web FORM surface renders through it; it holds no display text of its own.",
+      "data_story": "It reads nothing itself: the mount file passes the descriptor, the content strings and the data the page already fetched.",
+      "under_126": "**PROMOTED BINDING ENTRY** (P42-D9 a): a platform_shared census entry that owns the binding module, so R-13 totality holds while the converted surfaces own no component."
+    },
+    "evidence": {
+      "files": [
+        "~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md"
+      ],
+      "contracts": [
+        "contract_admin_media_list",
+        "contract_admin_media_upload",
+        "contract_admin_media_delete"
+      ],
+      "tables": [
+        "migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies"
+      ],
+      "gate": [
+        "src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page"
+      ],
+      "states": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states"
+      ],
+      "emits": [
+        "src/lib/admin/admin-audit.ts — writeAdminAudit"
+      ]
+    },
+    "identity": {
+      "id": "binding_web_form",
+      "archetype": "FORM",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": [
+          "src/components/surfaces/web/FormBinding.tsx",
+          "src/components/surfaces/web/AdminMantineProvider.tsx"
+        ]
+      },
+      "owner": "Admin domain (Spec 126 §14 Target Files) — no individual owner is named by Specs 126/127/128.",
+      "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+      "spec_refs": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains one at its C9 cutover, when the golden pair is captured.",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — one of the 11 NEW admin surfaces",
+          "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
+        ]
+      },
+      "ref": "S-077"
+    },
+    "inputs": {
+      "answer": "props",
+      "why": "Descriptor, content and data arrive as props from the mount file.",
+      "evidence": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "A binding writes nothing; a form submit is handed back to the mount file.",
+      "evidence": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ],
+      "contract_ref": [],
+      "tables": [],
+      "rollback": "n/a"
+    },
+    "state": {
+      "answer": "none",
+      "why": "No store: the library component holds its own local UI state.",
+      "evidence": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It renders what it is given.",
+      "evidence": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "admin",
+        "why": "Its only consumers today are /admin/** pages; each consumer declares its own guard.",
+        "evidence": [
+          "src/app/(maxbld)/admin/media/page.tsx — requireAdminPage()"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "media_assets is Class B by Spec 114 §2's definitional rule and carries the ONE ruled admin-read pattern (Wave 1 decision batch item 1): RLS on, one media_assets_select_admin policy (profiles.is_admin), no write policy; the routes read and write through the owner connection, so the policy is defence in depth.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)",
+          "migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "detail",
+      "breakpoints": "desktop_first_md",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "binding_web_form_components_owned",
+        "kind": "components_owned",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "The module is listed in bindings.json modules and owned by this entry (FE-31 C-3); a module nobody owns is a hand-built component."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud.",
+      "evidence": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Rendering emits nothing.",
+      "evidence": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ]
+    },
+    "offers": {
+      "answer": "none",
+      "why": "It manages the image files a SLOT or the report renders; it renders no sponsored placement itself.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "An operator act, not a metered product action; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09).",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable.",
+      "evidence": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ]
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "Every converted web FORM surface.",
+      "evidence": [
+        "scripts/surfaces/_schema/bindings.json — modules"
+      ],
+      "surfaces": [],
+      "varies_by_surface": "Only the descriptor, content and data passed in."
+    },
+    "a11y": {
+      "touch_target_min_px": 44,
+      "labels": "complete",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [],
+    "interpretation": "none",
+    "notes": "MF-37 (P42-D9 a, batch C-3). It also owns the one Mantine provider module (bindings.json providers; batch C-2), so R-13 totality holds for it.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/components/surfaces/web/FormBinding.tsx"
+      ],
+      "role": "shared",
+      "generated": "binding",
+      "net_new_tables": [],
+      "designed": true
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "B2",
+      "why": "Shared rendering infrastructure: the binding every converted web surface of this archetype renders through, in both products.",
+      "feature": "F14",
+      "build_order": 3144,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "new",
+    "docs": {
+      "purpose": "The one web LIST binding: it turns a LIST descriptor and its content file into props for the standard library (mantine-datatable, Mantine Button, Modal and Image). Every converted web LIST surface renders through it; it holds no display text of its own.",
+      "data_story": "It reads nothing itself: the mount file passes the descriptor, the content strings and the data the page already fetched.",
+      "under_126": "**PROMOTED BINDING ENTRY** (P42-D9 a): a platform_shared census entry that owns the binding module, so R-13 totality holds while the converted surfaces own no component."
+    },
+    "evidence": {
+      "files": [
+        "~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md"
+      ],
+      "contracts": [
+        "contract_admin_media_list",
+        "contract_admin_media_upload",
+        "contract_admin_media_delete"
+      ],
+      "tables": [
+        "migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies"
+      ],
+      "gate": [
+        "src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page"
+      ],
+      "states": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states"
+      ],
+      "emits": [
+        "src/lib/admin/admin-audit.ts — writeAdminAudit"
+      ]
+    },
+    "identity": {
+      "id": "binding_web_list",
+      "archetype": "LIST",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": [
+          "src/components/surfaces/web/ListBinding.tsx"
+        ]
+      },
+      "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+      "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+      "spec_refs": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains a promise at its C9 cutover, when its golden pair is captured.",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — listed among the 11 NEW admin surfaces",
+          "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR is what pins a shape"
+        ]
+      },
+      "ref": "S-078"
+    },
+    "inputs": {
+      "answer": "props",
+      "why": "Descriptor, content and data arrive as props from the mount file.",
+      "evidence": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "A binding writes nothing; a form submit is handed back to the mount file.",
+      "evidence": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ],
+      "contract_ref": [],
+      "tables": [],
+      "rollback": "n/a"
+    },
+    "state": {
+      "answer": "none",
+      "why": "No store: the library component holds its own local UI state.",
+      "evidence": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It renders what it is given.",
+      "evidence": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "admin",
+        "why": "Its only consumers today are /admin/** pages; each consumer declares its own guard.",
+        "evidence": [
+          "src/app/(maxbld)/admin/media/page.tsx — requireAdminPage()"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "media_assets is Class B by Spec 114 §2's definitional rule and carries the ONE ruled admin-read pattern (Wave 1 decision batch item 1): RLS on, one media_assets_select_admin policy (profiles.is_admin), no write policy; the routes read and write through the owner connection, so the policy is defence in depth.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)",
+          "migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "list",
+      "breakpoints": "desktop_first_md",
+      "export": "none",
+      "list": {
+        "item_archetype": "row",
+        "pagination": "none",
+        "recycling": "none"
+      }
+    },
+    "checks": [
+      {
+        "id": "binding_web_list_components_owned",
+        "kind": "components_owned",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "The module is listed in bindings.json modules and owned by this entry (FE-31 C-3); a module nobody owns is a hand-built component."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud.",
+      "evidence": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Rendering emits nothing.",
+      "evidence": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ]
+    },
+    "offers": {
+      "answer": "none",
+      "why": "It manages the image files a SLOT or the report renders; it renders no sponsored placement itself.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "An operator act, not a metered product action; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09).",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable.",
+      "evidence": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ]
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "Every converted web LIST surface.",
+      "evidence": [
+        "scripts/surfaces/_schema/bindings.json — modules"
+      ],
+      "surfaces": [],
+      "varies_by_surface": "Only the descriptor, content and data passed in."
+    },
+    "a11y": {
+      "touch_target_min_px": 44,
+      "labels": "complete",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [],
+    "interpretation": "none",
+    "notes": "MF-37 (P42-D9 a, batch C-3).",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [
+        "src/components/surfaces/web/ListBinding.tsx"
+      ],
+      "role": "shared",
+      "generated": "binding",
+      "net_new_tables": [],
+      "designed": true
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "B2",
+      "why": "Shared rendering infrastructure: the binding every converted web surface of this archetype renders through, in both products.",
+      "feature": "F14",
+      "build_order": 3144,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
   }
 ]

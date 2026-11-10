@@ -1,0 +1,12 @@
+MF-37 T7 (src/tests/surfaces/admin-media.golden.test.ts) red run, 2026-11-09. Plant: a hand edit of admin_media/hit.web.json (fetching false -> true). Restored after the run.
+   × T7 (a) the committed goldens equal a fresh build > 17 goldens, byte for byte 4ms
+     → expected [ …(2) ] to deeply equal [ …(2) ]
+   × T7 (a) the committed goldens equal a fresh build > RED: a hand edit of one golden differs from the fresh build 1ms
+     → expected '{\n  "surface": "admin_media",\n  "st…' not to be '{\n  "surface": "admin_media",\n  "st…' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/admin-media.golden.test.ts > T7 (a) the committed goldens equal a fresh build > 17 goldens, byte for byte
+AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]
+ FAIL  src/tests/surfaces/admin-media.golden.test.ts > T7 (a) the committed goldens equal a fresh build > RED: a hand edit of one golden differs from the fresh build
+AssertionError: expected '{\n  "surface": "admin_media",\n  "st…' not to be '{\n  "surface": "admin_media",\n  "st…' // Object.is equality
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)

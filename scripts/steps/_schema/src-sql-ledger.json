@@ -115,6 +115,68 @@
       },
       "writes": {}
     },
+    "src/app/api/admin/media/[asset_id]/route.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "17248cbf8fdece32",
+        "b83a0c015163ee5c"
+      ],
+      "reads": {
+        "media_assets": [
+          "alt",
+          "asset_id",
+          "bytes",
+          "created_at",
+          "kind",
+          "mime",
+          "path",
+          "position",
+          "scenario_key",
+          "uploaded_by"
+        ]
+      },
+      "writes": {
+        "media_assets": []
+      }
+    },
+    "src/app/api/admin/media/route.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "94084d0c9142f7f9",
+        "b73ce6f91a8b0fda"
+      ],
+      "reads": {
+        "media_assets": [
+          "kind",
+          "position",
+          "rule",
+          "scenario_key"
+        ]
+      },
+      "writes": {
+        "media_assets": [
+          "alt",
+          "asset_id",
+          "bytes",
+          "kind",
+          "mime",
+          "path",
+          "position",
+          "scenario_key",
+          "uploaded_by"
+        ]
+      }
+    },
     "src/app/api/admin/notifications/route.ts": {
       "class": "interpolated",
       "statements": 5,
@@ -2256,6 +2318,43 @@
           "name",
           "slug",
           "sort_order"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/media/contract.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "b5a1b0d462a3ba3c"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/media/list.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "77eeca9429b7f759"
+      ],
+      "reads": {
+        "media_assets": [
+          "alt",
+          "asset_id",
+          "bytes",
+          "created_at",
+          "kind",
+          "mime",
+          "position",
+          "scenario_key"
         ]
       },
       "writes": {}

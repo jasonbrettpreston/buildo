@@ -158,6 +158,19 @@ export default function AdminPage() {
               MFA (TOTP) enrollment and one-time backup codes for your admin account
             </p>
           </Link>
+
+          <Link
+            href="/admin/media"
+            className="group bg-white rounded-xl border border-gray-200 p-8 hover:border-blue-300 hover:shadow-lg transition-all"
+          >
+            <div className="text-4xl mb-4">🖼️</div>
+            <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              Media Library
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Upload and remove report images and ad creatives (private bucket, signed previews; MF-37)
+            </p>
+          </Link>
         </div>
       </main>
     </div>

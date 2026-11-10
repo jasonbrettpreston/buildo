@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **73 surfaces, 62 contracts and 6 jobs** in it today.
+There are **78 surfaces, 65 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 73 |
-| CONTRACT | 62 |
+| SURFACE | 78 |
+| CONTRACT | 65 |
 | JOB | 6 |
-| **Total** | **141** |
+| **Total** | **149** |
 
 ### 2.1 By archetype
 
@@ -217,11 +217,11 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `COMMAND` | CONTRACT | 8 | 0 | 0 | 8 |
 | `DASHBOARD` | SURFACE | 3 | 2 | 0 | 5 |
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
-| `FORM` | SURFACE | 6 | 1 | 0 | 7 |
+| `FORM` | SURFACE | 6 | 2 | 2 | 10 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 10 | 5 | 0 | 15 |
-| `MUTATION` | CONTRACT | 20 | 1 | 0 | 21 |
-| `QUERY` | CONTRACT | 32 | 0 | 0 | 32 |
+| `LIST` | SURFACE | 10 | 6 | 1 | 17 |
+| `MUTATION` | CONTRACT | 20 | 3 | 0 | 23 |
+| `QUERY` | CONTRACT | 32 | 1 | 0 | 33 |
 | `REPORT` | SURFACE | 2 | 3 | 0 | 5 |
 | `SCHEDULED` | JOB | 6 | 0 | 0 | 6 |
 | `SEARCH` | SURFACE | 4 | 0 | 0 | 4 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**10 of 141 rows fully researched · 131 still open · 433 unresearched fields in total.**
+**15 of 149 rows fully researched · 134 still open · 436 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
 | `mobile-product.json` | 37 | 7 | 30 | 63 |
-| `web-product.json` | 10 | 0 | 10 | 89 |
+| `web-product.json` | 12 | 2 | 10 | 89 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
-| `admin-new.json` | 11 | 2 | 9 | 17 |
-| `contracts.json` | 62 | 1 | 61 | 159 |
+| `admin-new.json` | 14 | 5 | 9 | 17 |
+| `contracts.json` | 65 | 1 | 64 | 162 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **141** | **10** | **131** | **433** |
+| **total** | **149** | **15** | **134** | **436** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -254,19 +254,19 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | **no owner spec** | 42 | The file carries no `SPEC LINK` header and the System Map has no row for it — so there is nothing to cite. Closing it means **writing or assigning a spec**, not finding one. Three of these cite a spec path that does not exist (a dead citation is filed as a defect, not resolved here). |
 | **no lineage producer** | 25 | The table is absent from `docs/reference/data-lineage-map.md`, so no pipeline step declares it as a write. Either it is written by an API route or a migration seed (answer `none`), or a step writes it without declaring it — which is a pipeline defect, not a research gap. |
 | **no declared owner** | 15 | Nobody is recorded as owning it. This is an organisational answer, not a measurable one. |
-| **vocabulary escalation** | 105 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
+| **vocabulary escalation** | 108 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
 | **archetype profile field, newly required** | 52 | ASK-22 made the archetype profiles REAL, so these fields became required AFTER the research pass ran. The field must now be present; it may hold the sentinel. Each is a short, well-defined lookup — the pagination idiom, the poll interval, the debounce, the resume key. |
 | **measurement not yet made** | 23 | An ordinary lookup nobody has done yet — read the query, name the columns, cite the line. |
 | **other** | 171 | Fields at paths this grouping does not name: see the per-row badges. |
-| | **433** | |
+| | **436** | |
 
 ### 2.3 By status
 
 | Status | Count | Meaning |
 |---|---:|---|
 | exists | 129 | the code is in the tree today |
-| new | 12 | specified, not built |
-| generated | 0 | will be rendered from descriptors, not hand-written |
+| new | 17 | specified, not built |
+| generated | 3 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -277,10 +277,10 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
 | **A** | `parcel_product` | 10 | 8 (80%) | 7 | yes |
-| **B** | `parcel_admin` | 13 | 2 (15%) | 18 | yes |
-| **C** | `platform_shared` | 72 | 0 (0%) | 43 | yes |
+| **B** | `parcel_admin` | 19 | 5 (26%) | 19 | yes |
+| **C** | `platform_shared` | 74 | 2 (3%) | 43 | yes |
 | **D** | `estate_other` | 46 | 0 (0%) | 40 | **no** — inventory + seam only (R-03) |
-| | **total** | **141** | **10** | | |
+| | **total** | **149** | **15** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -335,7 +335,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`C-062`](#c-062) | contract | `contract_parcels_tracked` | `MUTATION` | `F17` tracked-lots | 1172 | 100% | [detail](#c-062) |
 | [`S-072`](#s-072) | surface | `mobile_tracked_lots` | `LIST` | `F17` tracked-lots | 1173 | 100% | [detail](#s-072) |
 
-**§B `parcel_admin` (13)**
+**§B `parcel_admin` (19)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -346,14 +346,20 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-010`](#s-010) | surface | `admin_ledger_visualiser` | `REPORT` | `F07` app-outputs-materialisation | 2073 | 97% | [detail](#s-010) |
 | [`S-015`](#s-015) | surface | `admin_run_ledger` | `LIST` | `F07` app-outputs-materialisation | 2073 | 94% | [detail](#s-015) |
 | [`C-002`](#c-002) | contract | `contract_admin_parcels_lookup` | `QUERY` | `F08` admin-parcel-operations | 2082 | 97% | [detail](#c-002) |
+| [`S-074`](#s-074) | surface | `admin_media` | `LIST` | `F08` admin-parcel-operations | 2083 | 100% | [detail](#s-074) |
+| [`S-076`](#s-076) | surface | `admin_media_delete` | `FORM` | `F08` admin-parcel-operations | 2083 | 100% | [detail](#s-076) |
+| [`S-075`](#s-075) | surface | `admin_media_upload` | `FORM` | `F08` admin-parcel-operations | 2083 | 100% | [detail](#s-075) |
 | [`S-012`](#s-012) | surface | `admin_parcel_cost` | `SEARCH` | `F08` admin-parcel-operations | 2083 | 91% | [detail](#s-012) |
+| [`C-065`](#c-065) | contract | `contract_admin_media_delete` | `MUTATION` | `F08` admin-parcel-operations | 2083 | 97% | [detail](#c-065) |
+| [`C-063`](#c-063) | contract | `contract_admin_media_list` | `QUERY` | `F08` admin-parcel-operations | 2083 | 97% | [detail](#c-063) |
+| [`C-064`](#c-064) | contract | `contract_admin_media_upload` | `MUTATION` | `F08` admin-parcel-operations | 2083 | 97% | [detail](#c-064) |
 | [`S-007`](#s-007) | surface | `admin_contract_fanout` | `REPORT` | `F09` surface-registry-drift | 2093 | 100% | [detail](#s-007) |
 | [`S-008`](#s-008) | surface | `admin_drift_status` | `DASHBOARD` | `F09` surface-registry-drift | 2093 | 94% | [detail](#s-008) |
 | [`S-011`](#s-011) | surface | `admin_orphan_panel` | `LIST` | `F09` surface-registry-drift | 2093 | 97% | [detail](#s-011) |
 | [`S-014`](#s-014) | surface | `admin_role_matrix` | `REPORT` | `F09` surface-registry-drift | 2093 | 100% | [detail](#s-014) |
 | [`S-016`](#s-016) | surface | `admin_surface_registry` | `LIST` | `F09` surface-registry-drift | 2093 | 97% | [detail](#s-016) |
 
-**§C `platform_shared` (72)**
+**§C `platform_shared` (74)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -396,6 +402,8 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-045`](#s-045) | surface | `shell_app_root` | `SHELL` | `F14` navigation-shells | 3143 | 94% | [detail](#s-045) |
 | [`S-046`](#s-046) | surface | `shell_app_tabs` | `SHELL` | `F14` navigation-shells | 3143 | 94% | [detail](#s-046) |
 | [`S-049`](#s-049) | surface | `shell_web_root` | `SHELL` | `F14` navigation-shells | 3143 | 91% | [detail](#s-049) |
+| [`S-077`](#s-077) | surface | `binding_web_form` | `FORM` | `F14` navigation-shells | 3144 | 100% | [detail](#s-077) |
+| [`S-078`](#s-078) | surface | `binding_web_list` | `LIST` | `F14` navigation-shells | 3144 | 100% | [detail](#s-078) |
 | [`C-027`](#c-027) | contract | `contract_products` | `QUERY` | `F15` user-profile-settings | 3152 | 88% | [detail](#c-027) |
 | [`C-034`](#c-034) | contract | `contract_trades` | `QUERY` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-034) |
 | [`C-035`](#c-035) | contract | `contract_user_profile` | `MUTATION` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-035) |
@@ -498,13 +506,13 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
 | **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) | 0 | 0 | 1 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F07** app-outputs-materialisation | `parcel_admin` | [`S-010`](#s-010) · [`S-015`](#s-015) | 0 | 4 | 2 descriptor(s), and would orphan 1 table(s): `app_outputs` |
-| **F08** admin-parcel-operations | `parcel_admin` | [`C-002`](#c-002) · [`S-012`](#s-012) | 1 | 5 | 2 descriptor(s), 1 contract(s), and would orphan no table — every table it touches is shared |
+| **F08** admin-parcel-operations | `parcel_admin` | [`C-002`](#c-002) · [`S-012`](#s-012) · [`S-074`](#s-074) · [`S-075`](#s-075) · [`S-076`](#s-076) · [`C-063`](#c-063) · [`C-064`](#c-064) · [`C-065`](#c-065) | 4 | 6 | 8 descriptor(s), 4 contract(s), and would orphan 1 table(s): `media_assets` |
 | **F09** surface-registry-drift | `parcel_admin` | [`S-007`](#s-007) · [`S-008`](#s-008) · [`S-011`](#s-011) · [`S-014`](#s-014) · [`S-016`](#s-016) | 0 | 5 | 5 descriptor(s), and would orphan 4 table(s): `contract_descriptors` · `surface_descriptors` · `pg_policies` · `archetype_registry` |
 | **F10** auth-identity | `platform_shared` | [`S-027`](#s-027) · [`S-037`](#s-037) · [`S-038`](#s-038) · [`S-039`](#s-039) · [`S-040`](#s-040) · [`S-047`](#s-047) | 0 | 0 | 6 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F11** onboarding | `platform_shared` | [`C-026`](#c-026) · [`S-028`](#s-028) · [`S-029`](#s-029) · [`S-030`](#s-030) · [`S-031`](#s-031) · [`S-032`](#s-032) · [`S-033`](#s-033) · [`S-034`](#s-034) · [`S-035`](#s-035) · [`S-048`](#s-048) | 1 | 2 | 10 descriptor(s), 1 contract(s), and would orphan 1 table(s): `trade_suppliers` |
 | **F12** subscription-billing | `platform_shared` | [`C-020`](#c-020) · [`C-021`](#c-021) · [`C-022`](#c-022) · [`C-030`](#c-030) · [`C-031`](#c-031) · [`C-032`](#c-032) · [`C-038`](#c-038) · [`S-043`](#s-043) · [`S-044`](#s-044) · [`S-051`](#s-051) · [`S-052`](#s-052) · [`S-053`](#s-053) | 7 | 8 | 12 descriptor(s), 7 contract(s), and would orphan 1 table(s): `subscribe_nonces` |
 | **F13** notifications | `platform_shared` | [`C-006`](#c-006) · [`C-007`](#c-007) · [`C-023`](#c-023) · [`C-024`](#c-024) · [`C-025`](#c-025) · [`S-041`](#s-041) · [`S-022`](#s-022) | 5 | 6 | 7 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
-| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) | 0 | 3 | 6 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F15** user-profile-settings | `platform_shared` | [`C-027`](#c-027) · [`C-034`](#c-034) · [`C-035`](#c-035) · [`C-036`](#c-036) · [`C-037`](#c-037) · [`S-036`](#s-036) | 5 | 3 | 6 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
 | **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 11 table(s): `trade_configurations` · `trade_sqft_rates` · `data_quality_snapshots` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
 | **F17** tracked-lots | `parcel_product` | [`C-062`](#c-062) · [`S-072`](#s-072) | 1 | 3 | 2 descriptor(s), 1 contract(s), and would orphan 1 table(s): `user_tracked_lots` |
@@ -1339,7 +1347,7 @@ DATA. The contract C-062 and the `user_tracked_lots` table are DESIGNED, not bui
 
 THE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA BUILD = `parcels.max_newbuild_coa_gfa_sqm` (real). New Nearby CoA Ruling = NO COLUMN EXISTS; derivable from decided `coa_applications` in the parcel’s neighbourhood, declared nullable, rendered "—" while null. See `limitations` and the blocking check.
 
-### §B `parcel_admin` — admin surfaces that operate the parcel product (13)
+### §B `parcel_admin` — admin surfaces that operate the parcel product (19)
 
 Usage and entitlements, placements and advertiser accounts, the PDF audit, the `app_outputs` recompute, and the descriptor-native registry / drift / roles pages. These convert **with** the product, not after it — an unobservable product is not shipped.
 
@@ -1861,6 +1869,216 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 
 > ⚠️ Business logic lives in src/lib/admin/parcel-lookup.ts. The projection is allMappedColumns() — a genuinely explicit single-source-of-truth named-column whitelist (Spec 89 §4) used both to build the parcels SELECT and to drive the tiered response; geometry/geom columns are EXCLUDED_COLS and never selected. Tier-1/Tier-2 JSONB fields are Zod safeParse'd and degrade to null plus a warnings[] entry rather than a 500. | MEASURED 2026-09-15: Census checklist (parcels, address_points, parcel_address_points, coa_applications) fully CONFIRMED in code. Census MISSED `profiles` — read by the shared verifyAdminAuth guard the route calls (src/lib/auth/verify-admin.ts:117-119); the same omission applies to every route that calls the guard. No SELECT *; the parcel projection is ~160 explicitly-named columns built from static lists (src/lib/admin/parcel-lookup.ts:113-121) and quote-guarded by ident() (:124-127). All SQL parameterized. The typeahead query's projection is built by string .replaceAll on a module constant (src/lib/admin/parcel-lookup.ts:195) — the constant is static, no user input reaches it, but it is textual SQL assembly worth a reviewer's eye. `resolveAddress(q!)` at route.ts:57 uses a non-null assertion whose safety rests entirely on the schema's superRefine XOR. | Caching: none observed — no `export const dynamic|revalidate|runtime` and no Cache-Control header anywhere under src/app/api/admin/parcels/ (grep returned nothing); no in-process memo in src/lib/admin/parcel-lookup.ts | Other guards / classification: CI credential path (constant-time CI_ADMIN_TOKEN compare + CI_ADMIN_ALLOWED_IPS) at src/lib/auth/verify-admin.ts:89-103; MFA/aal2 gate + x-admin-backup-code alternative at src/lib/auth/verify-admin.ts:143-173 (INERT unless ADMIN_MFA_ENFORCED==='true', src/lib/auth/verify-admin.ts:143); CSRF Origin allowlist applies only to POST/PATCH/PUT/DELETE (src/lib/auth/verify-admin.ts:45,70) so it does NOT fire for this GET; dev bypass at src/lib/auth/verify-admin.ts:81-83 | Locking tests: src/tests/parcel-lookup.infra.test.ts.
 
+<a id="s-074"></a>
+
+###### `S-074` `admin_media`
+
+**Programme.** `S-074` · scope `parcel_admin` · feature `F08` · build order 2083 · batch `B2` · review `unreviewed` — The admin media library (MF-37): the report images and ad creatives the parcel product renders, uploaded and deleted by an admin.
+
+**What it is.** The admin media library: every report image and ad creative an admin has uploaded, with a small preview, its kind, scenario key, position, alt text, type, size and upload time, and a button that removes one.
+
+**What it reads and writes.** It reads media_assets through the admin list contract, which returns at most media_list_page_max rows with a short-lived signed preview URL each; a row whose URL could not be signed shows without a preview.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web LIST binding (mantine-datatable) from this descriptor and its content file; no hand-built component.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `web` · **status** generated · **shard** `admin-new` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (An /admin/** page: classifyRoute returns "admin" for any pathname starting with /admin/, and "admin" is the profiles.is_admin flag checked in-predicate, not a Postgres role.) · role **admin**
+
+**Calls.** `contract_admin_media_list`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md` |
+| `contracts` | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | One QUERY contract returns the rows with server display strings and sort keys; the page reads it on the server first and passes plain data. — `src/lib/media/list.ts — listMedia()` |
+| 3 | `outputs` | `contract_only` | The only write is the delete, through the delete FORM and its MUTATION contract; the list refreshes from the server after it. — `contract_admin_media_delete` |
+| 4 | `state` | `server_only` | An RSC page: the rows arrive from the server per request and refresh after a mutation; sort state is a local view choice. — `src/app/(maxbld)/admin/media/page.tsx` |
+| 5 | `staleness` | `live` | Read per request; the browser may keep the GET response for media_list_cache_seconds (private). — `scripts/seeds/logic_variables.json — media_list_cache_seconds` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope rather than from a raw exception. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `ledger` | Uploads and deletes write admin_audit_log rows (action media_upload / media_delete); the list itself writes nothing. — `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| 14 | `offers` | `none` | It manages the image files a SLOT or the report renders; it renders no sponsored placement itself. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 15 | `metering` | `none` | An operator act, not a metered product action; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 16 | `config` | `logic_variables` | The upload cap, the signed-URL lifetime, the list cap, the list cache seconds and the storage timeout are numbers a human would argue about. — `scripts/seeds/logic_variables.json — group Admin Media`, `migrations/301_media_logic_variables.sql` |
+| 17 | `sharing` | `shared` | media_assets is read by this library and, later, by the report images (MF-38) and ad creatives (MF-40). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-37. Pagination is none: the list is capped at media_list_page_max and shows the partial state above it (cursor pagination deferred).
+
+<a id="s-076"></a>
+
+###### `S-076` `admin_media_delete`
+
+**Programme.** `S-076` · scope `parcel_admin` · feature `F08` · build order 2083 · batch `B2` · review `unreviewed` — The admin media library (MF-37): the report images and ad creatives the parcel product renders, uploaded and deleted by an admin.
+
+**What it is.** The confirmation an admin fills to remove one image: they type the image's alt text to confirm, and the row, its object and an audit row are written.
+
+**What it reads and writes.** It deletes one media_assets row (audited) and then removes the object from the private bucket; if the object removal fails, the row is still gone and the response says object_removed false.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web FORM binding inside the list's Mantine Modal; the confirm value is injected at run time and re-checked by the server.
+
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** generated · **shard** `admin-new` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (An /admin/** page: classifyRoute returns "admin" for any pathname starting with /admin/, and "admin" is the profiles.is_admin flag checked in-predicate, not a Postgres role.) · role **admin**
+
+**Calls.** `contract_admin_media_delete`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md` |
+| `contracts` | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | The confirm field is checked against the row's alt text by the delete contract. — `src/app/api/admin/media/[asset_id]/route.ts` |
+| 3 | `outputs` | `contract_only` | The write goes through a declared MUTATION contract and the page waits for the server; no optimistic change, because an upload that appeared to save and did not would leave a report without its image. — `src/app/api/admin/media/route.ts` |
+| 4 | `state` | `server_only` | A web admin form whose canonical writer is the mutation contract; nothing persists on the device. — `src/lib/media/useUploadMedia.ts`, `src/lib/media/useDeleteMedia.ts` |
+| 5 | `staleness` | `live` | Submitted per request; the list re-reads after success. — `src/lib/media/useUploadMedia.ts — router.refresh() on success` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `ledger` | Uploads and deletes write admin_audit_log rows (action media_upload / media_delete); the list itself writes nothing. — `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| 14 | `offers` | `none` | It manages the image files a SLOT or the report renders; it renders no sponsored placement itself. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 15 | `metering` | `none` | An operator act, not a metered product action; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 16 | `config` | `logic_variables` | The upload cap, the signed-URL lifetime, the list cap, the list cache seconds and the storage timeout are numbers a human would argue about. — `scripts/seeds/logic_variables.json — group Admin Media`, `migrations/301_media_logic_variables.sql` |
+| 17 | `sharing` | `shared` | media_assets is read by this library and, later, by the report images (MF-38) and ad creatives (MF-40). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-37. The confirm const (the row's alt) is injected by the binding at run time; the descriptor schema carries confirm as a plain string (plan V3-5).
+
+<a id="s-075"></a>
+
+###### `S-075` `admin_media_upload`
+
+**Programme.** `S-075` · scope `parcel_admin` · feature `F08` · build order 2083 · batch `B2` · review `unreviewed` — The admin media library (MF-37): the report images and ad creatives the parcel product renders, uploaded and deleted by an admin.
+
+**What it is.** The form on which an admin uploads one image: its kind (report image or ad creative), for a report image the scenario key and position, the alt text, and the file (PNG, JPEG or WebP, up to the configured size).
+
+**What it reads and writes.** It writes one media_assets row and one object in the private surface-media bucket, with one admin_audit_log row, through the upload contract.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web FORM binding (RJSF with the Mantine theme) from render.form and the request schema in media-contract.json; the file uses RJSF's built-in file input (no dropzone, batch item 3).
+
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** generated · **shard** `admin-new` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (An /admin/** page: classifyRoute returns "admin" for any pathname starting with /admin/, and "admin" is the profiles.is_admin flag checked in-predicate, not a Postgres role.) · role **admin**
+
+**Calls.** `contract_admin_media_upload`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md` |
+| `contracts` | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | The fields and their rules come from the request schema of media-contract.json, the same schema the route validates. — `scripts/surfaces/_schema/media-contract.json — request_schema` |
+| 3 | `outputs` | `contract_only` | The write goes through a declared MUTATION contract and the page waits for the server; no optimistic change, because an upload that appeared to save and did not would leave a report without its image. — `src/app/api/admin/media/route.ts` |
+| 4 | `state` | `server_only` | A web admin form whose canonical writer is the mutation contract; nothing persists on the device. — `src/lib/media/useUploadMedia.ts`, `src/lib/media/useDeleteMedia.ts` |
+| 5 | `staleness` | `live` | Submitted per request; the list re-reads after success. — `src/lib/media/useUploadMedia.ts — router.refresh() on success` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `ledger` | Uploads and deletes write admin_audit_log rows (action media_upload / media_delete); the list itself writes nothing. — `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| 14 | `offers` | `none` | It manages the image files a SLOT or the report renders; it renders no sponsored placement itself. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 15 | `metering` | `none` | An operator act, not a metered product action; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 16 | `config` | `logic_variables` | The upload cap, the signed-URL lifetime, the list cap, the list cache seconds and the storage timeout are numbers a human would argue about. — `scripts/seeds/logic_variables.json — group Admin Media`, `migrations/301_media_logic_variables.sql` |
+| 17 | `sharing` | `shared` | media_assets is read by this library and, later, by the report images (MF-38) and ad creatives (MF-40). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-37. scenario_key uses the text widget: the scenario keys (report-v2-seed/row-presentation.json, e.g. detached_house/pitched) contain "/", which the select option rule ([a-z0-9_]+) refuses; the request schema still closes the value with an enum.
+
 <a id="s-012"></a>
 
 ###### `S-012` `admin_parcel_cost`
@@ -1938,6 +2156,216 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/89_parcel_cost_model_tool.md`](../../../docs/specs/02-web-admin/89_parcel_cost_model_tool.md) · files: `src/app/admin/parcel-cost/page.tsx` · `src/components/admin/ParcelCostTool.tsx` · `src/components/admin/GenericFieldRenderer.tsx`
 
 > ⚠️ 'candidates' is a genuine distinct state (no exact match but disambiguation options returned) separate from 'empty' ('No parcel found for that address'). GenericFieldRenderer is reached only through ParcelCostTool. A sibling src/app/admin/parcel-cost/error.tsx boundary exists (not counted in loc). Spec 89 Sec 2.3 records the rule that an absent cost-menu line does not mean 'does not fit'. identity.owner is UNRESEARCHED estate-wide: no owner registry exists in the tree, so naming one would be an invention rather than a measurement. a11y.touch_target_min_px is UNRESEARCHED because its vocabulary (UNRESEARCHED or an integer >= 44) has no member for a desktop-only admin page that declares no floor.
+
+<a id="c-065"></a>
+
+###### `C-065` `contract_admin_media_delete`
+
+**Programme.** `C-065` · scope `parcel_admin` · feature `F08` · build order 2083 · batch `B2` · review `unreviewed` — The admin media library (MF-37): the report images and ad creatives the parcel product renders, uploaded and deleted by an admin.
+
+**What it is.** Deletes one media row after the admin types its alt text, writes the audit row, then removes the object from the bucket.
+
+**What it reads and writes.** It locks the row, checks confirm against alt, deletes it with its audit row and commits; the object removal runs after COMMIT and its failure is reported as object_removed false and logged.
+
+**Under Spec 126.** A MUTATION CONTRACT; the audit row is committed before the object is removed, so a failed removal never loses the audit.
+
+**kind** CONTRACT · **archetype** `MUTATION` · **platforms** `web` · **status** new · **path** `/api/admin/media/[asset_id]` · **methods** `DELETE` · **lines** 430 · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **admin** (classifyRoute("/api/admin/leads/watchlist") returns "admin" (executed 2026-09-15); the handler re-verifies the caller in-process.)
+
+**Called by.** `admin_media_delete`
+
+**Emits.** `admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334` · `admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416`
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `media_assets` **(net-new)** | `id` · `lead_type` · `lead_key` · `permit_num` · `revision_num` · `coa_application_number` · `address_snapshot` · `saved_at` · `admin_uid` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/36_flight_center_tool.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/admin/media/[asset_id]/route.ts` |
+| `contracts` | `DELETE export` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `verifyAdminAuth — first line of the handler` |
+| `states` | `the envelope classes below` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads 8 table(s) directly; 5 of them are materialised by named pipeline steps (classify_coa_scope, classify_coa_trades, backfill_realtor_permit_trades), so its inputs are the pipeline's outputs rather than another contract. — `src/app/api/admin/leads/watchlist/route.ts:122-140`, `src/app/api/admin/leads/watchlist/route.ts:161-162`, `src/app/api/admin/leads/watchlist/route.ts:167-181`, `src/app/api/admin/leads/watchlist/route.ts:200-201`, `src/app/api/admin/leads/watchlist/route.ts:207-209`, `migrations/215_admin_watchlist.sql:28`, `docs/reference/data-lineage-map.md — no `## `admin_watchlist`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)`, `src/app/api/admin/leads/watchlist/route.ts:173-175`, `src/app/api/admin/leads/watchlist/route.ts:182-183`, `scripts/classify-coa-scope.js` |
+| 3 | `outputs` | `direct_db` | It deletes one media_assets row and inserts one admin_audit_log row in one transaction. — `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies`, `src/lib/admin/admin-audit.ts` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself. — `src/app/api/admin/leads/watchlist/route.ts:211 (GET export)`, `src/lib/api/with-api-envelope.ts:27-52` |
+| 5 | `staleness` | `live` | Every read runs against the base tables on each request — there is no cache layer between the handler and the database. — `src/app/api/admin/leads/watchlist/route.ts:122-140`, `src/app/api/admin/leads/watchlist/route.ts:161-162`, `src/app/api/admin/leads/watchlist/route.ts:167-181`, `src/app/api/admin/leads/watchlist/route.ts:200-201` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape. — `src/lib/api/with-api-envelope.ts:27-52`, `src/app/api/admin/leads/watchlist/route.ts:61-66`, `src/app/api/admin/leads/watchlist/route.ts:251-255`, `src/app/api/admin/leads/watchlist/route.ts:373`, `src/app/api/admin/leads/watchlist/route.ts:426`, `src/features/leads/api/envelope.ts:50-53`, `src/features/leads/api/envelope.ts:82`, `src/app/api/admin/leads/watchlist/route.ts:64 (401)`, `src/app/api/admin/leads/watchlist/route.ts:78 (403)`, `src/app/api/admin/leads/watchlist/route.ts:278 (400)`, `src/app/api/admin/leads/watchlist/route.ts:219 (400)` |
+| 13 | `emits` | `events` | It emits named observability events only — Sentry breadcrumbs and/or PostHog captures; it writes no ledger row. — `Sentry breadcrumb slow_query (category slow_query, >500ms)`, `Sentry breadcrumb watchlist_bulk_save (category admin_action)`, `Sentry breadcrumb watchlist_bulk_delete (category admin_action)`, `analytics admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334`, `analytics admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416` |
+| 14 | `offers` | `none` | It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory. — `migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)`, `src/app/api/admin/leads/watchlist/route.ts — read in full; no placement read` |
+| 15 | `metering` | `none` | Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler. — `src/app/api/admin/leads/watchlist/route.ts — read in full 2026-09-15`, `src/lib/db/generated/schema.ts — no usage_events table` |
+| 16 | `config` | `logic_variables` | Reads the Admin Media tunables. — `scripts/seeds/logic_variables.json — group Admin Media` |
+| 17 | `sharing` | `sole` | Called by the admin media page only (MF-38 will consume the list contract for the report). — `src/app/(maxbld)/admin/media/MediaPageClient.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/admin/media/[asset_id]/route.ts`
+
+> ⚠️ GET items are `{...row, temporal_group}` — a raw-row spread plus one computed field, not a hand-picked whitelist. POST/DELETE additionally require authMethod === 'session' (the shared admin_key sentinel is rejected 403; dev_bypass allowed) via forbiddenNonSessionWrite. POST insert is idempotent (ON CONFLICT DO NOTHING); DELETE is a hard delete scoped to admin_uid. NO admin audit row for the mutating methods. | MEASURED 2026-09-15: Census checklist: all 7 named tables VERIFIED. Census MISSED `profiles` (verifyAdminAuth, src/lib/auth/verify-admin.ts:117-120). FINDINGS: (1) COMMENT/CODE DISAGREEMENT — src/lib/admin/watchlist-temporal.ts:29 documents opportunity_score as 'MAX(opportunity_score) across the lead's active-trade forecasts', and :74 repeats 'MAX(opportunity_score) across all rows'; the actual GET SQL takes opportunity_score from the SAME row as the earliest predicted_start (route.ts:145-159, :185-199), which the route header at :25-28 correctly describes as same-row semantics. The JS mirror aggregateForecastRows (watchlist-temporal.ts:86-104) really does compute MAX, so the client-side reconcile helper and the server SQL can disagree for a lead whose max-score trade is not its earliest-start trade. (2) skipped_existing is derived arithmetically as valid.length - added (route.ts:365), so an INTRA-batch duplicate is reported as 'skipped_existing' even on a first-ever save — acknowledged in the comment at :338-339. (3) The POST INSERT builds its VALUES list by string concatenation (:341-351) but every value is a bound parameter ($1..$N) — parameterised, not injectable. (4) No SELECT * on a base table: the `SELECT *` at :120 reads the explicit-column subquery aliased `board` (:121-202). (5) No admin_audit_log row for either mutation, unlike the user-management routes — only breadcrumb + PostHog. (6) `dev_bypass` mutations are permitted (:73-79), so on a dev-mode deployment all rows land under uid 'dev-user' (src/lib/auth/verify-admin.ts:82). | Caching: none observed — no Cache-Control, no dynamic/revalidate, no in-process memo in route.ts:1-430 | Pagination: GET: LIMIT $2 OFFSET $3 at src/app/api/admin/leads/watchlist/route.ts:204 bound to WATCHLIST_PAGE_SIZE=50 (src/lib/admin/watchlist-schemas.ts:52) and the Zod-clamped offset (int >=0, max 1_000_000, src/lib/admin/watchlist-schemas.ts:56); `total` from a separate COUNT(*) at route.ts:207-209, returned in meta at :251-255. POST/DELETE: batch size capped at 1000 by Zod (watchlist-schemas.ts:99, :121). | Other guards / classification: MUTATION-ONLY identity gate: forbiddenNonSessionWrite at src/app/api/admin/leads/watchlist/route.ts:73-81 rejects authMethod==='admin_key' with 403; 'dev_bypass' writes are deliberately PERMITTED (:74 tests only admin_key). CSRF Origin allowlist fires for POST/DELETE inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78, allowlist parse at :288-303, default-deny at :336). MFA gate inert unless ADMIN_MFA_ENFORCED=true (:143). | Locking tests: src/tests/admin-watchlist.infra.test.ts.
+
+<a id="c-063"></a>
+
+###### `C-063` `contract_admin_media_list`
+
+**Programme.** `C-063` · scope `parcel_admin` · feature `F08` · build order 2083 · batch `B2` · review `unreviewed` — The admin media library (MF-37): the report images and ad creatives the parcel product renders, uploaded and deleted by an admin.
+
+**What it is.** Returns the admin media rows with server display strings, sort keys and one short-lived signed preview URL per row.
+
+**What it reads and writes.** It reads media_assets (capped at media_list_page_max) and signs every object path in one call; a row it could not sign has signed_url null and the response counts them in meta.unsigned.
+
+**Under Spec 126.** A QUERY CONTRACT; the LIST surface binds its columns to this projection (FE-32 `contract` binding kind).
+
+**kind** CONTRACT · **archetype** `QUERY` · **platforms** `web` · **status** new · **path** `/api/admin/media` · **methods** `GET` · **lines** 430 · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **admin** (classifyRoute("/api/admin/leads/watchlist") returns "admin" (executed 2026-09-15); the handler re-verifies the caller in-process.)
+
+**Called by.** `admin_media`
+
+**Emits.** `admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334` · `admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416`
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `media_assets` **(net-new)** | `id` · `lead_type` · `lead_key` · `permit_num` · `revision_num` · `coa_application_number` · `address_snapshot` · `saved_at` · `admin_uid` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/36_flight_center_tool.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/admin/media/route.ts` |
+| `contracts` | `GET export` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `verifyAdminAuth — first line of the handler` |
+| `states` | `the envelope classes below` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads 8 table(s) directly; 5 of them are materialised by named pipeline steps (classify_coa_scope, classify_coa_trades, backfill_realtor_permit_trades), so its inputs are the pipeline's outputs rather than another contract. — `src/app/api/admin/leads/watchlist/route.ts:122-140`, `src/app/api/admin/leads/watchlist/route.ts:161-162`, `src/app/api/admin/leads/watchlist/route.ts:167-181`, `src/app/api/admin/leads/watchlist/route.ts:200-201`, `src/app/api/admin/leads/watchlist/route.ts:207-209`, `migrations/215_admin_watchlist.sql:28`, `docs/reference/data-lineage-map.md — no `## `admin_watchlist`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)`, `src/app/api/admin/leads/watchlist/route.ts:173-175`, `src/app/api/admin/leads/watchlist/route.ts:182-183`, `scripts/classify-coa-scope.js` |
+| 3 | `outputs` | `none` | A read: it writes no table. — `src/lib/media/list.ts` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself. — `src/app/api/admin/leads/watchlist/route.ts:211 (GET export)`, `src/lib/api/with-api-envelope.ts:27-52` |
+| 5 | `staleness` | `live` | Every read runs against the base tables on each request — there is no cache layer between the handler and the database. — `src/app/api/admin/leads/watchlist/route.ts:122-140`, `src/app/api/admin/leads/watchlist/route.ts:161-162`, `src/app/api/admin/leads/watchlist/route.ts:167-181`, `src/app/api/admin/leads/watchlist/route.ts:200-201` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape. — `src/lib/api/with-api-envelope.ts:27-52`, `src/app/api/admin/leads/watchlist/route.ts:61-66`, `src/app/api/admin/leads/watchlist/route.ts:251-255`, `src/app/api/admin/leads/watchlist/route.ts:373`, `src/app/api/admin/leads/watchlist/route.ts:426`, `src/features/leads/api/envelope.ts:50-53`, `src/features/leads/api/envelope.ts:82`, `src/app/api/admin/leads/watchlist/route.ts:64 (401)`, `src/app/api/admin/leads/watchlist/route.ts:78 (403)`, `src/app/api/admin/leads/watchlist/route.ts:278 (400)`, `src/app/api/admin/leads/watchlist/route.ts:219 (400)` |
+| 13 | `emits` | `events` | It emits named observability events only — Sentry breadcrumbs and/or PostHog captures; it writes no ledger row. — `Sentry breadcrumb slow_query (category slow_query, >500ms)`, `Sentry breadcrumb watchlist_bulk_save (category admin_action)`, `Sentry breadcrumb watchlist_bulk_delete (category admin_action)`, `analytics admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334`, `analytics admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416` |
+| 14 | `offers` | `none` | It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory. — `migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)`, `src/app/api/admin/leads/watchlist/route.ts — read in full; no placement read` |
+| 15 | `metering` | `none` | Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler. — `src/app/api/admin/leads/watchlist/route.ts — read in full 2026-09-15`, `src/lib/db/generated/schema.ts — no usage_events table` |
+| 16 | `config` | `logic_variables` | Reads the Admin Media tunables. — `scripts/seeds/logic_variables.json — group Admin Media` |
+| 17 | `sharing` | `sole` | Called by the admin media page only (MF-38 will consume the list contract for the report). — `src/app/(maxbld)/admin/media/MediaPageClient.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/admin/media/route.ts`
+
+> ⚠️ GET items are `{...row, temporal_group}` — a raw-row spread plus one computed field, not a hand-picked whitelist. POST/DELETE additionally require authMethod === 'session' (the shared admin_key sentinel is rejected 403; dev_bypass allowed) via forbiddenNonSessionWrite. POST insert is idempotent (ON CONFLICT DO NOTHING); DELETE is a hard delete scoped to admin_uid. NO admin audit row for the mutating methods. | MEASURED 2026-09-15: Census checklist: all 7 named tables VERIFIED. Census MISSED `profiles` (verifyAdminAuth, src/lib/auth/verify-admin.ts:117-120). FINDINGS: (1) COMMENT/CODE DISAGREEMENT — src/lib/admin/watchlist-temporal.ts:29 documents opportunity_score as 'MAX(opportunity_score) across the lead's active-trade forecasts', and :74 repeats 'MAX(opportunity_score) across all rows'; the actual GET SQL takes opportunity_score from the SAME row as the earliest predicted_start (route.ts:145-159, :185-199), which the route header at :25-28 correctly describes as same-row semantics. The JS mirror aggregateForecastRows (watchlist-temporal.ts:86-104) really does compute MAX, so the client-side reconcile helper and the server SQL can disagree for a lead whose max-score trade is not its earliest-start trade. (2) skipped_existing is derived arithmetically as valid.length - added (route.ts:365), so an INTRA-batch duplicate is reported as 'skipped_existing' even on a first-ever save — acknowledged in the comment at :338-339. (3) The POST INSERT builds its VALUES list by string concatenation (:341-351) but every value is a bound parameter ($1..$N) — parameterised, not injectable. (4) No SELECT * on a base table: the `SELECT *` at :120 reads the explicit-column subquery aliased `board` (:121-202). (5) No admin_audit_log row for either mutation, unlike the user-management routes — only breadcrumb + PostHog. (6) `dev_bypass` mutations are permitted (:73-79), so on a dev-mode deployment all rows land under uid 'dev-user' (src/lib/auth/verify-admin.ts:82). | Caching: none observed — no Cache-Control, no dynamic/revalidate, no in-process memo in route.ts:1-430 | Pagination: GET: LIMIT $2 OFFSET $3 at src/app/api/admin/leads/watchlist/route.ts:204 bound to WATCHLIST_PAGE_SIZE=50 (src/lib/admin/watchlist-schemas.ts:52) and the Zod-clamped offset (int >=0, max 1_000_000, src/lib/admin/watchlist-schemas.ts:56); `total` from a separate COUNT(*) at route.ts:207-209, returned in meta at :251-255. POST/DELETE: batch size capped at 1000 by Zod (watchlist-schemas.ts:99, :121). | Other guards / classification: MUTATION-ONLY identity gate: forbiddenNonSessionWrite at src/app/api/admin/leads/watchlist/route.ts:73-81 rejects authMethod==='admin_key' with 403; 'dev_bypass' writes are deliberately PERMITTED (:74 tests only admin_key). CSRF Origin allowlist fires for POST/DELETE inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78, allowlist parse at :288-303, default-deny at :336). MFA gate inert unless ADMIN_MFA_ENFORCED=true (:143). | Locking tests: src/tests/admin-watchlist.infra.test.ts.
+
+<a id="c-064"></a>
+
+###### `C-064` `contract_admin_media_upload`
+
+**Programme.** `C-064` · scope `parcel_admin` · feature `F08` · build order 2083 · batch `B2` · review `unreviewed` — The admin media library (MF-37): the report images and ad creatives the parcel product renders, uploaded and deleted by an admin.
+
+**What it is.** Accepts one image as a data URL with its kind, scenario key, position and alt text; writes the row, the audit row and the bucket object, or nothing.
+
+**What it reads and writes.** It validates the body against media-contract.json, checks the size against media_upload_max_bytes and the magic bytes against the type, inserts media_assets and admin_audit_log in one transaction and uploads the object before COMMIT; a storage failure rolls the transaction back.
+
+**Under Spec 126.** A MUTATION CONTRACT with one audit row per success; idempotency by a server-assigned asset_id and the media_assets_report_order unique index.
+
+**kind** CONTRACT · **archetype** `MUTATION` · **platforms** `web` · **status** new · **path** `/api/admin/media` · **methods** `POST` · **lines** 430 · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **admin** (classifyRoute("/api/admin/leads/watchlist") returns "admin" (executed 2026-09-15); the handler re-verifies the caller in-process.)
+
+**Called by.** `admin_media_upload`
+
+**Emits.** `admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334` · `admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416`
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `media_assets` **(net-new)** | `id` · `lead_type` · `lead_key` · `permit_num` · `revision_num` · `coa_application_number` · `address_snapshot` · `saved_at` · `admin_uid` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/36_flight_center_tool.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/admin/media/route.ts` |
+| `contracts` | `POST export` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `verifyAdminAuth — first line of the handler` |
+| `states` | `the envelope classes below` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads 8 table(s) directly; 5 of them are materialised by named pipeline steps (classify_coa_scope, classify_coa_trades, backfill_realtor_permit_trades), so its inputs are the pipeline's outputs rather than another contract. — `src/app/api/admin/leads/watchlist/route.ts:122-140`, `src/app/api/admin/leads/watchlist/route.ts:161-162`, `src/app/api/admin/leads/watchlist/route.ts:167-181`, `src/app/api/admin/leads/watchlist/route.ts:200-201`, `src/app/api/admin/leads/watchlist/route.ts:207-209`, `migrations/215_admin_watchlist.sql:28`, `docs/reference/data-lineage-map.md — no `## `admin_watchlist`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)`, `src/app/api/admin/leads/watchlist/route.ts:173-175`, `src/app/api/admin/leads/watchlist/route.ts:182-183`, `scripts/classify-coa-scope.js` |
+| 3 | `outputs` | `direct_db` | It inserts one media_assets row and one admin_audit_log row in one transaction; the object upload runs inside it and a failure rolls both back. — `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies`, `src/lib/admin/admin-audit.ts` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself. — `src/app/api/admin/leads/watchlist/route.ts:211 (GET export)`, `src/lib/api/with-api-envelope.ts:27-52` |
+| 5 | `staleness` | `live` | Every read runs against the base tables on each request — there is no cache layer between the handler and the database. — `src/app/api/admin/leads/watchlist/route.ts:122-140`, `src/app/api/admin/leads/watchlist/route.ts:161-162`, `src/app/api/admin/leads/watchlist/route.ts:167-181`, `src/app/api/admin/leads/watchlist/route.ts:200-201` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape. — `src/lib/api/with-api-envelope.ts:27-52`, `src/app/api/admin/leads/watchlist/route.ts:61-66`, `src/app/api/admin/leads/watchlist/route.ts:251-255`, `src/app/api/admin/leads/watchlist/route.ts:373`, `src/app/api/admin/leads/watchlist/route.ts:426`, `src/features/leads/api/envelope.ts:50-53`, `src/features/leads/api/envelope.ts:82`, `src/app/api/admin/leads/watchlist/route.ts:64 (401)`, `src/app/api/admin/leads/watchlist/route.ts:78 (403)`, `src/app/api/admin/leads/watchlist/route.ts:278 (400)`, `src/app/api/admin/leads/watchlist/route.ts:219 (400)` |
+| 13 | `emits` | `events` | It emits named observability events only — Sentry breadcrumbs and/or PostHog captures; it writes no ledger row. — `Sentry breadcrumb slow_query (category slow_query, >500ms)`, `Sentry breadcrumb watchlist_bulk_save (category admin_action)`, `Sentry breadcrumb watchlist_bulk_delete (category admin_action)`, `analytics admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334`, `analytics admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416` |
+| 14 | `offers` | `none` | It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory. — `migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)`, `src/app/api/admin/leads/watchlist/route.ts — read in full; no placement read` |
+| 15 | `metering` | `none` | Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler. — `src/app/api/admin/leads/watchlist/route.ts — read in full 2026-09-15`, `src/lib/db/generated/schema.ts — no usage_events table` |
+| 16 | `config` | `logic_variables` | Reads the Admin Media tunables. — `scripts/seeds/logic_variables.json — group Admin Media` |
+| 17 | `sharing` | `sole` | Called by the admin media page only (MF-38 will consume the list contract for the report). — `src/app/(maxbld)/admin/media/MediaPageClient.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/admin/media/route.ts`
+
+> ⚠️ GET items are `{...row, temporal_group}` — a raw-row spread plus one computed field, not a hand-picked whitelist. POST/DELETE additionally require authMethod === 'session' (the shared admin_key sentinel is rejected 403; dev_bypass allowed) via forbiddenNonSessionWrite. POST insert is idempotent (ON CONFLICT DO NOTHING); DELETE is a hard delete scoped to admin_uid. NO admin audit row for the mutating methods. | MEASURED 2026-09-15: Census checklist: all 7 named tables VERIFIED. Census MISSED `profiles` (verifyAdminAuth, src/lib/auth/verify-admin.ts:117-120). FINDINGS: (1) COMMENT/CODE DISAGREEMENT — src/lib/admin/watchlist-temporal.ts:29 documents opportunity_score as 'MAX(opportunity_score) across the lead's active-trade forecasts', and :74 repeats 'MAX(opportunity_score) across all rows'; the actual GET SQL takes opportunity_score from the SAME row as the earliest predicted_start (route.ts:145-159, :185-199), which the route header at :25-28 correctly describes as same-row semantics. The JS mirror aggregateForecastRows (watchlist-temporal.ts:86-104) really does compute MAX, so the client-side reconcile helper and the server SQL can disagree for a lead whose max-score trade is not its earliest-start trade. (2) skipped_existing is derived arithmetically as valid.length - added (route.ts:365), so an INTRA-batch duplicate is reported as 'skipped_existing' even on a first-ever save — acknowledged in the comment at :338-339. (3) The POST INSERT builds its VALUES list by string concatenation (:341-351) but every value is a bound parameter ($1..$N) — parameterised, not injectable. (4) No SELECT * on a base table: the `SELECT *` at :120 reads the explicit-column subquery aliased `board` (:121-202). (5) No admin_audit_log row for either mutation, unlike the user-management routes — only breadcrumb + PostHog. (6) `dev_bypass` mutations are permitted (:73-79), so on a dev-mode deployment all rows land under uid 'dev-user' (src/lib/auth/verify-admin.ts:82). | Caching: none observed — no Cache-Control, no dynamic/revalidate, no in-process memo in route.ts:1-430 | Pagination: GET: LIMIT $2 OFFSET $3 at src/app/api/admin/leads/watchlist/route.ts:204 bound to WATCHLIST_PAGE_SIZE=50 (src/lib/admin/watchlist-schemas.ts:52) and the Zod-clamped offset (int >=0, max 1_000_000, src/lib/admin/watchlist-schemas.ts:56); `total` from a separate COUNT(*) at route.ts:207-209, returned in meta at :251-255. POST/DELETE: batch size capped at 1000 by Zod (watchlist-schemas.ts:99, :121). | Other guards / classification: MUTATION-ONLY identity gate: forbiddenNonSessionWrite at src/app/api/admin/leads/watchlist/route.ts:73-81 rejects authMethod==='admin_key' with 403; 'dev_bypass' writes are deliberately PERMITTED (:74 tests only admin_key). CSRF Origin allowlist fires for POST/DELETE inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78, allowlist parse at :288-303, default-deny at :336). MFA gate inert unless ADMIN_MFA_ENFORCED=true (:143). | Locking tests: src/tests/admin-watchlist.infra.test.ts.
 
 <a id="s-007"></a>
 
@@ -2302,7 +2730,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ Report §1.1 row 17 and §5 — the RECOMMENDED PILOT surface, to land at /admin/surfaces. Its other inputs are the SURFACE + CONTRACT + JOB descriptor files, which are not DB tables and do not exist in the tree yet (VERIFIED: no surfaces/, contracts/ or jobs/ directory at the repo root). Measured defect it makes visible: the census headline finding, /api/leads/view — a live metered route with zero production callers — would have been a red row on day one instead of months of silence. Per AQ9 the usage column renders 'not_yet_metered' until usage_events exists, never a zero. DESIGNED, NOT MEASURED — every category on this row is a design choice grounded in a spec §, not an observation of code. THREE DECISIONS THIS ROW COULD NOT TAKE: (1) `status` — the task asked for `status: "designed"`, which is not in the closed set {exists, new, generated} (surface.schema.json properties.status; generate-surface-registry.mjs:182 refuses anything else). Per the research brief §4 rule 1 a value the menu lacks is an escalation, never a per-row invention, so the row keeps `new` ("Specified, not built. Nothing is measured.") and the gap is filed here. (2) `inputs.contract_ref` is EMPTY although the surface calls a designed contract: generate-surface-registry.mjs:195 refuses a contract_ref entry that is neither a census contract path nor a census id, so the designed `GET /api/admin/surfaces` is recorded in evidence.contracts instead. A designed surface therefore renders as a zero-out-degree node in the very fan-out graph this estate is building. (3) `identity.route` is set only because Spec 126 §2.2.2 fixes /admin/surfaces by name.
 
-### §C `platform_shared` — shared by both products, owned by neither (72)
+### §C `platform_shared` — shared by both products, owned by neither (74)
 
 Auth, the user profile, the subscription and Stripe hand-off, entitlements, notifications, and the navigation shells. Changing one of these changes **both** products, which is exactly why it is its own scope rather than being filed under whichever product noticed it first.
 
@@ -5174,6 +5602,146 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ The spec cited is the SPEC LINK header on src/app/providers.tsx (Sec 11 Phase 3) and governs the provider composition (PersistQueryClientProvider + PostHogProvider) only; src/app/layout.tsx itself carries no SPEC LINK and appears in no system-map row. providers.tsx and PostHogProvider.tsx are included in files because the layout is the only thing that renders them; providers.tsx sits under src/app/, not src/components/. The tab title reads 'MaxBLD' (Spec 117 rename) while src/app/page.tsx still says 'Buildo'. No /api call: PostHogProvider only calls initObservability() from src/lib/observability/capture. MEASURED 2026-09-15: the QueryClient/persister this shell mounts is consumed by ZERO web-product surfaces — every one of the other nine uses bare fetch + useState (grep useQuery|useMutation|@tanstack across src/ hits only admin pages, src/features/admin-*, src/features/leads/api/useLeadView.ts and providers.tsx itself). guards.session is answered `anon` on the reachability axis (it renders for a sessionless visitor at `/`, route-guard.ts:43-64 + middleware.logic.test.ts:30); the x-draft note below is about classifyRoute, which takes a pathname the root layout does not have — both facts stand, they answer different questions. a11y.touch_target_min_px stays UNRESEARCHED because the vocabulary admits only UNRESEARCHED or an integer >= 44 and this surface has no interactive target at all — there is no "n/a" value to write (Spec 128 §4 escalation). SPEC PATH CORRECTED 2026-09-15: the SPEC LINK headers on src/app/providers.tsx:2 and src/components/observability/PostHogProvider.tsx:2 both cite docs/specs/03-mobile/75_lead_feed_implementation_guide.md, which does not exist — docs/specs/03-mobile/ holds 77 and 90-100 only, and the file lives at docs/specs/archive/75_lead_feed_implementation_guide.md. identity.spec now points at the file that is actually in the tree; the two stale in-code citations are recorded here rather than edited, because this shard is a census.
 
+<a id="s-077"></a>
+
+###### `S-077` `binding_web_form`
+
+**Programme.** `S-077` · scope `platform_shared` · feature `F14` · build order 3144 · batch `B2` · review `unreviewed` — Shared rendering infrastructure: the binding every converted web surface of this archetype renders through, in both products.
+
+**What it is.** The one web FORM binding: it turns a FORM descriptor and its content file into props for the standard library (RJSF with the Mantine theme). Every converted web FORM surface renders through it; it holds no display text of its own.
+
+**What it reads and writes.** It reads nothing itself: the mount file passes the descriptor, the content strings and the data the page already fetched.
+
+**Under Spec 126.** **PROMOTED BINDING ENTRY** (P42-D9 a): a platform_shared census entry that owns the binding module, so R-13 totality holds while the converted surfaces own no component.
+
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** new · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (Its only consumers today are /admin/** pages; each consumer declares its own guard.) · role **shared**
+
+**Calls.** —
+
+**Components owned.** `src/components/surfaces/web/FormBinding.tsx` · `src/components/surfaces/web/AdminMantineProvider.tsx`
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md` |
+| `contracts` | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `props` | Descriptor, content and data arrive as props from the mount file. — `src/components/surfaces/web/FormBinding.tsx` |
+| 3 | `outputs` | `none` | A binding writes nothing; a form submit is handed back to the mount file. — `src/components/surfaces/web/FormBinding.tsx` |
+| 4 | `state` | `none` | No store: the library component holds its own local UI state. — `src/components/surfaces/web/FormBinding.tsx` |
+| 5 | `staleness` | `none` | It renders what it is given. — `src/components/surfaces/web/FormBinding.tsx` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud. — `src/components/surfaces/web/FormBinding.tsx` |
+| 13 | `emits` | `none` | Rendering emits nothing. — `src/components/surfaces/web/FormBinding.tsx` |
+| 14 | `offers` | `none` | It manages the image files a SLOT or the report renders; it renders no sponsored placement itself. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 15 | `metering` | `none` | An operator act, not a metered product action; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 16 | `config` | `none` | No tunable. — `src/components/surfaces/web/FormBinding.tsx` |
+| 17 | `sharing` | `shared` | Every converted web FORM surface. — `scripts/surfaces/_schema/bindings.json — modules` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/components/surfaces/web/FormBinding.tsx`
+
+> ⚠️ MF-37 (P42-D9 a, batch C-3). It also owns the one Mantine provider module (bindings.json providers; batch C-2), so R-13 totality holds for it.
+
+<a id="s-078"></a>
+
+###### `S-078` `binding_web_list`
+
+**Programme.** `S-078` · scope `platform_shared` · feature `F14` · build order 3144 · batch `B2` · review `unreviewed` — Shared rendering infrastructure: the binding every converted web surface of this archetype renders through, in both products.
+
+**What it is.** The one web LIST binding: it turns a LIST descriptor and its content file into props for the standard library (mantine-datatable, Mantine Button, Modal and Image). Every converted web LIST surface renders through it; it holds no display text of its own.
+
+**What it reads and writes.** It reads nothing itself: the mount file passes the descriptor, the content strings and the data the page already fetched.
+
+**Under Spec 126.** **PROMOTED BINDING ENTRY** (P42-D9 a): a platform_shared census entry that owns the binding module, so R-13 totality holds while the converted surfaces own no component.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `web` · **status** new · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (Its only consumers today are /admin/** pages; each consumer declares its own guard.) · role **shared**
+
+**Calls.** —
+
+**Components owned.** `src/components/surfaces/web/ListBinding.tsx`
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md` |
+| `contracts` | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` |
+| `tables` | `migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-09 — the one ruled admin-read pattern (media_assets, offers, advertisers)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `props` | Descriptor, content and data arrive as props from the mount file. — `src/components/surfaces/web/ListBinding.tsx` |
+| 3 | `outputs` | `none` | A binding writes nothing; a form submit is handed back to the mount file. — `src/components/surfaces/web/ListBinding.tsx` |
+| 4 | `state` | `none` | No store: the library component holds its own local UI state. — `src/components/surfaces/web/ListBinding.tsx` |
+| 5 | `staleness` | `none` | It renders what it is given. — `src/components/surfaces/web/ListBinding.tsx` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud. — `src/components/surfaces/web/ListBinding.tsx` |
+| 13 | `emits` | `none` | Rendering emits nothing. — `src/components/surfaces/web/ListBinding.tsx` |
+| 14 | `offers` | `none` | It manages the image files a SLOT or the report renders; it renders no sponsored placement itself. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 15 | `metering` | `none` | An operator act, not a metered product action; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs` |
+| 16 | `config` | `none` | No tunable. — `src/components/surfaces/web/ListBinding.tsx` |
+| 17 | `sharing` | `shared` | Every converted web LIST surface. — `scripts/surfaces/_schema/bindings.json — modules` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/components/surfaces/web/ListBinding.tsx`
+
+> ⚠️ MF-37 (P42-D9 a, batch C-3).
+
 <a id="c-027"></a>
 
 ###### `C-027` `contract_products`
@@ -7724,7 +8292,7 @@ _Rendered in one line each on purpose. These convert under the same standard in 
 
 Every table any entry reads or writes, its real columns, and who touches it. **exists** = present in the introspected schema; **net-new** = specified but not yet in the database.
 
-**72** distinct tables are touched — **52** exist today, **20** are net-new.
+**73** distinct tables are touched — **52** exist today, **21** are net-new.
 
 ### Existing tables (52)
 
@@ -7783,7 +8351,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `user_profiles` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `web_subscribe` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `admin_users` · `contract_admin_notifications` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_subscribe_portal_session` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_offboarding_sweep_30day` | `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_lead_filter_sheet` · `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` |
 | `wsib_registry` | `id` · `legal_name` · `trade_name` · `legal_name_normalized` · `trade_name_normalized` · `mailing_address` · `predominant_class` · `naics_code` · `naics_description` · `subclass` · `subclass_description` · `business_size` · `match_confidence` · `matched_at` · `first_seen_at` · `last_seen_at` · `linked_entity_id` · `primary_phone` · `primary_email` · `website` · `last_enriched_at` · `is_gta` | `mobile_lead_feed` · `admin_data_quality` · `admin_lead_feed` · `contract_admin_builders` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_entities_id` · `contract_leads_feed` | — |
 
-### Net-new tables (20)
+### Net-new tables (21)
 
 | Table | Columns | Read by | Written by |
 |---|---|---|---|
@@ -7795,6 +8363,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `auth.users` | _net-new — no introspected columns_ | — | `job_offboarding_sweep_30day` |
 | `contract_descriptors` | _net-new — no introspected columns_ | `admin_contract_fanout` · `admin_orphan_panel` · `admin_surface_registry` | — |
 | `information_schema.columns` | _net-new — no introspected columns_ | `admin_data_quality` · `admin_pipeline_step_output` · `contract_admin_pipeline_step_output` · `contract_admin_stats` · `contract_quality_refresh` | — |
+| `media_assets` | _net-new — no introspected columns_ | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` | — |
 | `mv_monthly_permit_stats` | _net-new — no introspected columns_ | `admin_market_metrics` · `contract_admin_market_metrics` | `job_mv_monthly_permit_stats_refresh` |
 | `offers` | _net-new — no introspected columns_ | `admin_placements` · `advertiser_self_metrics` | `admin_placements` |
 | `pdf_exports` | _net-new — no introspected columns_ | `admin_export_audit` | — |
@@ -7814,7 +8383,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 12 of 61 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 12 of 64 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -7852,4 +8421,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 141 census rows and 271 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 149 census rows and 271 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

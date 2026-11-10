@@ -1,0 +1,27 @@
+{
+  "task": "MF-37",
+  "item": "Admin media library and the first Mantine web binding: the web FORM and LIST binding modules (RJSF on Mantine, mantine-datatable), the one provider module and the admin provider layout, the generated web theme (emit-web-theme.mjs, web-theme.json), the three converted surfaces admin_media, admin_media_upload, admin_media_delete with 17 goldens, the contract binding kind (FE-32), the render smoke (FE-33), the FE-31 web C-8/C-9/C-11 cases, media-contract.json, the GET/POST/DELETE media routes, requireAdminPage, the media hooks and mount files",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-09",
+  "head": "pending",
+  "cards": [
+    "Operator 2026-11-09: \"approved except for 9 ...\" (Wave 1 decision batch items 1-6, conflicts C-1..C-12).",
+    "Operator 2026-11-09: \"approved smaller version\" (MF-42 size: the theme generator, web C-8 and C-9 move to MF-37; the string checks go to FE-33).",
+    "Operator 2026-11-09: \"P42 decisions approved\" (P42-D1 a, D5 a, D6, D9 a).",
+    "Pre-approved D-22 and D-23 (~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): migrations 300/301; optional mapping and touch_targets on the bindings shape; hooks under src/lib/media/."
+  ],
+  "plan": "PLAN (stage 3): ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md (section 12 wins; plan.md v2 kept); PLAN panel (observability-reviewer, code-reviewer-grounded, compliance, regression-guardian) and a v3 delta seat (code-reviewer-grounded, CONDITIONAL PASS, all folded); record ~/Buildo-scratch/mcfrontend/MF-37/record.md.",
+  "output": "PENDING: the OUTPUT panel (regression-guardian, code-reviewer-grounded, compliance, Security) is filled before the push.",
+  "seats": [
+    "regression-guardian",
+    "code-reviewer-grounded",
+    "compliance (general-purpose, Spec 08 A9/A10)",
+    "Security (Wave 1 decision batch item 5)"
+  ],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-37/",
+  "notes": []
+}

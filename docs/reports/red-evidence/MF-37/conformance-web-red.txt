@@ -1,0 +1,13 @@
+MF-37 FE-31 lock edits (src/tests/surfaces/surface-conformance.logic.test.ts: C-1 counts, C-2b/C-3 real tree, C-7 149, new C-8, C-9, C-11) red run, 2026-11-09. Plants: an unmapped <Card /> in ListBinding.tsx; the LIST delete Button node at size sm (goldens left as committed, so the golden check is the C-9 plant via the RED cases); a hand edit of theme.generated.json. Restored after the run.
+   ✓ C-2 the import boundary (one tier: libraries only in binding modules, providers, tests and the vendor dir) > the real tree: no finding; the pinned D-2/D-3 libraries are listed; the walk examined files 848ms
+   × C-8 the web closed mapping (every JSX element of a web binding module is a listed library component) > the real tree: each web module renders only mapping.web names for its archetypes 6ms
+     → expected [ …(2) ] to deeply equal [ …(2) ]
+   × C-11 the generated web theme (scripts/surfaces/emit-web-theme.mjs --check) > --check exits 0 and prints theme ok (N pairs, S shades) with N > 0 28ms
+     → expected [ 1, '' ] to deeply equal [ +0, '' ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-8 the web closed mapping (every JSX element of a web binding module is a listed library component) > the real tree: each web module renders only mapping.web names for its archetypes
+AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-11 the generated web theme (scripts/surfaces/emit-web-theme.mjs --check) > --check exits 0 and prints theme ok (N pairs, S shades) with N > 0
+AssertionError: expected [ 1, '' ] to deeply equal [ +0, '' ]
+ Test Files  1 failed (1)
+      Tests  2 failed | 27 passed (29)

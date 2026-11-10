@@ -325,7 +325,9 @@ describe('src-sql-ledger — committed ledger (live)', () => {
   it('live: every column the ledger reads/writes on a catalogued table exists in the catalog; only the matview is skipped', async () => {
     const r = await ssl.checkSrcSqlLedger(REPO_ROOT);
     expect(r.membership.missing).toEqual([]);
-    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats']);
+    // MF-37 (2026-11-09): media_assets (migration 300) joins the catalog when the operator applies 300/301 and the witness catalog is recaptured
+    // (docs/reports/witness/_catalog.json is a DB snapshot, never hand-edited); until then it is the one other uncatalogued table.
+    expect(r.membership.uncatalogued).toEqual(['media_assets', 'mv_monthly_permit_stats']);
   });
 
   it('exit criterion: every SQL-bearing src/ file is classified', async () => {

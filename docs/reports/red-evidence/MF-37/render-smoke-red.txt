@@ -1,0 +1,20 @@
+MF-37 FE-33 lock (src/tests/surfaces/render-smoke.logic.test.ts) red run, 2026-11-09. Plants: transformErrors removed from FormBinding formProps; noRecordsText removed from ListBinding listProps; the provider's on-primary Button var set to white. Restored after the run.
+   × FE-33 (b) a gap is loud > RED: a missing content key throws in both bindings 2ms
+     → expected [Function] to throw an error
+   × FE-33 (c) form error messages come from content > a submitted empty confirm shows the content text, never AJV English 43ms
+     → expected ':root, :host{--mantine-primary-color-…' to contain 'Type the alt text to confirm.'
+   × FE-33 (d) no library default text > the empty LIST shows the content empty text, never "No records" 5ms
+     → expected '<style data-mantine-styles="true">:ro…' to contain 'No images uploaded yet. Use the form …'
+   × FE-33 (e) colour and touch targets > the primary (submit) Button carries --button-color #472a00 (On-primary) 5ms
+     → expected '<style data-mantine-styles="true">:ro…' to match /--button-color:\s*#472a00/i
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/render-smoke.logic.test.ts > FE-33 (b) a gap is loud > RED: a missing content key throws in both bindings
+AssertionError: expected [Function] to throw an error
+ FAIL  src/tests/surfaces/render-smoke.logic.test.ts > FE-33 (c) form error messages come from content > a submitted empty confirm shows the content text, never AJV English
+AssertionError: expected ':root, :host{--mantine-primary-color-…' to contain 'Type the alt text to confirm.'
+ FAIL  src/tests/surfaces/render-smoke.logic.test.ts > FE-33 (d) no library default text > the empty LIST shows the content empty text, never "No records"
+AssertionError: expected '<style data-mantine-styles="true">:ro…' to contain 'No images uploaded yet. Use the form …'
+ FAIL  src/tests/surfaces/render-smoke.logic.test.ts > FE-33 (e) colour and touch targets > the primary (submit) Button carries --button-color #472a00 (On-primary)
+AssertionError: expected '<style data-mantine-styles="true">:ro…' to match /--button-color:\s*#472a00/i
+ Test Files  1 failed (1)
+      Tests  4 failed | 9 passed (13)

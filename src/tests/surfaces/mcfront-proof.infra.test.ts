@@ -44,11 +44,13 @@ const L = {
 };
 const LOCKS = Object.values(L);
 // Measured copy list (about 16 MB, 11 s for the file); node_modules is a symlink, the rest is copied.
+// MF-37 (dated 2026-11-09): src/components/surfaces joins the copy: report-no-maths (FE-05) reads bindings.json modules, which now list the two
+// web binding modules, and fails closed on a listed module that is missing from the tree.
 const COPY = [
   'scripts/surfaces', 'scripts/analysis/report-schema.mjs', 'scripts/analysis/bylaw', CATALOGUE, SWITCHBOARD, 'scripts/seeds/bylaw/vocab.json', 'scripts/seeds/bylaw/adjudications.json',
   'docs/reports/decisions/2026-10-20-chat-batch-b.json', 'docs/specs/01-pipeline/78_optimal_lot_configuration.md', 'src/lib/parcels/consumer-lookup.ts', 'mobile/src/lib/parcelCostFormat.ts',
   'migrations', 'docs/reference/maxbld-report-v2-schema.md', 'docs/reference/maxbld-report-v2.sample.json', 'docs/reference/maxbld-report-v2.schema.json', 'docs/reference/maxbld-report-v2.types.ts',
-  'src/tests/fixtures/surfaces', 'src/lib/surfaces', 'src/components/report', 'src/app/admin/report-preview', 'src/tests/setup.ts', 'src/tests/helpers/before-image-sandbox.ts',
+  'src/tests/fixtures/surfaces', 'src/lib/surfaces', 'src/components/report', 'src/components/surfaces', 'src/app/admin/report-preview', 'src/tests/setup.ts', 'src/tests/helpers/before-image-sandbox.ts',
   'package.json', 'tsconfig.json', ...LOCKS,
 ];
 const CONFIG = `import { defineConfig } from 'vitest/config';

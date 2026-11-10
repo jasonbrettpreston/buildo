@@ -9,10 +9,10 @@
 -- UP
 INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description) VALUES
   ('media_upload_max_bytes', 2000000, NULL, 'MF-37: the largest image the admin media library accepts, in decoded bytes; at most 3 MB by ruling. CONSUMED by src/lib/media/contract.ts.'),
-  ('media_signed_url_ttl_seconds', 600, NULL, 'MF-37: lifetime of each preview signed URL the admin media list mints. CONSUMED by src/lib/media/list.ts.'),
-  ('media_list_page_max', 200, NULL, 'MF-37: the most media_assets rows the admin list returns (more rows show the partial state). CONSUMED by src/lib/media/list.ts.'),
-  ('media_list_cache_seconds', 60, NULL, 'MF-37: private cache lifetime of the admin media list response. CONSUMED by src/app/api/admin/media/route.ts.'),
-  ('media_storage_timeout_ms', 15000, NULL, 'MF-37: per-call timeout of a Storage upload, remove or sign call. CONSUMED by src/lib/media/storage.ts.')
+  ('media_signed_url_ttl_seconds', 600, NULL, 'MF-37: lifetime of each preview signed URL the admin media list mints. CONSUMED by src/lib/media/contract.ts (readMediaLimits).'),
+  ('media_list_page_max', 200, NULL, 'MF-37: the most media_assets rows the admin list returns (more rows show the partial state). CONSUMED by src/lib/media/contract.ts (readMediaLimits).'),
+  ('media_list_cache_seconds', 60, NULL, 'MF-37: private cache lifetime of the admin media list response. CONSUMED by src/lib/media/contract.ts (readMediaLimits).'),
+  ('media_storage_timeout_ms', 15000, NULL, 'MF-37: per-call timeout of a Storage upload, remove or sign call. CONSUMED by src/lib/media/contract.ts (readMediaLimits).')
 ON CONFLICT (variable_key) DO NOTHING;
 
 -- DOWN — manual rollback only, intentionally not transactional (matches migrations 159, 283, 294 and 296).

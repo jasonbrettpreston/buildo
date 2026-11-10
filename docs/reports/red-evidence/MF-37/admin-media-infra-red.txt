@@ -1,0 +1,13 @@
+# PLANT: 23505 -> 409 mapping disabled in POST route; confirm === alt check dropped in DELETE route (both restored after this run)
+   × POST /api/admin/media — order and compensation > 23505 (lost the position race): 409 POSITION_TAKEN, no logError, no upload 5ms
+   × DELETE /api/admin/media/[asset_id] > confirm != alt: 409 CONFIRM_MISMATCH, nothing deleted, no audit, no remove 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/admin-media.infra.test.ts > POST /api/admin/media — order and compensation > 23505 (lost the position race): 409 POSITION_TAKEN, no logError, no upload
+AssertionError: expected 500 to be 409 // Object.is equality
+- Expected
++ Received
+ FAIL  src/tests/admin-media.infra.test.ts > DELETE /api/admin/media/[asset_id] > confirm != alt: 409 CONFIRM_MISMATCH, nothing deleted, no audit, no remove
+AssertionError: expected 200 to be 409 // Object.is equality
+- Expected
++ Received
+      Tests  2 failed | 25 passed (27)

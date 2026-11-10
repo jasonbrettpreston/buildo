@@ -1,0 +1,12 @@
+{
+  "admin_media_delete.field.confirm": "Type the alt text to confirm",
+  "admin_media_delete.help.confirm": "This deletes the image and its file. It cannot be undone.",
+  "admin_media_delete.submit": "Delete image",
+  "admin_media_delete.errors.required": "Type the alt text to confirm.",
+  "admin_media_delete.errors.type": "This value has the wrong type.",
+  "admin_media_delete.errors.const": "The text does not match this image’s alt text.",
+  "admin_media_delete.errors.min_length": "Type the alt text to confirm.",
+  "admin_media_delete.errors.additional_properties": "This form sent a field it does not know.",
+  "admin_media_delete.state.error": "The image could not be deleted. Try again.",
+  "admin_media_delete.state.hit": "Image deleted."
+}

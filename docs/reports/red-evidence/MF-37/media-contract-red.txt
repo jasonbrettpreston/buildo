@@ -1,0 +1,13 @@
+# PLANT: media-contract.json bucket.public=true + request_schema.properties.file.format='data-url' (restored after this run)
+   × media contract — closed sets and privacy > the committed contract has no findings 24ms
+   × media contract — closed sets and privacy > bucket id is surface-media and the path template is {kind}/{asset_id}.{ext} 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/media-contract.logic.test.ts > media contract — closed sets and privacy > the committed contract has no findings
+AssertionError: expected [ 'bucket public', …(1) ] to deeply equal []
+- Expected
++ Received
+ FAIL  src/tests/media-contract.logic.test.ts > media contract — closed sets and privacy > bucket id is surface-media and the path template is {kind}/{asset_id}.{ext}
+AssertionError: expected { id: 'surface-media', public: true } to deeply equal { id: 'surface-media', public: false }
+- Expected
++ Received
+      Tests  2 failed | 22 passed (24)

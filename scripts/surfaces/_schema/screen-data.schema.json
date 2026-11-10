@@ -118,6 +118,8 @@
         },
         "providers": { "$ref": "#/definitions/ids" },
         "promoted_entries": { "$ref": "#/definitions/ids" },
+        "mapping": { "type": "object", "additionalProperties": false, "$comment": "Optional (D-23 2026-11-09, MF-37; FE-31 C-8): per platform, archetype -> the closed list of library component names a binding module may render in its own JSX.", "properties": { "web": { "type": "object", "additionalProperties": { "$ref": "#/definitions/ids" } }, "mobile": { "type": "object", "additionalProperties": { "$ref": "#/definitions/ids" } } } },
+        "touch_targets": { "type": "object", "additionalProperties": false, "$comment": "Optional (D-23 2026-11-09, MF-37; FE-31 C-9): per platform, component -> the size values that reach 44 px.", "properties": { "web": { "type": "object", "additionalProperties": { "$ref": "#/definitions/ids" } }, "mobile": { "type": "object", "additionalProperties": { "$ref": "#/definitions/ids" } } } },
         "test_globs": { "$ref": "#/definitions/ids" },
         "widget_types": { "type": "object", "additionalProperties": { "$ref": "#/definitions/strings" } },
         "ref_kinds": { "$ref": "#/definitions/ids" },

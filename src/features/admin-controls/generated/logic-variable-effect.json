@@ -1590,31 +1590,6 @@
       "label": "Not read — scheduled for retirement",
       "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
     },
-    "media_list_cache_seconds": {
-      "badge": "not_read_scheduled_for_retirement",
-      "label": "Not read — scheduled for retirement",
-      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
-    "media_list_page_max": {
-      "badge": "not_read_scheduled_for_retirement",
-      "label": "Not read — scheduled for retirement",
-      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
-    "media_signed_url_ttl_seconds": {
-      "badge": "not_read_scheduled_for_retirement",
-      "label": "Not read — scheduled for retirement",
-      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
-    "media_storage_timeout_ms": {
-      "badge": "not_read_scheduled_for_retirement",
-      "label": "Not read — scheduled for retirement",
-      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
-    "media_upload_max_bytes": {
-      "badge": "not_read_scheduled_for_retirement",
-      "label": "Not read — scheduled for retirement",
-      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
     "placeholder_cost_threshold": {
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",

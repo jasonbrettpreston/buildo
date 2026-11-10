@@ -1,0 +1,182 @@
+{
+  "surface": "admin_media",
+  "state": "partial",
+  "target": "web",
+  "covers": [
+    "partial"
+  ],
+  "props": {
+    "component": "Stack",
+    "props": {},
+    "children": [
+      {
+        "component": "Alert",
+        "props": {
+          "color": "yellow"
+        },
+        "children": [
+          {
+            "content": "admin_media.state.partial"
+          }
+        ]
+      },
+      {
+        "component": "DataTable",
+        "props": {
+          "idAccessor": "asset_id",
+          "columns": [
+            {
+              "accessor": "signed_url",
+              "title": {
+                "content": "admin_media.col.preview"
+              }
+            },
+            {
+              "accessor": "kind",
+              "title": {
+                "content": "admin_media.col.kind"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "scenario_key",
+              "title": {
+                "content": "admin_media.col.scenario_key"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "position",
+              "title": {
+                "content": "admin_media.col.position"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "alt",
+              "title": {
+                "content": "admin_media.col.alt"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "mime",
+              "title": {
+                "content": "admin_media.col.mime"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "bytes_display",
+              "title": {
+                "content": "admin_media.col.bytes"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "created_display",
+              "title": {
+                "content": "admin_media.col.created"
+              },
+              "sortable": true
+            },
+            {
+              "accessor": "actions",
+              "title": {
+                "content": "admin_media.col.actions"
+              }
+            }
+          ],
+          "records": [
+            {
+              "asset_id": {
+                "contract": "contract_admin_media_list.asset_id"
+              },
+              "kind": {
+                "contract": "contract_admin_media_list.kind"
+              },
+              "scenario_key": {
+                "contract": "contract_admin_media_list.scenario_key"
+              },
+              "position": {
+                "contract": "contract_admin_media_list.position"
+              },
+              "alt": {
+                "contract": "contract_admin_media_list.alt"
+              },
+              "mime": {
+                "contract": "contract_admin_media_list.mime"
+              },
+              "bytes": {
+                "contract": "contract_admin_media_list.bytes"
+              },
+              "bytes_display": {
+                "contract": "contract_admin_media_list.bytes_display"
+              },
+              "created_at": {
+                "contract": "contract_admin_media_list.created_at"
+              },
+              "created_display": {
+                "contract": "contract_admin_media_list.created_display"
+              },
+              "signed_url": {
+                "contract": "contract_admin_media_list.signed_url"
+              }
+            }
+          ],
+          "noRecordsText": {
+            "content": "admin_media.empty"
+          },
+          "loadingText": {
+            "content": "admin_media.loading"
+          },
+          "fetching": false
+        }
+      },
+      {
+        "component": "Button",
+        "props": {
+          "size": "lg",
+          "variant": "light",
+          "color": "red"
+        },
+        "children": [
+          {
+            "content": "admin_media.action.delete"
+          }
+        ]
+      },
+      {
+        "component": "Image",
+        "props": {
+          "alt": {
+            "contract": "contract_admin_media_list.alt"
+          },
+          "fallback": {
+            "content": "admin_media.preview.unavailable"
+          }
+        }
+      },
+      {
+        "component": "Modal",
+        "props": {
+          "title": {
+            "content": "admin_media.delete.title"
+          },
+          "closeButtonProps": {
+            "size": "xl",
+            "aria-label": {
+              "content": "admin_media.delete.close"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media.content.json": "9e20ea7cf8605103",
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media.descriptor.json": "35518f0751439254"
+    }
+  }
+}
