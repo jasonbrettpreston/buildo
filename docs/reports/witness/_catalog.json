@@ -887,6 +887,19 @@
       "variable_value",
       "variable_value_json"
     ],
+    "media_assets": [
+      "alt",
+      "asset_id",
+      "bytes",
+      "created_at",
+      "kind",
+      "mime",
+      "path",
+      "position",
+      "rule",
+      "scenario_key",
+      "uploaded_by"
+    ],
     "neighbourhood_build_norms": [
       "additions_5yr",
       "build_ratio_p50",

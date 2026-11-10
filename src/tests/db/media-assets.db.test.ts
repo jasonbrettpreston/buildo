@@ -40,6 +40,8 @@ const inTxn = async (pool: Pool, fn: (c: PoolClient) => Promise<void>): Promise<
 const asUser = async (c: PoolClient, uid: string | null): Promise<void> => {
   await c.query(uid === null ? 'SET LOCAL ROLE anon' : 'SET LOCAL ROLE authenticated');
   await c.query("SELECT set_config('request.jwt.claims', $1, true)", [uid === null ? '' : JSON.stringify({ sub: uid, role: 'authenticated' })]);
+  // The pinned test image's auth.uid() reads the legacy request.jwt.claim.sub only (the harness fallback reads request.jwt.claims): set both.
+  await c.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [uid ?? '']);
 };
 const code = async (c: PoolClient, sql: string, params: unknown[] = []): Promise<string | null> => {
   await c.query('SAVEPOINT s');
@@ -73,7 +75,8 @@ describe.skipIf(!dbAvailable())('migrations 300/301: media_assets, surface-media
       expect(await code(c, ...row({ alt: 'x'.repeat(501) }))).toBe('23514');
       expect(await code(c, ...row({ kind: 'report_image' }))).toBe('23514');
       expect(await code(c, ...row({ rule: { zone: 'R' } }))).toBe('23514');
-      expect(await code(c, ...row({ kind: 'report_image', scenario_key: 's', position: 1, rule: [] }))).toBe('23514');
+      // The array goes in as JSON text: node-postgres sends a JS array as a Postgres array literal ('{}'), which jsonb reads as an empty OBJECT.
+      expect(await code(c, ...row({ kind: 'report_image', scenario_key: 's', position: 1, rule: '[]' }))).toBe('23514');
     });
   });
 
