@@ -215,6 +215,12 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'compute_maxbld_scenarios_roof_assembly_depth_3_m',
   'compute_maxbld_scenarios_rafter_span_4_m',
   'compute_maxbld_scenarios_roof_assembly_depth_4_m',
+  // MF-37 admin media library (Wave 1 decision batch items 2 and 4, 2026-11-09): admin group "Admin Media", migration 299
+  'media_upload_max_bytes',
+  'media_signed_url_ttl_seconds',
+  'media_list_page_max',
+  'media_list_cache_seconds',
+  'media_storage_timeout_ms',
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',

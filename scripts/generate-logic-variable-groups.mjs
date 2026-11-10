@@ -1256,6 +1256,16 @@ const GROUP_ORDER = [
       "step_stall_ticker_multiplier",
       "step_seam_chain_run_scan_limit"
     ]
+  },
+  {
+    "label": "Admin Media",
+    "keys": [
+      "media_upload_max_bytes",
+      "media_signed_url_ttl_seconds",
+      "media_list_page_max",
+      "media_list_cache_seconds",
+      "media_storage_timeout_ms"
+    ]
   }
 ];
 

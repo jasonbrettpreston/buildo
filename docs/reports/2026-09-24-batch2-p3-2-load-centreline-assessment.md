@@ -628,7 +628,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_centreline | PASS | min_migration=175 <= migrations count=288 |
+| 1 | load_centreline | PASS | min_migration=175 <= migrations count=290 |
 | 2 | load_centreline | PASS | 8 declared, missing from seeds: none |
 | 3 | load_centreline | PASS | retired=1 overlap-with-declared=none |
 | 7 | load_centreline | PASS | SPEC LINK header present=true |
@@ -666,7 +666,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
 | 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 49 converted/pending step(s) admin-verifiable (7 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
-| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 219 take effect at cutover, 19 not read; admin badges current |
+| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 219 take effect at cutover, 24 not read; admin badges current |
 | 54 | (registry) | PASS | SWAP-ORDER (R-EQ): every swapped pending step's declared upstreams are converted or swapped (R-EQ) |
 
 ### Captures (item iv)

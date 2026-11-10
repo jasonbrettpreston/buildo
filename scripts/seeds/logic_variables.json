@@ -10327,5 +10327,55 @@
     "admin": {
       "group": "Source Ingestion"
     }
+  },
+  "media_upload_max_bytes": {
+    "default": 2000000,
+    "type": "number",
+    "min": 1,
+    "max": 3000000,
+    "description": "MF-37 (Spec 126 section 6.5 and Spec 114 section 6 dated notes 2026-11-09; Wave 1 decision batch items 2 and 4, operator \"approved except for 9 - ...\"; plan ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md D-8): the largest image the admin media library accepts, in bytes of the decoded file. The ruling caps it at 3 MB or less; the data URL of a file at the cap stays under the 4.5 MB request limit (T2 asserts max x 4/3 + 64 KiB < 4.5 MB). Inserted by migration 299. CONSUMED by src/lib/media/contract.ts (the upload route's size check, 413 FILE_TOO_LARGE).",
+    "admin": {
+      "group": "Admin Media"
+    }
+  },
+  "media_signed_url_ttl_seconds": {
+    "default": 600,
+    "type": "number",
+    "min": 60,
+    "max": 3600,
+    "description": "MF-37 (Spec 126 section 6.5 and Spec 114 section 6 dated notes 2026-11-09; Wave 1 decision batch items 2 and 4, operator \"approved except for 9 - ...\"; plan ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md D-8): the lifetime of each preview signed URL the admin media list mints for the private surface-media bucket. Inserted by migration 299. CONSUMED by src/lib/media/list.ts (createSignedUrls).",
+    "admin": {
+      "group": "Admin Media"
+    }
+  },
+  "media_list_page_max": {
+    "default": 200,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "MF-37 (Spec 126 section 6.5 and Spec 114 section 6 dated notes 2026-11-09; Wave 1 decision batch items 2 and 4, operator \"approved except for 9 - ...\"; plan ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md D-8): the most media_assets rows the admin list returns; more rows show the list's partial state (no cursor pagination yet). Spec 33 section 9: client sort and filter up to 200 rows. Inserted by migration 299. CONSUMED by src/lib/media/list.ts (the LIMIT).",
+    "admin": {
+      "group": "Admin Media"
+    }
+  },
+  "media_list_cache_seconds": {
+    "default": 60,
+    "type": "number",
+    "min": 0,
+    "max": 600,
+    "description": "MF-37 (Spec 126 section 6.5 and Spec 114 section 6 dated notes 2026-11-09; Wave 1 decision batch items 2 and 4, operator \"approved except for 9 - ...\"; plan ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md D-8): the private browser cache lifetime of the admin media list response (Cache-Control: private, max-age); kept below the signed-URL TTL. Inserted by migration 299. CONSUMED by src/app/api/admin/media/route.ts (GET).",
+    "admin": {
+      "group": "Admin Media"
+    }
+  },
+  "media_storage_timeout_ms": {
+    "default": 15000,
+    "type": "number",
+    "min": 1000,
+    "max": 60000,
+    "description": "MF-37 (Spec 126 section 6.5 and Spec 114 section 6 dated notes 2026-11-09; Wave 1 decision batch items 2 and 4, operator \"approved except for 9 - ...\"; plan ~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md D-8): the per-call timeout of a Supabase Storage upload, remove or sign call made by the admin media routes (AbortSignal.timeout). Inserted by migration 299. CONSUMED by src/lib/media/storage.ts.",
+    "admin": {
+      "group": "Admin Media"
+    }
   }
 }
