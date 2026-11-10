@@ -10,7 +10,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
-const ALLOWED = ['src/lib/placements/list.ts', 'src/app/api/admin/placements/offers/route.ts'];
+// OUTPUT panel MEDIUM-2 (2026-11-10): src/lib/placements/over-cap.ts holds the ONE oversubscription query both readers run.
+const ALLOWED = ['src/lib/placements/list.ts', 'src/lib/placements/over-cap.ts', 'src/app/api/admin/placements/offers/route.ts'];
 const OFFERS_SQL = /\b(?:FROM|JOIN|INTO|UPDATE)\s+offers\b/i;
 
 const walk = (rel: string): string[] => fs.readdirSync(path.join(ROOT, rel), { withFileTypes: true }).flatMap((e) => {

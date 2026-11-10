@@ -4,13 +4,14 @@
 // MF-40 · the admin placements read: every offer (with its advertiser's name, its two targeting values, its flight days, its active flag, the
 // over_cap flag and whether its target resolves to a report scenario), the active advertisers (the offer form's options_from), and the form's
 // flight defaults. The GET /api/admin/placements handler and the RSC page call this same function (MF-37 list pattern).
-// over_cap (plan fold 8): an ACTIVE offer whose group holds more active offers than the placement's max_slots; the group is the placement, and
-// for scenario_card the placement plus its scenario pair. All arithmetic is here (server), never in a binding (FE-05).
+// over_cap (plan fold 8): from the ONE group definition, src/lib/placements/over-cap.ts readOverCaps (OUTPUT panel MEDIUM-2: the offer route runs
+// the same constant). All arithmetic is on the server, never in a binding (FE-05).
 
 import { pool } from '@/lib/db/client';
 import type { Queryable } from '@/lib/entitlements';
 import adContractJson from '../../../scripts/surfaces/_schema/ad-contract.json';
 import { readPlacementLimits, type PlacementLimits } from './contract';
+import { readOverCaps } from './over-cap';
 
 const SCENARIOS = new Set(Object.keys((adContractJson as { scenario_fields: Record<string, string> }).scenario_fields));
 
@@ -51,30 +52,25 @@ export async function listPlacements(opts: { db?: Queryable; limits?: PlacementL
   const now = opts.now ?? new Date();
   const offers = await db.query<{
     offer_id: string; placement_key: string; advertiser_id: string; advertiser_name: string; building_type: string | null; design_option: string | null;
-    creative_text: string; flight_start: string | null; flight_end: string | null; active: boolean; over_cap: boolean; updated_at: string;
+    creative_text: string; flight_start: string | null; flight_end: string | null; active: boolean; updated_at: string;
   }>(
     `SELECT o.offer_id, o.placement_key, o.advertiser_id, a.name AS advertiser_name,
             o.targeting->>'building_type' AS building_type, o.targeting->>'design_option' AS design_option, o.creative_text,
             to_char(o.flight_start AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS flight_start,
             to_char(o.flight_end AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS flight_end,
             o.active,
-            (o.active AND count(*) FILTER (WHERE o.active) OVER (
-               PARTITION BY o.placement_key,
-                 CASE WHEN o.placement_key = 'scenario_card' THEN o.targeting->>'building_type' END,
-                 CASE WHEN o.placement_key = 'scenario_card' THEN o.targeting->>'design_option' END
-             ) > p.max_slots) AS over_cap,
             o.updated_at::text AS updated_at
        FROM offers o
        JOIN advertisers a ON a.advertiser_id = o.advertiser_id
-       JOIN placements p ON p.placement_key = o.placement_key
       ORDER BY o.created_at DESC, o.offer_id`,
   );
+  const caps = await readOverCaps(db);
   const advertisers = await db.query<AdvertiserOption>('SELECT advertiser_id, name FROM advertisers WHERE active ORDER BY name, advertiser_id');
   return {
     offers: offers.rows.map((r) => ({
       ...r,
       active: flag(r.active),
-      over_cap: flag(r.over_cap),
+      over_cap: flag(caps.get(r.offer_id) === true),
       resolvable: flag(resolvable(r.placement_key, r.building_type, r.design_option)),
     })),
     advertisers: advertisers.rows,

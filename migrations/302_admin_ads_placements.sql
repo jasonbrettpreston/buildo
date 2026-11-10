@@ -75,7 +75,7 @@ CREATE POLICY offers_select_admin ON offers
 -- the seed is the test truth). Idempotent: ON CONFLICT (variable_key) DO NOTHING keeps any operator-set value.
 INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description) VALUES
   ('admin_placement_default_flight_days', 30, NULL, 'MF-40: the flight length the offer form pre-fills, in days (the operator confirms it).'),
-  ('admin_placement_max_horizon_days', 365, NULL, 'MF-40: the latest flight_end the offer route accepts, in days from now; a later end is refused (400).')
+  ('admin_placement_max_horizon_days', 365, NULL, 'MF-40: bounds a given flight_end, in days from now; a later end is refused (400). An offer with no end date is allowed (open-ended).')
 ON CONFLICT (variable_key) DO NOTHING;
 
 -- DOWN — manual rollback only (ALLOW-DESTRUCTIVE: dropping offers and advertisers loses every scheduled ad; the policies go with the tables).

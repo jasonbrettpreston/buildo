@@ -34,8 +34,8 @@ export const PlacementsReadSchema = z.object({
   defaults: z.object({ flight_start: Day, flight_end: Day }),
 }) satisfies z.ZodType<PlacementsRead>;
 
-/** PUT /offers: the saved offer's id, its new updated_at and whether it was created; an offer is always saved inactive on create. */
-export const OfferUpsertResponseSchema = z.object({ offer_id: z.string().uuid(), updated_at: z.string(), created: z.boolean() });
+/** PUT /offers: the saved offer's id, its new updated_at, whether it was created (always inactive on create) and, for an edit of an active offer, the over_cap warning. */
+export const OfferUpsertResponseSchema = z.object({ offer_id: z.string().uuid(), updated_at: z.string(), created: z.boolean(), over_cap: z.boolean() });
 export type OfferUpsertResponse = z.infer<typeof OfferUpsertResponseSchema>;
 
 /** PATCH /offers: the new active value, its updated_at and the oversubscription warning (plan fold 8: returned, never silent). */

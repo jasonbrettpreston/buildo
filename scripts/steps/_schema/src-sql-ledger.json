@@ -355,7 +355,6 @@
         "1b9bbd56224b47d5",
         "1e162b50b7070a2f",
         "3f723e74bdc1179f",
-        "82ee6f374a2a8edf",
         "c7b52f726f4f459e"
       ],
       "reads": {
@@ -373,10 +372,6 @@
           "offer_id",
           "placement_key",
           "targeting"
-        ],
-        "placements": [
-          "max_slots",
-          "placement_key"
         ]
       },
       "writes": {
@@ -2455,7 +2450,7 @@
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
-        "6ee6ab297f3efc73",
+        "9d9f1222f50a2987",
         "f8e7bfdf4f86b817"
       ],
       "reads": {
@@ -2475,6 +2470,26 @@
           "placement_key",
           "targeting",
           "updated_at"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/placements/over-cap.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "d474d8ceaf2a2560"
+      ],
+      "reads": {
+        "offers": [
+          "active",
+          "offer_id",
+          "placement_key",
+          "targeting"
         ],
         "placements": [
           "max_slots",

@@ -26,6 +26,8 @@ import { badRequestZod, internalError } from '@/features/leads/api/error-mapping
 import { logInfo, logWarn } from '@/lib/logger';
 import { offerRuleProblems, offerValidator, readPlacementLimits, toggleValidator, type OfferBody } from '@/lib/placements/contract';
 import { PlacementRefusal, isStaleCast, isUniqueViolation } from '@/lib/placements/refusal';
+import { readOverCaps } from '@/lib/placements/over-cap';
+import type { Queryable } from '@/lib/entitlements';
 import { OfferToggleResponseSchema, OfferUpsertResponseSchema } from '../types';
 
 const TAG = '[api/admin/placements/offers]';
@@ -47,6 +49,10 @@ const readJson = async (request: NextRequest): Promise<{ ok: true; value: unknow
   }
 };
 
+/** The one oversubscription definition (src/lib/placements/over-cap.ts), read inside the write transaction for one offer. */
+const overCapOf = async (client: Queryable, offerId: string): Promise<boolean> =>
+  (await readOverCaps(client)).get(offerId) === true;
+
 const refused = (cause: unknown) => (cause instanceof PlacementRefusal ? err(cause.code, cause.message, cause.status) : null);
 
 export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
@@ -64,7 +70,12 @@ export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
     logWarn(TAG, 'offer refused by the contract schema', { stage: 'offer_schedule', reason: 'VALIDATION_FAILED' });
     return badRequestZod(parsed.error);
   }
-  const body = parsed.data;
+  // OUTPUT panel security L1: the text is stored trimmed; a whitespace-only text is a validation refusal here, never the DB CHECK as a 500.
+  const body = { ...parsed.data, creative_text: parsed.data.creative_text.trim() };
+  if (body.creative_text === '') {
+    logWarn(TAG, 'offer refused by the contract schema', { stage: 'offer_schedule', reason: 'VALIDATION_FAILED' });
+    return err('VALIDATION_FAILED', 'The ad text is empty', 400);
+  }
   const limits = await readPlacementLimits(pool);
   const problems = offerRuleProblems(body, { maxHorizonDays: limits.max_horizon_days, now: new Date() });
   const first = problems[0];
@@ -113,8 +124,11 @@ export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
         { adminUid: adminCtx.uid, action: 'offer_schedule', targetUid: body.offer_id, oldValue: prior ?? null, newValue: next, reason: 'admin offer schedule' },
         client,
       );
-      return { offer_id: body.offer_id, updated_at: updatedAt, created: !prior };
+      // OUTPUT panel LOW 1: an edit of an ACTIVE offer may move it into a full group; the warning is returned and logged, never silent.
+      const overCap = prior?.active === true ? await overCapOf(client, body.offer_id) : false;
+      return { offer_id: body.offer_id, updated_at: updatedAt, created: !prior, over_cap: overCap };
     });
+    if (out.over_cap) logWarn(TAG, 'active offers exceed the placement slot limit', { stage: 'offer_schedule', reason: 'over_cap', offer_id: out.offer_id });
     logInfo(TAG, 'offer saved', { offer_id: out.offer_id, created: out.created, duration_ms: Date.now() - t0 });
     return ok(OfferUpsertResponseSchema.parse(out));
   } catch (cause) {
@@ -146,25 +160,24 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
          FROM offers WHERE offer_id = $1 FOR UPDATE`, [body.offer_id]);
       const prior = before.rows[0];
       if (!prior) throw new PlacementRefusal(404, 'NOT_FOUND', 'That offer does not exist');
+      // OUTPUT panel LOW 2: turning an offer ON checks its advertiser is still active, as the PUT does; turning it off never blocks.
+      if (body.active) {
+        const adv = await client.query<{ active: boolean }>('SELECT active FROM advertisers WHERE advertiser_id = $1', [prior.advertiser_id]);
+        if (adv.rows[0]?.active !== true) throw new PlacementRefusal(400, 'ADVERTISER_INACTIVE', 'That advertiser is not active');
+      }
       const upd = await client.query<{ updated_at: string }>(
         'UPDATE offers SET active = $3, updated_at = now() WHERE offer_id = $1 AND updated_at = $2::timestamptz RETURNING updated_at::text AS updated_at',
         [body.offer_id, body.updated_at, body.active],
       );
       if (upd.rows.length === 0) throw new PlacementRefusal(409, 'STALE_OFFER', 'That offer changed since you opened it; reload the list');
-      const cap = await client.query<{ over: boolean }>(
-        `SELECT (count(*) > max(p.max_slots)) AS over
-           FROM offers o JOIN placements p ON p.placement_key = o.placement_key
-          WHERE o.active AND o.placement_key = $1
-            AND ($1 <> 'scenario_card' OR (o.targeting->>'building_type' IS NOT DISTINCT FROM $2 AND o.targeting->>'design_option' IS NOT DISTINCT FROM $3))`,
-        [prior.placement_key, prior.targeting.building_type ?? null, prior.targeting.design_option ?? null],
-      );
+      const overCap = body.active ? await overCapOf(client, body.offer_id) : false;
       await writeAdminAudit(
         { adminUid: adminCtx.uid, action, targetUid: body.offer_id, oldValue: { active: prior.active }, newValue: { active: body.active }, reason: `admin ${action.replace('_', ' ')}` },
         client,
       );
-      return { offer_id: body.offer_id, active: body.active, updated_at: String(upd.rows[0]?.updated_at), over_cap: body.active && cap.rows[0]?.over === true };
+      return { offer_id: body.offer_id, active: body.active, updated_at: String(upd.rows[0]?.updated_at), over_cap: overCap };
     });
-    if (out.over_cap) logWarn(TAG, 'active offers exceed the placement max_slots', { stage: action, reason: 'over_cap', offer_id: out.offer_id });
+    if (out.over_cap) logWarn(TAG, 'active offers exceed the placement slot limit', { stage: action, reason: 'over_cap', offer_id: out.offer_id });
     return ok(OfferToggleResponseSchema.parse(out));
   } catch (cause) {
     const r = refused(cause);

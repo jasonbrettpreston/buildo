@@ -90,6 +90,9 @@ describe('MF-40 offer validator: planted payloads refused, clean payloads pass',
     expect(rules({ flight_start: '2026-12-31', flight_end: '2026-12-01' })).toEqual(['FLIGHT_ORDER']);
     expect(rules({ flight_start: '2026-12-01', flight_end: '2026-12-01' })).toEqual([]);
     expect(rules({ flight_end: '2027-12-01' })).toEqual(['FLIGHT_BEYOND_HORIZON']);
+    // Operator 2026-11-10 (OUTPUT panel answer 1): an offer may run without an end date; the horizon bounds only a given end.
+    expect(rules({ flight_start: '2026-12-01' })).toEqual([]);
+    expect(rules({ flight_start: '2026-12-01', flight_end: '2026-12-31' })).toEqual([]);
     expect(rules({ flight_end: '2026-02-30' })).toEqual(['INVALID_DATE']);
   });
 

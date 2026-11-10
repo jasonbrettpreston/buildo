@@ -432,6 +432,8 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     expect(all.length).toBe(155); // MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
+    // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
+    // it serves only as the "a FORM that is not generated carries no render.form" control. When it, too, gains render.form, pick another non-generated FORM.
     const form = rj(path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_form.descriptor.json'));
     expect([form.status, form.render.form]).toEqual(['new', undefined]);
   });

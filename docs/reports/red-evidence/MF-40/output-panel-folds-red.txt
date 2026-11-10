@@ -1,0 +1,56 @@
+MF-40 OUTPUT panel folds: red evidence (code reviewer MEDIUM-1, MEDIUM-2, LOW 1-3; security L1; operator answer 1)
+Base: 3ea76393d..a670ffbd9 tip. Tests written first; src/lib/placements/over-cap.ts then added alone, the routes unchanged.
+RED 1 (module missing, then the behaviour against the unchanged routes):
+ FAIL  src/tests/admin-placements.infra.test.ts [ src/tests/admin-placements.infra.test.ts ]
+Error: Cannot find module '@/lib/placements/over-cap' imported from '/Users/brettpreston_macmini/Buildo-wt-mf40-build2/src/tests/admin-placements.infra.test.ts'.
+ FAIL  src/tests/placements-over-cap.logic.test.ts [ src/tests/placements-over-cap.logic.test.ts ]
+Error: Cannot find module '@/lib/placements/over-cap' imported from '/Users/brettpreston_macmini/Buildo-wt-mf40-build2/src/tests/placements-over-cap.logic.test.ts'.
+      Tests  6 passed (6)
+   × OUTPUT panel folds (code reviewer LOW 1, 2; security L1; operator 2026-11-10 answer 1) > a PUT edit of an ACTIVE offer returns over_cap (and warns); an inactive offer never runs the cap query 3ms
+   × OUTPUT panel folds (code reviewer LOW 1, 2; security L1; operator 2026-11-10 answer 1) > PATCH activate refuses an inactive advertiser (as PUT does); deactivate does not check it 1ms
+   × OUTPUT panel folds (code reviewer LOW 1, 2; security L1; operator 2026-11-10 answer 1) > a whitespace-only creative_text is 400 VALIDATION_FAILED before any transaction (never a 500); the saved text is trimmed 0ms
+   × PATCH /api/admin/placements/offers (the list-row toggle) > activate: audit offer_activate; over_cap is returned and warned 0ms
+   × PATCH /api/admin/placements/offers (the list-row toggle) > deactivate: audit offer_deactivate, never over_cap 0ms
+   × MF-40 over_cap: one group definition > the list read and the offer route use the constant and hold no second group definition 2ms
+   × MF-40 over_cap: one group definition > the client toggle names the action the server audits (code reviewer LOW 3) 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  7 failed | 25 passed (32)
+
+GREEN after the fixes: admin-placements.infra, placements-over-cap, placements-contract, placements-serving-tripwire -> 34 passed (34).
+
+Plants on the fixed code (each restored after its run):
+== plant A: the PUT UPDATE loses AND updated_at = $8::timestamptz
+0
+   × PUT /api/admin/placements/offers > edit: UPDATE WHERE updated_at; the audit carries the before and after 2ms
+   × PUT /api/admin/placements/offers > 409 STALE_OFFER: a stale updated_at, or an existing row without one; ROLLBACK and no audit 0ms
+   × OUTPUT panel folds (code reviewer LOW 1, 2; security L1; operator 2026-11-10 answer 1) > a PUT edit of an ACTIVE offer returns over_cap (and warns); an inactive offer never runs the cap query 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 19 passed (22)
+== plant H: the PATCH UPDATE loses AND updated_at = $2::timestamptz
+0
+   × OUTPUT panel folds (code reviewer LOW 1, 2; security L1; operator 2026-11-10 answer 1) > PATCH activate refuses an inactive advertiser (as PUT does); deactivate does not check it 2ms
+   × PATCH /api/admin/placements/offers (the list-row toggle) > activate: audit offer_activate; over_cap is returned and warned 0ms
+   × PATCH /api/admin/placements/offers (the list-row toggle) > deactivate: audit offer_deactivate, never over_cap 1ms
+   × PATCH /api/admin/placements/offers (the list-row toggle) > 404 for a missing offer, 409 for a stale updated_at, neither audited 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 18 passed (22)
+== plant I: the scenario-pair terms dropped from the shared over_cap partition (in-test plant on a copy of the constant)
+      Tests  4 passed (4)
+== plant I2: the route keeps its own cap query (a second group definition)
+== restored
+== plant I (file): over-cap.ts loses both scenario-pair terms
+1
+   × MF-40 over_cap: one group definition > the query partitions by placement and, for scenario_card only, by the scenario pair, against placements.max_slots 2ms
+   × MF-40 over_cap: one group definition > RED plant I: the scenario-pair terms dropped from the partition are caught 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 2 passed (4)
+== plant I2: the route runs its own cap query (a second group definition)
+   × MF-40 over_cap: one group definition > the list read and the offer route use the constant and hold no second group definition 2ms
+   × OUTPUT panel folds (code reviewer LOW 1, 2; security L1; operator 2026-11-10 answer 1) > a PUT edit of an ACTIVE offer returns over_cap (and warns); an inactive offer never runs the cap query 2ms
+   × PATCH /api/admin/placements/offers (the list-row toggle) > activate: audit offer_activate; over_cap is returned and warned 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 23 passed (26)
+== restored
+      Tests  26 passed (26)
+
+Later: the cap query call moved into over-cap.ts readOverCaps (src-sql-ledger closed interpolated set unchanged at 29); the lock follows (call sites must call readOverCaps). Targeted re-run: 220 passed, then 48 passed.

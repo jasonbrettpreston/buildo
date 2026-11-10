@@ -59,6 +59,7 @@ import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { GET } from '@/app/api/admin/placements/route';
 import { PUT as putOffer, PATCH as patchOffer } from '@/app/api/admin/placements/offers/route';
 import { PUT as putAdvertiser } from '@/app/api/admin/placements/advertisers/route';
+import { OVER_CAP_QUERY } from '@/lib/placements/over-cap';
 
 const UID = '11111111-2222-4333-8444-555555555555';
 const OFFER = '0b5d3c3e-6f0a-4c39-9d8e-2b7a0f4a1c11';
@@ -68,6 +69,10 @@ const offer = { offer_id: OFFER, placement_key: 'detail_footer', advertiser_id: 
 const PRIOR = { advertiser_id: ADV, placement_key: 'detail_footer', targeting: {}, flight_start: null, flight_end: null, active: false, creative_text: 'Old', creative_asset_id: null };
 
 let state: { advertiser: { active: boolean } | null; offer: typeof PRIOR | null; updateRows: number; insertConflict: boolean; advName: string; overCap: boolean };
+// OUTPUT panel MEDIUM-1 (code reviewer): the fake refuses an offers UPDATE whose WHERE lost the updated_at predicate or whose bound value is not the
+// updated_at the request sent, so a route that drops the stale check fails these tests (plants A and H).
+const PUT_STALE = /WHERE offer_id = \$1 AND updated_at = \$8::timestamptz/;
+const PATCH_STALE = /WHERE offer_id = \$1 AND updated_at = \$2::timestamptz/;
 
 function req(method: string, body: unknown): NextRequest {
   return {
@@ -96,13 +101,15 @@ beforeEach(() => {
     if (sql.includes('FROM offers o')) return { rows: [] };
     return { rows: [{ advertiser_id: ADV, name: 'Example sponsor' }] };
   });
-  h.clientQuery.mockImplementation(async (sql: string) => {
+  h.clientQuery.mockImplementation(async (sql: string, params: unknown[] = []) => {
     const s = sql.trim();
+    if (s.startsWith('UPDATE offers SET advertiser_id') && !(PUT_STALE.test(s) && params[7] === STAMP)) throw new Error('PUT UPDATE without the updated_at predicate or its bound value');
+    if (s.startsWith('UPDATE offers SET active') && !(PATCH_STALE.test(s) && params[1] === STAMP)) throw new Error('PATCH UPDATE without the updated_at predicate or its bound value');
     if (s.startsWith('SELECT active FROM advertisers')) { h.log.push('SELECT_ADVERTISER'); return { rows: state.advertiser ? [state.advertiser] : [] }; }
     if (s.includes('FROM offers WHERE offer_id = $1 FOR UPDATE')) { h.log.push('SELECT_FOR_UPDATE'); return { rows: state.offer ? [state.offer] : [] }; }
     if (s.startsWith('UPDATE offers')) { h.log.push('UPDATE'); return { rows: state.updateRows ? [{ updated_at: '2026-11-10 12:01:00.5+00' }] : [] }; }
     if (s.startsWith('INSERT INTO offers')) { h.log.push(s.includes('false)') ? 'INSERT_INACTIVE' : 'INSERT'); return { rows: [{ updated_at: STAMP }] }; }
-    if (s.includes('max(p.max_slots)')) { h.log.push('CAP'); return { rows: [{ over: state.overCap }] }; }
+    if (s === OVER_CAP_QUERY) { h.log.push('CAP'); return { rows: [{ offer_id: OFFER, over_cap: state.overCap }, { offer_id: ADV, over_cap: !state.overCap }] }; }
     if (s.startsWith('INSERT INTO advertisers')) { h.log.push('INSERT_ADVERTISER'); return { rows: state.insertConflict ? [] : [{ advertiser_id: ADV }] }; }
     if (s.startsWith('SELECT name FROM advertisers')) { h.log.push('SELECT_NAME'); return { rows: [{ name: state.advName }] }; }
     throw new Error(`unexpected SQL: ${s.slice(0, 60)}`);
@@ -133,7 +140,7 @@ describe('PUT /api/admin/placements/offers', () => {
   it('create: BEGIN, advertiser, FOR UPDATE, INSERT inactive, audit offer_schedule, COMMIT', async () => {
     const r = await putOffer(req('PUT', offer));
     expect(r.status).toBe(200);
-    expect((await json(r)).data).toEqual({ offer_id: OFFER, updated_at: STAMP, created: true });
+    expect((await json(r)).data).toEqual({ offer_id: OFFER, updated_at: STAMP, created: true, over_cap: false });
     expect(h.log.filter((l) => /^(BEGIN|SELECT|INSERT|UPDATE|audit|COMMIT|ROLLBACK)/.test(l))).toEqual(['BEGIN', 'SELECT_ADVERTISER', 'SELECT_FOR_UPDATE', 'INSERT_INACTIVE', 'audit:offer_schedule', 'COMMIT']);
     const a = vi.mocked(writeAdminAudit).mock.calls[0]?.[0];
     expect(a).toMatchObject({ adminUid: UID, action: 'offer_schedule', targetUid: OFFER, oldValue: null, newValue: { active: false, targeting: {} } });
@@ -201,6 +208,47 @@ describe('PUT /api/admin/placements/offers', () => {
     expect(r.status).toBe(500);
     expect(h.log).toContain('ROLLBACK');
     expect(h.log).not.toContain('COMMIT');
+  });
+});
+
+describe('OUTPUT panel folds (code reviewer LOW 1, 2; security L1; operator 2026-11-10 answer 1)', () => {
+  it('a PUT edit of an ACTIVE offer returns over_cap (and warns); an inactive offer never runs the cap query', async () => {
+    state.offer = { ...PRIOR, active: true };
+    state.overCap = true;
+    const r = await putOffer(req('PUT', { ...offer, updated_at: STAMP }));
+    expect((await json(r)).data).toMatchObject({ created: false, over_cap: true });
+    expect(h.log).toContain('logWarn:over_cap');
+    h.log.length = 0;
+    state.offer = PRIOR;
+    expect((await json(await putOffer(req('PUT', { ...offer, updated_at: STAMP })))).data).toMatchObject({ over_cap: false });
+    expect(h.log).not.toContain('CAP');
+  });
+
+  it('PATCH activate refuses an inactive advertiser (as PUT does); deactivate does not check it', async () => {
+    state.offer = PRIOR;
+    state.advertiser = { active: false };
+    const r = await patchOffer(req('PATCH', { offer_id: OFFER, updated_at: STAMP, active: true }));
+    expect(r.status).toBe(400);
+    expect((await json(r)).error?.code).toBe('ADVERTISER_INACTIVE');
+    expect(audits()).toEqual([]);
+    state.offer = { ...PRIOR, active: true };
+    expect((await patchOffer(req('PATCH', { offer_id: OFFER, updated_at: STAMP, active: false }))).status).toBe(200);
+  });
+
+  it('a whitespace-only creative_text is 400 VALIDATION_FAILED before any transaction (never a 500); the saved text is trimmed', async () => {
+    const r = await putOffer(req('PUT', { ...offer, creative_text: '   ' }));
+    expect(r.status).toBe(400);
+    expect((await json(r)).error?.code).toBe('VALIDATION_FAILED');
+    expect(h.log.filter((l) => l === 'BEGIN')).toEqual([]);
+    await putOffer(req('PUT', { ...offer, creative_text: '  Example sponsor offer  ' }));
+    const insert = h.clientQuery.mock.calls.find((c) => String(c[0]).trim().startsWith('INSERT INTO offers'));
+    expect(insert?.[1]?.[6]).toBe('Example sponsor offer');
+  });
+
+  it('an open-ended offer (no flight_end) is accepted; an end beyond the horizon is refused', async () => {
+    expect((await putOffer(req('PUT', { ...offer, flight_start: '2026-12-01' }))).status).toBe(200);
+    const far = await putOffer(req('PUT', { ...offer, flight_end: '2099-01-01' }));
+    expect((await json(far)).error?.code).toBe('FLIGHT_BEYOND_HORIZON');
   });
 });
 

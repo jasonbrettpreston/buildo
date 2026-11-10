@@ -25,7 +25,7 @@ const offerOf = (row: Row): Record<string, unknown> =>
     .flatMap((k) => (row[k] === null || row[k] === undefined ? [] : [[k, row[k]]])));
 
 export function PlacementsPageClient({ read, state }: { read: PlacementsRead; state: ListState }) {
-  const save = useSaveOffer({ errorText: PLACEMENTS_CONTENT['admin_placements.state.error'] as string });
+  const save = useSaveOffer({ errorText: PLACEMENTS_CONTENT['admin_placements.state.error'] as string, warnText: PLACEMENTS_CONTENT['admin_offers.col.over_cap.option.true'] as string });
   const toggle = useToggleOffer({ errorText: PLACEMENTS_CONTENT['admin_offers.state.error'] as string, warnText: PLACEMENTS_CONTENT['admin_offers.col.over_cap.option.true'] as string });
   const add = useAddAdvertiser({ errorText: PLACEMENTS_CONTENT['admin_advertiser_entry.state.error'] as string });
   const [offerId, setOfferId] = useState(() => crypto.randomUUID());

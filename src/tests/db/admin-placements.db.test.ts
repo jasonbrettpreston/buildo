@@ -16,7 +16,9 @@
 //       back as ::text) matches the fresh value and misses a stale one, with the real driver (fold 3: no mocked Date);
 //   (g) the descriptor invariants and plausibility on the live tables: flight window ordered, offer has placement, the max_slots WARN
 //       query runs, disclosure coverage (0 of 3 without disclosure);
-//   (h) the two Admin Placements logic_variables rows equal the seed.
+//   (h) the two Admin Placements logic_variables rows equal the seed;
+//   (i) OUTPUT panel MEDIUM-2: the ONE over_cap query (src/lib/placements/over-cap.ts, run by the list read and the offer route) on live rows: two
+//       active scenario_card offers on different scenario pairs are not over_cap; two on the same pair are; an inactive offer never is.
 // Owed with the MF-40 route code (not in this file yet): the forced audit-insert failure that must leave no offer row, and the 409 through
 // the PUT handler itself (fold 9).
 import fs from 'node:fs';
@@ -24,6 +26,7 @@ import path from 'node:path';
 import type { Pool, PoolClient } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+import { OVER_CAP_QUERY } from '@/lib/placements/over-cap';
 
 const ADMIN = '00000000-0000-0000-0000-00000000a400';
 const USER = '00000000-0000-0000-0000-00000000b400';
@@ -80,7 +83,7 @@ const columns = async (pool: Pool, table: string): Promise<string[]> =>
 describe.skipIf(!dbAvailable())('migration 302: advertisers, placements, offers, Admin Placements variables (live DB)', () => {
   let pool: Pool;
   beforeAll(() => { pool = getTestPool() as Pool; });
-  afterAll(() => { expect(arms).toBe(8); });
+  afterAll(() => { expect(arms).toBe(9); });
 
   it('(a) columns, types and nullability of the three tables', async () => {
     arms += 1;
@@ -221,5 +224,27 @@ describe.skipIf(!dbAvailable())('migration 302: advertisers, placements, offers,
     expect(PLACEMENT_KEYS).toEqual(['admin_placement_default_flight_days', 'admin_placement_max_horizon_days']);
     const r = await pool.query<{ variable_key: string; variable_value: string }>('SELECT variable_key, variable_value::text FROM logic_variables WHERE variable_key = ANY($1) ORDER BY 1', [PLACEMENT_KEYS]);
     expect(r.rows.map((x) => [x.variable_key, Number(x.variable_value)])).toEqual(PLACEMENT_KEYS.map((k) => [k, SEED[k]?.default]));
+  });
+
+  it('(i) over_cap: different scenario pairs are separate groups; one pair over max_slots is over_cap; inactive never', async () => {
+    arms += 1;
+    await inTxn(pool, async (c) => {
+      const a = await advertiser(c);
+      const card = (bt: string, d: string, active: boolean): [string, unknown[]] =>
+        offer(a, { placement_key: 'scenario_card', targeting: JSON.stringify({ building_type: bt, design_option: d }), active });
+      const ids: string[] = [];
+      for (const [d, active] of [['pitched', true], ['flat_or_shallow_roof', true], ['flat_or_shallow_roof', false]] as const) {
+        const [sql, params] = card('detached_house', d, active);
+        await c.query(sql, params);
+        ids.push(params[0] as string);
+      }
+      const capOf = async (): Promise<Map<string, boolean>> => new Map((await c.query<{ offer_id: string; over_cap: boolean }>(OVER_CAP_QUERY)).rows.map((x) => [x.offer_id, x.over_cap]));
+      let caps = await capOf();
+      expect(ids.map((id) => caps.get(id))).toEqual([false, false, false]);
+      const [sql, params] = card('detached_house', 'pitched', true);
+      await c.query(sql, params);
+      caps = await capOf();
+      expect([caps.get(ids[0] as string), caps.get(params[0] as string), caps.get(ids[1] as string), caps.get(ids[2] as string)]).toEqual([true, true, false, false]);
+    });
   });
 });
