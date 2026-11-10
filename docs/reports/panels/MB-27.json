@@ -1,19 +1,19 @@
 {
   "task": "MB-27",
-  "item": "the increment-2 roof-axis night MB27-AXIS-NIGHT-1 (2026-11-05): migration 295 alone, then a TRUNCATE-RELOAD of the three Layer 2 tables at 61 slots with bytea stamps from 41f1e2e3c plus the night patch, and the #44 witness recapture; the night itself gets an OUTPUT panel record, as the MB-26 night did",
+  "item": "the increment-3 Layer 2 night MB27-INC3-NIGHT-1 (2026-11-10): migration 297 alone, then a TRUNCATE-RELOAD of the three Layer 2 tables at 61 slots (storage form b) from 2e7976367 plus the notes-only night patch, and the #44 witness recapture; the night itself gets an OUTPUT panel record, as the MB-26 and axis nights did",
   "class": "D",
   "stage": 8,
-  "date": "2026-11-05",
-  "head": "41f1e2e3c",
+  "date": "2026-11-10",
+  "head": "2e7976367",
   "commits_reviewed": [
-    "the night recapture over 41f1e2e3c (both POST goldens, both witness traces, _catalog.json, explained-diffs.json, the night patch: notes slot words, resolve-bylaws.js fingerprint hunk, two test hunks), reviewed staged before commit",
-    "the night record docs/reports/nights/MB27-AXIS-NIGHT-1.md, reviewed before commit"
+    "0a5548856 the night recapture over 2e7976367 (both POST goldens, both witness traces, _catalog.json, explained-diffs.json, the notes as patched)",
+    "7f5872e91 the night record docs/reports/nights/MB27-INC3-NIGHT-1.md"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (the axis-night go (b) and OPERATOR-GO MB27-AXIS-NIGHT-1, Q-S6 a, Q-D4W a, Q-C3A b, Q-C3A2 b, Q-C4G b)"
+    "~/Buildo-scratch/mcbylaws/inc3/open-questions.md:397-419 (Census decision a; night timing b; night prep 1-3 incl. STOP-1 a; the orchestrator model and the typed go OPERATOR-GO MB27-INC3-NIGHT-1; NIGHT COMPLETE)"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/MB-27L2/night-checklist-axis.v2.md (C1-C6, dated notes v2.1-v2.7); prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-14.json (layer2_night, the complete dry-run transition table); night evidence ~/Buildo-scratch/mcbylaws/MB-27L2/night/",
-  "output": "OUTPUT panel over ~/Buildo-scratch/mcbylaws/MB-27L2/output-panel/bundle.md: ds-spec and ds-errorpaths (deepseek-reasoner; error-paths re-run on a cut bundle after its first run returned no answer) and one grounded-reviewer + reality-check seat (Sonnet, read-only DB). The grounded seat re-derived results 440,093 x 61, every by_reason value and delta, the winner histogram and its splits, texts 2,866 and units 1,015 with the id lists against pre295.dump, the 197 x 61 audit sample, migrations 280, storage 708.508 MiB and the held notes figures: all hold except G-1. Accepted and fixed before the commits: G-1 (exception_not_authored is 39,267 gated lots plus 928 ungated lots on the option slots, not 40,195 gated), the stale notes prose listed number by number, the all-class versus detached_house basis, the 285-cell transition universe, where the five items and the bytea stamps were ruled, RC-1 by destination, the heal-test wording, the observe pass and the 295 dry-run in the timeline, the MB-18 (l) mechanism, the T3 wording, the six CHECK names, the two storage figures, the leftovers owner and migration 296. Rejected with evidence: the untracked-file numstat, the line-number drift (cites read on the night tree), the heal-versus-rerun contradiction (deliberate delete_reinsert test, restored, then T2 440,093 of 440,093), the different-state goldens, the WARN 398 (registered), the I14 substitution (dated note v2.4 before the go), and the rest as listed. G8 after the fixes: 72 diffs, 0 unexplained; step-validate resolve_bylaws 17/17, V3, #44 WITNESS PASS. Open for the operator: Q-D4W a could not be carried out as written (filling the notes figures after the capture makes both POSTs stale, #44 FAIL:STALE); the figures are measured and held for the next recapture, disclosed in the record and commit.",
+  "plan": "~/Buildo-scratch/mcbylaws/inc3/night/RUNBOOK-inc3-night-v3.md over night-checklist-inc3.v2.md (C1-C6); prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-44.json (layer2_night); night evidence ~/Buildo-scratch/mcbylaws/inc3/night/n1/",
+  "output": "OUTPUT panel over ~/Buildo-scratch/mcbylaws/inc3/night/after-tmp/panel/bundle.md: ds-spec and ds-errorpaths (deepseek-reasoner via the dotenv preload; error-paths on the cut bundle-ep.md, sections 1-2 and 6-9; no downgrade) and one grounded-reviewer + reality-check seat (Sonnet, read-only DB). The grounded seat re-derived every figure of the record: 18,379 transitions and 3,389,414 moved cells equal to prereg layer2_night row for row, 440,093 x 292 = moved + unchanged, each item count (D5, D2, DL-4, Q12, E4, Q-287E), detached_house 846 = 448 + 398, the explained-diffs reconciliation, texts 2,866 -> 2,868 and units 1,015 -> 1,014 id by id against pre-inc3.dump, the timeline, the L: citations and finding 1 (the two C1 logs equal apart from timestamps). Reality check on the live DB (read-only): 440,093 lots, one version pair dc82bfe6d3b4 / 54c20374745f equal to the tree input, width 61 on every array, 12 CHECKs validated, stamps 32 B, and the moved families plausible on decoded lots (D2, Q12, Q-287E, DL-4, D5). The v2 C4 D-8 check on real rows (decision N-6, the carriage lock on the stored 25), run read-only through the tree READ_SQL.lots/parcel/cells and disclosureWords with the tree Layer 1 input: 25 of 25 stamps current, 0 lots with phase2_disclosures_not_current, 0 with phase2_disclosure_unmapped, 17 lots with words equal to the lock list, 25 of 25 equal to the fixture path; a mutated stamp gives the stale word. No defect in the night data. Rejected with evidence: row_sha_same 40,908 \"impossible\" (the same-set equals the 40,908 gated lots by key; gated rows store nothing class-specific; the D5 gate-reason cells are 7 x 41,836 = gated + the 928 ungated exception_not_authored lots), 754.1 in lots_table_mb as a basis change (708.5 and 754.1 are both the three-table figure, checklist v2:199), the 780 stop as manual (it is an automated C4 test), the second C1 rewriting evidence (logs equal, the 25-lot compares landed on the registered pairs), 8 missing 3 drift (the expected migrate --verify, expect.zsh:18), and the rest as listed in the adjudication. Accepted and disclosed here (the night record is not amended): (1) the notes expected_shape[0].what prose also carries the axis figures (1,015 units, 2,866 texts, about 24 min, about 708 MB, the one expected WARN scenario_axis_cells 398), not only measured; (2) units, texts, 754.1 and 24.6 are table_state row counts and figures derived from the storage ratio and duration_ms, not run-4418 records_meta keys (values right); (3) \"12@(B)(ii)\" is the prereg label, the stored unit is 10.80.40.10(1)#(1)(B). Operator note (grounded G-1, not a night defect): on 356 RM x253 lots the houseplex height_m is 12 m by base (B) while detached_house keeps 11 m by x253(C) (building_types any); this is the registered Q12 by-mechanism move (CENSUS-REVIEW-20261110.md row 91ab4722, the M-180(2) more-permissive mechanism).",
   "seats": [
     "ds-spec",
     "ds-errorpaths",
@@ -23,9 +23,12 @@
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "Q-D4W execution: operator ruling pending (the notes measured figures at the next Layer 2 recapture)",
-    "the cohort backup table bylaw_resolution_lots_cohort_bak_20261105t2142z, the C2 backup and pre295.dump: operator decision",
-    "card: the forced-cohort plan prints bytea row_sha as raw bytes"
+    "the night own notes figures held in ~/Buildo-scratch/mcbylaws/inc3/night/after-tmp/resolve-bylaws.notes.inc3-figures.json for the next Layer 2 recapture (N-4 a); that recapture fills expected_shape[0].what and measured together and names the three-table basis of lots_table_mb (panel accepted items 1-2)",
+    "operator reading check: RM x253 houseplex height_m 12 m by base (B) beside detached_house 11 m by x253(C) (any building type), 356 lots, the registered Q12 by-mechanism move (grounded G-1)",
+    "the cohort backup table bylaw_resolution_lots_cohort_bak_20261110t1853z, n1/backup and n1/pre-inc3.dump: kept until the operator word (L-1 a, L-4 a)",
+    "card: C1 has no guard against a concurrent C1 before its snapshot step (second C1 refused 12:52:54, no write)",
+    "card: D2 cells carry the unit id as evidence_ref where other clause cells carry the regulation id (registered in the prereg; grounded G-4)",
+    "card (carried): the forced-cohort plan prints bytea row_sha as raw bytes"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/MB-27L2/output-panel/adjudication.md (out-spec.md, out-errorpaths.md, seat-grounded/report.md)"
+  "evidence": "~/Buildo-scratch/mcbylaws/inc3/night/after-tmp/panel/adjudication.md (out-spec.md, out-errorpaths.md, seat-grounded/report.md, ../d8/d8-real-rows.summary.tsv)"
 }
