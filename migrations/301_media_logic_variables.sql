@@ -1,7 +1,7 @@
--- 299: the admin media library's five tunables (MF-37; Wave 1 decision batch items 2 and 4; plan D-8 values).
+-- 301: the admin media library's five tunables (MF-37; Wave 1 decision batch items 2 and 4; plan D-8 values).
 -- Mirrors scripts/seeds/logic_variables.json entry for entry (group "Admin Media"; the seed is the test truth). The upload cap
 -- is at most 3 MB by ruling (max 3,000,000). Idempotent: ON CONFLICT (variable_key) DO NOTHING keeps any operator-set value.
--- WRITTEN, NOT APPLIED here: the operator applies it with 298 (DB job).
+-- WRITTEN, NOT APPLIED here: the operator applies it with 300 (DB job). MF-37: 300, 301; MF-40 next free after that (batch C-5, D-22).
 --
 -- SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md section 6.5 (dated note 2026-11-09)
 -- SPEC LINK: docs/specs/00-architecture/114_rls_policy_catalog.md section 6 (dated note 2026-11-09)

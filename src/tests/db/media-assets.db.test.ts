@@ -2,7 +2,7 @@
 //   pattern; the surface-media bucket, admin scope; pgTAP-style positive and negative case per policy),
 //   docs/specs/02-web-admin/126_maxbld_surface_standard.md sections 6.2 (rule 3: read the LIVE catalog) and 6.5.
 //
-// MF-37 · McFrontend queue · T5. Live-DB proof of migrations 298 and 299 (applied by the operator; this file only reads):
+// MF-37 · McFrontend queue · T5. Live-DB proof of migrations 300 and 301 (applied by the operator; this file only reads):
 //   (a) media_assets columns, types and nullability; the kind and mime CHECKs both ways; the report-image and rule CHECKs;
 //   (b) media_assets_report_order is UNIQUE ... NULLS NOT DISTINCT: two NULL-rule report images on one (scenario_key, position) are
 //       refused, while the same pair on a plain-unique control table is accepted (the RED the clause exists for);
@@ -52,7 +52,7 @@ const row = (over: Record<string, unknown> = {}): [string, unknown[]] => {
   return [`INSERT INTO media_assets (${cols.join(', ')}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(', ')})`, cols.map((k) => r[k])];
 };
 
-describe.skipIf(!dbAvailable())('migrations 298/299: media_assets, surface-media, Admin Media variables (live DB)', () => {
+describe.skipIf(!dbAvailable())('migrations 300/301: media_assets, surface-media, Admin Media variables (live DB)', () => {
   let pool: Pool;
   beforeAll(() => { pool = getTestPool() as Pool; });
   afterAll(() => { expect(arms).toBe(5); });

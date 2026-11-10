@@ -1,4 +1,4 @@
--- 298: media_assets + the private surface-media bucket (MF-37, the admin media library).
+-- 300: media_assets + the private surface-media bucket (MF-37, the admin media library).
 -- The admin uploads report images and ad creatives; each object lives in the PRIVATE Supabase Storage bucket `surface-media`
 -- at `<kind>/<asset_id>.<ext>` and each row here describes one object. Contract: scripts/surfaces/_schema/media-contract.json;
 -- CONTRACT descriptor contract_admin_media_upload.descriptor.json (its `database` and `rls` blocks declare this table).
@@ -10,7 +10,8 @@
 -- Storage statements self-guard on the storage tables (the migration-234 namespace-guard pattern): an instance without the
 -- Storage tables (plain local Postgres, or an image whose storage.buckets predates the Storage API's `public` column) skips
 -- them with a NOTICE; where they exist, the bucket is asserted private.
--- WRITTEN, NOT APPLIED here: the operator applies it (DB job), before MF-40's migration (batch C-5).
+-- WRITTEN, NOT APPLIED here: the operator applies it (DB job). Numbering (batch C-5, D-22 2026-11-09): 298 is reserved for MB-86
+-- (298_mb86_scenario_cost_lines.sql, staged); MF-37: 300, 301; MF-40 next free after that.
 --
 -- SPEC LINK: docs/specs/00-architecture/114_rls_policy_catalog.md sections 2, 3.2, 6 (dated notes 2026-11-09)
 -- SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md sections 6.1, 6.2, 6.5 (dated notes 2026-11-09)
@@ -45,7 +46,7 @@ DO $migration$
 BEGIN
   IF to_regclass('storage.buckets') IS NULL OR to_regclass('storage.objects') IS NULL
      OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'storage' AND table_name = 'buckets' AND column_name = 'public') THEN
-    RAISE NOTICE '298: the Storage tables (storage.buckets with its public column, storage.objects) are not present on this instance — skipping the surface-media bucket and its policies';
+    RAISE NOTICE '300: the Storage tables (storage.buckets with its public column, storage.objects) are not present on this instance — skipping the surface-media bucket and its policies';
     RETURN;
   END IF;
 
@@ -53,7 +54,7 @@ BEGIN
     ON CONFLICT (id) DO UPDATE SET public = false;
 
   IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'surface-media' AND public = false) THEN
-    RAISE EXCEPTION '298: bucket surface-media is missing or public after creation';
+    RAISE EXCEPTION '300: bucket surface-media is missing or public after creation';
   END IF;
 
   EXECUTE $sql$
