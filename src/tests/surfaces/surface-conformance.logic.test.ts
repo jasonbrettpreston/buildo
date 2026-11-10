@@ -211,7 +211,7 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     expect(d.findings).toEqual([]);
     expect(d.note).toBe('S-desc ok (examined 23 in scope: converted 3, pending 7, parked 9, report 4)');
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (3 surfaces, 17 goldens)' }, { findings: [], note: 'S-sbind ok (3 surfaces, 54 strings)' }]);
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (3 surfaces, 17 goldens)' }, { findings: [], note: 'S-sbind ok (3 surfaces, 56 strings)' }]);
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -443,15 +443,18 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
 // ---- C-8 / C-9 / C-11 (MF-37; MF-42 size ruling and batch C-1, C-11: the web closed mapping, the web 44 px case and the theme check) -------------
 
 /** C-8: every JSX element a web binding module renders is a library component listed in bindings.json mapping.web for its archetypes. */
-export const mappingProblems = (text: string, file: string, allowed: string[]): string[] => {
+export const mappingProblems = (text: string, file: string, allowed: string[], libs: string[] = B.libraries.web): string[] => {
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const imported = new Map<string, string>(); // local name -> imported name, for every named or default import
+  const fromSpec = new Map<string, string>(); // local name -> its module specifier (a JSX tag must come from a UI library: code-reviewer OUTPUT F2)
   const locals = new Set<string>(); // names declared in the module itself (functions, consts, classes)
   const out: string[] = [];
   const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
   for (const s of sf.statements) {
     if (ts.isImportDeclaration(s) && s.importClause) {
       const c = s.importClause;
+      const spec = ts.isStringLiteral(s.moduleSpecifier) ? s.moduleSpecifier.text : '';
+      for (const n of [c.name?.text, ...(c.namedBindings && ts.isNamedImports(c.namedBindings) ? c.namedBindings.elements.map((e) => e.name.text) : []), c.namedBindings && ts.isNamespaceImport(c.namedBindings) ? c.namedBindings.name.text : undefined]) if (n) fromSpec.set(n, spec);
       if (c.name) imported.set(c.name.text, c.name.text);
       if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) imported.set(e.name.text, (e.propertyName ?? e.name).text);
       if (c.namedBindings && ts.isNamespaceImport(c.namedBindings)) imported.set(c.namedBindings.name.text, `${c.namedBindings.name.text}.*`);
@@ -474,6 +477,7 @@ export const mappingProblems = (text: string, file: string, allowed: string[]): 
       if (name.startsWith('local:')) out.push(`C-8 ${file}:${at(n)}: hand-built component ${name.slice(6)}`);
       else if (/^[a-z]/.test(name)) out.push(`C-8 ${file}:${at(n)}: intrinsic element <${name}>`);
       else if (!allowed.includes(name)) out.push(`C-8 ${file}:${at(n)}: ${name} is not in mapping.web`);
+      else if (ts.isIdentifier(n.tagName) && libOf(fromSpec.get(n.tagName.text) ?? '', libs) === undefined) out.push(`C-8 ${file}:${at(n)}: ${name} is imported from ${fromSpec.get(n.tagName.text) ?? 'nowhere'}, not a UI library`);
     }
     if (ts.isCallExpression(n)) {
       const e = n.expression;
@@ -493,6 +497,10 @@ describe('C-8 the web closed mapping (every JSX element of a web binding module 
     console.log(`C-8: ${mods.length} web modules`);
     expect(mods.length).toBeGreaterThan(0);
     for (const m of mods) expect([m.path, mappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowedFor(m))]).toEqual([m.path, []]);
+  });
+  it('RED: a mapped name imported from a hand-built file (code-reviewer OUTPUT F2)', () => {
+    const src = "import { Button } from './handbuilt';\nexport const P = () => <Button />;\n";
+    expect(mappingProblems(src, 'h.tsx', ['Button'])).toEqual(['C-8 h.tsx:2: Button is imported from ./handbuilt, not a UI library']);
   });
   it('RED: an unexported in-binding component, React.createElement of a table, an unmapped <Card/>, an intrinsic <div>, an aliased import', () => {
     const allowed = ['Stack', 'Button'];

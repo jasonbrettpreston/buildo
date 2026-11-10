@@ -83,9 +83,11 @@ let listRows: unknown[];
 let dupRows: unknown[];
 
 function req(method: string, body: unknown, headers: Record<string, string> = {}): NextRequest {
+  // A real client always sends Content-Length (the route refuses a missing one with 411); default it to the body's JSON size.
+  const all: Record<string, string> = { 'content-length': String(JSON.stringify(body ?? null).length), ...headers };
   return {
     method,
-    headers: { get: (k: string) => headers[k.toLowerCase()] ?? null },
+    headers: { get: (k: string) => all[k.toLowerCase()] ?? null },
     nextUrl: { pathname: '/api/admin/media', searchParams: new URLSearchParams() },
     json: async () => {
       if (body === undefined) throw new SyntaxError('Unexpected end of JSON input');
@@ -163,10 +165,18 @@ describe('POST /api/admin/media — order and compensation', () => {
     });
   }
 
-  it('storage with no status (timeout): 502', async () => {
+  it('storage with no status (timeout): 502, and the possibly-landed object is removed best-effort', async () => {
     h.upload.mockRejectedValue(new MediaStorageError('upload', null));
     expect((await upload(adBody)).status).toBe(502);
     expect(stages()).toEqual(['media_upload_storage']);
+    expect(h.remove).toHaveBeenCalledTimes(1);
+  });
+
+  it('timeout and the orphan remove fails: stage media_upload_timeout_orphan', async () => {
+    h.upload.mockRejectedValue(new MediaStorageError('upload', null));
+    h.remove.mockRejectedValue(new MediaStorageError('remove', 500));
+    expect((await upload(adBody)).status).toBe(502);
+    expect(stages()).toEqual(['media_upload_storage', 'media_upload_timeout_orphan']);
   });
 
   it('COMMIT failure after the upload: remove once + stage media_upload_commit', async () => {
@@ -202,6 +212,13 @@ describe('POST /api/admin/media — order and compensation', () => {
     expect(res.status).toBe(409);
     expect(telemetryOrAudit()).toEqual([]);
     expect(h.log).not.toContain('BEGIN');
+  });
+
+  it('411 when Content-Length is missing or not a number, before parsing', async () => {
+    for (const v of ['', 'abc']) {
+      const res = await upload(adBody, { 'content-length': v });
+      expect([v, res.status, (await res.json()).error.code]).toEqual([v, 411, 'LENGTH_REQUIRED']);
+    }
   });
 
   it('413 precheck on content-length, before parsing', async () => {

@@ -1,6 +1,6 @@
 'use client';
 // SPEC LINK: docs/specs/00-architecture/117_maxbld_brand.md section 7 (dated note 2026-11-09: the web theme is GENERATED, never hand-edited) and
-//            section 3.2 (On-primary #472a00), docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b.4, batch C-2 (one provider module).
+//            section 6.1 (On-primary #472a00, 117:219), docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b.4, batch C-2 (one provider module).
 //
 // MF-37 · the one Mantine provider module (listed in bindings.json providers). It merges the generated theme with ONE Button vars entry, so the
 // primary (filled, primary colour) button text is the On-primary colour: a vars function cannot cross from a server layout into the client provider

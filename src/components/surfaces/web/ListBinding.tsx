@@ -69,7 +69,6 @@ export const compareBy = (key: string, direction: 'asc' | 'desc') => (a: Row, b:
 
 export interface ListRuntime {
   sort?: DataTableSortStatus<Row> | undefined;
-  onDelete?: (row: Row) => void;
   fetching?: boolean;
 }
 

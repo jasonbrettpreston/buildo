@@ -10,6 +10,7 @@
 import { z } from 'zod';
 import type { Queryable } from '@/lib/entitlements';
 import contractJson from '../../../scripts/surfaces/_schema/media-contract.json';
+import seedJson from '../../../scripts/seeds/logic_variables.json';
 
 export type MediaKind = 'report_image' | 'ad_creative';
 export type MediaMime = 'image/png' | 'image/jpeg' | 'image/webp';
@@ -147,7 +148,7 @@ export function maxRequestBytes(limits: Pick<MediaLimits, 'max_bytes'>): number 
 
 export class MediaLimitsMissingError extends Error {
   constructor(readonly missing: string[]) {
-    super(`logic_variables missing or non-numeric: ${missing.join(', ')}`);
+    super(`logic_variables missing, non-numeric or outside the seed bounds: ${missing.join(', ')}`);
     this.name = 'MediaLimitsMissingError';
   }
 }
@@ -168,6 +169,15 @@ if (JSON.stringify(LIMIT_KEYS) !== JSON.stringify(CONTRACT.limits)) {
   throw new Error('media-contract.json limits differ from LIMIT_KEYS in src/lib/media/contract.ts');
 }
 
+/** The seed's declared bounds of the five keys (scripts/seeds/logic_variables.json min/max). */
+export const SEED_BOUNDS: Record<string, { min: number; max: number }> = Object.fromEntries(
+  Object.values(LIMIT_KEYS).map((k) => {
+    const s = (seedJson as Record<string, { min?: number; max?: number }>)[k];
+    if (!s || typeof s.min !== 'number' || typeof s.max !== 'number') throw new Error(`logic_variables seed has no bounds for ${k}`);
+    return [k, { min: s.min, max: s.max }];
+  }),
+);
+
 export async function readMediaLimits(db: Queryable): Promise<MediaLimits> {
   const keys = Object.values(LIMIT_KEYS);
   const res = await db.query<{ variable_key: string; variable_value: string | number | null }>(
@@ -179,7 +189,10 @@ export async function readMediaLimits(db: Queryable): Promise<MediaLimits> {
   const missing: string[] = [];
   for (const [field, key] of Object.entries(CONTRACT.limits) as Array<[keyof MediaLimits, string]>) {
     const v = byKey.get(key);
-    if (v === undefined || !Number.isFinite(v)) missing.push(key);
+    // Fail closed outside the seed's declared [min, max] (security OUTPUT seat F1): the 3 MB cap (Wave 1 batch item 2), the TTL and the
+    // timeout cannot be raised past their bounds by an admin edit or a direct write.
+    const bound = SEED_BOUNDS[key];
+    if (v === undefined || !Number.isFinite(v) || !bound || v < bound.min || v > bound.max) missing.push(key);
     else out[field] = v;
   }
   if (missing.length > 0) throw new MediaLimitsMissingError(missing);

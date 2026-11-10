@@ -70,6 +70,7 @@ describe.skipIf(!dbAvailable())('migrations 300/301: media_assets, surface-media
       expect(await code(c, ...row({ kind: 'banner' }))).toBe('23514');
       expect(await code(c, ...row({ mime: 'image/svg+xml' }))).toBe('23514');
       expect(await code(c, ...row({ alt: '' }))).toBe('23514');
+      expect(await code(c, ...row({ alt: 'x'.repeat(501) }))).toBe('23514');
       expect(await code(c, ...row({ kind: 'report_image' }))).toBe('23514');
       expect(await code(c, ...row({ rule: { zone: 'R' } }))).toBe('23514');
       expect(await code(c, ...row({ kind: 'report_image', scenario_key: 's', position: 1, rule: [] }))).toBe('23514');
@@ -121,6 +122,11 @@ describe.skipIf(!dbAvailable())('migrations 300/301: media_assets, surface-media
     expect(b.rows).toEqual([{ public: false }]);
     const pol = await pool.query<{ policyname: string; cmd: string }>("SELECT policyname, cmd FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname LIKE 'surface_media_%' ORDER BY 1");
     expect(pol.rows).toEqual([{ policyname: 'surface_media_delete_admin', cmd: 'DELETE' }, { policyname: 'surface_media_insert_admin', cmd: 'INSERT' }, { policyname: 'surface_media_select_admin', cmd: 'SELECT' }]);
+    // Security OUTPUT seat F8: no other storage.objects policy may reach every bucket (one that never names bucket_id would open surface-media).
+    const broad = await pool.query<{ policyname: string }>("SELECT policyname FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND coalesce(qual, '') NOT LIKE '%bucket_id%' AND coalesce(with_check, '') NOT LIKE '%bucket_id%'");
+    expect(broad.rows).toEqual([]);
+    const limits = await pool.query<{ ok: boolean }>("SELECT NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'storage' AND table_name = 'buckets' AND column_name = 'file_size_limit') OR EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'surface-media' AND file_size_limit = 3000000) AS ok");
+    expect(limits.rows[0]?.ok).toBe(true);
     await inTxn(pool, async (c) => {
       await c.query('GRANT SELECT, INSERT, DELETE ON storage.objects TO authenticated');
       await c.query('GRANT SELECT ON profiles TO authenticated');

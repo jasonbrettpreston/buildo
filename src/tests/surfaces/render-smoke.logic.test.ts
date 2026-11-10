@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-33 (one render smoke per archetype per platform; every displayed string,
 //            library default strings and form error messages included, comes from content), docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b.2,
-//            docs/specs/00-architecture/117_maxbld_brand.md section 3.2 (On-primary #472a00), docs/specs/02-web-admin/33_web_admin_engineering_protocol.md
+//            docs/specs/00-architecture/117_maxbld_brand.md section 6.1 (On-primary #472a00), docs/specs/02-web-admin/33_web_admin_engineering_protocol.md
 //            section 9 (touch targets of at least 44 px).
 //
 // MF-37 · T8, the FE-33 lock (web half; MF-35 extends it for mobile by dated note, prose-only until MF-25). Cases:
@@ -59,6 +59,22 @@ describe('FE-33 (a) one render smoke per archetype (web)', () => {
     const html = ssr(table('degraded', [ROW]));
     for (const k of ['col.kind', 'col.alt', 'col.bytes', 'col.preview', 'action.delete', 'state.degraded', 'preview.unavailable']) expect(html).toContain(C[`admin_media.${k}`]);
     expect(html).toContain('Alt one');
+  });
+});
+
+describe('FE-33 (a2) every declared state of the three surfaces renders (17 goldens; compliance OUTPUT F13)', () => {
+  it('each state renders non-empty through its binding, and its state alert text (when it has one) is the content text', () => {
+    let n = 0;
+    for (const [d, s] of [[upload, S_UP], [remove, S_DEL], [list, null]] as Array<[Json, Json | null]>) {
+      for (const st of d.states as Array<{ name: string }>) {
+        const html = s ? ssr(form(d, s, st.name, { formData: { asset_id: 'a1' } })) : ssr(table(st.name, ['hit', 'partial', 'degraded'].includes(st.name) ? [ROW] : []));
+        expect(html.length).toBeGreaterThan(0);
+        const key = `${d.identity.id}.state.${st.name}`;
+        if (C[key]) expect([key, html.includes(C[key] as string)]).toEqual([key, true]);
+        n += 1;
+      }
+    }
+    expect(n).toBe(17);
   });
 });
 

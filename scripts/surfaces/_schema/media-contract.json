@@ -54,7 +54,8 @@
       },
       "alt": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "maxLength": 500
       },
       "file": {
         "type": "string",
@@ -78,7 +79,8 @@
       },
       "confirm": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "maxLength": 500
       }
     },
     "required": [

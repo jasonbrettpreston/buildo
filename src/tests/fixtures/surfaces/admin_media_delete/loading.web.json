@@ -22,6 +22,9 @@
         "min_length": {
           "content": "admin_media_delete.errors.min_length"
         },
+        "max_length": {
+          "content": "admin_media_delete.errors.max_length"
+        },
         "additional_properties": {
           "content": "admin_media_delete.errors.additional_properties"
         }
@@ -64,8 +67,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/_schema/media-contract.json": "12792dad5cc3fc6d",
-      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media_delete.content.json": "f4da6ec056080f59",
+      "scripts/surfaces/_schema/media-contract.json": "51f925ff0bb8a427",
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_media_delete.content.json": "a7ac00bc41e350a3",
       "scripts/surfaces/parcel_admin/F08/surfaces/admin_media_delete.descriptor.json": "6b98aea2b1d14f2c"
     }
   }

@@ -19,12 +19,13 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
-import { verifyAdminAuth, type AdminContext } from '@/lib/auth/verify-admin';
+import { sessionRequired, unauthorized } from '@/lib/admin/admin-responses';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
 import { pool, withTransaction } from '@/lib/db/client';
 import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
-import { logError, logInfo, logWarn } from '@/lib/logger';
+import { logError, logInfo } from '@/lib/logger';
 import { track } from '@/lib/admin/analytics';
 import { hashAdminUid } from '@/lib/media/hash-admin-uid';
 import {
@@ -45,10 +46,12 @@ const TAG = '[api/admin/media]';
 const ACTION = 'media_upload';
 const TARGET = 'media_assets';
 
-function unauthorizedEnvelope(): NextResponse {
+
+/** 411: the upload needs a numeric Content-Length (outside the envelope helper's status union; same body shape). */
+function lengthRequired(): NextResponse {
   return NextResponse.json(
-    { data: null, error: { code: 'UNAUTHORIZED', message: 'Admin auth required' }, meta: null },
-    { status: 401 },
+    { data: null, error: { code: 'LENGTH_REQUIRED', message: 'The upload needs a Content-Length header' }, meta: null },
+    { status: 411 },
   );
 }
 
@@ -60,16 +63,6 @@ function tooLarge(): NextResponse {
   );
 }
 
-/** Shared sentinels ('admin-key', 'dev-user') cannot be audited (admin_audit_log.admin_uid UUID FK). */
-function forbiddenNonSessionWrite(ctx: AdminContext): NextResponse | null {
-  if (ctx.authMethod !== 'session') {
-    logWarn(TAG, 'non-session mutation rejected — media writes require a session admin', {
-      authMethod: ctx.authMethod,
-    });
-    return err('FORBIDDEN', 'Media mutations require a session admin (shared credentials cannot be audited)', 403);
-  }
-  return null;
-}
 
 function isUniqueViolation(e: unknown): boolean {
   return (e as { code?: unknown } | null)?.code === '23505';
@@ -78,7 +71,7 @@ function isUniqueViolation(e: unknown): boolean {
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   // Spec 33 §8 admin auth boundary — FIRST line.
   const adminCtx = await verifyAdminAuth(request);
-  if (!adminCtx) return unauthorizedEnvelope();
+  if (!adminCtx) return unauthorized();
 
   const t0 = Date.now();
   try {
@@ -96,9 +89,9 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   // Spec 33 §8 admin auth boundary — FIRST line (CSRF Origin gate inside the guard).
   const adminCtx = await verifyAdminAuth(request);
-  if (!adminCtx) return unauthorizedEnvelope();
-  const forbidden = forbiddenNonSessionWrite(adminCtx);
-  if (forbidden) return forbidden;
+  if (!adminCtx) return unauthorized();
+  // Spec 33 section 8.1: shared credentials cannot be audited (admin_audit_log.admin_uid is a UUID FK).
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, '/api/admin/media');
 
   const t0 = Date.now();
   const distinctId = hashAdminUid(adminCtx.uid);
@@ -113,8 +106,11 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     });
 
   const limits = await readMediaLimits(pool);
-  const declared = Number(request.headers.get('content-length') ?? '0');
-  if (Number.isFinite(declared) && declared > maxRequestBytes(limits)) return tooLarge();
+  // Security OUTPUT seat F2: a missing or non-numeric Content-Length is refused (411) so the JSON parse below never reads an uncapped body.
+  const header = request.headers.get('content-length');
+  const declared = header === null || header.trim() === '' ? Number.NaN : Number(header);
+  if (!Number.isFinite(declared) || declared < 0) return lengthRequired();
+  if (declared > maxRequestBytes(limits)) return tooLarge();
 
   let raw: unknown;
   try {
@@ -205,6 +201,15 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         return err('STORAGE_SESSION_REQUIRED', 'Storage refused the session; sign in again', 403);
       }
       logError(TAG, cause, { stage: 'media_upload_storage', asset_id: assetId, status: cause.status });
+      if (cause.status === null) {
+        // A timeout does not cancel the HTTP upload (storage-js takes no AbortSignal), so the object may still land after the rollback:
+        // remove it best-effort (code-reviewer F1, security F5). A failed remove is logged; the object is private and no row points to it.
+        try {
+          await storage.remove(path);
+        } catch (removeErr) {
+          logError(TAG, removeErr, { stage: 'media_upload_timeout_orphan', asset_id: assetId, path });
+        }
+      }
       outcome('error', 'storage_upload_failed');
       return err('STORAGE_UPLOAD_FAILED', 'The file could not be stored', 502);
     }

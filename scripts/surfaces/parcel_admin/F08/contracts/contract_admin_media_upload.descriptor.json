@@ -11,23 +11,24 @@
       "src/app/api/admin/media/route.ts"
     ],
     "contracts": [
-      "POST export"
+      "src/app/api/admin/media/route.ts — POST export"
     ],
     "tables": [
       "migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies"
     ],
     "gate": [
-      "verifyAdminAuth — first line of the handler"
+      "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
     ],
     "states": [
-      "the envelope classes below"
+      "the envelope classes in errors.classes"
     ],
     "emits": [
-      "src/lib/admin/admin-audit.ts — writeAdminAudit"
+      "src/lib/admin/admin-audit.ts — writeAdminAudit inside withTransaction"
     ]
   },
   "identity": {
     "id": "contract_admin_media_upload",
+    "ref": "C-064",
     "route": "/api/admin/media",
     "archetype": "MUTATION",
     "platforms": [
@@ -45,30 +46,20 @@
     "spec_version": "0-draft",
     "versioning": {
       "answer": "breaking_allowed",
-      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route, so a breaking change is one commit.",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route.",
       "evidence": [
-        "src/components/admin/TestFeedTool.tsx:138,203",
-        "src/features/admin-flight-center/api/useBulkDeleteFromWatchlist.ts:41,47",
-        "src/features/admin-flight-center/api/useBulkSaveToWatchlist.ts:40,46",
-        "src/features/admin-flight-center/api/useWatchlist.ts:26,28"
+        "src/app/(maxbld)/admin/media/MediaPageClient.tsx",
+        "src/lib/media/useUploadMedia.ts",
+        "src/lib/media/useDeleteMedia.ts"
       ]
-    },
-    "ref": "C-064"
+    }
   },
   "inputs": {
     "answer": "app_outputs",
-    "why": "It reads 8 table(s) directly; 5 of them are materialised by named pipeline steps (classify_coa_scope, classify_coa_trades, backfill_realtor_permit_trades), so its inputs are the pipeline's outputs rather than another contract.",
+    "why": "It reads media_assets (written only by this library's routes, never by a pipeline step) and the Admin Media logic_variables rows.",
     "evidence": [
-      "src/app/api/admin/leads/watchlist/route.ts:122-140",
-      "src/app/api/admin/leads/watchlist/route.ts:161-162",
-      "src/app/api/admin/leads/watchlist/route.ts:167-181",
-      "src/app/api/admin/leads/watchlist/route.ts:200-201",
-      "src/app/api/admin/leads/watchlist/route.ts:207-209",
-      "migrations/215_admin_watchlist.sql:28",
-      "docs/reference/data-lineage-map.md — no `## `admin_watchlist`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
-      "src/app/api/admin/leads/watchlist/route.ts:173-175",
-      "src/app/api/admin/leads/watchlist/route.ts:182-183",
-      "scripts/classify-coa-scope.js"
+      "migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies",
+      "src/lib/media/contract.ts — readMediaLimits"
     ],
     "contract_ref": [],
     "query_key": [],
@@ -86,27 +77,24 @@
       {
         "table": "media_assets",
         "columns": [
-          "id",
-          "lead_type",
-          "lead_key",
-          "permit_num",
-          "revision_num",
-          "coa_application_number",
-          "address_snapshot",
-          "saved_at",
-          "admin_uid"
+          "asset_id",
+          "kind",
+          "path",
+          "mime",
+          "bytes",
+          "alt",
+          "scenario_key",
+          "position",
+          "rule",
+          "uploaded_by",
+          "created_at"
         ],
         "producing_steps": "none",
         "chain_position": "n/a",
-        "owner_spec": "docs/specs/02-web-admin/36_flight_center_tool.md",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
         "evidence": [
-          "src/app/api/admin/leads/watchlist/route.ts:122-140",
-          "src/app/api/admin/leads/watchlist/route.ts:161-162",
-          "src/app/api/admin/leads/watchlist/route.ts:167-181",
-          "src/app/api/admin/leads/watchlist/route.ts:200-201",
-          "src/app/api/admin/leads/watchlist/route.ts:207-209",
-          "migrations/215_admin_watchlist.sql:28",
-          "docs/reference/data-lineage-map.md — no `## `admin_watchlist`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+          "migrations/300_media_assets_surface_media.sql — media_assets, RLS on, media_assets_select_admin, the surface-media bucket and three admin policies",
+          "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
         ]
       }
     ]
@@ -123,31 +111,27 @@
   },
   "state": {
     "answer": "server_only",
-    "why": "A CONTRACT holds no client state: every value is resolved per request on the server and nothing is cached in a client store by the route itself.",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server.",
     "evidence": [
-      "src/app/api/admin/leads/watchlist/route.ts:211 (GET export)",
-      "src/lib/api/with-api-envelope.ts:27-52"
+      "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
     ],
     "fields": []
   },
   "staleness": {
     "answer": "live",
-    "why": "Every read runs against the base tables on each request — there is no cache layer between the handler and the database.",
+    "why": "A write; nothing is cached.",
     "evidence": [
-      "src/app/api/admin/leads/watchlist/route.ts:122-140",
-      "src/app/api/admin/leads/watchlist/route.ts:161-162",
-      "src/app/api/admin/leads/watchlist/route.ts:167-181",
-      "src/app/api/admin/leads/watchlist/route.ts:200-201"
+      "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
     ],
     "offline": "none"
   },
   "guards": {
     "session": {
       "answer": "admin",
-      "why": "classifyRoute(\"/api/admin/leads/watchlist\") returns \"admin\" (executed 2026-09-15); the handler re-verifies the caller in-process.",
+      "why": "classifyRoute(\"/api/admin/media\") returns \"admin\" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin.",
       "evidence": [
-        "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
-        "verifyAdminAuth at src/app/api/admin/leads/watchlist/route.ts:213 (GET), :268 (POST), :385 (DELETE) — first line of each handler"
+        "src/lib/auth/route-guard.ts — the /api/admin/ prefix returns \"admin\"",
+        "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
       ]
     },
     "rls_class": {
@@ -174,52 +158,36 @@
   },
   "checks": [
     {
-      "id": "contract_admin_leads_watchlist__auth_class_parity",
+      "id": "contract_admin_media_upload__auth_class_parity",
       "kind": "auth_class_parity",
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "guards.session must equal classifyRoute(\"/api/admin/leads/watchlist\"), executed 2026-09-15 → \"admin\" plus the in-handler guard (verifyAdminAuth at src/app/api/admin/leads/watchlist/route.ts:213 (GET), :268 (POST), :385 (DELETE) — first li). Locked by admin-watchlist.infra.test.ts."
+      "why": "guards.session must equal classifyRoute(\"/api/admin/media\") → \"admin\" plus verifyAdminAuth on the first line of the POST handler; locked by src/tests/admin-media.security.test.ts."
     },
     {
-      "id": "contract_admin_leads_watchlist__error_envelope",
+      "id": "contract_admin_media_upload__error_envelope",
       "kind": "error_state",
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
-      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; expected to stay at zero deviations."
+      "why": "Every declared error class arrives in the { data, error, meta } envelope; no raw error message is returned (src/tests/admin-media.infra.test.ts)."
     },
     {
-      "id": "contract_admin_leads_watchlist__contract_parse",
-      "kind": "contract_parse",
+      "id": "contract_admin_media_upload__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is a pick-by-name projection equal to inputs.field_whitelist (src/app/api/admin/media/types.ts Zod schemas)."
+    },
+    {
+      "id": "contract_admin_media_upload__audit_row_present",
+      "kind": "ledger_row_present",
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "Request input is parsed by WatchlistQuerySchema (GET), BulkSaveBodySchema + WatchlistSaveItemSchema (POST), BulkDeleteBodySchema (DELETE); responses via WatchlistItemSchema, BulkSaveResponseSchema, BulkDeleteResponseSchema at src/app/api/admin/leads/watchlist/route.ts:216-219 (query), :280 (save body), :288 (per item), :397 (delete body); responses at :251, :373, :426 before any query runs; a payload that fails the schema is refused, never coerced."
-    },
-    {
-      "id": "contract_admin_leads_watchlist__field_whitelist_parity",
-      "kind": "field_whitelist_parity",
-      "severity": "WARN",
-      "blocking": false,
-      "when": "post",
-      "why": "MEASURED: the projection is mixed (src/app/api/admin/leads/watchlist/route.ts:230-233 (row_spread `...row` + temporal_group), src/app/api/admin/leads/watchlist/route.ts:251 (Zod z.array(WatchlistItemSchema).parse strips unlisted keys; allowed item keys enumerated at src/lib/admin/watchlist-schemas.ts:15-34), src/app/api/admin/leads/watchlist/route.ts:363-367 (POST explicit_pick: added/skipped_existing/failed), src/app/api/admin/leads/watchlist/route.ts:424 (DELETE explicit_pick: deleted)), so a column added upstream reaches the client without a code change. Permanently non-zero until the response is an explicit pick; retighten condition: projection.kind === explicit_pick."
-    },
-    {
-      "id": "contract_admin_leads_watchlist__schema_declared",
-      "kind": "schema_declared",
-      "severity": "FAIL",
-      "blocking": false,
-      "when": "post",
-      "why": "Every table and column declared in lineage.reads[]/writes[] must exist in src/lib/db/generated/schema.ts (drizzle-kit introspect of the live database); the registry generator checks this both directions."
-    },
-    {
-      "id": "contract_admin_leads_watchlist__audit_row_missing",
-      "kind": "ledger_row_present",
-      "severity": "WARN",
-      "blocking": false,
-      "when": "post",
-      "why": "MEASURED GAP, permanently non-zero: this admin route mutates admin_watchlist and writes NO admin_audit_log row — one of the measured audit gaps. Retighten condition: the handler writes an admin_audit_log row per accepted mutation."
+      "why": "R-12: exactly one admin_audit_log row per accepted request, written in the same transaction as the media_assets change (src/tests/admin-media.infra.test.ts)."
     }
   ],
   "invariants": "none",
@@ -227,14 +195,6 @@
   "states": [
     {
       "name": "hit",
-      "golden": "none"
-    },
-    {
-      "name": "empty",
-      "golden": "none"
-    },
-    {
-      "name": "partial",
       "golden": "none"
     },
     {
@@ -248,74 +208,55 @@
   ],
   "errors": {
     "answer": "envelope",
-    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper and converts any uncaught throw into the same shape.",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code.",
     "evidence": [
-      "src/lib/api/with-api-envelope.ts:27-52",
-      "src/app/api/admin/leads/watchlist/route.ts:61-66",
-      "src/app/api/admin/leads/watchlist/route.ts:251-255",
-      "src/app/api/admin/leads/watchlist/route.ts:373",
-      "src/app/api/admin/leads/watchlist/route.ts:426",
-      "src/features/leads/api/envelope.ts:50-53",
-      "src/features/leads/api/envelope.ts:82",
-      "src/app/api/admin/leads/watchlist/route.ts:64 (401)",
-      "src/app/api/admin/leads/watchlist/route.ts:78 (403)",
-      "src/app/api/admin/leads/watchlist/route.ts:278 (400)",
-      "src/app/api/admin/leads/watchlist/route.ts:219 (400)"
+      "src/lib/api/with-api-envelope.ts",
+      "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
     ],
     "classes": [
       {
         "class": "401",
-        "ui": "{data:null,error:{code,message},meta:null} — helper at :61-66, invoked at :214, :269, :386 — src/app/api/admin/leads/watchlist/route.ts:64 (code UNAUTHORIZED)"
+        "ui": "The page is not reachable without an admin session (requireAdminPage); a client call gets UNAUTHORIZED."
       },
       {
         "class": "403",
-        "ui": "{data:null,error:{code,message},meta:null} — session-write guard, invoked at :270 and :387 — src/app/api/admin/leads/watchlist/route.ts:78 (code FORBIDDEN)"
+        "ui": "A non-session admin credential gets SESSION_REQUIRED; Storage refusing the session gets STORAGE_SESSION_REQUIRED."
       },
       {
         "class": "400",
-        "ui": "{data:null,error:{code,message},meta:null} (DELETE twin at :395) — src/app/api/admin/leads/watchlist/route.ts:278 (code INVALID_JSON)"
+        "ui": "Validation errors are shown by the form from content."
       },
       {
         "class": "500",
-        "ui": "{data:null,error:{code,message},meta:null} via internalError at src/features/leads/api/error-mapping.ts:71-76 (also :375, :428) — src/app/api/admin/leads/watchlist/route.ts:257 (code INTERNAL_ERROR)"
+        "ui": "The persistent error toast from content; the request is logged."
       }
     ]
   },
   "emits": {
-    "answer": "events",
-    "why": "It emits named observability events only — Sentry breadcrumbs and/or PostHog captures; it writes no ledger row.",
+    "answer": "both",
+    "why": "Each accepted request writes one admin_audit_log row and emits admin_action_performed (intent, then result).",
     "evidence": [
-      "Sentry breadcrumb slow_query (category slow_query, >500ms)",
-      "Sentry breadcrumb watchlist_bulk_save (category admin_action)",
-      "Sentry breadcrumb watchlist_bulk_delete (category admin_action)",
-      "analytics admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334",
-      "analytics admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416"
+      "src/lib/admin/admin-audit.ts — writeAdminAudit",
+      "analytics admin_action_performed {action: media_upload, result} — src/app/api/admin/media/route.ts"
     ],
-    "analytics": [
-      "admin_action_performed {action: watchlist_bulk_save, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:330-334",
-      "admin_action_performed {action: watchlist_bulk_delete, target: admin_watchlist, auth_method} — src/app/api/admin/leads/watchlist/route.ts:412-416"
-    ],
+    "analytics": [],
     "ledger_events": [],
     "breadcrumbs": [
-      "slow_query (category slow_query, >500ms)",
-      "watchlist_bulk_save (category admin_action)",
-      "watchlist_bulk_delete (category admin_action)"
+      "admin_audit_log: action media_upload, target_uid = asset_id"
     ]
   },
   "offers": {
     "answer": "none",
-    "why": "It renders no sponsored placement: the offers and advertisers tables Spec 126 §2 specifies do not exist in migrations/ and nothing in this handler reads placement inventory.",
+    "why": "An admin endpoint renders no sponsored placement.",
     "evidence": [
-      "migrations/ — no CREATE TABLE offers / advertisers (grep 2026-09-15)",
-      "src/app/api/admin/leads/watchlist/route.ts — read in full; no placement read"
+      "src/app/api/admin/media/route.ts"
     ]
   },
   "metering": {
     "answer": "none",
-    "why": "Nothing here is counted: no usage_events row (the table does not exist in the introspected schema) and no quota counter is written by this handler.",
+    "why": "Admin media operations are not metered; the admin preview ledger is deferred (Spec 114 §6 dated note 2026-11-09).",
     "evidence": [
-      "src/app/api/admin/leads/watchlist/route.ts — read in full 2026-09-15",
-      "src/lib/db/generated/schema.ts — no usage_events table"
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 dated note 2026-11-09 — the surface-media bucket, admin scope, signed URLs"
     ]
   },
   "config": {
@@ -344,7 +285,7 @@
   },
   "sharing": {
     "answer": "sole",
-    "why": "Called by the admin media page only (MF-38 will consume the list contract for the report).",
+    "why": "Called by the admin media page only (MF-38 will read the list for the report).",
     "evidence": [
       "src/app/(maxbld)/admin/media/MediaPageClient.tsx"
     ],
@@ -364,18 +305,17 @@
   "limitations": [
     {
       "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
-      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented.",
-      "check_id": "contract_admin_leads_watchlist__auth_class_parity"
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target (the existing contract rows carry the same limitation).",
+      "check_id": "contract_admin_media_upload__auth_class_parity"
     }
   ],
   "interpretation": "none",
-  "notes": "GET items are `{...row, temporal_group}` — a raw-row spread plus one computed field, not a hand-picked whitelist. POST/DELETE additionally require authMethod === 'session' (the shared admin_key sentinel is rejected 403; dev_bypass allowed) via forbiddenNonSessionWrite. POST insert is idempotent (ON CONFLICT DO NOTHING); DELETE is a hard delete scoped to admin_uid. NO admin audit row for the mutating methods. | MEASURED 2026-09-15: Census checklist: all 7 named tables VERIFIED. Census MISSED `profiles` (verifyAdminAuth, src/lib/auth/verify-admin.ts:117-120). FINDINGS: (1) COMMENT/CODE DISAGREEMENT — src/lib/admin/watchlist-temporal.ts:29 documents opportunity_score as 'MAX(opportunity_score) across the lead's active-trade forecasts', and :74 repeats 'MAX(opportunity_score) across all rows'; the actual GET SQL takes opportunity_score from the SAME row as the earliest predicted_start (route.ts:145-159, :185-199), which the route header at :25-28 correctly describes as same-row semantics. The JS mirror aggregateForecastRows (watchlist-temporal.ts:86-104) really does compute MAX, so the client-side reconcile helper and the server SQL can disagree for a lead whose max-score trade is not its earliest-start trade. (2) skipped_existing is derived arithmetically as valid.length - added (route.ts:365), so an INTRA-batch duplicate is reported as 'skipped_existing' even on a first-ever save — acknowledged in the comment at :338-339. (3) The POST INSERT builds its VALUES list by string concatenation (:341-351) but every value is a bound parameter ($1..$N) — parameterised, not injectable. (4) No SELECT * on a base table: the `SELECT *` at :120 reads the explicit-column subquery aliased `board` (:121-202). (5) No admin_audit_log row for either mutation, unlike the user-management routes — only breadcrumb + PostHog. (6) `dev_bypass` mutations are permitted (:73-79), so on a dev-mode deployment all rows land under uid 'dev-user' (src/lib/auth/verify-admin.ts:82). | Caching: none observed — no Cache-Control, no dynamic/revalidate, no in-process memo in route.ts:1-430 | Pagination: GET: LIMIT $2 OFFSET $3 at src/app/api/admin/leads/watchlist/route.ts:204 bound to WATCHLIST_PAGE_SIZE=50 (src/lib/admin/watchlist-schemas.ts:52) and the Zod-clamped offset (int >=0, max 1_000_000, src/lib/admin/watchlist-schemas.ts:56); `total` from a separate COUNT(*) at route.ts:207-209, returned in meta at :251-255. POST/DELETE: batch size capped at 1000 by Zod (watchlist-schemas.ts:99, :121). | Other guards / classification: MUTATION-ONLY identity gate: forbiddenNonSessionWrite at src/app/api/admin/leads/watchlist/route.ts:73-81 rejects authMethod==='admin_key' with 403; 'dev_bypass' writes are deliberately PERMITTED (:74 tests only admin_key). CSRF Origin allowlist fires for POST/DELETE inside verifyAdminAuth (src/lib/auth/verify-admin.ts:70-78, allowlist parse at :288-303, default-deny at :336). MFA gate inert unless ADMIN_MFA_ENFORCED=true (:143). | Locking tests: src/tests/admin-watchlist.infra.test.ts.",
+  "notes": "MF-37. One CONTRACT descriptor per handler (126 §3.1). The 126 §6.2 rls block is not representable in surface.schema.json yet; guards.rls_class carries the ruled pattern (Spec 126 §6.2 dated notes 2026-11-09).",
   "x-draft": {
     "shard": "contracts",
     "files": [
       "src/app/api/admin/media/route.ts"
     ],
-    "loc": 430,
     "methods": [
       "POST"
     ],
@@ -383,7 +323,9 @@
       "admin_media_upload"
     ],
     "writes_audit_row": "yes",
-    "consumers_verified": [],
+    "consumers_verified": [
+      "src/app/(maxbld)/admin/media/MediaPageClient.tsx"
+    ],
     "auth_class_executed": "admin",
     "locking_tests": [
       "src/tests/admin-media.security.test.ts",

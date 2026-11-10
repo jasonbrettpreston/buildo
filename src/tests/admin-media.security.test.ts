@@ -3,7 +3,7 @@
 //             docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.5 (dated note 2026-11-09)
 //
 // T3 (MF-37 plan.v3 §4): the admin media trust boundary. Routes: 401 when verifyAdminAuth returns null
-// (GET, POST, DELETE); 403 FORBIDDEN for the shared admin_key and dev_bypass sentinels on the mutations;
+// (GET, POST, DELETE); 403 SESSION_REQUIRED for the shared admin_key and dev_bypass sentinels on the mutations;
 // 200 on the session path; every audit row carries a non-empty reason. requireAdminPage: the page-side
 // parity matrix with verifyAdminAuth (dev+UID, dev without UID, no session, getUser error, non-admin,
 // admin, MFA enforced at aal1 / aal2, profiles lookup throws). Auth, DB, storage and telemetry are mocked
@@ -71,9 +71,10 @@ const ROW = {
 };
 
 function req(method: string, body?: unknown): NextRequest {
+  const length = String(JSON.stringify(body ?? null).length);
   return {
     method,
-    headers: { get: () => null },
+    headers: { get: (k: string) => (k.toLowerCase() === 'content-length' ? length : null) },
     nextUrl: { pathname: '/api/admin/media', searchParams: new URLSearchParams() },
     json: async () => body,
   } as unknown as NextRequest;
@@ -122,11 +123,11 @@ describe('admin media routes — auth boundary', () => {
 
   for (const [method, call] of calls.slice(1)) {
     for (const sentinel of [ADMIN_KEY, DEV]) {
-      it(`${method}: 403 FORBIDDEN for ${sentinel.authMethod}, no audit, no telemetry, no write`, async () => {
+      it(`${method}: 403 SESSION_REQUIRED for ${sentinel.authMethod}, no audit, no telemetry, no write`, async () => {
         verify.mockResolvedValueOnce(sentinel);
         const res = await call();
         expect(res.status).toBe(403);
-        expect((await res.json()).error.code).toBe('FORBIDDEN');
+        expect((await res.json()).error.code).toBe('SESSION_REQUIRED');
         expect(audit).not.toHaveBeenCalled();
         expect(vi.mocked(track)).not.toHaveBeenCalled();
         expect(h.clientQuery).not.toHaveBeenCalled();

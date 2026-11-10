@@ -22,5 +22,6 @@
   "admin_media_upload.state.error": "The upload failed. Nothing was saved; check the file and try again.",
   "admin_media_upload.state.hit": "Image uploaded.",
   "admin_media_upload.state.unauthorized": "Your session has expired or you are not an admin. Sign in again to upload.",
-  "admin_media_upload.state.offline": "You are offline. Upload when the connection returns."
+  "admin_media_upload.state.offline": "You are offline. Upload when the connection returns.",
+  "admin_media_upload.errors.max_length": "Keep this under 500 characters."
 }

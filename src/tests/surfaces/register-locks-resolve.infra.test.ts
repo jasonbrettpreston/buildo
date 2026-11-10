@@ -21,7 +21,9 @@ const ROW_HEAD_RE = /^\| (?:~~\*\*)?(FE-\d+)(?:\*\*~~)? \|/;
 const SEE_RE = /\bsee (FE-\d+)\b/;
 const SENTINEL = 'FE-01';
 // Empty since the FE-10 flip (RULED 2026-11-09, lock 6aca7c76d, MF-18). Closed and shrink-only.
-const FLIP_PENDING: readonly string[] = [];
+// Dated 2026-11-09 (MF-37): FE-32 and FE-33 join it because their locks landed in the MF-37 code commit (7ad4ec42c) while the rows stay OWED
+// until the operator approves the flip (plan v3 section 7 step 8); the flip commit removes both ids. The list then shrinks back to empty.
+const FLIP_PENDING: readonly string[] = ['FE-32', 'FE-33'];
 
 type Row = { status: string; locks: string[] };
 
@@ -197,8 +199,8 @@ describe('FE-09: the Spec 135 Lock column resolves (rule 5)', () => {
     expect(registerLockProblems(text, TRACKED, [id]).join('\n')).toContain(`${id}: on FLIP_PENDING but its lock is not landed`);
     expect(registerLockProblems(REAL, TRACKED, ['FE-99']).join('\n')).toMatch(/FE-99: on FLIP_PENDING but not a register row/);
     const tracked = new Set([...TRACKED, lock]);
-    expect(registerLockProblems(text, tracked, [id])).not.toContain(`${id}: OWED but its lock already exists: ${lock} (rule 5; flip the row)`);
-    expect(registerLockProblems(text, tracked, [id])).toEqual([]);
+    expect(registerLockProblems(text, tracked, [id, ...FLIP_PENDING])).not.toContain(`${id}: OWED but its lock already exists: ${lock} (rule 5; flip the row)`);
+    expect(registerLockProblems(text, tracked, [id, ...FLIP_PENDING])).toEqual([]);
     expect(registerLockProblems(text, tracked, []).join('\n')).toContain(`${id}: OWED but its lock already exists`);
   });
 

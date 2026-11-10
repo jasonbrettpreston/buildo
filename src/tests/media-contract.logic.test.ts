@@ -18,6 +18,9 @@ import {
   MediaDecodeError,
   decodeDataUrl,
   maxRequestBytes,
+  readMediaLimits,
+  LIMIT_KEYS,
+  MediaLimitsMissingError,
   pathFor,
   requestValidator,
   deleteValidator,
@@ -170,6 +173,18 @@ describe('media contract — limits', () => {
 
   it('RED: a 5,000,000 max does not fit', () => {
     expect(maxRequestBytes({ max_bytes: 5_000_000 })).toBeGreaterThanOrEqual(REQUEST_LIMIT_BYTES);
+  });
+  // Security OUTPUT seat F1 (2026-11-09): the live values are refused outside the seed's [min, max], fail closed.
+  const fakeDb = (over: Record<string, number>) => ({
+    query: async () => ({ rows: Object.values(LIMIT_KEYS).map((k) => ({ variable_key: k, variable_value: over[k] ?? SEED[k]!.default })) }),
+  }) as unknown as Parameters<typeof readMediaLimits>[0];
+  it('readMediaLimits returns the seed defaults when the rows hold them; LIMIT_KEYS equals the contract limits', async () => {
+    expect(LIMIT_KEYS).toEqual(CONTRACT.limits);
+    expect((await readMediaLimits(fakeDb({}))).max_bytes).toBe(SEED[LIMIT_KEYS.max_bytes]!.default);
+  });
+  it('RED: a 3,000,001-byte cap and a one-day signed-URL TTL are refused (fail closed)', async () => {
+    await expect(readMediaLimits(fakeDb({ [LIMIT_KEYS.max_bytes]: 3_000_001 }))).rejects.toBeInstanceOf(MediaLimitsMissingError);
+    await expect(readMediaLimits(fakeDb({ [LIMIT_KEYS.signed_url_ttl_seconds]: 86_400 }))).rejects.toThrow('media_signed_url_ttl_seconds');
   });
 });
 

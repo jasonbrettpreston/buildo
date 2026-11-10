@@ -8,5 +8,6 @@
   "admin_media_delete.errors.min_length": "Type the alt text to confirm.",
   "admin_media_delete.errors.additional_properties": "This form sent a field it does not know.",
   "admin_media_delete.state.error": "The image could not be deleted. Try again.",
-  "admin_media_delete.state.hit": "Image deleted."
+  "admin_media_delete.state.hit": "Image deleted.",
+  "admin_media_delete.errors.max_length": "Keep this under 500 characters."
 }

@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS media_assets (
   path         text NOT NULL UNIQUE,
   mime         text NOT NULL CHECK (mime IN ('image/png', 'image/jpeg', 'image/webp')),
   bytes        integer NOT NULL CHECK (bytes > 0),
-  alt          text NOT NULL CHECK (length(alt) > 0),
+  alt          text NOT NULL CHECK (length(alt) BETWEEN 1 AND 500),
   scenario_key text NULL,
   position     integer NULL CHECK (position >= 0),
   rule         jsonb NULL CHECK (rule IS NULL OR jsonb_typeof(rule) = 'object'),
@@ -40,7 +40,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS media_assets_report_order
 
 ALTER TABLE media_assets ENABLE ROW LEVEL SECURITY;
 CREATE POLICY media_assets_select_admin ON media_assets
-  FOR SELECT USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
+  FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND is_admin = true));
 
 DO $migration$
 BEGIN
@@ -57,17 +57,24 @@ BEGIN
     RAISE EXCEPTION '300: bucket surface-media is missing or public after creation';
   END IF;
 
+  -- The bucket's own limits (security OUTPUT seat F4), where the Storage API version carries the columns: the ruled 3 MB ceiling
+  -- (Wave 1 batch item 2; the live cap is media_upload_max_bytes, at most this) and the closed MIME set of media-contract.json.
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'storage' AND table_name = 'buckets' AND column_name = 'file_size_limit')
+     AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'storage' AND table_name = 'buckets' AND column_name = 'allowed_mime_types') THEN
+    EXECUTE $sql$UPDATE storage.buckets SET file_size_limit = 3000000, allowed_mime_types = ARRAY['image/png', 'image/jpeg', 'image/webp'] WHERE id = 'surface-media'$sql$;
+  END IF;
+
   EXECUTE $sql$
-    CREATE POLICY surface_media_select_admin ON storage.objects FOR SELECT USING (
-      bucket_id = 'surface-media' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true))
+    CREATE POLICY surface_media_select_admin ON storage.objects FOR SELECT TO authenticated USING (
+      bucket_id = 'surface-media' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND is_admin = true))
   $sql$;
   EXECUTE $sql$
-    CREATE POLICY surface_media_insert_admin ON storage.objects FOR INSERT WITH CHECK (
-      bucket_id = 'surface-media' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true))
+    CREATE POLICY surface_media_insert_admin ON storage.objects FOR INSERT TO authenticated WITH CHECK (
+      bucket_id = 'surface-media' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND is_admin = true))
   $sql$;
   EXECUTE $sql$
-    CREATE POLICY surface_media_delete_admin ON storage.objects FOR DELETE USING (
-      bucket_id = 'surface-media' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true))
+    CREATE POLICY surface_media_delete_admin ON storage.objects FOR DELETE TO authenticated USING (
+      bucket_id = 'surface-media' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND is_admin = true))
   $sql$;
 END
 $migration$;

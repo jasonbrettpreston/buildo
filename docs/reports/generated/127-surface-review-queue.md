@@ -1164,7 +1164,7 @@ Deletes one media row after the admin types its alt text, writes the audit row, 
 
 | | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
 |---|---|---|---|---|---|---|
-| reads | `media_assets` **(net-new)** | `id` · `lead_type` · `lead_key` · `permit_num` · `revision_num` · `coa_application_number` · `address_snapshot` · `saved_at` · `admin_uid` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/36_flight_center_tool.md` |
+| reads | `media_assets` **(net-new)** | `asset_id` · `kind` · `path` · `mime` · `bytes` · `alt` · `scenario_key` · `position` · `rule` · `uploaded_by` · `created_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
 
 **3. Which contracts, and who calls them?**
 
@@ -1172,7 +1172,7 @@ Called by 1: `admin_media_delete`
 
 **4. What gate, role or entitlement stands in front of it?**
 
-session `admin` — classifyRoute("/api/admin/leads/watchlist") returns "admin" (executed 2026-09-15); the handler re-verifies the caller in-process. · RLS class `B` · entitlement `none`
+session `admin` — classifyRoute("/api/admin/media/[asset_id]") returns "admin" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin. · RLS class `B` · entitlement `none`
 
 **5. What archetype, and why that one?**
 
@@ -1212,7 +1212,7 @@ Returns the admin media rows with server display strings, sort keys and one shor
 
 | | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
 |---|---|---|---|---|---|---|
-| reads | `media_assets` **(net-new)** | `id` · `lead_type` · `lead_key` · `permit_num` · `revision_num` · `coa_application_number` · `address_snapshot` · `saved_at` · `admin_uid` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/36_flight_center_tool.md` |
+| reads | `media_assets` **(net-new)** | `asset_id` · `kind` · `path` · `mime` · `bytes` · `alt` · `scenario_key` · `position` · `rule` · `uploaded_by` · `created_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
 
 **3. Which contracts, and who calls them?**
 
@@ -1220,7 +1220,7 @@ Called by 1: `admin_media`
 
 **4. What gate, role or entitlement stands in front of it?**
 
-session `admin` — classifyRoute("/api/admin/leads/watchlist") returns "admin" (executed 2026-09-15); the handler re-verifies the caller in-process. · RLS class `B` · entitlement `none`
+session `admin` — classifyRoute("/api/admin/media") returns "admin" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin. · RLS class `B` · entitlement `none`
 
 **5. What archetype, and why that one?**
 
@@ -1260,7 +1260,7 @@ Accepts one image as a data URL with its kind, scenario key, position and alt te
 
 | | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
 |---|---|---|---|---|---|---|
-| reads | `media_assets` **(net-new)** | `id` · `lead_type` · `lead_key` · `permit_num` · `revision_num` · `coa_application_number` · `address_snapshot` · `saved_at` · `admin_uid` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/36_flight_center_tool.md` |
+| reads | `media_assets` **(net-new)** | `asset_id` · `kind` · `path` · `mime` · `bytes` · `alt` · `scenario_key` · `position` · `rule` · `uploaded_by` · `created_at` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
 
 **3. Which contracts, and who calls them?**
 
@@ -1268,7 +1268,7 @@ Called by 1: `admin_media_upload`
 
 **4. What gate, role or entitlement stands in front of it?**
 
-session `admin` — classifyRoute("/api/admin/leads/watchlist") returns "admin" (executed 2026-09-15); the handler re-verifies the caller in-process. · RLS class `B` · entitlement `none`
+session `admin` — classifyRoute("/api/admin/media") returns "admin" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and a mutation also requires a session admin. · RLS class `B` · entitlement `none`
 
 **5. What archetype, and why that one?**
 

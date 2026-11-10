@@ -9,15 +9,15 @@
 // orphan row). Auth: verifyAdminAuth FIRST line; authMethod === 'session' required.
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
-import { verifyAdminAuth, type AdminContext } from '@/lib/auth/verify-admin';
+import { sessionRequired, unauthorized } from '@/lib/admin/admin-responses';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
 import { pool, withTransaction } from '@/lib/db/client';
 import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod } from '@/features/leads/api/error-mapping';
-import { logError, logInfo, logWarn } from '@/lib/logger';
+import { logError, logInfo } from '@/lib/logger';
 import { track } from '@/lib/admin/analytics';
 import { hashAdminUid } from '@/lib/media/hash-admin-uid';
 import { deleteValidator, readMediaLimits } from '@/lib/media/contract';
@@ -29,22 +29,7 @@ const ACTION = 'media_delete';
 const TARGET = 'media_assets';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function unauthorizedEnvelope(): NextResponse {
-  return NextResponse.json(
-    { data: null, error: { code: 'UNAUTHORIZED', message: 'Admin auth required' }, meta: null },
-    { status: 401 },
-  );
-}
 
-function forbiddenNonSessionWrite(ctx: AdminContext): NextResponse | null {
-  if (ctx.authMethod !== 'session') {
-    logWarn(TAG, 'non-session mutation rejected — media writes require a session admin', {
-      authMethod: ctx.authMethod,
-    });
-    return err('FORBIDDEN', 'Media mutations require a session admin (shared credentials cannot be audited)', 403);
-  }
-  return null;
-}
 
 interface MediaRow {
   asset_id: string;
@@ -64,9 +49,9 @@ type TxOutcome = { kind: 'not_found' } | { kind: 'mismatch' } | { kind: 'deleted
 export const DELETE = withApiEnvelope(async function DELETE(request: NextRequest, context?: unknown) {
   // Spec 33 §8 admin auth boundary — FIRST line.
   const adminCtx = await verifyAdminAuth(request);
-  if (!adminCtx) return unauthorizedEnvelope();
-  const forbidden = forbiddenNonSessionWrite(adminCtx);
-  if (forbidden) return forbidden;
+  if (!adminCtx) return unauthorized();
+  // Spec 33 section 8.1: shared credentials cannot be audited (admin_audit_log.admin_uid is a UUID FK).
+  if (adminCtx.authMethod !== 'session') return sessionRequired(adminCtx, '/api/admin/media/[asset_id]');
 
   const t0 = Date.now();
   const { asset_id: assetId } = await (context as { params: Promise<{ asset_id: string }> }).params;

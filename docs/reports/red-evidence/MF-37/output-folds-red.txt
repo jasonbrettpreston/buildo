@@ -1,0 +1,34 @@
+MF-37 OUTPUT-panel folds red run, 2026-11-09 (the files were restored from copies after the run, cmp-verified). Plants: (1) FormBinding renders no state alert -> FE-33 (a2) every-state case; (2) readMediaLimits without the seed-bounds check (security F1) -> T2; (3) the 411 Content-Length refusal removed (security F2) and (4) the timeout orphan remove disabled (code-reviewer F1, security F5) -> T4. The C-8 import-source case (code-reviewer F2) is an in-memory RED inside the FE-31 lock.
+   × media contract — limits > RED: a 3,000,001-byte cap and a one-day signed-URL TTL are refused (fail closed) 5ms
+     → promise resolved "{ max_bytes: 3000001, …(4) }" instead of rejecting
+   × POST /api/admin/media — order and compensation > storage with no status (timeout): 502, and the possibly-landed object is removed best-effort 2ms
+     → expected "spy" to be called 1 times, but got 0 times
+   × POST /api/admin/media — order and compensation > timeout and the orphan remove fails: stage media_upload_timeout_orphan 1ms
+     → expected [ 'media_upload_storage' ] to deeply equal [ 'media_upload_storage', …(1) ]
+   × POST /api/admin/media — order and compensation > 411 when Content-Length is missing or not a number, before parsing 0ms
+     → Cannot read properties of null (reading 'code')
+   × FE-33 (a) one render smoke per archetype (web) > FORM delete: the confirm field, the state alert and the submit come from content; the asset id is not shown 6ms
+     → expected '<style data-mantine-styles="true">:ro…' to contain 'The image could not be deleted. Try a…'
+   × FE-33 (a2) every declared state of the three surfaces renders (17 goldens; compliance OUTPUT F13) > each state renders non-empty through its binding, and its state alert text (when it has one) is the content text 16ms
+     → expected [ …(2) ] to deeply equal [ …(2) ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/admin-media.infra.test.ts > POST /api/admin/media — order and compensation > storage with no status (timeout): 502, and the possibly-landed object is removed best-effort
+ FAIL  src/tests/admin-media.infra.test.ts > POST /api/admin/media — order and compensation > timeout and the orphan remove fails: stage media_upload_timeout_orphan
+ FAIL  src/tests/admin-media.infra.test.ts > POST /api/admin/media — order and compensation > 411 when Content-Length is missing or not a number, before parsing
+ FAIL  src/tests/media-contract.logic.test.ts > media contract — limits > RED: a 3,000,001-byte cap and a one-day signed-URL TTL are refused (fail closed)
+ FAIL  src/tests/surfaces/render-smoke.logic.test.ts > FE-33 (a) one render smoke per archetype (web) > FORM delete: the confirm field, the state alert and the submit come from content; the asset id is not shown
+ FAIL  src/tests/surfaces/render-smoke.logic.test.ts > FE-33 (a2) every declared state of the three surfaces renders (17 goldens; compliance OUTPUT F13) > each state renders non-empty through its binding, and its state alert text (when it h
+ Test Files  3 failed (3)
+      Tests  6 failed | 63 passed (69)
+
+Second part: the targeted run after the code commit landed (git ls-files now tracks the new locks and the first files under the pending globs). FE-09 (register-locks-resolve.infra.test.ts) was red because FE-32 and FE-33 are OWED with landed locks and FLIP_PENDING was empty; it is amended by dated comment (FLIP_PENDING = FE-32, FE-33 until the operator-approved flip). mcbylaws-frontend.logic.test.ts C2 is red because mcbylaws/protected-paths.json pending_globs still lists src/components/surfaces/** and src/app/(maxbld)/** (MB-67's file; not edited here).
+ FAIL  src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: no glob in pending AND frontend matches a tracked path; a stale one is named; McBylaws pending globs are n
+AssertionError: expected [ …(2) ] to deeply equal []
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > the real register and tree have no problem
+AssertionError: expected [ …(2) ] to deeply equal []
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > the planted OWED stand-in is chosen from the register at test time, or is synthetic, and is clean as planted
+AssertionError: expected [ …(2) ] to deeply equal []
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > FLIP_PENDING is exact: on the list a RULED row, an unlanded lock or a missing row is red; off the list a landed OWED lock is red
+AssertionError: expected [ …(2) ] to deeply equal []
+ FAIL  src/tests/surfaces/register-locks-resolve.infra.test.ts > FE-09: the Spec 135 Lock column resolves (rule 5) > fold: a RULED lock outside src/tests/surfaces resolves against the whole tracked tree
+AssertionError: expected [ …(2) ] to deeply equal []
