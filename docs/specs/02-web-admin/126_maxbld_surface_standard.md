@@ -1016,6 +1016,14 @@ Reading (record, same section): A = the report detail is the expanded card; B = 
 
 **Outside the MaxBLD set.** Buildo's lead-gen pages are not MaxBLD pages and are not listed above: web `/dashboard`, `/builders`, `/builders/[id]`, `/permits/[id]`; mobile lead feed `/(app)/` (index), lead detail `/(app)/[lead]?id=`, `/(app)/map`, `/(app)/settings`, the flight board `/(app)/flight-board` and `/(app)/[flight-job]?id=`; the trade onboarding `/(onboarding)/` screens (`profession`, `path`, `address`, `supplier`, `first-permit`, `terms`, `complete`, `manufacturer-hold`). Admin pages other than D1-D4 are estate admin, not MaxBLD pages.
 
+> Dated sub-note 2026-11-09 — **Report page (W6/A4)** (MaxBLD report page · McFrontend queue · push-17 lane; M-246, prior text kept, nothing above changed). Operator, verbatim: on the agreed brief, "This looks like it"; then "teh rear suite should be an add one to other scenarios". Record: `~/Buildo-scratch/mcfrontend/phase1/open-questions.md` (last entry); the agreed brief `~/Buildo-scratch/mcfrontend/REPORT-LAYOUT-v2.md` (2026-11-04) and the later rulings listed with it in `~/Buildo-scratch/mcfrontend/layouts/REPORT-STITCH-SUMMARY.md`.
+>
+> 1. **Page.** The lot card, then one card per scenario of the Spec 78 §P5.1 closed set, in catalogue order, as each scenario's rows land.
+> 2. **Rear suite.** An add-on inside the other scenario cards, never its own card (Spec 78 §P5.1 "Rear-suite add-on (every row)"). This replaces "Rear suite (5)" in REPORT-LAYOUT-v2 §A.2; no Spec 78 change.
+> 3. **Card frame** (REPORT-LAYOUT-v2 §C, same for every scenario): headline, confidence badge and reason, as-of-right per option, "+X m² with a CoA" (an estimate, after the as-of-right line, never the headline; §11a and the Q-MF7 a rules), photos, CoA decisions for this scenario, then More detail (collapsed).
+> 4. **Placement** (D0 SIMPLIFIED, 2026-11-09, recorded in the same record): one ordered headline list per scenario in `scripts/surfaces/_schema/report-v2-seed/row-presentation.json`; a row not listed is detail, in catalogue order; no priority numbers and no groups. This replaces the six tiers of REPORT-LAYOUT-v2 §C ("Tier is data").
+> 5. **Field names.** Taken from the field generator `~/Buildo-scratch/mcfrontend/fields/extract-fields.mjs` (read-only on origin) and its summary builder `build-stitch-summary.mjs`; every field binds to a DB field (§11a.1, Q-MF3). The brief and the summary are references, not copied into the repo.
+
 ## 12. Phases
 
 **There is ONE sequence in this programme, and it lives in Spec 127 §4.4** (batching by archetype). The table below is that sequence rendered at spec altitude — same rows, same order, same ids. It is not a second plan: if a batch moves, it moves in Spec 127 and this table follows. The one thing stated *here* rather than there is the rule that reordered it.
