@@ -1,0 +1,103 @@
+MF-37 T5 Storage half: supabase/tests/rls_admin_media.test.sql — RED (planted defects)
+Run 2026-11-10 on the LOCAL Supabase stack (container supabase_db_Buildo, 127.0.0.1:54322), DB lock held.
+Runner: psql -X -q -A -t -v ON_ERROR_STOP=1 -f <file> (one file, its own BEGIN ... ROLLBACK; nothing persists).
+Each plant is one extra statement inside the same transaction, in a temporary copy of the file (the committed file has no plant).
+
+== RED A: after plan(15), 'update storage.buckets set public = true where id = ''surface-media'';' (rolled back)
+expected: test 1 fails
+1..15
+not ok 1 - bucket surface-media exists and is private (public = false)
+# Failed test 1: "bucket surface-media exists and is private (public = false)"
+#     Results differ beginning at row 1:
+#         have: (t)
+#         want: (f)
+ok 2 - surface-media policy set is exactly select/insert/delete admin
+ok 3 - no UPDATE (or ALL) policy reaches surface-media
+ok 4 - no storage.objects policy is bucket-agnostic
+ok 5 - each of the three is TO authenticated and gates on bucket surface-media + profiles.is_admin of auth.uid()
+true
+00000000-0000-0000-0000-00000000a0b2
+{"sub" : "00000000-0000-0000-0000-00000000a0b2", "role" : "authenticated"}
+ok 6 - insert negative: non-admin authenticated user cannot upload to surface-media
+
+
+ok 7 - insert negative: anon cannot upload to surface-media
+00000000-0000-0000-0000-00000000a0a1
+{"sub" : "00000000-0000-0000-0000-00000000a0a1", "role" : "authenticated"}
+ok 8 - insert positive: admin uploads to surface-media
+ok 9 - select positive: admin sees both surface-media objects
+00000000-0000-0000-0000-00000000a0b2
+{"sub" : "00000000-0000-0000-0000-00000000a0b2", "role" : "authenticated"}
+ok 10 - select negative: non-admin authenticated user sees zero surface-media objects
+ok 11 - delete negative: the non-admin user's delete removed nothing
+
+
+ok 12 - select negative: anon sees zero surface-media objects
+ok 13 - delete negative: anon's delete removed nothing
+00000000-0000-0000-0000-00000000a0a1
+{"sub" : "00000000-0000-0000-0000-00000000a0a1", "role" : "authenticated"}
+ok 14 - no-UPDATE negative: the admin's update changed no surface-media object
+ok 15 - delete positive: the admin removed exactly the targeted object
+# Looks like you failed 1 test of 15
+
+== RED B: after the seed, 'update profiles set is_admin = true' for the NON-admin test user (rolled back)
+expected: the non-admin negatives fail (6, 10, 11) and the counts that depend on them (9, 13, 15)
+1..15
+ok 1 - bucket surface-media exists and is private (public = false)
+ok 2 - surface-media policy set is exactly select/insert/delete admin
+ok 3 - no UPDATE (or ALL) policy reaches surface-media
+ok 4 - no storage.objects policy is bucket-agnostic
+ok 5 - each of the three is TO authenticated and gates on bucket surface-media + profiles.is_admin of auth.uid()
+true
+00000000-0000-0000-0000-00000000a0b2
+{"sub" : "00000000-0000-0000-0000-00000000a0b2", "role" : "authenticated"}
+not ok 6 - insert negative: non-admin authenticated user cannot upload to surface-media
+# Failed test 6: "insert negative: non-admin authenticated user cannot upload to surface-media"
+#       caught: no exception
+#       wanted: 42501
+
+
+ok 7 - insert negative: anon cannot upload to surface-media
+00000000-0000-0000-0000-00000000a0a1
+{"sub" : "00000000-0000-0000-0000-00000000a0a1", "role" : "authenticated"}
+ok 8 - insert positive: admin uploads to surface-media
+not ok 9 - select positive: admin sees both surface-media objects
+# Failed test 9: "select positive: admin sees both surface-media objects"
+#     Results differ beginning at row 1:
+#         have: (3)
+#         want: (2)
+00000000-0000-0000-0000-00000000a0b2
+{"sub" : "00000000-0000-0000-0000-00000000a0b2", "role" : "authenticated"}
+not ok 10 - select negative: non-admin authenticated user sees zero surface-media objects
+# Failed test 10: "select negative: non-admin authenticated user sees zero surface-media objects"
+#     Results differ beginning at row 1:
+#         have: (3)
+#         want: (0)
+not ok 11 - delete negative: the non-admin user's delete removed nothing
+# Failed test 11: "delete negative: the non-admin user's delete removed nothing"
+#     Results differ beginning at row 1:
+#         have: (0)
+#         want: (2)
+
+
+ok 12 - select negative: anon sees zero surface-media objects
+not ok 13 - delete negative: anon's delete removed nothing
+# Failed test 13: "delete negative: anon's delete removed nothing"
+#     Results differ beginning at row 1:
+#         have: (0)
+#         want: (2)
+00000000-0000-0000-0000-00000000a0a1
+{"sub" : "00000000-0000-0000-0000-00000000a0a1", "role" : "authenticated"}
+ok 14 - no-UPDATE negative: the admin's update changed no surface-media object
+not ok 15 - delete positive: the admin removed exactly the targeted object
+# Failed test 15: "delete positive: the admin removed exactly the targeted object"
+#     Results differ beginning at row 1:
+#         have: NULL
+#         want: (report_image/pgtap-seed.png)
+# Looks like you failed 6 tests of 15
+
+== after the red and green runs (owner read): the plants did not persist
+after: bucket public|f
+after: objects|0
+after: test users|0
+after: pgtap ext|0

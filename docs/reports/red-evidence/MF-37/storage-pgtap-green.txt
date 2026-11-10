@@ -1,0 +1,40 @@
+MF-37 T5 Storage half: supabase/tests/rls_admin_media.test.sql — GREEN (no plant)
+Run 2026-11-10 on the LOCAL Supabase stack (container supabase_db_Buildo, 127.0.0.1:54322), DB lock held.
+Runner: psql -X -q -A -t -v ON_ERROR_STOP=1 -f supabase/tests/rls_admin_media.test.sql (BEGIN ... ROLLBACK); psql exit 0.
+(The bare set_config result lines are the impersonation steps: request.jwt.claim.sub and request.jwt.claims.)
+
+1..15
+ok 1 - bucket surface-media exists and is private (public = false)
+ok 2 - surface-media policy set is exactly select/insert/delete admin
+ok 3 - no UPDATE (or ALL) policy reaches surface-media
+ok 4 - no storage.objects policy is bucket-agnostic
+ok 5 - each of the three is TO authenticated and gates on bucket surface-media + profiles.is_admin of auth.uid()
+true
+00000000-0000-0000-0000-00000000a0b2
+{"sub" : "00000000-0000-0000-0000-00000000a0b2", "role" : "authenticated"}
+ok 6 - insert negative: non-admin authenticated user cannot upload to surface-media
+
+
+ok 7 - insert negative: anon cannot upload to surface-media
+00000000-0000-0000-0000-00000000a0a1
+{"sub" : "00000000-0000-0000-0000-00000000a0a1", "role" : "authenticated"}
+ok 8 - insert positive: admin uploads to surface-media
+ok 9 - select positive: admin sees both surface-media objects
+00000000-0000-0000-0000-00000000a0b2
+{"sub" : "00000000-0000-0000-0000-00000000a0b2", "role" : "authenticated"}
+ok 10 - select negative: non-admin authenticated user sees zero surface-media objects
+ok 11 - delete negative: the non-admin user's delete removed nothing
+
+
+ok 12 - select negative: anon sees zero surface-media objects
+ok 13 - delete negative: anon's delete removed nothing
+00000000-0000-0000-0000-00000000a0a1
+{"sub" : "00000000-0000-0000-0000-00000000a0a1", "role" : "authenticated"}
+ok 14 - no-UPDATE negative: the admin's update changed no surface-media object
+ok 15 - delete positive: the admin removed exactly the targeted object
+
+== after the red and green runs (owner read): nothing persisted (no test users, no surface-media objects, pgtap not left installed)
+after: bucket public|f
+after: objects|0
+after: test users|0
+after: pgtap ext|0
