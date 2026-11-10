@@ -1,0 +1,45 @@
+{
+  "$comment": "MF-35 legacy oracle input (plan v2 §9 RG-7, F1): every testID, a11y/input attribute and user-visible text literal of mobile/app/(app)/parcel-tool/index.tsx before the conversion (git show 1e87de532), extracted once by the lane. Read by src/tests/surfaces/parcel-legacy-oracle.logic.test.ts. The four text literals with a JSX expression inside are added by hand in their template form ({...}).",
+  "source": "1e87de532:mobile/app/(app)/parcel-tool/index.tsx",
+  "testIDs": [
+    "parcel-search-input",
+    "parcel-search-suggestion-${s.query}",
+    "parcel-search-outside-toronto",
+    "parcel-search-ratelimit",
+    "parcel-search-entitlement",
+    "parcel-search-error",
+    "parcel-search-retry",
+    "parcel-candidate-${c.parcelId}",
+    "parcel-search-refine",
+    "parcel-search-empty",
+    "parcel-search-prompt"
+  ],
+  "attrs": [
+    "accessibilityRole=header",
+    "placeholder=Search an address, e.g. 26 Hurlingham Cres",
+    "autoCapitalize=none",
+    "returnKeyType=search",
+    "accessibilityLabel=Search a Toronto address",
+    "accessibilityHint=Enter at least ${SEARCH_MIN_QUERY_LEN} characters to search for a lot",
+    "accessibilityLabel=Searching",
+    "accessibilityRole=button",
+    "accessibilityLabel=Search ${s.label}",
+    "accessibilityLabel=Retry the search",
+    "accessibilityLabel=Open lot at ${c.address || c.parcelId}"
+  ],
+  "text": [
+    "Max",
+    "BLD",
+    "Toronto lot lookup",
+    "Lots are only available in Toronto.",
+    "Try again",
+    "No parcel found for that address.",
+    "We couldn’t read the response for that address. This is our problem, not yours — it has been reported.",
+    "Couldn’t reach the lot service. Check your connection and try again.",
+    "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
+    "Too many searches. Try again in {retryAfter}s.",
+    "More than {SEARCH_CANDIDATE_LIMIT} lots match. Add a house number to narrow it down.",
+    "Type at least {SEARCH_MIN_QUERY_LEN} characters to search.",
+    "Parcel {c.parcelId}"
+  ]
+}

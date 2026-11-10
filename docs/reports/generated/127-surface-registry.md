@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **78 surfaces, 65 contracts and 6 jobs** in it today.
+There are **79 surfaces, 65 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 78 |
+| SURFACE | 79 |
 | CONTRACT | 65 |
 | JOB | 6 |
-| **Total** | **149** |
+| **Total** | **150** |
 
 ### 2.1 By archetype
 
@@ -219,12 +219,12 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
 | `FORM` | SURFACE | 6 | 2 | 2 | 10 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 10 | 6 | 1 | 17 |
+| `LIST` | SURFACE | 10 | 7 | 1 | 18 |
 | `MUTATION` | CONTRACT | 20 | 3 | 0 | 23 |
 | `QUERY` | CONTRACT | 32 | 1 | 0 | 33 |
 | `REPORT` | SURFACE | 2 | 3 | 0 | 5 |
 | `SCHEDULED` | JOB | 6 | 0 | 0 | 6 |
-| `SEARCH` | SURFACE | 4 | 0 | 0 | 4 |
+| `SEARCH` | SURFACE | 3 | 0 | 1 | 4 |
 | `SHELL` | SURFACE | 6 | 0 | 0 | 6 |
 | `SLOT` | SURFACE | 1 | 0 | 0 | 1 |
 | `STATIC` | SURFACE | 6 | 0 | 0 | 6 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**15 of 149 rows fully researched · 134 still open · 436 unresearched fields in total.**
+**16 of 150 rows fully researched · 134 still open · 436 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
-| `mobile-product.json` | 37 | 7 | 30 | 63 |
+| `mobile-product.json` | 38 | 8 | 30 | 63 |
 | `web-product.json` | 12 | 2 | 10 | 89 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 14 | 5 | 9 | 17 |
 | `contracts.json` | 65 | 1 | 64 | 162 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **149** | **15** | **134** | **436** |
+| **total** | **150** | **16** | **134** | **436** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -264,9 +264,9 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 
 | Status | Count | Meaning |
 |---|---:|---|
-| exists | 129 | the code is in the tree today |
-| new | 17 | specified, not built |
-| generated | 3 | will be rendered from descriptors, not hand-written |
+| exists | 128 | the code is in the tree today |
+| new | 18 | specified, not built |
+| generated | 4 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -278,9 +278,9 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 |---|---|---:|---:|---:|---|
 | **A** | `parcel_product` | 10 | 8 (80%) | 7 | yes |
 | **B** | `parcel_admin` | 19 | 5 (26%) | 19 | yes |
-| **C** | `platform_shared` | 74 | 2 (3%) | 43 | yes |
+| **C** | `platform_shared` | 75 | 3 (4%) | 43 | yes |
 | **D** | `estate_other` | 46 | 0 (0%) | 40 | **no** — inventory + seam only (R-03) |
-| | **total** | **149** | **15** | | |
+| | **total** | **150** | **16** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -359,7 +359,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-014`](#s-014) | surface | `admin_role_matrix` | `REPORT` | `F09` surface-registry-drift | 2093 | 100% | [detail](#s-014) |
 | [`S-016`](#s-016) | surface | `admin_surface_registry` | `LIST` | `F09` surface-registry-drift | 2093 | 97% | [detail](#s-016) |
 
-**§C `platform_shared` (74)**
+**§C `platform_shared` (75)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -404,6 +404,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-049`](#s-049) | surface | `shell_web_root` | `SHELL` | `F14` navigation-shells | 3143 | 91% | [detail](#s-049) |
 | [`S-077`](#s-077) | surface | `binding_web_form` | `FORM` | `F14` navigation-shells | 3144 | 100% | [detail](#s-077) |
 | [`S-078`](#s-078) | surface | `binding_web_list` | `LIST` | `F14` navigation-shells | 3144 | 100% | [detail](#s-078) |
+| [`S-079`](#s-079) | surface | `shared_mobile_surface_binding` | `LIST` | `F14` navigation-shells | 3145 | 100% | [detail](#s-079) |
 | [`C-027`](#c-027) | contract | `contract_products` | `QUERY` | `F15` user-profile-settings | 3152 | 88% | [detail](#c-027) |
 | [`C-034`](#c-034) | contract | `contract_trades` | `QUERY` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-034) |
 | [`C-035`](#c-035) | contract | `contract_user_profile` | `MUTATION` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-035) |
@@ -512,7 +513,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F11** onboarding | `platform_shared` | [`C-026`](#c-026) · [`S-028`](#s-028) · [`S-029`](#s-029) · [`S-030`](#s-030) · [`S-031`](#s-031) · [`S-032`](#s-032) · [`S-033`](#s-033) · [`S-034`](#s-034) · [`S-035`](#s-035) · [`S-048`](#s-048) | 1 | 2 | 10 descriptor(s), 1 contract(s), and would orphan 1 table(s): `trade_suppliers` |
 | **F12** subscription-billing | `platform_shared` | [`C-020`](#c-020) · [`C-021`](#c-021) · [`C-022`](#c-022) · [`C-030`](#c-030) · [`C-031`](#c-031) · [`C-032`](#c-032) · [`C-038`](#c-038) · [`S-043`](#s-043) · [`S-044`](#s-044) · [`S-051`](#s-051) · [`S-052`](#s-052) · [`S-053`](#s-053) | 7 | 8 | 12 descriptor(s), 7 contract(s), and would orphan 1 table(s): `subscribe_nonces` |
 | **F13** notifications | `platform_shared` | [`C-006`](#c-006) · [`C-007`](#c-007) · [`C-023`](#c-023) · [`C-024`](#c-024) · [`C-025`](#c-025) · [`S-041`](#s-041) · [`S-022`](#s-022) | 5 | 6 | 7 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
-| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) | 0 | 3 | 6 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) | 0 | 3 | 7 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F15** user-profile-settings | `platform_shared` | [`C-027`](#c-027) · [`C-034`](#c-034) · [`C-035`](#c-035) · [`C-036`](#c-036) · [`C-037`](#c-037) · [`S-036`](#s-036) | 5 | 3 | 6 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
 | **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 11 table(s): `trade_configurations` · `trade_sqft_rates` · `data_quality_snapshots` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
 | **F17** tracked-lots | `parcel_product` | [`C-062`](#c-062) · [`S-072`](#s-072) | 1 | 3 | 2 descriptor(s), 1 contract(s), and would orphan 1 table(s): `user_tracked_lots` |
@@ -737,7 +738,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Under Spec 126.** **RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module.
 
-**kind** SURFACE · **archetype** `SEARCH` · **platforms** `mobile` · **status** exists · **lines** 714 · **shard** `mobile-product` · **researched** ✅ every field
+**kind** SURFACE · **archetype** `SEARCH` · **platforms** `mobile` · **status** generated · **lines** 714 · **shard** `mobile-product` · **researched** ✅ every field
 
 **Gate.** auth class **entitled** (The route resolves the user context and then hard-403s unless subscription_status is one of trial/active/past_due/admin_managed — a signed-in but lapsed user cannot reach the search at all.) · session **required** · entitlement subscription_status · flag none · device permission none
 
@@ -776,7 +777,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 2 | `inputs` | `contract` | Typing produces one debounced GET /api/parcels/lookup?q=. There is no local input at all: the owner’s location is irrelevant to MaxBLD. The query STRING is read twice by pure helpers — once by `isOutsideToronto` for the Toronto-only rule, once by `isIntersectionQuery`, because the server has no intersection parsing at all. — `mobile/src/hooks/useParcelLookup.ts:59-69 — export function useParcelSearch`, `mobile/app/(app)/parcel-tool/index.tsx:77-78 — isOutsideToronto gates the hook; a refused query is never sent`, `mobile/src/lib/parcelSearchMatch.ts:91 — export function isOutsideToronto`, `mobile/src/lib/parcelSearchMatch.ts:85 — export function isIntersectionQuery` |
 | 3 | `outputs` | `none` | A SEARCH surface here writes nothing: the only action is router.push to the detail route with the chosen parcelId. — `mobile/app/(app)/parcel-tool/index.tsx:94-101 — const goToParcel = useCallback` |
-| 4 | `state` | `none` | The lead-gen filter-store read is deleted. The query text and its debounce live in component useState, which the state vocabulary has no value for, and nothing else is held. — `mobile/app/(app)/parcel-tool/index.tsx:64-65 — const [input, setInput] / const [debounced, setDebounced]`, `mobile/app/(app)/parcel-tool/index.tsx — no useFilterStore import remains (grep)` |
+| 4 | `state` | `mmkv` | MF-35 (P35-D16 a): the recent searches are kept on the phone by recentSearchesStore (Zustand persisted to MMKV, Layer 4a), shown as the chips under the search bar and cleared at sign-out. The query text, its debounce and the checked address card live in component useState. — `mobile/src/store/recentSearchesStore.ts — useRecentSearchesStore (add, reset)`, `mobile/src/store/authStore.ts — clearLocalSessionState calls useRecentSearchesStore.getState().reset()`, `docs/specs/03-mobile/99_mobile_state_architecture.md §3.4c — the recentSearchesStore row (dated note 2026-11-10)` |
 | 5 | `staleness` | `query_cache` | useParcelSearch declares a 60-second staleTime; the 400ms debounce upstream is what actually protects the 60/min bucket, not the cache. — `mobile/src/hooks/useParcelLookup.ts:62-67 — staleTime: 60_000`, `mobile/app/(app)/parcel-tool/index.tsx:70-74 — the SEARCH_DEBOUNCE_MS useEffect` |
 | 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -791,7 +792,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 16 | `config` | `none` | The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) — `mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72`, `mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42`, `scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist`, `docs/reference/logic-variables-registry.md — neither is a registered logic variable` |
 | 17 | `sharing` | `shared` | It is the q-branch of the same GET /api/parcels/lookup route the detail screen calls with ?parcelId=; one contract, two surfaces, two rate buckets. — `mobile/src/hooks/useParcelLookup.ts:59-83`, `src/app/api/parcels/lookup/route.ts:72-74` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 
@@ -808,6 +809,8 @@ MATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on o
 TORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.
 
 BRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.
+
+MF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the "Report incorrect address match" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: "teh phone check isnt possible - continue with MF-35").
 
 <a id="s-004"></a>
 
@@ -2730,7 +2733,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ Report §1.1 row 17 and §5 — the RECOMMENDED PILOT surface, to land at /admin/surfaces. Its other inputs are the SURFACE + CONTRACT + JOB descriptor files, which are not DB tables and do not exist in the tree yet (VERIFIED: no surfaces/, contracts/ or jobs/ directory at the repo root). Measured defect it makes visible: the census headline finding, /api/leads/view — a live metered route with zero production callers — would have been a red row on day one instead of months of silence. Per AQ9 the usage column renders 'not_yet_metered' until usage_events exists, never a zero. DESIGNED, NOT MEASURED — every category on this row is a design choice grounded in a spec §, not an observation of code. THREE DECISIONS THIS ROW COULD NOT TAKE: (1) `status` — the task asked for `status: "designed"`, which is not in the closed set {exists, new, generated} (surface.schema.json properties.status; generate-surface-registry.mjs:182 refuses anything else). Per the research brief §4 rule 1 a value the menu lacks is an escalation, never a per-row invention, so the row keeps `new` ("Specified, not built. Nothing is measured.") and the gap is filed here. (2) `inputs.contract_ref` is EMPTY although the surface calls a designed contract: generate-surface-registry.mjs:195 refuses a contract_ref entry that is neither a census contract path nor a census id, so the designed `GET /api/admin/surfaces` is recorded in evidence.contracts instead. A designed surface therefore renders as a zero-out-degree node in the very fan-out graph this estate is building. (3) `identity.route` is set only because Spec 126 §2.2.2 fixes /admin/surfaces by name.
 
-### §C `platform_shared` — shared by both products, owned by neither (74)
+### §C `platform_shared` — shared by both products, owned by neither (75)
 
 Auth, the user profile, the subscription and Stripe hand-off, entitlements, notifications, and the navigation shells. Changing one of these changes **both** products, which is exactly why it is its own scope rather than being filed under whichever product noticed it first.
 
@@ -5742,6 +5745,76 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ MF-37 (P42-D9 a, batch C-3).
 
+<a id="s-079"></a>
+
+###### `S-079` `shared_mobile_surface_binding`
+
+**Programme.** `S-079` · scope `platform_shared` · feature `F14` · build order 3145 · batch `B2` · review `unreviewed` — Shared rendering infrastructure: the binding every converted mobile surface renders through.
+
+**What it is.** The one mobile surface binding: SearchBinding.tsx maps a SEARCH situation to a props tree (refs only) and SurfaceRenderer.tsx renders a props tree through the closed COMPONENTS table (bindings.json mapping.mobile) into the vendored React Native Reusables parts. It holds no display text of its own.
+
+**What it reads and writes.** It reads nothing itself: the mount file passes the situation, the content strings (the generated slice) and the bound data.
+
+**Under Spec 126.** **PROMOTED BINDING ENTRY** (P42-D9 a; MF-35 plan v2 §2.3): a platform_shared census entry that owns the binding modules, so R-13 totality holds while the converted surfaces own no component.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** new · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (Its only consumer today is the MaxBLD search page; each consumer declares its own guard.) · role **shared**
+
+**Calls.** —
+
+**Components owned.** `mobile/src/components/surfaces/SurfaceRenderer.tsx` · `mobile/src/components/surfaces/SearchBinding.tsx`
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md` |
+| `contracts` | `contract_parcels_lookup` |
+| `tables` | — |
+| `gate` | — |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states` |
+| `emits` | — |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 dated note 2026-11-10 — the binding standard` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `props` | Descriptor, content and data arrive as props from the mount file. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 3 | `outputs` | `none` | A binding writes nothing; a form submit is handed back to the mount file. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 4 | `state` | `none` | No store: the library component holds its own local UI state. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 5 | `staleness` | `none` | It renders what it is given. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 13 | `emits` | `none` | Rendering emits nothing. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 14 | `offers` | `none` | It renders no sponsored placement. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 15 | `metering` | `none` | Rendering is not a metered product action. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 16 | `config` | `none` | No tunable. — `mobile/src/components/surfaces/SurfaceRenderer.tsx`, `mobile/src/components/surfaces/SearchBinding.tsx` |
+| 17 | `sharing` | `shared` | Every converted mobile surface (the parcel search page first). — `scripts/surfaces/_schema/bindings.json — modules` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `mobile/src/components/surfaces/SurfaceRenderer.tsx` · `mobile/src/components/surfaces/SearchBinding.tsx`
+
+> ⚠️ MF-35 (P42-D9 a; P35-D10 a; the binding standard 2026-11-10).
+
 <a id="c-027"></a>
 
 ###### `C-027` `contract_products`
@@ -8383,7 +8456,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 12 of 64 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 12 of 66 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -8421,4 +8494,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 149 census rows and 271 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 150 census rows and 271 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

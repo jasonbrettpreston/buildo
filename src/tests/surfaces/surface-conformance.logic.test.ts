@@ -11,6 +11,7 @@
 //   C-2b no display text in mount files and binding modules (JSX text, string children, string display attributes);
 //   C-3  bindings.json integrity (modules, owners, promoted entries, roots, policy globs);  C-4 a converted surface owns no component;
 //   C-5  the vendored manifest both directions;  C-6 the generated types and validator equal a fresh emit;  C-7 schema closedness and the cutover plants.
+//   C-8m / C-9m (MF-35; the binding standard, Spec 126 §11b.2 dated note 2026-11-10 item (5)) the mobile closed table and the mobile 44 px case.
 //   C-11m (MF-35) the generated mobile library theme: scripts/surfaces/emit-mobile-theme.mjs --check on the real tree, and its planted RED cases.
 // Each check is a function here, run GREEN on the real tree and RED on a planted temp tree or in-memory input. Counts are printed so a vacuous pass
 // (0 modules, 0 vendored files) reads as a stated WAITS. No DB, no network.
@@ -210,9 +211,10 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     const ctx = await loadContext(REPO);
     const d = descArm(ctx);
     expect(d.findings).toEqual([]);
-    expect(d.note).toBe('S-desc ok (examined 23 in scope: converted 3, pending 7, parked 9, report 4)');
+    // MF-35 (dated 2026-11-10): mobile_parcel_search is converted (converted 3 -> 4, pending 7 -> 6); its 10 mobile goldens and 23 content strings join.
+    expect(d.note).toBe('S-desc ok (examined 23 in scope: converted 4, pending 6, parked 9, report 4)');
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (3 surfaces, 17 goldens)' }, { findings: [], note: 'S-sbind ok (3 surfaces, 56 strings)' }]);
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (4 surfaces, 27 goldens)' }, { findings: [], note: 'S-sbind ok (4 surfaces, 79 strings)' }]);
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -312,7 +314,8 @@ describe('C-3 bindings.json integrity', () => {
     expect(shapeProblems(REPO, 'bindings', B)).toEqual([]);
     expect(bindingsProblems(real)).toEqual([]);
     console.log(`C-3: ${B.modules.length} modules`);
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([2, 2, 4]);
+    // MF-35 (dated 2026-11-10): + the two mobile modules, their promoted entry shared_mobile_surface_binding and the search screen mount.
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([4, 3, 5]);
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -418,7 +421,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     for (const a of ARCHETYPES) { const d = convert(a); expect([a, v(d), unresearchedCount(d)]).toEqual([a, [], 0]); }
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
-    expect(all.length).toBe(149); // MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42)
+    expect(all.length).toBe(150); // MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding)
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     const form = rj(path.join(REPO, 'scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.descriptor.json'));
     expect([form.status, form.render.form]).toEqual(['new', undefined]);
@@ -548,6 +551,7 @@ describe('C-9 the web 44 px case (golden nodes of a sized component carry a 44 p
     const per: Record<string, number> = {};
     for (const id of m.converted) {
       const d = DESCRIPTORS.get(id) as Json;
+      if (!d.identity.platforms.includes('web')) continue; // MF-35 (dated 2026-11-10): a mobile-only surface is judged by C-9m below
       for (const s of d.states) {
         const g = rj(path.join(REPO, 'src/tests/fixtures/surfaces', id, `${s.golden}.web.json`));
         const r = touchProblems(g.props, `${id}/${s.golden}`, B.touch_targets.web);
@@ -626,5 +630,152 @@ describe('C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-
     expect(T.toHsl('#f59e0b', 0)).toBe('38 92% 50%');
     expect(T.hslToHex('38 92% 50%')).not.toBe('#f59e0b');
     expect(T.hslToHex(T.toHsl('#f59e0b'))).toBe('#f59e0b');
+  });
+});
+
+// ---- C-8m / C-9m (MF-35): the mobile half of the closed mapping and the 44 px case ------------------------------------------------------------------
+// The binding standard (Spec 126 §11b.2 dated note 2026-11-10, item (5)): component names have one home, bindings.json mapping.<platform>.<archetype>.
+// A mobile binding module may render <C/> only where C is bound from ONE object literal named COMPONENTS (const C = COMPONENTS[...]) whose keys equal
+// mapping.mobile.<archetype> and whose values are identifiers imported from the vendored Reusables (the vendor dir), React Native core or
+// react-native-safe-area-context (the layout parts plan v2 §2.2 names); no intrinsic tag, no createElement/jsx call, no other JSX tag.
+const MOBILE_PARTS = ['react-native', 'react-native-safe-area-context'];
+const fromVendorOrParts = (spec: string): boolean => spec.startsWith('@/vendor/rnr/') || MOBILE_PARTS.includes(spec);
+export const mobileMappingProblems = (text: string, file: string, allowed: string[]): string[] => {
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const out: string[] = [];
+  const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+  const fromSpec = new Map<string, string>();
+  for (const s of sf.statements) {
+    if (!ts.isImportDeclaration(s) || !s.importClause || !ts.isStringLiteral(s.moduleSpecifier)) continue;
+    const c = s.importClause;
+    if (c.name) fromSpec.set(c.name.text, s.moduleSpecifier.text);
+    if (c.namedBindings && ts.isNamedImports(c.namedBindings)) for (const e of c.namedBindings.elements) fromSpec.set(e.name.text, s.moduleSpecifier.text);
+  }
+  let table: ts.ObjectLiteralExpression | undefined;
+  const fromTable = new Set<string>(); // locals bound as COMPONENTS[...] (an element access on the table)
+  const scan = (n: ts.Node): void => {
+    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.initializer) {
+      let init: ts.Expression = n.initializer;
+      while (ts.isAsExpression(init) || ts.isParenthesizedExpression(init)) init = init.expression;
+      if (n.name.text === 'COMPONENTS' && ts.isObjectLiteralExpression(init)) table = init;
+      if (ts.isElementAccessExpression(init) && ts.isIdentifier(init.expression) && init.expression.text === 'COMPONENTS') fromTable.add(n.name.text);
+    }
+    ts.forEachChild(n, scan);
+  };
+  scan(sf);
+  if (table) {
+    const keys: string[] = [];
+    for (const p of table.properties) {
+      const name = p.name && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) ? p.name.text : '?';
+      keys.push(name);
+      const value = ts.isShorthandPropertyAssignment(p) ? p.name.text : ts.isPropertyAssignment(p) && ts.isIdentifier(p.initializer) ? p.initializer.text : undefined;
+      if (value === undefined || !fromVendorOrParts(fromSpec.get(value) ?? '')) out.push(`C-8m ${file}:${at(p)}: COMPONENTS.${name} is not an imported library part`);
+    }
+    if (JSON.stringify([...keys].sort()) !== JSON.stringify([...allowed].sort())) out.push(`C-8m ${file}: COMPONENTS keys ${JSON.stringify(keys)} differ from mapping.mobile ${JSON.stringify(allowed)}`);
+  }
+  const visit = (n: ts.Node): void => {
+    if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) {
+      const tag = n.tagName.getText(sf);
+      if (/^[a-z]/.test(tag)) out.push(`C-8m ${file}:${at(n)}: intrinsic element <${tag}>`);
+      else if (!fromTable.has(tag)) out.push(`C-8m ${file}:${at(n)}: <${tag}> is not rendered through the COMPONENTS table`);
+    }
+    if (ts.isJsxFragment(n)) out.push(`C-8m ${file}:${at(n)}: a fragment`);
+    if (ts.isCallExpression(n)) {
+      const e = n.expression;
+      const callee = ts.isIdentifier(e) ? e.text : ts.isPropertyAccessExpression(e) ? e.name.text : '';
+      if (callee === 'createElement' || callee === 'jsx' || callee === 'jsxs') out.push(`C-8m ${file}:${at(n)}: ${callee}() call`);
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return out;
+};
+
+describe('C-8m the mobile closed table (MF-35; every element of a mobile binding module comes through COMPONENTS = mapping.mobile)', () => {
+  const mods = B.modules.filter((m: Json) => m.platform === 'mobile');
+  it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile.SEARCH; no FlashList', () => {
+    console.log(`C-8m: ${mods.length} mobile modules`);
+    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx']);
+    for (const m of mods) {
+      const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[a] ?? []))];
+      expect([m.path, mobileMappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowed)]).toEqual([m.path, []]);
+    }
+    expect(B.mapping.mobile.SEARCH).not.toContain('FlashList');
+  });
+  it('every component a converted mobile golden names is in mapping.mobile for its archetype', () => {
+    const conv = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json')).converted as string[];
+    let n = 0;
+    for (const id of conv) {
+      const dir = path.join(REPO, 'src/tests/fixtures/surfaces', id);
+      for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.mobile.json'))) {
+        const walkC = (o: Json): string[] => [o.component, ...((o.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap(walkC)];
+        const names = walkC(rj(path.join(dir, f)).props);
+        n += names.length;
+        expect([f, names.filter((c) => !B.mapping.mobile.SEARCH.includes(c))]).toEqual([f, []]);
+      }
+    }
+    expect(n).toBeGreaterThan(0);
+  });
+  it('RED: a hand-built Row, an intrinsic <view>, a fragment, createElement, a table entry from a hand-built file, a table missing a mapped key', () => {
+    const src = [
+      "import * as React from 'react';", "import { View } from 'react-native';", "import { Card } from './Card';",
+      'export const COMPONENTS = { View, Card };', 'const Row = () => null;',
+      'export function R({ n }: { n: string }) {', '  const C = COMPONENTS[n as "View"];', '  return (<C><Row /><view /><>{React.createElement(View)}</></C>);', '}', '',
+    ].join('\n');
+    expect(mobileMappingProblems(src, 'r.tsx', ['View', 'Text'])).toEqual([
+      'C-8m r.tsx:4: COMPONENTS.Card is not an imported library part',
+      'C-8m r.tsx: COMPONENTS keys ["View","Card"] differ from mapping.mobile ["View","Text"]',
+      'C-8m r.tsx:8: <Row> is not rendered through the COMPONENTS table',
+      'C-8m r.tsx:8: intrinsic element <view>',
+      'C-8m r.tsx:8: a fragment',
+      'C-8m r.tsx:8: createElement() call',
+    ]);
+  });
+});
+
+/** C-9m: every mobile golden node whose component is in touch_targets.mobile carries exactly one min-h- token, and it is a listed one. */
+export const mobileTouchProblems = (tree: Json, at: string, sizes: Record<string, string[]>): { n: number; lines: string[] } => {
+  const lines: string[] = [];
+  let n = 0;
+  const walkT = (o: Json, p: string): void => {
+    if (sizes[o.component]) {
+      n += 1;
+      const tk = String(o.props?.className ?? '').split(/\s+/).filter(Boolean);
+      const mins = tk.filter((x) => /(^|:)min-h-/.test(x));
+      if (mins.length !== 1 || !sizes[o.component]!.includes(mins[0]!)) lines.push(`C-9m ${p}: ${o.component} ${JSON.stringify(mins)} (needs exactly ${sizes[o.component]!.join('|')})`);
+    }
+    ((o.children ?? []) as Json[]).forEach((c, i) => { if (c && typeof c === 'object' && 'component' in c) walkT(c, `${p}/children/${i}`); });
+  };
+  walkT(tree, at);
+  return { n, lines };
+};
+
+describe('C-9m the mobile 44 px case (MF-35; min-h-[44px], because NativeWind rem is 14 here and min-h-11 is 38.5 px)', () => {
+  it('the real tree: every Button and Input of every converted mobile golden carries min-h-[44px] and no other min-h-', () => {
+    const conv = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json')).converted as string[];
+    let n = 0;
+    for (const id of conv) {
+      const dir = path.join(REPO, 'src/tests/fixtures/surfaces', id);
+      for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.mobile.json'))) {
+        const r = mobileTouchProblems(rj(path.join(dir, f)).props, `${id}/${f}`, B.touch_targets.mobile);
+        n += r.n;
+        expect(r.lines).toEqual([]);
+      }
+    }
+    console.log(`C-9m: ${n} sized nodes`);
+    expect(n).toBeGreaterThan(0);
+  });
+  it('RED: a chip without min-h-[44px], min-h-11, and min-h-[44px] with sm:min-h-8', () => {
+    const tree = { component: 'View', props: {}, children: [
+      { component: 'Button', props: { className: 'rounded-full px-3' }, children: [] },
+      { component: 'Button', props: { className: 'min-h-11' }, children: [] },
+      { component: 'Input', props: { className: 'min-h-[44px] sm:min-h-8' }, children: [] },
+      { component: 'Input', props: { className: 'flex-1 min-h-[44px]' }, children: [] },
+    ] };
+    expect(mobileTouchProblems(tree, 'g', B.touch_targets.mobile)).toEqual({ n: 4, lines: [
+      'C-9m g/children/0: Button [] (needs exactly min-h-[44px])',
+      'C-9m g/children/1: Button ["min-h-11"] (needs exactly min-h-[44px])',
+      'C-9m g/children/2: Input ["min-h-[44px]","sm:min-h-8"] (needs exactly min-h-[44px])',
+    ] });
   });
 });

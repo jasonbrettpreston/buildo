@@ -1,0 +1,330 @@
+{
+  "surface": "mobile_parcel_search",
+  "state": "empty",
+  "target": "mobile",
+  "covers": [
+    "empty",
+    "parcelsearch_toronto_only"
+  ],
+  "situation": "empty",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-search-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-search-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "header",
+                  "className": "items-center pt-10 pb-6"
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "wordmark",
+                      "className": "text-2xl font-bold tracking-tight text-zinc-100",
+                      "role": "header"
+                    },
+                    "children": [
+                      {
+                        "content": "search.wordmark.max"
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "wordmark-accent",
+                          "className": "text-2xl font-bold tracking-tight text-[#f59e0b]"
+                        },
+                        "children": [
+                          {
+                            "content": "search.wordmark.bld"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "tagline",
+                      "className": "mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                    },
+                    "children": [
+                      {
+                        "content": "search.tagline"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "pill",
+                  "className": "flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "search-icon",
+                      "icon": "Search",
+                      "size": 18,
+                      "color": "#71717a"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Input",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChangeText": {
+                        "action": "change_input"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "placeholderTextColor": "#52525b",
+                      "autoCapitalize": "none",
+                      "autoCorrect": false,
+                      "returnKeyType": "search",
+                      "accessibilityLabel": {
+                        "content": "search.input.label"
+                      },
+                      "accessibilityHint": {
+                        "content": "search.input.hint"
+                      }
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "account",
+                      "testID": "parcel-search-account",
+                      "variant": "default",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "search.account.label"
+                      },
+                      "onPress": {
+                        "action": "open_account"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "account-icon",
+                          "icon": "User",
+                          "size": 16,
+                          "color": "#472a00"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "chips",
+                  "className": "mt-3 flex-row flex-wrap gap-2"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "chip-Queen & Spadina",
+                      "testID": "parcel-search-suggestion-Queen & Spadina",
+                      "variant": "outline",
+                      "className": "min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "text": {
+                          "content": "search.chip.label"
+                        },
+                        "vars": {
+                          "query": {
+                            "derived": "recent.0"
+                          }
+                        }
+                      },
+                      "onPress": {
+                        "action": "set_input",
+                        "value": {
+                          "derived": "recent.0"
+                        }
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "chip-text",
+                          "className": "font-mono text-xs font-normal text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "derived": "recent.0"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "chip-26 Hurlingham Cres",
+                      "testID": "parcel-search-suggestion-26 Hurlingham Cres",
+                      "variant": "outline",
+                      "className": "min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "text": {
+                          "content": "search.chip.label"
+                        },
+                        "vars": {
+                          "query": {
+                            "derived": "recent.1"
+                          }
+                        }
+                      },
+                      "onPress": {
+                        "action": "set_input",
+                        "value": {
+                          "derived": "recent.1"
+                        }
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "chip-text",
+                          "className": "font-mono text-xs font-normal text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "derived": "recent.1"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "chip-Bathurst St",
+                      "testID": "parcel-search-suggestion-Bathurst St",
+                      "variant": "outline",
+                      "className": "min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "text": {
+                          "content": "search.chip.label"
+                        },
+                        "vars": {
+                          "query": {
+                            "derived": "recent.2"
+                          }
+                        }
+                      },
+                      "onPress": {
+                        "action": "set_input",
+                        "value": {
+                          "derived": "recent.2"
+                        }
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "chip-text",
+                          "className": "font-mono text-xs font-normal text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "derived": "recent.2"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Alert",
+                "props": {
+                  "key": "outside-toronto",
+                  "testID": "parcel-search-outside-toronto",
+                  "icon": "Ban",
+                  "iconClassName": "text-red-400",
+                  "className": "mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]"
+                },
+                "children": [
+                  {
+                    "component": "AlertDescription",
+                    "props": {
+                      "key": "outside-toronto-text",
+                      "className": "text-xs font-normal text-red-400"
+                    },
+                    "children": [
+                      {
+                        "content": "search.outside_toronto"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "b0fc775e4b33b337",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "7e2b9c205d989a04"
+    }
+  }
+}

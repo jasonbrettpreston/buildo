@@ -1,6 +1,6 @@
 {
   "kind": "SURFACE",
-  "status": "exists",
+  "status": "generated",
   "docs": {
     "purpose": "A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.",
     "data_story": "It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.",
@@ -166,13 +166,26 @@
     "tables": []
   },
   "state": {
-    "answer": "none",
-    "why": "The lead-gen filter-store read is deleted. The query text and its debounce live in component useState, which the state vocabulary has no value for, and nothing else is held.",
+    "answer": "mmkv",
+    "why": "MF-35 (P35-D16 a): the recent searches are kept on the phone by recentSearchesStore (Zustand persisted to MMKV, Layer 4a), shown as the chips under the search bar and cleared at sign-out. The query text, its debounce and the checked address card live in component useState.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/index.tsx:64-65 — const [input, setInput] / const [debounced, setDebounced]",
-      "mobile/app/(app)/parcel-tool/index.tsx — no useFilterStore import remains (grep)"
+      "mobile/src/store/recentSearchesStore.ts — useRecentSearchesStore (add, reset)",
+      "mobile/src/store/authStore.ts — clearLocalSessionState calls useRecentSearchesStore.getState().reset()",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §3.4c — the recentSearchesStore row (dated note 2026-11-10)"
     ],
-    "fields": []
+    "fields": [
+      {
+        "name": "recent",
+        "owner_layer": "4a_mmkv",
+        "canonical_writer": "useRecentSearchesStore.add, called by the search screen only when a search opens a page",
+        "authorized_readers": [
+          "mobile_parcel_search"
+        ],
+        "bridge": "B5",
+        "persistence": "mmkv",
+        "signout_reset": true
+      }
+    ]
   },
   "staleness": {
     "answer": "query_cache",
@@ -303,39 +316,43 @@
   "states": [
     {
       "name": "loading",
-      "golden": "none"
+      "golden": "loading"
     },
     {
-      "name": "hit",
-      "golden": "none"
+      "name": "redirect",
+      "golden": "redirect"
     },
     {
       "name": "ambiguous",
-      "golden": "none"
+      "golden": "ambiguous"
     },
     {
       "name": "miss",
-      "golden": "none"
+      "golden": "miss"
     },
     {
       "name": "empty",
-      "golden": "none"
+      "golden": "empty"
     },
     {
       "name": "schema_drift",
-      "golden": "none"
+      "golden": "schema_drift"
     },
     {
       "name": "rate_limited",
-      "golden": "none"
+      "golden": "rate_limited"
     },
     {
       "name": "unauthorized",
-      "golden": "none"
+      "golden": "unauthorized"
     },
     {
       "name": "error",
-      "golden": "none"
+      "golden": "error"
+    },
+    {
+      "name": "static",
+      "golden": "static"
     }
   ],
   "errors": {
@@ -436,7 +453,20 @@
       "top"
     ]
   },
-  "deviations": "none",
+  "deviations": [
+    {
+      "from": "Spec 126 §5.3 (126:408) server-projected screen",
+      "why": "binding config on the client; data through the frozen lookup contract (contract_parcels_lookup), read by the mobile binding (mobile/src/components/surfaces/SearchBinding.tsx, SurfaceRenderer.tsx).",
+      "adjudicated_by": "programme D-7 (Part B confirmed 2026-11-09): \"1. confirmed 2. approved 4. D-7 yes Mb-86 yes if complaint and grounded 3. explain in more detail\"",
+      "date": "2026-11-10"
+    },
+    {
+      "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-derived display values",
+      "why": "P35-D14 a: the field text, the query, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, query, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other).",
+      "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"): \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\"",
+      "date": "2026-11-10"
+    }
+  ],
   "limitations": [
     {
       "what": "Two of the five ruled match types — `multi_parcel` and `unlinked` — cannot be reached from the current contract. The response carries no address-point fan-out signal and cannot distinguish \"address resolved, no lot linked\" from \"address did not resolve\", so both arrive as an ordinary zero-candidate miss. The screen reports `no_match` rather than guessing, which is why the ruling’s ban on a silent nearest-polygon fallback is not violated — but it also means the map surface is unreachable for those two until the API declares a resolution type.",
@@ -450,7 +480,7 @@
     }
   ],
   "interpretation": "none",
-  "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.",
+  "notes": "HOME-BASE LEAKAGE — RESOLVED AND CLOSED (operator ruling 2026-09-16 (b)). This surface used to read the LEAD-FEED filter store (useFilterStore((s) => s.homeBaseLocation)) to decide whether to show a \"Toronto only\" coverage note, while its own header claimed it was \"NOT coupled to leads\". The ruling: MaxBLD has NO home-base concept and the owner’s location does not matter. The store read, the import and the hint are DELETED, so `programme.leakage` is now `none` — not a disposition, an absence. (The closed disposition vocabulary — move-to-owner, duplicate-locally, keep-and-declare, needs-ruling — has no value for \"was here, is gone\", so the history is recorded here.) Its replacement is the Toronto-only rule on the searched ADDRESS. Removing the store read is also what moved this surface from REBUILD to RE-PROJECT.\n\nENTITLEMENT vs OD5. `guards.entitlement.product` is `lead_gen` — not a description choice but a measured constraint: migration 228’s `chk_entitlements_product` permits only `lead_gen` and `flight_center`, and the route gates on the global `subscription_status`. Recording anything else here would make this descriptor lie. Under Spec 116 OD5 — MaxBLD is its own product; nothing in scope `parcel_product` may reference a lead-gen concept, that IS the finding: MaxBLD needs its own entitlement product, which is a migration plus a route change in the Backend domain. Raised as `programme.product_questions[0]`, not silently rewritten.\n\nMATCH-TYPE RULING (operator ruling 2026-09-16). The SEARCH surface branches on one of five types: unique (open the lot directly), text_candidates (capped list, differing part highlighted, ask for a house number past the cap), multi_parcel (map, every linked polygon tappable), unlinked (map, pin + faint surrounding parcels + a visible \"no lot is linked\" state, never a silent nearest-polygon pick), intersection (map, corner lots highlighted, no list). The map cases are their own surface, S-071, because they read parcel GEOMETRY, which this surface does not. The enum is declared on contract C-001. Three types are derivable client-side today; the other two are recorded in limitations as blocked on the API.\n\nTORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in Toronto. `isInsideToronto` / `TORONTO_BOUNDS` (mobile/src/lib/onboarding/snapCoord.ts) could NOT be reused for two reasons: they take a lat/lng and a SEARCH surface has an ungeocoded string, and they live in the lead-gen onboarding module, so importing them would be fresh scope-A leakage. The replacement is string-shaped and lives in the parcel product: a non-`M` postal FSA anywhere (Toronto is the only Canadian city on M), or a known non-Toronto municipality in the CITY position after the first comma. City-position-only is deliberate — Markham, Milton and Hamilton are also Toronto street names.\n\nBRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.\n\nMF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the \"Report incorrect address match\" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: \"teh phone check isnt possible - continue with MF-35\").",
   "x-draft": {
     "shard": "mobile-product",
     "files": [

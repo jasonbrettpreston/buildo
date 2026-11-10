@@ -30,7 +30,8 @@ describe('FE-32 (a) the contract kind is declared on both sides', () => {
   it('binding-sources.json: contract, register FE-32, resolver contract_projection, file set; bindings.json ref_kinds has contract', () => {
     const c = rj('scripts/surfaces/_schema/binding-sources.json').sources.contract;
     expect([c.register, c.resolver, typeof c.file, c.file === null]).toEqual(['FE-32', 'contract_projection', 'string', false]);
-    expect(rj('scripts/surfaces/_schema/bindings.json').ref_kinds).toEqual(['content', 'contract']);
+    // MF-35 (dated 2026-11-10; P35-D14 a): ref_kinds gains derived, a declared per-surface deviation (not a binding source), after content and contract.
+    expect(rj('scripts/surfaces/_schema/bindings.json').ref_kinds).toEqual(['content', 'contract', 'derived']);
   });
 });
 

@@ -22112,7 +22112,8 @@
         "storeys",
         "coa_decision",
         "build_ratio",
-        "structure_family"
+        "structure_family",
+        "parcelId"
       ],
       "tables": [
         {
@@ -22614,7 +22615,10 @@
         },
         {
           "class": "429",
-          "ui": "{data:null,error:{code,message,details:{remaining}},meta:null} + header Retry-After: 60 — src/features/leads/api/error-mapping.ts:37-40 — src/app/api/parcels/lookup/route.ts:76 (code RATE_LIMITED)"
+          "ui": "{data:null,error:{code,message,details:{remaining}},meta:null} + header Retry-After: 60 — src/features/leads/api/error-mapping.ts:37-40 — src/app/api/parcels/lookup/route.ts:76 (code RATE_LIMITED) — MF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): retryAfterSeconds = the Retry-After header in seconds, read by the client into RateLimitError.retryAfterSeconds (mobile/src/lib/errors.ts:35); bound by mobile_parcel_search as contract_parcels_lookup.errors.429.retryAfterSeconds",
+          "fields": [
+            "retryAfterSeconds"
+          ]
         },
         {
           "class": "500",

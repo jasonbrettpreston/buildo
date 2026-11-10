@@ -1,0 +1,27 @@
+MF-35 conversion commit (Code 2b) red evidence, 2026-11-10, worktree wf1/mf35-build2-1110 on 52c50ec1d.
+
+1. recentSearchesStore.test.ts written before the store existed (mobile jest):
+Tests:       5 failed, 5 total
+
+2. Root targeted run on the change BEFORE the lock edits (src/tests/surfaces/ + mcbylaws-frontend.logic.test.ts): 6 red, each a lock that saw the change.
+   × C-9 the web 44 px case (golden nodes of a sized component carry a 44 px size) > the real tree: every converted web golden passes, with a non-vacuous count per archetype 5ms
+   × SV-SBIND: content keys, columns, and no display text in goldens > a ref of a kind not in ref_kinds 43ms
+   × FE-05 widened to binding modules (MF-42): bindings.json modules are scanned, fail closed > the real tree: bindings.json reads, every listed module exists, and none carries maths (0 modules at MF-42: vacuous until MF-37 lists one) 28ms
+   × FE-32 (a) the contract kind is declared on both sides > binding-sources.json: contract, register FE-32, resolver contract_projection, file set; bindings.json ref_kinds has contract 4ms
+   × T7 (b) coverage > each golden covers its state, every state of the three surfaces has one 3ms
+   × canary b: a hand edit, an invented field and a bare number > control: a clean copy passes the generator --check, the gate --check and the three locks 633ms
+   The FE-05 row was a real catch: SurfaceRenderer.tsx:55 carried the literal 2 (keys.length === 2); rewritten as keys.every(...). The canary b row was a latent red left by the library commit (the gate's S-gen spawns emit-mobile-theme.mjs, whose mobile inputs the canary copy lacked); fixed here by the copy list.
+
+3. Mobile locks against planted defects (mobile jest: parcelScreens.golden, surfaceRenderer.smoke, parcelSearchScreen.behaviour), plants: the checked card without dark:border-primary, a chip without min-h-[44px] (layout table); a candidate tap that pushes (SearchBinding.tsx); a search recorded on every debounced change (index.tsx). All three plants restored before green.
+  ● mobile render smoke (FE-33 mobile case) › the address list: radio cards, the checked card, the amber word, the label fallback; a tap selects, SELECT pushes
+  ● mobile_parcel_search goldens (FE-31; plan v3 §7) › 10 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly
+  ● mobile_parcel_search goldens (FE-31; plan v3 §7) › the layout rules hold on every golden and every named case
+  ● named cases (plan v3 §7; must-survive rows 7-17) › a candidate tap selects (no route); SELECT pushes the selected lot by the legacy route string
+  ● parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28) › a miss and an error record nothing; Retry calls refetch with no argument
+  ● parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28) › outside Toronto: the hook gets "", the notice shows, nothing is pushed or recorded
+  ● parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28) › the address list: a tap selects (no push, no record); SELECT pushes the selected lot and records the query
+Tests:       7 failed, 33 passed, 40 total
+
+4. In-test RED plants (pass by asserting the planted problem lines): C-8m (a hand-built Row, an intrinsic tag, a fragment, createElement, a table entry from a hand-built file, a key mismatch), C-9m (a chip without min-h-[44px], min-h-11, sm:min-h-8), the golden layout rules (dark twin, sub-44, checked border, SELECT enabled with nothing checked, undeclared derived name, a Card, a keyless child), the renderer throws (unmapped component, unknown icon, content key, action), the legacy oracle (a dropped testID, a straight apostrophe, a changed hint).
+
+GREEN: root src/tests/surfaces/ + mcbylaws-frontend 751/751 + oracle 3/3; surface-validate --check exit 0 (S-desc converted 4, pending 6; S-screen 4 surfaces, 27 goldens; S-sbind 4 surfaces, 79 strings); emit-mobile-theme and emit-mobile-surfaces --check ok; mobile tsc 0; mobile jest --ci 41 suites / 629 tests. Device run: OWED, UNVERIFIED on device.

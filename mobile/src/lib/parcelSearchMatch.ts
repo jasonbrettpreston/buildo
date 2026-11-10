@@ -38,6 +38,7 @@
 // unrecognised `matchType` is rejected by the enum rather than passed through.
 
 import type { ParcelCandidate, ConsumerParcelLookupResult } from '@/lib/schemas';
+import { ApiError, RateLimitError } from '@/lib/errors';
 
 // ── The Toronto-only rule (operator ruling 2026-09-16 (b)) ──────────────────
 //
@@ -289,4 +290,88 @@ export function diffCandidateAddress(query: string, address: string): AddressSeg
     const isWord = /[a-zA-Z0-9]/.test(run);
     return { text: run, differs: isWord && !typed.has(run.toLowerCase()) };
   });
+}
+
+// ── MF-35: the search page's declared client derivations (programme D-7 "binding config, no server endpoint"; plan v2 §2.1) ──────────────
+// Pure helpers the screen feeds and the binding (mobile/src/components/surfaces/SearchBinding.tsx) reads. They carry the legacy rules of
+// mobile/app/(app)/parcel-tool/index.tsx verbatim (the must-survive list of ~/Buildo-scratch/mcfrontend/MF-35/plan.v2.md §4, rows 11-17):
+// the Toronto check before the network, the error classes, `deriveMatchType(debounced, error ? undefined : data)`, the 10-cap after the
+// slice with the refine line at >= the cap, the miss only when not fetching and no error, the prompt only below the minimum and with no error.
+
+/** Row 11: the hook gets '' for an out-of-Toronto query, so a refusal costs nothing against the 60/min bucket. */
+export function searchQueryArg(debounced: string): string {
+  return isOutsideToronto(debounced) ? '' : debounced;
+}
+
+export type ParcelSearchErrorClass = {
+  /** The 429 line shows whenever the error is a RateLimitError (`retryAfter != null`), including 0 seconds. */
+  rateLimited: boolean;
+  retryAfterSeconds: number | null;
+  /** 403: the entitlement refusal, never the miss copy. */
+  entitlement: boolean;
+  /** Everything else, and a RateLimitError(0) too (legacy `!retryAfter`; DEFECT MF35-DF1, pinned, not fixed). */
+  unexpected: boolean;
+  /** The parse failure: its own text, no Retry. */
+  schemaDrift: boolean;
+};
+
+/** Row 12: one visible block per failure class. `schemaDrift` is `error instanceof ParcelLookupSchemaError`, decided by the caller. */
+export function classifyParcelSearchError(error: unknown, schemaDrift: boolean): ParcelSearchErrorClass {
+  const retryAfterSeconds = error instanceof RateLimitError ? error.retryAfterSeconds : null;
+  const entitlement = error instanceof ApiError && error.status === 403;
+  const unexpected = error != null && !retryAfterSeconds && !entitlement;
+  return { rateLimited: retryAfterSeconds != null, retryAfterSeconds, entitlement, unexpected, schemaDrift: unexpected && schemaDrift };
+}
+
+export type SearchSituation = {
+  /** The raw field text (shown at once); everything else reads the debounced query. */
+  input: string;
+  query: string;
+  outcome: ParcelSearchOutcome;
+  isFetching: boolean;
+  errors: ParcelSearchErrorClass;
+  /** Capped at the limit, after the slice. */
+  candidates: ParcelCandidate[];
+  overCap: boolean;
+  showMiss: boolean;
+  showPrompt: boolean;
+  /** On-device recent searches, newest first (P35-D16 a). */
+  recent: string[];
+  /** The checked address card, or null (P35-D17 a: nothing pre-checked). */
+  selectedParcelId: string | null;
+  /** Where the outcome navigates (unique, map kinds), else null: the screen's effect pushes it. */
+  route: string | null;
+};
+
+/** The situation of one render, from the hook's values (rows 14, 16; the truth table in parcelSearchMatch.test.ts). */
+export function buildSearchSituation(args: {
+  input: string;
+  debounced: string;
+  data: ConsumerParcelLookupResult | undefined;
+  error: unknown;
+  isFetching: boolean;
+  schemaDrift: boolean;
+  recent: readonly string[];
+  selectedParcelId: string | null;
+  cap: number;
+  minQueryLen: number;
+}): SearchSituation {
+  const { debounced, data, error, isFetching } = args;
+  const outcome = deriveMatchType(debounced, error ? undefined : data);
+  const candidates = outcome === 'text_candidates' && data ? data.candidates.slice(0, args.cap) : [];
+  const selected = candidates.some((c) => c.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;
+  return {
+    input: args.input,
+    query: debounced,
+    outcome,
+    isFetching,
+    errors: classifyParcelSearchError(error, args.schemaDrift),
+    candidates,
+    overCap: isOverCandidateCap(candidates, args.cap),
+    showMiss: outcome === 'no_match' && !isFetching && error == null,
+    showPrompt: outcome !== 'outside_toronto' && debounced.trim().length < args.minQueryLen && error == null,
+    recent: [...args.recent],
+    selectedParcelId: selected,
+    route: parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query: debounced }),
+  };
 }

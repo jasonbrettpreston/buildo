@@ -373,3 +373,48 @@ describe('diffCandidateAddress — the differing part is highlighted', () => {
     expect(diffCandidateAddress('10 Elm', '')).toEqual([]);
   });
 });
+
+// ── MF-35: the situation helpers (plan v2 §9 truth table, RG-2; must-survive rows 11-16) ─────────────────────────────────────────────────────
+// The named situations of __tests__/fixtures/parcelSearch.situations.json are rebuilt here from hook values, so the file cannot drift from the helper.
+describe('MF-35 situation helpers', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const M = require('@/lib/parcelSearchMatch') as typeof import('@/lib/parcelSearchMatch');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ApiError, RateLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const S = require('./fixtures/parcelSearch.situations.json') as Record<string, unknown>;
+  const base = { input: '', debounced: '', data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
+  const cands = (S.ambiguous as { candidates: { parcelId: string; address: string }[] }).candidates;
+  const lookup = (candidates: { parcelId: string; address: string }[], match: unknown = null) => ({ match, candidates, warnings: [], parcel: null }) as never;
+
+  it('searchQueryArg: "" outside Toronto, the query otherwise (row 11)', () => {
+    expect(M.searchQueryArg('100 City Centre Dr, Mississauga')).toBe('');
+    expect(M.searchQueryArg('26 Hurlingham Cres')).toBe('26 Hurlingham Cres');
+  });
+  it('classifyParcelSearchError on the real classes (row 12; MF35-DF1 pinned)', () => {
+    expect(M.classifyParcelSearchError(new RateLimitError(7), false)).toEqual({ rateLimited: true, retryAfterSeconds: 7, entitlement: false, unexpected: false, schemaDrift: false });
+    expect(M.classifyParcelSearchError(new RateLimitError(0), false)).toEqual({ rateLimited: true, retryAfterSeconds: 0, entitlement: false, unexpected: true, schemaDrift: false });
+    expect(M.classifyParcelSearchError(new ApiError(403, 'x'), false).entitlement).toBe(true);
+    expect(M.classifyParcelSearchError(new ApiError(400, 'x'), false)).toMatchObject({ entitlement: false, unexpected: true });
+    expect(M.classifyParcelSearchError(new Error('drift'), true)).toMatchObject({ unexpected: true, schemaDrift: true });
+    expect(M.classifyParcelSearchError(null, false)).toEqual({ rateLimited: false, retryAfterSeconds: null, entitlement: false, unexpected: false, schemaDrift: false });
+  });
+  it('rebuilds the named situations from hook values: static, ambiguous, empty, rate_limited_zero, miss, redirect', () => {
+    const recent = ['Queen & Spadina', '26 Hurlingham Cres', 'Bathurst St'];
+    expect(M.buildSearchSituation({ ...base, recent })).toEqual(S.static);
+    expect(M.buildSearchSituation({ ...base, input: 'Bathurst St', debounced: 'Bathurst St', data: lookup([...cands, { parcelId: '100116', address: '116 Bathurst St' }, { parcelId: '100118', address: '118 Bathurst St' }]), selectedParcelId: '100102', recent: ['Queen & Spadina'] })).toEqual(S.ambiguous);
+    expect(M.buildSearchSituation({ ...base, input: '100 City Centre Dr, Mississauga', debounced: '100 City Centre Dr, Mississauga', recent })).toEqual(S.empty);
+    expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', error: new RateLimitError(0) })).toEqual(S.rate_limited_zero);
+    expect(M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]) })).toEqual(S.miss);
+    expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', data: lookup([], { parcelId: '100026', matchType: 'exact' }), recent: ['Bathurst St'] })).toEqual(S.redirect);
+  });
+  it('truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the cap; a miss needs !isFetching and no error', () => {
+    const many = lookup(cands.slice(0, 9));
+    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many, error: new Error('x') }).candidates).toEqual([]);
+    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many }).overCap).toBe(false);
+    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands) }).overCap).toBe(true);
+    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(false);
+    expect(M.buildSearchSituation({ ...base, debounced: '26', error: new Error('x') }).showPrompt).toBe(false);
+    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands), selectedParcelId: 'gone' }).selectedParcelId).toBeNull();
+  });
+});

@@ -56,8 +56,10 @@ describe('T7 (a2) admin_media comes from the generic LIST', () => {
 
 describe('T7 (b) coverage', () => {
   it('each golden covers its state, every state of the three surfaces has one', () => {
-    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete']);
-    for (const id of convertedIds(ROOT)) {
+    // MF-35 (dated 2026-11-10): mobile_parcel_search is converted too; its mobile goldens are built and checked by mobile jest
+    // (mobile/__tests__/parcelScreens.golden.test.ts), so this web coverage case reads the web surfaces only.
+    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search']);
+    for (const id of convertedIds(ROOT).filter((x) => x !== 'mobile_parcel_search')) {
       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {
         const g: Json = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/tests/fixtures/surfaces', id, `${s.golden}.web.json`), 'utf8'));

@@ -32,6 +32,12 @@ export const SEARCH_MIN_QUERY_LEN = 3;
  */
 export const SEARCH_CANDIDATE_LIMIT = 10;
 
+/**
+ * MF-35 (P35-D16 a): how many recent searches the search page keeps and shows as chips. Ground truth: the legacy page showed three suggestion
+ * chips, and the ruling keeps that count ("max 3"). Read by mobile/src/store/recentSearchesStore.ts.
+ */
+export const SEARCH_RECENT_MAX = 3;
+
 // The SEARCH archetype's third declared parameter, `guards.rate_bucket`, is deliberately NOT
 // mirrored here. It is `parcels-search:{uid}`, 60/min, 60s window
 // (`src/app/api/parcels/lookup/route.ts`), it is enforced entirely server-side, and the client
@@ -130,3 +136,61 @@ export const PARCEL_SEARCH_HEX = {
   textMuted: '#71717a',
   placeholder: '#52525b',
 } as const;
+
+// ── MF-35 layout table (Spec 117 §6.1 and its dated note 2026-11-10; P35-D11) ─────────────────────────────────────────────────────────────
+// The class strings and numbers the search page's binding (mobile/src/components/surfaces/SearchBinding.tsx) hands to the React Native
+// Reusables parts. Data, not code: every class is a FULL literal so NativeWind generates it (a composed `dark:${x}` would silently not exist).
+// Rules pinned by mobile/__tests__/parcelScreens.golden.test.ts:
+//   - 44 px is `min-h-[44px]` (NativeWind's rem is 14 here, so `min-h-11` is 38.5 px; plan F-A); no other `min-h-` token on a Button or Input;
+//   - every `dark:` token of a vendored variant in use has a twin with the same chain (`dark:bg-`, `dark:border-`, `dark:active:bg-`; P35-D2 a),
+//     so light-mode and dark-mode phones look the same;
+//   - every Text carries an explicit size, weight and colour (the RNR Text base is `text-foreground text-base`).
+// The S-002 hexes are the §6.1 values above; the RNR roles (`bg-primary`, `border-primary`) come from the generated theme (Spec 117 §7 note).
+export const PARCEL_SEARCH_LAYOUT = {
+  screen: 'flex-1 bg-[#0e0e10]',
+  scroll: 'flex-1',
+  column: 'w-full px-4',
+  header: 'items-center pt-10 pb-6',
+  wordmark: 'text-2xl font-bold tracking-tight text-zinc-100',
+  wordmarkAccent: 'text-2xl font-bold tracking-tight text-[#f59e0b]',
+  tagline: 'mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400',
+  pill: 'flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1',
+  input:
+    'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]',
+  account: 'min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary',
+  chipRow: 'mt-3 flex-row flex-wrap gap-2',
+  chip:
+    'min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]',
+  chipText: 'font-mono text-xs font-normal text-zinc-400',
+  notice: 'mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]',
+  noticeText: 'text-xs font-normal text-red-400',
+  /** The notice icon colours: red-400 is the legacy inline #f87171; the entitlement lock is the primary amber. */
+  noticeIcon: 'text-red-400',
+  entitlementIcon: 'text-[#f59e0b]',
+  noticeTextNeutral: 'text-xs font-normal text-zinc-300',
+  retry: 'mt-2 min-h-[44px] rounded-xl',
+  retryText: 'text-xs font-semibold text-[#472a00]',
+  listHeader: 'mt-4 flex-row items-center justify-between',
+  rail: 'font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400',
+  badge: 'font-mono text-[11px] font-normal uppercase tracking-widest text-[#f59e0b]',
+  card:
+    'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]',
+  cardChecked:
+    'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-primary dark:border-primary active:bg-[#27272a] dark:active:bg-[#27272a]',
+  cardRow: 'w-full flex-row items-center justify-between gap-2',
+  cardText: 'flex-1 text-base font-normal text-zinc-100',
+  segment: 'text-base font-normal text-zinc-100',
+  segmentDiffers: 'text-base font-semibold text-[#f59e0b]',
+  select: 'mt-4 min-h-[44px] w-full rounded-xl',
+  selectText: 'text-sm font-semibold uppercase tracking-widest text-[#472a00]',
+  refine: 'mt-3 text-center text-xs font-normal text-zinc-400',
+  miss: 'mt-10 items-center',
+  missText: 'mt-2 text-center text-base font-normal text-zinc-400',
+  prompt: 'mt-10 text-center text-base font-normal text-zinc-600',
+} as const;
+
+/** Icon sizes in px (lucide `size`), the legacy values (Spec 117 §6.1). */
+export const PARCEL_SEARCH_ICON = { field: 18, notice: 14, miss: 20, button: 16 } as const;
+
+/** The scroll content's bottom padding: the S-004 shelf plus the legacy 24 (the sum stays out of the binding: FE-05). */
+export const SEARCH_BOTTOM_PADDING = PARCEL_SHELF_HEIGHT + 24;

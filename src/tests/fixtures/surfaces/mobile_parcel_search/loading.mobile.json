@@ -1,0 +1,189 @@
+{
+  "surface": "mobile_parcel_search",
+  "state": "loading",
+  "target": "mobile",
+  "covers": [
+    "loading"
+  ],
+  "situation": "loading",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-search-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-search-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "header",
+                  "className": "items-center pt-10 pb-6"
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "wordmark",
+                      "className": "text-2xl font-bold tracking-tight text-zinc-100",
+                      "role": "header"
+                    },
+                    "children": [
+                      {
+                        "content": "search.wordmark.max"
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "wordmark-accent",
+                          "className": "text-2xl font-bold tracking-tight text-[#f59e0b]"
+                        },
+                        "children": [
+                          {
+                            "content": "search.wordmark.bld"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "tagline",
+                      "className": "mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                    },
+                    "children": [
+                      {
+                        "content": "search.tagline"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "pill",
+                  "className": "flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "search-icon",
+                      "icon": "Search",
+                      "size": 18,
+                      "color": "#71717a"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Input",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChangeText": {
+                        "action": "change_input"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "placeholderTextColor": "#52525b",
+                      "autoCapitalize": "none",
+                      "autoCorrect": false,
+                      "returnKeyType": "search",
+                      "accessibilityLabel": {
+                        "content": "search.input.label"
+                      },
+                      "accessibilityHint": {
+                        "content": "search.input.hint"
+                      }
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "ActivityIndicator",
+                    "props": {
+                      "key": "spinner",
+                      "testID": "parcel-search-spinner",
+                      "size": "small",
+                      "color": "#f59e0b",
+                      "accessibilityLabel": {
+                        "content": "search.searching"
+                      }
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "account",
+                      "testID": "parcel-search-account",
+                      "variant": "default",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "search.account.label"
+                      },
+                      "onPress": {
+                        "action": "open_account"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "account-icon",
+                          "icon": "User",
+                          "size": 16,
+                          "color": "#472a00"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "b0fc775e4b33b337",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "7e2b9c205d989a04"
+    }
+  }
+}

@@ -1,0 +1,1306 @@
+{
+  "surface": "mobile_parcel_search",
+  "state": "ambiguous",
+  "target": "mobile",
+  "covers": [
+    "ambiguous"
+  ],
+  "situation": "ambiguous",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-search-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-search-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "header",
+                  "className": "items-center pt-10 pb-6"
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "wordmark",
+                      "className": "text-2xl font-bold tracking-tight text-zinc-100",
+                      "role": "header"
+                    },
+                    "children": [
+                      {
+                        "content": "search.wordmark.max"
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "wordmark-accent",
+                          "className": "text-2xl font-bold tracking-tight text-[#f59e0b]"
+                        },
+                        "children": [
+                          {
+                            "content": "search.wordmark.bld"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "tagline",
+                      "className": "mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                    },
+                    "children": [
+                      {
+                        "content": "search.tagline"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "pill",
+                  "className": "flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "search-icon",
+                      "icon": "Search",
+                      "size": 18,
+                      "color": "#71717a"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Input",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChangeText": {
+                        "action": "change_input"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "placeholderTextColor": "#52525b",
+                      "autoCapitalize": "none",
+                      "autoCorrect": false,
+                      "returnKeyType": "search",
+                      "accessibilityLabel": {
+                        "content": "search.input.label"
+                      },
+                      "accessibilityHint": {
+                        "content": "search.input.hint"
+                      }
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "account",
+                      "testID": "parcel-search-account",
+                      "variant": "default",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "search.account.label"
+                      },
+                      "onPress": {
+                        "action": "open_account"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "account-icon",
+                          "icon": "User",
+                          "size": 16,
+                          "color": "#472a00"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "chips",
+                  "className": "mt-3 flex-row flex-wrap gap-2"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "chip-Queen & Spadina",
+                      "testID": "parcel-search-suggestion-Queen & Spadina",
+                      "variant": "outline",
+                      "className": "min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "text": {
+                          "content": "search.chip.label"
+                        },
+                        "vars": {
+                          "query": {
+                            "derived": "recent.0"
+                          }
+                        }
+                      },
+                      "onPress": {
+                        "action": "set_input",
+                        "value": {
+                          "derived": "recent.0"
+                        }
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "chip-text",
+                          "className": "font-mono text-xs font-normal text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "derived": "recent.0"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "list-header",
+                  "testID": "parcel-search-list-header",
+                  "className": "mt-4 flex-row items-center justify-between"
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "rail",
+                      "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                    },
+                    "children": [
+                      {
+                        "content": "list.rail"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "badge",
+                      "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-[#f59e0b]"
+                    },
+                    "children": [
+                      {
+                        "text": {
+                          "content": "list.badge"
+                        },
+                        "vars": {
+                          "count": {
+                            "derived": "candidate_count"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100100",
+                  "testID": "parcel-candidate-100100",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.0"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.0.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100100-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100100-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100100-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100100-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100100-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100102",
+                  "testID": "parcel-candidate-100102",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-primary dark:border-primary active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": true
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.1"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.1.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100102-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100102-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100102-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100102-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100102-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "check",
+                          "icon": "Check",
+                          "size": 16,
+                          "color": "#f59e0b"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100104",
+                  "testID": "parcel-candidate-100104",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.2"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.2.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100104-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100104-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100104-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100104-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100104-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100001",
+                  "testID": "parcel-candidate-100001",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.3"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.3.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100001-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.3.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100001-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.3.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100001-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.3.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100001-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.3.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100001-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.3.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100010",
+                  "testID": "parcel-candidate-100010",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.4"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.4.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100010-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.4.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100010-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.4.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100010-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.4.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100010-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.4.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100010-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.4.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100106",
+                  "testID": "parcel-candidate-100106",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.5"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.5.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100106-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.5.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100106-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.5.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100106-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.5.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100106-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.5.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100106-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.5.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100108",
+                  "testID": "parcel-candidate-100108",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.6"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.6.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100108-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.6.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100108-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.6.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100108-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.6.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100108-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.6.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100108-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.6.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100110",
+                  "testID": "parcel-candidate-100110",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.7"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.7.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100110-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.7.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100110-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.7.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100110-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.7.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100110-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.7.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100110-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.7.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100112",
+                  "testID": "parcel-candidate-100112",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.8"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.8.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100112-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.8.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100112-1",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.8.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100112-2",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.8.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100112-3",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.8.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100112-4",
+                              "className": "text-base font-normal text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.8.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "100114",
+                  "testID": "parcel-candidate-100114",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "derived": "label.9"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.candidates.9.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-text",
+                          "className": "flex-1 text-base font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100114-0",
+                              "className": "text-base font-semibold text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.9.0.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "select",
+                  "testID": "parcel-search-select",
+                  "variant": "default",
+                  "className": "mt-4 min-h-[44px] w-full rounded-xl",
+                  "disabled": false,
+                  "accessibilityRole": "button",
+                  "accessibilityState": {
+                    "disabled": false
+                  },
+                  "accessibilityLabel": {
+                    "content": "list.select.label"
+                  },
+                  "onPress": {
+                    "action": "push",
+                    "route": "/(app)/parcel-tool/100102"
+                  }
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "select-text",
+                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
+                    },
+                    "children": [
+                      {
+                        "content": "list.select"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "select-icon",
+                      "icon": "ArrowRight",
+                      "size": 16,
+                      "color": "#472a00"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "refine",
+                  "testID": "parcel-search-refine",
+                  "className": "mt-3 text-center text-xs font-normal text-zinc-400"
+                },
+                "children": [
+                  {
+                    "content": "list.refine"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "b0fc775e4b33b337",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "7e2b9c205d989a04"
+    }
+  }
+}

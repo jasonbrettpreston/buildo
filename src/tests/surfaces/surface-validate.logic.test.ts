@@ -23,6 +23,7 @@ const SEED_GEN = `${SCHEMA}/seed-report-v2.mjs`;
 const RS_GEN = 'scripts/analysis/report-schema.mjs';
 // MF-35 (dated 2026-11-10; plan v2 section 5, v3 section 10 step 3): the generated mobile library theme is the third S-gen generator.
 const MT_GEN = 'scripts/surfaces/emit-mobile-theme.mjs';
+const MS_GEN = 'scripts/surfaces/emit-mobile-surfaces.mjs';
 const roots: string[] = [];
 afterAll(() => { for (const r of roots) fs.rmSync(r, { recursive: true, force: true }); });
 
@@ -50,6 +51,7 @@ const mkRoot = (): string => {
   stub(root, SEED_GEN, 'process.exit(0);\n');
   stub(root, RS_GEN, 'process.exit(0);\n');
   stub(root, MT_GEN, 'process.exit(0);\n');
+  stub(root, MS_GEN, 'process.exit(0);\n');
   return root;
 };
 const run = (root: string, args: string[] = ['--check'], cwd = root): { code: number | null; out: string; err: string; lines: string[] } => {
@@ -70,7 +72,7 @@ describe('FE-13 surface-validate gate: real tree', () => {
     expect(r.status).toBe(0);
     // MF-42 (FE-13 dated note): amended deliberately to the new full string, still an exact toBe (never toContain or a regex); the REPORT prefix is unchanged.
     // MF-37 (FE-13 dated note 2026-11-09): amended deliberately again, still an exact toBe: the first three converted surfaces (23 in scope, 17 goldens, 56 strings).
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 23 in scope: converted 3, pending 7, parked 9, report 4) · S-screen ok (3 surfaces, 17 goldens) · S-sbind ok (3 surfaces, 56 strings)\n');
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 23 in scope: converted 4, pending 6, parked 9, report 4) · S-screen ok (4 surfaces, 27 goldens) · S-sbind ok (4 surfaces, 79 strings)\n');
     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
     expect(r.stdout).toContain('S-desc ok (examined 23 in scope:');
   });
@@ -118,6 +120,11 @@ describe('S-gen: the committed generators\' --check', () => {
     expect(run(root).lines).toEqual(['SV-GEN emit-mobile-theme.mjs: missing']);
     stub(root, MT_GEN, "console.error('GEN-STALE mobile/global.css'); process.exit(1);\n");
     expect(run(root).lines).toEqual(['SV-GEN emit-mobile-theme.mjs: exit 1', 'SV-GEN emit-mobile-theme.mjs: GEN-STALE mobile/global.css']);
+  });
+  it('MF-35: a missing mobile surfaces generator is a finding', () => {
+    const root = mkRoot();
+    fs.rmSync(path.join(root, MS_GEN));
+    expect(run(root).lines).toEqual(['SV-GEN emit-mobile-surfaces.mjs: missing']);
   });
   it('every generator exits 0: the GEN arm is clean', () => {
     expect(run(mkRoot()).code).toBe(0);

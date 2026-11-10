@@ -52,6 +52,9 @@ const COPY = [
   'migrations', 'docs/reference/maxbld-report-v2-schema.md', 'docs/reference/maxbld-report-v2.sample.json', 'docs/reference/maxbld-report-v2.schema.json', 'docs/reference/maxbld-report-v2.types.ts',
   'src/tests/fixtures/surfaces', 'src/lib/surfaces', 'src/components/report', 'src/components/surfaces', 'src/app/admin/report-preview', 'src/tests/setup.ts', 'src/tests/helpers/before-image-sandbox.ts',
   'package.json', 'tsconfig.json', ...LOCKS,
+  // MF-35 (dated 2026-11-10): the gate's S-gen now spawns emit-mobile-theme.mjs and emit-mobile-surfaces.mjs, which read these mobile files.
+  'mobile/tailwind.config.js', 'mobile/global.css', 'mobile/theme.rnr.generated.js', 'mobile/src/constants/parcelSearch.ts', 'mobile/src/generated/surfaces',
+  'mobile/__tests__/fixtures/surfaces', 'mobile/src/components/surfaces', // and report-no-maths (FE-05) reads the two mobile binding modules bindings.json now lists
 ];
 const CONFIG = `import { defineConfig } from 'vitest/config';
 import path from 'path';

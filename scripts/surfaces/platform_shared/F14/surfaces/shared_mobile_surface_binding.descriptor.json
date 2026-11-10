@@ -1,0 +1,227 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "The one mobile surface binding: SearchBinding.tsx maps a SEARCH situation to a props tree (refs only) and SurfaceRenderer.tsx renders a props tree through the closed COMPONENTS table (bindings.json mapping.mobile) into the vendored React Native Reusables parts. It holds no display text of its own.",
+    "data_story": "It reads nothing itself: the mount file passes the situation, the content strings (the generated slice) and the bound data.",
+    "under_126": "**PROMOTED BINDING ENTRY** (P42-D9 a; MF-35 plan v2 §2.3): a platform_shared census entry that owns the binding modules, so R-13 totality holds while the converted surfaces own no component."
+  },
+  "evidence": {
+    "files": [
+      "~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md"
+    ],
+    "contracts": [
+      "contract_parcels_lookup"
+    ],
+    "tables": [],
+    "gate": [],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states"
+    ],
+    "emits": []
+  },
+  "identity": {
+    "id": "shared_mobile_surface_binding",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+        "mobile/src/components/surfaces/SearchBinding.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 dated note 2026-11-10 — the binding standard"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains a promise at its C9 cutover, when its golden pair is captured.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — listed among the 11 NEW admin surfaces",
+        "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR is what pins a shape"
+      ]
+    },
+    "ref": "S-079"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "Descriptor, content and data arrive as props from the mount file.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A binding writes nothing; a form submit is handed back to the mount file.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a"
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store: the library component holds its own local UI state.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders what it is given.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "Its only consumer today is the MaxBLD search page; each consumer declares its own guard.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/index.tsx — the mount file"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "It renders lookup data the consumer already read through GET /api/parcels/lookup (parcels and address points, Class B); it reads no table itself.",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts — the route the consumer calls"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": {
+      "item_archetype": "row",
+      "pagination": "none",
+      "recycling": "none"
+    }
+  },
+  "checks": [
+    {
+      "id": "shared_mobile_surface_binding_components_owned",
+      "kind": "components_owned",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The two modules are listed in bindings.json modules and owned by this entry (FE-31 C-3); a module nobody owns is a hand-built component."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Rendering emits nothing.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Rendering is not a metered product action.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ]
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Every converted mobile surface (the parcel search page first).",
+    "evidence": [
+      "scripts/surfaces/_schema/bindings.json — modules"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "Only the props tree, content and data passed in."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [],
+  "interpretation": "none",
+  "notes": "MF-35 (P42-D9 a; P35-D10 a; the binding standard 2026-11-10).",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/SearchBinding.tsx"
+    ],
+    "role": "shared",
+    "generated": "binding",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "B2",
+    "why": "Shared rendering infrastructure: the binding every converted mobile surface renders through.",
+    "feature": "F14",
+    "build_order": 3145,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

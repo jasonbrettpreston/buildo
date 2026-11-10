@@ -49,7 +49,9 @@ export const buildGoldens = (root: string): Map<string, string> => {
     const file = descriptorFile(root, id);
     const d = rj(root, file);
     const files = Object.fromEntries(fingerprintFiles(id, { d, file }).map((p: string) => [p, sha16(path.join(root, p))]));
-    for (const target of d.identity.platforms as string[]) {
+    // MF-35 (dated 2026-11-10): a mobile target's goldens are built by the mobile binding, which root vitest cannot import (mobile jest only,
+    // test.yml); mobile/__tests__/parcelScreens.golden.test.ts asserts them equal searchProps(situation). This builder covers the web target.
+    for (const target of (d.identity.platforms as string[]).filter((p) => p === 'web')) {
       for (const s of d.states) {
         const doc = { surface: id, state: s.name, target, covers: [s.name], props: treeOf(root, d, s.name, target), fingerprint: { files } };
         out.set(`${GOLDEN_ROOT}/${id}/${s.golden}.${target}.json`, `${JSON.stringify(doc, null, 2)}\n`);

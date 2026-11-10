@@ -12,6 +12,7 @@ import { useOnboardingStore } from '@/store/onboardingStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { usePaywallStore } from '@/store/paywallStore';
 import { useFlightBoardSeenStore } from '@/store/flightBoardSeenStore';
+import { useRecentSearchesStore } from '@/store/recentSearchesStore';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
 import { cleanupLegacyUserProfileCache } from '@/lib/migrations/userProfileCacheCleanup';
@@ -120,6 +121,8 @@ function clearLocalSessionState(): void {
   // superseded by §B5 in commits 381a0c9 + f2f7147.) Spec 77 §3.2's
   // first-sight-no-flash gate handles the post-reset UX cleanly.
   useFlightBoardSeenStore.getState().reset();
+  // MF-35 (Spec 99 §3.4c, §B5; P35-D16 a): the MaxBLD search page's recent searches are per user; a different user sees none.
+  useRecentSearchesStore.getState().reset();
   // Inline auth zero (matches `clearAuth()` semantics — kept inline to
   // make the full session-clear visible in one place).
   useAuthStore.setState({ user: null, accessToken: null, isLoading: false });
