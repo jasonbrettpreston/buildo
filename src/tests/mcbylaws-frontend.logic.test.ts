@@ -470,10 +470,10 @@ describe('C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b,
     // landed the first tracked files under both; they stay frontend. Prior form: all five globs were asserted in pending_globs.
     // MB-67 owner commit 2026-11-10 (MF-35 lane; plan v3 section 10 step 4): mobile/src/vendor/rnr/** and mobile/components.json left pending when
     // the MF-35 library commit tracked the vendored parts and the CLI config; they stay frontend. Prior form: both were asserted in pending_globs.
-    for (const g of ['mobile/src/components/surfaces/**']) {
-      expect(real.pending_globs, g).toContain(g);
-    }
-    for (const g of ['src/components/surfaces/**', 'src/app/(maxbld)/**', 'mobile/src/vendor/rnr/**', 'mobile/components.json']) {
+    // MB-67 owner commit 2026-11-10 (MF-35 lane, after the conversion commit): mobile/src/components/surfaces/** left pending when MF-35 tracked
+    // the two mobile binding modules; it stays frontend. Prior form: it was asserted in pending_globs. No McFrontend glob is pending now.
+    expect(real.pending_globs.filter((g: string) => isFrontend(real, g.replace('**', 'x.tsx')))).toEqual([]);
+    for (const g of ['src/components/surfaces/**', 'src/app/(maxbld)/**', 'mobile/src/vendor/rnr/**', 'mobile/components.json', 'mobile/src/components/surfaces/**']) {
       expect(real.pending_globs, g).not.toContain(g);
       expect(real.frontend, g).toContain(g);
     }
