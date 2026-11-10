@@ -4,21 +4,23 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-10",
-  "head": "087690057",
+  "head": "b57ad9e22",
   "cards": [
     "Operator 2026-11-10: \"y recommendation: C, with the four trims. approved\" (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-10: the shared binding standard\").",
     "Operator 2026-11-10: \"Mf-D1 - we will just input the ads via the admin\" and \"Mf-40 agreed\" (D-1, D-3, D-6, D-7)."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-40/plan.md with ~/Buildo-scratch/mcfrontend/MF-40/plan.delta-1.md (section 8 folds win); PLAN panel ~/Buildo-scratch/mcfrontend/MF-40/panel/ (code-reviewer-grounded, compliance, observability-reviewer, regression-guardian) and the delta-1 seat (code-reviewer-grounded, PASS-WITH-FOLDS, all folded); record ~/Buildo-scratch/mcfrontend/MF-40/record.md.",
-  "output": "OUTPUT panel on the binding-standard commits (docs d8852beba, prereg 1 b284cf3d3 at round 132, standard 4a1067908; first made as edf87ad68, abcbd751a, 45c4cd60a on base 84c0f43db and re-made with hooks on 4a3f1c4fb): report ~/Buildo-scratch/mcfrontend/MF-40/panel/binding-std-output-code-reviewer.md (code-reviewer-grounded, PASS-WITH-FOLDS, 0 HIGH, 0 MEDIUM, 3 LOW). All three LOW folded in 087690057 with red evidence docs/reports/red-evidence/MF-40/binding-standard-folds-red.txt and green binding-standard-folds-green.txt. The later MF-40 build (offer and advertiser surfaces, contracts, routes) gets its own OUTPUT panel under this record.",
+  "output": "OUTPUT panel on the binding-standard commits (docs d8852beba, prereg 1 b284cf3d3 at round 132, standard 4a1067908; first made as edf87ad68, abcbd751a, 45c4cd60a on base 84c0f43db and re-made with hooks on 4a3f1c4fb): reports ~/Buildo-scratch/mcfrontend/MF-40/panel/binding-std-output-code-reviewer.md (code-reviewer-grounded, PASS-WITH-FOLDS, 0 HIGH, 0 MEDIUM, 3 LOW) and ~/Buildo-scratch/mcfrontend/MF-40/panel/binding-std-output-regression-guardian.md (regression-guardian, PASS-WITH-FOLDS, 0 HIGH, 1 MEDIUM, 3 LOW). The code reviewer's three LOW folded in 087690057 (red binding-standard-folds-red.txt, green binding-standard-folds-green.txt); the regression-guardian MEDIUM-1, LOW-1 and LOW-2 folded in b57ad9e22 (red binding-standard-rg-folds-red.txt, green binding-standard-rg-folds-green.txt), all under docs/reports/red-evidence/MF-40/. The later MF-40 build (offer and advertiser surfaces, contracts, routes) gets its own OUTPUT panel under this record.",
   "seats": [
-    "code-reviewer-grounded (OUTPUT, binding standard): PASS-WITH-FOLDS (LOW-1 INDEX_SEG leading zero; LOW-2 default sort unrecorded and untested; LOW-3 dead alt_field fallback and the optionCell throw unnoted); every executable claim run, plants on a copy each red on exactly one case"
+    "code-reviewer-grounded (OUTPUT, binding standard): PASS-WITH-FOLDS (LOW-1 INDEX_SEG leading zero; LOW-2 default sort unrecorded and untested; LOW-3 dead alt_field fallback and the optionCell throw unnoted); every executable claim run, plants on a copy each red on exactly one case",
+    "regression-guardian (OUTPUT, binding standard): PASS-WITH-FOLDS (MEDIUM-1 the image render and the row action Modal + actionForm unlocked; LOW-1 a name segment could not start with an underscore; LOW-2 missing Button/Image/Modal nodes now skipped, not thrown; LOW-3 the C-6 plant hard-codes the display union); admin_media golden identity re-run, all 7 states equal but the fingerprint; no lock loosened"
   ],
-  "verdict": "PASS-WITH-FOLDS: every LOW folded in 087690057 (red before green). Owed before push: the operator-scheduled full suite on the tip; owner y on the protected paths.",
+  "verdict": "PASS-WITH-FOLDS: the code reviewer's LOW-1..LOW-3 folded in 087690057; the regression-guardian MEDIUM-1, LOW-1 and LOW-2 folded in b57ad9e22 (red before green). Owed before push: the operator-scheduled full suite on the tip; owner y on the protected paths.",
   "blockers": [],
   "followups": [
-    "Not seated on the binding-standard OUTPUT: regression-guardian and compliance (general-purpose, Spec 08 A9/A10), named in this record before the panel ran; the coordinator seated the code reviewer only.",
-    "code-reviewer sub-threshold: Row type is string|number|null, so a real boolean cell relies on String(true); formProps String(r[v]) yields \"undefined\" for a missing option field; the edit and toggle_active ListBinding paths are covered by SSR render only, not click-through."
+    "Not seated on the binding-standard OUTPUT: compliance (general-purpose, Spec 08 A9/A10), named in this record before the panel ran.",
+    "code-reviewer sub-threshold: Row type is string|number|null, so a real boolean cell relies on String(true); formProps String(r[v]) yields \"undefined\" for a missing option field; the edit and toggle_active ListBinding paths are covered by SSR render only, not click-through.",
+    "regression-guardian LOW-3 (optional, not folded): the FE-31 C-6 plant hard-codes the column display union; it could derive the union from the emitted schema."
   ],
   "evidence": "docs/reports/red-evidence/MF-40/",
   "notes": [
