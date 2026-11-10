@@ -346,7 +346,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`C-068`](#c-068) | contract | `contract_admin_advertiser_upsert` | `MUTATION` | `F04` sponsor-placements | 2043 | 97% | [detail](#c-068) |
 | [`C-067`](#c-067) | contract | `contract_admin_offer_upsert` | `MUTATION` | `F04` sponsor-placements | 2043 | 97% | [detail](#c-067) |
 | [`C-066`](#c-066) | contract | `contract_admin_placements_list` | `QUERY` | `F04` sponsor-placements | 2043 | 97% | [detail](#c-066) |
-| [`S-079`](#s-079) | surface | `admin_offers` | `LIST` | `F04` sponsor-placements | 2044 | 100% | [detail](#s-079) |
+| [`S-081`](#s-081) | surface | `admin_offers` | `LIST` | `F04` sponsor-placements | 2044 | 100% | [detail](#s-081) |
 | [`S-080`](#s-080) | surface | `admin_advertiser_entry` | `FORM` | `F04` sponsor-placements | 2045 | 100% | [detail](#s-080) |
 | [`S-010`](#s-010) | surface | `admin_ledger_visualiser` | `REPORT` | `F07` app-outputs-materialisation | 2073 | 97% | [detail](#s-010) |
 | [`S-015`](#s-015) | surface | `admin_run_ledger` | `LIST` | `F07` app-outputs-materialisation | 2073 | 94% | [detail](#s-015) |
@@ -508,7 +508,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) | 1 | 6 | 2 descriptor(s), 1 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
-| **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-079`](#s-079) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
+| **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
 | **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) | 0 | 0 | 1 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F07** app-outputs-materialisation | `parcel_admin` | [`S-010`](#s-010) · [`S-015`](#s-015) | 0 | 4 | 2 descriptor(s), and would orphan 1 table(s): `app_outputs` |
@@ -1870,11 +1870,11 @@ Usage and entitlements, placements and advertiser accounts, the PDF audit, the `
 
 > ⚠️ MF-40. One CONTRACT descriptor per handler file (126 §3.1). The 126 §6.2 rls block is not representable in surface.schema.json yet; guards.rls_class carries the ruled pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10).
 
-<a id="s-079"></a>
+<a id="s-081"></a>
 
-###### `S-079` `admin_offers`
+###### `S-081` `admin_offers`
 
-**Programme.** `S-079` · scope `parcel_admin` · feature `F04` · build order 2044 · batch `B2` · review `unreviewed` — The scheduled first-party offers of the admin placements page (MF-40).
+**Programme.** `S-081` · scope `parcel_admin` · feature `F04` · build order 2044 · batch `B2` · review `unreviewed` — The scheduled first-party offers of the admin placements page (MF-40).
 
 **What it is.** The list of every scheduled offer: its placement, advertiser, targeting, flight days, whether it is on, whether its placement is oversubscribed and whether its target resolves to a report scenario. Each row opens the offer in the form or turns it on or off.
 
