@@ -468,10 +468,12 @@ describe('C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b,
     }
     // MB-67 owner commit 2026-11-09 (MF-37 lane; operator "a, 1-3 approved"): src/components/surfaces/** and src/app/(maxbld)/** left pending when MF-37
     // landed the first tracked files under both; they stay frontend. Prior form: all five globs were asserted in pending_globs.
-    for (const g of ['mobile/src/components/surfaces/**', 'mobile/src/vendor/rnr/**', 'mobile/components.json']) {
+    // MB-67 owner commit 2026-11-10 (MF-35 lane; plan v3 section 10 step 4): mobile/src/vendor/rnr/** and mobile/components.json left pending when
+    // the MF-35 library commit tracked the vendored parts and the CLI config; they stay frontend. Prior form: both were asserted in pending_globs.
+    for (const g of ['mobile/src/components/surfaces/**']) {
       expect(real.pending_globs, g).toContain(g);
     }
-    for (const g of ['src/components/surfaces/**', 'src/app/(maxbld)/**']) {
+    for (const g of ['src/components/surfaces/**', 'src/app/(maxbld)/**', 'mobile/src/vendor/rnr/**', 'mobile/components.json']) {
       expect(real.pending_globs, g).not.toContain(g);
       expect(real.frontend, g).toContain(g);
     }

@@ -1,0 +1,11 @@
+MB-67 pending-glob red run (src/tests/mcbylaws-frontend.logic.test.ts), 2026-11-10, worktree on ac836bccd (the MF-35 library commit) with the lock edited and mcbylaws/protected-paths.json NOT yet edited.
+Expected red: (1) the MF-42 stale-pending case names mobile/src/vendor/rnr/** and mobile/components.json, pending and frontend while the library commit tracks files under them; (2) the edited C2 case asserts both out of pending and in frontend.
+
+   × C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: no glob in pending AND frontend matches a tracked path; a stale one is named; McBylaws pending globs are not judged here 51ms
+   × C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: the binding homes, the vendor dir, the RNR config, the MaxBLD web pages and the golden dir are frontend; the vendor dir and the three standards data files are protected 3ms
+AssertionError: expected [ …(2) ] to deeply equal []
+AssertionError: mobile/src/vendor/rnr/**: expected [ …(5) ] to not include 'mobile/src/vendor/rnr/**'
+      Tests  2 failed | 30 passed (32)
+
+GREEN after removing the two globs from pending_globs (dated note appended to the policy $comment): mcbylaws-frontend.logic.test.ts plus surface-conformance.logic.test.ts, Tests  65 passed (65).
+Re-made 2026-11-10 on the base 2e7976367 (wf1/mf35-build2-1110, after the re-made library commit) by applying the first build's diff (6a257f7f4) with git apply --3way; green on this base: mcbylaws-frontend.logic.test.ts plus surface-conformance.logic.test.ts, 65 passed (65).
