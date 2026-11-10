@@ -1,0 +1,22 @@
+MF-40 red evidence: src/tests/admin-placements-seed.logic.test.ts (the file side of the placements drift lock)
+Base: ac1d64d3d (the MF-40 docs commit), before migrations/302_admin_ads_placements.sql and the two Admin Placements seed rows existed.
+Command: npx vitest run src/tests/admin-placements-seed.logic.test.ts
+RED (5 of 5):
+   × MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > the migration file exists with UP and DOWN blocks 4ms
+   × MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (a)(b) the seeded placements equal the contract slots and ad_placements, with disclosure true and the CHECK 3ms
+   × MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (a)(b) RED plants: a dropped slot, an extra slot, a max_slots drift, a false disclosure, a dropped CHECK 2ms
+   × MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (c) RLS: placements one public select; offers and advertisers one admin-read select; no write policy 0ms
+   × MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (d) the Admin Placements logic_variables: seed keys, migration rows and descriptor bounds agree 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/admin-placements-seed.logic.test.ts > MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > the migration file exists with UP and DOWN blocks
+AssertionError: migrations/302_admin_ads_placements.sql is missing: expected '' not to be '' // Object.is equality
+ FAIL  src/tests/admin-placements-seed.logic.test.ts > MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (a)(b) the seeded placements equal the contract slots and ad_placements, with disclosure true and the CHECK
+AssertionError: expected [] to deeply equal [ 'detail_footer', …(2) ]
+ FAIL  src/tests/admin-placements-seed.logic.test.ts > MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (a)(b) RED plants: a dropped slot, an extra slot, a max_slots drift, a false disclosure, a dropped CHECK
+AssertionError: expected [ …(2) ] to deeply equal ArrayContaining{…}
+ FAIL  src/tests/admin-placements-seed.logic.test.ts > MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (c) RLS: placements one public select; offers and advertisers one admin-read select; no write policy
+AssertionError: expected '' to match /ALTER TABLE advertisers ENABLE ROW LE…/
+ FAIL  src/tests/admin-placements-seed.logic.test.ts > MF-40 migration 302: placements seed, disclosure CHECK, RLS shape (file side) > (d) the Admin Placements logic_variables: seed keys, migration rows and descriptor bounds agree
+AssertionError: expected [] to deeply equal [ …(2) ]
+      Tests  5 failed (5)
+GREEN after the migration, the seed rows and the group pin: 5 passed (5). The in-test plants (a dropped slot, an extra slot, a max_slots drift, a false disclosure, a dropped CHECK, a write policy) each return the named problem on an in-memory copy of the migration text.

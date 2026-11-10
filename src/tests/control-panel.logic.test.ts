@@ -221,6 +221,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'media_list_page_max',
   'media_list_cache_seconds',
   'media_storage_timeout_ms',
+  // MF-40 admin ads and placements (operator "Mf-40 agreed", 2026-11-10; plan fold 7): admin group "Admin Placements", migration 302
+  'admin_placement_default_flight_days',
+  'admin_placement_max_horizon_days',
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',

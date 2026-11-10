@@ -1205,5 +1205,12 @@
       "media_list_cache_seconds",
       "media_storage_timeout_ms"
     ]
+  },
+  {
+    "label": "Admin Placements",
+    "keys": [
+      "admin_placement_default_flight_days",
+      "admin_placement_max_horizon_days"
+    ]
   }
 ]

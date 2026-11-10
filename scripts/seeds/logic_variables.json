@@ -10377,5 +10377,25 @@
     "admin": {
       "group": "Admin Media"
     }
+  },
+  "admin_placement_default_flight_days": {
+    "default": 30,
+    "type": "number",
+    "min": 1,
+    "max": 365,
+    "description": "MF-40 (Spec 126 section 6.3 rows 4-6 and Spec 114 section 2 dated notes 2026-11-10; operator \"Mf-40 agreed\"; plan ~/Buildo-scratch/mcfrontend/MF-40/plan.md section 12 fold 7; descriptor admin_placements config.logic_variables): the flight length, in days, the admin offer form pre-fills; the operator confirms it, so it changes no stored value on its own (descriptor on_invalid default). Inserted by migration 302. Not read yet: the MF-40 offer form reads it when the surface code lands.",
+    "admin": {
+      "group": "Admin Placements"
+    }
+  },
+  "admin_placement_max_horizon_days": {
+    "default": 365,
+    "type": "number",
+    "min": 1,
+    "max": 1095,
+    "description": "MF-40 (Spec 126 section 6.3 rows 4-6 and Spec 114 section 2 dated notes 2026-11-10; operator \"Mf-40 agreed\"; plan ~/Buildo-scratch/mcfrontend/MF-40/plan.md section 12 fold 7; descriptor admin_placements config.logic_variables): the latest flight_end, in days from now, the admin offer route accepts; a later end is refused with 400 (descriptor on_invalid fail: a bad value must fail, never widen). Inserted by migration 302. Not read yet: the MF-40 offer route reads it when the route code lands.",
+    "admin": {
+      "group": "Admin Placements"
+    }
   }
 }
