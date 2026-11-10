@@ -29,7 +29,10 @@
     "eslint-config-next",
     "@stryker-mutator/api",
     "@aws-sdk/client-s3",
-    "@aws-sdk/lib-storage"
+    "@aws-sdk/lib-storage",
+    "clsx",
+    "dayjs",
+    "@mantine/dates"
   ],
   "ignoreBinaries": ["tsx", "sqlfluff", "wait-on"]
 }

@@ -1,0 +1,16 @@
+MF-37 T1 red run (src/tests/web-library-css.logic.test.ts), 2026-11-09, worktree on 92b51269a with the package pins applied and src/app/globals.css WITHOUT the layer order statement.
+Expected red: (a) the real tree lacks mantine/mantine-datatable layers; the swap plant cannot apply (no statement). The (b)/(c)/(d) plants are in-test RED cases that pass by asserting the planted problem lines.
+
+   × T1 (a) the compiled layer order > the real globals.css: mantine and mantine-datatable after base, before components and utilities 17ms
+   × T1 (a) the compiled layer order > RED: the order statement with mantine after utilities, and with no order statement at all 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/web-library-css.logic.test.ts > T1 (a) the compiled layer order > the real globals.css: mantine and mantine-datatable after base, before components and utilities
+AssertionError: expected [ 'layer mantine: absent', …(1) ] to deeply equal []
+- Expected
++ Received
+ FAIL  src/tests/web-library-css.logic.test.ts > T1 (a) the compiled layer order > RED: the order statement with mantine after utilities, and with no order statement at all
+AssertionError: expected '@import "tailwindcss";\n\n/* Pipeline…' not to be '@import "tailwindcss";\n\n/* Pipeline…' // Object.is equality
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+
+GREEN after adding '@layer theme, base, mantine, mantine-datatable, components, utilities;' as the first statement of globals.css: Tests 8 passed (8).

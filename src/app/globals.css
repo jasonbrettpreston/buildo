@@ -1,3 +1,5 @@
+/* MF-37 (Spec 33 amendment 2026-11-09): the cascade order. Mantine and mantine-datatable sheets (imported only by the admin provider layout, layered) sit after Tailwind base and before components/utilities, so utilities still win. */
+@layer theme, base, mantine, mantine-datatable, components, utilities;
 @import "tailwindcss";
 
 /* Pipeline tile attention flash — pulses background color (not opacity)
