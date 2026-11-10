@@ -506,7 +506,7 @@
     {
       "id": "FE-32",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.32",
       "source": {
         "register": true,
@@ -517,7 +517,7 @@
     {
       "id": "FE-33",
       "kind": "fe-row",
-      "status": "owed",
+      "status": "active",
       "handbook_line": "fe.33",
       "source": {
         "register": true,

@@ -14,6 +14,7 @@
 //       the Modal close button is xl in the golden; the provider imports only the layered sheets T1 checks.
 // Written with createElement (the lock path is a .ts file). No DB, no network.
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { parseRegisterRows } from '../../../scripts/analysis/mcbylaws/cite-parse.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createElement as h, Fragment, type ReactElement } from 'react';
@@ -152,5 +153,13 @@ describe('FE-33 (e) colour and touch targets', () => {
     const known = ['@mantine/core/styles.layer.css', '@mantine/dates/styles.layer.css', 'mantine-datatable/styles.layer.css'];
     expect(fs.readFileSync(path.join(ROOT, 'src/tests/web-library-css.logic.test.ts'), 'utf8')).toContain("'node_modules/mantine-datatable/dist/styles.layer.css'");
     for (const s of sheets) expect(known).toContain(s);
+  });
+});
+
+describe('FE-33 flip (operator "a, 1-3 approved", 2026-11-09; the same-commit lock path, D-19 precedent)', () => {
+  it('Spec 135 FE-33 reads RULED and names exactly this lock', () => {
+    const rows = parseRegisterRows(fs.readFileSync(path.join(process.cwd(), 'docs/specs/02-web-admin/135_mcfrontend_decisions_register.md'), 'utf8')) as Map<string, { status: string; locks?: string[] }>;
+    expect(rows.get('FE-33')?.status).toBe('RULED');
+    expect(rows.get('FE-33')?.locks).toEqual(['src/tests/surfaces/render-smoke.logic.test.ts']);
   });
 });

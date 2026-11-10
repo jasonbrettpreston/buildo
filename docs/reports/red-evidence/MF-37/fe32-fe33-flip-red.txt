@@ -1,0 +1,9 @@
+MF-37 FE-32/FE-33 flip red run, 2026-11-09: each lock gained one assertion that Spec 135 shows its row RULED naming exactly that lock (D-19 precedent). Run before the flip (rows still OWED):
+   × FE-32 flip (operator "a, 1-3 approved", 2026-11-09; the same-commit lock path, D-19 precedent) > Spec 135 FE-32 reads RULED and names exactly this lock 3ms
+     → expected 'OWED' to be 'RULED' // Object.is equality
+   × FE-33 flip (operator "a, 1-3 approved", 2026-11-09; the same-commit lock path, D-19 precedent) > Spec 135 FE-33 reads RULED and names exactly this lock 3ms
+     → expected 'OWED' to be 'RULED' // Object.is equality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/contract-binding.logic.test.ts > FE-32 flip (operator "a, 1-3 approved", 2026-11-09; the same-commit lock path, D-19 precedent) > Spec 135 FE-32 reads RULED and names exactly this lock
+ FAIL  src/tests/surfaces/render-smoke.logic.test.ts > FE-33 flip (operator "a, 1-3 approved", 2026-11-09; the same-commit lock path, D-19 precedent) > Spec 135 FE-33 reads RULED and names exactly this lock
+      Tests  2 failed | 20 passed (22)

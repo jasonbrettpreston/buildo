@@ -8,6 +8,7 @@
 //       contract and a malformed ref are RED; the real admin_media goldens carry contract refs and SV-SBIND is clean on them;
 //   (c) the REPORT side (RS-1): a REPORT field bound `contract:` is refused until a ruling widens it.
 // Pure over committed files and in-memory copies. No DB, no network.
+import { parseRegisterRows } from '../../../scripts/analysis/mcbylaws/cite-parse.mjs';
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -66,5 +67,13 @@ describe('FE-32 (c) the REPORT side (RS-1): contract is not ruled for REPORT fie
     const g = RS.evaluate(inp).gates.find((x: Json) => x.id === 'RS-1');
     expect(g.state).toBe('FAIL');
     expect(g.failing.join('\n')).toContain('the contract binding kind is not ruled for REPORT fields');
+  });
+});
+
+describe('FE-32 flip (operator "a, 1-3 approved", 2026-11-09; the same-commit lock path, D-19 precedent)', () => {
+  it('Spec 135 FE-32 reads RULED and names exactly this lock', () => {
+    const rows = parseRegisterRows(fs.readFileSync(path.join(process.cwd(), 'docs/specs/02-web-admin/135_mcfrontend_decisions_register.md'), 'utf8')) as Map<string, { status: string; locks?: string[] }>;
+    expect(rows.get('FE-32')?.status).toBe('RULED');
+    expect(rows.get('FE-32')?.locks).toEqual(['src/tests/surfaces/contract-binding.logic.test.ts']);
   });
 });
