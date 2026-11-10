@@ -1,0 +1,192 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 43 (Spec 124a R-MA; round 131; supersedes prereg-MB-27-42.json, round 130, whose text named the lock as an edit of the existing bylaw-m435-blank-wall-emit lock: an edited oracle file the door would have to list line for line; the lock is now a new file and every other key is unchanged), the revert round of increment 1 that lands the E2c follow-up fix under operator \"Census decision a\" (2026-11-10; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md, last section; review ~/Buildo-scratch/mcbylaws/inc3/night/CENSUS-REVIEW-20261110.md). In the LQ-1 form (d337dd606): in scripts/analysis/bylaw/evaluate.mjs a dropped design-default arm (M435-EMIT 1a) is disclosed only where a value unit it displaces (its own rule-2 pairs) survives Spec 68 section 7.5 rule 4, at the place it was met (generic: no id, layer or zone in code; no exception path for suites). So the 10.10.40.70(4)(A)-(E) sentence \"If the side of the building has no windows or doors: ... the answer uses the 0.9 m side yard ...\" is no longer carried on garden_suite and laneway_suite side_setback_m, where 10.10.40.70(3)(A) is itself dropped condition_false and 150.7.60.20(5)(B) / 150.8.60.20(3)(D) (or no answer) stands, nor on the principal cells of exception-winner lots (900.2.10(125)(F)). The principal cells won by (3)(A) keep the sentence in the same position (every other disclosure byte-equal). Census reach, one family only (9e96c388; F9): on the golden 25, 75 -> 25 Phase 2 cells (the 25 registered by prereg 31: 5 R lots x 5 classes, principal only; the 50 suite cells drop); on the 1 % sample (every 100th parcel, 4,394 lots, the frozen census 847c5d77 tip 10ba4b857 vs this tree) 14,760 -> 4,905 rows (-9,855: garden_suite and laneway_suite 984 -> 0 per class, principal 984 -> 981 per class), so citywide about 1,470,870 -> about 488,800 (-982,000, x99.65 from the sample ratio; principal about 97,760 lots x 5). The 10 Layer 3 cells of prereg 31 (footprint_max_m2, gfa_max_m2 on A0175, A0375, A0464, A0388, A0561) do not move (principal). No stored cell moves (disclosures only). The four golden-lots cases.json suite lines added by E2c are reverted, listed line for line in expected_value_changes (R-MC). Red lock first, a new file: src/tests/bylaw-m435-blank-wall-reach.logic.test.ts (51 of 51 red with the 10ba4b857 evaluator: the 50 suite cells and the golden-25 count; 51 of 51 green after); the companion src/tests/bylaw-m435-blank-wall-emit.logic.test.ts is unchanged and keeps the 25 principal cells green. Zero scorer moves. One table_version move and one evaluator_version move.",
+ "schema": "coa-round-prereg-v1",
+ "round": 131,
+ "task": "MB-27",
+ "rules": [
+  "M-435",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc3/build/build-plan.md row E2 (:83), section 3 lock bylaw-m435-blank-wall-emit (:154), F9 (:246), MD-E5; ~/Buildo-scratch/mcbylaws/inc3/open-questions.md \"Operator ruling 2026-11-10: census STOP, M-435 blank-wall reach (E2c)\"",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version dfb248b5a9f2 -> dc82bfe6d3b4 and evaluator_version 81042395ee14 -> 54c20374745f (body_sha256 unchanged: the units do not move)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version dfb248b5a9f2 -> dc82bfe6d3b4",
+  "expected-172.json and expected-4d.json commit and inputs.table_version dfb248b5a9f2 -> dc82bfe6d3b4, inputs.evaluator_version 81042395ee14 -> 54c20374745f, through coa-scorecard.mjs --pin, totals equal",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version dfb248b5a9f2 -> dc82bfe6d3b4 and evaluator_version 81042395ee14 -> 54c20374745f, the version fields of the G-STOR record (RP-SW2 a; E1C-S: a mechanical pin of an already-ruled change); the storage measurement is not re-run here"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5403712 garden_suite side yard (150.7.60.20(5)(A) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [",
+   "new": "       \"disclosures\": [],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5403712 garden_suite side yard (150.7.60.20(5)(A) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5403712 garden_suite side yard (150.7.60.20(5)(A) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       ],",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5403712 garden_suite side yard (150.7.60.20(5)(B) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [",
+   "new": "       \"disclosures\": [],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5403712 garden_suite side yard (150.7.60.20(5)(B) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5403712 garden_suite side yard (150.7.60.20(5)(B) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       ],",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5401117 laneway_suite side yard (150.8.60.20(3)(A) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [",
+   "new": "       \"disclosures\": [],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5401117 laneway_suite side yard (150.8.60.20(3)(A) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5401117 laneway_suite side yard (150.8.60.20(3)(A) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       ],",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5401117 laneway_suite side yard (150.8.60.20(3)(D) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       \"disclosures\": [",
+   "new": "       \"disclosures\": [],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5401117 laneway_suite side yard (150.8.60.20(3)(D) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "        \"If the side of the building has no windows or doors: the side yard may be reduced to 0.45 m; the answer uses the 0.9 m side yard for a side with windows or doors.\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "lot 5401117 laneway_suite side yard (150.8.60.20(3)(D) check): the 0.45 m blank-wall sentence is not carried where the 0.9 m 10.10.40.70(3)(A) does not set the side yard (golden-lots cases)",
+   "ruling": "M-435",
+   "ruling_ref": "CHAT-230.D8M435",
+   "old": "       ],",
+   "new": null
+  }
+ ]
+}
