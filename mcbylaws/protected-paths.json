@@ -1,13 +1,11 @@
 {
-  "$comment": "McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only. frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not.",
+  "$comment": "McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only. frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not. Dated note 2026-11-09 (MB-67 owner commit, built in the MF-37 lane; operator, verbatim: \"a, 1-3 approved\"; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-09: MF-37 blocker and owed items\", item 1): src/components/surfaces/** and src/app/(maxbld)/** leave pending_globs because MF-37 landed the first tracked files under both (the binding modules and the admin media pages); both stay in frontend.",
   "pending_globs": [
     "scripts/lib/compute/bylaw-*.js",
     "scripts/lib/compute/maxbld-*.js",
-    "src/components/surfaces/**",
     "mobile/src/components/surfaces/**",
     "mobile/src/vendor/rnr/**",
-    "mobile/components.json",
-    "src/app/(maxbld)/**"
+    "mobile/components.json"
   ],
   "layer23": [
     "scripts/analysis/bylaw/**",

@@ -466,8 +466,14 @@ describe('C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b,
     for (const p of ['mobile/src/vendor/rnr/button.tsx', 'scripts/surfaces/_schema/bindings.json', 'scripts/surfaces/_schema/converted-surfaces.json', 'scripts/surfaces/_schema/vendor-rnr.manifest.json']) {
       expect(classify(real, p).protected, p).toBe(true);
     }
-    for (const g of ['src/components/surfaces/**', 'mobile/src/components/surfaces/**', 'mobile/src/vendor/rnr/**', 'mobile/components.json', 'src/app/(maxbld)/**']) {
+    // MB-67 owner commit 2026-11-09 (MF-37 lane; operator "a, 1-3 approved"): src/components/surfaces/** and src/app/(maxbld)/** left pending when MF-37
+    // landed the first tracked files under both; they stay frontend. Prior form: all five globs were asserted in pending_globs.
+    for (const g of ['mobile/src/components/surfaces/**', 'mobile/src/vendor/rnr/**', 'mobile/components.json']) {
       expect(real.pending_globs, g).toContain(g);
+    }
+    for (const g of ['src/components/surfaces/**', 'src/app/(maxbld)/**']) {
+      expect(real.pending_globs, g).not.toContain(g);
+      expect(real.frontend, g).toContain(g);
     }
     expect(isFrontend(real, 'src/app/page.tsx')).toBe(false);
   });

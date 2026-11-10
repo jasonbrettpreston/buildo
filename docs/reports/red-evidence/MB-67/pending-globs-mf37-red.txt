@@ -1,0 +1,8 @@
+MB-67 owner commit (MF-37 lane) red run, 2026-11-09: on the MF-37 tip (fd97c0973..ab17599ab) the real policy still lists src/components/surfaces/** and src/app/(maxbld)/** in pending_globs while both hold tracked files:
+ FAIL  src/tests/mcbylaws-frontend.logic.test.ts > C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: no glob in pending AND frontend matches a tracked path; a stale one is named; McBylaws pending globs are not judged here
+AssertionError: expected [ …(2) ] to deeply equal []
+After the two globs are removed, the MF-42 case that pinned all five frontend pending globs is red as expected:
+   × C2, the policy flip on the REAL policy (Spec 128 §4.11 item 6; D-2 b, D-4 a): both directions > MF-42: the binding homes, the vendor dir, the RNR config, the MaxBLD web pages and the golden dir are frontend; the ven
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: src/components/surfaces/**: expected [ …(5) ] to include 'src/components/surfaces/**'
+      Tests  1 failed | 31 passed (32)
