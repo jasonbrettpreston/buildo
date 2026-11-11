@@ -1,0 +1,1227 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 47 (Spec 124a R-MA; round 150, assigned by the orchestrator; supersedes prereg-MB-27-46.json, round 146, which did not list the two oracle files the full suite found moved by the 848-2025 in-force record: bylaw-amendments and coa-round; 848-2025 basis now the register id M-481), the revert round of increment 1 that lands increment 4 (the house with a secondary suite), committed alone directly before the build commit. Rulings: ~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-0, D-1 b, D-2 a, D-3 a, D-6 re-ruled a, D-8 a with the addendum, E1-E12, E7 y, houseplex family A a, the E8 hold), recorded as the 2026-11-11 dated notes on M-379, M-251, M-182, M-344 and M-481 (d79a0f96e). Seeds: building-types.json gains house_with_secondary_suite (units 2, units_floor 2, base_type detached_house) and the D-2 a gain declaration; switchboard.json gains its type switch, reading:suite_fsi_release_848 (medium, C15) and formula:units_max:increment_4; the 47 increment-1/2 catalogue rows list the suite; units_max gains the increment-4 revision and the fact bt_units_floor (E7); layer2-scope.json lists the suite third for roof_form (migration 304); vocab.json unit_application gains the five E8-hold rows with the dated note; adjudications.json gains COR-10.{20,40,60,80}.30.1(2)#whole/condition mapped(LC) (houseplex family A; R 10.10.30.1(2) compares 10.10.60.70(1)(C), not the overlay, and is left alone); amendments.json records 848-2025 in force 2025-07-24. Code (scripts/lib, no evaluator_version move): compute-maxbld-scenarios.js gainRows after the per-type loop; rows.js reads bt_units_floor from the building-types row and joins the closed Phase 2 words of every Layer 2 target a row read (conditions included; the A0179 carriage fix). Stored Layer 2 cells move (the increment-4 night, D-6 a): 2 % sample {\"detached_houseplex|principal|lot_coverage_pct\":117,\"semi_detached_houseplex|principal|lot_coverage_pct\":104,\"house_with_secondary_suite|principal|lot_coverage_pct\":267,\"house_with_secondary_suite|garden_suite|lot_coverage_pct\":23,\"house_with_secondary_suite|laneway_suite|lot_coverage_pct\":23}; option cells {}; permission words 0. Golden 25: 0 stored cells move except the suite's own listing; McProof key 25 of 25 (suite rows and gains). Scorer: one move per set, A0974/16EYK #1 MATCH -> BY-LAW CHANGED (848-2025 now in force, item 8), a named accepted finding, and the coa172 floor \"article 10.5.60 answered\" 42 -> 40 (operator \"a\" on STOP-848-FLOOR; M-481). Built on origin 82a5e2528; table_version 4e7ea5d17e90 (the 848-2025 basis is the register id M-481). Named assertion moves: the 26 of D-8 a (18 + 8) plus the mechanical results of items 6-8 listed below; the five oracle-class files are listed line for line (door: M-252 CHAT-29.F-SC-8, M-465 CHAT-225.Q-ROOF, M-481 CHAT-225.Q-CONF, each row and token already on origin).",
+ "schema": "coa-round-prereg-v1",
+ "round": 150,
+ "task": "MB-27",
+ "rules": [
+  "M-379",
+  "M-182",
+  "M-251",
+  "M-252",
+  "M-344",
+  "M-465",
+  "M-481",
+  "M-386",
+  "M-476",
+  "R-MA"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc4/impact/impact-map.md sections 1, 2.1, 5, 6; ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md; ~/Buildo-scratch/mcbylaws/inc4/cards/ (CARD-D4-E8-FAMILY-B q3, CARD-E7-UCAP, CARD-848-INFORCE, CARD-A0179-CARRIAGE, CARD-D3-SUITE-SIZE)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0974/16EYK",
+   "n": 1,
+   "clause": "10.5.60.70(1)",
+   "from": "MATCH",
+   "to": "BY-LAW CHANGED",
+   "reason": "A named accepted finding of this round (operator \"a\" on STOP-848-FLOOR, 2026-11-11; M-481 dated note). By-law 848-2025 is now recorded in force from 2025-07-24 (D-1 b, CARD-848-INFORCE); the 2016 notice cites 10.5.60.70(1), which 848-2025 amends, so the scorer classes it \"by-law changed after the hearing (848-2025); was MATCH: same value, same provision\". The value is unchanged (10, 10.5.60.70(1)(B)).",
+   "ruling": "M-481"
+  }
+ ],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [
+  {
+   "notice": "A0974/16EYK",
+   "n": 1,
+   "clause": "10.5.60.70(1)",
+   "from": "MATCH",
+   "to": "BY-LAW CHANGED",
+   "reason": "A named accepted finding of this round (operator \"a\" on STOP-848-FLOOR, 2026-11-11; M-481 dated note). By-law 848-2025 is now recorded in force from 2025-07-24 (D-1 b, CARD-848-INFORCE); the 2016 notice cites 10.5.60.70(1), which 848-2025 amends, so the scorer classes it \"by-law changed after the hearing (848-2025); was MATCH: same value, same provision\". The value is unchanged (10, 10.5.60.70(1)(B)).",
+   "ruling": "M-481"
+  }
+ ],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0974/16EYK",
+   "n": 1,
+   "clause": "10.5.60.70(1)",
+   "from": "MATCH",
+   "to": "BY-LAW CHANGED",
+   "reason": "A named accepted finding of this round (operator \"a\" on STOP-848-FLOOR, 2026-11-11; M-481 dated note). By-law 848-2025 is now recorded in force from 2025-07-24 (D-1 b, CARD-848-INFORCE); the 2016 notice cites 10.5.60.70(1), which 848-2025 amends, so the scorer classes it \"by-law changed after the hearing (848-2025); was MATCH: same value, same provision\". The value is unchanged (10, 10.5.60.70(1)(B)).",
+   "ruling": "M-481"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "one 172 floor line moves by ruling: \"article 10.5.60 answered\" 42 -> 40 (measured 40.6) through coa-scorecard.mjs --floors --accept --ruling=M-481 (operator \"a\" on STOP-848-FLOOR, 2026-11-11; the M-481 dated note); every other line unchanged and the floors check OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version dc82bfe6d3b4 -> the build tree (evaluator_version 54c20374745f unchanged; body_sha256 moves with vocab unit_application and the adjudications condition)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version and the 39 entries 848-2025 moves to in_force (generate-amendment-index.mjs --write)",
+  "docs/reference/bylaw-provisions.{json,md} (848-2025 statuses; generate-bylaw-provisions.mjs --write)",
+  "expected-172.json and expected-4d.json re-pinned through coa-scorecard.mjs --pin (one move each, above)",
+  "floors-172.json \"article 10.5.60 answered\" 42 -> 40 and its rulings entry M-481 (coa-scorecard.mjs --floors --accept --ruling=M-481)",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json version fields (RP-SW2 a, E1C-S); the storage measure is re-run on the night (D-6 a)",
+  "scripts/surfaces/_schema/report-v2.decl.json inputs_sha256_16 and the 64 report + 4 page goldens, fingerprint line only (seed-report-v2, report-capture, report-page-capture; D-7 hash-only)",
+  "docs/reference/maxbld-report-field-inventory.{json,md} hash fields; docs/reports/generated/envelope-answer-tracker.json (generated)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": "PINNED_SHA",
+   "row": "catalogue, switchboard and building-types sha pins",
+   "from": "previous hashes",
+   "to": "new hashes (E1C-S, mechanical)",
+   "rule": "D-8 a move 1 (impact-map 2.1 B11)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": "B8",
+   "row": "the 47 increment-1/2 rows' building_type",
+   "from": "['detached_house', 'detached_houseplex']",
+   "to": "['detached_house', 'detached_houseplex', 'house_with_secondary_suite']",
+   "rule": "D-8 a move 2 (P-3, Q2 a)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts",
+   "line": "41",
+   "row": "switchboard rows",
+   "from": "73",
+   "to": "76 (suite type switch; reading:suite_fsi_release_848, item 8; formula:units_max:increment_4, item 7)",
+   "rule": "D-8 a move 3, plus the mechanical results of items 7 and 8",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/determinism.logic.test.ts",
+   "line": "76-77",
+   "row": "rows per parcel",
+   "from": "102",
+   "to": "149 (+47 suite rows)",
+   "rule": "D-8 a move 4",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize.logic.test.ts",
+   "line": "classes by stub",
+   "row": "class_results keys",
+   "from": "['detached_houseplex', 'semi_detached_houseplex']",
+   "to": "+ 'house_with_secondary_suite' (option slots only)",
+   "rule": "D-8 a move 5",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize-roof-axis.logic.test.ts",
+   "line": "B2",
+   "row": "option rows",
+   "from": "14 for two listed classes",
+   "to": "21 for three listed classes",
+   "rule": "D-8 a move 6",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize-roof-axis.logic.test.ts",
+   "line": "B3",
+   "row": "no option override",
+   "from": "any class but the houseplex",
+   "to": "the representative class or an unlisted class (wording: \"for the representative class only\")",
+   "rule": "D-8 a move 7",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/d5-houseplex-option-slots.logic.test.ts",
+   "line": "26, 32",
+   "row": "options.roof_form.classes",
+   "from": "[detached_house, detached_houseplex]",
+   "to": "+ house_with_secondary_suite",
+   "rule": "D-8 a move 8",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/d5-houseplex-option-slots.logic.test.ts",
+   "line": "48",
+   "row": "decodes option rows for the listed classes",
+   "from": "both listed classes",
+   "to": "every listed class",
+   "rule": "D-8 a move 9",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/migration-295.logic.test.ts",
+   "line": "96-99",
+   "row": "the scope classes",
+   "from": "['detached_house', 'detached_houseplex']",
+   "to": "+ 'house_with_secondary_suite' (297 and 304 widen the view)",
+   "rule": "D-8 a move 10",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/migration-295.logic.test.ts",
+   "line": "G-STOR v2",
+   "row": "the record versions equal the tree",
+   "from": "dc82bfe6d3b4 / 54c20374745f",
+   "to": "the tree table_version / 54c20374745f (G-STOR re-bind, version fields only)",
+   "rule": "D-8 a move 11 (E1C-S)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/migration-297.logic.test.ts",
+   "line": "27-35",
+   "row": "the option view classes",
+   "from": "read from 297",
+   "to": "read from the latest migration that re-creates the view (304)",
+   "rule": "D-8 a move 12 (L2-3)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/surfaces/report-generator, report-generated-only, mcfront-proof",
+   "line": "GEN-STALE / FE-02",
+   "row": "report-v2.decl.json inputs_sha256_16 and the 64 report + 4 page goldens",
+   "from": "73601b5f311d6d49",
+   "to": "4511b739fc1f8977 (hash-only recapture; D-7 hash-only STOP not hit)",
+   "rule": "D-8 a moves 13-18 (P-5, D-7, E1C-S)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "line": "R11, R12",
+   "row": "listed classes; the A0166 flat main-wall word",
+   "from": "two classes; the house only",
+   "to": "three classes; the house and the suite",
+   "rule": "D-8 a addendum moves 1-2",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/coa-scorecard.logic.test.ts",
+   "line": "--check x2",
+   "row": "expected-4d.json and expected-172.json",
+   "from": "pinned at dc82bfe6d3b4",
+   "to": "re-pinned through coa-scorecard.mjs --pin; one scorer move each (A0974/16EYK #1, item 8)",
+   "rule": "D-8 a addendum moves 3-4",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "line": "424-428",
+   "row": "x.30.1(2) suite on the exception lot",
+   "from": "45",
+   "to": "30 (held until D-4)",
+   "rule": "D-8 a addendum move 5 (E8 hold)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/bylaw-golden-lots.logic.test.ts",
+   "line": "cases.json fresh; PROVEN 10.40.30.1(2) @RS; PROVEN 10.80.30.1(2) @RM",
+   "row": "golden-lots-cases.mjs expectations",
+   "from": "RS suite 45; RM suite unregulated; RM 4-unit houseplex unregulated; RM duplex 35 applying",
+   "to": "RS suite 40 unit_applies false; RM suite 33 unit_applies false; RM 4-unit houseplex 33 unit_applies false; RM duplex 35 unit_applies false (the unit does not form on the LC-unmapped lot)",
+   "rule": "D-8 a addendum moves 6-8, plus the mechanical result of item 6 (houseplex family A) on the RM case",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/bylaw-fix-4.logic.test.ts",
+   "line": "173-176",
+   "row": "RM x18 4-unit houseplex lot_coverage_pct",
+   "from": "unregulated",
+   "to": "33 from 900.6.10(18)(C)",
+   "rule": "mechanical result of item 6 (houseplex family A, operator \"3. a\")",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "line": "D5",
+   "row": "reading rows citing C8 onward",
+   "from": "six; readings + 7",
+   "to": "seven (+ reading:suite_fsi_release_848); readings + 8",
+   "rule": "mechanical result of item 8 (D-1 b)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/bylaw-amendments.infra.test.ts",
+   "line": "statuses default to not_verified",
+   "row": "the verified statuses and their basis",
+   "from": "ten, basis M-36 or the S0.5 spike",
+   "to": "eleven: + ['848-2025', 'in_force', 'M-481'] and its url, sha and dates",
+   "rule": "mechanical result of item 8 (D-1 b); found by the full suite",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/coa-round.logic.test.ts",
+   "line": "C-3",
+   "row": "the 172 BY-LAW CHANGED count",
+   "from": "3",
+   "to": "4 (+ A0974/16EYK #1, asserted)",
+   "rule": "mechanical result of item 8; the accepted finding (operator a on STOP-848-FLOOR); found by the full suite",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/increment2-revisions.logic.test.ts",
+   "line": "V1",
+   "row": "rows with revisions",
+   "from": "five",
+   "to": "+ 'units_max' (increment-4 revision)",
+   "rule": "mechanical result of item 7 (E7)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": "validateCatalogue",
+   "row": "known increments",
+   "from": "['1', '2', '3']",
+   "to": "['1', '2', '3', '4']",
+   "rule": "mechanical result of item 7 (E7)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  },
+  {
+   "file": "src/tests/bylaw-maxbld-trace.infra.test.ts",
+   "line": "INV-25",
+   "row": "docs/reports/generated/envelope-answer-tracker.json",
+   "from": "the four x.30.1(2) COR lists",
+   "to": "+ COR-10.x.30.1(2)#whole/condition (generate-answer-tracker.mjs --write)",
+   "rule": "mechanical result of item 6 (generated)",
+   "authority": "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-8 a; the late-morning \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\"); ~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md section 3"
+  }
+ ],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "bylaw-evaluator-fixes M-180 x.30.1(2) suite case held until D-4 (E8 hold, operator 2026-11-11: the suite keeps the exception 30 %, the M-252 safe side; evidence A0228/26EYK; D-8 a addendum move 5)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "it('x.30.1(2) names \"a residential building with a secondary suite\" too: a house with a suite on the exception lot takes the zone 45 % over the exception 30 % (panel round 1)', () => {",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "bylaw-evaluator-fixes M-180 x.30.1(2) suite case held until D-4 (E8 hold, operator 2026-11-11: the suite keeps the exception 30 %, the M-252 safe side; evidence A0228/26EYK; D-8 a addendum move 5)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "expect([zone, ev(l, 'lot_coverage_pct', withExc(8.5)).value]).toEqual([zone, 45]);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "bylaw-evaluator-fixes M-180 x.30.1(2) suite case held until D-4 (E8 hold, operator 2026-11-11: the suite keeps the exception 30 %, the M-252 safe side; evidence A0228/26EYK; D-8 a addendum move 5)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "// MB-27 increment 4, E8 hold (D-8 a named move; Spec 69a M-251 dated note 2026-11-11, operator \"yes\" to the hold at the safe side"
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "bylaw-evaluator-fixes M-180 x.30.1(2) suite case held until D-4 (E8 hold, operator 2026-11-11: the suite keeps the exception 30 %, the M-252 safe side; evidence A0228/26EYK; D-8 a addendum move 5)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "// until D-4 rules; M-252 (A0228/26EYK); card CARD-D4-E8-FAMILY-B): x.30.1(2) names the suite building, but its five units are set aside"
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "bylaw-evaluator-fixes M-180 x.30.1(2) suite case held until D-4 (E8 hold, operator 2026-11-11: the suite keeps the exception 30 %, the M-252 safe side; evidence A0228/26EYK; D-8 a addendum move 5)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "// for detached_house in vocab unit_application, so the suite keeps the exception 30 %; was 45. Held until D-4, not deleted."
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "bylaw-evaluator-fixes M-180 x.30.1(2) suite case held until D-4 (E8 hold, operator 2026-11-11: the suite keeps the exception 30 %, the M-252 safe side; evidence A0228/26EYK; D-8 a addendum move 5)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "it('x.30.1(2) names \"a residential building with a secondary suite\" too: held until D-4 (E8 hold), a house with a suite on the exception lot keeps the exception 30 % (panel round 1; was the zone 45 %)', () => {"
+  },
+  {
+   "path": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+   "case": "bylaw-evaluator-fixes M-180 x.30.1(2) suite case held until D-4 (E8 hold, operator 2026-11-11: the suite keeps the exception 30 %, the M-252 safe side; evidence A0228/26EYK; D-8 a addendum move 5)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "expect([zone, ev(l, 'lot_coverage_pct', withExc(8.5)).value]).toEqual([zone, 30]);"
+  },
+  {
+   "path": "src/tests/bylaw-fix-4.logic.test.ts",
+   "case": "bylaw-fix-4 F-SC-8 / M-252 RM x18 4-unit houseplex on the LC-unmapped lot: the exception 33 % stands (houseplex family A, operator \"3. a\", the mapped(LC) condition on 10.80.30.1(2); A0228/26EYK the same lot family)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "it('a 4-unit houseplex is no duplex or triplex: the detached-house substitution (33 %) and the more-permissive rule still apply (M-180(1)/(2) unchanged)', () => {",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-fix-4.logic.test.ts",
+   "case": "bylaw-fix-4 F-SC-8 / M-252 RM x18 4-unit houseplex on the LC-unmapped lot: the exception 33 % stands (houseplex family A, operator \"3. a\", the mapped(LC) condition on 10.80.30.1(2); A0228/26EYK the same lot family)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "expect([r.status, r.value]).toEqual(['value', 'unregulated']);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-fix-4.logic.test.ts",
+   "case": "bylaw-fix-4 F-SC-8 / M-252 RM x18 4-unit houseplex on the LC-unmapped lot: the exception 33 % stands (houseplex family A, operator \"3. a\", the mapped(LC) condition on 10.80.30.1(2); A0228/26EYK the same lot family)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "// MB-27 increment 4, houseplex family A (Spec 69a M-182 dated note 2026-11-11, operator \"3. a\"; the Q-D2 a form): on this LC-unmapped"
+  },
+  {
+   "path": "src/tests/bylaw-fix-4.logic.test.ts",
+   "case": "bylaw-fix-4 F-SC-8 / M-252 RM x18 4-unit houseplex on the LC-unmapped lot: the exception 33 % stands (houseplex family A, operator \"3. a\", the mapped(LC) condition on 10.80.30.1(2); A0228/26EYK the same lot family)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "// x18 lot 10.80.30.1(2) no longer forms (\"no lot coverage applies\" is no maximum to compare), so the detached-house substitution's 33 %"
+  },
+  {
+   "path": "src/tests/bylaw-fix-4.logic.test.ts",
+   "case": "bylaw-fix-4 F-SC-8 / M-252 RM x18 4-unit houseplex on the LC-unmapped lot: the exception 33 % stands (houseplex family A, operator \"3. a\", the mapped(LC) condition on 10.80.30.1(2); A0228/26EYK the same lot family)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "// stands (M-180(1), 900.1.10(3)); was unregulated. The 2- and 3-unit 35 % arm above is unchanged (M-252)."
+  },
+  {
+   "path": "src/tests/bylaw-fix-4.logic.test.ts",
+   "case": "bylaw-fix-4 F-SC-8 / M-252 RM x18 4-unit houseplex on the LC-unmapped lot: the exception 33 % stands (houseplex family A, operator \"3. a\", the mapped(LC) condition on 10.80.30.1(2); A0228/26EYK the same lot family)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "it('a 4-unit houseplex is no duplex or triplex: the detached-house substitution (33 %) applies; on the LC-unmapped lot the more-permissive rule does not form (houseplex family A, M-180(1); was unregulated)', () => {"
+  },
+  {
+   "path": "src/tests/bylaw-fix-4.logic.test.ts",
+   "case": "bylaw-fix-4 F-SC-8 / M-252 RM x18 4-unit houseplex on the LC-unmapped lot: the exception 33 % stands (houseplex family A, operator \"3. a\", the mapped(LC) condition on 10.80.30.1(2); A0228/26EYK the same lot family)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "expect([r.status, r.value, r.winner]).toEqual(['value', 33, '900.6.10(18)#(18)[SSP](C)']);"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"value\": 45,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"disclosure_match\": \"more permissive than the exception\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"rationale\": \"RS (x256), house with a secondary suite: 45 %\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"applies\": true,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"why\": null,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"value\": 45,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"winner\": \"10.40.30.40(1)#(1)(D)\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"10.40.30.40(1)#(1)(D)\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "],",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"disclosures\": [",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"On this exception lot the lot_coverage_pct is 45 from 10.40.30.40(1)#(1)(D): the zone's houseplex rule is more permissive than the exception's detached-house rule (40).\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"value\": \"unregulated\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"disclosure_match\": \"more permissive than the exception\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"rationale\": \"RM (x18), house with a suite: zone suite rule (no LC overlay → unregulated) is more permissive than exception 33 %\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"applies\": true,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"why\": null,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"value\": \"unregulated\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"winner\": \"10.80.30.40(1)#(1)(B)\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"10.80.30.40(1)#(1)(B)\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "],",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"disclosures\": [",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"On this exception lot the lot_coverage_pct is unregulated from 10.80.30.40(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (33).\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"value\": \"unregulated\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"disclosure_match\": \"more permissive than the exception\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"rationale\": \"RM (x18), 4-unit houseplex: as above\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"applies\": true,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"why\": null,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"value\": \"unregulated\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"winner\": \"10.80.30.40(1)#(1)(B)\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"10.80.30.40(1)#(1)(B)\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "],",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"disclosures\": [",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"On this exception lot the lot_coverage_pct is unregulated from 10.80.30.40(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (33).\"",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"value\": 35",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"rationale\": \"RM (x18), 2-unit houseplex = a duplex (M-252, 61 Redgrave Dr A0228/26EYK): 35 %, not displaced by 10.80.30.1(2)\",",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"applies\": true,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": "\"why\": null,",
+   "new": null
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"value\": 40,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"unit_applies\": false"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"rationale\": \"RS (x256), house with a secondary suite: held until D-4 (E8 hold, MB-27 increment 4, operator 2026-11-11; M-252, A0228/26EYK): the exception 40 % stands; was 45 %\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"applies\": false,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"why\": \"building_type detached_house (outside 10.40.30.1(2), E8 hold (MB-27 increment 4, operator 2026-11-11; until D-4))\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"value\": 40,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"winner\": \"900.4.10(256)#(256)[SSP](F)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"900.4.10(256)#(256)[SSP](F)\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"disclosures\": [],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"value\": 33,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"unit_applies\": false"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"rationale\": \"RM (x18), house with a suite: held until D-4 (E8 hold, MB-27 increment 4, operator 2026-11-11; M-252, A0228/26EYK), and on this LC-unmapped lot x.30.1(2) does not form (houseplex family A, operator \\\"3. a\\\"): the exception 33 % stands; was unregulated\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"applies\": false,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"why\": \"building_type detached_house (outside 10.80.30.1(2), E8 hold (MB-27 increment 4, operator 2026-11-11; until D-4))\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"value\": 33,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"winner\": \"900.6.10(18)#(18)[SSP](C)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"900.6.10(18)#(18)[SSP](C)\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"disclosures\": [],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"value\": 33,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"unit_applies\": false"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"rationale\": \"RM (x18), 4-unit houseplex: on this LC-unmapped lot x.30.1(2) does not form (houseplex family A, MB-27 increment 4, operator \\\"3. a\\\", the Q-D2 a form; M-252, A0228/26EYK): the detached-house substitution 33 % stands; was unregulated\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"applies\": false,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"why\": \"condition mapped(LC)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"value\": 33,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"winner\": \"900.6.10(18)#(18)[SSP](C)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"900.6.10(18)#(18)[SSP](C)\""
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"disclosures\": [],"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"value\": 35,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"unit_applies\": false"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"rationale\": \"RM (x18), 2-unit houseplex = a duplex (M-252, 61 Redgrave Dr A0228/26EYK): 35 %, not displaced by 10.80.30.1(2) (MB-27 increment 4, houseplex family A: on this LC-unmapped lot the unit does not form at all)\","
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"applies\": false,"
+  },
+  {
+   "path": "src/tests/fixtures/bylaw-golden-lots/cases.json",
+   "case": "golden-lots cases 10.40.30.1(2) RS x256 and 10.80.30.1(2) RM x18: the suite held until D-4 (E8 hold) and the houseplex family-A fix on the LC-unmapped x18 lot (A0228/26EYK); D-8 a addendum moves 6-8 (golden-lots-cases.mjs --write)",
+   "ruling": "M-252",
+   "ruling_ref": "CHAT-29.F-SC-8",
+   "old": null,
+   "new": "\"why\": \"condition mapped(LC)\","
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": "for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex']));",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": "for (const lot of out.rows.lots) if (lot.class_results) for (const [c, ov] of Object.entries(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) if (c !== 'detached_houseplex') expect(Number(k)).toBeLessThan(env.pairs.length);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": "const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof' && r.class === 'detached_house';",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": null,
+   "new": "// MB-27 increment 4 (bylaw-mb27l2-roof R11, D-8 a named move, the d5 form; DL-7 a / M-465 as amended: the scope lists the suite third,"
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": null,
+   "new": "// migration 304): the listed classes decode option rows and may write option overrides; an unlisted class never does"
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": null,
+   "new": "for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex', 'house_with_secondary_suite']));"
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": null,
+   "new": "for (const lot of out.rows.lots) if (lot.class_results) for (const [c, ov] of Object.entries(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) if (!['detached_houseplex', 'house_with_secondary_suite'].includes(c)) expect(Number(k)).toBeLessThan(env.pairs.length);"
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": null,
+   "new": "// MB-27 increment 4 (bylaw-mb27l2-roof R12, D-8 a named move): the suite house is a detached house (800.50(181)(F)), so its A0166 flat main-wall row carries the word too"
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-roof.logic.test.ts",
+   "case": "bylaw-mb27l2-roof R11 R12 the suite house is the third listed roof-form class (DL-7 a form, migration 304): it decodes its own option rows and its A0166 flat main-wall row carries main_wall_limit_above_height; D-8 a addendum moves 1-2",
+   "ruling": "M-465",
+   "ruling_ref": "CHAT-225.Q-ROOF",
+   "old": null,
+   "new": "const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof' && ['detached_house', 'house_with_secondary_suite'].includes(r.class);"
+  },
+  {
+   "path": "src/tests/bylaw-amendments.infra.test.ts",
+   "case": "bylaw-amendments the verified-status list gains 848-2025 in_force, basis M-481, with its law0848.pdf url, sha and dates (D-1 b, operator 2026-11-11)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": "it('statuses default to not_verified; the verified ones cite M-36 or the S0.5 spike evidence, each with its source sha', () => {",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-amendments.infra.test.ts",
+   "case": "bylaw-amendments the verified-status list gains 848-2025 in_force, basis M-481, with its law0848.pdf url, sha and dates (D-1 b, operator 2026-11-11)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "// MB-27 increment 4 (named move; D-1 b, operator 2026-11-11, recorded as the Spec 69a M-481 dated note): 848-2025 is verified in force"
+  },
+  {
+   "path": "src/tests/bylaw-amendments.infra.test.ts",
+   "case": "bylaw-amendments the verified-status list gains 848-2025 in_force, basis M-481, with its law0848.pdf url, sha and dates (D-1 b, operator 2026-11-11)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "// from its enacting text law0848.pdf, basis M-481, the register-id form 648-2025 and 654-2025 use with M-36"
+  },
+  {
+   "path": "src/tests/bylaw-amendments.infra.test.ts",
+   "case": "bylaw-amendments the verified-status list gains 848-2025 in_force, basis M-481, with its law0848.pdf url, sha and dates (D-1 b, operator 2026-11-11)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "it('statuses default to not_verified; the verified ones cite a Spec 69a ruling (M-36, M-481) or the S0.5 spike evidence, each with its source sha', () => {"
+  },
+  {
+   "path": "src/tests/bylaw-amendments.infra.test.ts",
+   "case": "bylaw-amendments the verified-status list gains 848-2025 in_force, basis M-481, with its law0848.pdf url, sha and dates (D-1 b, operator 2026-11-11)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "['848-2025', 'in_force', 'M-481'],"
+  },
+  {
+   "path": "src/tests/bylaw-amendments.infra.test.ts",
+   "case": "bylaw-amendments the verified-status list gains 848-2025 in_force, basis M-481, with its law0848.pdf url, sha and dates (D-1 b, operator 2026-11-11)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "expect(a.statuses['848-2025']).toMatchObject({ source_url: 'https://www.toronto.ca/legdocs/bylaws/2025/law0848.pdf', source_sha256: '3458ed2fdbde119dc5cee29963578b50d5bf700eb01d015a76af9e32a44ff0ca', enacted_on: '2025-07-24', in_force_on: '2025-07-24' });"
+  },
+  {
+   "path": "src/tests/coa-round.logic.test.ts",
+   "case": "coa-round C-3 the 172 BY-LAW CHANGED count 3 -> 4: A0974/16EYK #1 is BY-LAW CHANGED, was MATCH, with 848-2025 in force (the accepted finding, operator a on STOP-848-FLOOR)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": "expect(r.so).toMatch(/\"BY-LAW CHANGED\":3/);",
+   "new": null
+  },
+  {
+   "path": "src/tests/coa-round.logic.test.ts",
+   "case": "coa-round C-3 the 172 BY-LAW CHANGED count 3 -> 4: A0974/16EYK #1 is BY-LAW CHANGED, was MATCH, with 848-2025 in force (the accepted finding, operator a on STOP-848-FLOOR)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "// MB-27 increment 4 (coa-round C-3 named move; operator \"a\" on STOP-848-FLOOR, 2026-11-11, the M-481 dated note): 4, not 3. With"
+  },
+  {
+   "path": "src/tests/coa-round.logic.test.ts",
+   "case": "coa-round C-3 the 172 BY-LAW CHANGED count 3 -> 4: A0974/16EYK #1 is BY-LAW CHANGED, was MATCH, with 848-2025 in force (the accepted finding, operator a on STOP-848-FLOOR)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "// 848-2025 recorded in force, A0974/16EYK #1 10.5.60.70(1) (heard 2016) is BY-LAW CHANGED, was MATCH, same value: the accepted finding."
+  },
+  {
+   "path": "src/tests/coa-round.logic.test.ts",
+   "case": "coa-round C-3 the 172 BY-LAW CHANGED count 3 -> 4: A0974/16EYK #1 is BY-LAW CHANGED, was MATCH, with 848-2025 in force (the accepted finding, operator a on STOP-848-FLOOR)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "expect(r.so).toMatch(/\"BY-LAW CHANGED\":4/);"
+  },
+  {
+   "path": "src/tests/coa-round.logic.test.ts",
+   "case": "coa-round C-3 the 172 BY-LAW CHANGED count 3 -> 4: A0974/16EYK #1 is BY-LAW CHANGED, was MATCH, with 848-2025 in force (the accepted finding, operator a on STOP-848-FLOOR)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "const k = JSON.parse(fs.readFileSync(path.join(tmp, 'sc.json'), 'utf8')).rows.find((q: any) => q.notice === 'A0974/16EYK' && q.n === 1);"
+  },
+  {
+   "path": "src/tests/coa-round.logic.test.ts",
+   "case": "coa-round C-3 the 172 BY-LAW CHANGED count 3 -> 4: A0974/16EYK #1 is BY-LAW CHANGED, was MATCH, with 848-2025 in force (the accepted finding, operator a on STOP-848-FLOOR)",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "expect([k.class, k.class_before_bylaw]).toEqual(['BY-LAW CHANGED', 'MATCH']);"
+  },
+  {
+   "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "case": "bylaw-switchboard-confidence D5 reading:suite_fsi_release_848 (D-1 b, register C15) joins the rows that cite C8 onward; readings + 8",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": "const SIX = new Set([\"reading:rm_houseplex_no_main_wall_limit\",\"reading:exc_fsi_uncapped\",\"reading:x21_x38_take_x1462_reading\",\"reading:houseplex_coa_check_two_cases\",\"reading:circulation_share_operator_value\",\"reading:minimum_unit_size_operator_value\"]);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "case": "bylaw-switchboard-confidence D5 reading:suite_fsi_release_848 (D-1 b, register C15) joins the rows that cite C8 onward; readings + 8",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": "expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 7);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "case": "bylaw-switchboard-confidence D5 reading:suite_fsi_release_848 (D-1 b, register C15) joins the rows that cite C8 onward; readings + 8",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "// MB-27 increment 4 (bylaw-switchboard-confidence D5, D-1 b; Spec 69a M-481 dated note 2026-11-11): reading:suite_fsi_release_848 cites C15 and joins the set"
+  },
+  {
+   "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "case": "bylaw-switchboard-confidence D5 reading:suite_fsi_release_848 (D-1 b, register C15) joins the rows that cite C8 onward; readings + 8",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "const SIX = new Set([\"reading:rm_houseplex_no_main_wall_limit\",\"reading:exc_fsi_uncapped\",\"reading:x21_x38_take_x1462_reading\",\"reading:houseplex_coa_check_two_cases\",\"reading:circulation_share_operator_value\",\"reading:minimum_unit_size_operator_value\",\"reading:suite_fsi_release_848\"]);"
+  },
+  {
+   "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "case": "bylaw-switchboard-confidence D5 reading:suite_fsi_release_848 (D-1 b, register C15) joins the rows that cite C8 onward; readings + 8",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 8); // +1 increment-4 reading (D-1 b); was + 7"
+  }
+ ]
+}
