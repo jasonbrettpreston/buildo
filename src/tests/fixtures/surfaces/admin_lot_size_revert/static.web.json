@@ -60,7 +60,7 @@
     "files": {
       "scripts/surfaces/_schema/lot-size-entry-contract.json": "6ba135c5f5dd94de",
       "scripts/surfaces/parcel_admin/F08/surfaces/admin_lot_size_revert.content.json": "4d0217efdadb3d32",
-      "scripts/surfaces/parcel_admin/F08/surfaces/admin_lot_size_revert.descriptor.json": "4e97f099c72bbb48"
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_lot_size_revert.descriptor.json": "5541c113559952e9"
     }
   }
 }
