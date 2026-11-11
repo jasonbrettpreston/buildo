@@ -1,0 +1,28 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-11-11-batch-be/2026-11-11-batch-be.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-11-11-batch-be",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "approved as long as they are in complaince with governing spec and meet the standardized, observable, scalable, accurate and undeerstandable - simple no scope creep.",
+    "record": "operator chat 2026-11-02",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-11-11-batch-be/2026-11-11-batch-be.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-232.REH-BIND",
+      "question": "R-EH (a) note: batch_binds may also name a declared config.logic_variables entry and the step's declared population ids",
+      "recommendation": "Rule text: besides `last_key`, `batch_size` and `run_at`, `batch_binds` may also name: (1) a `config.logic_variables` entry, bound as its validated `ctx.config` value; (2) the step's declared population ids. Nothing else becomes bindable; `count_binds` and `post_binds` are unchanged. Card ~/Buildo-scratch/p2close/CARD-mb31-reads-binding.answered.md, (b) option 1; drafted and panel-checked at ~/Buildo-scratch/mcbylaws/R-batch-as/drafts.md (Draft 4 v2, Fold 1.1, recording order Fold 1.2: directly before the runner build MB-31 (e)).",
+      "decision": "approve",
+      "decided_at": "2026-11-02",
+      "operator_quote": "approved as long as they are in complaince with governing spec and meet the standardized, observable, scalable, accurate and undeerstandable - simple no scope creep."
+    }
+  ]
+}

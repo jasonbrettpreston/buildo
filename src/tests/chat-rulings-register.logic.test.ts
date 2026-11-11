@@ -1777,3 +1777,14 @@ describe("CHAT-231 (batch 2026-11-06-batch-bd): 13 rulings recorded in 13 new ro
     expect(row, "M-513 row").toContain("2026-11-06-batch-bd#CHAT-231.CITE-4");
   });
 });
+
+// CHAT-232 (batch 2026-11-11-batch-be): the R-EH (a) bind note is present in 124a §B-AM (R-EH sits in moved block §B24, which stays byte-identical), cites its decision, and names its lock.
+describe('CHAT-232 (batch 2026-11-11-batch-be): 1 ruling recorded; the bind lock lands with MB-31 (e)', () => {
+  it('R-EH carries 2026-11-11-batch-be#CHAT-232.REH-BIND and its Rule text', () => {
+    expect(A, 'CHAT-232.REH-BIND').toContain('2026-11-11-batch-be#CHAT-232.REH-BIND');
+    expect(A, 'CHAT-232.REH-BIND rule text').toContain("besides `last_key`, `batch_size` and `run_at`, `batch_binds` may also name: (1) a `config.logic_variables` entry, bound as its validated `ctx.config` value; (2) the step's declared population ids.");
+    const row = A.split('\n').find((l) => l.startsWith('- **R-EH (a) dated note 2026-11-02')) as string;
+    expect(row, 'R-EH §B-AM note').toContain('2026-11-11-batch-be#CHAT-232.REH-BIND');
+    expect(row, 'R-EH lock').toContain('`src/tests/materialize-rows.logic.test.ts`');
+  });
+});
