@@ -691,7 +691,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | parcels | PASS | min_migration=11 <= migrations count=291 |
+| 1 | parcels | PASS | min_migration=11 <= migrations count=292 |
 | 2 | parcels | PASS | 9 declared, missing from seeds: none |
 | 3 | parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | parcels | PASS | SPEC LINK header present=true |
@@ -725,7 +725,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
 | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
 | 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
-| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 538 emits.type check(s), 0 mismatches |
+| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
 | 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 49 converted/pending step(s) admin-verifiable (7 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |

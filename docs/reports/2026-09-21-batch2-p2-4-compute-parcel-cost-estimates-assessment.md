@@ -596,17 +596,17 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 6 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=0 it-count=52 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
+| G7 | 3 | 3 | file=true fences=0 it-count=54 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=52 |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=54 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=291 |
+| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=292 |
 | 2 | compute_parcel_cost_estimates | PASS | 20 declared, missing from seeds: none |
 | 3 | compute_parcel_cost_estimates | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_parcel_cost_estimates | PASS | SPEC LINK header present=true |
@@ -640,7 +640,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
 | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
 | 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
-| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 538 emits.type check(s), 0 mismatches |
+| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
 | 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 49 converted/pending step(s) admin-verifiable (7 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
@@ -651,7 +651,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 442 · unexplained: 0
+- compare ran: true · diffs found: 486 · unexplained: 0
 
 ### Test suite (item iii)
 - SKIPPED or failed to run: --fast: vitest spawn skipped
@@ -673,7 +673,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=54223B notes=0B checks=25 rows records_meta=7619B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=57289B notes=0B checks=28 rows records_meta=8148B (newest post/ capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 
