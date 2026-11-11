@@ -1,0 +1,91 @@
+{
+ "$comment": "Pre-registration, task MF-38 (report images, single image per option under the operator ruling O-1 b of 2026-11-11: one closed image node kind in the report tree carrying one {scenario, asset_id, alt, caption} item per scenario key, the decl images rows folded into one card_image row, the pure image selector with report-images.json, the same one native img on every target, the synthetic preview URLs, two new golden states images_present and images_empty), prereg 1, committed ALONE directly before the MF-38 code commit. rules[]: FE-05 (no-maths scan widened to src/lib/surfaces/report-images), FE-06, FE-28 and FE-29 (the honest lock and the node contract file: image cases), FE-07 (the parity lock: counts and the image leg), FE-13 (surface-validate: the exact success line and stale count), FE-24 (the render lock: counts and the image node cases) are RULED and their locks are edited in the code commit, each with new red evidence under docs/reports/red-evidence/MF-38/. FE-17 is OWED and is not cited (report-golden-parity only gains two state names). No OWED id is cited. Zero scorer moves (no file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes); totals and floors copied from prereg-MF-40-2.json, the newest prereg on the base tip 2db1bdd67. In-file round 137 (assigned by the orchestrator: 136 is MF-54; the round field is only checked as an integer).",
+ "schema": "coa-round-prereg-v1",
+ "round": 137,
+ "task": "MF-38",
+ "rules": [
+  "FE-05",
+  "FE-06",
+  "FE-07",
+  "FE-13",
+  "FE-24",
+  "FE-28",
+  "FE-29"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/MF-38/plan.md (sections 11 and 13 folds) with ~/Buildo-scratch/mcfrontend/MF-38/plan.delta-1.md (wins where they differ); ~/Buildo-scratch/mcfrontend/phase1/open-questions.md (2026-11-11 MF-38 O-1)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
