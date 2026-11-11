@@ -10417,5 +10417,25 @@
     "admin": {
       "group": "MaxBLD Plan"
     }
+  },
+  "report_check_min_ms": {
+    "default": 6000,
+    "type": "number",
+    "min": 1000,
+    "max": 20000,
+    "description": "MF-62 (Spec 126 section 11a.7 dated note 2026-11-11; Spec 135 FE-35; operator 2026-11-11 \"Mf-62 - yes\", D-2 a \"min 6 s + skip after 2 s, both admin logic_variables\"): the minimum time in milliseconds the report loading state \"What we checked\" stays before the report opens (reduce motion included). Edited in the Admin Control Panel. Inserted by migration 306. Read by the report producer through readReportCheckPace (src/lib/parcels/report-check-pace.ts: a missing or out-of-bounds value, or one below report_check_skip_after_ms, skips the screen and the report still opens).",
+    "admin": {
+      "group": "MaxBLD Report"
+    }
+  },
+  "report_check_skip_after_ms": {
+    "default": 2000,
+    "type": "number",
+    "min": 0,
+    "max": 10000,
+    "description": "MF-62 (Spec 126 section 11a.7 dated note 2026-11-11; Spec 135 FE-35; operator 2026-11-11 \"Mf-62 - yes\", D-2 a): the delay in milliseconds before the \"Show report\" link appears on the report loading state (WCAG 2.2 SC 2.2.2: the user can always leave). Never above report_check_min_ms. Edited in the Admin Control Panel. Inserted by migration 306. Read by the report producer through readReportCheckPace (src/lib/parcels/report-check-pace.ts).",
+    "admin": {
+      "group": "MaxBLD Report"
+    }
   }
 }

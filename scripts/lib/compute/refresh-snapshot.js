@@ -48,6 +48,17 @@ const { safeParsePositiveInt, safeParseFloat } = require('../safe-math');
 // `enable_indexscan = off` (declared as this file's own `guc` field in
 // buildReads(), executed by the runner) for the same reason.
 const ACTIVE_PERMIT_STATUSES = ['Permit Issued', 'Revision Issued', 'Under Review', 'Inspection', 'Examination'];
+// MF-62 (Spec 60 Refresh Snapshot dated note 2026-11-11; operator X-1 a: "one stored dated citywide-counts row refreshed by the existing
+// refresh_snapshot step"): the report loading state's citywide counts. "Builds" counts distinct permits in these three statuses (the ruled line
+// "194,110 builds examined" = these + coa_total; MF-62 research counts.json permits.active_status_set), separate from ACTIVE_PERMIT_STATUSES above.
+const REPORT_TRUST_PERMIT_STATUSES = Object.freeze(['Inspection', 'Permit Issued', 'Revision Issued']);
+// "Map areas" = zone areas + the nine zoning overlay tables + ravine areas + heritage districts (the ruled "27,759 map areas checked"; Map 600.60 out).
+const REPORT_TRUST_MAP_TABLES = Object.freeze([
+  'zoning_bylaw_areas', 'zoning_building_setback_overlay', 'zoning_height_overlay', 'zoning_lot_coverage_overlay', 'zoning_parking_zone_overlay',
+  'zoning_policy_area_overlay', 'zoning_policy_road_overlay', 'zoning_priority_retail_overlay', 'zoning_queenstw_eat_overlay',
+  'zoning_rooming_house_overlay', 'ravines', 'heritage_districts',
+]);
+const REPORT_TRUST_COLUMNS = Object.freeze(['parcels_total', 'permits_active_distinct', 'map_areas_total', 'zoning_layer_version', 'permits_last_seen_at', 'coa_last_seen_at']);
 const CORE_SCOPE_TAGS = new Set(['residential', 'commercial', 'mixed-use']);
 
 /** T1/T2 — the CoA confidence thresholds (R-G, `on_invalid:"fail"`). */
@@ -285,6 +296,18 @@ function buildReads(config, runAt) {
         params: [],
       },
       {
+        // MF-62 (X-1 a): the report's stored, dated citywide counts. OPTIONAL like massing: on failure the six columns carry forward from the
+        // prior row and optional_query_failed names it; never a zero (a zero would read as a count on the report).
+        key: 'reportTrust',
+        sql: `SELECT (SELECT COUNT(*) FROM parcels) AS parcels_total,
+              (SELECT COUNT(DISTINCT permit_num) FROM permits WHERE status = ANY($1)) AS permits_active_distinct,
+              (${REPORT_TRUST_MAP_TABLES.map((t) => `(SELECT COUNT(*) FROM ${t})`).join(' + ')}) AS map_areas_total,
+              (SELECT MAX(source_dataset_version) FROM zoning_bylaw_areas) AS zoning_layer_version,
+              (SELECT MAX(last_seen_at) FROM permits) AS permits_last_seen_at,
+              (SELECT MAX(last_seen_at) FROM coa_applications) AS coa_last_seen_at`,
+        params: [REPORT_TRUST_PERMIT_STATUSES.slice()],
+      },
+      {
         // RS-D2 (Ask 1, FIX): on failure, the runner carries forward the PRIOR
         // data_quality_snapshots row's own 4 cost_estimates_* columns — the file's
         // own declared policy (fd14dc53's carry-forward comment), which this block
@@ -431,6 +454,22 @@ function buildRow(results, prevRow, prior, config) {
     };
   }
 
+  // MF-62 — the report's citywide trust counts: carry-forward on failure (the massing policy), NULL when there is no prior row (never 0).
+  const trust = {};
+  // A scalar-subquery SELECT always returns one row: a null, missing or empty result is a failed read (carried forward, named in optional_query_failed).
+  const r = Array.isArray(results.reportTrust) ? results.reportTrust[0] : undefined;
+  const trustFailed = !r;
+  if (!trustFailed) {
+    trust.parcels_total = safeParsePositiveInt(r.parcels_total, 'parcels_total');
+    trust.permits_active_distinct = safeParsePositiveInt(r.permits_active_distinct, 'permits_active_distinct');
+    trust.map_areas_total = safeParsePositiveInt(r.map_areas_total, 'map_areas_total');
+    trust.zoning_layer_version = r.zoning_layer_version || null;
+    trust.permits_last_seen_at = r.permits_last_seen_at || null;
+    trust.coa_last_seen_at = r.coa_last_seen_at || null;
+  } else {
+    for (const c of REPORT_TRUST_COLUMNS) trust[c] = prevRow[c] === undefined ? null : prevRow[c];
+  }
+
   // ── Cost estimates coverage — RS-D2 FIX: carry-forward on failure, matching
   // the other 4 optional blocks' own policy (was: zero default). ─────────────
   let costEst = { total: 0, from_permit: 0, from_model: 0, null_cost: 0 };
@@ -559,6 +598,7 @@ function buildRow(results, prevRow, prior, config) {
     timing_calibration_total: timingCal.total,
     timing_calibration_avg_sample: timingCal.avg_sample,
     timing_calibration_freshness_hours: timingCal.freshness_hours,
+    ...trust,
   };
 
   return {
@@ -570,6 +610,7 @@ function buildRow(results, prevRow, prior, config) {
       optional_query_failed: [
         massingFailed && 'massing', schemaFailed && 'schemaColumnCounts', slaFailed && 'sla',
         inspectionsFailed && 'inspections', costEstFailed && 'costEst', coaFunnelFailed && 'coaFunnel',
+        trustFailed && 'reportTrust',
       ].filter(Boolean),
     },
   };
@@ -620,6 +661,7 @@ function buildWriteSql(row, runAt, config) {
     'inspections_outstanding_count', 'inspections_passed_count', 'inspections_not_passed_count',
     'cost_estimates_total', 'cost_estimates_from_permit', 'cost_estimates_from_model', 'cost_estimates_null_cost',
     'timing_calibration_total', 'timing_calibration_avg_sample', 'timing_calibration_freshness_hours',
+    ...REPORT_TRUST_COLUMNS,
   ];
   const jsonbCols = new Set(['scope_project_type_breakdown', 'scope_tags_top', 'schema_column_counts']);
   const placeholders = cols.map((c, i) => `$${i + 1}${jsonbCols.has(c) ? '::jsonb' : ''}`);
@@ -755,4 +797,6 @@ module.exports.buildTagBreakdownQuery = buildTagBreakdownQuery;
 module.exports.buildTradeByTypeQuery = buildTradeByTypeQuery;
 module.exports.splitTagBreakdown = splitTagBreakdown;
 module.exports.ACTIVE_PERMIT_STATUSES = ACTIVE_PERMIT_STATUSES;
+module.exports.REPORT_TRUST_PERMIT_STATUSES = REPORT_TRUST_PERMIT_STATUSES;
+module.exports.REPORT_TRUST_COLUMNS = REPORT_TRUST_COLUMNS;
 module.exports.TABLE = TABLE;

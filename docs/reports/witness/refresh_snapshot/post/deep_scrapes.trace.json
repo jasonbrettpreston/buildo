@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/refresh-snapshot.js",
   "chain": "deep_scrapes",
-  "source_fingerprint": "f64043f4dcf2fe3175ca1bbadc4a9c481ebd45e5cbeb790342ef8801a7c94d5f",
-  "git_head": "2225709f29e17d880d81edee459e0c12a4c45e19",
+  "source_fingerprint": "56b5569174d9b02d8cd34e971773220fa00ebbf76d48760a41f6814d221da205",
+  "git_head": "7775241078f9a51e9e01dd02972b00bd380a7776",
   "header": {
     "processes": 1,
-    "calls": 55,
-    "distinct": 47,
+    "calls": 68,
+    "distinct": 60,
     "utility": 15,
-    "tracer_self_ms": 5.601,
-    "wall_ms": 3518
+    "tracer_self_ms": 5.725,
+    "wall_ms": 3443
   },
   "statements": [
     {
@@ -106,6 +106,52 @@
       "error": null
     },
     {
+      "fingerprint": "229dcd68ed792701",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "last_seen_at"
+        ],
+        "heritage_districts": [],
+        "parcels": [],
+        "permits": [
+          "last_seen_at",
+          "permit_num",
+          "status"
+        ],
+        "ravines": [],
+        "zoning_building_setback_overlay": [],
+        "zoning_bylaw_areas": [
+          "source_dataset_version"
+        ],
+        "zoning_height_overlay": [],
+        "zoning_lot_coverage_overlay": [],
+        "zoning_parking_zone_overlay": [],
+        "zoning_policy_area_overlay": [],
+        "zoning_policy_road_overlay": [],
+        "zoning_priority_retail_overlay": [],
+        "zoning_queenstw_eat_overlay": [],
+        "zoning_rooming_house_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2706b26ad3f06e8b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_lot_coverage_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "2b290a8502e68deb",
       "kind": "read",
       "count": 1,
@@ -171,89 +217,14 @@
       "error": null
     },
     {
-      "fingerprint": "4889f94ceb7c3a50",
-      "kind": "write",
+      "fingerprint": "501dd26720c5d839",
+      "kind": "read",
       "count": 1,
       "rowCount": 1,
       "reads": {
-        "data_quality_snapshots": [
-          "snapshot_date"
-        ]
+        "zoning_policy_road_overlay": []
       },
-      "writes": {
-        "data_quality_snapshots": [
-          "active_permits",
-          "builders_enriched",
-          "builders_total",
-          "builders_with_email",
-          "builders_with_google",
-          "builders_with_phone",
-          "builders_with_website",
-          "builders_with_wsib",
-          "building_footprints_total",
-          "coa_avg_confidence",
-          "coa_high_confidence",
-          "coa_linked",
-          "coa_low_confidence",
-          "coa_total",
-          "cost_estimates_from_model",
-          "cost_estimates_from_permit",
-          "cost_estimates_null_cost",
-          "cost_estimates_total",
-          "created_at",
-          "inspections_not_passed_count",
-          "inspections_outstanding_count",
-          "inspections_passed_count",
-          "inspections_permits_scraped",
-          "inspections_total",
-          "last_sync_at",
-          "last_sync_status",
-          "null_builder_name_count",
-          "null_description_count",
-          "null_est_const_cost_count",
-          "null_geo_id_count",
-          "null_street_name_count",
-          "null_street_num_count",
-          "parcel_avg_confidence",
-          "parcel_exact_matches",
-          "parcel_name_matches",
-          "parcel_spatial_matches",
-          "parcels_with_buildings",
-          "permits_geocoded",
-          "permits_updated_24h",
-          "permits_updated_30d",
-          "permits_updated_7d",
-          "permits_with_builder",
-          "permits_with_detailed_tags",
-          "permits_with_neighbourhood",
-          "permits_with_parcel",
-          "permits_with_scope",
-          "permits_with_scope_tags",
-          "permits_with_trades",
-          "schema_column_counts",
-          "scope_project_type_breakdown",
-          "scope_tags_top",
-          "sla_permits_ingestion_hours",
-          "snapshot_date",
-          "timing_calibration_avg_sample",
-          "timing_calibration_freshness_hours",
-          "timing_calibration_total",
-          "total_permits",
-          "trade_avg_confidence",
-          "trade_commercial_classified",
-          "trade_commercial_total",
-          "trade_matches_total",
-          "trade_residential_classified",
-          "trade_residential_total",
-          "trade_tier1_count",
-          "trade_tier2_count",
-          "trade_tier3_count",
-          "violation_cost_out_of_range",
-          "violation_future_issued_date",
-          "violation_missing_status",
-          "violations_total"
-        ]
-      },
+      "writes": {},
       "excluded": [],
       "error": null
     },
@@ -261,12 +232,24 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 846,
+      "rowCount": 866,
       "reads": {},
       "writes": {},
       "excluded": [
         "logic_variables"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "5613ab5921e01328",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_bylaw_areas": []
+      },
+      "writes": {},
+      "excluded": [],
       "error": null
     },
     {
@@ -345,6 +328,30 @@
       "error": null
     },
     {
+      "fingerprint": "68b3f3220e610751",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_building_setback_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6b37ed5620518ade",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "6d3d74e590fab398",
       "kind": "read",
       "count": 1,
@@ -362,6 +369,7 @@
           "building_footprints_total",
           "coa_avg_confidence",
           "coa_high_confidence",
+          "coa_last_seen_at",
           "coa_linked",
           "coa_low_confidence",
           "coa_total",
@@ -380,6 +388,7 @@
           "inspections_total",
           "last_sync_at",
           "last_sync_status",
+          "map_areas_total",
           "null_builder_name_count",
           "null_description_count",
           "null_est_const_cost_count",
@@ -390,8 +399,11 @@
           "parcel_exact_matches",
           "parcel_name_matches",
           "parcel_spatial_matches",
+          "parcels_total",
           "parcels_with_buildings",
+          "permits_active_distinct",
           "permits_geocoded",
+          "permits_last_seen_at",
           "permits_updated_24h",
           "permits_updated_30d",
           "permits_updated_7d",
@@ -423,8 +435,33 @@
           "violation_cost_out_of_range",
           "violation_future_issued_date",
           "violation_missing_status",
-          "violations_total"
+          "violations_total",
+          "zoning_layer_version"
         ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6d7dd721d1ea874f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_rooming_house_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "71d43a4153840671",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_priority_retail_overlay": []
       },
       "writes": {},
       "excluded": [],
@@ -499,6 +536,99 @@
       "error": null
     },
     {
+      "fingerprint": "8357a2c228714715",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "data_quality_snapshots": [
+          "snapshot_date"
+        ]
+      },
+      "writes": {
+        "data_quality_snapshots": [
+          "active_permits",
+          "builders_enriched",
+          "builders_total",
+          "builders_with_email",
+          "builders_with_google",
+          "builders_with_phone",
+          "builders_with_website",
+          "builders_with_wsib",
+          "building_footprints_total",
+          "coa_avg_confidence",
+          "coa_high_confidence",
+          "coa_last_seen_at",
+          "coa_linked",
+          "coa_low_confidence",
+          "coa_total",
+          "cost_estimates_from_model",
+          "cost_estimates_from_permit",
+          "cost_estimates_null_cost",
+          "cost_estimates_total",
+          "created_at",
+          "inspections_not_passed_count",
+          "inspections_outstanding_count",
+          "inspections_passed_count",
+          "inspections_permits_scraped",
+          "inspections_total",
+          "last_sync_at",
+          "last_sync_status",
+          "map_areas_total",
+          "null_builder_name_count",
+          "null_description_count",
+          "null_est_const_cost_count",
+          "null_geo_id_count",
+          "null_street_name_count",
+          "null_street_num_count",
+          "parcel_avg_confidence",
+          "parcel_exact_matches",
+          "parcel_name_matches",
+          "parcel_spatial_matches",
+          "parcels_total",
+          "parcels_with_buildings",
+          "permits_active_distinct",
+          "permits_geocoded",
+          "permits_last_seen_at",
+          "permits_updated_24h",
+          "permits_updated_30d",
+          "permits_updated_7d",
+          "permits_with_builder",
+          "permits_with_detailed_tags",
+          "permits_with_neighbourhood",
+          "permits_with_parcel",
+          "permits_with_scope",
+          "permits_with_scope_tags",
+          "permits_with_trades",
+          "schema_column_counts",
+          "scope_project_type_breakdown",
+          "scope_tags_top",
+          "sla_permits_ingestion_hours",
+          "snapshot_date",
+          "timing_calibration_avg_sample",
+          "timing_calibration_freshness_hours",
+          "timing_calibration_total",
+          "total_permits",
+          "trade_avg_confidence",
+          "trade_commercial_classified",
+          "trade_commercial_total",
+          "trade_matches_total",
+          "trade_residential_classified",
+          "trade_residential_total",
+          "trade_tier1_count",
+          "trade_tier2_count",
+          "trade_tier3_count",
+          "violation_cost_out_of_range",
+          "violation_future_issued_date",
+          "violation_missing_status",
+          "violations_total",
+          "zoning_layer_version"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "83672543b9b45944",
       "kind": "read",
       "count": 1,
@@ -540,6 +670,30 @@
       "error": null
     },
     {
+      "fingerprint": "8e787a59fcf33ad7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_policy_area_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "8fc33c5ab6f6c3f0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_queenstw_eat_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "959a9d5af7c7db5f",
       "kind": "read",
       "count": 1,
@@ -566,6 +720,18 @@
           "permit_num",
           "status"
         ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ae62c9718ac8d2ef",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "ravines": []
       },
       "writes": {},
       "excluded": [],
@@ -673,6 +839,30 @@
           "scope_tags",
           "status"
         ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d80e5600227fc00d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_height_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "de59ec392eaf071d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_parking_zone_overlay": []
       },
       "writes": {},
       "excluded": [],
@@ -801,9 +991,9 @@
   ],
   "transactions": [
     {
-      "client": "71166:2",
+      "client": "58645:2",
       "write_fingerprints": [
-        "4889f94ceb7c3a50"
+        "8357a2c228714715"
       ]
     }
   ],
@@ -813,6 +1003,7 @@
       "building_footprints": [],
       "coa_applications": [
         "cost_source",
+        "last_seen_at",
         "latitude",
         "lead_id",
         "lifecycle_group",
@@ -836,6 +1027,7 @@
         "building_footprints_total",
         "coa_avg_confidence",
         "coa_high_confidence",
+        "coa_last_seen_at",
         "coa_linked",
         "coa_low_confidence",
         "coa_total",
@@ -854,6 +1046,7 @@
         "inspections_total",
         "last_sync_at",
         "last_sync_status",
+        "map_areas_total",
         "null_builder_name_count",
         "null_description_count",
         "null_est_const_cost_count",
@@ -864,8 +1057,11 @@
         "parcel_exact_matches",
         "parcel_name_matches",
         "parcel_spatial_matches",
+        "parcels_total",
         "parcels_with_buildings",
+        "permits_active_distinct",
         "permits_geocoded",
+        "permits_last_seen_at",
         "permits_updated_24h",
         "permits_updated_30d",
         "permits_updated_7d",
@@ -897,7 +1093,8 @@
         "violation_cost_out_of_range",
         "violation_future_issued_date",
         "violation_missing_status",
-        "violations_total"
+        "violations_total",
+        "zoning_layer_version"
       ],
       "entities": [
         "google_place_id",
@@ -907,6 +1104,7 @@
         "primary_phone",
         "website"
       ],
+      "heritage_districts": [],
       "lead_parcels": [
         "lead_id"
       ],
@@ -947,6 +1145,7 @@
         "street_name",
         "street_num"
       ],
+      "ravines": [],
       "sync_runs": [
         "started_at",
         "status"
@@ -955,7 +1154,19 @@
         "lead_id",
         "opportunity_score",
         "urgency"
-      ]
+      ],
+      "zoning_building_setback_overlay": [],
+      "zoning_bylaw_areas": [
+        "source_dataset_version"
+      ],
+      "zoning_height_overlay": [],
+      "zoning_lot_coverage_overlay": [],
+      "zoning_parking_zone_overlay": [],
+      "zoning_policy_area_overlay": [],
+      "zoning_policy_road_overlay": [],
+      "zoning_priority_retail_overlay": [],
+      "zoning_queenstw_eat_overlay": [],
+      "zoning_rooming_house_overlay": []
     },
     "writes": {
       "data_quality_snapshots": [
@@ -970,6 +1181,7 @@
         "building_footprints_total",
         "coa_avg_confidence",
         "coa_high_confidence",
+        "coa_last_seen_at",
         "coa_linked",
         "coa_low_confidence",
         "coa_total",
@@ -985,6 +1197,7 @@
         "inspections_total",
         "last_sync_at",
         "last_sync_status",
+        "map_areas_total",
         "null_builder_name_count",
         "null_description_count",
         "null_est_const_cost_count",
@@ -995,8 +1208,11 @@
         "parcel_exact_matches",
         "parcel_name_matches",
         "parcel_spatial_matches",
+        "parcels_total",
         "parcels_with_buildings",
+        "permits_active_distinct",
         "permits_geocoded",
+        "permits_last_seen_at",
         "permits_updated_24h",
         "permits_updated_30d",
         "permits_updated_7d",
@@ -1028,7 +1244,8 @@
         "violation_cost_out_of_range",
         "violation_future_issued_date",
         "violation_missing_status",
-        "violations_total"
+        "violations_total",
+        "zoning_layer_version"
       ]
     }
   },

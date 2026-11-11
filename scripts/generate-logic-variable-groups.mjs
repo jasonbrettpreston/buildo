@@ -1280,6 +1280,13 @@ const GROUP_ORDER = [
       "parcel_tool_report_limit_plan",
       "parcel_tool_report_limit_trial"
     ]
+  },
+  {
+    "label": "MaxBLD Report",
+    "keys": [
+      "report_check_min_ms",
+      "report_check_skip_after_ms"
+    ]
   }
 ];
 

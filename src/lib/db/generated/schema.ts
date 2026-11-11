@@ -1945,6 +1945,12 @@ export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
 	timingCalibrationFreshnessHours: numeric("timing_calibration_freshness_hours", { precision: 6, scale:  1 }),
 	costEstimatesLiarGateOverrides: integer("cost_estimates_liar_gate_overrides"),
 	costEstimatesZeroTotalBypass: integer("cost_estimates_zero_total_bypass"),
+	parcelsTotal: integer("parcels_total"),
+	permitsActiveDistinct: integer("permits_active_distinct"),
+	mapAreasTotal: integer("map_areas_total"),
+	zoningLayerVersion: timestamp("zoning_layer_version", { withTimezone: true, mode: 'string' }),
+	permitsLastSeenAt: timestamp("permits_last_seen_at", { withTimezone: true, mode: 'string' }),
+	coaLastSeenAt: timestamp("coa_last_seen_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	index("idx_dqs_snapshot_date").using("btree", table.snapshotDate.desc().nullsFirst().op("date_ops")),
 	unique("data_quality_snapshots_snapshot_date_key").on(table.snapshotDate),

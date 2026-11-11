@@ -334,6 +334,8 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       { upstream: 'link_neighbourhoods', downstream: 'refresh_snapshot' },
       { upstream: 'link_parcels', downstream: 'refresh_snapshot' },
       { upstream: 'link_wsib', downstream: 'refresh_snapshot' },
+      // MF-62 (Spec 60 Refresh Snapshot dated note 2026-11-11): refresh_snapshot declares load_zoning (its reportTrust read counts the zoning layers; #44(e) derived producer) — one new pair.
+      { upstream: 'load_zoning', downstream: 'refresh_snapshot' },
     ]);
   });
 });
@@ -564,6 +566,7 @@ describe('runSeamChecks — one row per derived pair', () => {
     'seam_link_neighbourhoods_before_refresh_snapshot',
     'seam_link_parcels_before_refresh_snapshot',
     'seam_link_wsib_before_refresh_snapshot',
+    'seam_load_zoning_before_refresh_snapshot', // MF-62: refresh_snapshot declares load_zoning (reportTrust)
   ];
 
   it('runs every live pair against the REAL registry and returns one row each', async () => {

@@ -227,6 +227,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // MF-45 the monthly report allowance (operator rulings 2026-11-10, plan 20 and trial 20; 2026-11-11 "change ... in the amdin"): admin group "MaxBLD Plan", migration 303
   'parcel_tool_report_limit_plan',
   'parcel_tool_report_limit_trial',
+  // MF-62 the report loading state pace (operator 2026-11-11 "Mf-62 - yes", D-2 a: minimum 6 s, skip after 2 s): admin group "MaxBLD Report", migration 306
+  'report_check_min_ms',
+  'report_check_skip_after_ms',
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',

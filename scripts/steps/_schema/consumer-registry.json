@@ -4924,6 +4924,174 @@
       "source": "src_sql"
     },
     {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "coa",
+      "kind": "table",
+      "key": "coa_applications.decision",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "enrich_heritage",
+      "kind": "table",
+      "key": "parcels.heritage_dataset_version_when_enriched",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "enrich_heritage",
+      "kind": "table",
+      "key": "parcels.is_heritage_designated",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "enrich_parcels",
+      "kind": "table",
+      "key": "parcels.neighbourhood_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "enrich_ravines",
+      "kind": "table",
+      "key": "parcels.is_in_ravine_protection_area",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "enrich_ravines",
+      "kind": "table",
+      "key": "parcels.ravine_dataset_version_when_enriched",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "link_coa_to_parcels",
+      "kind": "table",
+      "key": "coa_applications.neighbourhood_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.heritage_dataset_version_when_enriched",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.lot_size_sqm",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.parcel_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.ravine_dataset_version_when_enriched",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.building_footprints_total",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.coa_last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.coa_total",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.map_areas_total",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.parcels_total",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.permits_active_distinct",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.permits_last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.snapshot_date",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.zoning_layer_version",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
       "consumer": "src/lib/quality/metrics.ts",
       "producer": "backfill_realtor_permit_trades",
       "kind": "table",
@@ -5335,6 +5503,14 @@
       "consumer": "src/lib/quality/metrics.ts",
       "producer": "refresh_snapshot",
       "kind": "table",
+      "key": "data_quality_snapshots.coa_last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
       "key": "data_quality_snapshots.coa_linked",
       "value": "any",
       "source": "src_sql"
@@ -5463,6 +5639,14 @@
       "consumer": "src/lib/quality/metrics.ts",
       "producer": "refresh_snapshot",
       "kind": "table",
+      "key": "data_quality_snapshots.map_areas_total",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
       "key": "data_quality_snapshots.null_builder_name_count",
       "value": "any",
       "source": "src_sql"
@@ -5543,6 +5727,14 @@
       "consumer": "src/lib/quality/metrics.ts",
       "producer": "refresh_snapshot",
       "kind": "table",
+      "key": "data_quality_snapshots.parcels_total",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
       "key": "data_quality_snapshots.parcels_with_buildings",
       "value": "any",
       "source": "src_sql"
@@ -5551,7 +5743,23 @@
       "consumer": "src/lib/quality/metrics.ts",
       "producer": "refresh_snapshot",
       "kind": "table",
+      "key": "data_quality_snapshots.permits_active_distinct",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
       "key": "data_quality_snapshots.permits_geocoded",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.permits_last_seen_at",
       "value": "any",
       "source": "src_sql"
     },
@@ -5808,6 +6016,14 @@
       "producer": "refresh_snapshot",
       "kind": "table",
       "key": "data_quality_snapshots.violations_total",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.zoning_layer_version",
       "value": "any",
       "source": "src_sql"
     },

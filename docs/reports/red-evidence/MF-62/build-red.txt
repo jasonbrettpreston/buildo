@@ -1,0 +1,156 @@
+MF-62 red-first evidence, base 553ceefa2 (prereg) + tests only, before any code (2026-11-11).
+Command: VITEST_MIN_FORKS=4 VITEST_MAX_FORKS=4 npx vitest run <the 9 files below>
+
+ ❯ src/tests/report-checked-producer.logic.test.ts (0 test)
+ ❯ src/tests/surfaces/report-honest.logic.test.ts (76 tests | 8 failed) 59ms
+ ❯ src/tests/control-panel.logic.test.ts (33 tests | 2 failed) 46ms
+ ❯ src/tests/surfaces/report-render.logic.test.ts (108 tests | 9 failed) 103ms
+ ❯ src/tests/steps/refresh_snapshot/report-trust.logic.test.ts (5 tests | 5 failed) 6ms
+ ❯ src/tests/migration-306-report-check.infra.test.ts (0 test)
+ ❯ src/tests/surfaces/report-checked.logic.test.ts (38 tests | 31 failed) 36ms
+ ❯ src/tests/surfaces/parity.golden.test.ts (22 tests | 2 failed) 414ms
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts (51 tests | 25 failed) 15280ms
+ ❯ src/tests/migration-306-report-check.infra.test.ts:4:31
+ ❯ src/tests/report-checked-producer.logic.test.ts:5:25
+ ❯ src/tests/control-panel.logic.test.ts:809:77
+ ❯ src/tests/control-panel.logic.test.ts:885:52
+ ❯ src/tests/surfaces/parity.golden.test.ts:197:35
+ ❯ src/tests/surfaces/parity.golden.test.ts:157:46
+ ❯ src/tests/surfaces/parity.golden.test.ts:157:31
+ ❯ src/tests/surfaces/parity.golden.test.ts:205:12
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:61:18
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:84:85
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:96:87
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:102:15
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:172:12
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:193:17
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:199:15
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:208:17
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:220:15
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:226:72
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:249:17
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:265:20
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:270:17
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:276:19
+ ❯ src/tests/surfaces/report-checked.logic.test.ts:322:30
+ ❯ src/tests/surfaces/report-honest.logic.test.ts:37:47
+ ❯ src/tests/surfaces/report-render.logic.test.ts:37:14
+ ❯ src/tests/surfaces/report-render.logic.test.ts:42:15
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:71:22
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:92:88
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:97:20
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:113:21
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:120:21
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:125:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:132:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:135:32
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:143:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:149:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:154:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:160:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:167:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:183:21
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:195:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:220:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:225:29
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:66:123
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:317:5
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:324:32
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:66:123
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:349:5
+ ❯ src/tests/surfaces/surface-validate.logic.test.ts:392:15
+ ❯ src/tests/steps/refresh_snapshot/report-trust.logic.test.ts:40:15
+ ❯ src/tests/steps/refresh_snapshot/report-trust.logic.test.ts:57:31
+ ❯ src/tests/steps/refresh_snapshot/report-trust.logic.test.ts:70:42
+ ❯ src/tests/steps/refresh_snapshot/report-trust.logic.test.ts:80:19
+ ❯ src/tests/steps/refresh_snapshot/report-trust.logic.test.ts:88:43
+
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 3ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked_gated.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked_gated.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked_gated.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+   × FE-06 report-honest lock (schema: report-tree.schema.json) > loading_checked_gated.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed 0ms
+   × LOGIC_VAR_DEFAULTS — complete key set > contains all expected logic variable keys 4ms
+   × Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ config-loader > logic_variables.json contains all expected keys 1ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked.mobile 4ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked_gated.mobile 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked_gated.web 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked_gated.admin 0ms
+   × T1 buildTree reproduces every golden (the capture) > loading_checked_gated.pdf 0ms
+   × T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files 3ms
+   × the reportTrust optional read (X-1 a) > is OPTIONAL (never a main read), and counts lots, distinct active builds and the map areas of the twelve tables 3ms
+   × the reportTrust optional read (X-1 a) > buildRow writes the six columns from the read 1ms
+   × the reportTrust optional read (X-1 a) > a failed read carries the six forward from the prior row (never a zero), and optional_query_failed names it 0ms
+   × the reportTrust optional read (X-1 a) > the one write list carries the six columns (bound, never NOW()) 0ms
+   × the reportTrust optional read (X-1 a) > the descriptor declares the six written columns and every table and column the read touches 1ms
+   × C1 the contract (FE-35) > a loading response with what_we_checked builds one message node and a root-only checked object of content texts 4ms
+   × C1 the contract (FE-35) > a number value, a missing value, a value on a fixed line, an unknown key, an unknown group and a stray key are each refused 1ms
+   × C1 the contract (FE-35) > the pace is server data: non-integer or negative delays, and a skip delay above the minimum, are refused 0ms
+   × C1 the contract (FE-35) > assertTree: checked on a miss tree or a reading tree, checked beside a second node, and a text that is not a content template are refused 0ms
+   × C2 the claims lock (content and composed texts) > the committed content block is clean 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a digit in a label 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: satellite 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: aerial 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: updated 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: latest 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: live-progress word 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: AI comparison 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: chatbot 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: GPT 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: the rules line reads checked 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: checked beside the rules line 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: the citywide order moved 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a gated lot reads checked 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a not-evaluated lot reads checked 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: heritage reads listed 0ms
+   × C2 the claims lock (content and composed texts) > "said" does not trip the AI rule (whole word) 0ms
+   × C2 the claims lock (content and composed texts) > loading_checked: every composed text of the golden is clean, and planted faults in the golden are RED 0ms
+   × C2 the claims lock (content and composed texts) > loading_checked_gated: every composed text of the golden is clean, and planted faults in the golden are RED 0ms
+   × C3 the goldens > loading_checked carries the five citywide lines in order, the five lot lines, the dates and the skip 0ms
+   × C3 the goldens > loading_checked_gated: an exception_not_authored lot carries the gated line and no limits count 0ms
+   × C4 the web render > web: the title, one role="log" region holding every line, a server delay per line, the skip link after its delay 23ms
+   × C4 the web render > the lifecycle message stays in the DOM for screen readers but is not drawn over the checked screen 0ms
+   × C4 the web render > no href: no skip control at all (never an inert button) 0ms
+   × C4 the web render > admin: every line shown at once, no delay, no skip 0ms
+   × C4 the web render > pdf: every line shown at once, no delay, no skip 0ms
+   × C5 the stylesheet (globals.css) > the committed rules are complete 1ms
+   × FE-07 parity: the real output of every target (goldens) > no state normalises to fewer nodes than its golden tree, and the lifecycle states carry their one message node 79ms
+   × FE-07 parity: the real output of every target (goldens) > the four targets and the golden tree agree on all 48 combinations 97ms
+   × FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting 696ms
+   × FE-13 surface-validate gate: real tree > MF-42: a missing screen-checks.mjs gives three unavailable lines, the REPORT arms still report, exit 1 (no stack) 220ms
+   × FE-13 surface-validate gate: real tree > MF-42: a temp tree that examines nothing prints WAITS for the generic arms, never a finding 318ms
+   × S-gen: the committed generators' --check > a failing report-schema --check is relayed line by line; the warning line is not taken for the finding 292ms
+   × S-gen: the committed generators' --check > a missing generator is a finding 251ms
+   × S-gen: the committed generators' --check > MF-35: a missing mobile theme generator is a finding, and a failing one is relayed 244ms
+   × S-gen: the committed generators' --check > MF-35: a missing mobile surfaces generator is a finding 248ms
+   × S-gen: the committed generators' --check > every generator exits 0: the GEN arm is clean 272ms
+   × S-golden: existence and fingerprint > a deleted target file 277ms
+   × S-golden: existence and fingerprint > manifest targets are three 267ms
+   × S-golden: existence and fingerprint > a stray file beside the goldens 279ms
+   × S-golden: existence and fingerprint > a state dropped from the manifest while its files remain: each file is not in manifest 300ms
+   × S-golden: existence and fingerprint > a missing file and a bad target list together give two lines in the fixed order 271ms
+   × S-golden: existence and fingerprint > one byte changed in ad-contract.json: every golden is stale on it 277ms
+   × S-golden: existence and fingerprint > one byte changed in binding-sources.json: every golden is stale on it 285ms
+   × S-golden: existence and fingerprint > one byte changed in report-presentation.json: every golden is stale on it 277ms
+   × S-golden: existence and fingerprint > one byte changed in report-tree.schema.json: every golden is stale on it 272ms
+   × S-golden: existence and fingerprint > one byte changed in report-v2.decl.json: every golden is stale on it 269ms
+   × S-golden: existence and fingerprint > a dropped fingerprint.files key 270ms
+   × S-parity: the four target files agree > the target field names the wrong target 312ms
+   × S-parity: the four target files agree > the state field names the wrong state 291ms
+   × done-condition: a planted bad descriptor exits 1 > case B: goldens re-stamped so the hash is clean: the descriptor itself is judged, SV-BIND lines alone 16ms
+   × done-condition: a planted bad descriptor exits 1 > the same tree unedited exits 0 278ms
+   × malformed input is a finding, never a crash > a declaration whose sections are not a list gives an SV-BIND line and exit 1 20ms
+   × usage, output and read-only > a two-defect tree twice (fresh copy each time): identical findings in a fixed order 337ms
+
+
+ Test Files  9 failed (9)
+      Tests  82 failed | 251 passed (333)
+   Start at  10:49:25
+   Duration  15.59s (transform 322ms, setup 75ms, collect 599ms, tests 15.94s, environment 375ms, prepare 257ms)
+

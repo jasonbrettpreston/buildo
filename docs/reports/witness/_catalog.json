@@ -640,6 +640,7 @@
       "building_footprints_total",
       "coa_avg_confidence",
       "coa_high_confidence",
+      "coa_last_seen_at",
       "coa_linked",
       "coa_low_confidence",
       "coa_total",
@@ -658,6 +659,7 @@
       "inspections_total",
       "last_sync_at",
       "last_sync_status",
+      "map_areas_total",
       "null_builder_name_count",
       "null_description_count",
       "null_est_const_cost_count",
@@ -668,8 +670,11 @@
       "parcel_exact_matches",
       "parcel_name_matches",
       "parcel_spatial_matches",
+      "parcels_total",
       "parcels_with_buildings",
+      "permits_active_distinct",
       "permits_geocoded",
+      "permits_last_seen_at",
       "permits_updated_24h",
       "permits_updated_30d",
       "permits_updated_7d",
@@ -701,7 +706,8 @@
       "violation_cost_out_of_range",
       "violation_future_issued_date",
       "violation_missing_status",
-      "violations_total"
+      "violations_total",
+      "zoning_layer_version"
     ],
     "device_tokens": [
       "created_at",
