@@ -115504,6 +115504,70 @@
           "ancillary_contains_parking_space"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-11-11",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.20.30.1(2)#whole/condition",
+      "kind": "correction",
+      "reason": "Houseplex family A (MB-27 increment 4, operator \"3. a\", 2026-11-11; card CARD-D4-E8-FAMILY-B question 3): the more-permissive comparison of 10.20.30.1(2) is with \"the maximum lot coverage that would apply ... under clause 10.20.30.40\"; on a lot the Lot Coverage overlay does not map, 10.20.30.40(1)(B) gives \"no lot coverage applies\", which is no maximum to compare, so (2) does not form there and the exception's number stands (M-180(1), 900.1.10(3)); the same keying-correction pattern as Q-D2 a",
+      "rule": "Spec 69a M-182 dated note 2026-11-11; operator \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\" (3. a, 2026-11-11); Q-D2 a; M-75",
+      "unit": "10.20.30.1(2)#whole",
+      "value": {
+        "if": "mapped(LC)",
+        "tokens": [
+          "overlay_mapped"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-11",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.40.30.1(2)#whole/condition",
+      "kind": "correction",
+      "reason": "Houseplex family A (MB-27 increment 4, operator \"3. a\", 2026-11-11; card CARD-D4-E8-FAMILY-B question 3): the more-permissive comparison of 10.40.30.1(2) is with \"the maximum lot coverage that would apply ... under clause 10.40.30.40\"; on a lot the Lot Coverage overlay does not map, 10.40.30.40(1)(B) gives \"no lot coverage applies\", which is no maximum to compare, so (2) does not form there and the exception's number stands (M-180(1), 900.1.10(3)); the same keying-correction pattern as Q-D2 a",
+      "rule": "Spec 69a M-182 dated note 2026-11-11; operator \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\" (3. a, 2026-11-11); Q-D2 a; M-75",
+      "unit": "10.40.30.1(2)#whole",
+      "value": {
+        "if": "mapped(LC)",
+        "tokens": [
+          "overlay_mapped"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-11",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.60.30.1(2)#whole/condition",
+      "kind": "correction",
+      "reason": "Houseplex family A (MB-27 increment 4, operator \"3. a\", 2026-11-11; card CARD-D4-E8-FAMILY-B question 3): the more-permissive comparison of 10.60.30.1(2) is with \"the maximum lot coverage that would apply ... under clause 10.60.30.40\"; on a lot the Lot Coverage overlay does not map, 10.60.30.40(1)(B) gives \"no lot coverage applies\", which is no maximum to compare, so (2) does not form there and the exception's number stands (M-180(1), 900.1.10(3)); the same keying-correction pattern as Q-D2 a",
+      "rule": "Spec 69a M-182 dated note 2026-11-11; operator \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\" (3. a, 2026-11-11); Q-D2 a; M-75",
+      "unit": "10.60.30.1(2)#whole",
+      "value": {
+        "if": "mapped(LC)",
+        "tokens": [
+          "overlay_mapped"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-11",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.80.30.1(2)#whole/condition",
+      "kind": "correction",
+      "reason": "Houseplex family A (MB-27 increment 4, operator \"3. a\", 2026-11-11; card CARD-D4-E8-FAMILY-B question 3): the more-permissive comparison of 10.80.30.1(2) is with \"the maximum lot coverage that would apply ... under clause 10.80.30.40\"; on a lot the Lot Coverage overlay does not map, 10.80.30.40(1)(B) gives \"no lot coverage applies\", which is no maximum to compare, so (2) does not form there and the exception's number stands (M-180(1), 900.1.10(3)); the same keying-correction pattern as Q-D2 a",
+      "rule": "Spec 69a M-182 dated note 2026-11-11; operator \"1 a 2. y 3. a 4. will we need to build this later.. we have the tokens now 5. yes and yes recommend\" (3. a, 2026-11-11); Q-D2 a; M-75",
+      "unit": "10.80.30.1(2)#whole",
+      "value": {
+        "if": "mapped(LC)",
+        "tokens": [
+          "overlay_mapped"
+        ]
+      }
     }
   ]
 }

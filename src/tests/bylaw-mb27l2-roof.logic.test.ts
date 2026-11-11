@@ -229,9 +229,11 @@ describe('R10: the pitched step-back (M-465 (3), a dated note on M-183)', () => 
 });
 
 describe('R11 / R12: the class and ROOF-5', () => {
+  // MB-27 increment 4 (bylaw-mb27l2-roof R11, D-8 a named move, the d5 form; DL-7 a / M-465 as amended: the scope lists the suite third,
+  // migration 304): the listed classes decode option rows and may write option overrides; an unlisted class never does
   it('R11: another class decodes no option row (R3-11: never a neighbouring class\'s option)', () => {
-    for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex']));
-    for (const lot of out.rows.lots) if (lot.class_results) for (const [c, ov] of Object.entries(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) if (c !== 'detached_houseplex') expect(Number(k)).toBeLessThan(env.pairs.length);
+    for (const lot of out.rows.lots) expect(new Set(opt(lot).map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex', 'house_with_secondary_suite']));
+    for (const lot of out.rows.lots) if (lot.class_results) for (const [c, ov] of Object.entries(lot.class_results as Json)) for (const k of Object.keys(ov as Json)) if (!['detached_houseplex', 'house_with_secondary_suite'].includes(c)) expect(Number(k)).toBeLessThan(env.pairs.length);
   });
   it('R12: on A0166 the flat main-wall row (7.2 m) above the flat height (6.5 m) carries main_wall_limit_above_height; no other row of the 25 does', () => {
     for (const lot of out.rows.lots) {
@@ -239,7 +241,8 @@ describe('R11 / R12: the class and ROOF-5', () => {
       const v = mz.logicalRowsOf(row, lot, dicts, env) as Json;
       for (const r of v.option_rows as Json[]) {
         const has = (r.disclosures || []).includes('main_wall_limit_above_height');
-        const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof' && r.class === 'detached_house';
+        // MB-27 increment 4 (bylaw-mb27l2-roof R12, D-8 a named move): the suite house is a detached house (800.50(181)(F)), so its A0166 flat main-wall row carries the word too
+        const want = CASE.get(lot.parcel_id)!.startsWith('A0166') && r.target === T.mw && r.option === 'flat_or_shallow_roof' && ['detached_house', 'house_with_secondary_suite'].includes(r.class);
         expect([CASE.get(lot.parcel_id), r.target, r.option, has]).toEqual([CASE.get(lot.parcel_id), r.target, r.option, want]);
       }
     }

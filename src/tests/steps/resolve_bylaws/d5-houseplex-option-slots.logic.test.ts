@@ -23,13 +23,14 @@ const SCOPE = read('scripts/seeds/bylaw/layer2-scope.json');
 const VOCAB = read('scripts/seeds/bylaw/vocab.json');
 const MAP = read('scripts/seeds/bylaw/layer2-map.json');
 const PARCELS = read('src/tests/fixtures/layer3/golden-25/parcels-rows.json') as unknown as Json[];
-const CLASSES = ['detached_house', 'detached_houseplex'];
+// MB-27 increment 4 (D-8 a named move; Spec 69a M-379 dated note 2026-11-11, migration 304): the suite is the third listed class; was ['detached_house', 'detached_houseplex']
+const CLASSES = ['detached_house', 'detached_houseplex', 'house_with_secondary_suite'];
 const envOf = (scope: Json): Json => MZ.makeEnv({ body: INPUT.body, map: MAP, scope, vocab: VOCAB,
   zoneList: read('scripts/seeds/logic_variables.json').resolve_bylaws_population_zone_classes.default,
   versions: { table_version: INPUT.table_version, evaluator_version: INPUT.evaluator_version } });
 
 describe('DL-7 a: the scope lists the houseplex for the roof-form option slots', () => {
-  it('options.roof_form.classes = [detached_house, detached_houseplex]', () => {
+  it('options.roof_form.classes = [detached_house, detached_houseplex, house_with_secondary_suite]', () => {
     expect(SCOPE.options.roof_form.classes).toEqual(CLASSES);
   });
   it('base positions do not move: the base pairs and the option slot order are those of migration 295 (54 + 7)', () => {
@@ -45,7 +46,7 @@ describe('DL-7 a: houseplex option rows round-trip through encode and decode (Q-
   const optionPairs = RB.optionPairs(SCOPE, VOCAB.design_options);
   const decoded = out.rows.lots.filter((l: Json) => !l.lot_gate).map((lot: Json) => ({ lot,
     rows: LR.decodeOptionResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs }) as Json[] }));
-  it('every ungated golden lot decodes option rows for both listed classes', () => {
+  it('every ungated golden lot decodes option rows for every listed class', () => {
     for (const d of decoded) expect([...new Set(d.rows.map((r: Json) => r.class))].sort()).toEqual([...CLASSES].sort());
   });
   it('the decoded houseplex option rows equal Layer 2\'s own traceOption for the houseplex class', () => {

@@ -140,7 +140,11 @@ describe.skipIf(!have172)('scorer wiring (172 notices)', () => {
     // integrate-26: 3, not 1. excr5c 77c05a26 keys exception 559 (EVE.R5-4 literal correction), which makes A0263/21NY #4 10.20.40.10(6) and
     // #6 10.20.40.20 scorable MATCH (verify-46 bisect). That notice was heard 2021-11-04 and both provisions were amended by 474-2023, so C-3
     // moves both rows to BY-LAW CHANGED.
-    expect(r.so).toMatch(/"BY-LAW CHANGED":3/);
+    // MB-27 increment 4 (coa-round C-3 named move; operator "a" on STOP-848-FLOOR, 2026-11-11, the M-481 dated note): 4, not 3. With
+    // 848-2025 recorded in force, A0974/16EYK #1 10.5.60.70(1) (heard 2016) is BY-LAW CHANGED, was MATCH, same value: the accepted finding.
+    expect(r.so).toMatch(/"BY-LAW CHANGED":4/);
+    const k = JSON.parse(fs.readFileSync(path.join(tmp, 'sc.json'), 'utf8')).rows.find((q: any) => q.notice === 'A0974/16EYK' && q.n === 1);
+    expect([k.class, k.class_before_bylaw]).toEqual(['BY-LAW CHANGED', 'MATCH']);
     const sc = JSON.parse(fs.readFileSync(path.join(tmp, 'sc.json'), 'utf8'));
     const x = sc.rows.find((q: any) => q.notice === 'A0573/24NY' && q.clause_norm === '10.20.40.30(1)');
     expect([x.class, x.class_before_bylaw]).toEqual(['BY-LAW CHANGED', 'MATCH']);

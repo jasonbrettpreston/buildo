@@ -35,14 +35,17 @@ const PINNED_SHA: Record<string, string> = {
   // re-pinned 2026-11-04 (MB-27 Layer 3 forms, operator RP-10 'RP-10 approved, switchboard pin approved, shape low yes'): the lexicon gained refuse, best_of, ceiling, headline_, headline_lower_bound_, dropped_, unknown_reason, semi, syntax and three best_of syntax phrases, and the catalogue gained the declared lists refuse_reasons, drop_reasons, flag_words and flag_params (M-480, with its Q-K5 a dated note).
   // re-pinned 2026-11-04 (MB-27 increment-2 rows + R1, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 37 increment-2 rows (M-457..M-487), the revisions of buildable_width_m (M-458) and gfa_max_m2 (M-476), the R1 design_option tags, 8 rafter settings (M-462), the flag word attic_outside_gfa and the refuse word no_permitted_gfa_base (M-480, Q-MECH0).
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): every row's building_type becomes a list (Q2 a); was catalogue: '
-  catalogue: '42f5329578224c4753da0aa19e7e82bb2585095998b782aef1892cadad7eab09',
+  // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): house_with_secondary_suite joins the 47 increment-1/2 rows, the bt_units_floor fact and the units_max increment-4 revision (E7); was catalogue: '42f5329578224c4753da0aa19e7e82bb2585095998b782aef1892cadad7eab09'
+  catalogue: 'd4d0e8f904e99951ae25960c9425ae38f0fb789d4dab97cbc18ea4647a5cfe9b',
   // re-pinned 2026-11-04 (MB-27 switchboard confidence, operator Q-CONF a 'Q CONF a' and 'RP-10 approved, switchboard pin approved, shape low yes'): schema switchboard-v2; every reading row gained confidence and evidence; the seven increment-2 register readings C1-C7 joined as reading rows (M-481).
   // re-pinned 2026-11-04 (MB-27 increment-2 rows, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 39 formula switches (37 rows, 2 revisions; M-378, M-476), four off by "Q-default a".
   // re-pinned 2026-11-06 (MB-27 the switch-on, operator RP-SW "all recommended" (D-9) and RP-SW2 "a", version and hash fields only): the four Q-DEFAULT switches off -> on, their reason text; was 4aa44e44
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): the detached_houseplex switch and the six confidence readings; was switchboard:
-  switchboard: '3b812c786ab9b4cc93392097e629059ea458dc4492df4e6dc1dbc20caa131cfa',
+  // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): the suite type switch, reading:suite_fsi_release_848 (D-1 b) and formula:units_max:increment_4 (E7); was switchboard: '3b812c786ab9b4cc93392097e629059ea458dc4492df4e6dc1dbc20caa131cfa'
+  switchboard: 'd94a9268c73cdc96596ba99dffb75f3e6a491edc917973a97e977021a48ea371',
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): the detached_houseplex type; was buildingType
-  buildingTypes: '05398a754244b841d7a49a4b6516e3e8bb0766ee71150946f63a6bcd29f9a936',
+  // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): the house_with_secondary_suite type, units_floor per type and the units_floor_census declaration (E7) and the gain declaration (D-2 a); was buildingTypes: '05398a754244b841d7a49a4b6516e3e8bb0766ee71150946f63a6bcd29f9a936'
+  buildingTypes: 'cf6a21410bfac5044a5e842cfbb4cd57f0f55e386f088bdc52433e11a7568c19',
 };
 const ROW_IDS = [
   'permitted',
@@ -100,7 +103,8 @@ describe('MB-31 catalogue invariants (B8)', () => {
     expect(CAT.rows).toHaveLength(55); // MB-27 inc3 E8 rows (operator 2026-11-08 E8 ruling): +8 houseplex rows (basement_livable_m2, basement_units, units_flat, units_pitched_a, units_pitched_b, unit_count, houseplex_bedrooms, unit_area_m2); was 47
     expect(CAT.rows.slice(0, 10).map((r: Json) => r.id)).toEqual(ROW_IDS);
     for (const [i, row] of CAT.rows.entries()) {
-      expect(row.building_type).toEqual(i >= 47 ? ['detached_houseplex'] : ['detached_house', 'detached_houseplex']); // DL-21 a move 1 (Q2 a): every row's building_type is a list; the houseplex-only increment-3 rows list the houseplex alone
+      // MB-27 increment 4 (D-8 a named move; P-3, Q2 a): the 47 increment-1/2 rows list the suite house too; the 8 houseplex-only rows do not
+      expect(row.building_type).toEqual(i >= 47 ? ['detached_houseplex'] : ['detached_house', 'detached_houseplex', 'house_with_secondary_suite']); // DL-21 a move 1 (Q2 a): every row's building_type is a list; the houseplex-only increment-3 rows list the houseplex alone
       expect(row.increment).toBe(i < 10 ? '1' : i < 47 ? '2' : '3');
       expect(row.clauses.length).toBeGreaterThan(0);
       expect(row.rules.length).toBeGreaterThan(0);
@@ -150,7 +154,16 @@ describe('MB-31 catalogue invariants (B8)', () => {
   });
 
   it('validateCatalogue on the real seeds: no violation', () => {
-    expect(C.validateCatalogue(SEEDS, ['1', '2', '3'])).toHaveLength(0); // Q-K-ASSERT a (M-457): the increment-2 rows; was ['1']
+    // MB-27 increment 4 (E7, Spec 69a M-344 dated note 2026-11-11): the units_max revision is an increment-4 revision; was ['1', '2', '3']
+    expect(C.validateCatalogue(SEEDS, ['1', '2', '3', '4'])).toHaveLength(0); // Q-K-ASSERT a (M-457): the increment-2 rows; was ['1']
+  });
+
+  // D-3 a (MB-27 increment 4, Spec 69a M-379 dated note 2026-11-11; card ~/Buildo-scratch/mcbylaws/inc4/cards/CARD-D3-SUITE-SIZE.md):
+  // the LC-33 host/suite interior split (150.10.40.40, M-199, INV-13) is owed to increment 6; until then no suite row cites it.
+  it('D-3 scope guard: no catalogue row of the suite house cites 150.10.40.40 or reads suite_interior_sqm before increment 6', () => {
+    const early = CAT.rows.filter((r: Json) => ([] as string[]).concat(r.building_type).includes('house_with_secondary_suite') && Number.parseInt(String(r.increment), 10) < 6
+      && (JSON.stringify(r.clauses || []).includes('150.10.40.40') || String(r.expression || '').includes('suite_interior_sqm')));
+    expect(early.map((r: Json) => r.id)).toEqual([]);
   });
 
   it('validateCatalogue rejects a renamed fact, a deleted switchboard row, a 6 ratio and a fact named fsi', () => {

@@ -24,8 +24,14 @@ describe('migration 297 (written, not applied)', () => {
     expect(typeof file).toBe("string");
     expect(String(file)).toMatch(/^297_resolve_bylaws_/);
   });
-  it('the option view lists exactly the scope\'s roof_form classes', () => {
-    const m = /bylaw_resolution_option_results[\s\S]*?CROSS JOIN \(VALUES ([^)]*\)(?:, \([^)]*\))*)\) AS c \(class\)/.exec(SQL);
+  // MB-27 increment 4 (D-8 a named move; Spec 69a M-379 dated note 2026-11-11): the scope gains house_with_secondary_suite and
+  // migration 304 re-creates the view with it, so the class list is read from the LATEST migration that re-creates the view.
+  it('the latest option view (297, then 304) lists exactly the scope\'s roof_form classes', () => {
+    const latest = fs.readdirSync(path.join(ROOT, 'migrations')).filter((f) => /^\d+_.*\.sql$/.test(f))
+      .filter((f) => /CREATE OR REPLACE VIEW bylaw_resolution_option_results/.test(fs.readFileSync(path.join(ROOT, 'migrations', f), 'utf8')))
+      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10)).pop();
+    const VIEW = latest ? fs.readFileSync(path.join(ROOT, 'migrations', latest), 'utf8') : '';
+    const m = /bylaw_resolution_option_results[\s\S]*?CROSS JOIN \(VALUES ([^)]*\)(?:, \([^)]*\))*)\) AS c \(class\)/.exec(VIEW);
     const got = m ? [...String(m[1]).matchAll(/'([a-z_]+)'/g)].map((x) => x[1]) : [];
     expect(got).toEqual(SCOPE.options.roof_form.classes);
   });

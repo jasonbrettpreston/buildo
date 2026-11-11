@@ -198,16 +198,124 @@ function buildParcelRows(parcelInput, seeds, meta) {
   return out;
 }
 
+const round9 = (x) => Math.round(x * 1e9) / 1e9;
+
+/** The reason a gain is NULL: the first of the rows that is not permitted / not computed, its reason propagating unchanged (else its status word). */
+function nullReason(perms, fields) {
+  for (const r of perms) if (!r || r.status !== 'permitted') return (r && (r.reason || r.status)) || 'missing_input:permitted';
+  for (const r of fields) if (!r || r.status !== 'computed' || typeof r.value !== 'number') return (r && (r.reason || r.status)) || 'missing_input:absent_target';
+  return null;
+}
+
+function switchOf(seeds, id) {
+  const row = findById(seeds && seeds.switchboard && seeds.switchboard.rows, id);
+  return { id, state: row && row.state === 'off' ? 'off' : 'on' };
+}
+
+/** The decoded Phase 2 principal cells of a run's input whose value differs between two types. */
+function differingTargets(a, b) {
+  const x = a || {};
+  const y = b || {};
+  return [...new Set([...Object.keys(x), ...Object.keys(y)])].sort().filter((t) => JSON.stringify(x[t] ?? null) !== JSON.stringify(y[t] ?? null));
+}
+
+const optionCellsOf = (o) => JSON.stringify({ runs: (o && o.runs) || {}, shared: (o && o.shared) || {} });
+
+/** The releasing clause a decoded cell carries: the winner unit, or for a not_applicable cell the disapplying unit (vocab layer3.status_form: not_applicable "<clause>"). */
+const releasingClause = (cell) => (cell.s === 'not_applicable' && typeof cell.reason === 'string' ? cell.reason : cell.clause) ?? null;
+
+/**
+ * D-2 a (MB-27 increment 4, operator 2026-11-11; Spec 69a M-379 dated note 2026-11-11; LC-33; Spec 78 P5.2 item 11): the LC-33 gain
+ * of every building type whose seed row names a `base_type`, taken right after the step's one per-type loop, where both types' rows
+ * exist. Everything it compares and every reason it can name is data (`seeds.buildingTypes.gain`): the gain fields (type row minus
+ * base row of the same catalogue id), the reasons keyed by the releasing clause, the fail-closed reason. A mapped reason is named only
+ * when swapping that one Phase 2 cell into the base type's run moves a compared row (the "actually bound" test); a differing cell whose
+ * clause is not mapped, or any differing roof-option cell, fails the reasons row closed (M-379, MB-64). No id, zone or clause in code.
+ * @param {number} parcelId
+ * @param {Object<string, {input: object, rows: object[]}>} perType the per-type parcel input and the emitted rows of this parcel
+ * @param {object} seeds
+ * @param {{settings_sha?: string, layer2_table_version?: string}} meta
+ */
+function gainRows(parcelId, perType, seeds, meta) {
+  const decl = seeds && seeds.buildingTypes && seeds.buildingTypes.gain;
+  if (!decl || typeof decl !== 'object') return [];
+  const fields = toList(decl.fields);
+  const s = shas(seeds, meta);
+  const out = [];
+  for (const bt of toList(seeds.buildingTypes.rows)) {
+    if (!bt || typeof bt.base_type !== 'string') continue;
+    const mine = perType[bt.id];
+    const base = perType[bt.base_type];
+    const baseBt = findById(seeds.buildingTypes.rows, bt.base_type);
+    if (!mine || !base || !baseBt) continue; // a type not run here has no gain to take
+    const byId = (rows) => new Map(toList(rows).map((r) => [r.field_id, r]));
+    const m = byId(mine.rows);
+    const b = byId(base.rows);
+    const perms = [b.get(decl.permission_row), m.get(decl.permission_row)];
+    const switches = [switchOf(seeds, bt.switch), switchOf(seeds, baseBt.switch)];
+    // M-386 R3-02 (OUTPUT panel fold): a gain row reads both types' rows, so it carries every flag either row carries
+    const flagsOf = (rows) => [...new Set(rows.flatMap((r) => toList(r && r.flags)))];
+    const rowTrace = (f) => [
+      { kind: 'row', id: f.row, building_type: bt.id, status: (m.get(f.row) || {}).status ?? null },
+      { kind: 'row', id: f.row, building_type: bt.base_type, status: (b.get(f.row) || {}).status ?? null },
+    ];
+    let anyNull = null;
+    for (const f of fields) {
+      const why = nullReason(perms, [m.get(f.row), b.get(f.row)]);
+      if (why !== null && anyNull === null) anyNull = why;
+      const result = why !== null
+        ? { row: f.id, status: 'not_evaluated', value: null, unit: f.unit, reason: why, flags: flagsOf([m.get(f.row), b.get(f.row)]), trace: rowTrace(f), switches }
+        : { row: f.id, status: 'computed', value: round9(m.get(f.row).value - b.get(f.row).value), unit: f.unit, reason: null, flags: flagsOf([m.get(f.row), b.get(f.row)]), trace: rowTrace(f), switches };
+      out.push(dbRow(parcelId, bt.id, bt.increment, result, s));
+    }
+    if (typeof decl.reasons_field !== 'string') continue;
+    const readFlags = flagsOf(fields.flatMap((f) => [m.get(f.row), b.get(f.row)]));
+    if (anyNull !== null) {
+      out.push(dbRow(parcelId, bt.id, bt.increment, { row: decl.reasons_field, status: 'not_evaluated', value: null, unit: null, reason: anyNull, flags: readFlags, trace: [], switches }, s));
+      continue;
+    }
+    // the reasons: each differing principal cell, by the clause it carries
+    const trace = [];
+    const named = new Set();
+    let open = optionCellsOf(mine.input.l2Options) !== optionCellsOf(base.input.l2Options);
+    if (open) trace.push({ kind: 'l2', id: 'options', clause: null, reason: null, bound: null });
+    for (const t of differingTargets(mine.input.l2, base.input.l2)) {
+      const cell = mine.input.l2[t] || {};
+      const clause = releasingClause(cell);
+      const entry = toList(decl.reasons).find((r) => r && toList(r.units).includes(clause));
+      if (!entry) {
+        open = true;
+        trace.push({ kind: 'l2', id: t, clause, reason: null, bound: null });
+        continue;
+      }
+      const swapped = byId(buildParcelRows({ ...base.input, buildingType: bt.base_type, l2: { ...base.input.l2, [t]: cell } }, seeds, meta));
+      const bound = fields.some((f) => {
+        const x = swapped.get(f.row);
+        const y = b.get(f.row);
+        return !x || !y || x.status !== y.status || round9((x.value ?? 0) - (y.value ?? 0)) !== 0;
+      });
+      if (bound) named.add(entry.reason);
+      trace.push({ kind: 'l2', id: t, clause, reason: entry.reason, bound });
+    }
+    const result = open
+      ? { row: decl.reasons_field, status: 'not_evaluated', value: null, unit: null, reason: decl.fail_reason, flags: readFlags, trace, switches }
+      : { row: decl.reasons_field, status: 'computed', value: null, unit: null, reason: null, flags: [...(named.size ? [...named] : [decl.none_word]), ...readFlags], trace, switches };
+    out.push(dbRow(parcelId, bt.id, bt.increment, result, s));
+  }
+  return out;
+}
+
 /**
  * RV-2: the census of a list of emitted rows — the three counts `oneParcel` has always summed, plus the closure
  * violations (a trace entry naming a variable / target / geometry / fact the catalogue does not declare) and the
  * flags-missing count (a not_applicable / not_evaluated row with neither a flag nor a reason).
  */
-function censusOf(rows, U) {
+function censusOf(rows, U, floorCensus) {
   const u = U || {};
+  const fc = floorCensus && typeof floorCensus === 'object' ? floorCensus : null;
   const lvKeys = u.lv || {};
   const nameKeys = u.names || {};
-  const counts = { status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0 };
+  const counts = { status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0, units_floor_refusals: 0 };
   for (const r of toList(rows)) {
     const row = r || {};
     if (!CLOSED_STATUSES.includes(row.status)) counts.status_outside_closed_set += 1;
@@ -221,6 +329,8 @@ function censusOf(rows, U) {
       return false;
     });
     if (unresolved) counts.closure_violations += 1;
+    // E7 (M-344 dated note 2026-11-11): the refusals of the declared row and word (building-types.json units_floor_census), counted
+    if (fc && row.status === 'not_evaluated' && row.field_id === fc.row && row.reason === fc.reason) counts.units_floor_refusals += 1;
     if (row.status === 'not_applicable' || row.status === 'not_evaluated') {
       const noFlags = toList(row.flags).length === 0;
       const noReason = row.reason === null || row.reason === undefined || row.reason === '';
@@ -271,8 +381,9 @@ function oneParcel(source, lookups) {
   }
   const meta = { settings_sha: L.settings_sha ?? null, layer2_table_version: source.lot ? source.lot.table_version : null };
   const out = [];
-  const census = { layer2_cell_unparseable: unparseable, status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0 };
+  const census = { layer2_cell_unparseable: unparseable, status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0, units_floor_refusals: 0 };
   const U = cat.unitsFor(L.seeds && L.seeds.catalogue, L.vocab);
+  const perType = {};
   for (const bt of toList(L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.rows)) {
     const perm = l2Classes.includes(bt.class)
       ? cellsLib.decodePermission(source.lot || {}, bt.class, { classes: l2Classes, permissionKeys: L.permissionKeys, texts: L.texts })
@@ -299,10 +410,14 @@ function oneParcel(source, lookups) {
         decoded[bt.id].averaging_distance_m || { s: 'not_evaluated', kind: null, value: null, clause: null, reason: null },
       ).facts,
     };
-    for (const r of buildParcelRows(parcelInput, L.seeds, meta)) out.push(r);
+    const rowsOfType = buildParcelRows(parcelInput, L.seeds, meta);
+    perType[bt.id] = { input: parcelInput, rows: rowsOfType };
+    for (const r of rowsOfType) out.push(r);
   }
-  const counted = censusOf(out, U);
-  for (const k of ['status_outside_closed_set', 'numbers_without_trace', 'not_buildable_with_value', 'closure_violations', 'flags_missing']) census[k] = counted[k];
+  // D-2 a (M-379 dated note 2026-11-11): the one generic gain comparison, right after the per-type loop
+  for (const r of gainRows(source.parcel_id, perType, L.seeds, meta)) out.push(r);
+  const counted = censusOf(out, U, L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.units_floor_census);
+  for (const k of ['status_outside_closed_set', 'numbers_without_trace', 'not_buildable_with_value', 'closure_violations', 'flags_missing', 'units_floor_refusals']) census[k] = counted[k];
   return { rows: out, census };
 }
 
@@ -314,13 +429,13 @@ function oneParcel(source, lookups) {
 function materializeRows(sourceRows, ctx) {
   const lookups = (ctx && ctx.lookups) || {};
   const e1 = [];
-  const matched = { parcels: 0, rows_emitted: 0, layer2_cell_unparseable: 0, status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0 };
+  const matched = { parcels: 0, rows_emitted: 0, layer2_cell_unparseable: 0, status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0, units_floor_refusals: 0 };
   for (const source of toList(sourceRows)) {
     const one = oneParcel(source, lookups);
     e1.push(...one.rows);
     matched.parcels += 1;
     matched.rows_emitted += one.rows.length;
-    for (const k of ['layer2_cell_unparseable', 'status_outside_closed_set', 'numbers_without_trace', 'not_buildable_with_value', 'closure_violations', 'flags_missing']) matched[k] += one.census[k];
+    for (const k of ['layer2_cell_unparseable', 'status_outside_closed_set', 'numbers_without_trace', 'not_buildable_with_value', 'closure_violations', 'flags_missing', 'units_floor_refusals']) matched[k] += one.census[k];
   }
   return { rows: { e1 }, matched };
 }
@@ -388,6 +503,7 @@ module.exports = compute;
 module.exports.compute = compute;
 module.exports.runRow = runRow;
 module.exports.buildParcelRows = buildParcelRows;
+module.exports.gainRows = gainRows;
 module.exports.contentSha = contentSha;
 module.exports.censusOf = censusOf;
 module.exports.materializeRows = materializeRows;

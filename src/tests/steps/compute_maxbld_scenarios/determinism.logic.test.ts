@@ -70,11 +70,11 @@ describe('MB-31 determinism, G68-11 (waits B5)', () => {
     SEEDS = loadSeeds();
   });
 
-  it('two calls on the same parcel give one hundred and two equal rows', () => {
+  it('two calls on the same parcel give one hundred and forty-nine equal rows', () => {
     const a = S.buildParcelRows(makeParcel(false), SEEDS, META);
     const b = S.buildParcelRows(makeParcel(false), SEEDS, META);
-    expect(a).toHaveLength(102); // MB-27 inc3 E8 (DL-21 a): 47 house rows plus 47 houseplex rows (every row lists both types) plus 8 houseplex-only rows; was 47 // MB-27 switch-on (operator D-5): the three GFA form rows are shown with their switches on; was 44 (D3 a), was 10
-    expect(b).toHaveLength(102);
+    expect(a).toHaveLength(149); // MB-27 increment 4 (D-8 a named move; Spec 69a M-379 dated note 2026-11-11): +47 house_with_secondary_suite rows (the 47 increment-1/2 rows list it); was 102 // MB-27 inc3 E8 (DL-21 a): 47 house rows plus 47 houseplex rows (every row lists both types) plus 8 houseplex-only rows; was 47 // MB-27 switch-on (operator D-5): the three GFA form rows are shown with their switches on; was 44 (D3 a), was 10
+    expect(b).toHaveLength(149);
     const pick = (rows: Json[]) => rows.map((r) => [r.field_id, r.status, r.value, r.reason, r.content_sha]);
     expect(pick(a)).toEqual(pick(b));
   });

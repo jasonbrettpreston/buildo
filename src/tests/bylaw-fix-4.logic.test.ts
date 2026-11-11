@@ -170,9 +170,12 @@ describe('F-SC-8 / M-252 — exception RM 18 "35% for a duplex or triplex" binds
     }
   });
 
-  it('a 4-unit houseplex is no duplex or triplex: the detached-house substitution (33 %) and the more-permissive rule still apply (M-180(1)/(2) unchanged)', () => {
+  // MB-27 increment 4, houseplex family A (Spec 69a M-182 dated note 2026-11-11, operator "3. a"; the Q-D2 a form): on this LC-unmapped
+  // x18 lot 10.80.30.1(2) no longer forms ("no lot coverage applies" is no maximum to compare), so the detached-house substitution's 33 %
+  // stands (M-180(1), 900.1.10(3)); was unregulated. The 2- and 3-unit 35 % arm above is unchanged (M-252).
+  it('a 4-unit houseplex is no duplex or triplex: the detached-house substitution (33 %) applies; on the LC-unmapped lot the more-permissive rule does not form (houseplex family A, M-180(1); was unregulated)', () => {
     const r = eff(red(4), 'lot_coverage_pct');
-    expect([r.status, r.value]).toEqual(['value', 'unregulated']);
+    expect([r.status, r.value, r.winner]).toEqual(['value', 33, '900.6.10(18)#(18)[SSP](C)']);
   });
 });
 

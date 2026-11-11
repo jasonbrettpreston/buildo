@@ -101,11 +101,12 @@ describe('Q-CONF a switchboard data', () => {
   });
 
   it('D5 only the six increment-3 reading rows cite a register reading of C8 onward: they join when their rows are authored (M-481; DL-21 a move 3, oracle-first door)', () => {
-    const SIX = new Set(["reading:rm_houseplex_no_main_wall_limit","reading:exc_fsi_uncapped","reading:x21_x38_take_x1462_reading","reading:houseplex_coa_check_two_cases","reading:circulation_share_operator_value","reading:minimum_unit_size_operator_value"]);
+    // MB-27 increment 4 (bylaw-switchboard-confidence D5, D-1 b; Spec 69a M-481 dated note 2026-11-11): reading:suite_fsi_release_848 cites C15 and joins the set
+    const SIX = new Set(["reading:rm_houseplex_no_main_wall_limit","reading:exc_fsi_uncapped","reading:x21_x38_take_x1462_reading","reading:houseplex_coa_check_two_cases","reading:circulation_share_operator_value","reading:minimum_unit_size_operator_value","reading:suite_fsi_release_848"]);
     for (const r of SW.rows.filter((x: Json) => x.kind === 'reading')) {
       expect([r.id, /\bC(?:[89]|1\d)\b/.test(String(r.evidence))]).toEqual([r.id, SIX.has(r.id)]);
     }
-    expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 7);
+    expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 8); // +1 increment-4 reading (D-1 b); was + 7
   });
 
   it('D4 shape_calibration keeps its state and ruling and gains a confidence and evidence', () => {

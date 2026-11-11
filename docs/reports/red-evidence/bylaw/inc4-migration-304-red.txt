@@ -1,0 +1,3 @@
+== MB-27 increment 4 migration 304 (the option view lists the suite) red: the lock run on the parent d79a0f96e (no 304 file; the scope lists two classes); green on the build commit
+❯ src/tests/steps/resolve_bylaws/migration-304.logic.test.ts (5 tests | 4 failed)
+   × migration 304 (written, not applied) > exists as one file

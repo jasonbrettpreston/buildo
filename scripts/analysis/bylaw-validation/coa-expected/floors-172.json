@@ -29,7 +29,7 @@
   },
   "10.5.60": {
    "accuracy": 92,
-   "answered": 42
+   "answered": 40
   },
   "10.80.40": {
    "accuracy": 97,
@@ -82,6 +82,20 @@
      },
      "to": {
       "accuracy": 95
+     }
+    }
+   ]
+  },
+  {
+   "ruling": "M-481",
+   "lines": [
+    {
+     "line": "article 10.5.60 answered",
+     "from": {
+      "answered": 42
+     },
+     "to": {
+      "answered": 40
      }
     }
    ]

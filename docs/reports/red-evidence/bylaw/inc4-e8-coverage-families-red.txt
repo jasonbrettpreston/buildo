@@ -1,0 +1,3 @@
+== MB-27 increment 4 E8 hold and houseplex family A red: the lock run on the parent d79a0f96e (no hold rows, no mapped(LC) condition: the suite and houseplex take the zone value over the exception); green on the build commit
+❯ src/tests/bylaw-e8-coverage-families.logic.test.ts (7 tests | 6 failed)
+   × the E8 hold (until D-4 rules): the suite keeps the exception coverage on families B and C > five unit_application rows set the 10.x.30.1(2) units aside for detached_house, ruling "E8 hold ... until D-4"

@@ -1,0 +1,4 @@
+== MB-27 increment 4 D-2 a (the generic gain comparison and the M-379 lock) red: the lock run on the parent d79a0f96e (no suite type, no gain declaration, no gainRows); green on the build commit
+❯ src/tests/steps/compute_maxbld_scenarios/increment4-suite-gain.logic.test.ts (33 tests | 33 failed)
+   × D-2 a: the suite gain on the golden 25 equals the McProof key (25 of 25) > A0067
+Note: the 25 section-3.1 suite-row cases (H, S, footprint, headline GFA, units 2 vs ANSWER-KEY.md section 3.1) were added to the same file after this run; each reads the house_with_secondary_suite building-types row, which the parent does not have, so they are red there by construction (58 of 58 green on the build commit).

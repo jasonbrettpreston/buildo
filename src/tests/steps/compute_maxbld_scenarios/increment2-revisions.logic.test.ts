@@ -49,7 +49,8 @@ describe('MB-27 increment 2: revisions and the switchboard (M-476, M-458)', () =
     expect(new Set(ids).size).toBe(ids.length);
     const revised = SEEDS.catalogue.rows.filter((r: Json) => Array.isArray(r.revisions)).map((r: Json) => r.id);
     // MB-27 inc3 RM fix (named move): wall_storeys, storeys_above_wall and setback_plate_m2 each carry one increment-3 revision behind the RM reading; the two increment-2 revisions are unchanged
-    expect(revised).toEqual(['buildable_width_m', 'gfa_max_m2', 'wall_storeys', 'storeys_above_wall', 'setback_plate_m2']);
+    // MB-27 increment 4 (E7, Spec 69a M-344 dated note 2026-11-11): units_max carries one increment-4 revision behind formula:units_max:increment_4; the others are unchanged
+    expect(revised).toEqual(['buildable_width_m', 'gfa_max_m2', 'units_max', 'wall_storeys', 'storeys_above_wall', 'setback_plate_m2']);
     const RM_READING = 'reading:rm_houseplex_no_main_wall_limit';
     for (const id of revised.filter((x: string) => ['wall_storeys', 'storeys_above_wall', 'setback_plate_m2'].includes(x))) {
       const row = SEEDS.catalogue.rows.find((r: Json) => r.id === id);

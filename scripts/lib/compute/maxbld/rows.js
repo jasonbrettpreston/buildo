@@ -292,6 +292,10 @@ function l3Env(seeds, row, inputs, state, memo, run, runName) {
   if (!facts && inputs.neighbours !== undefined) {
     facts = factsLib.neighbourFacts(inputs.neighbours, cells.averaging_distance_m).facts;
   }
+  // E7 (MB-27 increment 4, Spec 69a M-344 dated note 2026-11-11): the fact bt_units_floor is read from its declared source, the
+  // building-types row of the type being run (building_types.units_floor), never from the caller
+  const btRow = findById(isObject(seeds.buildingTypes) ? seeds.buildingTypes.rows : null, inputs.buildingType || 'detached_house');
+  if (btRow && typeof btRow.units_floor === 'number') facts = { ...(facts || {}), bt_units_floor: btRow.units_floor };
   return l3.makeL3Env({
     cells,
     targetUnits,
@@ -341,7 +345,11 @@ function exprResult(row, inputs, state, memo, runIn, revisionSwitches, runName) 
   const res = evaluator.evaluate(row.expression, {}, { layer: 'l3', l3: env });
   const v = res ? res.l3 : undefined;
   if (!v || typeof v.k !== 'string') return notEvaluated(row, HOOKS_MISSING, { trace: env.trace, switches: switchesOf([], env) });
-  const flags = v.flags;
+  // MB-27 D-8 carriage (M-386 R3-02 dated note 2026-11-06; card CARD-A0179-CARRIAGE, MB-27 increment 4): the closed Phase 2 words of
+  // every Layer 2 target the row read join its flags, a target read only in an `if` condition included. The value's own flags carry only
+  // the taken branch (evaluate-l3.mjs `if`), so those words were lost (the A0179 stale-stamp gap). Declared input_flags are unchanged.
+  const readFlags = env.trace.filter((t) => isObject(t) && t.kind === 'l2' && typeof t.id === 'string').flatMap((t) => toList((isObject(inputs.l2Flags) ? inputs.l2Flags : {})[t.id]));
+  const flags = unique([...toList(v.flags), ...readFlags]);
   const switched = pathSwitches(env, inputs.seeds, state, run); // M-481: the readings it rests on, with their confidence
   if (row.envelope === true && v.k === 'num' && v.v <= 0) {
     const read = env.trace.filter((t) => t && t.kind === 'l2' && typeof t.clause === 'string').map((t) => t.clause);

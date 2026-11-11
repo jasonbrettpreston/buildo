@@ -4964,7 +4964,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.40.30.1(2)#whole/application.building_types, COR-10.40.30.1(2)#whole/application.evidence, COR-10.40.30.1(2)#whole/ranks_layers, COR-10.40.30.1(2)#whole/application"
+    "correction COR-10.40.30.1(2)#whole/application.building_types, COR-10.40.30.1(2)#whole/application.evidence, COR-10.40.30.1(2)#whole/ranks_layers, COR-10.40.30.1(2)#whole/application, COR-10.40.30.1(2)#whole/condition"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
@@ -9710,7 +9710,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.60.30.1(2)#whole/application.building_types, COR-10.60.30.1(2)#whole/application.evidence, COR-10.60.30.1(2)#whole/ranks_layers, COR-10.60.30.1(2)#whole/application"
+    "correction COR-10.60.30.1(2)#whole/application.building_types, COR-10.60.30.1(2)#whole/application.evidence, COR-10.60.30.1(2)#whole/ranks_layers, COR-10.60.30.1(2)#whole/application, COR-10.60.30.1(2)#whole/condition"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
@@ -11229,7 +11229,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.80.30.1(2)#whole/application.building_types, COR-10.80.30.1(2)#whole/application.evidence, COR-10.80.30.1(2)#whole/ranks_layers, COR-10.80.30.1(2)#whole/application"
+    "correction COR-10.80.30.1(2)#whole/application.building_types, COR-10.80.30.1(2)#whole/application.evidence, COR-10.80.30.1(2)#whole/ranks_layers, COR-10.80.30.1(2)#whole/application, COR-10.80.30.1(2)#whole/condition"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"

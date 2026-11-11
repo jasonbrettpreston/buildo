@@ -297,7 +297,10 @@ describe('classes by stub: a differing class stores only the positions that diff
     // M-465 (2): the stub answers every option slot as its base pair, so each is the closed code shared; the threshold has no base pair
     expect(out.rows.lots[0].codes.slice(PAIRS.length, -1).every((c: number) => c === lr().sharedCode(MAP))).toBe(true);
     const cr = out.rows.lots[0].class_results;
-    expect(Object.keys(cr).sort()).toEqual(['detached_houseplex', 'semi_detached_houseplex']);
+    // MB-27 increment 4 (D-8 a named move; layer2-scope options.roof_form.classes gains the suite, DL-7 a form): the listed suite class
+    // stores its option slots as overrides where the representative slot holds the closed code shared; its base pairs equal the representative's
+    expect(Object.keys(cr).sort()).toEqual(['detached_houseplex', 'house_with_secondary_suite', 'semi_detached_houseplex']);
+    expect(Object.keys(cr.house_with_secondary_suite).every((k) => Number(k) >= PAIRS.length)).toBe(true);
     expect(Object.keys(cr.detached_houseplex)).toHaveLength(PAIRS.filter((p) => p.structure === 'principal').length + OPTS.length); // only the principal structure carries the class vector; DL-7 a: the listed houseplex also stores its option slots where they differ (all 7 here)
     const dec = decoded(out);
     expect(dec.find((r) => r.class === 'detached_houseplex' && r.structure === 'principal')).toMatchObject({ status: 'applies', value: 12 });

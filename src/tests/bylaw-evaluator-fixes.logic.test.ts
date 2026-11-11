@@ -421,10 +421,13 @@ describe('M-180 — Chapter 900 exceptions and houseplexes: the detached-house s
       expect(ev(excLot(zone, 'detached_houseplex'), 'lot_coverage_pct', us).value).toBe(45);
     });
   }
-  it('x.30.1(2) names "a residential building with a secondary suite" too: a house with a suite on the exception lot takes the zone 45 % over the exception 30 % (panel round 1)', () => {
+  // MB-27 increment 4, E8 hold (D-8 a named move; Spec 69a M-251 dated note 2026-11-11, operator "yes" to the hold at the safe side
+  // until D-4 rules; M-252 (A0228/26EYK); card CARD-D4-E8-FAMILY-B): x.30.1(2) names the suite building, but its five units are set aside
+  // for detached_house in vocab unit_application, so the suite keeps the exception 30 %; was 45. Held until D-4, not deleted.
+  it('x.30.1(2) names "a residential building with a secondary suite" too: held until D-4 (E8 hold), a house with a suite on the exception lot keeps the exception 30 % (panel round 1; was the zone 45 %)', () => {
     for (const zone of ['RD', 'RS', 'RT', 'RM']) {
       const l = excLot(zone, 'detached_house'); l.flags.has_secondary_suite = true;
-      expect([zone, ev(l, 'lot_coverage_pct', withExc(8.5)).value]).toEqual([zone, 45]);
+      expect([zone, ev(l, 'lot_coverage_pct', withExc(8.5)).value]).toEqual([zone, 30]);
     }
   });
   it('a looser exception stands for the houseplex (12 m over the zone 10 m)', () => {

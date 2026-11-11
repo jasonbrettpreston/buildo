@@ -1,0 +1,136 @@
+[
+ {
+  "id": 1641,
+  "parcel_id": "5243571",
+  "zoning_class": "RM",
+  "zoning_zn_string": "RM (u4) (x18)",
+  "exception_number": 18,
+  "zoning_overlays": {
+   "base": [
+    {
+     "zn_zone": "RM",
+     "source_id": 10875,
+     "area_share": 1
+    }
+   ]
+  },
+  "on_policy_road": false,
+  "is_corner_lot": false,
+  "is_through_lot": false,
+  "abuts_laneway": false,
+  "frontage_m": 13.35,
+  "depth_m": 34.9,
+  "lot_size_sqm": 465.82,
+  "zoning_is_ambiguous": false,
+  "in_sixplex_area": false,
+  "is_heritage_designated": false,
+  "geom_npoints": 5
+ },
+ {
+  "id": 5612,
+  "parcel_id": "5151541",
+  "zoning_class": "RM",
+  "zoning_zn_string": "RM (f18.0; a605; u4) (x383)",
+  "exception_number": 383,
+  "zoning_overlays": {
+   "base": [
+    {
+     "zn_zone": "RM",
+     "source_id": 10716,
+     "area_share": 1
+    }
+   ],
+   "height_overlay": {
+    "applied": true,
+    "stories": 2,
+    "height_max_m": 10
+   },
+   "lot_coverage_overlay": {
+    "applied": true,
+    "coverage_max_pct": 35
+   }
+  },
+  "on_policy_road": false,
+  "is_corner_lot": false,
+  "is_through_lot": false,
+  "abuts_laneway": false,
+  "frontage_m": 12.96,
+  "depth_m": 28.62,
+  "lot_size_sqm": 370.92,
+  "zoning_is_ambiguous": false,
+  "in_sixplex_area": false,
+  "is_heritage_designated": false,
+  "geom_npoints": 11
+ },
+ {
+  "id": 24256,
+  "parcel_id": "5192751",
+  "zoning_class": "RD",
+  "zoning_zn_string": "RD (f16.5; a650; d0.45) (x9)",
+  "exception_number": 9,
+  "zoning_overlays": {
+   "base": [
+    {
+     "zn_zone": "RD",
+     "source_id": 6335,
+     "area_share": 1
+    }
+   ],
+   "height_overlay": {
+    "applied": true,
+    "height_max_m": 9.5
+   },
+   "lot_coverage_overlay": {
+    "applied": true,
+    "coverage_max_pct": 33
+   }
+  },
+  "on_policy_road": false,
+  "is_corner_lot": false,
+  "is_through_lot": false,
+  "abuts_laneway": false,
+  "frontage_m": 15.26,
+  "depth_m": 45.66,
+  "lot_size_sqm": 696.64,
+  "zoning_is_ambiguous": false,
+  "in_sixplex_area": false,
+  "is_heritage_designated": false,
+  "geom_npoints": 5
+ },
+ {
+  "id": 20618,
+  "parcel_id": "5013017",
+  "zoning_class": "RT",
+  "zoning_zn_string": "RT (x97)",
+  "exception_number": 97,
+  "zoning_overlays": {
+   "base": [
+    {
+     "zn_zone": "RT",
+     "source_id": 6951,
+     "area_share": 1
+    }
+   ],
+   "height_overlay": {
+    "applied": true,
+    "stories": 2,
+    "height_max_m": 9
+   },
+   "lot_coverage_overlay": {
+    "applied": true,
+    "coverage_max_pct": 33
+   }
+  },
+  "on_policy_road": false,
+  "is_corner_lot": false,
+  "is_through_lot": false,
+  "abuts_laneway": false,
+  "frontage_m": 13.27,
+  "depth_m": 29.79,
+  "lot_size_sqm": 395.46,
+  "zoning_is_ambiguous": false,
+  "in_sixplex_area": false,
+  "is_heritage_designated": false,
+  "geom_npoints": 12
+ }
+]

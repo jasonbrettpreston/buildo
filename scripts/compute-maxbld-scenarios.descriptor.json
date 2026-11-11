@@ -259,6 +259,11 @@
       "key": "layer2_cell_unparseable",
       "type": "number",
       "consumers": []
+    },
+    {
+      "key": "units_floor_refusals",
+      "type": "number",
+      "consumers": []
     }
   ],
   "deviations": [

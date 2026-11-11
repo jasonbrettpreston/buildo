@@ -1,0 +1,3 @@
+== MB-27 increment 4 E7 (the suite fails closed below 2 units) red: the lock run on the parent d79a0f96e (no suite type, no units_floor, no increment-4 revision); green on the build commit
+❯ src/tests/steps/compute_maxbld_scenarios/suite-unit-cap.logic.test.ts (6 tests | 3 failed)
+   × E7 trigger vector: an exception one-unit cap inside the suite scope > the suite units_max is never computed below its units: not_evaluated, units_differ_from_phase2 (the existing word)

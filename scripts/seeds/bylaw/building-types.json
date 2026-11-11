@@ -1,8 +1,30 @@
 {
-  "$comment": "MB-31, copied from the stage 2 draft: scripts/seeds/bylaw/building-types.json (queue (b); LC-16). Increment 1: one row. A type with no Phase 2 class answers not_modelled (R3-11, M-393). Increment 3 (MB-27, DL-21): the detached_houseplex row joins (units 4, M-160 / Q6 a) at element `\"3\"`.",
+  "$comment": "MB-31, copied from the stage 2 draft: scripts/seeds/bylaw/building-types.json (queue (b); LC-16). Increment 1: one row. A type with no Phase 2 class answers not_modelled (R3-11, M-393). Increment 3 (MB-27, DL-21): the detached_houseplex row joins (units 4, M-160 / Q6 a) at element `\"3\"`. Increment 4 (MB-27, Spec 69a M-379 / M-344 dated notes 2026-11-11): the house_with_secondary_suite row joins (units 2, vocab scenario_class_units, P-4) at element `\"4\"`; its `base_type` names the row its LC-33 gain is taken over (D-2 a). `units_floor` (E7) is the unit count a type needs from the stored dwelling_units_max cap: below it the units_max revision of increment 4 refuses (units_differ_from_phase2) instead of showing a smaller count; the detached house needs 1, the suite house 2; the houseplex is held at 1 so its increment-3 values do not move (its own cap-1 question is the side finding of card CARD-E7-UCAP, not ruled).",
   "schema": "building-types-v1",
   "rows": [
-    {"id":"detached_house","class":"detached_house","structure":"principal","units":1,"increment":"1","switch":"building_type:detached_house","rules":["LC-16","M-377"]},
-    {"id":"detached_houseplex","class":"detached_houseplex","structure":"principal","units":4,"increment":"3","switch":"building_type:detached_houseplex","rules":["LC-16","M-160","M-494","M-500","Q6 a"]}
-  ]
+    {"id":"detached_house","class":"detached_house","structure":"principal","units":1,"units_floor":1,"increment":"1","switch":"building_type:detached_house","rules":["LC-16","M-377"]},
+    {"id":"detached_houseplex","class":"detached_houseplex","structure":"principal","units":4,"units_floor":1,"increment":"3","switch":"building_type:detached_houseplex","rules":["LC-16","M-160","M-494","M-500","Q6 a"]},
+    {"id":"house_with_secondary_suite","class":"house_with_secondary_suite","structure":"principal","units":2,"units_floor":2,"increment":"4","switch":"building_type:house_with_secondary_suite","base_type":"detached_house","rules":["LC-16","LC-33","M-379","M-182","M-344"]}
+  ],
+  "units_floor_census": {
+    "$comment": "E7 (Spec 69a M-344 dated note 2026-11-11; card CARD-E7-UCAP lock item 2, OUTPUT panel fold): the step counts the rows the units_max increment-4 revision refuses, records_meta units_floor_refusals, so a night shows how many lots hold a dwelling-unit cap below a type's units_floor.",
+    "row": "units_max",
+    "reason": "units_differ_from_phase2"
+  },
+  "gain": {
+    "$comment": "D-2 a (MB-27 increment 4, operator 2026-11-11; Spec 69a M-379 dated note 2026-11-11; LC-33; Spec 78 P5.2 item 11, P5.10): the LC-33 gain of a type that names a `base_type`, computed by one generic comparison after the step's per-type loop. `fields`: each gain field is the type's catalogue row minus the base type's row of the same id (headline vs headline, same roof-form basis), NULL (not_evaluated, the non-computed row's reason propagating unchanged, or its status word) when either row is not computed or either type is not permitted. `reasons`: keyed by the releasing clause; a Phase 2 principal cell of the type that differs from the base type's is looked up by the clause (the winner unit) it carries; a mapped clause names its reason only if swapping that one cell into the base type's run changes a compared row (the \"actually bound\" test); any differing cell whose clause is not listed, and any differing roof-option cell, fails closed: the reasons row is not_evaluated with reason `fail_reason` (M-379 invariant, MB-64). The reasons row carries its closed words in `flags` (the text[] of P5.10), sorted, `none_word` when no reason binds.",
+    "permission_row": "permitted",
+    "fields": [
+      {"id":"gain_vs_detached_gfa_sqm","row":"gfa_max_m2","unit":"m2"},
+      {"id":"gain_vs_detached_footprint_sqm","row":"footprint_max_m2","unit":"m2"},
+      {"id":"gain_vs_detached_storeys","row":"storeys_max","unit":"storeys"}
+    ],
+    "reasons_field": "gain_reasons",
+    "none_word": "none",
+    "fail_reason": "no_producer",
+    "reasons": [
+      {"clause":"x.40.40(1)(C)","reason":"fsi_not_applicable","units":["10.10.40.40(1)#(1)(C)","10.20.40.40(1)#(1)(C)","10.40.40.40(1)#(1)(C)","10.60.40.40(1)#(1)(C)","10.80.40.40(1)#(1)(C)"]},
+      {"clause":"x.30.40(1)(D)","reason":"coverage_45","units":["10.20.30.40(1)#(1)(D)","10.40.30.40(1)#(1)(D)","10.60.30.40(1)#(1)(D)","10.80.30.40(1)#(1)(D)"]}
+    ]
+  }
 }

@@ -4247,15 +4247,15 @@
       "verified_on": null
     },
     "848-2025": {
-      "basis": null,
+      "basis": "M-481",
       "bylaw": "848-2025",
-      "enacted_on": null,
-      "in_force_on": null,
-      "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "enacted_on": "2025-07-24",
+      "in_force_on": "2025-07-24",
+      "in_force_trigger": "on enactment: the City consolidation (City-wide Amendments up to April 30, 2026) prints the 848-2025 tags with no (OLT) appeal marker; the CBO and CoA apply it to applications filed after enactment (City page); D-1 b (MB-27 increment 4, operator 2026-11-11, the M-481 dated note), research ~/Buildo-scratch/mcbylaws/inc4/mcproof/D1-RESEARCH-20261111.md",
+      "source_sha256": "3458ed2fdbde119dc5cee29963578b50d5bf700eb01d015a76af9e32a44ff0ca",
+      "source_url": "https://www.toronto.ca/legdocs/bylaws/2025/law0848.pdf",
+      "status": "in_force",
+      "verified_on": "2026-11-11"
     },
     "849-2025": {
       "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",

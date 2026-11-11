@@ -53,8 +53,9 @@ describe('B1 / B2: the slot order and a 61-wide round trip', () => {
     expect(lot.codes).toHaveLength(61);
     expect(lr.decodeLotResults({ lot, pairs: env.pairs, classes: env.classes, map: MAP, dicts, optionPairs: env.optionPairs })).toHaveLength(54 * 5);
     const o = lr.decodeOptionResults({ lot, pairs: env.pairs, classes: env.classes, map: MAP, dicts, optionPairs: env.optionPairs }) as Json[];
-    expect(o).toHaveLength(14);
-    expect(new Set(o.map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex']));
+    // MB-27 increment 4 (D-8 a named move; the scope lists house_with_secondary_suite third, migration 304): 3 listed classes x 7 slots; was 14
+    expect(o).toHaveLength(21);
+    expect(new Set(o.map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex', 'house_with_secondary_suite']));
   });
   it('B2: a 61-wide lot decoded without the option slots, or a shared code at a base slot, throws (never decoded against the wrong positions)', () => {
     const lot = out.rows.lots[0];
@@ -65,8 +66,11 @@ describe('B1 / B2: the slot order and a 61-wide round trip', () => {
 });
 
 describe('B3 / B4 / B6: no override at the option slots; the option flag is not a lot input; a gated lot shares nothing', () => {
-  it('B3: no class_results entry at slots 55-61 for the representative class (RC-1 as amended by DL-7 a), and an option slot that omits the representative class is refused', () => {
-    for (const l of out.rows.lots) if (l.class_results) for (const [c, ov] of Object.entries(l.class_results as Json)) for (const k of Object.keys(ov as Json)) if (c !== 'detached_houseplex') expect(Number(k)).toBeLessThan(54);
+  // MB-27 increment 4 (D-8 a named move): the wording is "for the representative class only"; a listed class other than the first
+  // (the houseplex, DL-7 a; the suite, migration 304) may write its own option overrides at 55-61, an unlisted class never does
+  it('B3: no class_results entry at slots 55-61 for the representative class or an unlisted class (RC-1 as amended by DL-7 a), and an option slot that omits the representative class is refused', () => {
+    const listed = SCOPE.options.roof_form.classes.slice(1) as string[];
+    for (const l of out.rows.lots) if (l.class_results) for (const [c, ov] of Object.entries(l.class_results as Json)) for (const k of Object.keys(ov as Json)) if (!listed.includes(c)) expect(Number(k)).toBeLessThan(54);
     const bad = { ...SCOPE, options: { ...SCOPE.options, roof_form: { ...SCOPE.options.roof_form, classes: ['detached_houseplex'] } } };
     expect(() => mkEnv({ scope: bad })).toThrow(/representative class/);
   });

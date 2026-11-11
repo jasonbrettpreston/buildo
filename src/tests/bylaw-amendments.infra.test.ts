@@ -52,7 +52,9 @@ describe('amendments.json over the committed adoption (G-PROV amendment arm)', (
     expect(a.tags.filter((t: Json) => t.clause_path === null)).toEqual([]);
   });
 
-  it('statuses default to not_verified; the verified ones cite M-36 or the S0.5 spike evidence, each with its source sha', () => {
+  // MB-27 increment 4 (named move; D-1 b, operator 2026-11-11, recorded as the Spec 69a M-481 dated note): 848-2025 is verified in force
+  // from its enacting text law0848.pdf, basis M-481, the register-id form 648-2025 and 654-2025 use with M-36
+  it('statuses default to not_verified; the verified ones cite a Spec 69a ruling (M-36, M-481) or the S0.5 spike evidence, each with its source sha', () => {
     const a = readJson('amendments.json');
     const verified = (Object.values(a.statuses) as Json[]).filter((s) => s.status !== 'not_verified');
     const byId = (x: unknown[][]) => [...x].sort((p, q) => String(p[0]).localeCompare(String(q[0])));
@@ -65,6 +67,7 @@ describe('amendments.json over the committed adoption (G-PROV amendment arm)', (
       ['608-2024', 'in_force', SPIKE],
       ['648-2025', 'in_force', 'M-36'],
       ['654-2025', 'in_force', 'M-36'],
+      ['848-2025', 'in_force', 'M-481'],
       ['849-2025', 'partially_in_force', SPIKE],
       ['89-2022', 'in_force', SPIKE],
     ]));
@@ -72,6 +75,7 @@ describe('amendments.json over the committed adoption (G-PROV amendment arm)', (
     expect(a.statuses['648-2025'].in_force_trigger).toBe('in force per City page, date not stated');
     expect(a.statuses['654-2025']).toMatchObject({ source_url: URL_654, source_sha256: SHA_654, enacted_on: '2025-06-26' });
     expect(a.statuses['654-2025'].in_force_trigger).toMatch(/648-2025/);
+    expect(a.statuses['848-2025']).toMatchObject({ source_url: 'https://www.toronto.ca/legdocs/bylaws/2025/law0848.pdf', source_sha256: '3458ed2fdbde119dc5cee29963578b50d5bf700eb01d015a76af9e32a44ff0ca', enacted_on: '2025-07-24', in_force_on: '2025-07-24' });
   });
 
   it('654-2025 tags six clauses, all on the Sixplex Overlay page (Spec 69 §3)', () => {

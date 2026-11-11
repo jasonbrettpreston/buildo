@@ -3873,26 +3873,24 @@
      },
      "target": "lot_coverage_pct",
      "expect": {
-      "value": 45,
-      "disclosure_match": "more permissive than the exception"
+      "value": 40,
+      "unit_applies": false
      },
-     "rationale": "RS (x256), house with a secondary suite: 45 %",
+     "rationale": "RS (x256), house with a secondary suite: held until D-4 (E8 hold, MB-27 increment 4, operator 2026-11-11; M-252, A0228/26EYK): the exception 40 % stands; was 45 %",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
-       "applies": true,
-       "why": null,
+       "applies": false,
+       "why": "building_type detached_house (outside 10.40.30.1(2), E8 hold (MB-27 increment 4, operator 2026-11-11; until D-4))",
        "status": "value",
-       "value": 45,
+       "value": 40,
        "reason": null,
-       "winner": "10.40.30.40(1)#(1)(D)",
+       "winner": "900.4.10(256)#(256)[SSP](F)",
        "applied": [
-        "10.40.30.40(1)#(1)(D)"
+        "900.4.10(256)#(256)[SSP](F)"
        ],
-       "disclosures": [
-        "On this exception lot the lot_coverage_pct is 45 from 10.40.30.40(1)#(1)(D): the zone's houseplex rule is more permissive than the exception's detached-house rule (40)."
-       ],
+       "disclosures": [],
        "alternate_paths": 30
       }
      }
@@ -29401,26 +29399,24 @@
      },
      "target": "lot_coverage_pct",
      "expect": {
-      "value": "unregulated",
-      "disclosure_match": "more permissive than the exception"
+      "value": 33,
+      "unit_applies": false
      },
-     "rationale": "RM (x18), house with a suite: zone suite rule (no LC overlay → unregulated) is more permissive than exception 33 %",
+     "rationale": "RM (x18), house with a suite: held until D-4 (E8 hold, MB-27 increment 4, operator 2026-11-11; M-252, A0228/26EYK), and on this LC-unmapped lot x.30.1(2) does not form (houseplex family A, operator \"3. a\"): the exception 33 % stands; was unregulated",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
-       "applies": true,
-       "why": null,
+       "applies": false,
+       "why": "building_type detached_house (outside 10.80.30.1(2), E8 hold (MB-27 increment 4, operator 2026-11-11; until D-4))",
        "status": "value",
-       "value": "unregulated",
+       "value": 33,
        "reason": null,
-       "winner": "10.80.30.40(1)#(1)(B)",
+       "winner": "900.6.10(18)#(18)[SSP](C)",
        "applied": [
-        "10.80.30.40(1)#(1)(B)"
+        "900.6.10(18)#(18)[SSP](C)"
        ],
-       "disclosures": [
-        "On this exception lot the lot_coverage_pct is unregulated from 10.80.30.40(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (33)."
-       ],
+       "disclosures": [],
        "alternate_paths": 32
       }
      }
@@ -29437,26 +29433,24 @@
      },
      "target": "lot_coverage_pct",
      "expect": {
-      "value": "unregulated",
-      "disclosure_match": "more permissive than the exception"
+      "value": 33,
+      "unit_applies": false
      },
-     "rationale": "RM (x18), 4-unit houseplex: as above",
+     "rationale": "RM (x18), 4-unit houseplex: on this LC-unmapped lot x.30.1(2) does not form (houseplex family A, MB-27 increment 4, operator \"3. a\", the Q-D2 a form; M-252, A0228/26EYK): the detached-house substitution 33 % stands; was unregulated",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
-       "applies": true,
-       "why": null,
+       "applies": false,
+       "why": "condition mapped(LC)",
        "status": "value",
-       "value": "unregulated",
+       "value": 33,
        "reason": null,
-       "winner": "10.80.30.40(1)#(1)(B)",
+       "winner": "900.6.10(18)#(18)[SSP](C)",
        "applied": [
-        "10.80.30.40(1)#(1)(B)"
+        "900.6.10(18)#(18)[SSP](C)"
        ],
-       "disclosures": [
-        "On this exception lot the lot_coverage_pct is unregulated from 10.80.30.40(1)#(1)(B): the zone's houseplex rule is more permissive than the exception's detached-house rule (33)."
-       ],
+       "disclosures": [],
        "alternate_paths": 32
       }
      }
@@ -29473,15 +29467,16 @@
      },
      "target": "lot_coverage_pct",
      "expect": {
-      "value": 35
+      "value": 35,
+      "unit_applies": false
      },
-     "rationale": "RM (x18), 2-unit houseplex = a duplex (M-252, 61 Redgrave Dr A0228/26EYK): 35 %, not displaced by 10.80.30.1(2)",
+     "rationale": "RM (x18), 2-unit houseplex = a duplex (M-252, 61 Redgrave Dr A0228/26EYK): 35 %, not displaced by 10.80.30.1(2) (MB-27 increment 4, houseplex family A: on this LC-unmapped lot the unit does not form at all)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
-       "applies": true,
-       "why": null,
+       "applies": false,
+       "why": "condition mapped(LC)",
        "status": "value",
        "value": 35,
        "reason": null,

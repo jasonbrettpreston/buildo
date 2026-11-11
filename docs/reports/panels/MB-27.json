@@ -1,34 +1,63 @@
 {
   "task": "MB-27",
-  "item": "the increment-3 Layer 2 night MB27-INC3-NIGHT-1 (2026-11-10): migration 297 alone, then a TRUNCATE-RELOAD of the three Layer 2 tables at 61 slots (storage form b) from 2e7976367 plus the notes-only night patch, and the #44 witness recapture; the night itself gets an OUTPUT panel record, as the MB-26 and axis nights did",
+  "item": "increment 4 (the house with a secondary suite), the build commit over prereg-MB-27-45 (round 141): the suite type on the 47 increment-1/2 rows, the LC-33 gain comparison declared in data (D-2 a), the E8 hold, the houseplex family-A condition, the E7 fail-closed revision and its count, 848-2025 in force with its confidence row, the A0179 carriage fix, migration 304",
   "class": "D",
-  "stage": 8,
-  "date": "2026-11-10",
-  "head": "2e7976367",
+  "stage": 9,
+  "date": "2026-11-11",
+  "head": "d79a0f96e",
   "commits_reviewed": [
-    "0a5548856 the night recapture over 2e7976367 (both POST goldens, both witness traces, _catalog.json, explained-diffs.json, the notes as patched)",
-    "7f5872e91 the night record docs/reports/nights/MB27-INC3-NIGHT-1.md"
+    "the uncommitted build diff on d79a0f96e (wf1/mb27-inc4-1111), reviewed before the prereg and build commits; folds re-run after"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc3/open-questions.md:397-419 (Census decision a; night timing b; night prep 1-3 incl. STOP-1 a; the orchestrator model and the typed go OPERATOR-GO MB27-INC3-NIGHT-1; NIGHT COMPLETE)"
+    "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md",
+    "~/Buildo-scratch/mcbylaws/inc4/ADDENDUM-E8-HOLD.md",
+    "~/Buildo-scratch/mcbylaws/inc4/cards/ (CARD-D4-E8-FAMILY-B q3, CARD-E7-UCAP, CARD-848-INFORCE, CARD-A0179-CARRIAGE, CARD-D3-SUITE-SIZE)"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/inc3/night/RUNBOOK-inc3-night-v3.md over night-checklist-inc3.v2.md (C1-C6); prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-44.json (layer2_night); night evidence ~/Buildo-scratch/mcbylaws/inc3/night/n1/",
-  "output": "OUTPUT panel over ~/Buildo-scratch/mcbylaws/inc3/night/after-tmp/panel/bundle.md: ds-spec and ds-errorpaths (deepseek-reasoner via the dotenv preload; error-paths on the cut bundle-ep.md, sections 1-2 and 6-9; no downgrade) and one grounded-reviewer + reality-check seat (Sonnet, read-only DB). The grounded seat re-derived every figure of the record: 18,379 transitions and 3,389,414 moved cells equal to prereg layer2_night row for row, 440,093 x 292 = moved + unchanged, each item count (D5, D2, DL-4, Q12, E4, Q-287E), detached_house 846 = 448 + 398, the explained-diffs reconciliation, texts 2,866 -> 2,868 and units 1,015 -> 1,014 id by id against pre-inc3.dump, the timeline, the L: citations and finding 1 (the two C1 logs equal apart from timestamps). Reality check on the live DB (read-only): 440,093 lots, one version pair dc82bfe6d3b4 / 54c20374745f equal to the tree input, width 61 on every array, 12 CHECKs validated, stamps 32 B, and the moved families plausible on decoded lots (D2, Q12, Q-287E, DL-4, D5). The v2 C4 D-8 check on real rows (decision N-6, the carriage lock on the stored 25), run read-only through the tree READ_SQL.lots/parcel/cells and disclosureWords with the tree Layer 1 input: 25 of 25 stamps current, 0 lots with phase2_disclosures_not_current, 0 with phase2_disclosure_unmapped, 17 lots with words equal to the lock list, 25 of 25 equal to the fixture path; a mutated stamp gives the stale word. No defect in the night data. Rejected with evidence: row_sha_same 40,908 \"impossible\" (the same-set equals the 40,908 gated lots by key; gated rows store nothing class-specific; the D5 gate-reason cells are 7 x 41,836 = gated + the 928 ungated exception_not_authored lots), 754.1 in lots_table_mb as a basis change (708.5 and 754.1 are both the three-table figure, checklist v2:199), the 780 stop as manual (it is an automated C4 test), the second C1 rewriting evidence (logs equal, the 25-lot compares landed on the registered pairs), 8 missing 3 drift (the expected migrate --verify, expect.zsh:18), and the rest as listed in the adjudication. Accepted and disclosed here (the night record is not amended): (1) the notes expected_shape[0].what prose also carries the axis figures (1,015 units, 2,866 texts, about 24 min, about 708 MB, the one expected WARN scenario_axis_cells 398), not only measured; (2) units, texts, 754.1 and 24.6 are table_state row counts and figures derived from the storage ratio and duration_ms, not run-4418 records_meta keys (values right); (3) \"12@(B)(ii)\" is the prereg label, the stored unit is 10.80.40.10(1)#(1)(B). Operator note (grounded G-1, not a night defect): on 356 RM x253 lots the houseplex height_m is 12 m by base (B) while detached_house keeps 11 m by x253(C) (building_types any); this is the registered Q12 by-mechanism move (CENSUS-REVIEW-20261110.md row 91ab4722, the M-180(2) more-permissive mechanism).",
+  "plan": "~/Buildo-scratch/mcbylaws/inc4/impact/impact-map.md (build order section 6) and the ruled decision list ~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md; prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-45.json",
+  "output": "OUTPUT panel over ~/Buildo-scratch/mcbylaws/inc4/build/panel/BRIEF.md, four read-only seats: code-reviewer-grounded PASS-WITH-FOLDS (HIGH: tsc red on the new tests, 20 errors; LOW: switchOf fail-open trace, l2 trace key, bound test swaps the cell only, reasons sorted only via dbRow); regression-guardian PASS-WITH-FOLDS (MEDIUM: the family-A condition also moves the semi-detached houseplex and the suite garden/laneway structures, not named in the notes; MEDIUM: the rows.js flag join is its own move, name it; LOW notes on units_max, migration-297 and the confidence list); observability-reviewer FAIL (HIGH: the E7 count of the card lock item 2 was not built; HIGH: the gain rows dropped the flags of the rows they compare; MEDIUM: gain l2 trace keyed target not id; LOW: silent skip when a base type is absent); pipeline-reality-check PASS-WITH-FOLDS (values: 25 of 25 against the key, INV-4 and INV-6 hold, E7 vector holds; MEDIUM: the night disclosure must carry the semi-detached houseplex 104 and suite structure 46 sample cells and the x56 stored scaling; LOW: houseplex units_max 1 and cross-class exception-vs-unregulated invariants are blind spots). No DeepSeek lens: the McIncrement recipe does not call for one at step 4.",
   "seats": [
-    "ds-spec",
-    "ds-errorpaths",
-    "grounded-reviewer",
-    "reality-check"
+    {
+      "seat": "code-reviewer-grounded",
+      "verdict": "PASS-WITH-FOLDS",
+      "folds": [
+        "tsc errors fixed (Json casts, String(), typed concat): tsc 0 errors on src"
+      ]
+    },
+    {
+      "seat": "regression-guardian",
+      "verdict": "PASS-WITH-FOLDS",
+      "folds": [
+        "the extra family-A moves named in the commit message and asserted on 1641 (semi-detached houseplex 33 %; suite structures equal the house) in bylaw-e8-coverage-families",
+        "the rows.js flag join named as its own move in the commit message (A0179 carriage, D-8 carriage words only)"
+      ]
+    },
+    {
+      "seat": "observability-reviewer",
+      "verdict": "FAIL -> folded",
+      "folds": [
+        "records_meta units_floor_refusals: declared row and word in building-types.json units_floor_census, counted in censusOf, summed in materializeRows, descriptor emit; asserted in suite-unit-cap",
+        "gain rows carry the union of the flags of the rows they compare; the reasons row too (the closed reason words filtered by the declared list); locked in disclosure-carriage-stale (stale and current)",
+        "gain l2 trace entries keyed id, as every other l2 entry"
+      ]
+    },
+    {
+      "seat": "pipeline-reality-check",
+      "verdict": "PASS-WITH-FOLDS",
+      "folds": [
+        "night counts carried in the hand-back with the measured sample figures and the x56 scaling labelled estimates"
+      ]
+    }
   ],
-  "verdict": "PASS",
+  "verdict": "PASS after folds (one FAIL seat folded in full; no blocker left open)",
   "blockers": [],
   "followups": [
-    "the night own notes figures held in ~/Buildo-scratch/mcbylaws/inc3/night/after-tmp/resolve-bylaws.notes.inc3-figures.json for the next Layer 2 recapture (N-4 a); that recapture fills expected_shape[0].what and measured together and names the three-table basis of lots_table_mb (panel accepted items 1-2)",
-    "operator reading check: RM x253 houseplex height_m 12 m by base (B) beside detached_house 11 m by x253(C) (any building type), 356 lots, the registered Q12 by-mechanism move (grounded G-1)",
-    "the cohort backup table bylaw_resolution_lots_cohort_bak_20261110t1853z, n1/backup and n1/pre-inc3.dump: kept until the operator word (L-1 a, L-4 a)",
-    "card: C1 has no guard against a concurrent C1 before its snapshot step (second C1 refused 12:52:54, no write)",
-    "card: D2 cells carry the unit id as evidence_ref where other clause cells carry the regulation id (registered in the prereg; grounded G-4)",
-    "card (carried): the forced-cohort plan prints bytea row_sha as raw bytes"
+    "LOW not folded: switchOf reads a missing switch as on (the rows.js pattern); the bound test swaps the cell, not its words; gainRows skips silently when the base type is absent (inert today)",
+    "owed to the operator: the full R3-02 form (declared input_flags on condition-only reads) would add attic_area_reading and r_slope_cap_reading to the A0097 and A0179 headline flags of the golden 25; not built",
+    "reality blind spots: houseplex units_max 1 on exception one-unit caps (CARD-E7-UCAP side finding); no cross-class exception-vs-unregulated invariant"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/inc3/night/after-tmp/panel/adjudication.md (out-spec.md, out-errorpaths.md, seat-grounded/report.md, ../d8/d8-real-rows.summary.tsv)"
+  "evidence": [
+    "~/Buildo-scratch/mcbylaws/inc4/build/panel/",
+    "~/Buildo-scratch/mcbylaws/inc4/build/final-vs-tip-sample.json",
+    "docs/reports/red-evidence/bylaw/inc4-*.txt"
+  ]
 }
