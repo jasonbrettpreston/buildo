@@ -270,7 +270,8 @@ export type SurfaceDescriptor = {
   /** Citations for this answer: `path:line`, `migrations/NNN_x.sql:line`, or a spec §anchor. A claim with no citation is UNRESEARCHED, whatever it says. */
   evidence: "UNRESEARCHED" | Array<string>;
   classes?: Array<{
-  class: "400" | "401" | "403" | "429" | "500" | "schema_drift" | "offline" | "404";
+  /** The closed error-class list (Spec 128 section 4; ASK-20 added 404). MF-54 (operator 2026-11-10, answer c: "c. yes"; Spec 128 section 6 ASK-24): 409 is a conflict the client must reload for, e.g. a stale updated_at. */
+  class: "400" | "401" | "403" | "429" | "500" | "schema_drift" | "offline" | "404" | "409";
   ui: string;
   /** Binding standard (MF-40 plan delta 1, option C; operator 2026-11-10 "y recommendation: C, with the four trims. approved"): the detail fields of this error class a golden may bind as <contract_id>.errors.<class>.<field>; the row says where e */
   fields?: Array<string>;

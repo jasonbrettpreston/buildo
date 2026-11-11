@@ -31757,11 +31757,15 @@
         },
         {
           "class": "400",
-          "ui": "Validation and placement-rule refusals (VALIDATION_FAILED, TARGETING_NOT_ALLOWED, SCENARIO_REQUIRED, SCENARIO_UNKNOWN, INVALID_DATE, FLIGHT_ORDER, FLIGHT_BEYOND_HORIZON, ADVERTISER_UNKNOWN, ADVERTISER_INACTIVE) and the 409 STALE_OFFER (the offer changed since the page read it; the closed class list has no 409, so it is recorded here and in notes): the form shows its error state from content."
+          "ui": "Validation and placement-rule refusals (VALIDATION_FAILED, TARGETING_NOT_ALLOWED, SCENARIO_REQUIRED, SCENARIO_UNKNOWN, INVALID_DATE, FLIGHT_ORDER, FLIGHT_BEYOND_HORIZON, ADVERTISER_UNKNOWN, ADVERTISER_INACTIVE): the form shows its error state from content."
         },
         {
           "class": "404",
           "ui": "NOT_FOUND: the offer is gone; the error state from content."
+        },
+        {
+          "class": "409",
+          "ui": "STALE_OFFER: the offer changed since the page read it (a stale or missing updated_at); the form shows its error state from content and the list must be reloaded."
         },
         {
           "class": "500",
@@ -32098,7 +32102,11 @@
         },
         {
           "class": "400",
-          "ui": "Validation errors, and the 409 ADVERTISER_ID_TAKEN (the closed class list has no 409), are shown by the form from content."
+          "ui": "Validation errors are shown by the form from content."
+        },
+        {
+          "class": "409",
+          "ui": "ADVERTISER_ID_TAKEN: the advertiser id is already held under another name; shown by the form from content."
         },
         {
           "class": "500",

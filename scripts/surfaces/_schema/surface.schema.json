@@ -2161,8 +2161,10 @@
                   "500",
                   "schema_drift",
                   "offline",
-                  "404"
-                ]
+                  "404",
+                  "409"
+                ],
+                "description": "The closed error-class list (Spec 128 section 4; ASK-20 added 404). MF-54 (operator 2026-11-10, answer c: \"c. yes\"; Spec 128 section 6 ASK-24): 409 is a conflict the client must reload for, e.g. a stale updated_at."
               },
               "ui": {
                 "type": "string",

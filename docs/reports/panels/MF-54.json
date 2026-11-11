@@ -1,0 +1,24 @@
+{
+  "task": "MF-54",
+  "item": "The closed error-class list gains 409: surface.schema.json errors.classes[].class adds 409 (a conflict the client must reload for, e.g. a stale updated_at), types regenerated; contract_admin_offer_upsert (STALE_OFFER) and contract_admin_advertiser_upsert (ADVERTISER_ID_TAKEN) move their 409 out of the 400 class row into a 409 row; Spec 126 section 11b.2 dated note; Spec 128 section 6 ASK-24 (the section 4 escalation record).",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-10",
+  "head": "b87a669a3",
+  "cards": [
+    "Operator 2026-11-10: \"MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter\", answer c (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator answers 2026-11-10: MF-40 OUTPUT panel questions\"; MF-40 panel record, security and compliance M2)."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-54/plan.md (S row, smallest panel per Spec 08: no PLAN seat; the queue row's Done-condition is the plan's checklist). Docs c1976a155 (Spec 126 section 11b.2 note, Spec 128 ASK-24, system map regenerated), prereg 1 b87a669a3 at round 136.",
+  "output": "OUTPUT panel PENDING: code-reviewer-grounded and regression-guardian on the MF-54 commits (docs, prereg, code). Red docs/reports/red-evidence/MF-54/error-class-409-red.txt (4 red, 2 green on the unchanged tree), green error-class-409-green.txt.",
+  "seats": [],
+  "verdict": "PENDING: OUTPUT panel not yet run.",
+  "blockers": [],
+  "followups": [
+    "Not in scope (minimal row): the scope C/D descriptors whose limitations say 409 is not representable (contract_admin_users, contract_user_profile, contract_admin_users_uid_subscription_reconcile, contract_admin_pipelines_slug, admin_user_detail) keep that text; they convert on touch."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-54/",
+  "notes": [
+    "Prereg round 136 is the next after 135 (MF-40-2); the orchestrator confirms it against other open lanes.",
+    "Push needs McBylaws owner sign-off (gate-adjacent schema change, queue header)."
+  ]
+}

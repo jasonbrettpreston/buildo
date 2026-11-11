@@ -211,7 +211,11 @@
       },
       {
         "class": "400",
-        "ui": "Validation errors, and the 409 ADVERTISER_ID_TAKEN (the closed class list has no 409), are shown by the form from content."
+        "ui": "Validation errors are shown by the form from content."
+      },
+      {
+        "class": "409",
+        "ui": "ADVERTISER_ID_TAKEN: the advertiser id is already held under another name; shown by the form from content."
       },
       {
         "class": "500",

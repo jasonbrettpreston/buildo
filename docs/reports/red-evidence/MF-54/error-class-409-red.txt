@@ -1,0 +1,16 @@
+MF-54 red evidence: src/tests/surfaces/error-class-409.logic.test.ts on the unchanged tree (base origin/wf1/mb-rulings 2db1bdd67, schema and contracts not yet edited), 2026-11-10.
+Expected: the 409 validates, type union, and the two contract-row cases red (4); the live-contracts base case and the planted unknown class case green (2).
+
+ ✓ src/tests/surfaces/error-class-409.logic.test.ts > MF-54: the closed error-class list gains 409 > the live contracts are valid as committed (the base the plants below start from)
+ × src/tests/surfaces/error-class-409.logic.test.ts > MF-54: the closed error-class list gains 409 > a 409 class row validates
+   → expected [ Array(1) ] to deeply equal []
+ ✓ src/tests/surfaces/error-class-409.logic.test.ts > MF-54: the closed error-class list gains 409 > the list stays closed: a planted unknown class fails, and so does a numeric 409
+ × src/tests/surfaces/error-class-409.logic.test.ts > MF-54: the closed error-class list gains 409 > the generated descriptor type names 409 in the class union
+   → expected '  class: "400" | "401" | "403" | "429…' to contain '"409"'
+ × src/tests/surfaces/error-class-409.logic.test.ts > MF-54: the closed error-class list gains 409 > contract_admin_offer_upsert declares its 409 in a 409 row, and its 400 row no longer carries it
+ × src/tests/surfaces/error-class-409.logic.test.ts > MF-54: the closed error-class list gains 409 > contract_admin_advertiser_upsert declares its 409 in a 409 row, and its 400 row no longer carries it
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [ Array(1) ] to deeply equal []
+AssertionError: expected '  class: "400" | "401" | "403" | "429…' to contain '"409"'
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+      Tests  4 failed | 2 passed (6)
