@@ -4983,6 +4983,14 @@
       "consumer": "src/lib/parcels/what-we-checked.ts",
       "producer": "parcels",
       "kind": "table",
+      "key": "parcels.address_number",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "parcels",
+      "kind": "table",
       "key": "parcels.heritage_dataset_version_when_enriched",
       "value": "any",
       "source": "src_sql"
@@ -4992,6 +5000,14 @@
       "producer": "parcels",
       "kind": "table",
       "key": "parcels.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/what-we-checked.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.linear_name_full",
       "value": "any",
       "source": "src_sql"
     },
