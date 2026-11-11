@@ -775,10 +775,11 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
     const allowed = B.mapping.mobile.REPORT_HOST as string[];
     expect(mobileMappingProblems(real, 'h.tsx', allowed, host)).toEqual([]);
     const other = real.replace("from '@gorhom/bottom-sheet';", "from 'react-native-modal';");
+    const at = real.split('\n').findIndex((l) => l.startsWith('const COMPONENTS = ')) + 1; // the table line, read from the file (no pinned line number)
     expect(mobileMappingProblems(other, 'h.tsx', allowed, host)).toEqual([
-      'C-8m h.tsx:18: COMPONENTS.BottomSheet is not an imported library part',
-      'C-8m h.tsx:18: COMPONENTS.BottomSheetView is not an imported library part',
-      'C-8m h.tsx:18: COMPONENTS.BottomSheetBackdrop is not an imported library part',
+      `C-8m h.tsx:${at}: COMPONENTS.BottomSheet is not an imported library part`,
+      `C-8m h.tsx:${at}: COMPONENTS.BottomSheetView is not an imported library part`,
+      `C-8m h.tsx:${at}: COMPONENTS.BottomSheetBackdrop is not an imported library part`,
     ]);
     expect(mobileMappingProblems(real, 'h.tsx', allowed).filter((l) => l.includes('is not an imported library part')).length).toBe(4);
   });
