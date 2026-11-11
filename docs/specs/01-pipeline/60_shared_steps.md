@@ -287,6 +287,8 @@ schema column counts, SLA, inspections) follow this; the two most recently added
 from_model bucket`) — corrected 2026-08-31 (Pilot 8 PH-0, Finding 2); the prior line named 2
 files, one of which (`quality.infra.test.ts`) has zero hits on this script at all, while 4 real
 dedicated test files went unnamed.
+
+> Dated note 2026-11-11 (MF-62; M-246, prior text kept; operator, verbatim: "x-1 a of course, x-2 a x-3 a x-4 a - build this into McFront-end specs and rulings and handbook", X-1 (a): "one stored dated citywide-counts row refreshed by the existing refresh_snapshot step"; register FE-38; Spec 126 11a.7 dated note of the same date): one more optional read, `reportTrust`, records the report's citywide trust counts on the same daily row: `parcels_total` (parcels), `permits_active_distinct` (distinct permit_num in Inspection, Permit Issued, Revision Issued), `map_areas_total` (zoning_bylaw_areas, the nine zoning overlay tables, ravines and heritage_districts), `zoning_layer_version` (zoning_bylaw_areas.source_dataset_version), `permits_last_seen_at` and `coa_last_seen_at`. Migration 306 adds the six nullable columns. On a failed read the six carry forward from the prior row, as massing does, and `optional_query_failed` names `reportTrust`. Buildings and CoA applications reuse `building_footprints_total` and `coa_total`. The report's producer `src/lib/parcels/what-we-checked.ts` reads the newest row; it never counts live.
 </behavior>
 
 ---
