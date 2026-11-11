@@ -3,19 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LoginForm } from '@/components/auth/LoginForm';
+import { safeRedirectPath } from '@/lib/auth/safe-redirect';
 
 const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
-
-// Same-origin path guard for the ?redirect= bounce target. Rejects absolute
-// URLs, protocol-relative (`//evil`), AND backslash variants (`/\evil` — some
-// browsers normalize \ to /, a classic open-redirect filter bypass flagged by
-// the commit security review).
-function safeRedirectPath(raw: string | null): string {
-  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) {
-    return '/dashboard';
-  }
-  return raw;
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,7 +43,7 @@ export default function LoginPage() {
       <LoginForm
         onSuccess={() => {
           // Honor the middleware's ?redirect= bounce target via the shared
-          // same-origin guard above.
+          // same-origin guard (src/lib/auth/safe-redirect.ts).
           const params = new URLSearchParams(window.location.search);
           router.push(safeRedirectPath(params.get('redirect')));
         }}
