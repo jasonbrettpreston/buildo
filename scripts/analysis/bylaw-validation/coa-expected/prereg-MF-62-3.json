@@ -1,0 +1,90 @@
+{
+ "$comment": "Pre-registration, task MF-62 follow-up, prereg 3 (the processing sequence, the report name, the search placeholder, the loading verbs). Operator 2026-11-11, verbatim: \"the show report button shows before the animation is complete - also why do we need that button - after the each fact runs - we need to paude and then have somet the possibilities report for the address is ready and then transisiton.  Let's slow it down and make it more compelling.\"; \"1. I like pulling by-law results.  2. Just your report is ready is sufficent\"; Landing v9 R1 \"1. y\" (The Building Possibilities Report); small pages v7.1 item 9 \"inside the search box - should be enter lot address\". Scope: content states.checked (verbs, ready, open, skip, summary), page.title, the mobile search placeholder, the producer pace and address, a third logic variable report_check_ready_hold_ms and migration 312 (written, applied by the DB job), the contract (verb, done_ms, ready, open), the web render and stylesheet; no new client part; the short disclaimer on legal.line and search.legal (operator D-1 a, verbatim \"3 y\"); report_check_min_ms 23000 (D-6, verbatim \"1 acutally think it needs longer\"). Committed ALONE directly before the build commit. rules[]: FE-05, FE-06, FE-07, FE-24, FE-31, FE-35 are RULED and cited by the new and edited locks (report-checked.logic.test.ts, report-checked-producer.logic.test.ts, migration-312-report-check-sequence.infra.test.ts, parity.golden.test.ts, parcel-legacy-oracle.logic.test.ts); red evidence docs/reports/red-evidence/MF-62/followup-red.txt. No OWED id is cited. Zero scorer moves (no file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes); totals and floors copied from the after totals of prereg-MB-27-48.json (round 154, the newest prereg on the base wf1/stack-1111-mf62 618b24e78). In-file round 157 (assigned by the orchestrator).",
+ "schema": "coa-round-prereg-v1",
+ "round": 157,
+ "task": "MF-62",
+ "rules": [
+  "FE-05",
+  "FE-06",
+  "FE-07",
+  "FE-24",
+  "FE-31",
+  "FE-35"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/MF-62/followup-1111/plan.md; panel reports ~/Buildo-scratch/mcfrontend/MF-62/followup-1111/panel-plan/ and panel-out/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged from prereg-MB-27-48.json (round 154) and the floors check stays OK",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
