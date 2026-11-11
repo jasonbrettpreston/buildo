@@ -1808,6 +1808,17 @@
       "signal_type",
       "trade_slug"
     ],
+    "usage_events": [
+      "event",
+      "event_id",
+      "meta",
+      "occurred_at",
+      "product",
+      "session_id",
+      "subject_key",
+      "subject_kind",
+      "user_id"
+    ],
     "user_profiles": [
       "account_deleted_at",
       "account_preset",
