@@ -9,8 +9,8 @@
 
 -- UP
 INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description) VALUES
-  ('parcel_map_neighbour_radius_m', 25, NULL, 'MF-53: on the choose-your-lot map, neighbour lots within this many metres of the pin of an address with no linked lot. CONSUMED by src/lib/parcels/lot-map.ts (readLotMapLimits).'),
-  ('parcel_map_neighbour_limit', 30, NULL, 'MF-53: the most neighbour lots drawn around an address with no linked lot, nearest first (at most 50). CONSUMED by src/lib/parcels/lot-map.ts (readLotMapLimits).')
+  ('parcel_map_neighbour_radius_m', 25, NULL, 'MF-53: on the choose-your-lot map, neighbour lots within this many metres of the pin of an address with no linked lot. CONSUMED by readLotMapLimits (lot-map.ts, the consumer lookup map read).'),
+  ('parcel_map_neighbour_limit', 30, NULL, 'MF-53: the most neighbour lots drawn around an address with no linked lot, nearest first (at most 50). CONSUMED by readLotMapLimits (lot-map.ts, the consumer lookup map read).')
 ON CONFLICT (variable_key) DO NOTHING;
 
 -- DOWN — manual rollback only, intentionally not transactional (matches migrations 301 and 303).

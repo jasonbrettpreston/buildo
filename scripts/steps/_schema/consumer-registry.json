@@ -2773,6 +2773,94 @@
     },
     {
       "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.addr_num_normalized",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.address_full",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.address_number",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.address_point_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.address_status",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.latitude",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.linear_name_full",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.linear_name_normalized",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.longitude",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.maint_stage",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.retired_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
       "producer": "classify_coa_scope",
       "kind": "table",
       "key": "coa_applications.project_type",
@@ -2856,6 +2944,14 @@
       "producer": "link_coa_to_parcels",
       "kind": "table",
       "key": "coa_applications.neighbourhood_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/parcel-lookup.ts",
+      "producer": "link_parcel_addresses",
+      "kind": "table",
+      "key": "parcel_address_points.address_point_id",
       "value": "any",
       "source": "src_sql"
     },
@@ -4920,6 +5016,142 @@
       "producer": "permits",
       "kind": "table",
       "key": "permits.revision_num",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.addr_num_normalized",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.address_point_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.address_status",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.latitude",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.longitude",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.maint_stage",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.retired_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "compute_centroids",
+      "kind": "table",
+      "key": "parcels.centroid_lat",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "compute_centroids",
+      "kind": "table",
+      "key": "parcels.centroid_lng",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "enrich_parcels",
+      "kind": "table",
+      "key": "parcels.zoning_zn_string",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "link_parcel_addresses",
+      "kind": "table",
+      "key": "parcel_address_points.address_point_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "link_parcel_addresses",
+      "kind": "table",
+      "key": "parcel_address_points.parcel_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.frontage_m",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.geom",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.lot_size_sqm",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.parcel_id",
       "value": "any",
       "source": "src_sql"
     },

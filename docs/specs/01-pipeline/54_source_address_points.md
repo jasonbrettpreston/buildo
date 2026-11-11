@@ -112,7 +112,7 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
   - data (descriptor): `address_points` reads+writes (migrations/018_address_points.sql)
   - upstream: none
   - downstream: assert_data_bounds · geocode_permits · link_parcel_addresses · link_parcels
-  - consumers: address_points (records_meta address_points_load) · assert_data_bounds (records_meta audit_table) · src/app/api/admin/stats/route.ts (table address_points: 1 column)
+  - consumers: address_points (records_meta address_points_load) · assert_data_bounds (records_meta audit_table) · src/app/api/admin/stats/route.ts (table address_points: 1 column) · src/lib/admin/parcel-lookup.ts (table address_points: 11 columns) · src/lib/parcels/lot-map.ts (table address_points: 7 columns)
 - `link_parcel_addresses` — MATERIALIZER · converted · owner specs: 54
   - `scripts/link-parcel-addresses.js`
   - `scripts/link-parcel-addresses.descriptor.json`
@@ -124,7 +124,7 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
   - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` writes (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql)
   - upstream: address_points · parcels
   - downstream: link_parcels
-  - consumers: none
+  - consumers: src/lib/admin/parcel-lookup.ts (table parcel_address_points: 1 column) · src/lib/parcels/lot-map.ts (table parcel_address_points: 2 columns)
 <!-- /generated:target-files -->
 - `scripts/lib/address-points-csv-drift.js` — the CSV header/null-fraction drift detector, shared with `assert_schema` (`hasCoordinateSource`) and the ONLY `fingerprint_inputs` entry of `assert-schema.descriptor.json`; previously unregistered anywhere in the system map (registry gap closed at commit 9).
 - Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/step-library.logic.test.ts`
