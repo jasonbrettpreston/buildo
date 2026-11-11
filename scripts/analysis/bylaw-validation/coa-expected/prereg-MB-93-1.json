@@ -1,0 +1,85 @@
+{
+ "$comment": "Pre-registration, task MB-93 (the internal preview producer: stored Layer 2/3 rows to the declared v21 page payload, admin only), prereg 1, committed ALONE directly before the MB-93 code commit. Operator 2026-11-11, verbatim \"D-1 b and D-2 to D-8 a\" (record ~/Buildo-scratch/mcfrontend/PREVIEW/DECISIONS.md bottom; plan ~/Buildo-scratch/mcfrontend/PREVIEW/plan.md with the section 9 panel folds). rules[]: M-384 (Phase 3 is tables: the producer only reads the stored parcel_maxbld_scenarios rows and the Layer 2 lot stamps, never recomputes). The McFrontend rules the build honours (FE-05 no maths in the report folders: the formatter lives in src/lib/admin/report-preview-live/; FE-34 the one page contract, buildPage validates every payload) are cited in the code and tests, not here (an MB prereg cites McBylaws registers only). Red evidence docs/reports/red-evidence/MB-93/. Zero scorer moves: the code commit moves no file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw-layer2-input.json; totals and floors copied from prereg-MF-57-2.json. In-file round 151 (assigned by the orchestrator). The switch migration 308 is written, not applied (orchestrator DB job).",
+ "schema": "coa-round-prereg-v1",
+ "round": 151,
+ "task": "MB-93",
+ "rules": [
+  "M-384"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/PREVIEW/plan.md (section 3 producer, section 9 folds 2-9, 11-12, 14); ~/Buildo-scratch/mcfrontend/PREVIEW/DECISIONS.md (operator \"D-1 b and D-2 to D-8 a\")",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
