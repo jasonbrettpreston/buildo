@@ -10527,5 +10527,15 @@
     "admin": {
       "group": "MaxBLD Lot Size"
     }
+  },
+  "maxbld_internal_preview_enabled": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "MB-93 (operator 2026-11-11 \"D-1 b and D-2 to D-8 a\", D-3 a; plan ~/Buildo-scratch/mcfrontend/PREVIEW/plan.md sections 4 and 9.12): the on/off switch of the INTERNAL admin preview of the v21 report on real lots (stored Layer 2/3 rows, /admin/report-preview live mode). 1 = on; 0 = off (the default). Read strictly: only the exact value 1 is on; a missing row, a read error or any other value is off, and the preview then reads no lot data. Customers never see it (MAXBLD_WEB_LIVE is a separate source constant). Edited in the Admin Control Panel (each change audited). Inserted by migration 308. CONSUMED by src/lib/admin/report-preview-live/stored-page.ts (readPreviewSwitch).",
+    "admin": {
+      "group": "MaxBLD Internal Preview"
+    }
   }
 }

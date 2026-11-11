@@ -242,6 +242,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'user_lot_size_max_sqm',
   'user_lot_size_city_ratio_max',
   'user_lot_size_entries_per_day',
+  // MB-93 the internal preview switch (operator 2026-11-11 "D-1 b and D-2 to D-8 a", D-3 a): admin group "MaxBLD Internal Preview", migration 308
+  'maxbld_internal_preview_enabled',
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',

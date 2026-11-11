@@ -1807,6 +1807,54 @@
       "reads": {},
       "writes": {}
     },
+    "src/lib/admin/report-preview-live/stored-page.ts": {
+      "class": "static",
+      "statements": 5,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0f97e5ecb408958d",
+        "30f89b13d6acca30",
+        "630899561be92b85",
+        "83cc21ad31fee961",
+        "f5730dce47400ed9"
+      ],
+      "reads": {
+        "bylaw_resolution_lot_stamps": [
+          "evaluator_version",
+          "lot_gate",
+          "parcel_id",
+          "table_version"
+        ],
+        "parcel_maxbld_scenarios": [
+          "building_type",
+          "catalogue_sha",
+          "content_sha",
+          "field_id",
+          "flags",
+          "increment",
+          "layer2_table_version",
+          "parcel_id",
+          "reason",
+          "settings_sha",
+          "status",
+          "switchboard_sha",
+          "unit",
+          "value"
+        ],
+        "parcels": [
+          "address_number",
+          "id",
+          "linear_name_full",
+          "lot_size_sqm",
+          "parcel_id",
+          "zoning_zn_string"
+        ]
+      },
+      "writes": {}
+    },
     "src/lib/admin/step-output-query.ts": {
       "class": "interpolated",
       "statements": 1,

@@ -1,0 +1,30 @@
+{
+  "task": "MB-93",
+  "item": "Internal preview producer: stored Layer 2/3 rows to the declared v21 page payload, admin only (operator 2026-11-11 \"D-1 b and D-2 to D-8 a\"); first commit the requireAdminPage guard on /admin/report-preview; switch maxbld_internal_preview_enabled (seed, admin group, migration 308 written not applied)",
+  "class": "E",
+  "stage": 9,
+  "date": "2026-11-11",
+  "head": "36036d1be",
+  "commits_reviewed": [
+    "2dbbbc774 (guard)",
+    "36036d1be (prereg-MB-93-1, round 151)",
+    "the staged MB-93 producer commit"
+  ],
+  "cards": [
+    "~/Buildo-scratch/mcfrontend/PREVIEW/DECISIONS.md",
+    "~/Buildo-scratch/mcfrontend/PREVIEW/plan.md (section 9 folds)"
+  ],
+  "plan": "PLAN panel 2026-11-11 (code reviewer, regression guardian, security, pipeline reality: all PASS-WITH-FOLDS, no STOP): ~/Buildo-scratch/mcfrontend/PREVIEW/panel/; folds 1-16 in plan.md section 9; operator \"D-1 b and D-2 to D-8 a\".",
+  "output": "OUTPUT panel, four read-only seats on wf1/mb93-1111 (records ~/Buildo-scratch/mcbylaws/mb93/panel/): code-reviewer-grounded PASS (three sub-threshold notes; note 3 folded: the MB-35 dated note names the 287 column names MB-93 reads as a consumer contract); regression-guardian PASS-WITH-FOLDS (LOW-1 folded: a dev-mode guard case; LOW-2 the Next free id line waits the queue-owed commit); security PASS-WITH-FOLDS (F1 folded: the import fence walks all of src/app outside the admin area; F2 documented: NUMERIC column so 1, 1.0, 1.00 are the same value; F3 noted); pipeline-reality-check PASS-WITH-FOLDS (LOW folded: an unstamped lot reports no_layer2_stamp before table_absent; the invariant bound corrected to the catalogue formula gfa_max + footprint, measured 24 of 25 exceed gfa_max alone; two report-honesty items carried to the operator).",
+  "verdict": "PASS",
+  "blockers": [],
+  "followups": [
+    "OPERATOR (report honesty, reality seat HIGH): the houseplex size per unit (unit_area_m2) counts the basement ((1 - circulation) x (gfa_max + footprint) / unit_count) while the page shows Max build size beside it and the Basement row B9.6 is pending: units read larger than the stated maximum (A0067 1.64x); options: label, land B9.6, or hold the row; escalate through Spec 128 section 4",
+    "OPERATOR (reality seat MED): units_flat (a pre-cap candidate count, 4 to 50) shows beside Units (4) on 21 of 24 lots and reads as a contradiction",
+    "reality blind spots for MB-35 / sanity audit: no coverage or zone FSI bound for the houseplex (A0399 64% coverage, FSI 2.56 on d0.6, an INC3 example: verify against the rule); invariants run on fixtures only until MB-35 rows exist; units_flat <= unit_count unchecked",
+    "MF-73 (page wiring): S2 route-class rows, S3 rate limit preview:uid, L8 no-store + noindex on every branch, L9 no-link fence, L5 MAXBLD_WEB_LIVE interim, pick() of target/view, no double logging of a rethrown read error, pre-launch read-only probe of the production switch value",
+    "queue: Next free id line moves to MB-94 when wf1/queue-owed-1111b lands (it holds MB-88..MB-92)",
+    "DB job (orchestrator): apply migration 308; the Rule 13 scorecard refresh for the migration count rides it"
+  ],
+  "evidence": "~/Buildo-scratch/mcbylaws/mb93/panel/ (code-reviewer.md, regression-guardian.md, security.md, pipeline-reality-check.md); red evidence docs/reports/red-evidence/MB-93/ (guard-red.txt, producer-red.txt)"
+}

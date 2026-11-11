@@ -333,7 +333,10 @@ describe('src-sql-ledger — committed ledger (live)', () => {
     // catalog is a DB snapshot, never hand-edited), so the matview is again the only uncatalogued name (the MF-37 / MF-40 precedent).
     // MF-19 (2026-11-11): parcel_user_inputs (migration 305, written, not applied) is uncatalogued until the operator applies 305 and recaptures
     // docs/reports/witness/_catalog.json; then this list returns to the matview alone (the MF-37 / MF-40 / MF-45 precedent, a follow-up of the DB job).
-    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats', 'parcel_user_inputs']);
+    // MB-93 (2026-11-11, operator "D-1 b and D-2 to D-8 a"): src/lib/admin/report-preview-live/stored-page.ts reads parcel_maxbld_scenarios, which
+    // does not exist until MB-35 applies migration 287; the producer guards the read with to_regclass. It leaves this list when MB-35's catalog
+    // recapture lands (the MF-37 / MF-40 / MF-45 precedent: the catalog is a DB snapshot, never hand-edited).
+    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats', 'parcel_maxbld_scenarios', 'parcel_user_inputs']);
   });
 
   it('exit criterion: every SQL-bearing src/ file is classified', async () => {

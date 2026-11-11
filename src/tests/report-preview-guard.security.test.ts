@@ -86,6 +86,17 @@ describe('/admin/report-preview gates itself (requireAdminPage at the top of the
     expect(h.isAdmin).toHaveBeenCalledWith(expect.anything(), UID);
   });
 
+  // regression-guardian OUTPUT LOW-1: the dev path (isDevMode: NODE_ENV not production and DEV_MODE=true) admits the dev sentinel with no session
+  it('dev mode with no session renders through the dev sentinel; no session or profiles read', async () => {
+    process.env.DEV_MODE = 'true';
+    h.getUser.mockResolvedValue({ data: { user: null }, error: null });
+    const { p, seen } = tracked({});
+    expect(await ReportPreviewPage({ searchParams: p })).toBeTruthy();
+    expect(seen.read).toBe(true);
+    expect(h.getUser).not.toHaveBeenCalled();
+    expect(h.isAdmin).not.toHaveBeenCalled();
+  });
+
   it('the page source calls requireAdminPage() as its first statement', async () => {
     const fs = await import('node:fs');
     const src = fs.readFileSync('src/app/admin/report-preview/page.tsx', 'utf8');

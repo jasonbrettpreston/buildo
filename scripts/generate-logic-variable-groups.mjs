@@ -1305,6 +1305,12 @@ const GROUP_ORDER = [
       "user_lot_size_city_ratio_max",
       "user_lot_size_entries_per_day"
     ]
+  },
+  {
+    "label": "MaxBLD Internal Preview",
+    "keys": [
+      "maxbld_internal_preview_enabled"
+    ]
   }
 ];
 

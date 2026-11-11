@@ -1,0 +1,5 @@
+# MB-93 producer red evidence: src/tests/admin-report-preview-live.logic.test.ts on the tree before src/lib/admin/report-preview-live/ exists (2026-11-11).
+ FAIL  src/tests/admin-report-preview-live.logic.test.ts [ src/tests/admin-report-preview-live.logic.test.ts ]
+Error: Cannot find module '@/lib/admin/report-preview-live/format' imported from '/Users/brettpreston_macmini/Buildo-wt-mb93/src/tests/admin-report-preview-live.logic.test.ts'.
+ Test Files  1 failed (1)
+      Tests  no tests
