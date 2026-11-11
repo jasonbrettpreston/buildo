@@ -70,9 +70,10 @@ const SETTINGS = (enabled: number) => [
   { variable_key: LOT_SIZE_SETTING_KEYS.per_day, variable_value: '5' },
 ];
 type Lot = { city?: number | null; entry?: { value_sqm: number; entered_at: string } | null; missing?: boolean };
-function db(o: { enabled?: number; lot?: Lot; insertThrows?: unknown; enteredAt?: string; updateRows?: number } = {}) {
+function db(o: { enabled?: number; lot?: Lot; insertThrows?: unknown; enteredAt?: string; updateRows?: number; parcelTool?: string | null } = {}) {
   poolQuery.mockImplementation(async (text: string) => {
     if (/FROM logic_variables/.test(text)) return { rows: SETTINGS(o.enabled ?? 1) };
+    if (/FROM entitlements/.test(text)) return { rows: o.parcelTool ? [{ status: o.parcelTool, trial_started_at: null }] : [] };
     throw new Error(`unexpected pool query: ${text}`);
   });
   clientQuery.mockImplementation(async (text: string, params: unknown[]) => {
@@ -135,6 +136,15 @@ describe('POST /api/parcels/lot-size with the switch on (test copy of the seed b
     const r = await post(OK);
     expect(r.status).toBe(401);
     expect(poolQuery).not.toHaveBeenCalled();
+  });
+  it('D-4 the MF-45 gate: a parcel_tool plan in an active status passes with no lead_gen status; a lapsed parcel_tool with no lead_gen is 403', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: null } as never);
+    db({ parcelTool: 'active' });
+    expect((await post(OK)).status).toBe(200);
+    db({ parcelTool: 'cancelled' });
+    const r = await post(OK);
+    expect([r.status, r.body.error?.code]).toEqual([403, 'SUBSCRIPTION_REQUIRED']);
+    expect(String(poolQuery.mock.calls.find(([q]) => /FROM entitlements/.test(String(q)))?.[1])).toBe(`${UID},parcel_tool`);
   });
   it('an inactive subscription -> 403 SUBSCRIPTION_REQUIRED before the body is read or the bucket used', async () => {
     vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: 'cancelled' } as never);

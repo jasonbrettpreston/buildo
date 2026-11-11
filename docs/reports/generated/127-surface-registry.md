@@ -1474,7 +1474,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | `files` | `~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md (B7) and DECISIONS.md D-1..D-6` |
 | `contracts` | `contract_parcels_lot_size_entry` |
 | `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
-| `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, the entitlement gate` |
+| `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, then the MF-45 parcel_tool gate (getEntitlementStatus + ACTIVE_SUBSCRIPTION_STATUSES, the transitional lead_gen arm)` |
 | `states` | `src/components/surfaces/web/FormBinding.tsx — the six FORM states` |
 | `emits` | `src/app/api/parcels/lot-size/route.ts — logInfo outcome lines` |
 | `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)` |
@@ -1501,7 +1501,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 16 | `config` | `logic_variables` | The switch, the range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
 | 17 | `sharing` | `shared` | parcel_user_inputs is read by the report (the after-entry line) and reverted by the admin form. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 
@@ -1544,7 +1544,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | `files` | `src/app/api/parcels/lot-size/route.ts` |
 | `contracts` | `src/app/api/parcels/lot-size/route.ts — POST export` |
 | `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
-| `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, the entitlement gate` |
+| `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, then the MF-45 parcel_tool gate (getEntitlementStatus + ACTIVE_SUBSCRIPTION_STATUSES, the transitional lead_gen arm)` |
 | `states` | `the envelope classes in errors.classes` |
 | `emits` | `src/app/api/parcels/lot-size/route.ts — logInfo outcome lines` |
 | `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)` |
@@ -1571,7 +1571,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 16 | `config` | `logic_variables` | The switch, the range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
 | 17 | `sharing` | `sole` | Called by the Add lot size form only (mounted at the flip). — `scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 
@@ -1579,7 +1579,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/parcels/lot-size/route.ts`
 
-> ⚠️ MF-19 D-1..D-6. Entitlement gate on this base = the lookup status check; on the MF-45 restack it becomes the parcel_tool arm. One CONTRACT descriptor per handler file (126 §3.1).
+> ⚠️ MF-19 D-1..D-6. Entitlement gate: the MF-45 parcel_tool arm (restacked onto fa4fff51d), with the lookup gate's transitional lead_gen arm. One CONTRACT descriptor per handler file (126 §3.1).
 
 ### §B `parcel_admin` — admin surfaces that operate the parcel product (26)
 

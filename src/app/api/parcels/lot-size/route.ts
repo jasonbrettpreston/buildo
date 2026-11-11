@@ -8,8 +8,8 @@
 //   1. auth — getCurrentUserContext FIRST (401).
 //   2. the switch — readLotSizeSettings, ONE read; OFF -> 403 ENTRY_OFF before anything else is read or written (D-6; the lock test proves it).
 //      It is OFF today (seed bounds 0-0): this route cannot write until the flip (MB-42 and the one-lot re-evaluation row, D-8).
-//   3. the entitlement gate (D-4): the lookup's status check on this base. Restack note: on MF-45 it becomes MF-45's parcel_tool arm
-//      (getEntitlementStatus(pool, uid, 'parcel_tool') in ACTIVE_SUBSCRIPTION_STATUSES), the same form as the lookup gate there.
+//   3. the entitlement gate (D-4: the MF-45 parcel_tool plan), the lookup gate's own form (MF-45, restacked onto fa4fff51d): a parcel_tool
+//      entitlement in ACTIVE_SUBSCRIPTION_STATUSES, else the transitional lead_gen status (MF-50 removes that arm), else 403.
 //   4. strict body parse (400; an extra key such as entered_by is refused) BEFORE the rate limit, so a mistyped form does not burn the bucket.
 //   5. rate — the existing withRateLimit, bucket parcels-lot-size:{uid}, window one day, limit from the admin setting (D-4: 5 a day) -> 429.
 //   6. one transaction — 404 unknown lot, 409 LOT_SIZE_ALREADY_ENTERED (with the stored entry), 400 OUT_OF_RANGE / FAR_FROM_CITY_RECORD with the
@@ -23,6 +23,7 @@ import { withRateLimit } from '@/lib/auth/rate-limit';
 import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, forbiddenSubscription, internalError, rateLimited, unauthorized } from '@/features/leads/api/error-mapping';
+import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus } from '@/lib/entitlements';
 import { logInfo } from '@/lib/logger';
 import { insertLotSizeEntry, LotSizeRefusal, readLotSizeSettings } from '@/lib/parcels/lot-size-entry';
 import { LotSizeEntryRequestSchema, LotSizeEntryResponseSchema } from './types';
@@ -31,8 +32,6 @@ const TAG = '[api/parcel-lot-size]';
 const ROUTE = 'POST /api/parcels/lot-size';
 const RATE_WINDOW_SEC = 86_400; // D-4: "a day"; the count is the admin setting user_lot_size_entries_per_day
 
-// Statuses that grant app content (the lookup route's set on this base, Spec 96 §10).
-const ACTIVE_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['trial', 'active', 'past_due', 'admin_managed']);
 
 export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   // 1. Auth — the first call (Spec 90 §11).
@@ -50,8 +49,10 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       return err('ENTRY_OFF', 'Lot size entry is not open yet', 403);
     }
 
-    // 3. Entitlement gate (D-4) — before the body is read.
-    if (!ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '')) {
+    // 3. Entitlement gate (D-4) — before the body is read: the lookup gate's form (parcel_tool, else the transitional lead_gen arm).
+    const parcelTool = await getEntitlementStatus(pool, ctx.uid, 'parcel_tool');
+    const entitled = (parcelTool !== null && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) || ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '');
+    if (!entitled) {
       done('forbidden', null);
       return forbiddenSubscription();
     }

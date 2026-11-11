@@ -17,7 +17,7 @@
       "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables"
     ],
     "gate": [
-      "src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, the entitlement gate"
+      "src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, then the MF-45 parcel_tool gate (getEntitlementStatus + ACTIVE_SUBSCRIPTION_STATUSES, the transitional lead_gen arm)"
     ],
     "states": [
       "the envelope classes in errors.classes"
@@ -133,7 +133,16 @@
       ]
     },
     "disclosure": "none",
-    "entitlement": "none",
+    "entitlement": {
+      "product": "parcel_tool",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "403"
+    },
     "flag": "none",
     "permission": "none",
     "rate_bucket": "none"
@@ -313,7 +322,14 @@
     "i18n": "none",
     "safe_area": "none"
   },
-  "deviations": "none",
+  "deviations": [
+    {
+      "from": "Spec 126 R-01 / Spec 116 §5 OD5 amendment: a parcel_tool surface is gated on the parcel_tool entitlement",
+      "why": "The entry route admits the transitional lead_gen status as the lookup gate does (src/app/api/parcels/lot-size/route.ts, the lookup gate form of MF-45). Removed by MF-50 with the lookup arm.",
+      "adjudicated_by": "operator 2026-11-11, MF-19 D-4 (\"all as recommmended\": the gate is the MF-45 parcel_tool plan; record ~/Buildo-scratch/mcfrontend/MF-19/DECISIONS.md) and MF-45 D-4 (a) (the transitional OR, removed by MF-50)",
+      "date": "2026-11-11"
+    }
+  ],
   "limitations": [
     {
       "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
@@ -322,7 +338,7 @@
     }
   ],
   "interpretation": "none",
-  "notes": "MF-19 D-1..D-6. Entitlement gate on this base = the lookup status check; on the MF-45 restack it becomes the parcel_tool arm. One CONTRACT descriptor per handler file (126 §3.1).",
+  "notes": "MF-19 D-1..D-6. Entitlement gate: the MF-45 parcel_tool arm (restacked onto fa4fff51d), with the lookup gate's transitional lead_gen arm. One CONTRACT descriptor per handler file (126 §3.1).",
   "x-draft": {
     "shard": "contracts",
     "files": [

@@ -1185,7 +1185,7 @@ Calls 1: `contract_parcels_lot_size_entry`
 
 **4. What gate, role or entitlement stands in front of it?**
 
-session `authenticated` — The entry route calls getCurrentUserContext first and answers 401 without a signed-in user. · RLS class `B` · entitlement `none`
+session `authenticated` — The entry route calls getCurrentUserContext first and answers 401 without a signed-in user. · RLS class `B` · entitlement `parcel_tool`
 
 **5. What archetype, and why that one?**
 
@@ -1281,7 +1281,7 @@ Called by 1: `report_lot_size_entry`
 
 **4. What gate, role or entitlement stands in front of it?**
 
-session `authenticated` — getCurrentUserContext first; 401 without a signed-in user (the /api/parcels route-guard family). · RLS class `B` · entitlement `none`
+session `authenticated` — getCurrentUserContext first; 401 without a signed-in user (the /api/parcels route-guard family). · RLS class `B` · entitlement `parcel_tool`
 
 **5. What archetype, and why that one?**
 
