@@ -88,12 +88,6 @@
       "error": "Could not load this report. Try again."
     },
     "checked": {
-      "title": "What we checked",
-      "log_label": "What we checked",
-      "headings": {
-        "citywide": "Across Toronto",
-        "lot": "Your lot"
-      },
       "lines": {
         "citywide": {
           "lots": "{value} lots scanned",

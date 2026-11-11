@@ -24,7 +24,7 @@ export interface ReportSlot { field: string; slot: string; source: string; label
 export interface ReportImageItem { scenario: string; asset_id: string; alt: string; caption: string }
 export interface ReportImageNode { field: string; source: 'content'; kind: 'image'; label: string; images: ReportImageItem[] }
 export interface CheckedLine { key: string; text: string; delay_ms: number }
-export interface CheckedTree { title: string; log_label: string; summary: string; groups: Array<{ key: string; heading: string; lines: CheckedLine[] }>; dates?: { text: string; delay_ms: number }; skip: { text: string; after_ms: number }; min_ms: number }
+export interface CheckedTree { summary: string; groups: Array<{ key: string; lines: CheckedLine[] }>; dates?: { text: string; delay_ms: number }; skip: { text: string; after_ms: number }; min_ms: number }
 // MF-62: `paced` (lines fade in at their delay, the skip appears after its delay) on layout rows with details: collapsed; `href` the skip target, or null.
 export interface ViewChecked extends CheckedTree { paced: boolean; href: string | null }
 export interface ReportTree { lifecycle?: string; nodes: Array<ReportNode | ReportImageNode>; slots?: ReportSlot[]; checked?: CheckedTree }
@@ -140,14 +140,13 @@ const buildChecked = (w: unknown, ctx: ReportCtx, out: string[]): Json | undefin
     const at = `groups.${gi}`;
     if (!isObj(g)) { out.push(`RR-CHECKED ${at}: not an object`); return {}; }
     strayKeys(g, ['key', 'lines'], at, out);
-    const heading = c.headings?.[g.key];
     const tpls = c.lines?.[g.key];
-    if (typeof heading !== 'string' || !isObj(tpls)) { out.push(`RR-CHECKED ${at}: unknown group ${String(g.key)}`); return {}; }
+    if (!isObj(tpls)) { out.push(`RR-CHECKED ${at}: unknown group ${String(g.key)}`); return {}; }
     if (seen.has(g.key)) out.push(`RR-CHECKED ${at}: group ${String(g.key)} twice`);
     seen.add(g.key);
     const lines: unknown[] = Array.isArray(g.lines) ? g.lines : [];
     if (!lines.length) out.push(`RR-CHECKED ${at}: a group carries at least one line (the producer omits an empty group)`);
-    return { key: g.key, heading, lines: lines.map((x, li) => {
+    return { key: g.key, lines: lines.map((x, li) => {
       const lat = `${at}.lines.${li}`;
       if (!isObj(x)) { out.push(`RR-CHECKED ${lat}: not an object`); return {}; }
       strayKeys(x, ['key', 'value', 'types', 'delay_ms'], lat, out);
@@ -155,7 +154,7 @@ const buildChecked = (w: unknown, ctx: ReportCtx, out: string[]): Json | undefin
       return { key: x.key, text: checkedLine(tpls[x.key], x, lat, out), delay_ms: x.delay_ms };
     }) };
   });
-  const tree: Json = { title: c.title, log_label: c.log_label, summary: c.summary, groups: built };
+  const tree: Json = { summary: c.summary, groups: built };
   if (w.dates !== undefined) {
     const d = w.dates;
     if (!isObj(d)) out.push(`RR-CHECKED dates: not an object`);
@@ -189,12 +188,9 @@ const checkedProblems = (tree: Json, ctx: ReportCtx): string[] => {
   if (tree.lifecycle !== LOADING) out.push(`RR-LIFECYCLE checked: only on a ${LOADING} tree`);
   const c = ctx.content.states?.checked;
   if (!isObj(c) || !isObj(ch)) return [...out, ...(isObj(c) ? [] : ['RR-CONTENT states.checked: missing'])];
-  if (ch.title !== c.title) out.push('RR-CONTENT checked.title: not content states.checked.title');
-  if (ch.log_label !== c.log_label) out.push('RR-CONTENT checked.log_label: not content states.checked.log_label');
   if (ch.skip?.text !== c.skip) out.push('RR-CONTENT checked.skip: not content states.checked.skip');
   if (ch.summary !== c.summary) out.push('RR-CONTENT checked.summary: not content states.checked.summary');
   for (const g of Array.isArray(ch.groups) ? ch.groups : []) {
-    if (g?.heading !== c.headings?.[g?.key]) out.push(`RR-CONTENT checked.${String(g?.key)}: heading is not the content heading`);
     for (const l of Array.isArray(g?.lines) ? g.lines : []) {
       const t = c.lines?.[g.key]?.[l?.key];
       if (typeof t !== 'string' || !new RegExp(`^${tplRe(t)}$`).test(String(l?.text))) out.push(`RR-CONTENT checked.${String(g.key)}.${String(l?.key)}: text is not its content template`);

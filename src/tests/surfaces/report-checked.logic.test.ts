@@ -61,9 +61,9 @@ describe('C1 the contract (FE-35)', () => {
     const tree = buildTree(loading(), reportCtx);
     expect(tree.nodes).toHaveLength(1);
     expect(tree.nodes[0].field).toBe('status_text');
-    expect(tree.checked.title).toBe(CHECKED.title);
+    expect('title' in tree.checked || 'log_label' in tree.checked).toBe(false); // operator 2026-11-11: no title, no section labels
     expect(tree.checked.groups.map((g: Json) => g.key)).toEqual(['citywide', 'lot']);
-    expect(tree.checked.groups[0].heading).toBe(CHECKED.headings.citywide);
+    expect('heading' in tree.checked.groups[0]).toBe(false);
     expect(tree.checked.groups[0].lines[0]).toEqual({ key: 'lots', text: CHECKED.lines.citywide.lots.replace('{value}', '1,111'), delay_ms: 0 });
     expect(tree.checked.groups[1].lines[2]).toEqual({ key: 'ravine_out', text: CHECKED.lines.lot.ravine_out, delay_ms: 700 });
     expect(tree.checked.dates).toEqual({ text: `${CHECKED.dates.bylaw.replace('{value}', '2026-01-02')} ${CHECKED.dates.permits.replace('{value}', '2026-01-03')}`, delay_ms: 1000 });
@@ -122,9 +122,15 @@ describe('C1 the contract (FE-35)', () => {
     const free = clone(t);
     free.checked.groups[0].lines[1].text = '50,000 by-laws reviewed';
     expect(has(problemsOf(() => assertTree(free, reportCtx)), 'RR-CONTENT')).toBe(true);
-    const title = clone(t);
-    title.checked.title = 'Checking your lot';
-    expect(has(problemsOf(() => assertTree(title, reportCtx)), 'RR-CONTENT')).toBe(true);
+    const title = clone(t); // a title or a section label is refused by the contract (operator 2026-11-11)
+    title.checked.title = 'What we checked';
+    expect(has(problemsOf(() => assertTree(title, reportCtx)), 'RR-SCHEMA')).toBe(true);
+    const heading = clone(t);
+    heading.checked.groups[0].heading = 'Across Toronto';
+    expect(has(problemsOf(() => assertTree(heading, reportCtx)), 'RR-SCHEMA')).toBe(true);
+    const summary = clone(t);
+    summary.checked.summary = 'Reviewing your lot';
+    expect(has(problemsOf(() => assertTree(summary, reportCtx)), 'RR-CONTENT')).toBe(true);
     const extra = clone(t);
     extra.checked.source = 'x';
     expect(has(problemsOf(() => assertTree(extra, reportCtx)), 'RR-SCHEMA')).toBe(true);
@@ -148,8 +154,7 @@ const CHECKED_WORD = /\bchecked\b/i;
 export const contentProblems = (c: Json): string[] => {
   const out: string[] = [];
   const texts: Array<[string, string]> = [
-    ['title', c.title], ['log_label', c.log_label], ['skip', c.skip], ['summary', c.summary],
-    ...Object.entries(c.headings ?? {}).map(([k, v]) => [`headings.${k}`, v] as [string, string]),
+    ['skip', c.skip], ['summary', c.summary],
     ...Object.entries(c.lines?.citywide ?? {}).map(([k, v]) => [`lines.citywide.${k}`, v] as [string, string]),
     ...Object.entries(c.lines?.lot ?? {}).map(([k, v]) => [`lines.lot.${k}`, v] as [string, string]),
     ...Object.entries(c.dates ?? {}).map(([k, v]) => [`dates.${k}`, v] as [string, string]),
@@ -176,8 +181,8 @@ const treeProblems = (tree: Json): string[] => {
   const out: string[] = [];
   const ch = tree.checked;
   if (!ch) return out;
-  const all: Array<[string, string]> = [['title', ch.title], ['log_label', ch.log_label], ['summary', ch.summary], ['skip', ch.skip.text], ...(ch.dates ? [['dates', ch.dates.text] as [string, string]] : [])];
-  for (const g of ch.groups) { all.push([`${g.key}.heading`, g.heading]); for (const l of g.lines) all.push([`${g.key}.${l.key}`, l.text]); }
+  const all: Array<[string, string]> = [['summary', ch.summary], ['skip', ch.skip.text], ...(ch.dates ? [['dates', ch.dates.text] as [string, string]] : [])];
+  for (const g of ch.groups) for (const l of g.lines) all.push([`${g.key}.${l.key}`, l.text]);
   for (const [k, t] of all) for (const [why, re] of BANNED) if (re.test(t)) out.push(`${k}: ${why}`);
   const city: Json[] = ch.groups.find((g: Json) => g.key === 'citywide')?.lines ?? [];
   const at = city.findIndex((l) => l.key === 'regulations');
@@ -198,13 +203,13 @@ describe('C2 the claims lock (content and composed texts)', () => {
   const plants: Array<[string, (c: Json) => void]> = [
     ['a digit in a label', (c) => { c.lines.citywide.regulations = '50,000 by-law rules searched'; }],
     ['satellite', (c) => { c.lines.citywide.buildings = '{value} buildings measured from satellite'; }],
-    ['aerial', (c) => { c.title = 'Aerial review'; }],
+    ['aerial', (c) => { c.summary = 'Aerial review done. Show report.'; }],
     ['updated', (c) => { c.dates.permits = 'Permits updated {value}.'; }],
     ['latest', (c) => { c.dates.bylaw = 'Latest by-law results {value}.'; }],
-    ['live-progress word', (c) => { c.title = 'Checking your lot'; }],
+    ['live-progress word', (c) => { c.summary = 'Checking your lot'; }],
     ['AI comparison', (c) => { c.skip = 'More accurate than AI'; }],
-    ['chatbot', (c) => { c.headings.citywide = 'Better than a chatbot'; }],
-    ['GPT', (c) => { c.log_label = 'Not GPT'; }],
+    ['chatbot', (c) => { c.summary = 'Better than a chatbot'; }],
+    ['GPT', (c) => { c.skip = 'Not GPT'; }],
     ['the rules line reads checked', (c) => { c.lines.citywide.regulations = '{value} by-law rules checked'; }],
     ['checked beside the rules line', (c) => { c.lines.citywide.buildings = '{value} buildings checked'; }],
     ['the citywide order moved', (c) => { const { map_areas, ...rest } = c.lines.citywide; c.lines.citywide = { map_areas, ...rest }; }],
@@ -215,19 +220,19 @@ describe('C2 the claims lock (content and composed texts)', () => {
     ['N-1: the house types dropped', (c) => { c.lines.lot.limits = '{value} by-law checks'; }],
     ['the summary claims an endorsement', (c) => { c.summary = 'Officially verified. Show report.'; }],
     // OUTPUT panel N-3: one planted fault per new family.
-    ['endorsement', (c) => { c.title = 'Certified by the City'; }],
-    ['official', (c) => { c.title = 'Official zoning review'; }],
+    ['endorsement', (c) => { c.summary = 'Certified by the City'; }],
+    ['official', (c) => { c.summary = 'Official zoning review'; }],
     ['approved by', (c) => { c.skip = 'Approved by the City'; }],
     ['guarantee', (c) => { c.lines.lot.limits = 'Guaranteed buildable: {value}'; }],
     ['verified', (c) => { c.lines.citywide.lots = '{value} lots verified'; }],
-    ['100%', (c) => { c.log_label = '100% accurate'; }],
-    ['progress verb', (c) => { c.title = 'Processing your lot'; }],
-    ['calculating', (c) => { c.headings.lot = 'Calculating'; }],
+    ['100%', (c) => { c.skip = '100% accurate'; }],
+    ['progress verb', (c) => { c.summary = 'Processing your lot'; }],
+    ['calculating', (c) => { c.skip = 'Calculating'; }],
     ['current as of', (c) => { c.dates.zoning = 'Zoning maps current as of {value}.'; }],
     ['refreshed', (c) => { c.dates.permits = 'Permits refreshed {value}.'; }],
-    ['fresh data', (c) => { c.headings.citywide = 'Fresh data'; }],
+    ['fresh data', (c) => { c.summary = 'Fresh data'; }],
     ['drone', (c) => { c.lines.citywide.buildings = '{value} buildings from a drone survey'; }],
-    ['machine learning', (c) => { c.title = 'Machine learning review'; }],
+    ['machine learning', (c) => { c.summary = 'Machine learning review'; }],
   ];
   for (const [name, plant] of plants) {
     it(`RED on a planted fault: ${name}`, () => {
@@ -299,12 +304,12 @@ describe('C4 the web render', () => {
     expect(PACED.sort()).toEqual(['mobile', 'web']);
     expect(STILL.sort()).toEqual(['admin', 'pdf']);
   });
-  it('web: the title, one role="log" region holding every line, a server delay per line, the skip link after its delay', () => {
+  it('web: no title and no section labels (operator 2026-11-11), one role="log" region holding every line, a server delay per line, the skip link after its delay', () => {
     const box = render('web', '/report');
-    expect(box.querySelector('[data-block="checked"] h1')?.textContent).toBe(CHECKED.title);
+    expect(box.querySelector('[data-block="checked"] h1, [data-block="checked"] h2')).toBeNull();
+    expect(box.querySelector('[data-block="checked"]')?.textContent).not.toMatch(/what we checked|across toronto|your lot/i);
     const logs = box.querySelectorAll('[role="log"]');
     expect(logs).toHaveLength(1);
-    expect(logs[0]?.getAttribute('aria-label')).toBe(CHECKED.log_label);
     const lines = [...box.querySelectorAll('[data-check]')];
     expect(lines).toHaveLength(10);
     for (const l of lines) expect(logs[0]?.contains(l)).toBe(true);

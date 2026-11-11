@@ -52,14 +52,12 @@ export const Picture = ({ im, fill = false }: { im: ViewImage; fill?: boolean })
 // Every line sits in ONE role="log" region (WCAG 2.2 SC 4.1.3, ARIA23); the lines are in the DOM from the first paint, so the fade is visual only
 // (opacity, globals.css .report-check-line) and nothing is announced per line. On a paced row each line carries the server delay as --d and the skip
 // link appears after --skip (revealed by visibility, so it is not focusable while unseen); reduce motion and print show everything at once.
-// Admin and pdf (not paced) draw every line at once and no skip. No href, no skip: never an inert control. No state, no handler.
+// No title and no section labels (operator 2026-11-11: "it doesnt need a title"). Admin and pdf (not paced) draw every line at once and no skip. No href, no skip: never an inert control. No state, no handler.
 const Checked = ({ c }: { c: ViewChecked }): ReactElement => (
   <section data-block="checked" data-paced={c.paced ? 'true' : 'false'} className="space-y-4 rounded bg-report-page p-4 text-report-ink">
-    <h1 className="text-2xl font-bold">{c.title}</h1>
-    <div role="log" aria-label={c.log_label} className="grid gap-3">
+    <div role="log" className="grid gap-3">
       {c.groups.map((g) => (
         <div key={g.key} data-group={g.key} className="grid gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-report-soft">{g.heading}</h2>
           <ul className="grid gap-1.5 text-sm text-report-muted">
             {g.lines.map((l) => (
               <li key={l.key} data-check={`${g.key}.${l.key}`} className={c.paced ? 'report-check-line' : undefined} style={c.paced ? { ['--d' as string]: `${l.delay_ms}ms` } : undefined}>{l.text}</li>

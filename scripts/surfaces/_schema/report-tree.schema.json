@@ -30,10 +30,8 @@
     "checked": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["title", "log_label", "summary", "groups", "skip", "min_ms"],
+      "required": ["summary", "groups", "skip", "min_ms"],
       "properties": {
-        "title": { "type": "string", "minLength": 1 },
-        "log_label": { "type": "string", "minLength": 1 },
         "summary": { "type": "string", "minLength": 1 },
         "groups": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "$ref": "#/$defs/checked_group" } },
         "dates": {
@@ -54,10 +52,9 @@
     "checked_group": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["key", "heading", "lines"],
+      "required": ["key", "lines"],
       "properties": {
         "key": { "enum": ["citywide", "lot"] },
-        "heading": { "type": "string", "minLength": 1 },
         "lines": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/checked_line" } }
       }
     },

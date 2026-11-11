@@ -103,13 +103,10 @@
       }
     ],
     "checked": {
-      "title": "What we checked",
-      "log_label": "What we checked",
       "summary": "Everything we checked is shown. Choose Show report to open your report.",
       "groups": [
         {
           "key": "citywide",
-          "heading": "Across Toronto",
           "lines": [
             {
               "key": "lots",
@@ -140,7 +137,6 @@
         },
         {
           "key": "lot",
-          "heading": "Your lot",
           "lines": [
             {
               "key": "area",
@@ -186,9 +182,9 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
-      "scripts/surfaces/_schema/report-presentation.json": "3b3666355cfbbb96",
-      "scripts/surfaces/_schema/report-tree.schema.json": "b4fad6e33ab42fe6",
-      "scripts/surfaces/_schema/report-v2.decl.json": "06d1e86c4b890092"
+      "scripts/surfaces/_schema/report-presentation.json": "e18794ea5d5461c6",
+      "scripts/surfaces/_schema/report-tree.schema.json": "29ee07b69a0fe74f",
+      "scripts/surfaces/_schema/report-v2.decl.json": "da8eb967fbdfde83"
     }
   }
 }
