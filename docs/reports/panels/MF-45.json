@@ -4,7 +4,7 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-11",
-  "head": "08556a53b",
+  "head": "faf23b17f",
   "cards": [
     "Operator 2026-11-11: \"a\" (D-1), \"all five a\" (D-2..D-6), \"y\" (the MB-44 wait dropped; build starts) (record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md; ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"2026-11-11 MF-45: operator \\\"y\\\"\").",
     "Operator 2026-11-11 (relayed by the orchestrator): \"we should be able to change the number of reports per month in the amdin\".",
@@ -36,6 +36,7 @@
   "notes": [
     "Commit order: docs d6e909b0f, prereg 08556a53b alone (round 140), then the build commit with the folds and this record; each with real hooks.",
     "The Spec 114 section 2 note landed in the docs commit d6e909b0f, not in the migration commit (rows first).",
-    "DB-job follow-ups: a66f8ae0c (schema.ts / relations.ts hand-followed from a read-only introspect), 95ba69b72 (witness catalog + ledger lock back to the matview), 2709140dd (scorecard refresh, read-only session). Read-contract fold in the next commit."
+    "DB-job follow-ups: a66f8ae0c (schema.ts / relations.ts hand-followed from a read-only introspect), 95ba69b72 (witness catalog + ledger lock back to the matview), 2709140dd (scorecard refresh, read-only session). Read-contract fold in the next commit.",
+    "Restacked 2026-11-11 onto origin wf1/mb-rulings d618d86e8 (two wf3 account-delete commits; no shared file except the generated src-sql-ledger.json, which auto-merged and stays --check fresh). Old -> new: d6e909b0f -> 4454b39a7 (docs), 08556a53b -> faf23b17f (prereg, round 140), fb8df9aed -> 4559ad8f7 (build + folds), db17f7e86 -> 8fe6d056a, a66f8ae0c -> 3bd0f4116, 95ba69b72 -> 2648c6fcd, 2709140dd -> fe8502528, f0b85b19b -> 9ed192bb8 (read contract). Commit messages keep the old ids."
   ]
 }
