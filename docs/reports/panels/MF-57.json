@@ -1,0 +1,36 @@
+{
+  "task": "MF-57",
+  "item": "The report page in the approved v21 layout (mock v21, open-questions.md \"mock v21: APPROVED\") in the shared REPORT renderer on synthetic page goldens: page contract report-page.schema.json, page table report-page.json, buildPage / assertPage / pageViewOf, ReportPage + one client island, /admin/report-preview?view=page, the v21 page texts as content:page, the named report colours (ruling 1 a, grey #8f8f99 ruling 2). Built on the decision-list recommendations D-A..D-J; push waits on the operator.",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "f776189af",
+  "cards": [
+    "Operator 2026-11-11: \"Teh report page should be ready as well\" (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"2026-11-11 tonight McFrontend tasks\": yes to D1, MF-57 queued).",
+    "Operator 2026-11-10: \"I'm good with what we have here. ... Approved. 2. Like it 1. a 3. Not needed now\" (\"mock v21: APPROVED\")."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-57/plan.md (section 7 folds win). PLAN panel ~/Buildo-scratch/mcfrontend/MF-57/panel-plan/: code-reviewer-grounded APPROVE WITH FOLDS (F1-F6: golden dir outside the gate root, per-part response keys, in-repo brief ids, regenerated report-schema/web theme/re-stamp, ad-rule checks, corrected counts); design fidelity (general-purpose, Playwright at 390 px; mock shots + fidelity-checklist.json) APPROVE WITH FOLDS (F1-F10: full colour census, pending style, font, dialog, full-bleed preview, ads, picture frame, FE-05 class strings); DeepSeek spec lens (scripts/deepseek-review.js review, deepseek-reasoner, rc 0, deepseek-lens.txt; each finding grounded by the lane: FE-05 rule lock, ad section shape, a11y, split commits folded; 'third pending text' and 'render the Coming soon list' not folded per the coordinator's instruction to render the declared pending text where an open item blocks a part).",
+  "output": "OUTPUT panel on the uncommitted build at f776189af (~/Buildo-scratch/mcfrontend/MF-57/panel-out/): code-reviewer-grounded PASS WITH FOLDS (F1 assertPage rules unlocked, F2 anchor edge cases, F3 anchored sections could vanish; tsc, eslint, 40/40 + 97/97 targeted, 10 planted defects each red); regression-guardian PASS WITH FOLDS (F1 MF-20 D-7 not carried into the page path, F2 page_text rejection unlocked; re-stamp verified fingerprint-only; fences stated for MF-14, MF-20, RS-4, theme shas, 8-digit tokens, registry count); design fidelity PASS WITH FOLDS (behaviour all pass, colours within sRGB 1; folds: pending style important, tile grid margin, cost note margin, pointer margin, sheet focus rings; side-by-side shots sbs-*.png). All folds applied before commit: scenario ads follow their own option and are dropped beside a hidden or not_evaluated option (D-7), leftover anchored sections always placed, assertPage plants + control, anchor edge cases, page_text lock, the five class folds; re-measured: one pending style (14px/20px/400/rgb(156,156,165)) on every pending slot, zero console errors.",
+  "seats": [
+    "code-reviewer-grounded (PLAN): APPROVE WITH FOLDS",
+    "design fidelity, general-purpose (PLAN): APPROVE WITH FOLDS",
+    "DeepSeek spec lens (PLAN): findings adjudicated by the lane",
+    "code-reviewer-grounded (OUTPUT): PASS WITH FOLDS",
+    "regression-guardian (OUTPUT): PASS WITH FOLDS",
+    "design fidelity, general-purpose (OUTPUT): PASS WITH FOLDS"
+  ],
+  "verdict": "PASS-WITH-FOLDS: every OUTPUT fold applied before the code commit; push waits on the operator decision list ~/Buildo-scratch/mcfrontend/MF-57/decisions.md (D-A page contract, D-B value rule, D-C content home, D-D golden dir, D-E pending style, D-F font, D-G hidden options, D-H ads, D-I owner sign-off, D-J the unit as its own part) and the 25 brief v4 open items (pending list ~/Buildo-scratch/mcfrontend/MF-57/pending-fields.md).",
+  "blockers": [],
+  "followups": [
+    "Spec 126 11a.7 dated note + Spec 135 FE row for the page contract: drafted in decisions.md, lands with the operator's D-A answer.",
+    "Page goldens move under the gate (SV-SCREEN / SV-GOLDEN arm) once D-D is ruled.",
+    "Bedrooms refused state: no golden state yet (brief v4 review).",
+    "Expanded targets (admin, pdf) still draw the Add lot size button and the hidden sheet (design seat note): a layout-row ruling is owed.",
+    "Mobile RN component waits MF-22; mobile is proven through pageViewOf on the goldens."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-57/",
+  "notes": [
+    "Commit order: prereg f776189af alone (round 138), then the theme commit, then the renderer commit; each made with real hooks.",
+    "The prereg and theme commits were made in a clean temporary worktree and fast-forwarded, because the pre-commit generators read the whole working tree."
+  ]
+}

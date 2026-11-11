@@ -19,6 +19,38 @@ module.exports = {
         'amber-glow': '#fbbf24',    // amber-400 — highlighted accent
         'red-alert': '#ef4444',     // red-500 — stalled/error
         'green-go': '#22c55e',      // green-500 — good/work window
+        // MF-57 · report surface colours of the approved v21 report (ruling 1 a, oq "mock v21: APPROVED"; grey #8f8f99 ruling 2). Twin of --color-report-* in src/app/globals.css.
+        'report-page': '#09090b', // page background
+        'report-card': '#18181b', // lot-size and lot-facts boxes
+        'report-sky': '#27272a', // picture sky
+        'report-line': '#3f3f46', // rules, frames, badge ring
+        'report-ink': '#f4f4f5', // main text
+        'report-muted': '#a1a1aa', // muted text
+        'report-amber': '#f59e0b', // accent
+        'report-count-ink': '#472a00', // text on the amber notes chip (Spec 117 §3.2 on-primary)
+        'report-ok': '#22c55e', // approved
+        'report-no': '#ef4444', // refused, input error border
+        'report-outer': '#141417', // option frame (Stitch outer)
+        'report-outer-border': '#28282e', // option frame border, divider
+        'report-inner': '#19191d', // sheet surface (Stitch inner)
+        'report-tile': '#1f1f25', // tiles and panels
+        'report-tile-border': '#2d2d36', // tile and panel border
+        'report-mini': '#212127', // project mini cards
+        'report-mini-border': '#2c2c34', // mini card border
+        'report-button': '#26262e', // See details / How? fill
+        'report-button-border': '#3e3e48', // button and input border
+        'report-soft': '#8f8f99', // small grey captions (ruling 2)
+        'report-quiet': '#9c9ca5', // secondary lines
+        'report-dim': '#b9b9c0', // badges, unit words
+        'report-option-label': '#ffc174', // OPTION N label
+        'report-refused': '#f87171', // refused pill text, error text
+        'report-scrim': '#00000099', // sheet backdrop rgba(0,0,0,.6)
+        'report-shade': '#000000b8', // picture top shading rgba(0,0,0,.72)
+        'report-chip': '#00000080', // Illustration chip rgba(0,0,0,.5)
+        'report-ok-fill': '#22c55e1f', // approved pill fill .12
+        'report-ok-ring': '#22c55e59', // approved pill border .35
+        'report-no-fill': '#ef44441f', // refused pill fill .12
+        'report-no-ring': '#ef444459', // refused pill border .35
       },
       fontFamily: {
         mono: ['SpaceMono', 'monospace'],

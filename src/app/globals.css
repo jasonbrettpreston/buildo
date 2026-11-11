@@ -82,6 +82,41 @@
   --color-action-primary: #F59E0B;
   --color-action-secondary: #3B82F6;
 
+  /* MF-57 · report surface colours of the approved v21 report (open-questions.md "mock v21: APPROVED" ruling 1 a: Stitch shades become named
+     report colours in the app theme; ruling 2: grey captions #8f8f99). Twin of the report-* keys in mobile/tailwind.config.js. 8-digit values
+     are the mock's translucent rgba() colours; emit-web-theme.mjs reads 6-digit values only. */
+  --color-report-page: #09090b; /* page background */
+  --color-report-card: #18181b; /* lot-size and lot-facts boxes */
+  --color-report-sky: #27272a; /* picture sky */
+  --color-report-line: #3f3f46; /* rules, frames, badge ring */
+  --color-report-ink: #f4f4f5; /* main text */
+  --color-report-muted: #a1a1aa; /* muted text */
+  --color-report-amber: #f59e0b; /* accent */
+  --color-report-count-ink: #472a00; /* text on the amber notes chip (Spec 117 §3.2 on-primary) */
+  --color-report-ok: #22c55e; /* approved */
+  --color-report-no: #ef4444; /* refused, input error border */
+  --color-report-outer: #141417; /* option frame (Stitch outer) */
+  --color-report-outer-border: #28282e; /* option frame border, divider */
+  --color-report-inner: #19191d; /* sheet surface (Stitch inner) */
+  --color-report-tile: #1f1f25; /* tiles and panels */
+  --color-report-tile-border: #2d2d36; /* tile and panel border */
+  --color-report-mini: #212127; /* project mini cards */
+  --color-report-mini-border: #2c2c34; /* mini card border */
+  --color-report-button: #26262e; /* See details / How? fill */
+  --color-report-button-border: #3e3e48; /* button and input border */
+  --color-report-soft: #8f8f99; /* small grey captions (ruling 2) */
+  --color-report-quiet: #9c9ca5; /* secondary lines */
+  --color-report-dim: #b9b9c0; /* badges, unit words */
+  --color-report-option-label: #ffc174; /* OPTION N label */
+  --color-report-refused: #f87171; /* refused pill text, error text */
+  --color-report-scrim: #00000099; /* sheet backdrop rgba(0,0,0,.6) */
+  --color-report-shade: #000000b8; /* picture top shading rgba(0,0,0,.72) */
+  --color-report-chip: #00000080; /* Illustration chip rgba(0,0,0,.5) */
+  --color-report-ok-fill: #22c55e1f; /* approved pill fill .12 */
+  --color-report-ok-ring: #22c55e59; /* approved pill border .35 */
+  --color-report-no-fill: #ef44441f; /* refused pill fill .12 */
+  --color-report-no-ring: #ef444459; /* refused pill border .35 */
+
   /* Semantic token aliases (Procore-inspired construction material naming) */
   --color-amber-hardhat: #F59E0B;
   --color-green-safety: #10B981;
