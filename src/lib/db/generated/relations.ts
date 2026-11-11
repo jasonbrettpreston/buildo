@@ -1,9 +1,16 @@
 import { relations } from "drizzle-orm/relations";
-import { usersInAuth, adminBackupCodes, trackedProjects, trades, tradeMappingRules, permits, permitParcels, parcels, productGroups, leadProducts, neighbourhoods, neighbourhoodStoreyNorms, costEstimates, bylawResolutionLots, permitTrades, neighbourhoodBuildNorms, adminAuditLog, entities, wsibRegistry, userProfiles, profiles, notifications, archetypeCostRates, parcelCostLines, adminWatchlist, notificationDispatches, permitHistory, syncRuns, entityProjects, leadViews, deviceTokens, subscribeNonces, entityContacts, buildingFootprints, parcelBuildings, leadTrades, permitPhaseTransitions, addressPoints, parcelAddressPoints, tradeProducts, suppliers, supplierTrades, supplierProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements, parcelAbutments } from "./schema";
+import { usersInAuth, adminBackupCodes, usageEvents, trackedProjects, trades, tradeMappingRules, permits, permitParcels, parcels, productGroups, leadProducts, neighbourhoods, neighbourhoodStoreyNorms, costEstimates, bylawResolutionLots, permitTrades, neighbourhoodBuildNorms, adminAuditLog, entities, wsibRegistry, userProfiles, profiles, notifications, archetypeCostRates, parcelCostLines, adminWatchlist, notificationDispatches, permitHistory, syncRuns, entityProjects, leadViews, deviceTokens, subscribeNonces, entityContacts, buildingFootprints, parcelBuildings, leadTrades, permitPhaseTransitions, addressPoints, parcelAddressPoints, tradeProducts, suppliers, supplierTrades, supplierProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements, parcelAbutments } from "./schema";
 
 export const adminBackupCodesRelations = relations(adminBackupCodes, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
 		fields: [adminBackupCodes.userId],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const usageEventsRelations = relations(usageEvents, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [usageEvents.userId],
 		references: [usersInAuth.id]
 	}),
 }));
@@ -22,6 +29,7 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	subscribeNonces: many(subscribeNonces),
 	leadViewEvents: many(leadViewEvents),
 	entitlements: many(entitlements),
+	usageEvents: many(usageEvents),
 }));
 
 export const trackedProjectsRelations = relations(trackedProjects, ({one}) => ({

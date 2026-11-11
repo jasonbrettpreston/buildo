@@ -3328,8 +3328,32 @@ export const entitlements = pgTable("entitlements", {
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.userId, table.product], name: "entitlements_pkey"}),
 	pgPolicy("entitlements_select_own", { as: "permissive", for: "select", to: ["public"], using: sql`(auth.uid() = user_id)` }),
-	check("chk_entitlements_product", sql`product = ANY (ARRAY['lead_gen'::text, 'flight_center'::text])`),
+	check("chk_entitlements_product", sql`product = ANY (ARRAY['lead_gen'::text, 'flight_center'::text, 'parcel_tool'::text, 'agent_reports'::text])`),
 	check("chk_entitlements_status", sql`status = ANY (ARRAY['trial'::text, 'active'::text, 'past_due'::text, 'expired'::text, 'cancelled_pending_deletion'::text, 'admin_managed'::text])`),
+]);
+
+export const usageEvents = pgTable("usage_events", {
+	eventId: uuid("event_id").defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id"),
+	sessionId: text("session_id"),
+	product: text().notNull(),
+	event: text().notNull(),
+	subjectKind: text("subject_kind").notNull(),
+	subjectKey: text("subject_key").notNull(),
+	occurredAt: timestamp("occurred_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	meta: jsonb().default({}).notNull(),
+}, (table) => [
+	index("idx_usage_events_quota").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.product.asc().nullsLast().op("uuid_ops"), table.event.asc().nullsLast().op("timestamptz_ops"), table.subjectKind.asc().nullsLast().op("timestamptz_ops"), table.occurredAt.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "usage_events_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("usage_events_select_own", { as: "permissive", for: "select", to: ["public"], using: sql`(auth.uid() = user_id)` }),
+	check("chk_usage_events_event", sql`event = ANY (ARRAY['property_view'::text, 'pdf_send'::text, 'offer_impression'::text, 'offer_click'::text, 'export'::text, 'parcel_id_translated'::text])`),
+	check("chk_usage_events_principal", sql`(user_id IS NULL) <> (session_id IS NULL)`),
+	check("chk_usage_events_product", sql`product = ANY (ARRAY['lead_gen'::text, 'flight_center'::text, 'parcel_tool'::text, 'agent_reports'::text])`),
+	check("chk_usage_events_subject_kind", sql`subject_kind = ANY (ARRAY['parcel_ref'::text, 'parcel_pk'::text, 'permit_rev'::text, 'offer_id'::text])`),
 ]);
 
 export const parcelAbutments = pgTable("parcel_abutments", {
