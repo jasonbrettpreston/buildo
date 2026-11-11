@@ -10483,7 +10483,7 @@
     "type": "number",
     "min": 0,
     "max": 0,
-    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): the lot-size entry switch. 0 = OFF: POST /api/parcels/lot-size refuses with 403 ENTRY_OFF before any other read, and the report page leaves the lot-size box and the sheet out (D-6). The bounds 0-0 keep it off: the reader treats any value other than 1 inside the seed bounds as off, so a DB value of 1 still reads off until the flip (MB-42 and the one-lot re-evaluation row, D-8) raises max in this seed with its own panel. Not in the Admin Control Panel. Inserted by migration 305. CONSUMED by src/lib/parcels/lot-size-entry.ts (readLotSizeSettings).",
+    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): the lot-size entry switch. 0 = OFF: POST /api/parcels/lot-size refuses with 403 ENTRY_OFF before any other read, and the report page leaves the lot-size box and the sheet out (D-6). The bounds 0-0 keep it off: the reader treats any value other than 1 inside the seed bounds as off, so a DB value of 1 still reads off until the flip (MB-42 and the one-lot re-evaluation row, D-8) raises max in this seed with its own panel. Not in the Admin Control Panel. Inserted by migration 305. CONSUMED by the lot-size entry library (src/lib/parcels/lot-size-entry.ts: readLotSizeSettings).",
     "admin": {
       "hidden": "internal"
     }
@@ -10493,7 +10493,7 @@
     "type": "number",
     "min": 1,
     "max": 1000,
-    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): the smallest lot size a user may enter, in m2 (D-2: 46.45 m2, so the sheet reads 500 sq ft). The shown bound in each unit is this value at the unit display precision (whole sq ft; m2 to 2 decimals) and the typed value is checked against the shown bound in its own unit, so the shown edge always passes. Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by src/lib/parcels/lot-size-entry.ts (readLotSizeSettings, lotSizeProblems: a missing or out-of-bounds value refuses the entry, 500).",
+    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): the smallest lot size a user may enter, in m2 (D-2: 46.45 m2, so the sheet reads 500 sq ft). The shown bound in each unit is this value at the unit display precision (whole sq ft; m2 to 2 decimals) and the typed value is checked against the shown bound in its own unit, so the shown edge always passes. Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by the lot-size entry library (src/lib/parcels/lot-size-entry.ts: readLotSizeSettings, lotSizeProblems: a missing or out-of-bounds value refuses the entry, 500).",
     "admin": {
       "group": "MaxBLD Lot Size"
     }
@@ -10503,7 +10503,7 @@
     "type": "number",
     "min": 100,
     "max": 100000,
-    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): the largest lot size a user may enter, in m2 (D-2: 4,645.15 m2, so the sheet reads 50,000 sq ft). Lots outside the model band (max_build_lot_min_sqm..max_build_lot_max_sqm) are stored and show the model existing not-modelled status. Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by src/lib/parcels/lot-size-entry.ts (readLotSizeSettings, lotSizeProblems: a missing or out-of-bounds value refuses the entry, 500).",
+    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): the largest lot size a user may enter, in m2 (D-2: 4,645.15 m2, so the sheet reads 50,000 sq ft). Lots outside the model band (max_build_lot_min_sqm..max_build_lot_max_sqm) are stored and show the model existing not-modelled status. Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by the lot-size entry library (src/lib/parcels/lot-size-entry.ts: readLotSizeSettings, lotSizeProblems: a missing or out-of-bounds value refuses the entry, 500).",
     "admin": {
       "group": "MaxBLD Lot Size"
     }
@@ -10513,7 +10513,7 @@
     "type": "number",
     "min": 1.5,
     "max": 10,
-    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): D-3: an entry more than this many times the City lot record, or less than the City lot record divided by it, is refused with a server message (catches a sq ft number typed as m2, a 10.76x slip). No City record: no ratio check. Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by src/lib/parcels/lot-size-entry.ts (lotSizeProblems).",
+    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): D-3: an entry more than this many times the City lot record, or less than the City lot record divided by it, is refused with a server message (catches a sq ft number typed as m2, a 10.76x slip). No City record: no ratio check. Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by the lot-size entry library (src/lib/parcels/lot-size-entry.ts: lotSizeProblems).",
     "admin": {
       "group": "MaxBLD Lot Size"
     }
@@ -10523,7 +10523,7 @@
     "type": "number",
     "min": 1,
     "max": 100,
-    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): D-4: lot-size entries one user may submit in a day, through the existing withRateLimit (bucket parcels-lot-size:{uid}, window 86400 s). Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by src/app/api/parcels/lot-size/route.ts (via readLotSizeSettings).",
+    "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): D-4: lot-size entries one user may submit in a day, through the existing withRateLimit (bucket parcels-lot-size:{uid}, window 86400 s). Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by the lot-size entry route (src/app/api/parcels/lot-size/route.ts, via readLotSizeSettings).",
     "admin": {
       "group": "MaxBLD Lot Size"
     }

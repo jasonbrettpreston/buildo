@@ -2045,7 +2045,7 @@ none
 - `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - `scripts/seeds/bylaw/vocab.json` sha256 `c38a77b57c7b8a06`
 - `scripts/seeds/lineage-meta-snapshot.json` sha256 `dec51c67181e95e1`
-- `scripts/seeds/logic_variables.json` sha256 `7a2ce72a5e7f6a88`
+- `scripts/seeds/logic_variables.json` sha256 `182883e848832e39`
 - `scripts/surfaces/_schema/report-fields.decl.json` sha256 `8f3c6f43dfb41e2d`
 - `scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json` sha256 `e296249294952c5d`
 - `scripts/surfaces/parcel_product/F17/contracts/contract_parcels_tracked.descriptor.json` sha256 `c8ed2d7e0e283e62`
