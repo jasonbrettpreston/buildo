@@ -33,7 +33,10 @@
  * different row version (deviations[]).
  */
 
-const { buildParcelCostMenu, PARCEL_COST_LINES, mergeCostLines } = require('../parcel-cost');
+const {
+  buildParcelCostMenu, PARCEL_COST_LINES, mergeCostLines,
+  SCENARIO_COST_LINES, SCENARIO_LINE_PREFIX, mergeScenarioLines, buildScenarioCostLines,
+} = require('../parcel-cost');
 const { parcelFamilyFromZoning } = require('../build-norms');
 const { COST_SCALAR_COLS, FSI_SCALAR_COLS } = require('../parcel-cost-cols');
 
@@ -41,6 +44,12 @@ const TAG = '[compute_parcel_cost_estimates]';
 const ALL_SCALAR_COLS = [...COST_SCALAR_COLS, ...FSI_SCALAR_COLS];
 
 const NAMED_ZONES = ['RD', 'R', 'RM', 'RS', 'RT', 'RA', 'RAC'];
+
+// MB-86 (Spec 88 §2.11 dated note 2026-11-09) — the stored Layer 3 scenario areas. A declared read
+// (inputs.reads.tables) probed through ctx.catalog: absent until MB-35 applies migration 287.
+const SCENARIO_TABLE = 'parcel_maxbld_scenarios';
+const SCENARIO_KEYS = SCENARIO_COST_LINES.map((l) => `${l.buildingType}/${l.fieldId}`);
+const SCENARIO_LINE_IDS = SCENARIO_COST_LINES.map((l) => l.id);
 
 function num(v) {
   if (v === null || v === undefined) return null;
@@ -108,7 +117,14 @@ async function readCostContract(ctx) {
        FROM parcel_cost_lines
       ORDER BY id`,
   );
-  const lines = mergeCostLines(PARCEL_COST_LINES, linesRes.rows);
+  // MB-86 — the `scenario:` rows (migration 298) are the editable half of SCENARIO_COST_LINES;
+  // the 13-line merge keeps its own both-directions guard over the remaining rows.
+  const isScenario = (r) => String(r.id).startsWith(SCENARIO_LINE_PREFIX);
+  const lines = mergeCostLines(PARCEL_COST_LINES, linesRes.rows.filter((r) => !isScenario(r)));
+  const scenarioLines = mergeScenarioLines(SCENARIO_COST_LINES, linesRes.rows.filter(isScenario));
+  // MB-86 — refuse cleanly while the Layer 3 table is absent: the runner's catalog reader returns 0
+  // columns for a table that does not exist (scripts/lib/step/catalog.js columnCount).
+  const scenarioSourcePresent = Number(await ctx.catalog.columnCount(SCENARIO_TABLE)) > 0;
 
   // F9/D#2 — rates_as_of reads MAX(updated_at), NOT MAX(as_of_date) (a cost_per_sqm correction
   // never moves the business as_of_date). No FROM clause on either subquery ⇒ always exactly
@@ -131,6 +147,8 @@ async function readCostContract(ctx) {
   return {
     rates,
     lines,
+    scenarioLines,
+    scenarioSourcePresent,
     ratesAsOf: toIso(sig.rates_as_of),
     indexUpdatedAt: toIso(sig.index_updated_at),
     linesUpdatedAt: toIso(sig.cost_lines_updated_at),
@@ -174,6 +192,51 @@ function buildSourceSql() {
       p.max_build_confidence,
       p.zoning_class
     FROM parcels p
+    WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
+      AND p.max_buildable_gfa_sqm IS NOT NULL
+      AND p.lot_size_sqm IS NOT NULL
+      AND (p.cur_floor_gfa_sqm IS NULL OR p.cur_floor_gfa_sqm <= $1::numeric)
+    ORDER BY p.id ASC`;
+}
+
+// MB-86 (Spec 88 §2.11 dated note 2026-11-09) — the SAME source as buildSourceSql, plus each parcel's
+// stored Layer 3 scenario area rows ($2 = the `<building_type>/<field_id>` keys of SCENARIO_COST_LINES;
+// NULL when the parcel has none). Used ONLY when the table exists (readCostContract probe). Kept a
+// literal (no interpolated fragment) so the report-field lineage tracer reads it; the equality with
+// buildSourceSql outside the two scenario fragments is locked by compute-parcel-cost-scenario.logic.test.ts.
+function buildScenarioSourceSql() {
+  return `
+    SELECT
+      p.id,
+      p.lot_size_sqm::float8                 AS lot_size_sqm,
+      p.max_buildable_gfa_sqm::float8        AS max_buildable_gfa_sqm,
+      COALESCE(p.opt_aor_gfa_sqm, p.max_buildable_gfa_sqm)::float8 AS opt_aor_gfa_sqm,
+      (p.opt_aor_gfa_sqm IS NULL AND p.max_buildable_gfa_sqm IS NOT NULL) AS new_build_used_fallback,
+      p.max_buildable_footprint_sqm::float8  AS max_buildable_footprint_sqm,
+      p.opt_coa_gfa_sqm::float8              AS opt_coa_gfa_sqm,
+      p.max_garden_suite_gfa_sqm::float8     AS max_garden_suite_gfa_sqm,
+      p.max_laneway_suite_gfa_sqm::float8    AS max_laneway_suite_gfa_sqm,
+      p.cur_est_kitchen_gfa_sqm::float8      AS cur_est_kitchen_gfa_sqm,
+      p.cur_est_bath_gfa_sqm::float8         AS cur_est_bath_gfa_sqm,
+      p.max_garage_gfa_sqm::float8           AS max_garage_gfa_sqm,
+      p.cur_floor_gfa_sqm::float8            AS cur_floor_gfa_sqm,
+      p.cur_pot_2story_gfa_sqm::float8       AS cur_pot_2story_gfa_sqm,
+      p.realized_fsi_p90::float8             AS realized_fsi_p90,
+      p.neighbourhood_cost_premium::float8   AS neighbourhood_cost_premium,
+      p.rear_suite_permission,
+      p.garage_permission,
+      p.max_build_confidence,
+      p.zoning_class,
+      sc.scenario_rows
+    FROM parcels p
+    LEFT JOIN LATERAL (
+      SELECT jsonb_agg(jsonb_build_object('building_type', s.building_type, 'field_id', s.field_id,
+               'status', s.status, 'value', s.value, 'reason', s.reason, 'flags', s.flags,
+               'content_sha', s.content_sha) ORDER BY s.building_type, s.field_id) AS scenario_rows
+        FROM parcel_maxbld_scenarios s
+       WHERE s.parcel_id = p.id
+         AND (s.building_type || '/' || s.field_id) = ANY($2::text[])
+    ) sc ON true
     WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
       AND p.max_buildable_gfa_sqm IS NOT NULL
       AND p.lot_size_sqm IS NOT NULL
@@ -263,6 +326,12 @@ async function runCostMenuPass(client, ctx) {
   const confidenceTotals = { high: 0, medium: 0, low: 0 };
   const lineCoverage = {};
   for (const line of lines) lineCoverage[line.id] = 0;
+  // MB-86 — scenario-line counters, always returned (zero included).
+  const scenarioSourcePresent = ctx.contract.scenarioSourcePresent === true;
+  const scenarioLines = ctx.contract.scenarioLines;
+  const sc = {
+    parcels: 0, priced: 0, at_least: 0, refused: 0, not_modelled: 0, no_rate: 0, malformed_rate: 0, exceed_coa: 0, gfa_computed_cost_missing: 0,
+  };
 
   const batchSize = Number(config.compute_parcel_cost_batch_size);
   const streamBatchSize = Number(config.compute_parcel_cost_stream_batch_size);
@@ -279,7 +348,11 @@ async function runCostMenuPass(client, ctx) {
     if (typeof ctx.onProgress === 'function') ctx.onProgress(updated);
   }
 
-  for await (const parcel of ctx.stream(buildSourceSql(), [maxExistingGfaSqm], { batchSize: streamBatchSize })) {
+  // MB-86 — the scenario join only when the Layer 3 table exists (refused cleanly while absent).
+  const source = scenarioSourcePresent
+    ? ctx.stream(buildScenarioSourceSql(), [maxExistingGfaSqm, SCENARIO_KEYS], { batchSize: streamBatchSize })
+    : ctx.stream(buildSourceSql(), [maxExistingGfaSqm], { batchSize: streamBatchSize });
+  for await (const parcel of source) {
     scanned++;
     // CPCE-D3 — hoisted OUTSIDE the try (parcelFamilyFromZoning never throws — it is a pure
     // string classify with an 'all' backstop, build-norms.js) so every SCANNED parcel is
@@ -299,6 +372,15 @@ async function runCostMenuPass(client, ctx) {
       // R2 detached-only grounding (F6, Spec 78 P2 R2) — ported byte-for-byte.
       const r2Grounded = family === 'detached';
       const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded, config: engineConfig, lines });
+      if (scenarioSourcePresent && Array.isArray(parcel.scenario_rows)) {
+        const coa = built.menu.coa_build;
+        const scenario = buildScenarioCostLines(parcel, parcel.scenario_rows, rates, indexNow, {
+          config: engineConfig, scenarioLines, coaTotal: coa ? coa.total : null,
+        });
+        Object.assign(built.menu, scenario.lines);
+        sc.parcels++;
+        for (const k of Object.keys(scenario.counts)) sc[k] += scenario.counts[k];
+      }
       if (built.fsiImplausible) fsiImplausibleCount++;
       if (parcel.new_build_used_fallback) newBuildFallbackCount++;
       if (built.lineCount === 0) {
@@ -361,6 +443,8 @@ async function runCostMenuPass(client, ctx) {
     fitGatedGarageCount,
     lineCoverage,
     confidenceTotals,
+    scenarioSourcePresent,
+    scenarioCounts: sc,
     // Echoed from ctx.contract so `computePostPhase` (which has NO `ctx.contract` seam of its
     // own — only `{passRaw, specs, full, runAt, config, descriptor, staleOverlays}`) can read
     // the F9 version stamps back off `passRaw.cost_menu` (the enrich_heritage `datasetVersion`
@@ -444,6 +528,20 @@ function buildZoneBuckets(rows) {
     }
   }
   return buckets;
+}
+
+/** MB-86 — stored scenario lines out of step with their Layer 3 area row ($1 = the scenario line ids). */
+function buildScenarioStaleSql() {
+  return `
+    SELECT COUNT(*)::int AS n
+      FROM parcels p
+     CROSS JOIN LATERAL jsonb_each(p.parcel_cost_menu) AS e(k, v)
+      LEFT JOIN parcel_maxbld_scenarios s
+        ON s.parcel_id = p.id AND ('scenario:' || s.building_type || '/' || s.field_id) = e.k
+     WHERE p.parcel_cost_menu ?| $1::text[]
+       AND e.k = ANY($1::text[])
+       AND jsonb_typeof(e.v) = 'object'
+       AND (e.v->>'l3_content_sha') IS DISTINCT FROM s.content_sha`;
 }
 
 async function computePostPhase(pool, { passRaw, config, runAt }) {
@@ -537,6 +635,17 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
 
   const indexMissing = !(Number(config.cost_escalation_index) > 0);
 
+  // MB-86 — scenario lines: counters from the pass, staleness re-measured AFTER the write (a stored
+  // line whose l3_content_sha no longer equals its area row's, or whose row is gone).
+  const scenarioSourcePresent = pass.scenarioSourcePresent === true;
+  const scn = pass.scenarioCounts || {};
+  const scnCount = (k) => Number(scn[k] || 0);
+  let scenarioCostStale = 0;
+  if (scenarioSourcePresent) {
+    const staleRes = await pool.query(buildScenarioStaleSql(), [SCENARIO_LINE_IDS]);
+    scenarioCostStale = Number(staleRes.rows[0].n || 0);
+  }
+
   return {
     matched: {
       residential_parcels_examined: scanned,
@@ -575,6 +684,18 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
       rates_as_of: pass.ratesAsOf ?? null,
       index_updated_at: pass.indexUpdatedAt ?? null,
       cost_lines_updated_at: pass.costLinesUpdatedAt ?? null,
+      scenario_source_present: scenarioSourcePresent ? 1 : 0,
+      scenario_source_absent: scenarioSourcePresent ? 0 : 1,
+      scenario_parcels: scnCount('parcels'),
+      scenario_lines_priced: scnCount('priced'),
+      scenario_lines_at_least: scnCount('at_least'),
+      scenario_lines_refused: scnCount('refused'),
+      scenario_lines_not_modelled: scnCount('not_modelled'),
+      scenario_lines_no_rate: scnCount('no_rate'),
+      scenario_lines_malformed_rate: scnCount('malformed_rate'),
+      scenario_lines_exceed_coa: scnCount('exceed_coa'),
+      scenario_gfa_computed_cost_missing: scnCount('gfa_computed_cost_missing'),
+      scenario_cost_stale: scenarioCostStale,
     },
     compute: {
       residential_parcels_examined: scanned,
@@ -643,6 +764,16 @@ function unmapped_residential_family_fallback_count(ctx) {
 function stranded_cost_rows_retracted(ctx) {
   ctx.report('stranded_cost_rows_retracted', { violations: 0, detail: ctx.matched.stranded_cost_rows_retracted });
 }
+// MB-86 (Spec 88 §2.11 dated note 2026-11-09).
+function scenario_source_absent(ctx) {
+  ctx.report('scenario_source_absent', { violations: 0, detail: ctx.matched.scenario_source_absent });
+}
+function scenario_gfa_computed_cost_missing(ctx) {
+  ctx.report('scenario_gfa_computed_cost_missing', { violations: ctx.matched.scenario_gfa_computed_cost_missing });
+}
+function scenario_cost_stale(ctx) {
+  ctx.report('scenario_cost_stale', { violations: ctx.matched.scenario_cost_stale });
+}
 function line_coverage_max_build(ctx) {
   ctx.report('line_coverage_max_build', { violations: 0, detail: ctx.matched.line_coverage.max_build });
 }
@@ -696,6 +827,9 @@ const CHECKS = {
   compute_parcel_cost_line_total_max_cad,
   unmapped_residential_family_fallback_count,
   stranded_cost_rows_retracted,
+  scenario_source_absent,
+  scenario_gfa_computed_cost_missing,
+  scenario_cost_stale,
   line_coverage_max_build,
   line_coverage_coa_build,
   line_coverage_solar_max,
@@ -757,6 +891,18 @@ function buildCostMeta(ctx) {
     rates_as_of: m.rates_as_of,
     index_updated_at: m.index_updated_at,
     cost_lines_updated_at: m.cost_lines_updated_at,
+    // MB-86 — always written, zero included.
+    scenario_source_present: m.scenario_source_present,
+    scenario_parcels: m.scenario_parcels,
+    scenario_lines_priced: m.scenario_lines_priced,
+    scenario_lines_at_least: m.scenario_lines_at_least,
+    scenario_lines_refused: m.scenario_lines_refused,
+    scenario_lines_not_modelled: m.scenario_lines_not_modelled,
+    scenario_lines_no_rate: m.scenario_lines_no_rate,
+    scenario_lines_malformed_rate: m.scenario_lines_malformed_rate,
+    scenario_lines_exceed_coa: m.scenario_lines_exceed_coa,
+    scenario_gfa_computed_cost_missing: m.scenario_gfa_computed_cost_missing,
+    scenario_cost_stale: m.scenario_cost_stale,
   };
 }
 
@@ -784,9 +930,12 @@ const passes = [
 module.exports = Object.assign(compute, {
   checks: CHECKS,
   buildSourceSql,
+  buildScenarioSourceSql,
   buildFlushSql,
   buildZoneSql,
   buildZoneBuckets,
+  buildScenarioStaleSql,
+  SCENARIO_TABLE,
   readCostContract,
   runCostMenuPass,
   computePostPhase,

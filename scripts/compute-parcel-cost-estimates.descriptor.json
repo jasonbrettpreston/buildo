@@ -24,11 +24,12 @@
       "tables": [
         { "table": "archetype_cost_rates", "columns": ["archetype", "cost_per_sqm", "cost_adjustment_factor", "escalation_index_base", "as_of_date", "updated_at"] },
         { "table": "parcel_cost_lines", "columns": ["id", "archetype", "base_confidence", "fit_permitted_values", "updated_at"] },
-        { "table": "parcels", "columns": ["id", "zoning_class", "lot_size_sqm", "max_buildable_gfa_sqm", "opt_aor_gfa_sqm", "max_buildable_footprint_sqm", "opt_coa_gfa_sqm", "max_garden_suite_gfa_sqm", "max_laneway_suite_gfa_sqm", "cur_est_kitchen_gfa_sqm", "cur_est_bath_gfa_sqm", "max_garage_gfa_sqm", "cur_floor_gfa_sqm", "cur_pot_2story_gfa_sqm", "realized_fsi_p90", "neighbourhood_cost_premium", "rear_suite_permission", "garage_permission", "max_build_confidence"] }
+        { "table": "parcels", "columns": ["id", "zoning_class", "lot_size_sqm", "max_buildable_gfa_sqm", "opt_aor_gfa_sqm", "max_buildable_footprint_sqm", "opt_coa_gfa_sqm", "max_garden_suite_gfa_sqm", "max_laneway_suite_gfa_sqm", "cur_est_kitchen_gfa_sqm", "cur_est_bath_gfa_sqm", "max_garage_gfa_sqm", "cur_floor_gfa_sqm", "cur_pot_2story_gfa_sqm", "realized_fsi_p90", "neighbourhood_cost_premium", "rear_suite_permission", "garage_permission", "max_build_confidence"] },
+        { "table": "parcel_maxbld_scenarios", "columns": ["parcel_id", "building_type", "field_id", "status", "value", "reason", "flags", "content_sha"] }
       ],
       "externals": []
     },
-    "expect_nonempty": true,
+    "expect_nonempty": false,
     "on_missing": "halt"
   },
   "outputs": {
@@ -227,6 +228,9 @@
     { "id": "compute_parcel_cost_line_total_max_cad", "kind": "bound", "expect": { "reports": "MAX(cost_gut_total) across the per-zone visibility block — a labelled FUTURE-REGRESSION TRIPWIRE, not a calibrated bound (A8 RULED)" }, "limit": "value_max 250000000", "limit_from_config": "compute_parcel_cost_line_total_max_cad", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "A8 RULED — the live max ($176,567,416) is itself a suspect upstream cur_floor_gfa_sqm artifact (rf:198), so this ceiling only catches movement ABOVE today's already-suspect tail. NOT a plausibility bound on today's values.", "liveness": { "kind": "column", "ref": "parcels.cost_gut_total" } } },
     { "id": "unmapped_residential_family_fallback_count", "kind": "field_coverage", "expect": { "reports": "COUNT of residential parcels whose zoning falls through parcelFamilyFromZoning to the 'all' bucket (R/RA/RAC — no family-specific norm mapping exists yet), silently carrying norm_basis:'pre_r2' on their coa_build line until Spec 88 P2's family-aware norm read grounds them" }, "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "retighten_when": "Spec 88 P2 lands — parcelFamilyFromZoning's 'all' fall-through is replaced by a real family-aware norm read for every R/RA/RAC zone", "why": { "text": "CPCE-D3 CLOSED (commit 2, 2026-09-21). Spec 124 operator adjudication (2026-09-21), R-H's own precedent form (link_massing LM-D6/LM-D11, scripts/link-massing.descriptor.json ~:507/:523): a WARN check with a strict `viol == 0` bound, `blocking:false`, a declared `retighten_when`, and NO new logic variable — NOT a ceiling seeded at today's 105,595 high-water mark (that alternative was considered and rejected; a high-water ceiling would read PASS on the exact population the defect describes). The counter was structurally `0` (a legacy literal); it now measures the real family fall-through, computed by a Σ-identity CODED in runCostMenuPass (detached+townhouse+multiplex+unmapped === scanned, mirroring computePostPhase's own cost_by_zone identity) so a bucketing defect reddens the run instead of silently under-reporting. Measured live 2026-09-21: 105,595 of 437,279 residential parcels (R 102,551 / RA 2,354 / RAC 690) — a standing, structurally non-zero population until Spec 88 P2's family-aware norm read lands, never a defect THIS run introduced, so WARN with a machine-observable retighten condition rather than FAIL; never INFO (a threshold IS possible here, unlike a purely descriptive count).", "liveness": { "kind": "column", "ref": "parcels.zoning_class" } } },
     { "id": "stranded_cost_rows_retracted", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels this run's ctx.retract(1, []) call NULLed (a menu + 15 scalars written by a prior run before a re-zoning moved the parcel outside the R% population, OR before S0.2's product-scope bound excluded it: out of the max-build model, or existing GFA > product_scope_max_existing_gfa_sqm)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "CPCE-D2 CLOSED, WIDENED S0.2 — the Spec 48 §3.6 dual-pattern's INFO-counter half (paired with the `no_cost_outside_population` FAIL invariant, its gate half): a purely descriptive count of what this run repaired, which no threshold can bound. CPCE-D2's own converging run measured 2 (2026-09-21); S0.2's own converging run (widening writes[1].scope to the product-scope bound, R-AT — the SAME counter, no parallel counter added per FOLD-I1/M7) measured the 18,529-parcel out-of-model population on ITS OWN converging run, 0 on every steady-state run thereafter — self-extinguishing (`idempotent_rerun:\"zero_writes\"`), and a future re-zoning or max-build recompute legitimately makes it non-zero again. Always emitted, even at 0 (§3.6's zero-row emission preservation rule).", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
+    { "id": "scenario_source_absent", "kind": "field_coverage", "expect": { "reports": "1 when parcel_maxbld_scenarios does not exist (the runner catalog reader returns 0 columns), so no scenario line is written this run; else 0" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09): the Layer 3 table is created at MB-35 (migration 287). Until then the step refuses the scenario lines cleanly and says so in its own audit row, never silently.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" } } },
+    { "id": "scenario_gfa_computed_cost_missing", "kind": "field_coverage", "expect": { "reports": "COUNT of scenario lines whose Layer 3 area row is computed but which carry no total (no_rate, no_rate_line, malformed_rate, area_not_priceable)" }, "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "MB-86 plan v2 §5.4: \"GFA computed but cost not\" must be 0; each such line still states its reason on the menu (every scenario has a cost or a stated reason).", "liveness": { "kind": "file", "ref": "scripts/lib/parcel-cost.js" } } },
+    { "id": "scenario_cost_stale", "kind": "field_coverage", "expect": { "reports": "COUNT of stored scenario lines, measured after the write, whose l3_content_sha differs from the current parcel_maxbld_scenarios row (or whose row is gone); 0 when the table is absent" }, "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "MB-86 plan v2 D-8 (b): each scenario line stores its area row content_sha; a mismatch after this run means the Layer 3 rows moved under the cost (a concurrent compute_maxbld_scenarios write) and the next cost run re-prices it.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" } } },
     { "id": "line_coverage_max_build", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the max_build (new-build) line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
     { "id": "line_coverage_coa_build", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the coa_build line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
     { "id": "line_coverage_solar_max", "kind": "field_coverage", "expect": { "reports": "COUNT of parcels carrying the solar_max line" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["sources"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } } },
@@ -251,7 +255,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-23T00:46:36.565Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 577, "sample_n": 23, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-11-11T04:34:58.341Z", "commit": "3e1c32dd1654b3d5efa72250d6938702312990b7", "cost_ms": 594, "sample_n": 27, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "§7 invariant 3 — a cost line can only be priced from a non-null lot-derived area. MEASURED 0, 2026-09-21.", "liveness": { "kind": "column", "ref": "parcels.cost_fb_total" } }
     },
     {
@@ -263,7 +267,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-23T00:46:36.565Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 576, "sample_n": 23, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-11-11T04:34:58.341Z", "commit": "3e1c32dd1654b3d5efa72250d6938702312990b7", "cost_ms": 592, "sample_n": 27, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "§7 invariant 2 — a new build can never legitimately cost more than the CoA build (CoA can only add). MEASURED 0, 2026-09-21. NOTE: coa_fsi > max_build_fsi is a SEPARATE, documented divergent reference (Spec 88 §2.6/2.6) and is NOT a violation of this invariant.", "liveness": { "kind": "column", "ref": "parcels.cost_coa_total" } }
     },
     {
@@ -275,7 +279,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-23T00:46:36.565Z", "commit": "2225709f29e17d880d81edee459e0c12a4c45e19", "cost_ms": 620, "sample_n": 23, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-11-11T04:34:58.341Z", "commit": "3e1c32dd1654b3d5efa72250d6938702312990b7", "cost_ms": 672, "sample_n": 27, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": { "text": "CPCE-D2 CLOSED, WIDENED S0.2 — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate. CPCE peel (DeepSeek/grounded O4, 2026-09-21) widened the COLUMN coverage to all 16 `write_discipline.guard_columns`. S0.2 (WF3 existing-structure-area-artifacts, 2026-09-21/22) widens the POPULATION half in the SAME statement, matching `writes[1]`'s own widened `scope`: `max_buildable_gfa_sqm IS NULL` (S0.1's lot-band bound) or `cur_floor_gfa_sqm > 750` (`product_scope_max_existing_gfa_sqm`, FOLD-RC2) now ALSO count as 'outside the population', not only a non-R% zoning. The two widenings (columns, O4; population, S0.2) are orthogonal and composed here, never duplicated as separate invariants.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
     }
   ],
@@ -301,7 +305,18 @@
     { "key": "cost_escalation_index", "type": "number", "consumers": [] },
     { "key": "rates_max_as_of_date", "type": "string", "consumers": [] },
     { "key": "unmapped_residential_family_fallback_count", "type": "int", "consumers": [] },
-    { "key": "stranded_cost_rows_retracted", "type": "int", "consumers": ["compute_parcel_cost_estimates"] }
+    { "key": "stranded_cost_rows_retracted", "type": "int", "consumers": ["compute_parcel_cost_estimates"] },
+    { "key": "scenario_source_present", "type": "int", "consumers": [] },
+    { "key": "scenario_parcels", "type": "int", "consumers": [] },
+    { "key": "scenario_lines_priced", "type": "int", "consumers": [] },
+    { "key": "scenario_lines_at_least", "type": "int", "consumers": [] },
+    { "key": "scenario_lines_refused", "type": "int", "consumers": [] },
+    { "key": "scenario_lines_not_modelled", "type": "int", "consumers": [] },
+    { "key": "scenario_lines_no_rate", "type": "int", "consumers": [] },
+    { "key": "scenario_lines_malformed_rate", "type": "int", "consumers": [] },
+    { "key": "scenario_lines_exceed_coa", "type": "int", "consumers": [] },
+    { "key": "scenario_gfa_computed_cost_missing", "type": "int", "consumers": [] },
+    { "key": "scenario_cost_stale", "type": "int", "consumers": [] }
   ],
   "deviations": [
     {

@@ -1,0 +1,1336 @@
+{
+ "$comment": "MB-86 (Spec 88 §2.3/§2.4 dated notes 2026-11-09). The stored Layer 3 scenario area rows of the 25 golden lots, as parcel_maxbld_scenarios would hold them: produced by the Layer 3 step's own compute (scripts/lib/compute/compute-maxbld-scenarios.js buildParcelRows) over src/tests/fixtures/layer3/golden-25/inputs.jsonl with the committed seeds and switchboard at f982e64c (the golden-25.logic.test.ts replay form). Only the three detached GFA rows; no detached_houseplex rows exist yet (lane E E8 rows), so the houseplex line states no_area_row. Values are full precision (the cost step reads the stored value).",
+ "rows": [
+  {
+   "case": "A0067_26SC",
+   "parcel_id": 205238,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 279.00000008957,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "17210f8b0cc77f27a68a5d1bddca6d904505f688bfa785a048ac2fb419d7332f"
+  },
+  {
+   "case": "A0067_26SC",
+   "parcel_id": 205238,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 279.00000008957,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "3f9e04dc6496cf3f8f0ba525fa3014ee6dc5567458913a35359c7fdb1246d3a6"
+  },
+  {
+   "case": "A0067_26SC",
+   "parcel_id": 205238,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 279.00000008957,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "25b8750176eb2897fbbf07d087c0aa00b43650384040c8518032c811e5a1f4fb"
+  },
+  {
+   "case": "A0094_26SC",
+   "parcel_id": 159079,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 254.485,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "3eafd73ba35396368541afe0cf6c4c244bc4baad14b08142f4a043858c4bd8ea"
+  },
+  {
+   "case": "A0094_26SC",
+   "parcel_id": 159079,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 254.485,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "61a4476f4fb87f14f9a0b102199783baa3b795f544745d331cbb3b5fd3c12cfd"
+  },
+  {
+   "case": "A0094_26SC",
+   "parcel_id": 159079,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 254.485,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "f7141ca53dc58d202174abef22d58e2d5bf62456d0241155f96e71169a4d644e"
+  },
+  {
+   "case": "A0097_26SC",
+   "parcel_id": 274216,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 456.2776447058824,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline_lower_bound:main_wall_shares_not_resolved",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "24dce401999cb7ad2f2546b05146598971baded1e4ef70e4e285e892ad6f7b22"
+  },
+  {
+   "case": "A0097_26SC",
+   "parcel_id": 274216,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 482.78340000000003,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "ad58df4df03d6b53c22760bafd5e6f01a7d199514a8b212138d48c0b81c8ffa5"
+  },
+  {
+   "case": "A0097_26SC",
+   "parcel_id": 274216,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 482.78340000000003,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "e8c73139c94003bde78e631ad753692910c54a7f0a08b3079247c099bff1801d"
+  },
+  {
+   "case": "A0166_26EYK",
+   "parcel_id": 119522,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "not_evaluated",
+   "value": null,
+   "reason": "unlimited_in_arithmetic",
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "main_wall_limit_above_height",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "dce308eb57dcffc179c0ddab4120b8a9db3e90f2d61e77208a728723aca0b000"
+  },
+  {
+   "case": "A0166_26EYK",
+   "parcel_id": 119522,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "not_evaluated",
+   "value": null,
+   "reason": "unlimited_in_arithmetic",
+   "flags": [
+    "front_yard_needs_survey",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed"
+   ],
+   "content_sha": "f897e38300f72977c5a2d7215a03ed4b8d4b23044c7a59da2ceda068a8c93ac1"
+  },
+  {
+   "case": "A0166_26EYK",
+   "parcel_id": 119522,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "not_evaluated",
+   "value": null,
+   "reason": "unlimited_in_arithmetic",
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "main_wall_limit_above_height",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "9341d4efea106cff30bfdd96ce498c4ffd6ecd6053525eee615e6f05feadb857"
+  },
+  {
+   "case": "A0170_26EYK",
+   "parcel_id": 258388,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 243.47,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "ee85854569098ee2d9f4693d02d29fa71b10b70c18d9d72e27eb04531e68f591"
+  },
+  {
+   "case": "A0170_26EYK",
+   "parcel_id": 258388,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 243.47,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "27479571eeeb4e12cbb13d619ab088885c34854a5337bfb076b3fa72664b5ce3"
+  },
+  {
+   "case": "A0170_26EYK",
+   "parcel_id": 258388,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 243.47,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "3da9729f2ae281504836f758b29b327a9e6242935c5c72b734598c54d7eec0de"
+  },
+  {
+   "case": "A0175_26NY",
+   "parcel_id": 173273,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 153.25199999999998,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "b9d342cd04e83c2d9b55ca03d1f62cd6b02cc9bd6a67004b2f78c9cfb574d57e"
+  },
+  {
+   "case": "A0175_26NY",
+   "parcel_id": 173273,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 153.25199999999998,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "r_slope_cap_reading",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "53bdef49f8708b2bc52ba35d78eb8c7ef1761ebdd77eda10ce0a7a51c9462a85"
+  },
+  {
+   "case": "A0175_26NY",
+   "parcel_id": 173273,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 153.25199999999998,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "0aabfd89a822eaf4e9609c4077118b14bd6be79a2a19886bb7672e634aaafc29"
+  },
+  {
+   "case": "A0179_26EYK",
+   "parcel_id": 120669,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 221.07150000000001,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline_lower_bound:main_wall_shares_not_resolved",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "7871a05beb66df5803f342efce6231bcf84307328ac35733cdfe58d0de54d595"
+  },
+  {
+   "case": "A0179_26EYK",
+   "parcel_id": 120669,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 237.4515,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "fca989f3fd2c240f5cc1bc8dbfe9760877d280e689963c8d5243d61066f92d1e"
+  },
+  {
+   "case": "A0179_26EYK",
+   "parcel_id": 120669,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 237.4515,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "c2c62f7ae776b9cc10c973a9e771e8ac66b349270fab5eaba0e7070f058ed24e"
+  },
+  {
+   "case": "A0182_26EYK",
+   "parcel_id": 30065,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 382.49399999999997,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "2309ce5aefe260e56f33c65488375457cadff7d9688815bce910f5242479ffc0"
+  },
+  {
+   "case": "A0182_26EYK",
+   "parcel_id": 30065,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 382.49399999999997,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "83b22804273c7eef0e373f9a986dc6da8e84285d7d2944df5fd190184750e65d"
+  },
+  {
+   "case": "A0182_26EYK",
+   "parcel_id": 30065,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 382.49399999999997,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "be31396c2748c33787a8074f37f7701abe8532cf4a365f89190971e70718dd94"
+  },
+  {
+   "case": "A0193_26EYK",
+   "parcel_id": 304365,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 264.348,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "0f677ae3db612f8eeb5f50a8c621cec62e698e0f5b77e065dbd9f67617168619"
+  },
+  {
+   "case": "A0193_26EYK",
+   "parcel_id": 304365,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 264.348,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "8c1b72248c22b2cf51a3a9ace257573ad78933920ad0bf8a9b91a5405edb9443"
+  },
+  {
+   "case": "A0193_26EYK",
+   "parcel_id": 304365,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 264.348,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "a4e328b5eb0b80b5c843dd44e14aea582d8d93f26e5cee4a8f1190338c83ca55"
+  },
+  {
+   "case": "A0203_26NY",
+   "parcel_id": 6640,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 395.08,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "946dd2c3d5728daf438389960ca9b28ac611d97cad2ac04a4f78507ca7ccf646"
+  },
+  {
+   "case": "A0203_26NY",
+   "parcel_id": 6640,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 395.08,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "9db463458e55efdff09f311aa319c0abde1a3e3115acd587cc69312c02b7606b"
+  },
+  {
+   "case": "A0203_26NY",
+   "parcel_id": 6640,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 395.08,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "bdf731d87d4d4a9c6d5125b15aaa2363e555e4df67415a445ab8092b31fd8c56"
+  },
+  {
+   "case": "A0205_26NY",
+   "parcel_id": 33830,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 388.61999999999995,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "48d118f7f8bc1cd7fd537c414907b044ea83586ccce598a754d0995559a87f97"
+  },
+  {
+   "case": "A0205_26NY",
+   "parcel_id": 33830,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 388.61999999999995,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "94973907ee7d36e6225b71f55991eefaf29aac8977b99e791180084728012595"
+  },
+  {
+   "case": "A0205_26NY",
+   "parcel_id": 33830,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 388.61999999999995,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "59fff86948971aa13217aea4912f6fbe5f78eca629d93e1f91bed58409f0683c"
+  },
+  {
+   "case": "A0229_26NY",
+   "parcel_id": 313999,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 498.09999999999997,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "c7556ccaba1f012e6cd3057dec7789af0b145d0280fe3cf4870ce5f2bc789ec6"
+  },
+  {
+   "case": "A0229_26NY",
+   "parcel_id": 313999,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 498.09999999999997,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "fa82673001d1077b33f1ac7c04695198a27a77ddc1313d388b478d790cac10e5"
+  },
+  {
+   "case": "A0229_26NY",
+   "parcel_id": 313999,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 498.09999999999997,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "2577b2d7300a68df1f29cc34d742a377dd94622c23f7ed34b0859710a139d71e"
+  },
+  {
+   "case": "A0277_26NY",
+   "parcel_id": 122034,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 394.74,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "491ccbddbfdfb0fece6f6fce7d903264bd4fa95512ce5c95f6129a497621c295"
+  },
+  {
+   "case": "A0277_26NY",
+   "parcel_id": 122034,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 394.74,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "b899cba59c81c23bcd069b9bb6859025bbf11d6575a0195f6fdbfc6583bff497"
+  },
+  {
+   "case": "A0277_26NY",
+   "parcel_id": 122034,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 394.74,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "de02604bb3a9bf24297cae8167e478fdfbc518de1cba935a81003b4e3673d968"
+  },
+  {
+   "case": "A0289_26TEY",
+   "parcel_id": 170105,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 195.632,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "48f96af132354a1edcf216d964416329901d58a8c48cce3a181a731f89ec6a08"
+  },
+  {
+   "case": "A0289_26TEY",
+   "parcel_id": 170105,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 195.632,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "b15ade7cdf8edc99797985126fc3967d937ca1d23cccd1c0d619568445b721df"
+  },
+  {
+   "case": "A0289_26TEY",
+   "parcel_id": 170105,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 195.632,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "35adeb701063a82edeb3e8bf2fe07c506047410f10b622e75af482497df9d583"
+  },
+  {
+   "case": "A0354_26TEY",
+   "parcel_id": 153191,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 147.2175,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "783c0a565e3ca515531d768b016237b3ec7ae6e709fe5b9af67eb8156ed71159"
+  },
+  {
+   "case": "A0354_26TEY",
+   "parcel_id": 153191,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 147.2175,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "ced57512ac713c596ca2a5e04fe53881f4b0544325a69e0224b9f260b605506e"
+  },
+  {
+   "case": "A0354_26TEY",
+   "parcel_id": 153191,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 147.2175,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "c44e3fc502c535bedbdfd998062fa62520e7437ced4e1f285856839b1cd0924c"
+  },
+  {
+   "case": "A0375_26TEY",
+   "parcel_id": 410720,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 156.63,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "2ae9567a5094aea2d8e4dda02c8afe6451b65dabf75d221ebc0208e25a9b4407"
+  },
+  {
+   "case": "A0375_26TEY",
+   "parcel_id": 410720,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 156.63,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "58aec93851f4e10869e23f5325a16b5f69163e7916908cdafd1d4d03d5011f0b"
+  },
+  {
+   "case": "A0375_26TEY",
+   "parcel_id": 410720,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 156.63,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "ca4b58773dbf84cf4714c66a07af33d9c1e31d515216efad2ee182378ec007eb"
+  },
+  {
+   "case": "A0388_26TEY",
+   "parcel_id": 442123,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 127.044,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "4f4eec0e56a8bd4f811bb71ade82f16d7f8625d09a7dd17f54355f8ab720b186"
+  },
+  {
+   "case": "A0388_26TEY",
+   "parcel_id": 442123,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 127.044,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "r_slope_cap_reading",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "085b956a11a2f1521dcc848f1c7a7e28009f6cad5cef4736436a366bd5ecaa3b"
+  },
+  {
+   "case": "A0388_26TEY",
+   "parcel_id": 442123,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 127.044,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "715e017a093e0d8feda8a63dce973255d38c34118340f37ce0583a6866482882"
+  },
+  {
+   "case": "A0399_24EYK",
+   "parcel_id": 283723,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 313.08599999999996,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "a791a36ac6f5d1a447d2b71ca9403221c3829ba9c3ad811cb1ee7f720f930073"
+  },
+  {
+   "case": "A0399_24EYK",
+   "parcel_id": 283723,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 313.08599999999996,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "67453c3c6e6025393efe21f87441e219214b47c913c8b4291f506af1cb7b9e53"
+  },
+  {
+   "case": "A0399_24EYK",
+   "parcel_id": 283723,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 313.08599999999996,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "fd54852d556443edc404f95da95c97a7b166978d7a6315ba6c338238567d27e4"
+  },
+  {
+   "case": "A0457_25EYK",
+   "parcel_id": 216666,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 219.29600000000002,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "4ac26416994bf6436b51b5135abf58d80b73de24fd6962a1ae72a7c456273a35"
+  },
+  {
+   "case": "A0457_25EYK",
+   "parcel_id": 216666,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 219.29600000000002,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "6b286e8a8a96e073282c6777f9f1e063b75801cc896856f4e75b2481eab41085"
+  },
+  {
+   "case": "A0457_25EYK",
+   "parcel_id": 216666,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 219.29600000000002,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "c61f4c39bd887b43ec6466ff17e6c2d2cdc997185b922a5cb3b6cdfd981b739a"
+  },
+  {
+   "case": "A0461_26TEY",
+   "parcel_id": 169742,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 256.344,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "942b1be9bd383bb8e867e789a855c0c946d6cc0384653b6df101df815dc40d30"
+  },
+  {
+   "case": "A0461_26TEY",
+   "parcel_id": 169742,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 256.344,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "34e64986f07f2a129ede275ec86b4bc3d50a96d7d8f827979fd4598b35196247"
+  },
+  {
+   "case": "A0461_26TEY",
+   "parcel_id": 169742,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 256.344,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "6afa1975506483c884cf7e3b2466a50a3e7ea41ac254ad232180d7399b7360a2"
+  },
+  {
+   "case": "A0464_26TEY",
+   "parcel_id": 427312,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 147.97799999999998,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "d62a5b6a9aae91b0a2a1def760e0672d8949eff94b712b00cc2bd3169233f302"
+  },
+  {
+   "case": "A0464_26TEY",
+   "parcel_id": 427312,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 147.97799999999998,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "1505f8d8b03ae4cc0c85047fb476f683adcebf80c6cd551a51b112c7f3ca57db"
+  },
+  {
+   "case": "A0464_26TEY",
+   "parcel_id": 427312,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 147.97799999999998,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "73dcdfc57bde4a97bf3693e5ce06d6622b184db214b469cd31b7d2af07ac3fad"
+  },
+  {
+   "case": "A0553_26TEY",
+   "parcel_id": 428050,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 153.498,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "7b68dca6d6c13e0b90e035df86443e9445d04a13ec254396e2199689a769e5de"
+  },
+  {
+   "case": "A0553_26TEY",
+   "parcel_id": 428050,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 153.498,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "a72bcebbc3b1971ef8c53181533b2a82407cde42c01ec63399477fea7cd084bc"
+  },
+  {
+   "case": "A0553_26TEY",
+   "parcel_id": 428050,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 153.498,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "523d8b802f76a38f9812da76d8dbdc6f8f6b1e2c951edf79e01496baeae5546a"
+  },
+  {
+   "case": "A0561_26TEY",
+   "parcel_id": 461807,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 199.33,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "a298272c421cd33f24a3433e5afec1b57c99699d6f9f3f14697c497dca8e0d20"
+  },
+  {
+   "case": "A0561_26TEY",
+   "parcel_id": 461807,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 199.33,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "r_slope_cap_reading",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "9a539a65e35461c1e891235dafd55fcac85668108d09eb13d4eb5880f02d6f56"
+  },
+  {
+   "case": "A0561_26TEY",
+   "parcel_id": 461807,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 199.33,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "a1daab980fa6f44c9d4d08c05fe59eb53fc738a0630debd6744b0786e4a6f29e"
+  },
+  {
+   "case": "A0562_26TEY",
+   "parcel_id": 30554,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 243.352,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "31f80ab7b3153457efb3e968bba987afbc7f1ec077806d2ce29ff0b5c0b6d7b3"
+  },
+  {
+   "case": "A0562_26TEY",
+   "parcel_id": 30554,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 243.352,
+   "reason": null,
+   "flags": [
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "shape_box_assumed"
+   ],
+   "content_sha": "b21ee2aa7c8fa116282d912f28ca93e842ffd6682a6b8706318f413696b43c75"
+  },
+  {
+   "case": "A0562_26TEY",
+   "parcel_id": 30554,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 243.352,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "b4aafa27279705e98f3b38f786cf0884a5852ebfd94c349a1060928dbd4412b9"
+  },
+  {
+   "case": "A0578_26TEY",
+   "parcel_id": 403569,
+   "building_type": "detached_house",
+   "field_id": "gfa_flat_m2",
+   "status": "computed",
+   "value": 192.39600000000002,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "c928a3d6532bd56f94a7d929eac32828c6e00b3b0904eb840aee8cb68dee16b0"
+  },
+  {
+   "case": "A0578_26TEY",
+   "parcel_id": 403569,
+   "building_type": "detached_house",
+   "field_id": "gfa_pitched_m2",
+   "status": "computed",
+   "value": 192.39600000000002,
+   "reason": null,
+   "flags": [
+    "attic_headroom_datum",
+    "dormer_clearance_assumed",
+    "dormers_at_40_pct_maximum",
+    "front_yard_needs_survey",
+    "headline:gfa_pitched_a_m2",
+    "ridge_at_height_limit",
+    "roof_steepest_pitch_height_allows",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "7cde98b3aea1493b7c244e725d1937dc6e9a64780e8aed446f0c194851734c3f"
+  },
+  {
+   "case": "A0578_26TEY",
+   "parcel_id": 403569,
+   "building_type": "detached_house",
+   "field_id": "gfa_max_m2",
+   "status": "computed",
+   "value": 192.39600000000002,
+   "reason": null,
+   "flags": [
+    "free_share_union_not_taken",
+    "front_rear_walls_narrowest_width",
+    "front_yard_needs_survey",
+    "headline:gfa_flat_m2",
+    "shape_box_assumed",
+    "storeys_from_minimum_ceiling"
+   ],
+   "content_sha": "7dc06f1453ffc36ebad5ebbed3e2ec592c6ebcaa6085e99daab99625227afa73"
+  }
+ ]
+}

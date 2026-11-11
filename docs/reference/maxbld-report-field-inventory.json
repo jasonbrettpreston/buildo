@@ -9231,7 +9231,7 @@
           "file": "scripts/lib/compute/compute-parcel-cost-estimates.js",
           "id": "select.opt_aor_gfa_sqm",
           "kind": "sql",
-          "line": 159,
+          "line": 177,
           "name": "opt_aor_gfa_sqm",
           "scope": "select",
           "spans": []
@@ -19739,11 +19739,11 @@
   "inputs": [
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json",
-      "sha256": "faa6e00f9518e134"
+      "sha256": "d29dbb1f4fcc1d00"
     },
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json",
-      "sha256": "0dfe945dc51ddbcf"
+      "sha256": "21b4a19ce46868fb"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/none_incremental.trace.json",
@@ -19783,7 +19783,7 @@
     },
     {
       "path": "scripts/lib/compute/compute-parcel-cost-estimates.js",
-      "sha256": "5f3e3f2ffb53bf1a"
+      "sha256": "8c9c837f8bd4533a"
     },
     {
       "path": "scripts/lib/compute/enrich-parcels.js",
@@ -19799,7 +19799,7 @@
     },
     {
       "path": "scripts/lib/parcel-cost.js",
-      "sha256": "0d767c0bfc32c3e7"
+      "sha256": "06cec1fb1748722b"
     },
     {
       "path": "scripts/lib/zoning-precedence.js",
@@ -26983,7 +26983,7 @@
           "file": "scripts/lib/compute/compute-parcel-cost-estimates.js",
           "id": "select.opt_aor_gfa_sqm",
           "kind": "sql",
-          "line": 159,
+          "line": 177,
           "name": "opt_aor_gfa_sqm",
           "scope": "select",
           "spans": []

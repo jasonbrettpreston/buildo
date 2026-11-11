@@ -98,7 +98,8 @@ describe('cost stamps come from config.$meta, never logic_variables (R-CM)', () 
   it('readCostContract binds the $meta Date and issues no logic_variables SQL (sigRes)', async () => {
     const calls: Call[] = [];
     const pool = recordingPool(calls);
-    const ctx = { pool, config: configWithMeta({ cost_escalation_index: { updated_at: INDEX_STAMP } }) };
+    // MB-86: the runner's hook ctx always carries the catalog reader (0 columns = the Layer 3 table is absent).
+    const ctx = { pool, config: configWithMeta({ cost_escalation_index: { updated_at: INDEX_STAMP } }), catalog: { columnCount: async () => 0 } };
 
     await readCostContract(ctx as unknown as ReadCostContractArg);
 
@@ -116,7 +117,7 @@ describe('cost stamps come from config.$meta, never logic_variables (R-CM)', () 
     const calls: Call[] = [];
     const pool = recordingPool(calls);
 
-    await readCostContract({ pool, config: configWithMeta({}) } as unknown as ReadCostContractArg);
+    await readCostContract({ pool, config: configWithMeta({}), catalog: { columnCount: async () => 0 } } as unknown as ReadCostContractArg);
 
     const sig = calls.find((c) => c.sql.includes('index_updated_at'));
     expect(sig).toBeDefined();

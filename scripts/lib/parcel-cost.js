@@ -380,8 +380,190 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
   return { menu, scalars, lineCount, confidenceCounts, fitGatedSuiteCount, fitGatedGarageCount, fsiImplausible };
 }
 
+// ===========================================================================
+// MB-86 — per-scenario lines (Spec 88 §2.3/§2.4 dated notes 2026-11-09; Spec 69a M-67 dated
+// note 2026-11-09). Spec 88 prices the STORED Layer 3 scenario areas (parcel_maxbld_scenarios);
+// Layer 3 stays sizes only. One line per scenario of increments 1-3, keyed
+// `scenario:<building_type>/<field_id>`, through the SAME `lineCost` (one formula, one rounding).
+// ===========================================================================
+
+/** Menu-key prefix of a scenario line (also the `parcel_cost_lines` id prefix). */
+const SCENARIO_LINE_PREFIX = 'scenario:';
+
+/**
+ * The scenario lines — STRUCTURAL ONLY (which stored Layer 3 row is the area). The editable half
+ * (archetype, base confidence) is the `parcel_cost_lines` row with the same id (migration 298).
+ * @type {ReadonlyArray<{id: string, buildingType: string, fieldId: string}>}
+ */
+const SCENARIO_COST_LINES = Object.freeze([
+  { id: 'scenario:detached_house/gfa_max_m2', buildingType: 'detached_house', fieldId: 'gfa_max_m2' }, // the headline (D-11)
+  { id: 'scenario:detached_house/gfa_flat_m2', buildingType: 'detached_house', fieldId: 'gfa_flat_m2' },
+  { id: 'scenario:detached_house/gfa_pitched_m2', buildingType: 'detached_house', fieldId: 'gfa_pitched_m2' }, // pitched a and b share it
+  { id: 'scenario:detached_houseplex/gfa_max_m2', buildingType: 'detached_houseplex', fieldId: 'gfa_max_m2' }, // HOUSEPLEX rate
+]);
+
+/** The Layer 3 flag that makes a computed area a lower bound (catalogue lexicon `headline_lower_bound_`). */
+const LOWER_BOUND_FLAG = 'headline_lower_bound';
+/** The named coherence exception (Spec 88 §2.4 note): mirrors `new_build_cost_not_gt_coa_cost`'s `+ 1`. */
+const COA_EXCEEDED_FLAG = 'l3_envelope_exceeds_old_coa';
+const COA_TOLERANCE_CAD = 1;
+/**
+ * The rate's source confidence, by archetype, carried on a priced scenario line as
+ * `rate_inputs.rate_confidence` (FE-06 closed display set). Distinct from `area_confidence` (Spec 88
+ * §2.7: floor-area certainty, closed high|medium|low). FB: Spec 88 §3 "High"; HOUSEPLEX: operator
+ * 2026-11-09 ("1. accept" on "$400/ft², confidence MEDIUM-LOW"; MB-86 houseplex confidence (b)).
+ * An archetype not listed carries null (no cited confidence).
+ */
+const RATE_CONFIDENCE = Object.freeze({ FB: 'high', HOUSEPLEX: 'medium-low' });
+
+/**
+ * Join the structural scenario lines with their `parcel_cost_lines` rows by id. An unknown
+ * `scenario:` id in the DB is a HALT (the same drift guard as `mergeCostLines`); a structural
+ * line with NO row is kept with `archetype: null`, so it states `no_rate_line` instead of
+ * halting the whole step before the operator applies migration 298.
+ * @param {ReadonlyArray<{id: string, buildingType: string, fieldId: string}>} structural
+ * @param {Array<{id: string, archetype: string, base_confidence: 'high'|'medium'|'low'}>} dbRows  scenario rows only
+ */
+function mergeScenarioLines(structural, dbRows) {
+  const byId = new Map();
+  for (const row of dbRows) {
+    if (byId.has(row.id)) throw new Error(`[parcel-cost] mergeScenarioLines: duplicate parcel_cost_lines id: ${row.id}`);
+    byId.set(row.id, row);
+  }
+  const known = new Set(structural.map((l) => l.id));
+  for (const id of byId.keys()) {
+    if (!known.has(id)) {
+      throw new Error(`[parcel-cost] mergeScenarioLines: parcel_cost_lines id is unknown to SCENARIO_COST_LINES: ${id} — refusing to run (the editable catalogue has drifted from the frozen structural bindings).`);
+    }
+  }
+  return structural.map((line) => {
+    const row = byId.get(line.id);
+    return { ...line, archetype: row ? row.archetype : null, baseConfidence: row ? row.base_confidence : null };
+  });
+}
+
+/** Flags of a stored Layer 3 row as a sorted string list (jsonb array, text[] or null). */
+function flagList(v) {
+  if (Array.isArray(v)) return [...new Set(v.map(String))].sort();
+  return [];
+}
+
+/**
+ * The scenario lines of ONE parcel. Pure. `scenarioRows` is the parcel's stored Layer 3 rows
+ * (`{building_type, field_id, status, value, reason, flags, content_sha}`), or null when the
+ * parcel has no stored rows (then NO scenario line is written). Every scenario line is present
+ * with a cost or a stated reason.
+ *
+ * @param {Record<string, unknown>} parcel
+ * @param {Array<Record<string, unknown>>|null} scenarioRows
+ * @param {Record<string, {cost_per_sqm:unknown, cost_adjustment_factor:unknown, escalation_index_base:unknown}>} rates
+ * @param {number|null} indexNow
+ * @param {{config: object, scenarioLines: Array<object>, coaTotal: number|null}} opts  config REQUIRED (Rule 3)
+ * @returns {{ lines: Record<string, object>, counts: Record<string, number> }}
+ */
+function buildScenarioCostLines(parcel, scenarioRows, rates, indexNow, opts = {}) {
+  const cfg = opts.config;
+  if (!cfg) throw new Error('[parcel-cost] buildScenarioCostLines requires opts.config (Rule 3 — no defaulted engine tunable)');
+  if (!opts.scenarioLines) throw new Error('[parcel-cost] buildScenarioCostLines requires opts.scenarioLines (mergeScenarioLines)');
+  const counts = {
+    priced: 0, at_least: 0, refused: 0, not_modelled: 0, no_rate: 0, malformed_rate: 0, exceed_coa: 0, gfa_computed_cost_missing: 0,
+  };
+  /** @type {Record<string, object>} */
+  const lines = {};
+  if (!Array.isArray(scenarioRows)) return { lines, counts };
+
+  const byKey = new Map();
+  for (const r of scenarioRows) byKey.set(`${r.building_type}/${r.field_id}`, r);
+  const premium = num(parcel.neighbourhood_cost_premium) ?? cfg.premiumDefault;
+  const coaTotal = num(opts.coaTotal);
+
+  const refuse = (line, row, status, reason) => {
+    lines[line.id] = {
+      status,
+      reason,
+      flags: row ? flagList(row.flags) : [],
+      l3_content_sha: row ? row.content_sha ?? null : null,
+      area_basis: 'bylaw_gfa',
+    };
+    if (status === 'not_modelled') counts.not_modelled += 1;
+    else if (reason === 'no_rate' || reason === 'no_rate_line') counts.no_rate += 1;
+    else if (reason === 'malformed_rate') counts.malformed_rate += 1;
+    else counts.refused += 1;
+  };
+
+  for (const line of opts.scenarioLines) {
+    const row = byKey.get(`${line.buildingType}/${line.fieldId}`) || null;
+    if (!row) { refuse(line, null, 'not_evaluated', 'no_area_row'); continue; }
+    if (row.status !== 'computed') {
+      if (row.status === 'not_buildable' || row.status === 'not_modelled') refuse(line, row, row.status, row.reason ?? null);
+      else refuse(line, row, 'not_evaluated', `l3_${row.status}${row.reason ? `:${row.reason}` : ''}`);
+      continue;
+    }
+    // From here the area row is COMPUTED: any missing number is a "GFA computed but cost not" line.
+    const area = num(row.value);
+    if (area === null || area <= cfg.minPriceableAreaSqm) {
+      counts.gfa_computed_cost_missing += 1;
+      refuse(line, row, 'not_evaluated', 'area_not_priceable');
+      continue;
+    }
+    if (!line.archetype) {
+      counts.gfa_computed_cost_missing += 1;
+      refuse(line, row, 'not_evaluated', 'no_rate_line');
+      continue;
+    }
+    const rate = rates[line.archetype];
+    if (!rate) {
+      counts.gfa_computed_cost_missing += 1;
+      refuse(line, row, 'not_evaluated', 'no_rate');
+      continue;
+    }
+    const ratePerSqm = num(rate.cost_per_sqm);
+    if (ratePerSqm === null || ratePerSqm <= 0) {
+      counts.gfa_computed_cost_missing += 1;
+      refuse(line, row, 'not_evaluated', 'malformed_rate');
+      continue;
+    }
+    const adjFactor = num(rate.cost_adjustment_factor) ?? cfg.adjustmentFactorDefault;
+    const escalationMult = escalationMultiplier(indexNow, rate.escalation_index_base, cfg);
+    const { total, per_sqm } = lineCost({ areaSqm: area, ratePerSqm, escalationMult, adjFactor, premium });
+    const flags = flagList(row.flags);
+    const atLeast = flags.some((f) => f === LOWER_BOUND_FLAG || f.startsWith(`${LOWER_BOUND_FLAG}:`));
+    if (coaTotal !== null && total > coaTotal + COA_TOLERANCE_CAD) {
+      flags.push(COA_EXCEEDED_FLAG);
+      flags.sort();
+      counts.exceed_coa += 1;
+    }
+    lines[line.id] = {
+      status: atLeast ? 'at_least' : 'computed',
+      reason: null,
+      flags,
+      l3_content_sha: row.content_sha ?? null,
+      area_basis: 'bylaw_gfa',
+      total,
+      per_sqm,
+      area: round2(area),
+      area_confidence: areaConfidenceFor(line.baseConfidence, parcel.max_build_confidence ?? null),
+      rate_inputs: {
+        archetype: line.archetype,
+        cost_per_sqm: ratePerSqm,
+        escalation_multiplier: escalationMult,
+        adjustment_factor: adjFactor,
+        premium,
+        rate_confidence: RATE_CONFIDENCE[line.archetype] ?? null,
+      },
+    };
+    if (atLeast) counts.at_least += 1;
+    else counts.priced += 1;
+  }
+  return { lines, counts };
+}
+
 module.exports = {
   PARCEL_COST_SCHEMA_VERSION,
+  SCENARIO_LINE_PREFIX,
+  SCENARIO_COST_LINES,
+  mergeScenarioLines,
+  buildScenarioCostLines,
   PARCEL_COST_LINES,
   FSI_MAX_PLAUSIBLE,
   escalationMultiplier,

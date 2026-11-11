@@ -20,13 +20,38 @@
           "id",
           "updated_at"
         ],
+        "parcel_maxbld_scenarios": [
+          "building_type",
+          "content_sha",
+          "field_id",
+          "flags",
+          "parcel_id",
+          "reason",
+          "status",
+          "value"
+        ],
         "parcels": [
           "cost_fb_total",
           "cost_gut_total",
+          "cur_est_bath_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
           "cur_floor_gfa_sqm",
+          "cur_pot_2story_gfa_sqm",
+          "garage_permission",
+          "id",
           "lot_size_sqm",
+          "max_build_confidence",
+          "max_buildable_footprint_sqm",
           "max_buildable_gfa_sqm",
+          "max_garage_gfa_sqm",
+          "max_garden_suite_gfa_sqm",
+          "max_laneway_suite_gfa_sqm",
+          "neighbourhood_cost_premium",
+          "opt_aor_gfa_sqm",
+          "opt_coa_gfa_sqm",
           "parcel_cost_menu",
+          "realized_fsi_p90",
+          "rear_suite_permission",
           "zoning_class"
         ]
       },

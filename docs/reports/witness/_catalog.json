@@ -1241,6 +1241,10 @@
       "cost_fb_total",
       "id"
     ],
+    "parcels_cohort_bak_20261111t0432z": [
+      "cost_fb_total",
+      "id"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",

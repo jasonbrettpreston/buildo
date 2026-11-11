@@ -37,7 +37,7 @@ const IDS = [1455, 1786, 1842, 1886, 1940, 3435, 3679, 3684, 3690, 4437, 10003, 
   // REQUIRED buildParcelCostMenu argument; same non-step analysis read-live pattern (FOLD-V8).
   const costLines = mergeCostLines(
     PARCEL_COST_LINES,
-    (await pool.query(`SELECT id, archetype, base_confidence, fit_permitted_values FROM parcel_cost_lines ORDER BY id`)).rows,
+    (await pool.query(`SELECT id, archetype, base_confidence, fit_permitted_values FROM parcel_cost_lines WHERE id NOT LIKE 'scenario:%' ORDER BY id`)).rows, // MB-86: the scenario: rows belong to SCENARIO_COST_LINES
   );
 
   // Every field the cost engine reads + the persisted zoning/FSI context, in full.

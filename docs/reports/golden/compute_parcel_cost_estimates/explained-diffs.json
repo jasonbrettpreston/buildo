@@ -16,6 +16,10 @@
       "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources/standalone: absent → [\"id\",\"archetype\",\"base_confidence\",\"fit_permitted_values…)."
     },
     {
+      "key": "meta[].reads.parcel_maxbld_scenarios",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246): MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\") adds the declared read inputs.reads parcel_maxbld_scenarios (8 columns), so this entry is present only in the POST meta (sources/standalone: absent → [\"parcel_id\",\"building_type\",\"field_id\",\"status\",\"value\",\"reason\",\"flags\",\"content_sha\"]). Recaptured 2026-11-10 (MB86-RECAPTURE-1) with the table absent locally (MB-35 / migration 287 not landed)."
+    },
+    {
       "key": "pipeline_runs[]",
       "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
     },
@@ -198,6 +202,50 @@
     {
       "key": "summary.records_meta.row_limit",
       "why": "report L130-L132: the legacy --limit=N CLI flag is ruled retired, so the converted step emits no row_limit key at all."
+    },
+    {
+      "key": "summary.records_meta.scenario_source_present",
+      "why": "declared emit (descriptor emits[] key \"scenario_source_present\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_parcels",
+      "why": "declared emit (descriptor emits[] key \"scenario_parcels\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_lines_priced",
+      "why": "declared emit (descriptor emits[] key \"scenario_lines_priced\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_lines_at_least",
+      "why": "declared emit (descriptor emits[] key \"scenario_lines_at_least\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_lines_refused",
+      "why": "declared emit (descriptor emits[] key \"scenario_lines_refused\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_lines_not_modelled",
+      "why": "declared emit (descriptor emits[] key \"scenario_lines_not_modelled\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_lines_no_rate",
+      "why": "declared emit (descriptor emits[] key \"scenario_lines_no_rate\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_lines_malformed_rate",
+      "why": "declared emit (descriptor emits[] key \"scenario_lines_malformed_rate\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_lines_exceed_coa",
+      "why": "declared emit (descriptor emits[] key \"scenario_lines_exceed_coa\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_gfa_computed_cost_missing",
+      "why": "declared emit (descriptor emits[] key \"scenario_gfa_computed_cost_missing\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.scenario_cost_stale",
+      "why": "declared emit (descriptor emits[] key \"scenario_cost_stale\", MB-86 (Spec 88 §2.11 dated note 2026-11-09; Spec 69a M-67 dated note 2026-11-09; operator \"1. b 2. ii 3.yes\", \"1. accept 2. b\")): the converted compute returns it and the runner stamps it in records_meta, always written even at 0; the legacy PRE did not report it. Measured 2026-11-10 (MB86-RECAPTURE-1): parcel_maxbld_scenarios is absent locally, so the step refuses the scenario join (scenario_source_absent INFO = 1) and the value is 0 (sources/standalone: absent → 0; absent → 0)."
     },
     {
       "key": "summary.records_meta.stranded_cost_rows_retracted",

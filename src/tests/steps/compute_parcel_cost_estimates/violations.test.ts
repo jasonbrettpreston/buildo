@@ -411,7 +411,7 @@ describe('compute_parcel_cost_estimates — CPCE FOLD A2: readCostContract parce
 
   it('a good fixture returns 13 merged lines + linesUpdatedAt (ISO string, from MAX(parcel_cost_lines.updated_at))', async () => {
     const compute = loadCompute();
-    const contract = await compute.readCostContract({ pool: stubPool(SEED_ROWS) });
+    const contract = await compute.readCostContract({ pool: stubPool(SEED_ROWS), catalog: { columnCount: async () => 0 } }); // MB-86: the runner's hook ctx carries the catalog reader
     expect(contract.lines).toHaveLength(13);
     const garden = contract.lines.find((l: { id: string }) => l.id === 'garden_suite');
     expect(garden.archetype).toBe('LANE_GARDEN');
@@ -714,5 +714,78 @@ describe('compute_parcel_cost_estimates — S0.2: product-scope bound (Spec 88 �
     const src = fs.readFileSync(path.join(process.cwd(), 'scripts/lib/compute/compute-parcel-cost-estimates.js'), 'utf8');
     expect(src).toContain('AND p.lot_size_sqm IS NOT NULL');
     expect(src).toMatch(/\n\s+AND lot_size_sqm IS NOT NULL\n/);
+  });
+});
+
+// MB-86 #44 (a) fixture witness (Spec 122 §6.6.1 P1-C4a; Spec 88 §2.11 dated note 2026-11-09). The local DB has
+// no parcel_maxbld_scenarios until MB-35 (migration 287), so no capture trace can touch its declared columns.
+// The fixture guard witnesses them instead: the REAL compute module issues its REAL scenario SQL on a guarded
+// fake handle (the enrich_parcels form: the fake ctx seams route their SQL through the wrapped client.query).
+describe('compute_parcel_cost_estimates — MB-86: the parcel_maxbld_scenarios reads run through the fixture guard', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function guardedClient(answer: (sql: string) => any) {
+    const sql: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return guard.wrap({ sql, query: async (text: string, _params?: unknown[]): Promise<any> => { sql.push(text); return answer(text); } });
+  }
+
+  it('table present: the cost pass streams buildScenarioSourceSql (all 8 declared scenario columns) through the guarded handle', async () => {
+    const compute = loadCompute();
+    const client = guardedClient(() => ({ rows: [] }));
+    const ctx = {
+      config: {
+        cost_escalation_index: 100,
+        compute_parcel_cost_fsi_max_plausible: 99.999,
+        compute_parcel_cost_escalation_min_multiplier: 1,
+        compute_parcel_cost_escalation_fallback_multiplier: 1,
+        compute_parcel_cost_premium_default: 1,
+        compute_parcel_cost_adjustment_factor_default: 1,
+        compute_parcel_cost_min_priceable_area_sqm: 0,
+        compute_parcel_cost_batch_size: 1000,
+        compute_parcel_cost_stream_batch_size: 1000,
+        product_scope_max_existing_gfa_sqm: 750,
+      },
+      contract: { rates: {}, lines: FAKE_CTX_LINES, scenarioLines: [], scenarioSourcePresent: true, ratesAsOf: null, indexUpdatedAt: null, linesUpdatedAt: null },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stream: async function* (text: string, params: unknown[]): AsyncGenerator<any> {
+        const res = await client.query(text, params);
+        for (const r of res.rows) yield r;
+      },
+      flushBatch: (text: string, params: unknown[]) => client.query(text, params),
+      onProgress: () => {},
+      retract: async () => 0,
+    };
+    const result = await compute.runCostMenuPass(null, ctx);
+    expect(result.scanned).toBe(0);
+    expect(client.sql).toContain(compute.buildScenarioSourceSql());
+    expect(guard.record().reads.parcel_maxbld_scenarios).toEqual(
+      ['building_type', 'content_sha', 'field_id', 'flags', 'parcel_id', 'reason', 'status', 'value'],
+    );
+  });
+
+  it('table present: computePostPhase re-measures scenario_cost_stale with buildScenarioStaleSql through the guarded handle', async () => {
+    const compute = loadCompute();
+    const scanned = 5;
+    const zoneRows = [{ zone: 'RD', parcels: scanned, menus: 0, empty_menus: 0, p50_cost_fb: null, max_cost_gut: null }];
+    const client = guardedClient((text) => {
+      if (text === compute.buildScenarioStaleSql()) return { rows: [{ n: 0 }] };
+      if (text.includes('AS pct')) return { rows: [{ pct: 100 }] };
+      if (text.includes('GROUP BY 1')) return { rows: zoneRows };
+      return { rows: [{ rates_as_of: '2026-09-01', rates_age_months: 1, index_age_months: 1, rates_future: false }] };
+    });
+    const result = await compute.computePostPhase(client, {
+      passRaw: {
+        cost_menu: {
+          scanned, updated: 0, recordsSkipped: 0, engineErrorCount: 0, nullGeomBasisCount: 0,
+          fsiImplausibleCount: 0, newBuildFallbackCount: 0, fitGatedSuiteCount: 0, fitGatedGarageCount: 0,
+          lineCoverage: {}, confidenceTotals: { high: 0, medium: 0, low: 0 }, ratesAsOf: null, indexUpdatedAt: null,
+          scenarioSourcePresent: true, scenarioCounts: {},
+        },
+      },
+      config: { cost_rates_stale_months: 3, cost_index_stale_months: 4, cost_escalation_index: 100 },
+      runAt: new Date('2026-09-21T00:00:00Z'),
+    });
+    expect(client.sql).toContain(compute.buildScenarioStaleSql());
+    expect(result.matched.scenario_source_absent).toBe(0);
   });
 });

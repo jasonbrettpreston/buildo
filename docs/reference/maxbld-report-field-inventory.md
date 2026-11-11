@@ -568,7 +568,7 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 - named constants: `max-build.js#COVERAGE_DEFAULTS.*` (13 leafs: 30/33/35/50/60/75; H:statistical_default), `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#NONRES_STOREY_HEIGHT_M` (1 leaf: 4; H:modelling_assumption), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule), `cost-model-shared.js#DEFAULT_PREMIUM_TIERS` (14 leafs: 0/1/1.15/1.35/1.6/1.85/…; H:modelling_assumption; OUT)
 - inline literals: `enrich-parcels.js:1462 100`, `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`, `enrich-parcels.js:683 100`, `optimal-config.js:260 2`
 - chain:
-  - `buildSourceSql:select.opt_aor_gfa_sqm` compute-parcel-cost-estimates.js:159 — `COALESCE(p.opt_aor_gfa_sqm, p.max_buildable_gfa_sqm)::float8 AS opt_aor_gfa_sqm`
+  - `buildSourceSql:select.opt_aor_gfa_sqm` compute-parcel-cost-estimates.js:177 — `COALESCE(p.opt_aor_gfa_sqm, p.max_buildable_gfa_sqm)::float8 AS opt_aor_gfa_sqm`
   - `buildParcelCostMenu:entry.total` parcel-cost.js:341 — `{ total, per_sqm, area: round2(area), area_confidence: areaConfidence, norm_basis: line.isCoaLine ? coaNormBasis : 'n/a', // §2.4: CoA-line-scoped (pre_r2 \| r2_refined post-R2) trades: null, // §2.1 …`
   - `buildParcelCostMenu:total` parcel-cost.js:328 — `lineCost({ areaSqm: area, ratePerSqm: num(rate.cost_per_sqm), escalationMult, adjFactor, premium, })`
   - `lineCost:lineCost()` parcel-cost.js:248 — — [called from scripts/lib/parcel-cost.js:328]
@@ -1460,7 +1460,7 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 - named constants: `max-build.js#COVERAGE_DEFAULTS.*` (13 leafs: 30/33/35/50/60/75; H:statistical_default), `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#NONRES_STOREY_HEIGHT_M` (1 leaf: 4; H:modelling_assumption), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule), `cost-model-shared.js#DEFAULT_PREMIUM_TIERS` (14 leafs: 0/1/1.15/1.35/1.6/1.85/…; H:modelling_assumption; OUT)
 - inline literals: `enrich-parcels.js:1462 100`, `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`, `enrich-parcels.js:683 100`, `optimal-config.js:260 2`
 - chain:
-  - `buildSourceSql:select.opt_aor_gfa_sqm` compute-parcel-cost-estimates.js:159 — `COALESCE(p.opt_aor_gfa_sqm, p.max_buildable_gfa_sqm)::float8 AS opt_aor_gfa_sqm`
+  - `buildSourceSql:select.opt_aor_gfa_sqm` compute-parcel-cost-estimates.js:177 — `COALESCE(p.opt_aor_gfa_sqm, p.max_buildable_gfa_sqm)::float8 AS opt_aor_gfa_sqm`
   - `buildParcelCostMenu:entry.total` parcel-cost.js:341 — `{ total, per_sqm, area: round2(area), area_confidence: areaConfidence, norm_basis: line.isCoaLine ? coaNormBasis : 'n/a', // §2.4: CoA-line-scoped (pre_r2 \| r2_refined post-R2) trades: null, // §2.1 …`
   - `buildParcelCostMenu:total` parcel-cost.js:328 — `lineCost({ areaSqm: area, ratePerSqm: num(rate.cost_per_sqm), escalationMult, adjFactor, premium, })`
   - `lineCost:lineCost()` parcel-cost.js:248 — — [called from scripts/lib/parcel-cost.js:328]
@@ -2026,8 +2026,8 @@ none
 
 ## Inputs
 
-- `docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json` sha256 `faa6e00f9518e134`
-- `docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json` sha256 `0dfe945dc51ddbcf`
+- `docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json` sha256 `d29dbb1f4fcc1d00`
+- `docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json` sha256 `21b4a19ce46868fb`
 - `docs/reports/witness/enrich_parcels/post/none_incremental.trace.json` sha256 `e4b7581aa707c345`
 - `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `cc5686e6c200d816`
 - `migrations/205_archetype_cost_rates.sql` sha256 `9d8da50c991f1258`
@@ -2037,11 +2037,11 @@ none
 - `mobile/src/lib/parcelCostFormat.ts` sha256 `f5d64ed403231148`
 - `mobile/src/lib/trackedLots.ts` sha256 `3e7974f73db4e058`
 - `scripts/lib/build-norms.js` sha256 `79277fd3c64dd57b`
-- `scripts/lib/compute/compute-parcel-cost-estimates.js` sha256 `5f3e3f2ffb53bf1a`
+- `scripts/lib/compute/compute-parcel-cost-estimates.js` sha256 `8c9c837f8bd4533a`
 - `scripts/lib/compute/enrich-parcels.js` sha256 `8e76004b9bef01de`
 - `scripts/lib/max-build.js` sha256 `b4d23240936fa986`
 - `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
-- `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`
+- `scripts/lib/parcel-cost.js` sha256 `06cec1fb1748722b`
 - `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - `scripts/seeds/bylaw/vocab.json` sha256 `7d9e04ae8d756a94`
 - `scripts/seeds/lineage-meta-snapshot.json` sha256 `dec51c67181e95e1`

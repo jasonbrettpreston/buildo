@@ -1,0 +1,20 @@
+MB-86 red evidence: src/tests/parcel-cost-scenario.logic.test.ts and src/tests/compute-parcel-cost-scenario.logic.test.ts (with src/tests/fixtures/cost/) run on the parent tree f982e64c (no MB-86 code), 2026-11-09. Full output: ~/Buildo-scratch/mcfrontend/COST/red/red-1109.out
+ Test Files  2 failed (2)
+      Tests  10 failed | 1 passed (11)
+FAIL  src/tests/parcel-cost-scenario.logic.test.ts [ src/tests/parcel-cost-scenario.logic.test.ts ]
+TypeError: P.mergeScenarioLines is not a function
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 readCostContract: the scenario catalogue and the absent-table probe > absent table (catalog columnCount 0) -> scenarioSourcePresent false; the 13 lines merge untouched besid
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 readCostContract: the scenario catalogue and the absent-table probe > present table -> scenarioSourcePresent true; before migration 298 the scenario lines carry archetype nu
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 buildSourceSql: the scenario join only when the table exists > with scenarios: a LEFT JOIN LATERAL on parcel_id, filtered to the scenario keys ($2), aggregated per parcel
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 runCostMenuPass: scenario lines ride the existing menu write > absent: the plain source runs, no scenario line is written, the counters are zero
+TypeError: P.mergeScenarioLines is not a function
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 runCostMenuPass: scenario lines ride the existing menu write > present: the scenario rows are priced into the menu, the coherence flag compares to coa_build, the counters mo
+TypeError: P.mergeScenarioLines is not a function
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 computePostPhase + records_meta: zero always written, stale measured only when the table exists > absent: no stale query, scenario_source_absent = 1, every scenario counter 
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 computePostPhase + records_meta: zero always written, stale measured only when the table exists > present: the stale count is measured after the write and reported; counters
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 computePostPhase + records_meta: zero always written, stale measured only when the table exists > the three checks report what the post-phase measured
+TypeError: C.checks.scenario_source_absent is not a function
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 descriptor > declares the Layer 3 read, turns off the input COUNT (the halts stay in guards.empty_source) and records the deviation
+TypeError: Cannot read properties of undefined (reading 'columns')
+FAIL  src/tests/compute-parcel-cost-scenario.logic.test.ts > MB-86 descriptor > declares the three checks with their severities and every scenario counter as an emit
+MB-86 COST-11b red: RED (staged engine before the rate_confidence edit): rate_inputs.rate_confidence = undefined (expected "medium-low")

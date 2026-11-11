@@ -121,7 +121,7 @@ Root: `{ "_schema_version": 1, "<line_id>": {…}, … }`. Per line:
 - `reason`: null when priced; otherwise `no_area_row`, `area_not_priceable`, `no_rate`, `malformed_rate`, or `l3_<status>[:<reason>]` inherited from the area row (`not_buildable` and `not_modelled` keep the row's own reason).
 - `flags`: the area row's flags, plus `l3_envelope_exceeds_old_coa` when the scenario total exceeds this parcel's `coa_build` total by more than $1 (the named exception to the `new_build_cost_not_gt_coa_cost` fence: Layer 3 GFA is the by-law envelope, the CoA line is the old engine).
 - `l3_content_sha`: the area row's `content_sha` (null when no row); `area_basis`: `bylaw_gfa`.
-- When priced: `total`, `per_sqm`, `area` and `area_confidence` exactly as the 13 lines (`lineCost`, one formula, one rounding), plus `rate_inputs` (`archetype`, `cost_per_sqm`, `escalation_multiplier`, `adjustment_factor`, `premium`), the rate-input stamp.
+- When priced: `total`, `per_sqm`, `area` and `area_confidence` exactly as the 13 lines (`lineCost`, one formula, one rounding), plus `rate_inputs` (`archetype`, `cost_per_sqm`, `escalation_multiplier`, `adjustment_factor`, `premium`, `rate_confidence`), the rate-input stamp. `rate_confidence` is the rate's source confidence in the FE-06 display set (`FB` high, Spec 88 §3; `HOUSEPLEX` medium-low, operator 2026-11-09); `area_confidence` keeps its closed high|medium|low area-band meaning (houseplex line: low).
 Display rounding is the producer's (MF-14 D-10 a); the menu stores cents.
 
 ### 2.5 New parcel scalar columns (headline + FSI), all propagated (§2.8)
@@ -265,7 +265,7 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
   - `scripts/compute-parcel-cost-estimates.descriptor.json`
   - `scripts/lib/compute/compute-parcel-cost-estimates.js`
   - `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts`
-  - data (descriptor): `archetype_cost_rates` reads (migrations/205_archetype_cost_rates.sql); `parcel_cost_lines` reads (migrations/248_parcel_cost_lines.sql); `parcels` reads+writes (migrations/011_parcels.sql)
+  - data (descriptor): `archetype_cost_rates` reads (migrations/205_archetype_cost_rates.sql); `parcel_cost_lines` reads (migrations/248_parcel_cost_lines.sql); `parcel_maxbld_scenarios` reads (no CREATE migration); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: enrich_parcels · parcels
   - downstream: assert_global_coverage · assert_parcel_sanity
   - consumers: compute_parcel_cost_estimates (records_meta stranded_cost_rows_retracted)

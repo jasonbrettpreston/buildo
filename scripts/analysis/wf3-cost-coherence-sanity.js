@@ -142,7 +142,7 @@ function makeCtx({ scopeWhere, config, runAt, extra }) {
   // opts.lines (the merged parcel_cost_lines catalogue). Same non-step analysis pattern as
   // opts.config above (FOLD-V8): read the editable half from the DB, re-join by id.
   const costLinesRows = (await pool.query(
-    `SELECT id, archetype, base_confidence, fit_permitted_values FROM parcel_cost_lines ORDER BY id`,
+    `SELECT id, archetype, base_confidence, fit_permitted_values FROM parcel_cost_lines WHERE id NOT LIKE 'scenario:%' ORDER BY id`, // MB-86: the scenario: rows belong to SCENARIO_COST_LINES
   )).rows;
   const costLines = mergeCostLines(PARCEL_COST_LINES, costLinesRows);
 
