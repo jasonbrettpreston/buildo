@@ -32,7 +32,8 @@ const BRIEF_IDS = ['A0', 'A1', 'A2', 'B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', '
   'B9.11', 'B9.12', 'B9.13', 'B9.14', 'B9.15', 'B9.16', 'B9.17', 'B9.18', 'B9.19', 'B10', 'B10.1', 'B10.2', 'B10.3', 'B10.4', 'B10.5', 'B10.6', 'B11', 'B12', 'B13',
   'B14', 'B15', 'B16', 'C1', 'C2', 'D1', 'D2', 'E1', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'G1', 'G2', 'G3', 'G4', 'H0'];
 // The brief's screen order: A page top, Option 1, the lot-size box, Option 2, ad, Option 3, (ad D2 owed), Coming soon, About this lot, legal, footer; H is the sheet.
-const SCREEN_ORDER = ['title', 'address', 'option', 'lot_size', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
+// MF-19 (D-5): the after-entry line (C2) follows the lot-size box in the table; the page flags decide which of the two is built.
+const SCREEN_ORDER = ['title', 'address', 'option', 'lot_size', 'lot_size_entered', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
 
 describe('P1 the page table covers the brief and binds only what exists', () => {
   it('every brief v4 element id is placed, a frame, or listed owed; nothing else', () => {
@@ -83,7 +84,7 @@ describe('P2 buildPage: the capture, the throw and Q-G4 a', () => {
     const a = capturePages(ROOT);
     const b = capturePages(ROOT);
     expect([...a.entries()]).toEqual([...b.entries()]);
-    expect(a.size).toBe(4);
+    expect(a.size).toBe(16); // MF-19: v21 plus the three entry states (entry_off, entered, entered_used) on four targets
     for (const [file, text] of a) expect(fs.readFileSync(path.join(GOLD, file), 'utf8')).toBe(text);
   });
   it('a pending part shows one of the two ruled texts and never a value', () => {

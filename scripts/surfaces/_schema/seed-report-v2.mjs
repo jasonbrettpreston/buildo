@@ -346,6 +346,11 @@ log.push(`reno: +${renoExtra.length} per-card fields (scenario, total, disclosur
 // MF-57: the v21 report page texts are content read by ONE declared field (RS-4 keeps the registry key); the texts are an authored input
 add('states', ['', '', '', 'proposed', ''], { path: 'ui.page_text', label: 'Report page text (v21)', source: 'presentation:page', type: ['text'], status: 'proposed', note: 'MF-57: fixed texts and the two ruled pending texts of the v21 page (report-v2-seed/page-text.json); read by buildPage, never sent in a response' });
 log.push('states: +1 field ui.page_text (MF-57, the v21 page texts)');
+// MF-19 (operator 2026-11-11 D-1..D-8 "all as recommmended"): the after-entry line (C2) binds the stored user entry through the input contract
+// (binding-sources.json user_input, lot-size-entry-contract.json members): its lot area (m², shown as area_sqft_m2_dot) and its entered_at (date_dmy)
+add('states', ['', '', '', 'proposed', ''], { path: 'ui.lot_size_entry', label: 'Lot size entered by a user', source: 'user_input:lot_area', type: ['number', 'm²'], status: 'proposed', note: 'MF-19: the active user lot-size entry (parcel_user_inputs, provenance user); the after-entry line shows it, server-formatted' });
+add('states', ['', '', '', 'proposed', ''], { path: 'ui.lot_size_entered_at', label: 'Lot size entered on', source: 'user_input:entered_at', type: ['timestamp'], status: 'proposed', note: 'MF-19: the entry stamp (parcel_user_inputs.entered_at); the after-entry line shows it as date_dmy, server-formatted' });
+log.push('states: +2 fields ui.lot_size_entry, ui.lot_size_entered_at (MF-19, the after-entry line)');
 // images: asset_id
 // cards
 const RULING_CARD = { RE: pend.q('Q-6'), RF: pend.lq('scenario:RF') };
@@ -440,6 +445,7 @@ const bindOf = (f) => {
   if (!m) return { why: 'no source' };
   if (m[1] === 'catalogue') return { source: f.source };
   if (m[1] === 'presentation') return { source: `content:${m[2]}` };
+  if (m[1] === 'user_input') return { source: f.source }; // MF-19: the input contract member; RS-1 resolves it once binding-sources.json names the file
   if (m[1] === 'consumer') { const col = colOf(m[2]); return col ? { source: `parcels:${col}` } : { why: 'no parcels column' }; }
   return { why: `no row yet (${m[1]})` };
 };

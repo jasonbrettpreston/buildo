@@ -5,7 +5,9 @@
 // `fingerprint` are rebuilt from its `response_fixture` by buildPage. The fixtures are never changed. Run twice it writes identical bytes.
 // The page goldens sit OUTSIDE the gate's golden root (src/tests/fixtures/surfaces) until decision D-D places them (SV-SCREEN accepts only the
 // REPORT dir and converted surfaces there); src/tests/surfaces/report-page.logic.test.ts holds the capture and parity proof meanwhile.
-//   npx tsx scripts/surfaces/report-page-capture.ts            rewrite the four page goldens
+// MF-19 (2026-11-11; D-5, D-6): three more page states per target beside v21 (entry_off: the switch off, no box or sheet; entered: the
+// after-entry line; entered_used: the line with its recalculated sentence), each from its own authored response_fixture.
+//   npx tsx scripts/surfaces/report-page-capture.ts            rewrite the page goldens
 //   npx tsx scripts/surfaces/report-page-capture.ts --check    exit 1 if any page golden would change (writes nothing)
 // MF-48 (Stage A; Spec 126 11b.2 dated note 2026-11-11, D-4 a): the same run also writes the mobile page VIEWS of the mobile props goldens
 // (props/<state>.mobile.json): each view is pageViewOf(buildPage(response), {target: 'mobile'}) through this core, never a second resolver. The
@@ -23,12 +25,14 @@ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-ex
 export const PAGE_GOLDEN_DIR = 'src/tests/fixtures/report-page';
 export const PAGE_FP_FILES = [...(FP_FILES as string[]), 'scripts/surfaces/_schema/report-page.json', 'scripts/surfaces/_schema/report-page.schema.json'];
 
+export const PAGE_STATES = ['v21', 'entry_off', 'entered', 'entered_used'] as const;
+
 export const capturePages = (root: string): Map<string, string> => {
   const files: Record<string, string> = {};
   for (const p of PAGE_FP_FILES) files[p] = sha16(path.join(root, p));
   const out = new Map<string, string>();
-  for (const target of TARGETS as string[]) {
-    const name = `v21.${target}.json`;
+  for (const state of PAGE_STATES) for (const target of TARGETS as string[]) {
+    const name = `${state}.${target}.json`;
     const g = readJson(path.join(root, PAGE_GOLDEN_DIR, name)) as Json;
     const next = {
       harness: g.harness, spec: g.spec, surface: g.surface, state: g.state, target: g.target,

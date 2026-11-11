@@ -8,7 +8,7 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-121 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+123 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
@@ -16,6 +16,7 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | `catalogue` | 55 |
 | `content` | 35 |
 | `parcels` | 27 |
+| `user_input` | 2 |
 
 ## Gates
 
@@ -247,6 +248,8 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | Semi lot: "it's detached" correction | `ui.states.semi_correction` | text |  | new | rendered | `content:states.semi_correction` | Q-2: the correction prompt; sets lot_form_user_override |
 | Lot-form display rules | `ui.lot_form_rules` | jsonb |  | new | rendered | `content:lot_form_rules` | Q-1/Q-2/Q-3: what a semi_half lot shows |
 | Report page text (v21) | `ui.page_text` | text |  | proposed | rendered | `content:page` | MF-57: fixed texts and the two ruled pending texts of the v21 page (report-v2-seed/page-text.json); read by buildPage, never sent in a response |
+| Lot size entered by a user | `ui.lot_size_entry` | number | m² | proposed | rendered | `user_input:lot_area` | MF-19: the active user lot-size entry (parcel_user_inputs, provenance user); the after-entry line shows it, server-formatted |
+| Lot size entered on | `ui.lot_size_entered_at` | timestamp |  | proposed | rendered | `user_input:entered_at` | MF-19: the entry stamp (parcel_user_inputs.entered_at); the after-entry line shows it as date_dmy, server-formatted |
 | Street View photo block (display rules) | `ui.street_view` | jsonb |  | new | rendered | `content:street_view` | Q-9 (decided): caption, attribution template, placement |
 | Sponsored placements | `ui.ad_placements` | jsonb |  | new | rendered | `content:ad_placements` | Q-7/Q-8 (decided): first-party ads, two slots, never inside a card, always "Sponsored" |
 

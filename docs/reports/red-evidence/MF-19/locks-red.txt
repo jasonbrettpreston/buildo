@@ -1,0 +1,32 @@
+MF-19 · red first for the new locks: FE-19 src/tests/surfaces/user-input-provenance.logic.test.ts, FE-20 src/tests/surfaces/user-entry-precedence.logic.test.ts, and the D-6 switch lock src/tests/parcels-lot-size-route.infra.test.ts (2026-11-11). Both runs in a throwaway worktree (removed after).
+
+Run 1 — the pre-build tree (prereg commit 9a25611f1) with only the three test files copied in: every file fails; nothing they lock exists.
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts — Cannot find module '@/app/api/parcels/lot-size/route'
+ FAIL  src/tests/surfaces/user-entry-precedence.logic.test.ts — Cannot find module '@/lib/parcels/lot-size-entry'
+ FAIL  src/tests/surfaces/user-input-provenance.logic.test.ts — Cannot find module '@/app/api/parcels/lot-size/types'
+ Test Files  3 failed (3)
+
+Run 2 — the full MF-19 tree with four planted defects: (a) route.ts the ENTRY_OFF branch disabled (if (false && ...)); (b) effectiveLotSize returns the City value before the active entry; (c) lotSizePageFlags opens the box and sheet without the switch; (d) entryView sends entered_by.
+   × FE-19 (2) shared, never private > the response is the value and the stamp, source user; never the author or the typed value (planted entered_by fails)
+   × FE-20 (1) precedence: verified > the active user entry > the City value > the real effectiveLotSize passes every case; the verified list is closed and empty
+   × FE-20 (1) precedence: verified > the active user entry > the City value > planted: the order swapped (City first) and stated read as verified are both caught
+   × FE-20 (3) the page flags (D-5, D-6) > off and nothing entered: no box, no sheet, no line (D-6)
+   × THE LOCK (D-6): no write path is reachable while the switch is off > the DB value 0: 403 ENTRY_OFF after one settings read; no parcel read, no transaction, no rate call, for every body
+   × THE LOCK (D-6): no write path is reachable while the switch is off > the DB value 1 with the seed bound 0-0 (as committed): 403 ENTRY_OFF after one settings read; no parcel read, no transaction, no rate call, for every body
+   × THE LOCK (D-6): no write path is reachable while the switch is off > a value other than 1: 403 ENTRY_OFF after one settings read; no parcel read, no transaction, no rate call, for every body
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > 409 LOT_SIZE_ALREADY_ENTERED with the stored entry (entered once), nothing written
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > D-2 500 sqft -> 200
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > D-2 50000 sqft -> 200
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > D-2 46.45 m2 -> 200
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > D-2 4645.15 m2 -> 200
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > D-3: a sq ft number typed as m² (10.76x the City record) is refused with the server message; 1/3 and 3x pass, beyond fails
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > 200 stores m² rounded to 2 decimals with source user; shows the server format; never the author or the typed value
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > the m²-typed path end to end: 289.856 is refused (3 decimals) and 289.86 m² stores as typed
+   × POST /api/parcels/lot-size with the switch on (test copy of the seed bound) > a 23:30 Toronto entry (04:30 UTC the next day) shows the Toronto date
+   × PUT /api/admin/parcels/lot-size/revert (D-4: the audited admin revert) > one UPDATE to reverted (the row stays) and one admin_audit_log row lot_size_revert, in one transaction
+   × PUT /api/admin/parcels/lot-size/revert (D-4: the audited admin revert) > the revert does not read the switch (a bad entry must be fixable while the switch is off)
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  3 failed (3)
+      Tests  18 failed | 39 passed (57)
+
+Green: the same three files on the MF-19 tree with no planted defect: 3 files, 57 tests passed (src/tests/parcels-lot-size-route.infra.test.ts 42, user-input-provenance 7, user-entry-precedence 8).

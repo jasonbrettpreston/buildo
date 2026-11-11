@@ -221,21 +221,23 @@ const walkAll = (dir: string, rel = ''): string[] => (fs.existsSync(dir) ? fs.re
 // ---- the cases -------------------------------------------------------------------------------------------------------------------------------------
 
 describe('C-1 the arms on the real tree, and the queue state', () => {
-  it('SV-DESC is clean with the exact counts (25 in scope: 7 converted, 5 pending, 9 parked, 4 report); SCREEN and SBIND judge the MF-37, MF-35 and MF-40 surfaces', async () => {
+  it('SV-DESC is clean with the exact counts (27 in scope: 10 converted, 4 pending, 9 parked, 4 report); SCREEN and SBIND judge the MF-37, MF-35, MF-40, MF-53 and MF-19 surfaces', async () => {
     const ctx = await loadContext(REPO);
     const d = descArm(ctx);
     expect(d.findings).toEqual([]);
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted (converted 3 -> 4, pending 7 -> 6); its 10 mobile goldens and 23 content strings join.
     // MF-40 (dated 2026-11-10; operator "y recommendation: C, with the four trims. approved"): admin_placements converted from pending, admin_offers and
     // admin_advertiser_entry new (25 in scope, converted 4 -> 7, pending 6 -> 5); 17 web goldens and 75 content strings join (re-measured on the MF-35 tip).
-    expect(d.note).toBe('S-desc ok (examined 25 in scope: converted 8, pending 4, parked 9, report 4)'); // MF-53: the map page converted
+    // MF-19 (dated 2026-11-11; operator D-1..D-8 "all as recommmended"): admin_lot_size_revert and report_lot_size_entry new and converted (+2 in scope,
+    // +2 converted); 12 web goldens and 29 content strings join; red evidence docs/reports/red-evidence/MF-19/count-locks-red.txt.
+    expect(d.note).toBe('S-desc ok (examined 27 in scope: converted 10, pending 4, parked 9, report 4)'); // MF-53: the map page converted
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
     // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
     // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
     // MF-44 (dated 2026-11-11; operator "01-a 0-2 b as long as they are complaint"): mobile_parcel_search gains its web target, so its 10 web goldens
     // join (44 -> 54); no content key is added (the web reads the same 23 strings).
     // MF-53 (dated 2026-11-11): + the map page (11 mobile goldens, 21 strings).
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (8 surfaces, 65 goldens)' }, { findings: [], note: 'S-sbind ok (8 surfaces, 176 strings)' }]);
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (10 surfaces, 77 goldens)' }, { findings: [], note: 'S-sbind ok (10 surfaces, 205 strings)' }]); // MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -364,7 +366,7 @@ describe('C-3 bindings.json integrity', () => {
     // MF-35 (dated 2026-11-10): + the two mobile modules, their promoted entry shared_mobile_surface_binding and the search screen mount.
     // MF-44 (dated 2026-11-11; Spec 126 §11b.5): + the web SEARCH module, its promoted entry binding_web_search and the four web search mounts.
     // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([8, 6, 15]); // MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary)
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([8, 6, 18]); // MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -471,7 +473,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
     // MF-48 (dated 2026-11-11; D-2 a): +1 promoted binding entry (binding_mobile_report).
-    expect(all.length).toBe(159); // MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    expect(all.length).toBe(163); // MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;

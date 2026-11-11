@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **84 surfaces, 69 contracts and 6 jobs** in it today.
+There are **86 surfaces, 71 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 84 |
-| CONTRACT | 69 |
+| SURFACE | 86 |
+| CONTRACT | 71 |
 | JOB | 6 |
-| **Total** | **159** |
+| **Total** | **163** |
 
 ### 2.1 By archetype
 
@@ -217,10 +217,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `COMMAND` | CONTRACT | 8 | 0 | 0 | 8 |
 | `DASHBOARD` | SURFACE | 3 | 2 | 0 | 5 |
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
-| `FORM` | SURFACE | 6 | 1 | 4 | 11 |
+| `FORM` | SURFACE | 6 | 1 | 6 | 13 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
 | `LIST` | SURFACE | 9 | 7 | 3 | 19 |
-| `MUTATION` | CONTRACT | 20 | 5 | 0 | 25 |
+| `MUTATION` | CONTRACT | 20 | 7 | 0 | 27 |
 | `QUERY` | CONTRACT | 33 | 2 | 0 | 35 |
 | `REPORT` | SURFACE | 2 | 4 | 0 | 6 |
 | `SCHEDULED` | JOB | 6 | 0 | 0 | 6 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**22 of 159 rows fully researched · 137 still open · 438 unresearched fields in total.**
+**24 of 163 rows fully researched · 139 still open · 440 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
 | `mobile-product.json` | 40 | 10 | 30 | 63 |
-| `web-product.json` | 13 | 3 | 10 | 89 |
+| `web-product.json` | 14 | 4 | 10 | 89 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
-| `admin-new.json` | 16 | 8 | 8 | 15 |
-| `contracts.json` | 69 | 1 | 68 | 166 |
+| `admin-new.json` | 17 | 9 | 8 | 15 |
+| `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **159** | **22** | **137** | **438** |
+| **total** | **163** | **24** | **139** | **440** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -254,19 +254,19 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | **no owner spec** | 42 | The file carries no `SPEC LINK` header and the System Map has no row for it — so there is nothing to cite. Closing it means **writing or assigning a spec**, not finding one. Three of these cite a spec path that does not exist (a dead citation is filed as a defect, not resolved here). |
 | **no lineage producer** | 25 | The table is absent from `docs/reference/data-lineage-map.md`, so no pipeline step declares it as a write. Either it is written by an API route or a migration seed (answer `none`), or a step writes it without declaring it — which is a pipeline defect, not a research gap. |
 | **no declared owner** | 15 | Nobody is recorded as owning it. This is an organisational answer, not a measurable one. |
-| **vocabulary escalation** | 111 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
+| **vocabulary escalation** | 113 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
 | **archetype profile field, newly required** | 52 | ASK-22 made the archetype profiles REAL, so these fields became required AFTER the research pass ran. The field must now be present; it may hold the sentinel. Each is a short, well-defined lookup — the pagination idiom, the poll interval, the debounce, the resume key. |
 | **measurement not yet made** | 23 | An ordinary lookup nobody has done yet — read the query, name the columns, cite the line. |
 | **other** | 170 | Fields at paths this grouping does not name: see the per-row badges. |
-| | **438** | |
+| | **440** | |
 
 ### 2.3 By status
 
 | Status | Count | Meaning |
 |---|---:|---|
 | exists | 128 | the code is in the tree today |
-| new | 23 | specified, not built |
-| generated | 8 | will be rendered from descriptors, not hand-written |
+| new | 25 | specified, not built |
+| generated | 10 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 11 | 8 (73%) | 9 | yes |
-| **B** | `parcel_admin` | 24 | 8 (33%) | 19 | yes |
+| **A** | `parcel_product` | 13 | 9 (69%) | 10 | yes |
+| **B** | `parcel_admin` | 26 | 9 (35%) | 20 | yes |
 | **C** | `platform_shared` | 78 | 6 (8%) | 43 | yes |
-| **D** | `estate_other` | 46 | 0 (0%) | 40 | **no** — inventory + seam only (R-03) |
-| | **total** | **159** | **22** | | |
+| **D** | `estate_other` | 46 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
+| | **total** | **163** | **24** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -320,7 +320,7 @@ The path from a customer tapping a screen to the pipeline step that built what t
 
 One line per entry in scopes A, B and C, organised **scope → type → build order**. `build_order` is derived, not chosen: scope rank × 1000 + feature rank × 10 + kind rank, where the kind rank puts **tables before contracts before surfaces before admin** — it answers *"what must exist before this can be built"*. Follow an id to its detail in §3.
 
-**§A `parcel_product` (11)**
+**§A `parcel_product` (13)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -335,8 +335,10 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-005`](#s-005) | surface | `web_landing` | `STATIC` | `F06` web-front-door | 1063 | 91% | [detail](#s-005) |
 | [`C-062`](#c-062) | contract | `contract_parcels_tracked` | `MUTATION` | `F17` tracked-lots | 1172 | 100% | [detail](#c-062) |
 | [`S-072`](#s-072) | surface | `mobile_tracked_lots` | `LIST` | `F17` tracked-lots | 1173 | 100% | [detail](#s-072) |
+| [`S-083`](#s-083) | surface | `report_lot_size_entry` | `FORM` | `F02` parcel-report | 2047 | 100% | [detail](#s-083) |
+| [`C-070`](#c-070) | contract | `contract_parcels_lot_size_entry` | `MUTATION` | `F02` parcel-report | 2049 | 97% | [detail](#c-070) |
 
-**§B `parcel_admin` (24)**
+**§B `parcel_admin` (26)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -349,6 +351,8 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`C-066`](#c-066) | contract | `contract_admin_placements_list` | `QUERY` | `F04` sponsor-placements | 2043 | 97% | [detail](#c-066) |
 | [`S-081`](#s-081) | surface | `admin_offers` | `LIST` | `F04` sponsor-placements | 2044 | 100% | [detail](#s-081) |
 | [`S-080`](#s-080) | surface | `admin_advertiser_entry` | `FORM` | `F04` sponsor-placements | 2045 | 100% | [detail](#s-080) |
+| [`S-082`](#s-082) | surface | `admin_lot_size_revert` | `FORM` | `F08` admin-parcel-operations | 2046 | 100% | [detail](#s-082) |
+| [`C-071`](#c-071) | contract | `contract_admin_lot_size_revert` | `MUTATION` | `F08` admin-parcel-operations | 2048 | 97% | [detail](#c-071) |
 | [`S-010`](#s-010) | surface | `admin_ledger_visualiser` | `REPORT` | `F07` app-outputs-materialisation | 2073 | 97% | [detail](#s-010) |
 | [`S-015`](#s-015) | surface | `admin_run_ledger` | `LIST` | `F07` app-outputs-materialisation | 2073 | 94% | [detail](#s-015) |
 | [`C-002`](#c-002) | contract | `contract_admin_parcels_lookup` | `QUERY` | `F08` admin-parcel-operations | 2082 | 97% | [detail](#c-002) |
@@ -510,13 +514,13 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |
 |---|---|---|---:|---:|---|
 | **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
-| **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) | 2 | 8 | 3 descriptor(s), 2 contract(s), and would orphan no table — every table it touches is shared |
+| **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-083`](#s-083) · [`C-070`](#c-070) | 3 | 9 | 5 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
 | **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) | 0 | 0 | 1 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F07** app-outputs-materialisation | `parcel_admin` | [`S-010`](#s-010) · [`S-015`](#s-015) | 0 | 4 | 2 descriptor(s), and would orphan 1 table(s): `app_outputs` |
-| **F08** admin-parcel-operations | `parcel_admin` | [`C-002`](#c-002) · [`S-012`](#s-012) · [`S-074`](#s-074) · [`S-075`](#s-075) · [`S-076`](#s-076) · [`C-063`](#c-063) · [`C-064`](#c-064) · [`C-065`](#c-065) | 4 | 6 | 8 descriptor(s), 4 contract(s), and would orphan 1 table(s): `media_assets` |
+| **F08** admin-parcel-operations | `parcel_admin` | [`S-082`](#s-082) · [`C-071`](#c-071) · [`C-002`](#c-002) · [`S-012`](#s-012) · [`S-074`](#s-074) · [`S-075`](#s-075) · [`S-076`](#s-076) · [`C-063`](#c-063) · [`C-064`](#c-064) · [`C-065`](#c-065) | 5 | 7 | 10 descriptor(s), 5 contract(s), and would orphan 1 table(s): `media_assets` |
 | **F09** surface-registry-drift | `parcel_admin` | [`S-007`](#s-007) · [`S-008`](#s-008) · [`S-011`](#s-011) · [`S-014`](#s-014) · [`S-016`](#s-016) | 0 | 5 | 5 descriptor(s), and would orphan 4 table(s): `contract_descriptors` · `surface_descriptors` · `pg_policies` · `archetype_registry` |
 | **F10** auth-identity | `platform_shared` | [`S-027`](#s-027) · [`S-037`](#s-037) · [`S-038`](#s-038) · [`S-039`](#s-039) · [`S-040`](#s-040) · [`S-047`](#s-047) | 0 | 0 | 6 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F11** onboarding | `platform_shared` | [`C-026`](#c-026) · [`S-028`](#s-028) · [`S-029`](#s-029) · [`S-030`](#s-030) · [`S-031`](#s-031) · [`S-032`](#s-032) · [`S-033`](#s-033) · [`S-034`](#s-034) · [`S-035`](#s-035) · [`S-048`](#s-048) | 1 | 2 | 10 descriptor(s), 1 contract(s), and would orphan 1 table(s): `trade_suppliers` |
@@ -529,7 +533,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F90** lead-generation | `estate_other` | [`C-040`](#c-040) · [`C-041`](#c-041) · [`C-042`](#c-042) · [`C-043`](#c-043) · [`C-046`](#c-046) · [`C-052`](#c-052) · [`C-053`](#c-053) · [`C-056`](#c-056) · [`C-057`](#c-057) · [`C-058`](#c-058) · [`S-061`](#s-061) · [`S-062`](#s-062) · [`S-065`](#s-065) · [`S-055`](#s-055) · [`S-057`](#s-057) | 10 | 31 | 15 descriptor(s), 10 contract(s), and would orphan 3 table(s): `pg_extension` · `supplier_trades` · `suppliers` |
 | **F91** flight-center | `estate_other` | [`C-054`](#c-054) · [`C-055`](#c-055) · [`S-059`](#s-059) · [`S-060`](#s-060) · [`S-054`](#s-054) · [`S-056`](#s-056) | 2 | 24 | 6 descriptor(s), 2 contract(s), and would orphan no table — every table it touches is shared |
 | **F92** permits-builders-entities | `estate_other` | [`C-039`](#c-039) · [`C-044`](#c-044) · [`C-045`](#c-045) · [`C-047`](#c-047) · [`C-048`](#c-048) · [`C-049`](#c-049) · [`C-050`](#c-050) · [`C-051`](#c-051) · [`C-059`](#c-059) · [`C-060`](#c-060) · [`C-061`](#c-061) · [`S-063`](#s-063) · [`S-064`](#s-064) · [`S-066`](#s-066) · [`S-067`](#s-067) · [`S-068`](#s-068) · [`S-069`](#s-069) · [`S-070`](#s-070) · [`S-058`](#s-058) | 11 | 20 | 19 descriptor(s), 11 contract(s), and would orphan 1 table(s): `entity_contacts` |
-| **F93** scheduled-jobs | `estate_other` | [`J-001`](#j-001) · [`J-002`](#j-002) · [`J-003`](#j-003) · [`J-004`](#j-004) · [`J-005`](#j-005) · [`J-006`](#j-006) | 0 | 9 | 6 descriptor(s), and would orphan 3 table(s): `auth.users` · `permit_scrape_outcomes` · `permit_scrape_outcome_rollup` |
+| **F93** scheduled-jobs | `estate_other` | [`J-001`](#j-001) · [`J-002`](#j-002) · [`J-003`](#j-003) · [`J-004`](#j-004) · [`J-005`](#j-005) · [`J-006`](#j-006) | 0 | 10 | 6 descriptor(s), and would orphan 3 table(s): `auth.users` · `permit_scrape_outcomes` · `permit_scrape_outcome_rollup` |
 
 The emitted descriptor tree mirrors this exactly — `scripts/surfaces/<scope>/<feature>/<kind>/<id>.descriptor.json` — so removing a feature is removing a directory, and the `--check` arm reports precisely what went with it.
 
@@ -585,7 +589,7 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 
 The estate shares one repository; it does not share one programme. Sections A–C are what **Spec 126 governs**. Section D is the other product — inventoried so a shared contract or an orphan is visible, and deliberately rendered in one line each rather than in full (Spec 126 §2; the fence is Spec 128 R-03).
 
-### §A `parcel_product` — the MaxBLD parcel cost tool (11)
+### §A `parcel_product` — the MaxBLD parcel cost tool (13)
 
 **This is the programme.** The surfaces, contracts and jobs a customer of the parcel tool touches, plus the five business requirements that hang off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; batched first by Spec 127 §4.4.
 
@@ -1437,7 +1441,147 @@ DATA. The contract C-062 and the `user_tracked_lots` table are DESIGNED, not bui
 
 THE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA BUILD = `parcels.max_newbuild_coa_gfa_sqm` (real). New Nearby CoA Ruling = NO COLUMN EXISTS; derivable from decided `coa_applications` in the parcel’s neighbourhood, declared nullable, rendered "—" while null. See `limitations` and the blocking check.
 
-### §B `parcel_admin` — admin surfaces that operate the parcel product (24)
+<a id="s-083"></a>
+
+###### `S-083` `report_lot_size_entry`
+
+**Programme.** `S-083` · scope `parcel_product` · feature `F02` · build order 2047 · batch `B2` · review `unreviewed` — The user lot-size input of the report (MF-19).
+
+**What it is.** The Add lot size form of the report sheet: one number and its unit (sq ft or m²), entered once per lot (D-1 a). Declared now; it is mounted in the report sheet when the entry switch flips (the sheet is hidden while off, D-6).
+
+**What it reads and writes.** It posts the lot area to the entry contract, which stores one parcel_user_inputs row (source user, entered_at) that wins over the City value for every viewer; the page re-reads and shows the after-entry line.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web FORM binding from render.form and entry_request in lot-size-entry-contract.json.
+
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** generated · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **authenticated** (The entry route calls getCurrentUserContext first and answers 401 without a signed-in user.) · role **consumer**
+
+**Calls.** `contract_parcels_lot_size_entry`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md (B7) and DECISIONS.md D-1..D-6` |
+| `contracts` | `contract_parcels_lot_size_entry` |
+| `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
+| `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, the entitlement gate` |
+| `states` | `src/components/surfaces/web/FormBinding.tsx — the six FORM states` |
+| `emits` | `src/app/api/parcels/lot-size/route.ts — logInfo outcome lines` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | The two fields come from entry_request in lot-size-entry-contract.json; the route schema adds parcel_id from the page. — `scripts/surfaces/_schema/lot-size-entry-contract.json — entry_request, route_request` |
+| 3 | `outputs` | `contract_only` | The write goes through a declared MUTATION contract; the page re-reads after success (no optimistic write). — `src/app/api/parcels/lot-size/route.ts` |
+| 4 | `state` | `server_only` | The entry is a shared server fact (FE-19); nothing persists on the device. — `src/app/api/parcels/lot-size/route.ts` |
+| 5 | `staleness` | `live` | Submitted per request. — `src/app/api/parcels/lot-size/route.ts` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `none` | The entry row is its own record (who, when); no analytics or ledger event is declared. — `src/app/api/parcels/lot-size/route.ts` |
+| 14 | `offers` | `none` | An admin correction form; it renders no sponsored placement. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 15 | `metering` | `none` | An operator act, not a metered product action. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 16 | `config` | `logic_variables` | The switch, the range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
+| 17 | `sharing` | `shared` | parcel_user_inputs is read by the report (the after-entry line) and reverted by the admin form. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record "sq ft first"). The bounds are the server's (plan fold F2): the form checks the type only.
+
+<a id="c-070"></a>
+
+###### `C-070` `contract_parcels_lot_size_entry`
+
+**Programme.** `C-070` · scope `parcel_product` · feature `F02` · build order 2049 · batch `B2` · review `unreviewed` — The user lot-size input of the report (MF-19).
+
+**What it is.** Stores one user lot-size entry for one lot, once (D-1 a): its own record that wins over the City value for every viewer; the City value stays. Closed while the entry switch is off (403 ENTRY_OFF, D-6).
+
+**What it reads and writes.** It reads the switch and settings, then the lot and its active entry, checks the D-2 range and the D-3 City ratio on the server, and inserts one parcel_user_inputs row (source user, entered_at) in one transaction.
+
+**Under Spec 126.** A MUTATION CONTRACT; idempotency by the partial unique index (a second entry or a lost race is 409 with the stored entry).
+
+**kind** CONTRACT · **archetype** `MUTATION` · **platforms** `web` · **status** new · **path** `/api/parcels/lot-size` · **methods** `POST` · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **authenticated** (getCurrentUserContext first; 401 without a signed-in user (the /api/parcels route-guard family).)
+
+**Called by.** `report_lot_size_entry`
+
+**Emits.** —
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `parcel_user_inputs` **(net-new)** | `id` · `parcel_id` · `input_key` · `value_sqm` · `typed_value` · `typed_unit` · `source` · `entered_at` · `entered_by` · `status` · `reverted_at` · `reverted_by` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/parcels/lot-size/route.ts` |
+| `contracts` | `src/app/api/parcels/lot-size/route.ts — POST export` |
+| `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
+| `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, the entitlement gate` |
+| `states` | `the envelope classes in errors.classes` |
+| `emits` | `src/app/api/parcels/lot-size/route.ts — logInfo outcome lines` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads the switch and settings (logic_variables), the lot and its City value (parcels) and the active entry (parcel_user_inputs). — `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables`, `src/lib/parcels/lot-size-entry.ts — readLotSizeSettings, readLotSizeRead` |
+| 3 | `outputs` | `direct_db` | It inserts one parcel_user_inputs row in one transaction (insert-only; never parcels). — `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 5 | `staleness` | `live` | A write; nothing is cached. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code. — `src/lib/api/with-api-envelope.ts`, `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 13 | `emits` | `none` | The entry row is its own record (who, when); the route logs outcome lines only. — `src/app/api/parcels/lot-size/route.ts` |
+| 14 | `offers` | `none` | A write endpoint renders no sponsored placement. — `src/app/api/parcels/lot-size/route.ts` |
+| 15 | `metering` | `none` | An entry is not a metered report view; it is limited per day by the rate limit (D-4). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 16 | `config` | `logic_variables` | The switch, the range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
+| 17 | `sharing` | `sole` | Called by the Add lot size form only (mounted at the flip). — `scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/parcels/lot-size/route.ts`
+
+> ⚠️ MF-19 D-1..D-6. Entitlement gate on this base = the lookup status check; on the MF-45 restack it becomes the parcel_tool arm. One CONTRACT descriptor per handler file (126 §3.1).
+
+### §B `parcel_admin` — admin surfaces that operate the parcel product (26)
 
 Usage and entitlements, placements and advertiser accounts, the PDF audit, the `app_outputs` recompute, and the descriptor-native registry / drift / roles pages. These convert **with** the product, not after it — an unobservable product is not shipped.
 
@@ -2091,6 +2235,146 @@ _No table is reached by this entry — every value it shows arrives through a co
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
 
 > ⚠️ MF-40 D-3 (minimal advertisers entry on the placements page, no LIST or DETAIL; admin_advertiser_accounts stays parked). Trim 4: created active, no deactivation or rename in v1. advertiser_id is generated by the page (idempotent create).
+
+<a id="s-082"></a>
+
+###### `S-082` `admin_lot_size_revert`
+
+**Programme.** `S-082` · scope `parcel_admin` · feature `F08` · build order 2046 · batch `B2` · review `unreviewed` — The audited admin revert of a user lot-size entry (MF-19 D-4).
+
+**What it is.** The small admin form that reverts the user lot-size entry of one lot, so a bad entry stops being the lot size every viewer sees (D-4).
+
+**What it reads and writes.** It flips the active parcel_user_inputs row of the lot to reverted (the row stays as history) and writes one admin_audit_log row through the revert contract; the City value is the lot size again.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web FORM binding from render.form and revert_request in lot-size-entry-contract.json.
+
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** generated · **shard** `admin-new` · **researched** ✅ every field
+
+**Gate.** auth class **admin** (An /admin/** page: classifyRoute returns "admin" for any pathname starting with /admin/, and "admin" is the profiles.is_admin flag checked in-predicate, not a Postgres role.) · role **admin**
+
+**Calls.** `contract_admin_lot_size_revert`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md (B6) and DECISIONS.md D-4` |
+| `contracts` | `contract_admin_lot_size_revert` |
+| `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
+| `gate` | `src/lib/auth/require-admin-page.ts — requireAdminPage(), called first in the page` |
+| `states` | `src/components/surfaces/web/FormBinding.tsx — the six FORM states` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | The one field comes from revert_request in lot-size-entry-contract.json, the schema the revert route validates. — `scripts/surfaces/_schema/lot-size-entry-contract.json — revert_request` |
+| 3 | `outputs` | `contract_only` | The write goes through a declared MUTATION contract and the page waits for the server. — `src/app/api/admin/parcels/lot-size/revert/route.ts` |
+| 4 | `state` | `server_only` | A web admin form whose canonical writer is the mutation contract; nothing persists on the device. — `src/lib/parcels/useLotSizeRevert.ts` |
+| 5 | `staleness` | `live` | Submitted per request. — `src/lib/parcels/useLotSizeRevert.ts` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `ledger` | A revert writes one admin_audit_log row (lot_size_revert). — `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| 14 | `offers` | `none` | An admin correction form; it renders no sponsored placement. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 15 | `metering` | `none` | An operator act, not a metered product action. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 16 | `config` | `none` | No tunable: a revert has no limit (it is the fix for a bad entry, D-4). — `scripts/surfaces/_schema/lot-size-entry-contract.json — revert_request` |
+| 17 | `sharing` | `shared` | parcel_user_inputs is written by the user entry route and read by the report. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-19 D-4 (the audited admin revert as a FORM on the existing web FORM binding). One field: the City parcel id; the route reverts that lot's active entry.
+
+<a id="c-071"></a>
+
+###### `C-071` `contract_admin_lot_size_revert`
+
+**Programme.** `C-071` · scope `parcel_admin` · feature `F08` · build order 2048 · batch `B2` · review `unreviewed` — The audited admin revert of a user lot-size entry (MF-19 D-4).
+
+**What it is.** Reverts the active user lot-size entry of one lot (D-4). The row stays as history; the City value is the lot size again.
+
+**What it reads and writes.** It reads the lot and its active parcel_user_inputs row, flips it to reverted and inserts one admin_audit_log row in one transaction.
+
+**Under Spec 126.** A MUTATION CONTRACT with one audit row per revert (lot_size_revert).
+
+**kind** CONTRACT · **archetype** `MUTATION` · **platforms** `web` · **status** new · **path** `/api/admin/parcels/lot-size/revert` · **methods** `PUT` · **shard** `contracts` · **unresearched fields: 1**
+
+**Gate.** auth class **admin** (classifyRoute("/api/admin/parcels/lot-size/revert") returns "admin" (the /api/admin/ prefix); the handler re-verifies the caller with verifyAdminAuth, and the mutation requires a session admin.)
+
+**Called by.** `admin_lot_size_revert`
+
+**Emits.** —
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `parcel_user_inputs` **(net-new)** | `id` · `parcel_id` · `input_key` · `value_sqm` · `typed_value` · `typed_unit` · `source` · `entered_at` · `entered_by` · `status` · `reverted_at` · `reverted_by` | _does not exist yet_ | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/api/admin/parcels/lot-size/revert/route.ts` |
+| `contracts` | `src/app/api/admin/parcels/lot-size/revert/route.ts — PUT export` |
+| `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
+| `gate` | `src/app/api/admin/parcels/lot-size/revert/route.ts — verifyAdminAuth first` |
+| `states` | `the envelope classes in errors.classes` |
+| `emits` | `src/lib/admin/admin-audit.ts — writeAdminAudit inside withTransaction` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `app_outputs` | It reads the lot (parcels) and its active entry (parcel_user_inputs, written only by the entry route). — `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables`, `src/lib/parcels/lot-size-entry.ts — readLotSizeRead` |
+| 3 | `outputs` | `direct_db` | It updates one parcel_user_inputs row (status reverted) and inserts one admin_audit_log row in one transaction. — `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables`, `src/lib/admin/admin-audit.ts` |
+| 4 | `state` | `server_only` | A CONTRACT holds no client state: every value is resolved per request on the server. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 5 | `staleness` | `live` | A write; nothing is cached. — `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code. — `src/lib/api/with-api-envelope.ts`, `src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler` |
+| 13 | `emits` | `both` | A revert writes one admin_audit_log row. — `src/lib/admin/admin-audit.ts — writeAdminAudit` |
+| 14 | `offers` | `none` | An admin endpoint renders no sponsored placement. — `src/app/api/admin/parcels/lot-size/revert/route.ts` |
+| 15 | `metering` | `none` | Admin corrections are not metered. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 16 | `config` | `none` | No tunable. — `scripts/surfaces/_schema/lot-size-entry-contract.json — revert_request` |
+| 17 | `sharing` | `sole` | Called by the admin lot-size page only. — `src/app/(maxbld)/admin/lot-size/LotSizeRevertPageClient.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/api/admin/parcels/lot-size/revert/route.ts`
+
+> ⚠️ MF-19 D-4. One CONTRACT descriptor per handler file (126 §3.1).
 
 <a id="s-010"></a>
 
@@ -9016,7 +9300,7 @@ _Rendered in one line each on purpose. These convert under the same standard in 
 
 Every table any entry reads or writes, its real columns, and who touches it. **exists** = present in the introspected schema; **net-new** = specified but not yet in the database.
 
-**73** distinct tables are touched — **53** exist today, **20** are net-new.
+**74** distinct tables are touched — **53** exist today, **21** are net-new.
 
 ### Existing tables (53)
 
@@ -9076,7 +9360,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `user_profiles` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `web_subscribe` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `admin_users` · `contract_admin_notifications` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_subscribe_portal_session` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_offboarding_sweep_30day` | `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_lead_filter_sheet` · `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` |
 | `wsib_registry` | `id` · `legal_name` · `trade_name` · `legal_name_normalized` · `trade_name_normalized` · `mailing_address` · `predominant_class` · `naics_code` · `naics_description` · `subclass` · `subclass_description` · `business_size` · `match_confidence` · `matched_at` · `first_seen_at` · `last_seen_at` · `linked_entity_id` · `primary_phone` · `primary_email` · `website` · `last_enriched_at` · `is_gta` | `mobile_lead_feed` · `admin_data_quality` · `admin_lead_feed` · `contract_admin_builders` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_entities_id` · `contract_leads_feed` | — |
 
-### Net-new tables (20)
+### Net-new tables (21)
 
 | Table | Columns | Read by | Written by |
 |---|---|---|---|
@@ -9091,6 +9375,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `media_assets` | _net-new — no introspected columns_ | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` | — |
 | `mv_monthly_permit_stats` | _net-new — no introspected columns_ | `admin_market_metrics` · `contract_admin_market_metrics` | `job_mv_monthly_permit_stats_refresh` |
 | `offers` | _net-new — no introspected columns_ | `admin_placements` · `advertiser_self_metrics` · `contract_admin_placements_list` · `contract_admin_offer_upsert` | `admin_placements` |
+| `parcel_user_inputs` | _net-new — no introspected columns_ | `contract_parcels_lot_size_entry` · `contract_admin_lot_size_revert` | `job_offboarding_sweep_30day` |
 | `pdf_exports` | _net-new — no introspected columns_ | `admin_export_audit` | — |
 | `pg_class` | _net-new — no introspected columns_ | `admin_data_quality` · `admin_pipeline_step_output` · `contract_admin_pipeline_step_output` · `contract_admin_stats` | — |
 | `pg_extension` | _net-new — no introspected columns_ | `admin_lead_feed` · `contract_admin_leads_test_feed` · `contract_leads_feed` | — |
@@ -9147,4 +9432,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 159 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 163 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

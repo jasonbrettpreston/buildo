@@ -1,0 +1,66 @@
+{
+  "surface": "admin_lot_size_revert",
+  "state": "static",
+  "target": "web",
+  "covers": [
+    "static"
+  ],
+  "props": {
+    "component": "Form",
+    "props": {
+      "name": "admin_lot_size_revert",
+      "errors": {
+        "required": {
+          "content": "admin_lot_size_revert.errors.required"
+        },
+        "type": {
+          "content": "admin_lot_size_revert.errors.type"
+        },
+        "const": {
+          "content": "admin_lot_size_revert.errors.const"
+        },
+        "pattern": {
+          "content": "admin_lot_size_revert.errors.pattern"
+        },
+        "additional_properties": {
+          "content": "admin_lot_size_revert.errors.additional_properties"
+        }
+      }
+    },
+    "children": [
+      {
+        "component": "TextInput",
+        "props": {
+          "name": "parcel_id",
+          "size": "lg",
+          "label": {
+            "content": "admin_lot_size_revert.field.parcel_id"
+          },
+          "description": {
+            "content": "admin_lot_size_revert.help.parcel_id"
+          }
+        }
+      },
+      {
+        "component": "Button",
+        "props": {
+          "type": "submit",
+          "size": "lg",
+          "loading": false
+        },
+        "children": [
+          {
+            "content": "admin_lot_size_revert.submit"
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/_schema/lot-size-entry-contract.json": "6ba135c5f5dd94de",
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_lot_size_revert.content.json": "4d0217efdadb3d32",
+      "scripts/surfaces/parcel_admin/F08/surfaces/admin_lot_size_revert.descriptor.json": "4e97f099c72bbb48"
+    }
+  }
+}

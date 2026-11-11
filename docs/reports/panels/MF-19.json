@@ -1,0 +1,29 @@
+{
+  "task": "MF-19",
+  "item": "Add lot size, the minimal user-input path with the entry switch OFF (operator 2026-11-11 D-1..D-8 \"all as recommmended\"): parcel_user_inputs as its own record (migration 305, written not applied), the range / City-ratio / entries-a-day settings in the existing Admin Control Panel, POST /api/parcels/lot-size behind the switch, the audited admin revert FORM, the declared user FORM and its input contract, the report page flags and the after-entry line, the author emptied on erasure, one McBylaws LATER row (MB-88).",
+  "class": "G",
+  "stage": 6,
+  "date": "2026-11-11",
+  "head": "PENDING (filled after the OUTPUT panel)",
+  "cards": [
+    "Operator 2026-11-11 (verbatim): \"all as recommmended\" (MF-19 DECISIONS.md D-1..D-8, incl. the corrections block)",
+    "Operator 2026-11-11: \"building anything just using existing components\""
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-19/plan.md (v1 + section 7 folds F1-F20) and plan.v2.md (rulings folded). PLAN panel 2026-11-11 (~/Buildo-scratch/mcfrontend/MF-19/panel/record.md): code-reviewer-grounded PASS-WITH-FOLDS (11 findings, 0 blockers); security and data integrity (general-purpose) PASS-WITH-FOLDS (10 findings, 0 blockers, 3 DECISION); DeepSeek spec lens (deepseek-reasoner, ran, not downgraded) not approvable as-is, 33 findings, folded F1-F20; post-fold PASS-WITH-FOLDS, build-ready once D-1, D-2, D-6 answered (answered 2026-11-11).",
+  "output": "PENDING: the OUTPUT panel (code-reviewer-grounded, regression-guardian, security general-purpose) runs on the build restacked onto origin fa4fff51d (MF-45); this record is filled with the verdicts and folds before READY TO PUSH.",
+  "seats": [
+    "code-reviewer-grounded (PLAN): PASS-WITH-FOLDS",
+    "security and data integrity, general-purpose (PLAN): PASS-WITH-FOLDS",
+    "DeepSeek spec lens (PLAN): not approvable as-is, folded F1-F20",
+    "code-reviewer-grounded (OUTPUT): PENDING",
+    "regression-guardian (OUTPUT): PENDING",
+    "security, general-purpose (OUTPUT): PENDING"
+  ],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-19/",
+  "notes": [
+    "Commit order: prereg 9a25611f1 alone (round 144), the docs notes 18c40d02b, the DB files 580510652, then the code commit."
+  ]
+}

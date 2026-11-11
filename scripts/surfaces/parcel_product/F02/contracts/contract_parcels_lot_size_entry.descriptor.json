@@ -1,0 +1,357 @@
+{
+  "kind": "CONTRACT",
+  "status": "new",
+  "docs": {
+    "purpose": "Stores one user lot-size entry for one lot, once (D-1 a): its own record that wins over the City value for every viewer; the City value stays. Closed while the entry switch is off (403 ENTRY_OFF, D-6).",
+    "data_story": "It reads the switch and settings, then the lot and its active entry, checks the D-2 range and the D-3 City ratio on the server, and inserts one parcel_user_inputs row (source user, entered_at) in one transaction.",
+    "under_126": "A MUTATION CONTRACT; idempotency by the partial unique index (a second entry or a lost race is 409 with the stored entry)."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/parcels/lot-size/route.ts"
+    ],
+    "contracts": [
+      "src/app/api/parcels/lot-size/route.ts — POST export"
+    ],
+    "tables": [
+      "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables"
+    ],
+    "gate": [
+      "src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, the entitlement gate"
+    ],
+    "states": [
+      "the envelope classes in errors.classes"
+    ],
+    "emits": [
+      "src/app/api/parcels/lot-size/route.ts — logInfo outcome lines"
+    ]
+  },
+  "identity": {
+    "id": "contract_parcels_lot_size_entry",
+    "ref": "C-070",
+    "route": "/api/parcels/lot-size",
+    "archetype": "MUTATION",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Backend/Pipeline (CLAUDE.md §Domain Rules: `src/app/api/`)",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City",
+      "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "breaking_allowed",
+      "why": "Every consumer is in src/** and ships in the same Next.js deploy as the route.",
+      "evidence": [
+        "src/app/api/parcels/lot-size/types.ts"
+      ]
+    }
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads the switch and settings (logic_variables), the lot and its City value (parcels) and the active entry (parcel_user_inputs).",
+    "evidence": [
+      "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables",
+      "src/lib/parcels/lot-size-entry.ts — readLotSizeSettings, readLotSizeRead"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "lot_size"
+    ],
+    "tables": [
+      {
+        "table": "parcel_user_inputs",
+        "columns": [
+          "id",
+          "parcel_id",
+          "input_key",
+          "value_sqm",
+          "typed_value",
+          "typed_unit",
+          "source",
+          "entered_at",
+          "entered_by",
+          "status",
+          "reverted_at",
+          "reverted_by"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "direct_db",
+    "why": "It inserts one parcel_user_inputs row in one transaction (insert-only; never parcels).",
+    "evidence": [
+      "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server.",
+    "evidence": [
+      "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "A write; nothing is cached.",
+    "evidence": [
+      "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "getCurrentUserContext first; 401 without a signed-in user (the /api/parcels route-guard family).",
+      "evidence": [
+        "src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first",
+        "src/lib/auth/route-guard.ts — /api/parcels"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "parcel_user_inputs is Class B (RLS on, no policy; Spec 114 §2 dated note 2026-11-11); the route reads and writes through the owner connection after verifyAdminAuth.",
+      "evidence": [
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)",
+        "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_parcels_lot_size_entry__switch_off_no_write",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "D-6: while the switch is off the route answers 403 ENTRY_OFF after its one settings read, with no other read and no write (src/tests/parcels-lot-size-route.infra.test.ts)."
+    },
+    {
+      "id": "contract_parcels_lot_size_entry__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class arrives in the { data, error, meta } envelope with a specific code (src/tests/parcels-lot-size-route.infra.test.ts)."
+    },
+    {
+      "id": "contract_parcels_lot_size_entry__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is the .strict() LotSizeEntryResponseSchema: never entered_by, never the typed value (src/app/api/parcels/lot-size/types.ts)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope; withApiEnvelope converts any uncaught throw into the same shape with a sanitised code.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts",
+      "src/app/api/admin/media/route.ts — POST export: verifyAdminAuth first, then the media handler"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "Sign in again; nothing is stored."
+      },
+      {
+        "class": "403",
+        "ui": "ENTRY_OFF (the switch is off; the sheet is hidden, so a client never sees it) or SUBSCRIPTION_REQUIRED."
+      },
+      {
+        "class": "400",
+        "ui": "OUT_OF_RANGE or FAR_FROM_CITY_RECORD with the server-formatted message in the typed unit; VALIDATION_FAILED for a bad body."
+      },
+      {
+        "class": "404",
+        "ui": "PARCEL_NOT_FOUND."
+      },
+      {
+        "class": "409",
+        "ui": "LOT_SIZE_ALREADY_ENTERED with the stored entry in details.lot_size: the page treats it as entered and re-reads."
+      },
+      {
+        "class": "429",
+        "ui": "RATE_LIMITED: the entries a day are used up (D-4)."
+      },
+      {
+        "class": "500",
+        "ui": "The form error state from content; the request is logged without the body."
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "The entry row is its own record (who, when); the route logs outcome lines only.",
+    "evidence": [
+      "src/app/api/parcels/lot-size/route.ts"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "A write endpoint renders no sponsored placement.",
+    "evidence": [
+      "src/app/api/parcels/lot-size/route.ts"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "An entry is not a metered report view; it is limited per day by the rate limit (D-4).",
+    "evidence": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The switch, the range, the City ratio and the entries a day are logic variables read by the route.",
+    "evidence": [
+      "scripts/seeds/logic_variables.json — user_lot_size_*"
+    ],
+    "logic_variables": [
+      {
+        "name": "user_lot_size_entry_enabled",
+        "min": 0,
+        "max": 0,
+        "on_invalid": "fail",
+        "why": "Write-gating: anything but 1 inside the seed bounds reads off (D-6)."
+      },
+      {
+        "name": "user_lot_size_min_sqm",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail",
+        "why": "Write-affecting (D-2): a bad value refuses the entry rather than widen it."
+      },
+      {
+        "name": "user_lot_size_max_sqm",
+        "min": 100,
+        "max": 100000,
+        "on_invalid": "fail",
+        "why": "Write-affecting (D-2)."
+      },
+      {
+        "name": "user_lot_size_city_ratio_max",
+        "min": 1.5,
+        "max": 20,
+        "on_invalid": "fail",
+        "why": "Write-affecting (D-3)."
+      },
+      {
+        "name": "user_lot_size_entries_per_day",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail",
+        "why": "The rate limit (D-4)."
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "sole",
+    "why": "Called by the Add lot size form only (mounted at the flip).",
+    "evidence": [
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json"
+    ],
+    "surfaces": [
+      "report_lot_size_entry"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target (the existing contract rows carry the same limitation).",
+      "check_id": "contract_parcels_lot_size_entry__switch_off_no_write"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "MF-19 D-1..D-6. Entitlement gate on this base = the lookup status check; on the MF-45 restack it becomes the parcel_tool arm. One CONTRACT descriptor per handler file (126 §3.1).",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/parcels/lot-size/route.ts"
+    ],
+    "methods": [
+      "POST"
+    ],
+    "consumers": [
+      "report_lot_size_entry"
+    ],
+    "writes_audit_row": "no",
+    "consumers_verified": [],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/parcels-lot-size-route.infra.test.ts",
+      "src/tests/api.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "The user lot-size input of the report (MF-19).",
+    "feature": "F02",
+    "build_order": 2049,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

@@ -1,10 +1,15 @@
 {
-  "$comment": "MF-57 · THE v21 report page table (approved mock v21, oq:866-869; binding brief fields/REPORT-LAYOUT-BRIEF-v4.md). Sections in the brief screen order; each part is ONE shown text with ONE binding: `field` (a declared report-v2.decl.json field; the producer sends its server-formatted text under `key`, R17/FE-05), `content` (a key of report-presentation.json `page`), or `pending` (Q-G4 a: the ruled text, no value; `why` names the brief status or the open item that blocks it). Read by src/lib/surfaces/report/core.ts buildPage; locked by src/tests/surfaces/report-page.logic.test.ts. No field is invented; an undeclared field is pending and listed. Dated 2026-11-11 (operator \"y to all as built\"): D-J a tile area value is two value parts, the number (`<tile>.value`) and its unit (`<tile>.unit`), both server-formatted under their own keys; D-K a section with `details` is drawn only on layout rows (report-layout.json) whose `details` equals it (the lot-size box and the sheet: collapsed rows only); MF-38 the picture is the reused figure, B4 listed owed.",
+  "$comment": "MF-57 · THE v21 report page table (approved mock v21, oq:866-869; binding brief fields/REPORT-LAYOUT-BRIEF-v4.md). Sections in the brief screen order; each part is ONE shown text with ONE binding: `field` (a declared report-v2.decl.json field; the producer sends its server-formatted text under `key`, R17/FE-05), `content` (a key of report-presentation.json `page`), or `pending` (Q-G4 a: the ruled text, no value; `why` names the brief status or the open item that blocks it). Read by src/lib/surfaces/report/core.ts buildPage; locked by src/tests/surfaces/report-page.logic.test.ts. No field is invented; an undeclared field is pending and listed. Dated 2026-11-11 (operator \"y to all as built\"): D-J a tile area value is two value parts, the number (`<tile>.value`) and its unit (`<tile>.unit`), both server-formatted under their own keys; D-K a section with `details` is drawn only on layout rows (report-layout.json) whose `details` equals it (the lot-size box and the sheet: collapsed rows only); MF-38 the picture is the reused figure, B4 listed owed. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"; D-5, D-6): `flags` is the closed list of page flags the server sends in the response (`flags: {name: boolean}`, src/lib/parcels/lot-size-entry.ts lotSizePageFlags); a section or part with `when` shows only when the server sends that flag true, and is left out otherwise (fail closed: no flag, no section). The lot-size box (C1) and the sheet (H0) show only while the entry switch is on and nothing is entered (D-6: hidden while off; R-BTN: gone once entered); the after-entry line (C2, prior status owed) shows once a lot size is entered, with the neutral words of D-5, and its recalculated sentence only when the stored results used the entry.",
   "layout": "v21",
   "pending_texts": {
     "estimated": "pending.estimated",
     "classified": "pending.classified"
   },
+  "flags": [
+    "lot_size_entry_open",
+    "lot_size_entered",
+    "lot_size_entry_used"
+  ],
   "frames": [
     {
       "brief": "A0",
@@ -19,10 +24,6 @@
     {
       "brief": "B4",
       "why": "picture and its caption: the reused MF-38 figure (src/components/report/ReportView.tsx Picture) inside the option picture box, caption in report-soft (operator 2026-11-11 \"y to all as built\", MF-38 ruling; WCAG 2.1 SC 1.4.3). The image item is the declared field card_image (content:illustrations; caption from content.illustrations.caption_default \"Illustrative — not this lot\", which replaces the v21 \"Illustration\" chip and closes brief v4 open item 5) with a URL from the server read that signs image URLs (MF-44 / MF-22), owed; until then the ruled empty state: no figure and no caption (MF-38: empty is nothing)"
-    },
-    {
-      "brief": "C2",
-      "why": "after-entry line: shows the stored user lot size (MF-19 input); no entry in the synthetic golden"
     },
     {
       "brief": "D2",
@@ -109,6 +110,14 @@
       "title",
       "body",
       "button"
+    ],
+    "lot_size_entered": [
+      "label",
+      "value",
+      "source",
+      "date",
+      "end",
+      "recalc"
     ],
     "ad": [],
     "coming_soon": [
@@ -595,6 +604,8 @@
       "kind": "lot_size",
       "id": "lot_size",
       "after_option": 1,
+      "details": "collapsed",
+      "when": "lot_size_entry_open",
       "parts": [
         {
           "role": "title",
@@ -611,8 +622,50 @@
           "brief": "C1",
           "content": "ls.button"
         }
-      ],
-      "details": "collapsed"
+      ]
+    },
+    {
+      "kind": "lot_size_entered",
+      "id": "lot_size_entered",
+      "after_option": 1,
+      "when": "lot_size_entered",
+      "parts": [
+        {
+          "role": "label",
+          "brief": "C2",
+          "content": "lot.size"
+        },
+        {
+          "role": "value",
+          "brief": "C2",
+          "field": "lot_size_entry",
+          "rule": "area_sqft_m2_dot",
+          "key": "entered.value"
+        },
+        {
+          "role": "source",
+          "brief": "C2",
+          "content": "entered.source"
+        },
+        {
+          "role": "date",
+          "brief": "C2",
+          "field": "lot_size_entered_at",
+          "rule": "date_dmy",
+          "key": "entered.date"
+        },
+        {
+          "role": "end",
+          "brief": "C2",
+          "content": "entered.end"
+        },
+        {
+          "role": "recalc",
+          "brief": "C2",
+          "content": "entered.recalc",
+          "when": "lot_size_entry_used"
+        }
+      ]
     },
     {
       "kind": "option",
@@ -1587,6 +1640,8 @@
     {
       "kind": "sheet",
       "id": "sheet",
+      "details": "collapsed",
+      "when": "lot_size_entry_open",
       "parts": [
         {
           "role": "title",
@@ -1634,7 +1689,7 @@
           "role": "error",
           "brief": "H0",
           "pending": "estimated",
-          "why": "lot_range_error FE-05 FLAG; bounds have no field (MB-42); open item 22"
+          "why": "MF-19: the server sends the refusal text in the entry response (D-2 range in the typed unit, D-3 City ratio); the page carries no value; prior why: lot_range_error FE-05 FLAG; bounds have no field (MB-42); open item 22"
         },
         {
           "role": "note",
@@ -1651,8 +1706,7 @@
           "brief": "H0",
           "content": "sheet.cancel"
         }
-      ],
-      "details": "collapsed"
+      ]
     }
   ]
 }

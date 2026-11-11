@@ -1,0 +1,14 @@
+{
+  "admin_lot_size_revert.field.parcel_id": "City parcel id",
+  "admin_lot_size_revert.help.parcel_id": "Reverts the lot size a user entered for this lot. The entry stays in the history and the lot shows the City lot record again.",
+  "admin_lot_size_revert.submit": "Revert entered lot size",
+  "admin_lot_size_revert.errors.required": "This field is required.",
+  "admin_lot_size_revert.errors.type": "This value has the wrong type.",
+  "admin_lot_size_revert.errors.const": "This value does not match.",
+  "admin_lot_size_revert.errors.pattern": "Use the City parcel id: letters, numbers, - or _ (up to 20).",
+  "admin_lot_size_revert.errors.additional_properties": "This form sent a field it does not know.",
+  "admin_lot_size_revert.state.error": "Nothing was reverted. Check the parcel id: the lot must have an entered lot size.",
+  "admin_lot_size_revert.state.hit": "Reverted. The lot shows the City lot record again.",
+  "admin_lot_size_revert.state.unauthorized": "Your session has expired or you are not an admin. Sign in again to revert entries.",
+  "admin_lot_size_revert.state.offline": "You are offline. Revert the entry when the connection returns."
+}

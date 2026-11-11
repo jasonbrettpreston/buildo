@@ -1,0 +1,32 @@
+MF-19 · the FE-31 / FE-13 / T7 count locks before their edit (red on the MF-19 tree: two converted FORM surfaces admin_lot_size_revert and report_lot_size_entry, 25 -> 27 in scope, 7 -> 9 converted, 3 new mounts, 4 new descriptors (2 SURFACE + 2 CONTRACT, 155 -> 159), 12 new web goldens, 34 -> 46 T7 goldens). Command: npx vitest run src/tests/surfaces/
+Base: d618d86e8 + the MF-19 working tree, 2026-11-11
+
+   × C-1 the arms on the real tree, and the queue state > SV-DESC is clean with the exact counts (25 in scope: 7 converted, 5 pending, 9 parked, 4 report); SCREEN and SBIND judge the MF-37, MF-35 and MF-40 surfaces
+   × C-3 bindings.json integrity > the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid
+   × C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > controls: each converted fixture is valid with 0 sentinels; every live descriptor is valid; a non-generated FORM and LIST need no new key
+   × T7 (a) the committed goldens equal a fresh build > 34 goldens, byte for byte
+   × T7 (b) coverage > each golden covers its state, every state of the three surfaces has one
+   × FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected 46 to be 34 // Object.is equality
+- Expected
++ Received
+AssertionError: expected [ 'admin_media', …(8) ] to deeply equal [ 'admin_media', …(6) ]
+- Expected
++ Received
+AssertionError: expected 'S-desc ok (examined 27 in scope: conv…' to be 'S-desc ok (examined 25 in scope: conv…' // Object.is equality
+Expected: "S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4)"
+Received: "S-desc ok (examined 27 in scope: converted 9, pending 5, parked 9, report 4)"
+AssertionError: expected [ 4, 3, 13 ] to deeply equal [ 4, 3, 10 ]
+- Expected
++ Received
+AssertionError: expected 159 to be 155 // Object.is equality
+- Expected
++ Received
+AssertionError: expected 'surface-validate current; S-gen ok · …' to be 'surface-validate current; S-gen ok · …' // Object.is equality
+- Expected
++ Received
+ Test Files  3 failed | 32 passed (35)
+      Tests  6 failed | 833 passed (839)
+
+Re-measure after the restack onto origin dd24c95ff (MF-44: mobile_parcel_search gains its web target and the web SEARCH binding, 2026-11-11): T7 goldens 44 -> 56, S-screen 54 -> 66 goldens on 9 surfaces, strings 155 -> 184, mounts 14 -> 17, live descriptors 157 -> 161; each lock stays an exact value, green on the restacked tree.

@@ -418,7 +418,7 @@ export interface PageTree { page: string; sections: PageSection[] }
 export interface PageView { target: string; layout: Json; sections: PageSection[]; images?: Record<string, ViewImage> }
 
 const AD_KIND_SECTION = 'ad';
-const PAGE_RESPONSE_KEYS = ['page', 'synthetic', 'values', 'hidden', 'not_evaluated'];
+const PAGE_RESPONSE_KEYS = ['page', 'synthetic', 'values', 'hidden', 'not_evaluated', 'flags'];
 const pageValidators = new WeakMap<object, any>();
 const pageValidatorOf = (pageSchema: Json, treeSchema: Json): any => {
   let v = pageValidators.get(pageSchema);
@@ -448,6 +448,21 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
   for (const k of Object.keys(response ?? {})) if (!PAGE_RESPONSE_KEYS.includes(k)) out.push(`RR-PAGE response: unexpected key ${k}`);
   const values: Json = response?.values !== null && typeof response?.values === 'object' ? response.values : {};
   if (values !== response?.values) out.push('RR-PAGE response: values is not an object');
+  // MF-19 (D-5, D-6): the page flags are the server's (response.flags; names from the table's closed `flags` list). A section or part whose
+  // `when` flag is not sent true is left out: no flag, no section (fail closed). A hidden part's key is still a declared key (the values check).
+  const declared: unknown[] = Array.isArray(T.flags) ? T.flags : [];
+  const rawFlags: unknown = response?.flags;
+  const flags: Json = rawFlags !== null && typeof rawFlags === 'object' && !Array.isArray(rawFlags) ? (rawFlags as Json) : {};
+  if (rawFlags !== undefined && flags !== rawFlags) out.push('RR-PAGE response: flags is not an object');
+  for (const [k, v] of Object.entries(flags)) {
+    if (!declared.includes(k)) out.push(`RR-PAGE flag ${k}: not a flag of the page table`);
+    if (typeof v !== 'boolean') out.push(`RR-PAGE flag ${k}: not a boolean`);
+  }
+  const on = (w: unknown, at: string): boolean => {
+    if (w === undefined) return true;
+    if (!declared.includes(w)) { out.push(`RR-PAGE ${at}: when ${String(w)} is not a flag of the page table`); return false; }
+    return flags[w as string] === true;
+  };
   const keys = new Set<string>();
   const built: [Json, Json | null][] = []; // [table section, built section or null], in table order
   for (const s of T.sections as Json[]) {
@@ -463,8 +478,11 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
       built.push([s, slot ? { kind: s.kind, id: s.id, brief: s.brief, ad: slot, parts: [] } : null]);
       continue;
     }
+    const shown = on(s.when, String(s.id));
+    const partsShown: boolean[] = [];
     const parts = (s.parts as Json[]).map((p): Json => {
       const at = `${String(s.id)}.${String(p.role)}`;
+      partsShown.push(on(p.when, at));
       if (Array.isArray(vocab) && !vocab.includes(p.role)) out.push(`RR-PAGE ${at}: role not in the ${String(s.kind)} vocabulary`);
       const base = { role: p.role, brief: p.brief };
       if (p.field !== undefined) {
@@ -488,7 +506,7 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
       if (typeof t !== 'string' || t === '') out.push(`RR-CONTENT ${at}: no pending text for ${String(p.pending)}`);
       return { ...base, kind: 'pending', pending: p.pending, text: String(t) };
     });
-    built.push([s, { kind: s.kind, id: s.id, ...(s.scenario !== undefined ? { scenario: s.scenario } : {}), parts }]);
+    built.push([s, shown ? { kind: s.kind, id: s.id, ...(s.scenario !== undefined ? { scenario: s.scenario } : {}), parts: parts.filter((_, i) => partsShown[i]) } : null]);
   }
   for (const k of Object.keys(values)) if (!keys.has(k)) out.push(`RR-PAGE ${k}: not a key of the page table`);
   // Which options show is the server's: `hidden` (option section ids the server hides: report-presentation.json states.hidden) and `not_evaluated`

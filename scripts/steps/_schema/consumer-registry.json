@@ -5156,6 +5156,38 @@
       "source": "src_sql"
     },
     {
+      "consumer": "src/lib/parcels/lot-size-entry.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-size-entry.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.lot_size_source",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-size-entry.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.lot_size_sqm",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-size-entry.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.parcel_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
       "consumer": "src/lib/parcels/what-we-checked.ts",
       "producer": "coa",
       "kind": "table",

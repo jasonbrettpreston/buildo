@@ -1,5 +1,5 @@
 {
-  "$comment": "THE closed binding set of the report schema (Spec 126 11a.1; Spec 128 Rule 20; Spec 135 FE-18, FE-21, FE-23, FE-27). Every displayed field's `source` is `<kind>:<member>` with <kind> a key of `sources` below; any other kind fails RS-1. A member must resolve through its source's resolver; a source whose contract file has not landed (`file: null`) has no member yet (the ad contract landed with MF-20), so a field naming it fails until the contract lands. PROTECTED: adding a source or a member needs a Spec 135 register row and a panel (MB-67 owner sign-off on the protected-paths edit). Read by scripts/analysis/report-schema.mjs and src/tests/surfaces/report-binding.logic.test.ts.",
+  "$comment": "THE closed binding set of the report schema (Spec 126 11a.1; Spec 128 Rule 20; Spec 135 FE-18, FE-21, FE-23, FE-27). Every displayed field's `source` is `<kind>:<member>` with <kind> a key of `sources` below; any other kind fails RS-1. A member must resolve through its source's resolver; a source whose contract file has not landed (`file: null`) has no member yet (the ad contract landed with MF-20), so a field naming it fails until the contract lands. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"; FE-18 names user_input): the user_input contract lands, scripts/surfaces/_schema/lot-size-entry-contract.json (members lot_area and entered_at; the prior value of file was null); no source or member kind is added. PROTECTED: adding a source or a member needs a Spec 135 register row and a panel (MB-67 owner sign-off on the protected-paths edit). Read by scripts/analysis/report-schema.mjs and src/tests/surfaces/report-binding.logic.test.ts.",
   "version": 1,
   "sources": {
     "catalogue": {
@@ -18,7 +18,7 @@
       "register": "FE-18",
       "member": "an id in the input contract (the form archetype)",
       "resolver": "contract_id",
-      "file": null
+      "file": "scripts/surfaces/_schema/lot-size-entry-contract.json"
     },
     "ad_slot": {
       "register": "FE-23",

@@ -2527,6 +2527,50 @@
       },
       "writes": {}
     },
+    "src/lib/parcels/lot-size-entry.ts": {
+      "class": "static",
+      "statements": 4,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "75f7a6538c81a5ee",
+        "7d527c414a169b01",
+        "8c8d88433aa1389c",
+        "b5a1b0d462a3ba3c"
+      ],
+      "reads": {
+        "parcel_user_inputs": [
+          "entered_at",
+          "id",
+          "input_key",
+          "parcel_id",
+          "status",
+          "value_sqm"
+        ],
+        "parcels": [
+          "id",
+          "lot_size_source",
+          "lot_size_sqm",
+          "parcel_id"
+        ]
+      },
+      "writes": {
+        "parcel_user_inputs": [
+          "entered_by",
+          "input_key",
+          "parcel_id",
+          "reverted_at",
+          "reverted_by",
+          "source",
+          "status",
+          "typed_unit",
+          "typed_value",
+          "value_sqm"
+        ]
+      }
+    },
     "src/lib/parcels/report-check-pace.ts": {
       "class": "static",
       "statements": 1,

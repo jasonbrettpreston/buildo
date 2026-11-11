@@ -53,6 +53,11 @@ const readAdContract = (root, bindingSources) => {
   const file = bindingSources.sources?.ad_slot?.file;
   return file ? readJson(root, file) : null;
 };
+// MF-19: the user input contract (binding-sources.json user_input.file); a user_input member must be one of its members.
+const readInputContract = (root, bindingSources) => {
+  const file = bindingSources.sources?.user_input?.file;
+  return file ? readJson(root, file) : null;
+};
 
 /** Every input as plain JSON (structured-clonable), so tests mutate a copy and re-evaluate. */
 export function loadInputs(root) {
@@ -70,6 +75,7 @@ export function loadInputs(root) {
     rulings: readJson(root, decl.inputs.rulings),
     bindingSources: readJson(root, decl.inputs.binding_sources),
     adContract: readAdContract(root, readJson(root, decl.inputs.binding_sources)),
+    inputContract: readInputContract(root, readJson(root, decl.inputs.binding_sources)),
     catalogue: readJson(root, decl.inputs.catalogue),
     spec78: readText(root, decl.inputs.spec78),
     consumer: {
@@ -150,6 +156,7 @@ export function evaluate(inputs) {
     // MF-37 (FE-32): the `contract` kind binds SURFACE goldens to a CONTRACT projection; a REPORT field may not use it until a ruling widens it.
     if (src.resolver === 'contract_projection') { bad1.push(`${where}: ${role} ${kind}:${ref} — the contract binding kind is not ruled for REPORT fields (FE-32 binds SURFACE goldens)`); return null; }
     if (src.resolver === 'contract_id' && kind === 'ad_slot' && !(inputs.adContract?.slots ?? []).includes(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a slot id in the ad contract`);
+    if (src.resolver === 'contract_id' && kind === 'user_input' && !(inputs.inputContract?.members ?? []).includes(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a member of the input contract`);
     if (src.resolver === 'registry_key' && getPath(presentation, ref) === undefined) bad1.push(`${where}: ${role} ${kind}:${ref} is not in the content registry`);
     if (src.resolver === 'migration_column' && !pcols.has(ref)) bad1.push(`${where}: ${role} ${kind}:${ref} is not a parcels migration column`);
     if (src.resolver === 'catalogue_row') { const row = catRows.get(ref); if (!row) bad1.push(`${where}: ${role} ${kind}:${ref} is not a catalogue row`); return row || null; }

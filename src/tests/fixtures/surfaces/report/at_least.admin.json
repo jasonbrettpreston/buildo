@@ -27,10 +27,10 @@
     "response_fixture": "14a7540f9538bba6",
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
-      "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
-      "scripts/surfaces/_schema/report-presentation.json": "f7e1ecfd073b9068",
+      "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
+      "scripts/surfaces/_schema/report-presentation.json": "a13f8e92c7d45603",
       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
-      "scripts/surfaces/_schema/report-v2.decl.json": "26e67dafcf6a087e"
+      "scripts/surfaces/_schema/report-v2.decl.json": "0be18f034b471cda"
     }
   }
 }

@@ -129,6 +129,20 @@
           "scripts/lib/step/ledger.js:62 — the SDK insert this mirrors",
           "docs/specs/00-architecture/114_rls_policy_catalog.md:209 — Class B"
         ]
+      },
+      {
+        "table": "parcel_user_inputs",
+        "columns": [
+          "entered_by",
+          "reverted_by"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "migrations/305_parcel_user_inputs.sql — entered_by and reverted_by REFERENCES auth.users(id) ON DELETE SET NULL: the per-user DELETE FROM auth.users keeps every lot-size entry (a shared fact) and empties its author (MF-19 D-7, operator 2026-11-11 \"all as recommmended\")",
+          "docs/specs/00-architecture/115_scheduling.md offboarding_sweep_30day (dated note 2026-11-11)"
+        ]
       }
     ]
   },

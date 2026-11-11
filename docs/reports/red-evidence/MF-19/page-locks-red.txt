@@ -1,0 +1,10 @@
+MF-19 · the MF-57 page locks before their edit (red on the MF-19 tree: the page table gains the C2 section kind lot_size_entered after lot_size, and the capture gains three entry states per target, 4 -> 16 page goldens). Command: npx vitest run src/tests/surfaces/report-page.logic.test.ts
+Base: d618d86e8 + the MF-19 working tree, 2026-11-11
+
+   × P1 the page table covers the brief and binds only what exists > the sections follow the brief screen order 
+   × P2 buildPage: the capture, the throw and Q-G4 a > capture twice writes identical bytes and equals the committed files 
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [ 'title', 'address', 'option', …(10) ] to deeply equal [ 'title', 'address', 'option', …(9) ]
+AssertionError: expected 16 to be 4 // Object.is equality
+ Test Files  1 failed (1)
+      Tests  2 failed | 30 passed (32)

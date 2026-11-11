@@ -1,0 +1,58 @@
+{
+  "$comment": "MF-19 the user lot-size input contract (Spec 126 section 11a.9 and the user_input binding source of binding-sources.json, FE-18; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md; operator 2026-11-11 D-1..D-8 \"all as recommmended\"). entry_request is the FORM schema of report_lot_size_entry (two fields; type check only, the bounds are the server's, plan fold F2); route_request is POST /api/parcels/lot-size: entry_request plus parcel_id (the City parcel id the page sends; a test asserts route_request = entry_request + parcel_id, fold F5); revert_request is PUT /api/admin/parcels/lot-size/revert (the audited admin revert, D-4). In MF-42's keyword subset (no format, no conditionals). members are the user_input binding members a report field may name (the stored entry: its lot area in m2 and its entered_at stamp). settings name the logic_variables keys (values live in the table). Read by src/lib/parcels/lot-size-entry.ts and scripts/analysis/report-schema.mjs (via binding-sources.json).",
+  "members": ["lot_area", "entered_at"],
+  "settings": {
+    "enabled": "user_lot_size_entry_enabled",
+    "min_sqm": "user_lot_size_min_sqm",
+    "max_sqm": "user_lot_size_max_sqm",
+    "ratio_max": "user_lot_size_city_ratio_max",
+    "per_day": "user_lot_size_entries_per_day"
+  },
+  "entry_request": {
+    "type": "object",
+    "properties": {
+      "lot_area_value": {
+        "type": "number",
+        "minimum": 0.01,
+        "maximum": 9999999999
+      },
+      "lot_area_unit": {
+        "type": "string",
+        "enum": ["sqft", "m2"]
+      }
+    },
+    "required": ["lot_area_value", "lot_area_unit"],
+    "additionalProperties": false
+  },
+  "route_request": {
+    "type": "object",
+    "properties": {
+      "parcel_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,20}$"
+      },
+      "lot_area_value": {
+        "type": "number",
+        "minimum": 0.01,
+        "maximum": 9999999999
+      },
+      "lot_area_unit": {
+        "type": "string",
+        "enum": ["sqft", "m2"]
+      }
+    },
+    "required": ["parcel_id", "lot_area_value", "lot_area_unit"],
+    "additionalProperties": false
+  },
+  "revert_request": {
+    "type": "object",
+    "properties": {
+      "parcel_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,20}$"
+      }
+    },
+    "required": ["parcel_id"],
+    "additionalProperties": false
+  }
+}

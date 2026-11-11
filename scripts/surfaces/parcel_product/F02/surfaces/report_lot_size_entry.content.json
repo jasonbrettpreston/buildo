@@ -1,0 +1,19 @@
+{
+  "report_lot_size_entry.field.lot_area_value": "Lot size from your survey",
+  "report_lot_size_entry.placeholder.lot_area_value": "e.g. 3,120",
+  "report_lot_size_entry.field.lot_area_unit": "Unit",
+  "report_lot_size_entry.field.lot_area_unit.option.sqft": "sq ft",
+  "report_lot_size_entry.field.lot_area_unit.option.m2": "m²",
+  "report_lot_size_entry.submit": "Recalculate",
+  "report_lot_size_entry.errors.required": "Enter your lot size.",
+  "report_lot_size_entry.errors.type": "Enter a number.",
+  "report_lot_size_entry.errors.const": "This value does not match.",
+  "report_lot_size_entry.errors.enum": "Choose sq ft or m².",
+  "report_lot_size_entry.errors.minimum": "Enter a lot size above zero.",
+  "report_lot_size_entry.errors.maximum": "This number is too large.",
+  "report_lot_size_entry.errors.additional_properties": "This form sent a field it does not know.",
+  "report_lot_size_entry.state.error": "The lot size was not saved. Check the number and the unit and try again.",
+  "report_lot_size_entry.state.hit": "Lot size saved. It is marked as entered from a survey.",
+  "report_lot_size_entry.state.unauthorized": "Sign in again to add the lot size.",
+  "report_lot_size_entry.state.offline": "You are offline. Add the lot size when the connection returns."
+}

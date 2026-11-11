@@ -1,0 +1,7 @@
+MF-19 · the src-sql-ledger live catalog lock before its edit (red: parcel_user_inputs, migration 305 written and not applied, is not in the witness catalog until the DB job applies 305 and recaptures docs/reports/witness/_catalog.json; the MF-37 / MF-40 / MF-45 precedent). Command: npx vitest run src/tests/src-sql-ledger.logic.test.ts
+
+   × src-sql-ledger — committed ledger (live) > live: every column the ledger reads/writes on a catalogued table exists in the catalog; only the matview is skipped
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [ 'mv_monthly_permit_stats', …(1) ] to deeply equal [ 'mv_monthly_permit_stats' ]
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 passed (20)

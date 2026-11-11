@@ -338,6 +338,12 @@
     "sheet.note": "You can enter the lot size once. It is saved with this lot and marked as entered by you.",
     "sheet.submit": "Recalculate",
     "sheet.cancel": "Cancel",
+    "entered.source": "· from a survey, entered",
+    "entered.end": ".",
+    "entered.recalc": "Every option is recalculated with it.",
+    "sheet.err_range_sqft": "Enter a lot size between {lo} and {hi} sq ft.",
+    "sheet.err_range_m2": "Enter a lot size between {lo} and {hi} m².",
+    "sheet.err_ratio": "This is far from the City lot record of {city}. Check the number and the unit.",
     "pending.estimated": "not yet estimated",
     "pending.classified": "not yet classified"
   },

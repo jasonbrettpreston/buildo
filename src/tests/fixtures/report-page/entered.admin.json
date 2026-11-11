@@ -1,0 +1,1910 @@
+{
+  "harness": "MF-57 synthetic page golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md 11a.7",
+  "surface": "report",
+  "state": "page_entered",
+  "target": "admin",
+  "response_fixture": {
+    "page": "v21",
+    "synthetic": true,
+    "values": {
+      "o1.size.value": "2,670",
+      "o1.size.unit": "sq ft",
+      "o1.size.m2": "248 m²",
+      "o1.row.max": "2,670 sq ft (248 m²)",
+      "o1.row.storeys": "3",
+      "o1.row.footprint": "1,292 sq ft (120 m²)",
+      "o1.row.homes": "1",
+      "o2.size.value": "2,885",
+      "o2.size.unit": "sq ft",
+      "o2.size.m2": "268 m²",
+      "o2.row.max": "2,885 sq ft (268 m²)",
+      "o2.row.storeys": "3",
+      "o2.row.footprint": "1,292 sq ft (120 m²)",
+      "o2.row.homes": "1",
+      "o3.size.value": "4,435",
+      "o3.size.unit": "sq ft",
+      "o3.size.m2": "412 m²",
+      "o3.unit.value": "739",
+      "o3.unit.unit": "sq ft",
+      "o3.unit.m2": "69 m²",
+      "o3.row.max": "4,435 sq ft (412 m²)",
+      "o3.row.units": "6",
+      "o3.row.unit_size": "739 sq ft (69 m²)",
+      "o3.row.bedrooms": "12",
+      "o3.row.storeys": "3",
+      "o3.row.units_flat": "6",
+      "lot.size": "3,057 sq ft · 284 m²",
+      "sheet.record": "3,057 sq ft · 284 m²",
+      "ad_scenario_detached_house_flat_or_shallow_roof": "Get your lot surveyed",
+      "entered.value": "3,120 sq ft · 290 m²",
+      "entered.date": "10 Nov 2026"
+    },
+    "flags": {
+      "lot_size_entry_open": false,
+      "lot_size_entered": true,
+      "lot_size_entry_used": false
+    }
+  },
+  "rendered_tree": {
+    "page": "v21",
+    "sections": [
+      {
+        "kind": "title",
+        "id": "title",
+        "parts": [
+          {
+            "role": "title",
+            "brief": "A1",
+            "kind": "content",
+            "content": "page.title",
+            "text": "The Building Possibilities Report"
+          }
+        ]
+      },
+      {
+        "kind": "address",
+        "id": "address",
+        "parts": [
+          {
+            "role": "address",
+            "brief": "A2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "option",
+        "id": "o1",
+        "scenario": "detached_house/pitched",
+        "parts": [
+          {
+            "role": "label",
+            "brief": "B1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "title",
+            "brief": "B2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "spec_label",
+            "brief": "B5",
+            "kind": "content",
+            "content": "spec.label",
+            "text": "By-law specifications"
+          },
+          {
+            "role": "size.badge",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.label",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.label",
+            "text": "Max Build Size"
+          },
+          {
+            "role": "size.sub",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.sub",
+            "text": "(by-law allows)"
+          },
+          {
+            "role": "size.value",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.value",
+            "rule": "area_sqft",
+            "text": "2,670"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "size.m2",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.m2",
+            "rule": "area_m2",
+            "text": "248 m²"
+          },
+          {
+            "role": "size.button",
+            "brief": "B6",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.count",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.badge",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.label",
+            "brief": "B7",
+            "kind": "content",
+            "content": "tile.cost.label",
+            "text": "Cost to Build"
+          },
+          {
+            "role": "cost.sub",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.value",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.rate",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.button",
+            "brief": "B7",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.panel.h",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.size.h",
+            "text": "Max build size details"
+          },
+          {
+            "role": "size.panel.why",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes_h",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.all",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.all_numbers",
+            "text": "All the numbers"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.1",
+            "kind": "content",
+            "content": "row.max_build_size",
+            "text": "Max build size"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.1",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.row.max",
+            "rule": "area_sqft_m2_paren",
+            "text": "2,670 sq ft (248 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.2",
+            "kind": "content",
+            "content": "row.storeys",
+            "text": "Storeys"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.2",
+            "kind": "value",
+            "field": "storeys_max",
+            "key": "o1.row.storeys",
+            "rule": "int",
+            "text": "3"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.3",
+            "kind": "content",
+            "content": "row.height",
+            "text": "Height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.11",
+            "kind": "content",
+            "content": "row.footprint",
+            "text": "Footprint"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.11",
+            "kind": "value",
+            "field": "footprint_max_m2",
+            "key": "o1.row.footprint",
+            "rule": "area_sqft_m2_paren",
+            "text": "1,292 sq ft (120 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.12",
+            "kind": "content",
+            "content": "row.coverage",
+            "text": "Lot coverage"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.13",
+            "kind": "content",
+            "content": "row.fsi",
+            "text": "Floor space index"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.14",
+            "kind": "content",
+            "content": "row.front_setback",
+            "text": "Front setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.14",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.15",
+            "kind": "content",
+            "content": "row.rear_setback",
+            "text": "Rear setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.15",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.16",
+            "kind": "content",
+            "content": "row.side_setbacks",
+            "text": "Side setbacks"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.16",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.17",
+            "kind": "content",
+            "content": "row.depth",
+            "text": "Building depth"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.17",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.18",
+            "kind": "content",
+            "content": "row.main_wall",
+            "text": "Main wall height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.18",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.19",
+            "kind": "content",
+            "content": "row.homes",
+            "text": "Homes"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.19",
+            "kind": "value",
+            "field": "units_max",
+            "key": "o1.row.homes",
+            "rule": "int",
+            "text": "1"
+          },
+          {
+            "role": "size.panel.ver",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.hide",
+            "brief": "B9",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "cost.panel.h",
+            "brief": "B10",
+            "kind": "content",
+            "content": "panel.cost.h",
+            "text": "Cost to build details"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.1",
+            "kind": "content",
+            "content": "row.cost_total",
+            "text": "Cost to build"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.2",
+            "kind": "content",
+            "content": "row.cost_rate",
+            "text": "Cost per sq ft"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.3",
+            "kind": "content",
+            "content": "row.cost_area",
+            "text": "Area priced"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.4",
+            "kind": "content",
+            "content": "row.cost_basis",
+            "text": "Area based on"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.5",
+            "kind": "content",
+            "content": "row.cost_conf",
+            "text": "Confidence"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.6",
+            "kind": "content",
+            "content": "row.cost_excl",
+            "text": "Not included"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.note",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.ver",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.hide",
+            "brief": "B10",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "var_label",
+            "brief": "B11",
+            "kind": "content",
+            "content": "var.label",
+            "text": "By-law variances"
+          },
+          {
+            "role": "bigger.q",
+            "brief": "B12",
+            "kind": "content",
+            "content": "q.bigger",
+            "text": "Can you build bigger?"
+          },
+          {
+            "role": "bigger.answer",
+            "brief": "B12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "bigger.how",
+            "brief": "B13",
+            "kind": "content",
+            "content": "btn.how",
+            "text": "How?"
+          },
+          {
+            "role": "bigger.how.steps",
+            "brief": "B13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "nbr.q",
+            "brief": "B14",
+            "kind": "content",
+            "content": "q.neighbours",
+            "text": "Did the neighbours build bigger?"
+          },
+          {
+            "role": "nbr.answer",
+            "brief": "B14",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          },
+          {
+            "role": "nbr.recent",
+            "brief": "B15",
+            "kind": "content",
+            "content": "row.most_recent",
+            "text": "Most recent"
+          },
+          {
+            "role": "nbr.swipe",
+            "brief": "B15",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "nbr.projects",
+            "brief": "B15",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          }
+        ]
+      },
+      {
+        "kind": "lot_size_entered",
+        "id": "lot_size_entered",
+        "parts": [
+          {
+            "role": "label",
+            "brief": "C2",
+            "kind": "content",
+            "content": "lot.size",
+            "text": "Lot size"
+          },
+          {
+            "role": "value",
+            "brief": "C2",
+            "kind": "value",
+            "field": "lot_size_entry",
+            "key": "entered.value",
+            "rule": "area_sqft_m2_dot",
+            "text": "3,120 sq ft · 290 m²"
+          },
+          {
+            "role": "source",
+            "brief": "C2",
+            "kind": "content",
+            "content": "entered.source",
+            "text": "· from a survey, entered"
+          },
+          {
+            "role": "date",
+            "brief": "C2",
+            "kind": "value",
+            "field": "lot_size_entered_at",
+            "key": "entered.date",
+            "rule": "date_dmy",
+            "text": "10 Nov 2026"
+          },
+          {
+            "role": "end",
+            "brief": "C2",
+            "kind": "content",
+            "content": "entered.end",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "kind": "option",
+        "id": "o2",
+        "scenario": "detached_house/flat_or_shallow_roof",
+        "parts": [
+          {
+            "role": "label",
+            "brief": "B1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "title",
+            "brief": "B2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "tag",
+            "brief": "B3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "spec_label",
+            "brief": "B5",
+            "kind": "content",
+            "content": "spec.label",
+            "text": "By-law specifications"
+          },
+          {
+            "role": "size.badge",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.label",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.label",
+            "text": "Max Build Size"
+          },
+          {
+            "role": "size.sub",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.sub",
+            "text": "(by-law allows)"
+          },
+          {
+            "role": "size.value",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.value",
+            "rule": "area_sqft",
+            "text": "2,885"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "size.m2",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.m2",
+            "rule": "area_m2",
+            "text": "268 m²"
+          },
+          {
+            "role": "size.button",
+            "brief": "B6",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.count",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.badge",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.label",
+            "brief": "B7",
+            "kind": "content",
+            "content": "tile.cost.label",
+            "text": "Cost to Build"
+          },
+          {
+            "role": "cost.sub",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.value",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.rate",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.button",
+            "brief": "B7",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.panel.h",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.size.h",
+            "text": "Max build size details"
+          },
+          {
+            "role": "size.panel.why",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes_h",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.all",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.all_numbers",
+            "text": "All the numbers"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.1",
+            "kind": "content",
+            "content": "row.max_build_size",
+            "text": "Max build size"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.1",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.row.max",
+            "rule": "area_sqft_m2_paren",
+            "text": "2,885 sq ft (268 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.2",
+            "kind": "content",
+            "content": "row.storeys",
+            "text": "Storeys"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.2",
+            "kind": "value",
+            "field": "storeys_max",
+            "key": "o2.row.storeys",
+            "rule": "int",
+            "text": "3"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.3",
+            "kind": "content",
+            "content": "row.height",
+            "text": "Height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.11",
+            "kind": "content",
+            "content": "row.footprint",
+            "text": "Footprint"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.11",
+            "kind": "value",
+            "field": "footprint_max_m2",
+            "key": "o2.row.footprint",
+            "rule": "area_sqft_m2_paren",
+            "text": "1,292 sq ft (120 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.12",
+            "kind": "content",
+            "content": "row.coverage",
+            "text": "Lot coverage"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.13",
+            "kind": "content",
+            "content": "row.fsi",
+            "text": "Floor space index"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.14",
+            "kind": "content",
+            "content": "row.front_setback",
+            "text": "Front setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.14",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.15",
+            "kind": "content",
+            "content": "row.rear_setback",
+            "text": "Rear setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.15",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.16",
+            "kind": "content",
+            "content": "row.side_setbacks",
+            "text": "Side setbacks"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.16",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.17",
+            "kind": "content",
+            "content": "row.depth",
+            "text": "Building depth"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.17",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.18",
+            "kind": "content",
+            "content": "row.main_wall",
+            "text": "Main wall height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.18",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.19",
+            "kind": "content",
+            "content": "row.homes",
+            "text": "Homes"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.19",
+            "kind": "value",
+            "field": "units_max",
+            "key": "o2.row.homes",
+            "rule": "int",
+            "text": "1"
+          },
+          {
+            "role": "size.panel.ver",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.hide",
+            "brief": "B9",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "cost.panel.h",
+            "brief": "B10",
+            "kind": "content",
+            "content": "panel.cost.h",
+            "text": "Cost to build details"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.1",
+            "kind": "content",
+            "content": "row.cost_total",
+            "text": "Cost to build"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.2",
+            "kind": "content",
+            "content": "row.cost_rate",
+            "text": "Cost per sq ft"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.3",
+            "kind": "content",
+            "content": "row.cost_area",
+            "text": "Area priced"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.4",
+            "kind": "content",
+            "content": "row.cost_basis",
+            "text": "Area based on"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.5",
+            "kind": "content",
+            "content": "row.cost_conf",
+            "text": "Confidence"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.6",
+            "kind": "content",
+            "content": "row.cost_excl",
+            "text": "Not included"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.note",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.ver",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.hide",
+            "brief": "B10",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "var_label",
+            "brief": "B11",
+            "kind": "content",
+            "content": "var.label",
+            "text": "By-law variances"
+          },
+          {
+            "role": "bigger.q",
+            "brief": "B12",
+            "kind": "content",
+            "content": "q.bigger",
+            "text": "Can you build bigger?"
+          },
+          {
+            "role": "bigger.answer",
+            "brief": "B12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "bigger.how",
+            "brief": "B13",
+            "kind": "content",
+            "content": "btn.how",
+            "text": "How?"
+          },
+          {
+            "role": "bigger.how.steps",
+            "brief": "B13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "nbr.q",
+            "brief": "B14",
+            "kind": "content",
+            "content": "q.neighbours",
+            "text": "Did the neighbours build bigger?"
+          },
+          {
+            "role": "nbr.answer",
+            "brief": "B14",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          },
+          {
+            "role": "nbr.pointer",
+            "brief": "B16",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          }
+        ]
+      },
+      {
+        "kind": "ad",
+        "id": "ad_o2",
+        "brief": "D1",
+        "ad": {
+          "field": "ad_scenario_detached_house_flat_or_shallow_roof",
+          "slot": "scenario_card",
+          "source": "ad_slot",
+          "label": "Sponsored slot (beside the detached_house/flat_or_shallow_roof card)",
+          "value": "Get your lot surveyed",
+          "disclosure": "Sponsored",
+          "scenario": "detached_house/flat_or_shallow_roof"
+        },
+        "parts": []
+      },
+      {
+        "kind": "option",
+        "id": "o3",
+        "scenario": "detached_houseplex",
+        "parts": [
+          {
+            "role": "label",
+            "brief": "B1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "title",
+            "brief": "B2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "spec_label",
+            "brief": "B5",
+            "kind": "content",
+            "content": "spec.label",
+            "text": "By-law specifications"
+          },
+          {
+            "role": "size.badge",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.label",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.label",
+            "text": "Max Build Size"
+          },
+          {
+            "role": "size.sub",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.sub",
+            "text": "(by-law allows)"
+          },
+          {
+            "role": "size.value",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.value",
+            "rule": "area_sqft",
+            "text": "4,435"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "size.m2",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.m2",
+            "rule": "area_m2",
+            "text": "412 m²"
+          },
+          {
+            "role": "size.button",
+            "brief": "B6",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.count",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.badge",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.label",
+            "brief": "B7",
+            "kind": "content",
+            "content": "tile.cost.label",
+            "text": "Cost to Build"
+          },
+          {
+            "role": "cost.sub",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.value",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.rate",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.button",
+            "brief": "B7",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "unit.badge",
+            "brief": "B8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "unit.label",
+            "brief": "B8",
+            "kind": "content",
+            "content": "tile.unit.label",
+            "text": "Size per Unit"
+          },
+          {
+            "role": "unit.sub",
+            "brief": "B8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "unit.value",
+            "brief": "B8",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.value",
+            "rule": "area_sqft",
+            "text": "739"
+          },
+          {
+            "role": "unit.unit",
+            "brief": "B8",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "unit.m2",
+            "brief": "B8",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.m2",
+            "rule": "area_m2",
+            "text": "69 m²"
+          },
+          {
+            "role": "size.panel.h",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.size.h",
+            "text": "Max build size details"
+          },
+          {
+            "role": "size.panel.why",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes_h",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.all",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.all_numbers",
+            "text": "All the numbers"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.1",
+            "kind": "content",
+            "content": "row.max_build_size",
+            "text": "Max build size"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.1",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.row.max",
+            "rule": "area_sqft_m2_paren",
+            "text": "4,435 sq ft (412 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.4",
+            "kind": "content",
+            "content": "row.units",
+            "text": "Units"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.4",
+            "kind": "value",
+            "field": "unit_count",
+            "key": "o3.row.units",
+            "rule": "int",
+            "text": "6"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.5",
+            "kind": "content",
+            "content": "row.unit_size",
+            "text": "Size per unit (average)"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.5",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.row.unit_size",
+            "rule": "area_sqft_m2_paren",
+            "text": "739 sq ft (69 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.6",
+            "kind": "content",
+            "content": "row.basement",
+            "text": "Basement"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.7",
+            "kind": "content",
+            "content": "row.bedrooms",
+            "text": "Bedrooms"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.7",
+            "kind": "value",
+            "field": "houseplex_bedrooms",
+            "key": "o3.row.bedrooms",
+            "rule": "int",
+            "text": "12"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.2",
+            "kind": "content",
+            "content": "row.storeys",
+            "text": "Storeys"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.2",
+            "kind": "value",
+            "field": "storeys_max",
+            "key": "o3.row.storeys",
+            "rule": "int",
+            "text": "3"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.3",
+            "kind": "content",
+            "content": "row.height",
+            "text": "Height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.8",
+            "kind": "content",
+            "content": "row.roof",
+            "text": "Roof"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.9",
+            "kind": "content",
+            "content": "row.units_flat",
+            "text": "Units with a flat roof"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.9",
+            "kind": "value",
+            "field": "units_flat",
+            "key": "o3.row.units_flat",
+            "rule": "int",
+            "text": "6"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.10",
+            "kind": "content",
+            "content": "row.units_pitched",
+            "text": "Units with a pitched roof"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.ver",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.hide",
+            "brief": "B9",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "cost.panel.h",
+            "brief": "B10",
+            "kind": "content",
+            "content": "panel.cost.h",
+            "text": "Cost to build details"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.1",
+            "kind": "content",
+            "content": "row.cost_total",
+            "text": "Cost to build"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.2",
+            "kind": "content",
+            "content": "row.cost_rate",
+            "text": "Cost per sq ft"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.3",
+            "kind": "content",
+            "content": "row.cost_area",
+            "text": "Area priced"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.4",
+            "kind": "content",
+            "content": "row.cost_basis",
+            "text": "Area based on"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.5",
+            "kind": "content",
+            "content": "row.cost_conf",
+            "text": "Confidence"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.6",
+            "kind": "content",
+            "content": "row.cost_excl",
+            "text": "Not included"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.note",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.ver",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.hide",
+            "brief": "B10",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "var_label",
+            "brief": "B11",
+            "kind": "content",
+            "content": "var.label",
+            "text": "By-law variances"
+          },
+          {
+            "role": "bigger.q",
+            "brief": "B12",
+            "kind": "content",
+            "content": "q.bigger",
+            "text": "Can you build bigger?"
+          },
+          {
+            "role": "bigger.answer",
+            "brief": "B12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "coming_soon",
+        "id": "soon",
+        "parts": [
+          {
+            "role": "heading",
+            "brief": "E1",
+            "kind": "content",
+            "content": "soon.h",
+            "text": "Coming soon"
+          },
+          {
+            "role": "items",
+            "brief": "E1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "lot_facts",
+        "id": "lot",
+        "parts": [
+          {
+            "role": "heading",
+            "brief": "F1",
+            "kind": "content",
+            "content": "lot.h",
+            "text": "About this lot"
+          },
+          {
+            "role": "row.label",
+            "brief": "F2",
+            "kind": "content",
+            "content": "lot.size",
+            "text": "Lot size"
+          },
+          {
+            "role": "row.value",
+            "brief": "F2",
+            "kind": "value",
+            "field": "lot_size_sqm",
+            "key": "lot.size",
+            "rule": "area_sqft_m2_dot",
+            "text": "3,057 sq ft · 284 m²"
+          },
+          {
+            "role": "row.label",
+            "brief": "F3",
+            "kind": "content",
+            "content": "lot.fd",
+            "text": "Frontage × depth"
+          },
+          {
+            "role": "row.value",
+            "brief": "F3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F4",
+            "kind": "content",
+            "content": "lot.zone",
+            "text": "Zone"
+          },
+          {
+            "role": "row.value",
+            "brief": "F4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F5",
+            "kind": "content",
+            "content": "lot.heritage",
+            "text": "Heritage"
+          },
+          {
+            "role": "row.value",
+            "brief": "F5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F6",
+            "kind": "content",
+            "content": "lot.ravine",
+            "text": "Ravine protection area"
+          },
+          {
+            "role": "row.value",
+            "brief": "F6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F7",
+            "kind": "content",
+            "content": "lot.corner",
+            "text": "Corner lot"
+          },
+          {
+            "role": "row.value",
+            "brief": "F7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.value",
+            "brief": "F8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "legal",
+        "id": "legal",
+        "parts": [
+          {
+            "role": "line",
+            "brief": "G1",
+            "kind": "content",
+            "content": "legal.line",
+            "text": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City."
+          }
+        ]
+      },
+      {
+        "kind": "footer",
+        "id": "footer",
+        "parts": [
+          {
+            "role": "sources",
+            "brief": "G2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "change",
+            "brief": "G3",
+            "kind": "content",
+            "content": "footer.change",
+            "text": "By-laws and maps change and may not show recent amendments. For a formal answer, apply to Toronto Building for a Zoning Applicable Law Certificate."
+          },
+          {
+            "role": "copyright",
+            "brief": "G4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "response_fixture": "9b59652c00c354be",
+    "files": {
+      "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
+      "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
+      "scripts/surfaces/_schema/report-presentation.json": "a13f8e92c7d45603",
+      "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
+      "scripts/surfaces/_schema/report-v2.decl.json": "0be18f034b471cda",
+      "scripts/surfaces/_schema/report-page.json": "3fbf420fd2822b3d",
+      "scripts/surfaces/_schema/report-page.schema.json": "f79e00423cc3e519"
+    }
+  }
+}

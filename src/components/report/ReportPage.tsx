@@ -2,7 +2,7 @@
 //            docs/specs/02-web-admin/128_surface_standard_policy.md Rule 15 (same everywhere), Rule 16 (no maths), Rule 17 (honest display), R-34 (an ad is never inside a card),
 //            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05, FE-24; approved mock v21 (open-questions.md "mock v21: APPROVED", rulings 1 a and 2).
 //
-// MF-57 · McFrontend queue. THE v21 report page over the page view (pageViewOf). It reads parts by ROLE (scripts/surfaces/_schema/report-page.json
+// MF-57 · McFrontend queue. THE v21 report page over the page view (pageViewOf). MF-19 (2026-11-11): the after-entry line section (D-5). It reads parts by ROLE (scripts/surfaces/_schema/report-page.json
 // `kinds`), never a field name, a target name or a number: the layout row decides whether the details panels start closed with toggles
 // (`details: collapsed`) or open without them (`expanded`). Every text is a part's text as built on the server; a pending part shows the ruled
 // pending text in its own slot in one muted style (data-pending). Colours are the named report-* theme colours (ruling 1 a); geometry is in
@@ -189,6 +189,16 @@ const Section = ({ s, open, images }: { s: PageSection; open: boolean; images: P
           <button type="button" data-toggle="sheet" aria-haspopup="dialog" aria-controls="report-sheet" className="min-h-12 rounded-xl border border-report-amber bg-transparent text-[16px]/[24px] font-semibold text-report-amber focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">
             {one(s, 'button')?.text}
           </button>
+        </section>
+      );
+    case 'lot_size_entered':
+      // MF-19 (D-5): the after-entry line, one neutral line for every viewer, in place of the box; every text is the server's or content.
+      return (
+        <section data-section="lot_size_entered" aria-labelledby="report-lse" className="rounded-[14px] border border-report-line px-6 py-4">
+          <p id="report-lse" className="m-0 text-[14px]/[20px] text-report-muted">
+            <T p={one(s, 'label')} />{' '}<T p={one(s, 'value')} className="font-semibold text-report-ink tabular-nums" />{' '}<T p={one(s, 'source')} />{' '}<T p={one(s, 'date')} /><T p={one(s, 'end')} />
+            {one(s, 'recalc') ? <>{' '}<T p={one(s, 'recalc')} /></> : null}
+          </p>
         </section>
       );
     case 'ad':

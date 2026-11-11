@@ -11,7 +11,7 @@
     },
     "review": "scratchpad/report-review/REVIEW.md §6",
     "seeded": "2026-10-20",
-    "inputs_sha256_16": "68a502752f8c46eb"
+    "inputs_sha256_16": "04f8177a9e33e862"
   },
   "inputs": {
     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
@@ -1289,6 +1289,27 @@
           "source": "content:page",
           "render": "rendered",
           "note": "MF-57: fixed texts and the two ruled pending texts of the v21 page (report-v2-seed/page-text.json); read by buildPage, never sent in a response"
+        },
+        {
+          "path": "ui.lot_size_entry",
+          "name": "lot_size_entry",
+          "label": "Lot size entered by a user",
+          "type": "number",
+          "unit": "m²",
+          "status": "proposed",
+          "source": "user_input:lot_area",
+          "render": "rendered",
+          "note": "MF-19: the active user lot-size entry (parcel_user_inputs, provenance user); the after-entry line shows it, server-formatted"
+        },
+        {
+          "path": "ui.lot_size_entered_at",
+          "name": "lot_size_entered_at",
+          "label": "Lot size entered on",
+          "type": "timestamp",
+          "status": "proposed",
+          "source": "user_input:entered_at",
+          "render": "rendered",
+          "note": "MF-19: the entry stamp (parcel_user_inputs.entered_at); the after-entry line shows it as date_dmy, server-formatted"
         },
         {
           "path": "ui.street_view",

@@ -4140,5 +4140,337 @@
         "status": "unreviewed"
       }
     }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "generated",
+    "docs": {
+      "purpose": "The Add lot size form of the report sheet: one number and its unit (sq ft or m²), entered once per lot (D-1 a). Declared now; it is mounted in the report sheet when the entry switch flips (the sheet is hidden while off, D-6).",
+      "data_story": "It posts the lot area to the entry contract, which stores one parcel_user_inputs row (source user, entered_at) that wins over the City value for every viewer; the page re-reads and shows the after-entry line.",
+      "under_126": "**GENERATED.** Rendered by the web FORM binding from render.form and entry_request in lot-size-entry-contract.json."
+    },
+    "evidence": {
+      "files": [
+        "~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md (B7) and DECISIONS.md D-1..D-6"
+      ],
+      "contracts": [
+        "contract_parcels_lot_size_entry"
+      ],
+      "tables": [
+        "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables"
+      ],
+      "gate": [
+        "src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, the entitlement gate"
+      ],
+      "states": [
+        "src/components/surfaces/web/FormBinding.tsx — the six FORM states"
+      ],
+      "emits": [
+        "src/app/api/parcels/lot-size/route.ts — logInfo outcome lines"
+      ]
+    },
+    "identity": {
+      "id": "report_lot_size_entry",
+      "archetype": "FORM",
+      "platforms": [
+        "web"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "Product report (Spec 126 §11a.9 user inputs) — no individual owner is named by Specs 126/127/128.",
+      "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+      "spec_refs": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "Nothing consumes this surface: it does not exist, so no compatibility promise can have been made. It gains one at its C9 cutover, when the golden pair is captured.",
+        "evidence": [
+          "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2.2 — one of the 11 NEW admin surfaces",
+          "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
+        ]
+      },
+      "ref": "S-083"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "The two fields come from entry_request in lot-size-entry-contract.json; the route schema adds parcel_id from the page.",
+      "evidence": [
+        "scripts/surfaces/_schema/lot-size-entry-contract.json — entry_request, route_request"
+      ],
+      "contract_ref": [
+        "contract_parcels_lot_size_entry"
+      ],
+      "query_key": [],
+      "field_whitelist": [
+        "lot_area_value",
+        "lot_area_unit"
+      ]
+    },
+    "outputs": {
+      "answer": "contract_only",
+      "why": "The write goes through a declared MUTATION contract; the page re-reads after success (no optimistic write).",
+      "evidence": [
+        "src/app/api/parcels/lot-size/route.ts"
+      ],
+      "contract_ref": [
+        "contract_parcels_lot_size_entry"
+      ],
+      "rollback": "None is applied locally, so none is undone."
+    },
+    "state": {
+      "answer": "server_only",
+      "why": "The entry is a shared server fact (FE-19); nothing persists on the device.",
+      "evidence": [
+        "src/app/api/parcels/lot-size/route.ts"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "live",
+      "why": "Submitted per request.",
+      "evidence": [
+        "src/app/api/parcels/lot-size/route.ts"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "authenticated",
+        "why": "The entry route calls getCurrentUserContext first and answers 401 without a signed-in user.",
+        "evidence": [
+          "src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "parcel_user_inputs is Class B (RLS on, no policy; Spec 114 §2 dated note 2026-11-11); the route reads and writes through the owner connection after verifyAdminAuth.",
+        "evidence": [
+          "docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)",
+          "migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "detail",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "form": {
+        "schema_ref": "scripts/surfaces/_schema/lot-size-entry-contract.json#/entry_request",
+        "fields": [
+          {
+            "field": "lot_area_value",
+            "widget": "number",
+            "label": "report_lot_size_entry.field.lot_area_value",
+            "placeholder": "report_lot_size_entry.placeholder.lot_area_value"
+          },
+          {
+            "field": "lot_area_unit",
+            "widget": "select",
+            "label": "report_lot_size_entry.field.lot_area_unit"
+          }
+        ],
+        "submit": "report_lot_size_entry.submit"
+      }
+    },
+    "checks": [
+      {
+        "id": "lot_size_entry_switch_off_no_write",
+        "kind": "error_state",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "D-6: while user_lot_size_entry_enabled is off the route answers 403 ENTRY_OFF before any other read or write (src/tests/parcels-lot-size-route.infra.test.ts)."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "static",
+        "golden": "static"
+      },
+      {
+        "name": "loading",
+        "golden": "loading"
+      },
+      {
+        "name": "error",
+        "golden": "error"
+      },
+      {
+        "name": "hit",
+        "golden": "hit"
+      },
+      {
+        "name": "unauthorized",
+        "golden": "unauthorized"
+      },
+      {
+        "name": "offline",
+        "golden": "offline"
+      }
+    ],
+    "errors": {
+      "answer": "envelope",
+      "why": "Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope.",
+      "evidence": [
+        "src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope",
+        "src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed"
+      ],
+      "classes": [
+        {
+          "class": "401",
+          "ui": "Redirect to sign-in — the route guard refuses before the page renders."
+        },
+        {
+          "class": "403",
+          "ui": "Full-page \"admin only\" block naming the is_admin requirement; no partial data."
+        },
+        {
+          "class": "500",
+          "ui": "Full-width error panel carrying the envelope error.code, with a retry control."
+        },
+        {
+          "class": "schema_drift",
+          "ui": "The row that failed to parse renders as a red schema_drift row; the rest still renders."
+        }
+      ],
+      "no_retry": [
+        "401",
+        "403"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "The entry row is its own record (who, when); no analytics or ledger event is declared.",
+      "evidence": [
+        "src/app/api/parcels/lot-size/route.ts"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "An admin correction form; it renders no sponsored placement.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "An operator act, not a metered product action.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City"
+      ]
+    },
+    "config": {
+      "answer": "logic_variables",
+      "why": "The switch, the range, the City ratio and the entries a day are logic variables read by the route.",
+      "evidence": [
+        "scripts/seeds/logic_variables.json — user_lot_size_*"
+      ],
+      "logic_variables": [
+        {
+          "name": "user_lot_size_entry_enabled",
+          "min": 0,
+          "max": 0,
+          "on_invalid": "fail",
+          "why": "Write-gating: anything but 1 inside the seed bounds reads off (D-6)."
+        },
+        {
+          "name": "user_lot_size_min_sqm",
+          "min": 1,
+          "max": 1000,
+          "on_invalid": "fail",
+          "why": "Write-affecting (D-2): a bad value refuses the entry rather than widen it."
+        },
+        {
+          "name": "user_lot_size_max_sqm",
+          "min": 100,
+          "max": 100000,
+          "on_invalid": "fail",
+          "why": "Write-affecting (D-2)."
+        },
+        {
+          "name": "user_lot_size_city_ratio_max",
+          "min": 1.5,
+          "max": 20,
+          "on_invalid": "fail",
+          "why": "Write-affecting (D-3)."
+        },
+        {
+          "name": "user_lot_size_entries_per_day",
+          "min": 1,
+          "max": 100,
+          "on_invalid": "fail",
+          "why": "The rate limit (D-4)."
+        }
+      ],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "parcel_user_inputs is read by the report (the after-entry line) and reverted by the admin form.",
+      "evidence": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City"
+      ],
+      "surfaces": [
+        "admin_lot_size_revert"
+      ],
+      "varies_by_surface": "This form enters a lot size once; the admin form reverts it."
+    },
+    "a11y": {
+      "touch_target_min_px": 44,
+      "labels": "complete",
+      "dark_mode": "none",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [
+      {
+        "what": "The form is declared and goldened but not mounted: the report sheet is hidden while the entry switch is off (D-6), the live report is MF-44, and the report page has no Mantine provider.",
+        "measured": "bindings.json mounts[] has no report_lot_size_entry row; mounting it in the sheet is a flip condition (plan v2 section 2).",
+        "check_id": "lot_size_entry_switch_off_no_write"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record \"sq ft first\"). The bounds are the server's (plan fold F2): the form checks the type only.",
+    "x-draft": {
+      "shard": "web-product",
+      "files": [],
+      "role": "consumer",
+      "generated": "100%",
+      "net_new_tables": [
+        "parcel_user_inputs"
+      ],
+      "designed": true
+    },
+    "programme": {
+      "scope": "parcel_product",
+      "phase": "B2",
+      "why": "The user lot-size input of the report (MF-19).",
+      "feature": "F02",
+      "build_order": 2047,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
   }
 ]

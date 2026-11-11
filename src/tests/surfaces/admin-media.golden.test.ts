@@ -29,9 +29,11 @@ export const plainProblems = (v: unknown, at = '/'): string[] => {
 describe('T7 (a) the committed goldens equal a fresh build', () => {
   // MF-40 (2026-11-10): the builder covers the three admin placements surfaces too (17 + 17 = 34 web goldens; mobile_parcel_search is built by mobile jest).
   // MF-44 (dated 2026-11-11): + the 10 web goldens of mobile_parcel_search (searchWebTree over the mobile golden's situation; 34 -> 44).
-  it('44 goldens, byte for byte', () => {
+  // MF-19 (dated 2026-11-11; operator D-1..D-8 "all as recommmended"): admin_lot_size_revert and report_lot_size_entry add 6 web goldens each (44 -> 56,
+  // re-measured on the MF-44 tip); red evidence docs/reports/red-evidence/MF-19/count-locks-red.txt.
+  it('56 goldens, byte for byte', () => {
     const fresh = buildGoldens(ROOT);
-    expect(fresh.size).toBe(44);
+    expect(fresh.size).toBe(56);
     for (const [p, text] of fresh) expect([p, fs.readFileSync(path.join(ROOT, p), 'utf8') === text]).toEqual([p, true]);
   });
   it('RED: a hand edit of one golden differs from the fresh build', () => {
@@ -60,7 +62,7 @@ describe('T7 (b) coverage', () => {
   it('each golden covers its state, every state of the three surfaces has one', () => {
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted too; its mobile goldens are built and checked by mobile jest
     // (mobile/__tests__/parcelScreens.golden.test.ts), so this web coverage case reads the web surfaces only.
-    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map']); // MF-53: + the map page (mobile only)
+    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'admin_lot_size_revert', 'report_lot_size_entry']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
     for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {

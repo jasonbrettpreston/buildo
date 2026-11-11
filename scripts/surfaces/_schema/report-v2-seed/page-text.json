@@ -1,5 +1,5 @@
 {
-  "$comment": "MF-57 · authored INPUT of seed-report-v2.mjs: the fixed texts of the approved v21 report page (fields/REPORT-LAYOUT-BRIEF-v4.md, display-rules-v4.json `content`, verbatim) and the two ruled pending texts (Q-G4 a: \"not yet estimated\", \"not yet classified\"). A text named by an operator open item of the brief is NOT here: its part is pending (scripts/surfaces/_schema/report-page.json). Generated into report-presentation.json `page`; never read from here at run time.",
+  "$comment": "MF-57 · authored INPUT of seed-report-v2.mjs: the fixed texts of the approved v21 report page (fields/REPORT-LAYOUT-BRIEF-v4.md, display-rules-v4.json `content`, verbatim) and the two ruled pending texts (Q-G4 a: \"not yet estimated\", \"not yet classified\"). A text named by an operator open item of the brief is NOT here: its part is pending (scripts/surfaces/_schema/report-page.json). Generated into report-presentation.json `page`; never read from here at run time. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"): the after-entry line (C2) texts, D-5 neutral wording \"from a survey\" (the mock read \"from your survey\"), the recalculated sentence shown only when the stored results used the entry, and the three server message templates of the sheet (D-2 range in the typed unit, display rules lot_range_error / lot_range_error_m2; D-3 City ratio), filled and sent by the server (src/lib/parcels/lot-size-entry.ts), never formatted on screen.",
   "texts": {
     "page.title": "The Building Possibilities Report",
     "spec.label": "By-law specifications",
@@ -65,6 +65,12 @@
     "sheet.note": "You can enter the lot size once. It is saved with this lot and marked as entered by you.",
     "sheet.submit": "Recalculate",
     "sheet.cancel": "Cancel",
+    "entered.source": "· from a survey, entered",
+    "entered.end": ".",
+    "entered.recalc": "Every option is recalculated with it.",
+    "sheet.err_range_sqft": "Enter a lot size between {lo} and {hi} sq ft.",
+    "sheet.err_range_m2": "Enter a lot size between {lo} and {hi} m².",
+    "sheet.err_ratio": "This is far from the City lot record of {city}. Check the number and the unit.",
     "pending.estimated": "not yet estimated",
     "pending.classified": "not yet classified"
   }
