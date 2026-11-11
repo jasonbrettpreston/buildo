@@ -11,7 +11,9 @@
 // parser strips tab/CR/LF, so the target became `//evil.com` and the router
 // left the site. The same checks run on the value decoded once more (a
 // double-encoded `%2509` or `%252F`), and the final target must resolve to
-// the same origin. A valid internal path is returned unchanged.
+// the same origin. A valid internal path is returned unchanged. A pathname
+// with an encoded backslash (`%5C`), an encoded `//` or a malformed percent
+// sequence also falls back, losing only the deep link (fails safe).
 
 const FALLBACK = '/dashboard';
 const PROBE_ORIGIN = 'https://same-origin.invalid';
@@ -38,6 +40,8 @@ export function safeRedirectPath(raw: string | null | undefined): string {
   if (!raw || !isLocalPath(raw)) return FALLBACK;
   const decoded = decodeOnce(raw);
   if (decoded === null || !isLocalPath(decoded)) return FALLBACK;
+  // Backstop: unreachable while isLocalPath holds; kept so a future edit to
+  // the string checks cannot reopen an off-site target.
   if (new URL(raw, PROBE_ORIGIN).origin !== PROBE_ORIGIN) return FALLBACK;
   return raw;
 }
