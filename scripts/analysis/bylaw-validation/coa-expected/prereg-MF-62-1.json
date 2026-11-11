@@ -1,0 +1,89 @@
+{
+ "$comment": "Pre-registration, task MF-62 \"What we checked\", the report loading state (operator 2026-11-11, verbatim \"Mf-62 - yes\" (D-1 a, D-2 a, D-3 a, D-4 a) and \"x-1 a of course, x-2 a x-3 a x-4 a - build this into McFront-end specs and rulings and handbook\"; record ~/Buildo-scratch/mcfrontend/MF-62/plan.md and build-plan.md bottoms, phase1/open-questions.md bottom): the root-only checked object on a lifecycle loading tree (FE-38), the labels in report-presentation.json states.checked, the producer src/lib/parcels/what-we-checked.ts, two logic_variables (report_check_min_ms, report_check_skip_after_ms), the stored dated citywide counts written by the existing refresh_snapshot step (migration 306 written, not applied). prereg 1, committed ALONE directly before the code commit. rules[]: FE-05, FE-06, FE-07, FE-24 and FE-38 are RULED and are cited by the new and edited locks (src/tests/surfaces/report-checked.logic.test.ts, report-render.logic.test.ts, report-honest.logic.test.ts, parity.golden.test.ts); red evidence docs/reports/red-evidence/MF-62/. No OWED id is cited. Zero scorer moves (no file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes; the producer only reads scripts/seeds/bylaw/universe.lock.json); totals and floors copied from prereg-MF-57-2.json. In-file round 147 (assigned by the orchestrator: 140-146 are taken by parallel lanes; the round field is only checked as an integer).",
+ "schema": "coa-round-prereg-v1",
+ "round": 147,
+ "task": "MF-62",
+ "rules": [
+  "FE-05",
+  "FE-06",
+  "FE-07",
+  "FE-24",
+  "FE-38"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/MF-62/plan.md and build-plan.md (operator 2026-11-11 \"Mf-62 - yes\" and \"x-1 a of course, x-2 a x-3 a x-4 a - build this into McFront-end specs and rulings and handbook\"); panel reports ~/Buildo-scratch/mcfrontend/MF-62/panel-plan/",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
