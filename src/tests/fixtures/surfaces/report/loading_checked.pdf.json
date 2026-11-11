@@ -1,0 +1,200 @@
+{
+  "harness": "mf12-report-golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md#11a.7",
+  "surface": "report",
+  "state": "loading_checked",
+  "target": "pdf",
+  "response_fixture": {
+    "synthetic": true,
+    "lifecycle": "loading",
+    "what_we_checked": {
+      "groups": [
+        {
+          "key": "citywide",
+          "lines": [
+            {
+              "key": "lots",
+              "value": "496,536",
+              "delay_ms": 0
+            },
+            {
+              "key": "regulations",
+              "value": "4,356",
+              "delay_ms": 545
+            },
+            {
+              "key": "buildings",
+              "value": "427,077",
+              "delay_ms": 1090
+            },
+            {
+              "key": "builds",
+              "value": "194,110",
+              "delay_ms": 1636
+            },
+            {
+              "key": "map_areas",
+              "value": "27,759",
+              "delay_ms": 2181
+            }
+          ]
+        },
+        {
+          "key": "lot",
+          "lines": [
+            {
+              "key": "area",
+              "value": "246 m²",
+              "delay_ms": 2727
+            },
+            {
+              "key": "limits",
+              "value": "163",
+              "types": "5",
+              "delay_ms": 3272
+            },
+            {
+              "key": "ravine_out",
+              "delay_ms": 3818
+            },
+            {
+              "key": "heritage_out",
+              "delay_ms": 4363
+            },
+            {
+              "key": "decisions",
+              "value": "12",
+              "delay_ms": 4909
+            }
+          ]
+        }
+      ],
+      "dates": {
+        "lines": [
+          {
+            "key": "bylaw",
+            "value": "2026-11-10"
+          },
+          {
+            "key": "zoning",
+            "value": "2026-02-20"
+          },
+          {
+            "key": "permits",
+            "value": "2026-10-25"
+          },
+          {
+            "key": "decisions",
+            "value": "2026-10-23"
+          }
+        ],
+        "delay_ms": 5454
+      },
+      "skip_after_ms": 2000,
+      "min_ms": 6000
+    }
+  },
+  "rendered_tree": {
+    "lifecycle": "loading",
+    "nodes": [
+      {
+        "field": "status_text",
+        "source": "content",
+        "label": "Status reason (plain words)",
+        "value": "Loading the report…",
+        "status": "none",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      }
+    ],
+    "checked": {
+      "title": "What we checked",
+      "log_label": "What we checked",
+      "summary": "Everything we checked is shown. Choose Show report to open your report.",
+      "groups": [
+        {
+          "key": "citywide",
+          "heading": "Across Toronto",
+          "lines": [
+            {
+              "key": "lots",
+              "text": "496,536 lots scanned",
+              "delay_ms": 0
+            },
+            {
+              "key": "regulations",
+              "text": "4,356 by-law rules searched",
+              "delay_ms": 545
+            },
+            {
+              "key": "buildings",
+              "text": "427,077 buildings measured",
+              "delay_ms": 1090
+            },
+            {
+              "key": "builds",
+              "text": "194,110 builds examined",
+              "delay_ms": 1636
+            },
+            {
+              "key": "map_areas",
+              "text": "27,759 map areas checked",
+              "delay_ms": 2181
+            }
+          ]
+        },
+        {
+          "key": "lot",
+          "heading": "Your lot",
+          "lines": [
+            {
+              "key": "area",
+              "text": "Lot: 246 m²",
+              "delay_ms": 2727
+            },
+            {
+              "key": "limits",
+              "text": "163 by-law checks across 5 house types",
+              "delay_ms": 3272
+            },
+            {
+              "key": "ravine_out",
+              "text": "Not in a ravine area",
+              "delay_ms": 3818
+            },
+            {
+              "key": "heritage_out",
+              "text": "Not heritage designated",
+              "delay_ms": 4363
+            },
+            {
+              "key": "decisions",
+              "text": "12 decisions nearby",
+              "delay_ms": 4909
+            }
+          ]
+        }
+      ],
+      "dates": {
+        "text": "By-law results dated 2026-11-10. Zoning maps 2026-02-20. Permits to 2026-10-25. Decisions to 2026-10-23.",
+        "delay_ms": 5454
+      },
+      "skip": {
+        "text": "Show report",
+        "after_ms": 2000
+      },
+      "min_ms": 6000
+    }
+  },
+  "fingerprint": {
+    "response_fixture": "e67ef5e6edcf9774",
+    "files": {
+      "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
+      "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
+      "scripts/surfaces/_schema/report-presentation.json": "3b3666355cfbbb96",
+      "scripts/surfaces/_schema/report-tree.schema.json": "b4fad6e33ab42fe6",
+      "scripts/surfaces/_schema/report-v2.decl.json": "06d1e86c4b890092"
+    }
+  }
+}

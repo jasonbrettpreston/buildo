@@ -126,3 +126,30 @@
   /* Touch target constant — matches standards §1.1 minimum 44px */
   --spacing-touch: 44px;
 }
+
+/* MF-62 (Spec 126 11a.7 dated note 2026-11-11, FE-35; operator "Mf-62 - yes", D-2 a): the report loading state "What we checked".
+   Each line fades in at the server delay --d (opacity only: the line stays in the accessibility tree); the skip link is revealed after --skip
+   by visibility (not focusable while unseen). Base styles are visible; the hidden start comes only from fill-mode backwards, so reduce motion
+   (WCAG 2.2 SC 2.2.2, prefers-reduced-motion) and print show every line and the skip at once. Locked by src/tests/surfaces/report-checked.logic.test.ts C5. */
+@keyframes report-check-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes report-check-skip-in {
+  from { visibility: hidden; opacity: 0; }
+  to { visibility: visible; opacity: 1; }
+}
+.report-check-line {
+  animation: report-check-in 400ms ease-out backwards;
+  animation-delay: var(--d, 0ms);
+}
+.report-check-skip {
+  animation: report-check-skip-in 200ms ease-out backwards;
+  animation-delay: var(--skip, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .report-check-line, .report-check-skip { animation: none; }
+}
+@media print {
+  .report-check-line, .report-check-skip { animation: none; }
+}

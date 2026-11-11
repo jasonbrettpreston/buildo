@@ -6,7 +6,7 @@
 // word, no target comparison, no layout number. Every layout key is honoured through a data attribute and a class. No state: a collapsed block is a
 // natively toggled <details>, so the component is safe in a server component.
 import type { ReactElement } from 'react';
-import type { ReportView as View, ViewImage, ViewNode, ViewSlot } from '../../lib/surfaces/report/core';
+import type { ReportView as View, ViewChecked, ViewImage, ViewNode, ViewSlot } from '../../lib/surfaces/report/core';
 
 const Item = ({ n }: { n: ViewNode }): ReactElement => (
   <div data-field={n.field} data-status={n.status} data-unavailable={n.unavailable ? 'true' : 'false'} className="py-1">
@@ -48,6 +48,33 @@ export const Picture = ({ im, fill = false }: { im: ViewImage; fill?: boolean })
   </figure>
 );
 
+// MF-62 (Spec 126 11a.7 dated note 2026-11-11, FE-35; operator "Mf-62 - yes"): the loading state "What we checked", drawn from the view only.
+// Every line sits in ONE role="log" region (WCAG 2.2 SC 4.1.3, ARIA23); the lines are in the DOM from the first paint, so the fade is visual only
+// (opacity, globals.css .report-check-line) and nothing is announced per line. On a paced row each line carries the server delay as --d and the skip
+// link appears after --skip (revealed by visibility, so it is not focusable while unseen); reduce motion and print show everything at once.
+// Admin and pdf (not paced) draw every line at once and no skip. No href, no skip: never an inert control. No state, no handler.
+const Checked = ({ c }: { c: ViewChecked }): ReactElement => (
+  <section data-block="checked" data-paced={c.paced ? 'true' : 'false'} className="space-y-4 rounded bg-report-page p-4 text-report-ink">
+    <h1 className="text-2xl font-bold">{c.title}</h1>
+    <div role="log" aria-label={c.log_label} className="grid gap-3">
+      {c.groups.map((g) => (
+        <div key={g.key} data-group={g.key} className="grid gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-report-soft">{g.heading}</h2>
+          <ul className="grid gap-1.5 text-sm text-report-muted">
+            {g.lines.map((l) => (
+              <li key={l.key} data-check={`${g.key}.${l.key}`} className={c.paced ? 'report-check-line' : undefined} style={c.paced ? { ['--d' as string]: `${l.delay_ms}ms` } : undefined}>{l.text}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+    {c.dates ? <p data-block="checked-dates" className={c.paced ? 'report-check-line text-xs text-report-soft' : 'text-xs text-report-soft'} style={c.paced ? { ['--d' as string]: `${c.dates.delay_ms}ms` } : undefined}>{c.dates.text}</p> : null}
+    {c.paced && c.href ? (
+      <a href={c.href} data-block="checked-skip" className="report-check-skip flex min-h-12 items-center justify-center rounded-xl border border-report-button-border bg-report-button px-4 font-semibold text-report-ink" style={{ ['--skip' as string]: `${c.skip.after_ms}ms` }}>{c.skip.text}</a>
+    ) : null}
+  </section>
+);
+
 export function ReportView({ view }: { view: View }): ReactElement {
   const { layout } = view;
   const collapsed = layout.details === 'collapsed';
@@ -67,11 +94,12 @@ export function ReportView({ view }: { view: View }): ReactElement {
       className="space-y-4"
     >
       {view.reason ? (
-        <p data-block="reason" data-status={view.reason.status} className="text-base">
+        <p data-block="reason" data-status={view.reason.status} className={view.checked ? 'sr-only' : 'text-base'}>
           {view.reason.badge ? <span data-badge className="mr-2 rounded border px-1 text-xs uppercase">{view.reason.badge}</span> : null}
           {view.reason.text}
         </p>
       ) : null}
+      {view.checked ? <Checked c={view.checked} /> : null}
       <div data-block="card-row" className="flex flex-col gap-4 md:flex-row">
         <div data-block="card" className="min-w-0 flex-1 space-y-4">
           {view.image ? <Picture im={view.image} /> : null}

@@ -65,6 +65,9 @@ const contractOf = (root) => {
   return contracts.get(root);
 };
 export const lifecycleStates = (root = REPO) => contractOf(root).lifecycle;
+// MF-62 (FE-35): a golden state is a lifecycle state when its name IS a lifecycle value or starts with `<lifecycle>_` (loading_checked,
+// loading_checked_gated are loading trees carrying the checked object). Returns that lifecycle, or undefined.
+export const lifecycleOfState = (state, root = REPO) => lifecycleStates(root).find((l) => state === l || String(state).startsWith(`${l}_`));
 
 // The FE-06 honest-display checks: the node contract (the schema) plus what the schema cannot express (its `$comment`).
 export const honestProblems = (tree, root = REPO) => {
@@ -237,13 +240,13 @@ export const bindProblems = (root = REPO) => {
 export const statusProblems = (root = REPO) => {
   const out = [];
   const m = manifestOf(root);
-  const life = lifecycleStates(root);
   for (const [key, g] of goldensOf(root, m, 'STATUS', out)) {
     const name = `${key}.json`;
     honestProblems(g.rendered_tree, root).forEach((p) => out.push(`SV-STATUS ${name}: ${p}`));
-    const isLife = life.includes(g.state);
+    const want = lifecycleOfState(g.state, root); // MF-62
+    const isLife = want !== undefined;
     if ('lifecycle' in (g.rendered_tree ?? {}) !== isLife) out.push(`SV-STATUS ${name}: lifecycle key ${isLife ? 'missing' : 'present'}`);
-    else if (isLife && g.rendered_tree.lifecycle !== g.state) out.push(`SV-STATUS ${name}: lifecycle is not ${g.state}`);
+    else if (isLife && g.rendered_tree.lifecycle !== want) out.push(`SV-STATUS ${name}: lifecycle is not ${want}`);
   }
   return out;
 };

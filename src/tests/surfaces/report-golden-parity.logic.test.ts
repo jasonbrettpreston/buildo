@@ -19,6 +19,7 @@ const STATES = [
   'variant_pitched_b', 'at_least', 'loading', 'miss', 'error', 'not_buildable', 'not_modelled',
   'ad_slot_present', 'ad_slot_absent',
   'images_present', 'images_empty', // MF-38 (126 11a.7 dated note 2026-11-11)
+  'loading_checked', 'loading_checked_gated', // MF-62 (126 11a.7 dated note 2026-11-11, FE-35)
 ];
 const readJson = (p: string): Json => JSON.parse(fs.readFileSync(p, 'utf8'));
 const file = (s: string, t: string): string => path.join(DIR, `${s}.${t}.json`);

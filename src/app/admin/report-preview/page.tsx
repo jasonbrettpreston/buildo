@@ -45,7 +45,9 @@ export default async function ReportPreviewPage({ searchParams }: { searchParams
     );
   }
   const golden = GOLDENS[state] as { response_fixture: { synthetic?: boolean }; rendered_tree: object };
-  const view = viewOf(golden.rendered_tree, { scenario, target, urls: syntheticUrls(golden.rendered_tree as Tree) }, reportCtx) as View;
+  // MF-62: the "What we checked" skip opens the v21 page preview of the same target (the preview's report), so the link is real, never inert.
+  const reportHref = `/admin/report-preview?view=page&target=${target}`;
+  const view = viewOf(golden.rendered_tree, { scenario, target, urls: syntheticUrls(golden.rendered_tree as Tree), reportHref }, reportCtx) as View;
   const href = (patch: Record<string, string | null>): string => {
     const p = new URLSearchParams();
     const next = { state, target, scenario, ...patch } as Record<string, string | null>;

@@ -16,8 +16,11 @@ import ad_slot_present from '../../../tests/fixtures/surfaces/report/ad_slot_pre
 import ad_slot_absent from '../../../tests/fixtures/surfaces/report/ad_slot_absent.web.json';
 import images_present from '../../../tests/fixtures/surfaces/report/images_present.web.json';
 import images_empty from '../../../tests/fixtures/surfaces/report/images_empty.web.json';
+// MF-62: the loading state "What we checked" (a resolved lot and an exception_not_authored lot).
+import loading_checked from '../../../tests/fixtures/surfaces/report/loading_checked.web.json';
+import loading_checked_gated from '../../../tests/fixtures/surfaces/report/loading_checked_gated.web.json';
 
-export const GOLDENS: Record<string, unknown> = { permitted, not_permitted, not_evaluated, variant_flat, variant_pitched_a, variant_pitched_b, at_least, loading, miss, error, ad_slot_present, ad_slot_absent, images_present, images_empty };
+export const GOLDENS: Record<string, unknown> = { permitted, not_permitted, not_evaluated, variant_flat, variant_pitched_a, variant_pitched_b, at_least, loading, miss, error, ad_slot_present, ad_slot_absent, images_present, images_empty, loading_checked, loading_checked_gated };
 export const STATES: string[] = Object.keys(GOLDENS);
 
 // MF-57: the four v21 page goldens (src/tests/fixtures/report-page), keyed by target; the four carry the same tree (S-parity).

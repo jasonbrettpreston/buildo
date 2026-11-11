@@ -53,7 +53,7 @@ const fromView = (view: Json): Rec[] => {
     field: n.field, label: isReason ? '' : n.label, value: n.text, status: n.status, badge: n.badge ?? '',
     confidence: n.confidence, provenance: n.provenance, disclosures: [...n.disclosures], unavailable: n.unavailable,
   });
-  return [...(view.reason ? [rec(view.reason, true)] : []), ...view.headline.map((n: Json) => rec(n, false)), ...view.detail.map((n: Json) => rec(n, false)), ...view.slots.map((x: Json) => adRec(x.field, x.text, x.placement, x.disclosure)), ...(view.image ? [imgRec(view.image.field, view.image.alt, view.image.caption, view.image.src)] : [])].sort(byField);
+  return [...(view.reason ? [rec(view.reason, true)] : []), ...view.headline.map((n: Json) => rec(n, false)), ...view.detail.map((n: Json) => rec(n, false)), ...view.slots.map((x: Json) => adRec(x.field, x.text, x.placement, x.disclosure)), ...(view.checked ? chkFromTree(view.checked) : []), ...(view.image ? [imgRec(view.image.field, view.image.alt, view.image.caption, view.image.src)] : [])].sort(byField);
 };
 const textWithout = (el: Element, sel: string): string => {
   const c = el.cloneNode(true) as Element;
@@ -81,6 +81,14 @@ const fromMarkup = (markup: string): Rec[] => {
   box.querySelectorAll('aside[data-block="ad-slot"]').forEach((el) => {
     out.push(adRec(el.getAttribute('data-ad-field') ?? '', el.querySelector('p:not([data-disclosure])')?.textContent?.trim() ?? '', el.getAttribute('data-placement') ?? '', el.querySelector('[data-disclosure]')?.textContent?.trim() ?? ''));
   });
+  // MF-62: the checked screen (title, every line, the dates) is compared as records too, so a target that drops or rewords a line is RED.
+  const ch = box.querySelector('[data-block="checked"]');
+  if (ch) {
+    out.push(chkRec('title', ch.querySelector('h1')?.textContent?.trim() ?? ''));
+    ch.querySelectorAll('[data-check]').forEach((el) => out.push(chkRec(el.getAttribute('data-check') ?? '', el.textContent?.trim() ?? '')));
+    const d = ch.querySelector('[data-block="checked-dates"]');
+    if (d) out.push(chkRec('dates', d.textContent?.trim() ?? ''));
+  }
   box.querySelectorAll('figure[data-block="image"]').forEach((el) => {
     const im = el.querySelector('img');
     out.push(imgRec(el.getAttribute('data-image-field') ?? '', im?.getAttribute('alt') ?? '', el.querySelector('figcaption')?.textContent?.trim() ?? '', im?.getAttribute('src') ?? ''));
@@ -92,6 +100,10 @@ const fromMarkup = (markup: string): Rec[] => {
 const imgRec = (field: string, alt: string, caption: string, src: string): Rec => ({ field: `img:${field}`, label: caption, value: alt, status: src, badge: '', confidence: 'none', provenance: 'none', disclosures: [], unavailable: false });
 // MF-20: a sponsored slot is compared as a record too (field ad:<field>, value = the offer text, status = its placement, disclosures = [Sponsored]), so a target that drops or misplaces a slot is RED.
 const adRec = (field: string, text: string, placement: string, disclosure: string): Rec => ({ field: `ad:${field}`, label: '', value: text, status: placement, badge: '', confidence: 'none', provenance: 'none', disclosures: [disclosure], unavailable: false });
+// MF-62 (FE-35): one record per checked text (field chk:<group>.<key>, chk:title, chk:dates; value = the shown text). Pace is not compared (it differs by
+// layout row by design: admin and pdf draw no delay and no skip).
+const chkRec = (field: string, text: string): Rec => ({ field: `chk:${field}`, label: '', value: text, status: '', badge: '', confidence: 'none', provenance: 'none', disclosures: [], unavailable: false });
+const chkFromTree = (c: Json): Rec[] => [chkRec('title', c.title), ...(c.groups as Json[]).flatMap((g) => (g.lines as Json[]).map((l) => chkRec(`${g.key}.${l.key}`, l.text))), ...(c.dates ? [chkRec('dates', c.dates.text)] : [])];
 const normalise = (target: string, raw: Raw): Rec[] => (target === 'mobile' ? fromView(raw as Json) : fromMarkup(raw as string));
 
 // The anchor: the expectation from the golden tree, the declaration and the content registry. Never calls viewOf.
@@ -114,6 +126,7 @@ const expected = (tree: Json, scenario: string | null, ctx: Json): Rec[] => {
     recs.push({ field: id, label: String(declared.find((f) => f.name === id)?.label ?? id), value: dash, status: 'none', badge: '', confidence: 'none', provenance: 'none', disclosures: [], unavailable: true });
   }
   // MF-20: the slots of the tree that belong to this pick (unscoped ones, and the picked scenario's), from the tree alone; never viewOf.
+  if (tree.checked) recs.push(...chkFromTree(tree.checked)); // MF-62, from the tree alone
   for (const x of (tree.slots ?? []) as Json[]) if (x.scenario === undefined || x.scenario === scenario) recs.push(adRec(x.field, x.value, x.scenario === undefined ? 'after_card' : 'beside_card', String(ctx.content.sponsored_label)));
   return recs.sort(byField);
 };
@@ -172,8 +185,8 @@ const all = (fix: (r: Raw) => Raw): Emit => (t, tree, sc, ctx) => fix(emit(t, tr
 const FLAT = 'detached_house/flat_or_shallow_roof';
 
 describe('FE-07 parity: the real output of every target (goldens)', () => {
-  it('covers the manifest: 16 states x 3 picks, four targets', () => { // MF-38: + images_present, images_empty
-    expect(manifest.states).toHaveLength(16);
+  it('covers the manifest: 18 states x 3 picks, four targets', () => { // MF-38: + images_present, images_empty; MF-62: + loading_checked, loading_checked_gated
+    expect(manifest.states).toHaveLength(18);
     expect(PICKS).toHaveLength(3);
     expect(TARGETS).toHaveLength(4);
   });
@@ -185,10 +198,12 @@ describe('FE-07 parity: the real output of every target (goldens)', () => {
         expect(recs.length).toBeGreaterThanOrEqual(tree.nodes.filter((n: Json) => n.kind !== 'image').length); // MF-38: no image at the no-scenario pick
         expect(recs.length).toBeGreaterThan(0);
       }
-      if (tree.lifecycle) expect(expected(tree, null, reportCtx).map((r) => r.field)).toEqual([REASON]);
+      // MF-62: the one message node rule is about nodes; the checked records (chk:*) of a loading_checked tree are root-only, not nodes.
+      if (tree.lifecycle) expect(expected(tree, null, reportCtx).map((r) => r.field).filter((f) => !f.startsWith('chk:'))).toEqual([REASON]);
+      if (tree.lifecycle !== 'loading') expect(expected(tree, null, reportCtx).some((r) => r.field.startsWith('chk:'))).toBe(false);
     }
   });
-  it('the four targets and the golden tree agree on all 48 combinations', () => {
+  it('the four targets and the golden tree agree on all 54 combinations (MF-62: 18 states x 3 picks)', () => {
     expect(goldenFindings(emit)).toEqual([]);
   });
   it('a hand-written literal pins the at_least state apart from the generator', () => {

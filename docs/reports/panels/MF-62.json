@@ -1,0 +1,39 @@
+{
+  "task": "MF-62",
+  "item": "\"What we checked\": the REPORT loading lifecycle state carries one root-only checked object (title, the five citywide trust lines, this lot's findings, the data dates, the skip and the pace), every text a content template filled with a server-formatted value; the producer src/lib/parcels/what-we-checked.ts (lookup wiring with MF-48, X-4 a); the citywide counts as six stored, dated columns written by the existing refresh_snapshot step (X-1 a, migration 306 written, not applied); the pace as two logic variables in the existing Admin Control Panel (D-2 a); web through the one ReportView with CSS pacing, reduce motion and print; no new route, node kind or section kind.",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "620f18a09",
+  "cards": [
+    "Operator 2026-11-11: \"Mf-62 - yes\" (D-1 a \"What we checked\", D-2 a minimum 6 s + \"Show report\" after 2 s as admin logic_variables, D-3 a no satellite or aerial wording, D-4 a all five per-lot lines; record ~/Buildo-scratch/mcfrontend/MF-62/plan.md bottom).",
+    "Operator 2026-11-11: \"x-1 a of course, x-2 a x-3 a x-4 a - build this into McFront-end specs and rulings and handbook\" (X-1 a stored row via refresh_snapshot, X-2 a \"Heritage designated\" / \"Not heritage designated\", X-3 a \"By-law limits not yet evaluated\", X-4 a producer here, lookup wiring with MF-48; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md bottom).",
+    "Operator 2026-11-11: \"also we should be building anything just using existing components\".",
+    "Operator 2026-11-11: \"b just keep the bigger number for now and we can revisit\" (N-1 b: \"{N} by-law checks across {M} house types\").",
+    "Operator 2026-11-11: \"go OPERATOR-GO MF62-306.\" (the DB job: migration 306, refresh_snapshot captures, witness catalog, schema.ts, Rule 13 scorecards).",
+    "Accessibility audit 2026-11-11 (WCAG 2.2 SC 2.2.1 / 4.1.3, relayed by the coordinator): no automatic opening under a screen reader or reduce motion; one summary announcement; the web keeps role=\"log\"."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-62/build-plan.md (sections 1, 3 folds, 4 STOP). PLAN panel ~/Buildo-scratch/mcfrontend/MF-62/panel-plan/: code-reviewer-grounded PASS-WITH-FOLDS (6), regression-guardian PASS-WITH-FOLDS (8; fold 1 route ordering, now recorded on MF-48), security/compliance (general-purpose) PASS-WITH-FOLDS (10). STOP X-1..X-4 answered by the operator (cards 2).",
+  "seats": [
+    "code-reviewer-grounded (PLAN): PASS-WITH-FOLDS",
+    "regression-guardian (PLAN): PASS-WITH-FOLDS",
+    "security and compliance, general-purpose (PLAN): PASS-WITH-FOLDS",
+    "code-reviewer-grounded (OUTPUT): PASS-WITH-FOLDS (CR-1 dead lifecycleOfState export, CR-2 producer error contract, CR-3 SQL never executed live)",
+    "regression-guardian (OUTPUT): PASS-WITH-FOLDS (RG-1 FE numbering gap, RG-2 lock untracked until commit, RG-3 duplicated prefix rule, RG-4 witness provenance)",
+    "security and compliance, general-purpose (OUTPUT): PASS-WITH-FOLDS (N-1..N-7)"
+  ],
+  "output": "OUTPUT panel on the uncommitted build over 553ceefa2 (reports ~/Buildo-scratch/mcfrontend/MF-62/panel-out/). Folded: CR-1 / RG-3 statusProblems and the honest lock call the one lifecycleOfState (report-checks.mjs), unit-pinned with negative cases; CR-2 / N-5 readWhatWeChecked catches any DB error (logError) and returns null, tested; CR rename ProducedLine; N-2 an area rounding below 1 m2 is omitted, tested; N-3 the claims lock gains endorsement / guarantee, progress-verb, freshness and imagery families with one planted fault each, also over composed tree text; N-4 the by-law date is sent only beside a counted limits line (producer, gated goldens re-captured, lock with a planted fault); N-7 viewOf takes only a same-origin path as the skip href, tested; N-6 recorded as a known limit in the Spec 60 note. RG-4: the witness fixture was re-recorded by its own path (BUILDO_WITNESS_WRITE=1), additions only; its live captures are the DB job's. Not folded: N-1 (the limits count is per building type; the label is the ruled text, raised to the operator), N-7 two h1 on the admin preview (admin-only page), CR-3 (live SQL is the DB job's).",
+  "verdict": "PASS-WITH-FOLDS: every OUTPUT fold applied; N-1 ruled (b) and applied; the accessibility audit rule applied. DB job MF62-306 done (captures, catalog, schema.ts, scorecards). Push waits on the operator (protected paths, owner y).",
+  "blockers": [],
+  "followups": [
+    "MF-48: lookup wiring (whatWeChecked after the meter, re-parsed), the app render, the min-duration hold, focus to the report heading.",
+    "Lawyer check before launch: \"builds examined\", \"buildings measured\", \"by-law rules searched\" (with MF-58)."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-62/build-red.txt (82 red before any code); targeted suites after the folds: 1048 passed, 4 failed (register-locks-resolve: the FE-35 lock is untracked until commit); handbook-rule-map green after the renumber (35 rules).",
+  "notes": [
+    "Commit order: docs 90f5e8d72, prereg 553ceefa2 alone (round 147), then the step + migration commit and the report commit once the DB job has run, each with real hooks.",
+    "The pace reader report-check-pace.ts sits apart from the producer so the logic variables are read in the step commit (R-EO variable-effect gate).",
+    "FE renumber (coordinator): the register row moved FE-38 -> FE-35 by the forward docs commit 846f63d64 (90f5e8d72 kept in history); prereg 2 at round 152 (777524107) supersedes prereg 1 (553ceefa2, kept). Both were committed from a throwaway worktree at 553ceefa2 (the disk-walking gates see the held build) and fast-forwarded with merge --ff-only; Spec 136 and surface-rule-map.json regenerate with the build commit (the generator requires the FE-35 lock file in the tree).",
+    "Resume after the DB job: N-1 (b) applied as two closed placeholders {value} and {types} in one content template (types = distinct evaluated building types on the lot, from data; LOT_SQL types_evaluated) with a claims-lock rule and planted faults; the tree carries checked.summary (content states.checked.summary) for the app announcement; Spec 126 11a.7 and queue MF-62 / MF-48 dated notes. Commit A 620f18a09 (step, migration, captures, scorecards), commit B (report surface)."
+  ]
+}

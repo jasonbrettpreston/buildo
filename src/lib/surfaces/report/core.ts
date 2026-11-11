@@ -7,6 +7,9 @@
 // MF-38 (Spec 126 11a.7 and FE-29 dated notes 2026-11-11; O-1 b): ONE closed image node kind. A declared content field typed object[] is the image
 // list: one {scenario, asset_id, alt, caption?} item per scenario key; caption defaults to content.illustrations.caption_default; the tree never
 // carries a URL. viewOf shows the picked scenario's one image with its injected URL (pick.urls), the same on every target; no layout key.
+// MF-62 (Spec 126 11a.7 dated note 2026-11-11, FE-35; operator "Mf-62 - yes"): a loading response may carry `what_we_checked`; its tree then carries ONE
+// root-only `checked` object (as `slots`, never a node; never on miss, error or a reading tree): every text a content template of
+// states.checked filled with the server-formatted value, the pace as sent. viewOf adds `paced` (layout rows with details: collapsed) and the skip href.
 // MF-14 · McFrontend queue · lane E-MF14. THE one REPORT renderer core: three pure functions. Every datum (schema, declaration, content registry,
 // headline lists, layout table) is an argument, so a test can inject a synthetic one and nothing here names a field. Runs on the server (the schema
 // check is AJV, the engine of the gate: scripts/surfaces/report-checks.mjs). No maths: String(n), the declared unit, the dash for null.
@@ -20,12 +23,16 @@ export interface ReportNode { field: string; source: string; label: string; valu
 export interface ReportSlot { field: string; slot: string; source: string; label: string; value: string; disclosure: string; scenario?: string }
 export interface ReportImageItem { scenario: string; asset_id: string; alt: string; caption: string }
 export interface ReportImageNode { field: string; source: 'content'; kind: 'image'; label: string; images: ReportImageItem[] }
-export interface ReportTree { lifecycle?: string; nodes: Array<ReportNode | ReportImageNode>; slots?: ReportSlot[] }
+export interface CheckedLine { key: string; text: string; delay_ms: number }
+export interface CheckedTree { title: string; log_label: string; summary: string; groups: Array<{ key: string; heading: string; lines: CheckedLine[] }>; dates?: { text: string; delay_ms: number }; skip: { text: string; after_ms: number }; min_ms: number }
+// MF-62: `paced` (lines fade in at their delay, the skip appears after its delay) on layout rows with details: collapsed; `href` the skip target, or null.
+export interface ViewChecked extends CheckedTree { paced: boolean; href: string | null }
+export interface ReportTree { lifecycle?: string; nodes: Array<ReportNode | ReportImageNode>; slots?: ReportSlot[]; checked?: CheckedTree }
 export interface ViewImage { field: string; label: string; asset_id: string; alt: string; caption: string; src: string }
 export interface ViewSlot { field: string; slot: string; scenario?: string; label: string; text: string; disclosure: string; placement: 'beside_card' | 'after_card' }
 export interface ViewNode { field: string; label: string; text: string; status: string; badge: string | null; confidence: string; provenance: string; disclosures: string[]; showMeta: boolean; unavailable: boolean }
 // image_state: shown (the picked option's image with a URL), none (no image for this pick), no_url (an image exists but no URL was issued).
-export interface ReportView { target: string; layout: Json; lifecycle?: string; reason?: ViewNode; headline: ViewNode[]; detail: ViewNode[]; slots: ViewSlot[]; image?: ViewImage; image_state: 'shown' | 'none' | 'no_url' }
+export interface ReportView { target: string; layout: Json; lifecycle?: string; reason?: ViewNode; headline: ViewNode[]; detail: ViewNode[]; slots: ViewSlot[]; image?: ViewImage; image_state: 'shown' | 'none' | 'no_url'; checked?: ViewChecked }
 
 // Control keys of a response pick the tree kind; information keys ride along and are never emitted (MF-14 D-11, closed list).
 const CONTROL_KEYS = ['status', 'lifecycle'];
@@ -98,6 +105,108 @@ const imageItemProblems = (field: string, items: unknown[], ctx: ReportCtx): str
   return out;
 };
 
+// MF-62: the loading state "What we checked". Closed keys; every value a server-formatted string (FE-05); the pace as integer milliseconds.
+const LOADING = 'loading';
+const CHECKED_KEY = 'what_we_checked';
+const CHECKED_KEYS = ['groups', 'dates', 'skip_after_ms', 'min_ms'];
+// The closed placeholders of a checked template and the response key that fills each (N-1 b, 2026-11-11: the limits line also names its house types).
+const SLOTS: Array<[string, string]> = [['{value}', 'value'], ['{types}', 'types']];
+const isObj = (v: unknown): v is Json => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isMs = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && /^\d+$/.test(String(v));
+const strayKeys = (x: Json, keys: string[], at: string, out: string[]): void => { for (const k of Object.keys(x)) if (!keys.includes(k)) out.push(`RR-CHECKED ${at}: key ${k} is not allowed`); };
+const checkedLine = (tpl: unknown, x: Json, at: string, out: string[]): string => {
+  if (typeof tpl !== 'string' || tpl === '') { out.push(`RR-CHECKED ${at}: no content text for ${String(x.key)}`); return ''; }
+  let text = tpl;
+  for (const [slot, k] of SLOTS) {
+    const wants = tpl.includes(slot);
+    if (wants && !(typeof x[k] === 'string' && x[k] !== '')) out.push(`RR-CHECKED ${at}: ${k} is required and is a string (the server formats, FE-05)`);
+    if (!wants && x[k] !== undefined) out.push(`RR-CHECKED ${at}: this line takes no ${k}`);
+    if (wants) text = text.replace(slot, () => String(x[k]));
+  }
+  return text;
+};
+const buildChecked = (w: unknown, ctx: ReportCtx, out: string[]): Json | undefined => {
+  const c = ctx.content.states?.checked;
+  if (!isObj(c)) { out.push('RR-CONTENT states.checked: missing'); return undefined; }
+  if (!isObj(w)) { out.push(`RR-CHECKED ${CHECKED_KEY}: not an object`); return undefined; }
+  strayKeys(w, CHECKED_KEYS, CHECKED_KEY, out);
+  if (!isMs(w.min_ms)) out.push(`RR-CHECKED ${CHECKED_KEY}.min_ms: not integer milliseconds`);
+  if (!isMs(w.skip_after_ms)) out.push(`RR-CHECKED ${CHECKED_KEY}.skip_after_ms: not integer milliseconds`);
+  else if (isMs(w.min_ms) && w.skip_after_ms > w.min_ms) out.push(`RR-CHECKED ${CHECKED_KEY}.skip_after_ms: above min_ms`);
+  const groups: unknown[] = Array.isArray(w.groups) ? w.groups : [];
+  if (!groups.length) out.push(`RR-CHECKED ${CHECKED_KEY}.groups: at least one group`);
+  const seen = new Set<string>();
+  const built = groups.map((g, gi) => {
+    const at = `groups.${gi}`;
+    if (!isObj(g)) { out.push(`RR-CHECKED ${at}: not an object`); return {}; }
+    strayKeys(g, ['key', 'lines'], at, out);
+    const heading = c.headings?.[g.key];
+    const tpls = c.lines?.[g.key];
+    if (typeof heading !== 'string' || !isObj(tpls)) { out.push(`RR-CHECKED ${at}: unknown group ${String(g.key)}`); return {}; }
+    if (seen.has(g.key)) out.push(`RR-CHECKED ${at}: group ${String(g.key)} twice`);
+    seen.add(g.key);
+    const lines: unknown[] = Array.isArray(g.lines) ? g.lines : [];
+    if (!lines.length) out.push(`RR-CHECKED ${at}: a group carries at least one line (the producer omits an empty group)`);
+    return { key: g.key, heading, lines: lines.map((x, li) => {
+      const lat = `${at}.lines.${li}`;
+      if (!isObj(x)) { out.push(`RR-CHECKED ${lat}: not an object`); return {}; }
+      strayKeys(x, ['key', 'value', 'types', 'delay_ms'], lat, out);
+      if (!isMs(x.delay_ms)) out.push(`RR-CHECKED ${lat}.delay_ms: not integer milliseconds`);
+      return { key: x.key, text: checkedLine(tpls[x.key], x, lat, out), delay_ms: x.delay_ms };
+    }) };
+  });
+  const tree: Json = { title: c.title, log_label: c.log_label, summary: c.summary, groups: built };
+  if (w.dates !== undefined) {
+    const d = w.dates;
+    if (!isObj(d)) out.push(`RR-CHECKED dates: not an object`);
+    else {
+      strayKeys(d, ['lines', 'delay_ms'], 'dates', out);
+      if (!isMs(d.delay_ms)) out.push('RR-CHECKED dates.delay_ms: not integer milliseconds');
+      const ls: unknown[] = Array.isArray(d.lines) ? d.lines : [];
+      if (!ls.length) out.push('RR-CHECKED dates.lines: at least one date (the producer omits the dates when none)');
+      const texts = ls.map((x, li) => {
+        if (!isObj(x)) { out.push(`RR-CHECKED dates.lines.${li}: not an object`); return ''; }
+        strayKeys(x, ['key', 'value'], `dates.lines.${li}`, out);
+        return checkedLine(c.dates?.[x.key], x, `dates.lines.${li}`, out);
+      });
+      tree.dates = { text: texts.join(' '), delay_ms: d.delay_ms };
+    }
+  }
+  tree.skip = { text: c.skip, after_ms: w.skip_after_ms };
+  tree.min_ms = w.min_ms;
+  return tree;
+};
+// What the schema cannot say about checked: a loading tree only, and every text is a content template.
+const reEscape = (t: string): string => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const tplRe = (t: string): string => {
+  let r = reEscape(t);
+  for (const [slot] of SLOTS) r = r.split(reEscape(slot)).join('.+');
+  return r;
+};
+const checkedProblems = (tree: Json, ctx: ReportCtx): string[] => {
+  const out: string[] = [];
+  const ch = tree.checked;
+  if (tree.lifecycle !== LOADING) out.push(`RR-LIFECYCLE checked: only on a ${LOADING} tree`);
+  const c = ctx.content.states?.checked;
+  if (!isObj(c) || !isObj(ch)) return [...out, ...(isObj(c) ? [] : ['RR-CONTENT states.checked: missing'])];
+  if (ch.title !== c.title) out.push('RR-CONTENT checked.title: not content states.checked.title');
+  if (ch.log_label !== c.log_label) out.push('RR-CONTENT checked.log_label: not content states.checked.log_label');
+  if (ch.skip?.text !== c.skip) out.push('RR-CONTENT checked.skip: not content states.checked.skip');
+  if (ch.summary !== c.summary) out.push('RR-CONTENT checked.summary: not content states.checked.summary');
+  for (const g of Array.isArray(ch.groups) ? ch.groups : []) {
+    if (g?.heading !== c.headings?.[g?.key]) out.push(`RR-CONTENT checked.${String(g?.key)}: heading is not the content heading`);
+    for (const l of Array.isArray(g?.lines) ? g.lines : []) {
+      const t = c.lines?.[g.key]?.[l?.key];
+      if (typeof t !== 'string' || !new RegExp(`^${tplRe(t)}$`).test(String(l?.text))) out.push(`RR-CONTENT checked.${String(g.key)}.${String(l?.key)}: text is not its content template`);
+    }
+  }
+  if (ch.dates !== undefined) {
+    const alt = Object.values(isObj(c.dates) ? c.dates : {}).map((t) => tplRe(String(t))).join('|');
+    if (!new RegExp(`^(?:${alt})(?: (?:${alt}))*$`).test(String(ch.dates?.text))) out.push('RR-CONTENT checked.dates: text is not its content templates');
+  }
+  return out;
+};
+
 // 1. The capture: the declaration plus a response produce the tree. Accumulates every problem, then throws once.
 export const buildTree = (response: Json, ctx: ReportCtx): Json => {
   const out: string[] = [];
@@ -114,9 +223,11 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
     const text = life[response.lifecycle];
     if (typeof text !== 'string' || text === '') out.push(`RR-LIFECYCLE response: unknown lifecycle: ${String(response.lifecycle)}`);
     if (!reason) out.push(`RR-FIELD declaration: no field ${REASON_FIELD}`);
-    for (const k of Object.keys(response)) if (k !== 'lifecycle' && !INFO_KEYS.includes(k)) out.push(`RR-FIELD unexpected field on a lifecycle response: ${k}`);
+    const withChecked = response.lifecycle === LOADING && CHECKED_KEY in response; // MF-62: only a loading response carries it
+    for (const k of Object.keys(response)) if (k !== 'lifecycle' && !INFO_KEYS.includes(k) && !(withChecked && k === CHECKED_KEY)) out.push(`RR-FIELD unexpected field on a lifecycle response: ${k}`);
+    const checked = withChecked ? buildChecked(response[CHECKED_KEY], ctx, out) : undefined;
     if (out.length) throw new ReportRenderError(out);
-    return { lifecycle: response.lifecycle, nodes: [mk(reason as Json, text, 'none')] };
+    return { lifecycle: response.lifecycle, nodes: [mk(reason as Json, text, 'none')], ...(checked ? { checked } : {}) };
   }
 
   const status = response.status;
@@ -225,6 +336,7 @@ export const assertTree = (tree: Json, ctx: ReportCtx): void => {
     if (isLife && n?.field !== REASON_FIELD) out.push(`RR-LIFECYCLE ${String(n?.field)}: a lifecycle node must be ${REASON_FIELD}`);
   });
   slotProblems(tree, ctx).forEach((p) => out.push(p));
+  if (tree?.checked !== undefined) checkedProblems(tree, ctx).forEach((p) => out.push(p)); // MF-62
   if (out.length) throw new ReportRenderError(out);
 };
 
@@ -270,6 +382,13 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
   if (item && out.image_state === 'shown') out.image = { field: imageNode?.field, label: imageNode?.label, asset_id: item.asset_id, alt: item.alt, caption: item.caption, src } as ViewImage;
   if (tree.lifecycle !== undefined) out.lifecycle = tree.lifecycle;
   if (reasonNode) out.reason = view(reasonNode);
+  // MF-62: pace and the skip only on details: collapsed rows (mobile, web); admin and pdf draw every line at once and no skip (the D-K precedent:
+  // data, not a target name). The skip href is the host's (pick.reportHref); without one no skip is drawn, never an inert control.
+  if (tree.checked !== undefined) {
+    const paced = row.details === 'collapsed';
+    const href = typeof pick.reportHref === 'string' && /^\/(?![/\\])/.test(pick.reportHref) ? pick.reportHref : null; // same-origin path only (OUTPUT panel N-7)
+    out.checked = { ...tree.checked, paced, href: paced ? href : null };
+  }
   return out;
 };
 

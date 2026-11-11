@@ -23,7 +23,9 @@
     "ad_slot_present",
     "ad_slot_absent",
     "images_present",
-    "images_empty"
+    "images_empty",
+    "loading_checked",
+    "loading_checked_gated"
   ],
   "owed_states": 13,
   "owed_files": 52

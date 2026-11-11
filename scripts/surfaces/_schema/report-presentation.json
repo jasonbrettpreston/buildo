@@ -87,6 +87,42 @@
       "miss": "No report for this lot yet.",
       "error": "Could not load this report. Try again."
     },
+    "checked": {
+      "title": "What we checked",
+      "log_label": "What we checked",
+      "headings": {
+        "citywide": "Across Toronto",
+        "lot": "Your lot"
+      },
+      "lines": {
+        "citywide": {
+          "lots": "{value} lots scanned",
+          "regulations": "{value} by-law rules searched",
+          "buildings": "{value} buildings measured",
+          "builds": "{value} builds examined",
+          "map_areas": "{value} map areas checked"
+        },
+        "lot": {
+          "area": "Lot: {value}",
+          "limits": "{value} by-law checks across {types} house types",
+          "limits_gated": "Site exception: exception noted, not yet modelled",
+          "limits_not_evaluated": "By-law limits not yet evaluated",
+          "ravine_out": "Not in a ravine area",
+          "ravine_in": "In a ravine area",
+          "heritage_out": "Not heritage designated",
+          "heritage_in": "Heritage designated",
+          "decisions": "{value} decisions nearby"
+        }
+      },
+      "dates": {
+        "bylaw": "By-law results dated {value}.",
+        "zoning": "Zoning maps {value}.",
+        "permits": "Permits to {value}.",
+        "decisions": "Decisions to {value}."
+      },
+      "skip": "Show report",
+      "summary": "Everything we checked is shown. Choose Show report to open your report."
+    },
     "semi_needs_input": "This lot looks like half of a semi-detached house. Tell us about your house to see what you can add.",
     "semi_correction": "This isn't a semi — it's detached",
     "note": "Spec 78 §6.6 rules 1, 5, 8: hidden states are counted, never shown as cards; null renders \"—\", never 0 or \"no\""

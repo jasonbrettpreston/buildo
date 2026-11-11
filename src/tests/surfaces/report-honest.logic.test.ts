@@ -10,14 +10,13 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { honestProblems } from '../../../scripts/surfaces/report-checks.mjs'; // MF-15 D-1 a: the checks have one home, shared with surface-validate.mjs (R-27)
+import { honestProblems, lifecycleOfState } from '../../../scripts/surfaces/report-checks.mjs'; // MF-15 D-1 a: the checks have one home, shared with surface-validate.mjs (R-27)
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
 const ROOT = process.cwd();
 const DIR = path.join(ROOT, 'src/tests/fixtures/surfaces/report');
 const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 const SCHEMA: Json = readJson('scripts/surfaces/_schema/report-tree.schema.json');
-const LIFECYCLE: string[] = SCHEMA.properties.lifecycle.enum;
 const PRESENTATION: Json = readJson('scripts/surfaces/_schema/report-presentation.json');
 // The closed disclosure-code list is the keys of report-presentation.json `disclosure_texts` (Spec 126 11a.3: a closed list; MF-12 panel 2 F-3).
 // The three keys below are the object's own metadata, not codes. Read at run time, never copied: an empty list means every code fails.
@@ -27,17 +26,18 @@ const CODES = Object.keys(PRESENTATION.disclosure_texts).filter((k) => !DISCLOSU
 const goldens = fs.existsSync(DIR) ? fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== 'states.json').sort() : [];
 
 describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
-  it('there are 64 goldens to check', () => { // MF-38: + images_present, images_empty x 4 targets
-    expect(goldens).toHaveLength(64);
+  it('there are 72 goldens to check', () => { // MF-38: + images_present, images_empty x 4 targets; MF-62: + loading_checked, loading_checked_gated x 4
+    expect(goldens).toHaveLength(72);
   });
 
   for (const f of goldens) {
     it(`${f}: validates against the node contract; none only in lifecycle trees; lifecycle closed`, () => {
       const g: Json = readJson(path.join('src/tests/fixtures/surfaces/report', f));
       expect(honestProblems(g.rendered_tree)).toEqual([]);
-      const life = LIFECYCLE.includes(g.state);
-      expect('lifecycle' in g.rendered_tree).toBe(life);
-      if (life) expect(g.rendered_tree.lifecycle).toBe(g.state);
+      // MF-62 (FE-35): loading_checked and loading_checked_gated are loading trees: the lifecycle is the state name or its `<lifecycle>_` prefix.
+      const want = lifecycleOfState(g.state); // the one rule, shared with surface-validate (report-checks.mjs)
+      expect('lifecycle' in g.rendered_tree).toBe(want !== undefined);
+      if (want !== undefined) expect(g.rendered_tree.lifecycle).toBe(want);
     });
   }
 
