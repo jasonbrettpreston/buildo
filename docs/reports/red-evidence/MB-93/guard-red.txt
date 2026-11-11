@@ -1,0 +1,20 @@
+# MB-93 commit 1 red evidence: src/tests/report-preview-guard.security.test.ts on e088bf072 (page.tsx without requireAdminPage), 2026-11-11.
+      Tests  17 failed (17)
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a getUser error: notFound before the query string is read ({"state":"permitted"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a getUser error: notFound before the query string is read ({"view":"page","target":"web"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a getUser error: notFound before the query string is read ({})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a profiles lookup error: notFound before the query string is read ({"state":"permitted"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a profiles lookup error: notFound before the query string is read ({"view":"page","target":"web"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a profiles lookup error: notFound before the query string is read ({})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a signed-in non-admin: notFound before the query string is read ({"state":"permitted"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a signed-in non-admin: notFound before the query string is read ({"view":"page","target":"web"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > a signed-in non-admin: notFound before the query string is read ({})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > an admin below aal2 while MFA is enforced: notFound before the query string is read ({"state":"permitted"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > an admin below aal2 while MFA is enforced: notFound before the query string is read ({"view":"page","target":"web"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > an admin below aal2 while MFA is enforced: notFound before the query string is read ({})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > an admin session renders the page (states and the v21 page view)
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > no session user: notFound before the query string is read ({"state":"permitted"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > no session user: notFound before the query string is read ({"view":"page","target":"web"})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > no session user: notFound before the query string is read ({})
+ FAIL  src/tests/report-preview-guard.security.test.ts > /admin/report-preview gates itself (requireAdminPage at the top of the page) > the page source calls requireAdminPage() as its first statement
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯

@@ -3,8 +3,10 @@
 //            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-24; operator T-3 (admin-only preview page, synthetic goldens labelled).
 //
 // MF-14 · lane E-MF14. /admin/report-preview: a server component that renders the committed synthetic goldens through the real renderer.
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/react';
+// MB-93: the page now gates itself (requireAdminPage, locked by report-preview-guard.security.test.ts); this render test runs as an admin.
+vi.mock('@/lib/auth/require-admin-page', () => ({ requireAdminPage: vi.fn(async () => ({ uid: 'admin' })) }));
 import ReportPreviewPage from '../app/admin/report-preview/page';
 
 const open = async (q: Record<string, string> = {}) => render(await ReportPreviewPage({ searchParams: Promise.resolve(q) }));

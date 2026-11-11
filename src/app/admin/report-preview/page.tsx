@@ -2,11 +2,15 @@
 //            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-24; operator T-3 (separate admin-only page, labelled synthetic goldens).
 //
 // MF-14 · lane E-MF14. Admin report-renderer preview. A server component: it runs viewOf over the committed synthetic golden trees and renders the one
-// ReportView. No state, no client bundle. Admin-only via route-guard.ts (/admin/* blanket), as the other admin pages. Not stored lot data.
+// ReportView. No state, no client bundle. Not stored lot data.
+// MB-93 (operator 2026-11-11 "D-1 b and D-2 to D-8 a", D-2 a; plan ~/Buildo-scratch/mcfrontend/PREVIEW/plan.md 9.1, Security S1): the page gates
+// itself with requireAdminPage() as its FIRST statement, before any query-string read (Spec 33 section 8); the /admin/* middleware blanket only
+// checks that an auth cookie is present. Lock: src/tests/report-preview-guard.security.test.ts.
 // MF-57: `?view=page&target=<t>` renders the approved v21 report PAGE (pageViewOf over the synthetic page golden) full-bleed on the report page
 // colour, with the synthetic banner and the target picker above it; the existing states are unchanged.
 import { ReportView } from '@/components/report/ReportView';
 import { ReportPage } from '@/components/report/ReportPage';
+import { requireAdminPage } from '@/lib/auth/require-admin-page';
 import { pageViewOf, viewOf, type PageView, type ReportView as View } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
 import { GOLDENS, PAGE_GOLDENS, STATES } from './goldens';
@@ -25,6 +29,7 @@ const syntheticUrls = (tree: Tree): Record<string, string> => Object.fromEntries
 const pick = (v: string | undefined, allowed: string[], fallback: string): string => (v !== undefined && allowed.includes(v) ? v : fallback);
 
 export default async function ReportPreviewPage({ searchParams }: { searchParams: Promise<Q> }) {
+  await requireAdminPage();
   const q = await searchParams;
   const state = pick(one(q.state), STATES, STATES[0] as string);
   const target = pick(one(q.target), TARGETS, 'web');
