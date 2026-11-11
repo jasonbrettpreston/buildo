@@ -4,17 +4,29 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-11",
-  "head": "PENDING",
+  "head": "9aac4b597",
   "cards": [
     "Operator 2026-11-11: \"0-1 b\" (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"2026-11-11 MF-38 O-1\"): single image per option, no carousel, no install; amends the photos-with-dots ruling for v1.",
     "Operator 2026-11-09 Wave 1 batch (open-questions.md:463, approve-as-recommended): MF-38 D-1..D-11."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-38/plan.md (sections 11 and 13 folds; PLAN panel ~/Buildo-scratch/mcfrontend/MF-38/panel/: regression-guardian, code-reviewer-grounded, compliance, PASS-WITH-FOLDS) with ~/Buildo-scratch/mcfrontend/MF-38/plan.delta-1.md (re-measured on 2db1bdd67; wins where they differ); pre-approved D-35 and D-36 (logged first as D-29 and D-30; renumbered for an id collision) in ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md.",
-  "output": "PENDING: the OUTPUT panel (code-reviewer-grounded, regression-guardian) runs on the code commit; this placeholder is replaced by the record commit.",
-  "seats": [],
-  "verdict": "PENDING",
+  "output": "OUTPUT panel on the code commit 1ce0463d7 (docs 90fe80f74, prereg 1 2fad4fe7a at round 137, base 4b966e4d5): reports ~/Buildo-scratch/mcfrontend/MF-38/panel-out/output-code-reviewer.md (code-reviewer-grounded, PASS-WITH-FOLDS, 0 HIGH, 1 MEDIUM, 3 LOW) and ~/Buildo-scratch/mcfrontend/MF-38/panel-out/output-regression-guardian.md (regression-guardian, PASS-WITH-FOLDS, 0 HIGH, 0 MEDIUM, 3 LOW). Folded in 9aac4b597: code reviewer MEDIUM-1, LOW-1, LOW-2, LOW-3 (comment); regression-guardian LOW-1, LOW-3; regression-guardian LOW-2 refuted (the image-leg test already asserts one image record per target per scenario pick). Red then green under docs/reports/red-evidence/MF-38/ (output-folds-red.txt, output-folds-green.txt).",
+  "seats": [
+    "code-reviewer-grounded (OUTPUT): PASS-WITH-FOLDS (MEDIUM-1 the lifecycle-image guard in assertTree unlocked; LOW-1 the one-image-node guard unlocked and partly redundant; LOW-2 selector rule values not type-checked; LOW-3 equal frontage edges leave the standard band empty, by design); plants on a copy, 10 further plants red, the renderer and the gate agree on 9 mutation classes",
+    "regression-guardian (OUTPUT): PASS-WITH-FOLDS (LOW-1 the kind enum and massing_diagram retired unnamed; LOW-2 the parity count check ignores image nodes, covered by the image leg; LOW-3 the gate scenario source justified by a comment); every count still an exact equality; 56 existing goldens differ only in the two fingerprint hashes"
+  ],
+  "verdict": "PASS-WITH-FOLDS: all findings folded in 9aac4b597 (red before green) or refuted with a reason. Owed before push: the orchestrator full suite on the tip; owner y on the protected paths.",
   "blockers": [],
-  "followups": [],
+  "followups": [
+    "Not built (owed by design): the server read that loads media_assets image sets and signs URLs, and the wiring of selectImage to the lot facts (MF-44 / MF-22); the two frontage-edge logic_variables rows land with the first frontage-conditioned set (D-3 a).",
+    "Not done: a real-browser look at /admin/report-preview?state=images_present (plan step 8); jsdom covers the markup only. The code reviewer found no CSP img-src in next.config.ts, middleware or proxy that would block the data:image/svg+xml placeholder.",
+    "Code reviewer sub-threshold: a zero-width-space alt passes the \\S pattern; knip may flag the unwired select.ts exports.",
+    "Stack: MF-57 (on wf1/stack3-1111) draws its own v21 option picture box with a picture.caption chip and no image, and its caption wording is open item 19; wiring this image into that box, and the caption choice, are outside MF-38 as built."
+  ],
   "evidence": "docs/reports/red-evidence/MF-38/",
-  "notes": []
+  "notes": [
+    "Refuted: regression-guardian LOW-2 (already asserted by the FE-07 image-leg test).",
+    "Pre-approved D-35 (each image item names its scenario) and D-36 (no images layout key), logged first as D-29 and D-30 and renumbered for an id collision, are logged in ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md for the morning log.",
+    "Restacked 2026-11-11 onto wf1/cost3-1111 at 4b966e4d5 (stack3 plus MB-86): the five commits re-made in order with real hooks (68aa9a137 -> 90fe80f74, 1b0ff1fba -> 2fad4fe7a, 1bde1d3e9 -> 1ce0463d7, 3586befcc -> 9aac4b597, 379aa0f2f -> this commit); conflicts resolved by generator (seed-report-v2 --write, report-schema --write, report-capture, report-page-capture for the four MF-57 page goldens, fingerprint only), the queue keeping both notes, the surface-validate line re-measured (16 states, 155 strings). The panel ran on 1bde1d3e9 at base 2db1bdd67; the commit messages keep the original shas."
+  ]
 }

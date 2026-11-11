@@ -1,0 +1,8 @@
+Fold tests against the code of 1bde1d3e9 (before the fold code): exit 1; Tests  1 failed | 185 passed (186)
+  FAIL  src/tests/surfaces/report-image-select.logic.test.ts > MF-38 selector: RED inputs throw (FE-24 spirit: never a guess) > a rule value of the wrong type (or null) throws
+
+CR MEDIUM-1 plant: the lifecycle-image guard deleted: exit 1 RED; Tests  1 failed | 99 passed (100)
+  FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > assertTree RED: a lifecycle tree whose one node is an image names the image rule; two image nodes name the one-node rule
+
+CR LOW-1 plant: the one-image-node guard disabled: exit 1 RED; Tests  1 failed | 99 passed (100)
+  FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > assertTree RED: a lifecycle tree whose one node is an image names the image rule; two image nodes name the one-node rule

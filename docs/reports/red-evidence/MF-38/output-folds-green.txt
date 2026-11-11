@@ -1,0 +1,6 @@
+OUTPUT panel folds, GREEN on the folded code: the 25 targeted files
+ Test Files  25 passed (25)
+      Tests  687 passed (687)
+
+restamp vs 1bde1d3e9: existing goldens: 64; identical apart from fingerprint.files: 64; other differences: 0 
+restamp vs 1bde1d3e9: fingerprint inputs that moved: scripts/surfaces/_schema/report-v2.decl.json
