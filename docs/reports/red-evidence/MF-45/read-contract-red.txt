@@ -1,0 +1,18 @@
+MF-45 red evidence for the entitlement read contract (operator 2026-11-11, verbatim: "4. will we need to build this later.. we have the tokens now"), worktree wf1/mf45-1111 at 2709140dd: the tests written, no route, no types, no descriptor.
+Command: npx vitest run src/tests/parcels-entitlement.infra.test.ts src/tests/parcel-tool-meter.logic.test.ts
+
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf45/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json'
+ FAIL  src/tests/parcels-entitlement.infra.test.ts [ src/tests/parcels-entitlement.infra.test.ts ]
+Error: Cannot find module '@/app/api/parcels/entitlement/route' imported from '/Users/brettpreston_macmini/Buildo-wt-mf45/src/tests/parcels-entitlement.infra.test.ts'.
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T14b the entitlement read contract descriptor (operator 2026-11-11 "4. ... we have the tokens now") > a QUERY contract on /api/parcels/entitlement, read-only, unmetered, no entitlement guard (it reports the entitlement, including its absence)
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf45/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json'
+ Test Files  2 failed (2)
+      Tests  1 failed | 28 passed (29)
+
+FE-31 lock (src/tests/surfaces/surface-conformance.logic.test.ts C-7, the live descriptor count, an exact toBe) after the census row contract_parcels_entitlement is emitted, before the lock edit:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/surface-conformance.logic.test.ts > C-7 schema closedness and the cutover (the closed render vocabulary grows only by the 128 section 4 route) > controls: each converted fixture is valid with 0 sentinels; every live descriptor is valid; a non-generated FORM and LIST need no new key
+AssertionError: expected 156 to be 155 // Object.is equality
+      Tests  1 failed | 3 passed | 35 skipped (39)
+-> the lock is edited 155 -> 156 (+1 CONTRACT, MF-45), still an exact toBe.

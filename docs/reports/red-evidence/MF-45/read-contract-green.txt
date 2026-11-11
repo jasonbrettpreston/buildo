@@ -1,0 +1,6 @@
+MF-45 green evidence for the entitlement read contract, 2026-11-11 (same command as read-contract-red.txt, plus the FE-31 lock):
+ ✓ src/tests/parcel-tool-meter.logic.test.ts (29 tests) 33ms
+ ✓ src/tests/parcels-entitlement.infra.test.ts (10 tests) 7ms
+ ✓ src/tests/surfaces/surface-conformance.logic.test.ts (39 tests) 1565ms
+ Test Files  3 passed (3)
+      Tests  78 passed (78)

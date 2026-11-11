@@ -431,7 +431,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     for (const a of ARCHETYPES) { const d = convert(a); expect([a, v(d), unresearchedCount(d)]).toEqual([a, [], 0]); }
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
-    expect(all.length).toBe(155); // MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    expect(all.length).toBe(156); // MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;

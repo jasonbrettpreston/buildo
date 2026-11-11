@@ -231,3 +231,19 @@ describe('the read-contract values (readParcelToolUsage): server-computed, FE-05
     expect(db.texts).toEqual([]);
   });
 });
+
+describe('T14b the entitlement read contract descriptor (operator 2026-11-11 "4. ... we have the tokens now")', () => {
+  const rel = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json';
+  it('a QUERY contract on /api/parcels/entitlement, read-only, unmetered, no entitlement guard (it reports the entitlement, including its absence)', () => {
+    const d = JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8')) as {
+      identity: { id: string; route: string; archetype: string }; guards: { entitlement: unknown; rate_bucket: string };
+      metering: { answer: string }; outputs: { answer: string }; errors: { classes: Array<{ class: string }> };
+    };
+    expect(d.identity).toMatchObject({ id: 'contract_parcels_entitlement', route: '/api/parcels/entitlement', archetype: 'QUERY' });
+    expect(d.guards.entitlement).toBe('none');
+    expect(d.guards.rate_bucket).toContain('parcels-entitlement:');
+    expect(d.metering.answer).toBe('none');
+    expect(d.outputs.answer).toBe('none');
+    expect(d.errors.classes.map((c) => c.class)).toEqual(['401', '429', '500']);
+  });
+});

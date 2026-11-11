@@ -1,0 +1,378 @@
+{
+  "kind": "CONTRACT",
+  "status": "exists",
+  "docs": {
+    "purpose": "Tells a signed-in MaxBLD user which plan they hold and how many of this month's reports they have used and have left, and when the count resets, so the search page can say \"N of 20 reports left\" and the Account page can show the month's use.",
+    "data_story": "It reads 3 tables — `entitlements` (the caller's `parcel_tool` row), `logic_variables` (the two monthly allowances) and `usage_events` (the distinct lots opened this billing month) — and writes nothing. Every value, including the reports left and the limit-reached flag, is computed on the server. No `parcel_tool` row is a 200 with every field null. No caller yet: MF-35 (the search line), MF-52 (Account) and MF-49 (the app gate) read it when they build.",
+    "under_126": "A CONTRACT descriptor of archetype `QUERY`, born converted-shape: its response is an explicit `.strict()` whitelist of six fields, its auth class is authenticated, its rate bucket is per uid, `outputs.writes` is none and it is never a gate (the lookup's 403 `REPORT_LIMIT_REACHED` is the gate)."
+  },
+  "evidence": {
+    "files": [
+      "src/app/api/parcels/entitlement/route.ts:1",
+      "src/app/api/parcels/entitlement/types.ts:1"
+    ],
+    "contracts": [
+      "src/app/api/parcels/entitlement/route.ts:27 (GET export)",
+      "src/lib/api/with-api-envelope.ts:27-52"
+    ],
+    "tables": [
+      "src/lib/entitlements/index.ts:535-539",
+      "src/lib/entitlements/index.ts:408-411",
+      "src/lib/entitlements/index.ts:467-473",
+      "src/lib/db/generated/schema.ts — entitlements, logic_variables and usage_events are present in the introspected drizzle schema"
+    ],
+    "gate": [
+      "src/lib/auth/route-guard.ts:127 — AUTHENTICATED_API_ROUTES prefix — '/api/parcels'",
+      "in-handler: getCurrentUserContext(request, pool) — src/app/api/parcels/entitlement/route.ts:28 (FIRST await); null -> 401 at src/app/api/parcels/entitlement/route.ts:29"
+    ],
+    "states": [
+      "hit: src/lib/entitlements/index.ts:552-559 (an allowed parcel_tool status: the counts)",
+      "empty: src/lib/entitlements/index.ts:541 (no parcel_tool row: every field null)",
+      "unauthorized: src/app/api/parcels/entitlement/route.ts:29",
+      "rate_limited: src/app/api/parcels/entitlement/route.ts:36",
+      "error: src/app/api/parcels/entitlement/route.ts:42"
+    ],
+    "emits": [
+      "src/app/api/parcels/entitlement/route.ts — read in full; no Sentry breadcrumb, no analytics capture and no ledger INSERT"
+    ]
+  },
+  "identity": {
+    "id": "contract_parcels_entitlement",
+    "route": "/api/parcels/entitlement",
+    "archetype": "QUERY",
+    "platforms": [
+      "web",
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Cross-Domain (CLAUDE.md §Domain Rules: an API route consumed by the Expo app)",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 rules 5-6 (dated note 2026-11-11) — src/app/api/parcels/entitlement/route.ts:1",
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6 (the shape drives the client state machine)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "additive_only",
+      "why": "Its planned readers include the installed Expo app (the search line, MF-35, and Account, MF-52), which does not redeploy with the server, so a removed or retyped field would break shipped clients; adding fields does not.",
+      "evidence": [
+        "src/app/api/parcels/entitlement/types.ts:10-19",
+        "mobile/app.json:5"
+      ]
+    },
+    "ref": "C-069"
+  },
+  "inputs": {
+    "answer": "app_outputs",
+    "why": "It reads 3 tables directly, all server-written (no pipeline step produces them): the caller's entitlement row, the two allowance settings and the report ledger.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:535-539",
+      "src/lib/entitlements/index.ts:408-411",
+      "src/lib/entitlements/index.ts:467-473"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [
+      "status",
+      "reportsUsed",
+      "reportsLimit",
+      "reportsLeft",
+      "reportsLimitReached",
+      "resetsOn"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status",
+          "current_period_end",
+          "created_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/00-architecture/116_multi_product_architecture.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:535-539"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:408-411"
+        ]
+      },
+      {
+        "table": "usage_events",
+        "columns": [
+          "user_id",
+          "product",
+          "event",
+          "subject_kind",
+          "subject_key",
+          "occurred_at"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:467-473"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing: three SELECTs, no lock and no write (locked by src/tests/parcels-entitlement.infra.test.ts \"read-only\").",
+    "evidence": [
+      "src/lib/entitlements/index.ts:532-560"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "server_only",
+    "why": "A CONTRACT holds no client state: every value is resolved per request on the server.",
+    "evidence": [
+      "src/app/api/parcels/entitlement/route.ts:27 (GET export)"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "live",
+    "why": "Every read runs against the base tables on each request; there is no cache layer.",
+    "evidence": [
+      "src/lib/entitlements/index.ts:532-560"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "classifyRoute covers /api/parcels (authenticated) and the handler calls getCurrentUserContext first; null -> 401.",
+      "evidence": [
+        "src/lib/auth/route-guard.ts:127",
+        "src/app/api/parcels/entitlement/route.ts:28 (FIRST await)",
+        "src/app/api/parcels/entitlement/route.ts:29 (401)"
+      ]
+    },
+    "rls_class": {
+      "answer": "A",
+      "why": "It reads user-owned rows (entitlements, usage_events: Class A, select own) plus logic_variables. The route connects as the table owner (raw pg), RLS-exempt (Spec 114 §9); the class describes the data.",
+      "evidence": [
+        "migrations/230_rls_class_a_entitlements.sql:58",
+        "migrations/303_parcel_tool_entitlement_usage.sql",
+        "docs/specs/00-architecture/114_rls_policy_catalog.md §2"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "parcels-entitlement:<uid> 30/min (src/app/api/parcels/entitlement/route.ts:31-36)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "none",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "contract_parcels_entitlement__auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "guards.session must equal classifyRoute(\"/api/parcels/entitlement\") → \"authenticated\" plus the in-handler guard (getCurrentUserContext(request, pool) — src/app/api/parcels/entitlement/route.ts:28, FIRST await). Locked by src/tests/parcels-entitlement.infra.test.ts."
+    },
+    {
+      "id": "contract_parcels_entitlement__error_envelope",
+      "kind": "error_state",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every declared error class returns the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4 (withApiEnvelope + the shared error-mapping helpers)."
+    },
+    {
+      "id": "contract_parcels_entitlement__field_whitelist_parity",
+      "kind": "field_whitelist_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The response is the .strict() ParcelToolEntitlementResponseSchema (src/app/api/parcels/entitlement/types.ts:10-19) of exactly the six inputs.field_whitelist names; an extra key fails the parse (locked by parcels-entitlement.infra.test.ts)."
+    },
+    {
+      "id": "contract_parcels_entitlement__schema_declared",
+      "kind": "schema_declared",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "Every table and column declared in inputs.tables must exist in src/lib/db/generated/schema.ts; the registry generator checks this both directions."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    },
+    {
+      "name": "empty",
+      "golden": "none"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "none"
+    },
+    {
+      "name": "rate_limited",
+      "golden": "none"
+    },
+    {
+      "name": "error",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "envelope",
+    "why": "Success and failure both arrive in the { data, error, meta } envelope of docs/specs/00_engineering_standards.md §4.4; withApiEnvelope is the outermost wrapper.",
+    "evidence": [
+      "src/lib/api/with-api-envelope.ts:27-52",
+      "src/app/api/parcels/entitlement/route.ts:29 (401)",
+      "src/app/api/parcels/entitlement/route.ts:36 (429)",
+      "src/app/api/parcels/entitlement/route.ts:42 (500)"
+    ],
+    "classes": [
+      {
+        "class": "401",
+        "ui": "{data:null,error:{code,message},meta:null} — src/features/leads/api/error-mapping.ts:13 — src/app/api/parcels/entitlement/route.ts:29 (code UNAUTHORIZED)"
+      },
+      {
+        "class": "429",
+        "ui": "{data:null,error:{code,message,details:{remaining}},meta:null} + header Retry-After: 60 — src/features/leads/api/error-mapping.ts — src/app/api/parcels/entitlement/route.ts:36 (code RATE_LIMITED)"
+      },
+      {
+        "class": "500",
+        "ui": "{data:null,error:{code,message},meta:null} — src/features/leads/api/error-mapping.ts — src/app/api/parcels/entitlement/route.ts:42 (code INTERNAL_ERROR)"
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "A read with no analytics, breadcrumb or ledger write: route.ts and readParcelToolUsage were read in full.",
+    "evidence": [
+      "src/app/api/parcels/entitlement/route.ts — read in full",
+      "src/lib/entitlements/index.ts:532-560"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement and reads no placement inventory.",
+    "evidence": [
+      "src/app/api/parcels/entitlement/route.ts — read in full"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "A read of the plan and the counts is not a report and is never counted; the lookup meters reports (contract_parcels_lookup).",
+    "evidence": [
+      "src/app/api/parcels/entitlement/route.ts — read in full; no usage_events INSERT"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed).",
+    "evidence": [
+      "src/lib/entitlements/index.ts:408-411",
+      "scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial"
+    ],
+    "logic_variables": [
+      {
+        "name": "parcel_tool_report_limit_plan",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_tool_report_limit_trial",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "No surface renders it yet; MF-35 (the search line \"N of 20 reports left\"), MF-52 (Account) and MF-49 bind to it when they build.",
+    "evidence": [
+      ".cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": "UNRESEARCHED",
+    "labels": "none",
+    "dark_mode": "none",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",
+      "measured": "The schema allows only UNRESEARCHED or an integer >= 44; a JSON endpoint has no touch target and the vocabulary has no \"n/a\". Left UNRESEARCHED and escalated per Spec 128 §4 rather than invented (the contract_parcels_lookup precedent).",
+      "check_id": "contract_parcels_entitlement__auth_class_parity"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "MF-45, built on the operator's ruling (operator 2026-11-11, verbatim: \"4. will we need to build this later.. we have the tokens now\" (MF-45; queue MF-45 dated note 2026-11-11)). A thin wrapper over readParcelToolUsage on the lookup route's own pattern. A display, never a gate.",
+  "x-draft": {
+    "shard": "contracts",
+    "files": [
+      "src/app/api/parcels/entitlement/route.ts",
+      "src/app/api/parcels/entitlement/types.ts"
+    ],
+    "loc": 43,
+    "methods": [
+      "GET"
+    ],
+    "consumers": [],
+    "writes_audit_row": false,
+    "consumers_verified": [],
+    "auth_class_executed": "authenticated",
+    "locking_tests": [
+      "src/tests/parcels-entitlement.infra.test.ts"
+    ]
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B1",
+    "why": "The parcel product's read of its own plan and monthly report allowance (MF-45): the reports-left line and the Account page bind to it.",
+    "feature": "F02",
+    "build_order": 1023,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}
