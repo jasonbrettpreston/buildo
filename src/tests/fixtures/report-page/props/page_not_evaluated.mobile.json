@@ -1,0 +1,4144 @@
+{
+  "harness": "MF-48 mobile props golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b.2",
+  "surface": "mobile_parcel_detail",
+  "state": "page_not_evaluated",
+  "target": "mobile",
+  "response_fixture": {
+    "page": "v21",
+    "synthetic": true,
+    "values": {
+      "o1.size.value": "2,670",
+      "o1.size.unit": "sq ft",
+      "o1.size.m2": "248 m²",
+      "o1.row.max": "2,670 sq ft (248 m²)",
+      "o1.row.storeys": "3",
+      "o1.row.footprint": "1,292 sq ft (120 m²)",
+      "o1.row.homes": "1",
+      "o2.size.value": "2,885",
+      "o2.size.unit": "sq ft",
+      "o2.size.m2": "268 m²",
+      "o2.row.max": "2,885 sq ft (268 m²)",
+      "o2.row.storeys": "3",
+      "o2.row.footprint": "1,292 sq ft (120 m²)",
+      "o2.row.homes": "1",
+      "o3.size.value": "4,435",
+      "o3.size.unit": "sq ft",
+      "o3.size.m2": "412 m²",
+      "o3.unit.value": "739",
+      "o3.unit.unit": "sq ft",
+      "o3.unit.m2": "69 m²",
+      "o3.row.max": "4,435 sq ft (412 m²)",
+      "o3.row.units": "6",
+      "o3.row.unit_size": "739 sq ft (69 m²)",
+      "o3.row.bedrooms": "12",
+      "o3.row.storeys": "3",
+      "o3.row.units_flat": "6",
+      "lot.size": "3,057 sq ft · 284 m²",
+      "sheet.record": "3,057 sq ft · 284 m²",
+      "ad_scenario_detached_house_flat_or_shallow_roof": "Get your lot surveyed"
+    },
+    "not_evaluated": [
+      "o2"
+    ]
+  },
+  "view": {
+    "target": "mobile",
+    "layout": {
+      "columns": 1,
+      "details": "collapsed",
+      "meta": "when_set",
+      "page_break": "none"
+    },
+    "sections": [
+      {
+        "kind": "title",
+        "id": "title",
+        "parts": [
+          {
+            "role": "title",
+            "brief": "A1",
+            "kind": "content",
+            "content": "page.title",
+            "text": "Build Possibilities"
+          }
+        ]
+      },
+      {
+        "kind": "address",
+        "id": "address",
+        "parts": [
+          {
+            "role": "address",
+            "brief": "A2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "option",
+        "id": "o1",
+        "scenario": "detached_house/pitched",
+        "parts": [
+          {
+            "role": "label",
+            "brief": "B1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "title",
+            "brief": "B2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "spec_label",
+            "brief": "B5",
+            "kind": "content",
+            "content": "spec.label",
+            "text": "By-law specifications"
+          },
+          {
+            "role": "size.badge",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.label",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.label",
+            "text": "Max Build Size"
+          },
+          {
+            "role": "size.sub",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.sub",
+            "text": "(by-law allows)"
+          },
+          {
+            "role": "size.value",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.value",
+            "rule": "area_sqft",
+            "text": "2,670"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "size.m2",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.m2",
+            "rule": "area_m2",
+            "text": "248 m²"
+          },
+          {
+            "role": "size.button",
+            "brief": "B6",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.count",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.badge",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.label",
+            "brief": "B7",
+            "kind": "content",
+            "content": "tile.cost.label",
+            "text": "Cost to Build"
+          },
+          {
+            "role": "cost.sub",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.value",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.rate",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.button",
+            "brief": "B7",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.panel.h",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.size.h",
+            "text": "Max build size details"
+          },
+          {
+            "role": "size.panel.why",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes_h",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.all",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.all_numbers",
+            "text": "All the numbers"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.1",
+            "kind": "content",
+            "content": "row.max_build_size",
+            "text": "Max build size"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.1",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.row.max",
+            "rule": "area_sqft_m2_paren",
+            "text": "2,670 sq ft (248 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.2",
+            "kind": "content",
+            "content": "row.storeys",
+            "text": "Storeys"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.2",
+            "kind": "value",
+            "field": "storeys_max",
+            "key": "o1.row.storeys",
+            "rule": "int",
+            "text": "3"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.3",
+            "kind": "content",
+            "content": "row.height",
+            "text": "Height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.11",
+            "kind": "content",
+            "content": "row.footprint",
+            "text": "Footprint"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.11",
+            "kind": "value",
+            "field": "footprint_max_m2",
+            "key": "o1.row.footprint",
+            "rule": "area_sqft_m2_paren",
+            "text": "1,292 sq ft (120 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.12",
+            "kind": "content",
+            "content": "row.coverage",
+            "text": "Lot coverage"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.13",
+            "kind": "content",
+            "content": "row.fsi",
+            "text": "Floor space index"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.14",
+            "kind": "content",
+            "content": "row.front_setback",
+            "text": "Front setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.14",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.15",
+            "kind": "content",
+            "content": "row.rear_setback",
+            "text": "Rear setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.15",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.16",
+            "kind": "content",
+            "content": "row.side_setbacks",
+            "text": "Side setbacks"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.16",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.17",
+            "kind": "content",
+            "content": "row.depth",
+            "text": "Building depth"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.17",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.18",
+            "kind": "content",
+            "content": "row.main_wall",
+            "text": "Main wall height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.18",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.19",
+            "kind": "content",
+            "content": "row.homes",
+            "text": "Homes"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.19",
+            "kind": "value",
+            "field": "units_max",
+            "key": "o1.row.homes",
+            "rule": "int",
+            "text": "1"
+          },
+          {
+            "role": "size.panel.ver",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.hide",
+            "brief": "B9",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "cost.panel.h",
+            "brief": "B10",
+            "kind": "content",
+            "content": "panel.cost.h",
+            "text": "Cost to build details"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.1",
+            "kind": "content",
+            "content": "row.cost_total",
+            "text": "Cost to build"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.2",
+            "kind": "content",
+            "content": "row.cost_rate",
+            "text": "Cost per sq ft"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.3",
+            "kind": "content",
+            "content": "row.cost_area",
+            "text": "Area priced"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.4",
+            "kind": "content",
+            "content": "row.cost_basis",
+            "text": "Area based on"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.5",
+            "kind": "content",
+            "content": "row.cost_conf",
+            "text": "Confidence"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.6",
+            "kind": "content",
+            "content": "row.cost_excl",
+            "text": "Not included"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.note",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.ver",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.hide",
+            "brief": "B10",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "var_label",
+            "brief": "B11",
+            "kind": "content",
+            "content": "var.label",
+            "text": "By-law variances"
+          },
+          {
+            "role": "bigger.q",
+            "brief": "B12",
+            "kind": "content",
+            "content": "q.bigger",
+            "text": "Can you build bigger?"
+          },
+          {
+            "role": "bigger.answer",
+            "brief": "B12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "bigger.how",
+            "brief": "B13",
+            "kind": "content",
+            "content": "btn.how",
+            "text": "How?"
+          },
+          {
+            "role": "bigger.how.steps",
+            "brief": "B13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "nbr.q",
+            "brief": "B14",
+            "kind": "content",
+            "content": "q.neighbours",
+            "text": "Did the neighbours build bigger?"
+          },
+          {
+            "role": "nbr.answer",
+            "brief": "B14",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          },
+          {
+            "role": "nbr.recent",
+            "brief": "B15",
+            "kind": "content",
+            "content": "row.most_recent",
+            "text": "Most recent"
+          },
+          {
+            "role": "nbr.swipe",
+            "brief": "B15",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "nbr.projects",
+            "brief": "B15",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          }
+        ]
+      },
+      {
+        "kind": "lot_size",
+        "id": "lot_size",
+        "parts": [
+          {
+            "role": "title",
+            "brief": "C1",
+            "kind": "content",
+            "content": "ls.title",
+            "text": "Know your exact lot size?"
+          },
+          {
+            "role": "body",
+            "brief": "C1",
+            "kind": "content",
+            "content": "ls.body",
+            "text": "Survey data is more accurate than our estimate. Add lot size and every option is recalculated."
+          },
+          {
+            "role": "button",
+            "brief": "C1",
+            "kind": "content",
+            "content": "ls.button",
+            "text": "Add lot size"
+          }
+        ]
+      },
+      {
+        "kind": "option",
+        "id": "o2",
+        "scenario": "detached_house/flat_or_shallow_roof",
+        "parts": [
+          {
+            "role": "label",
+            "brief": "B1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "title",
+            "brief": "B2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "tag",
+            "brief": "B3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "spec_label",
+            "brief": "B5",
+            "kind": "content",
+            "content": "spec.label",
+            "text": "By-law specifications"
+          },
+          {
+            "role": "size.badge",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.label",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.label",
+            "text": "Max Build Size"
+          },
+          {
+            "role": "size.sub",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.sub",
+            "text": "(by-law allows)"
+          },
+          {
+            "role": "size.value",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.value",
+            "rule": "area_sqft",
+            "text": "2,885"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "size.m2",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.m2",
+            "rule": "area_m2",
+            "text": "268 m²"
+          },
+          {
+            "role": "size.button",
+            "brief": "B6",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.count",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.badge",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.label",
+            "brief": "B7",
+            "kind": "content",
+            "content": "tile.cost.label",
+            "text": "Cost to Build"
+          },
+          {
+            "role": "cost.sub",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.value",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.rate",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.button",
+            "brief": "B7",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.panel.h",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.size.h",
+            "text": "Max build size details"
+          },
+          {
+            "role": "size.panel.why",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes_h",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.all",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.all_numbers",
+            "text": "All the numbers"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.1",
+            "kind": "content",
+            "content": "row.max_build_size",
+            "text": "Max build size"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.1",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.row.max",
+            "rule": "area_sqft_m2_paren",
+            "text": "2,885 sq ft (268 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.2",
+            "kind": "content",
+            "content": "row.storeys",
+            "text": "Storeys"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.2",
+            "kind": "value",
+            "field": "storeys_max",
+            "key": "o2.row.storeys",
+            "rule": "int",
+            "text": "3"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.3",
+            "kind": "content",
+            "content": "row.height",
+            "text": "Height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.11",
+            "kind": "content",
+            "content": "row.footprint",
+            "text": "Footprint"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.11",
+            "kind": "value",
+            "field": "footprint_max_m2",
+            "key": "o2.row.footprint",
+            "rule": "area_sqft_m2_paren",
+            "text": "1,292 sq ft (120 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.12",
+            "kind": "content",
+            "content": "row.coverage",
+            "text": "Lot coverage"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.13",
+            "kind": "content",
+            "content": "row.fsi",
+            "text": "Floor space index"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.14",
+            "kind": "content",
+            "content": "row.front_setback",
+            "text": "Front setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.14",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.15",
+            "kind": "content",
+            "content": "row.rear_setback",
+            "text": "Rear setback"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.15",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.16",
+            "kind": "content",
+            "content": "row.side_setbacks",
+            "text": "Side setbacks"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.16",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.17",
+            "kind": "content",
+            "content": "row.depth",
+            "text": "Building depth"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.17",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.18",
+            "kind": "content",
+            "content": "row.main_wall",
+            "text": "Main wall height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.18",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.19",
+            "kind": "content",
+            "content": "row.homes",
+            "text": "Homes"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.19",
+            "kind": "value",
+            "field": "units_max",
+            "key": "o2.row.homes",
+            "rule": "int",
+            "text": "1"
+          },
+          {
+            "role": "size.panel.ver",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.hide",
+            "brief": "B9",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "cost.panel.h",
+            "brief": "B10",
+            "kind": "content",
+            "content": "panel.cost.h",
+            "text": "Cost to build details"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.1",
+            "kind": "content",
+            "content": "row.cost_total",
+            "text": "Cost to build"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.2",
+            "kind": "content",
+            "content": "row.cost_rate",
+            "text": "Cost per sq ft"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.3",
+            "kind": "content",
+            "content": "row.cost_area",
+            "text": "Area priced"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.4",
+            "kind": "content",
+            "content": "row.cost_basis",
+            "text": "Area based on"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.5",
+            "kind": "content",
+            "content": "row.cost_conf",
+            "text": "Confidence"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.6",
+            "kind": "content",
+            "content": "row.cost_excl",
+            "text": "Not included"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.note",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.ver",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.hide",
+            "brief": "B10",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "var_label",
+            "brief": "B11",
+            "kind": "content",
+            "content": "var.label",
+            "text": "By-law variances"
+          },
+          {
+            "role": "bigger.q",
+            "brief": "B12",
+            "kind": "content",
+            "content": "q.bigger",
+            "text": "Can you build bigger?"
+          },
+          {
+            "role": "bigger.answer",
+            "brief": "B12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "bigger.how",
+            "brief": "B13",
+            "kind": "content",
+            "content": "btn.how",
+            "text": "How?"
+          },
+          {
+            "role": "bigger.how.steps",
+            "brief": "B13",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "nbr.q",
+            "brief": "B14",
+            "kind": "content",
+            "content": "q.neighbours",
+            "text": "Did the neighbours build bigger?"
+          },
+          {
+            "role": "nbr.answer",
+            "brief": "B14",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          },
+          {
+            "role": "nbr.pointer",
+            "brief": "B16",
+            "kind": "pending",
+            "pending": "classified",
+            "text": "not yet classified"
+          }
+        ]
+      },
+      {
+        "kind": "option",
+        "id": "o3",
+        "scenario": "detached_houseplex",
+        "parts": [
+          {
+            "role": "label",
+            "brief": "B1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "title",
+            "brief": "B2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "spec_label",
+            "brief": "B5",
+            "kind": "content",
+            "content": "spec.label",
+            "text": "By-law specifications"
+          },
+          {
+            "role": "size.badge",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.label",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.label",
+            "text": "Max Build Size"
+          },
+          {
+            "role": "size.sub",
+            "brief": "B6",
+            "kind": "content",
+            "content": "tile.size.sub",
+            "text": "(by-law allows)"
+          },
+          {
+            "role": "size.value",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.value",
+            "rule": "area_sqft",
+            "text": "4,435"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "size.m2",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.m2",
+            "rule": "area_m2",
+            "text": "412 m²"
+          },
+          {
+            "role": "size.button",
+            "brief": "B6",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "size.count",
+            "brief": "B6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.badge",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.label",
+            "brief": "B7",
+            "kind": "content",
+            "content": "tile.cost.label",
+            "text": "Cost to Build"
+          },
+          {
+            "role": "cost.sub",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.value",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.rate",
+            "brief": "B7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.button",
+            "brief": "B7",
+            "kind": "content",
+            "content": "btn.see_details",
+            "text": "See details"
+          },
+          {
+            "role": "unit.badge",
+            "brief": "B8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "unit.label",
+            "brief": "B8",
+            "kind": "content",
+            "content": "tile.unit.label",
+            "text": "Size per Unit"
+          },
+          {
+            "role": "unit.sub",
+            "brief": "B8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "unit.value",
+            "brief": "B8",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.value",
+            "rule": "area_sqft",
+            "text": "739"
+          },
+          {
+            "role": "unit.unit",
+            "brief": "B8",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "unit.m2",
+            "brief": "B8",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.m2",
+            "rule": "area_m2",
+            "text": "69 m²"
+          },
+          {
+            "role": "size.panel.h",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.size.h",
+            "text": "Max build size details"
+          },
+          {
+            "role": "size.panel.why",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes_h",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.notes",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.all",
+            "brief": "B9",
+            "kind": "content",
+            "content": "panel.all_numbers",
+            "text": "All the numbers"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.1",
+            "kind": "content",
+            "content": "row.max_build_size",
+            "text": "Max build size"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.1",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.row.max",
+            "rule": "area_sqft_m2_paren",
+            "text": "4,435 sq ft (412 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.4",
+            "kind": "content",
+            "content": "row.units",
+            "text": "Units"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.4",
+            "kind": "value",
+            "field": "unit_count",
+            "key": "o3.row.units",
+            "rule": "int",
+            "text": "6"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.5",
+            "kind": "content",
+            "content": "row.unit_size",
+            "text": "Size per unit (average)"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.5",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.row.unit_size",
+            "rule": "area_sqft_m2_paren",
+            "text": "739 sq ft (69 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.6",
+            "kind": "content",
+            "content": "row.basement",
+            "text": "Basement"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.7",
+            "kind": "content",
+            "content": "row.bedrooms",
+            "text": "Bedrooms"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.7",
+            "kind": "value",
+            "field": "houseplex_bedrooms",
+            "key": "o3.row.bedrooms",
+            "rule": "int",
+            "text": "12"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.2",
+            "kind": "content",
+            "content": "row.storeys",
+            "text": "Storeys"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.2",
+            "kind": "value",
+            "field": "storeys_max",
+            "key": "o3.row.storeys",
+            "rule": "int",
+            "text": "3"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.3",
+            "kind": "content",
+            "content": "row.height",
+            "text": "Height"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.8",
+            "kind": "content",
+            "content": "row.roof",
+            "text": "Roof"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.9",
+            "kind": "content",
+            "content": "row.units_flat",
+            "text": "Units with a flat roof"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.9",
+            "kind": "value",
+            "field": "units_flat",
+            "key": "o3.row.units_flat",
+            "rule": "int",
+            "text": "6"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.10",
+            "kind": "content",
+            "content": "row.units_pitched",
+            "text": "Units with a pitched roof"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.ver",
+            "brief": "B9",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "size.panel.hide",
+            "brief": "B9",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "cost.panel.h",
+            "brief": "B10",
+            "kind": "content",
+            "content": "panel.cost.h",
+            "text": "Cost to build details"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.1",
+            "kind": "content",
+            "content": "row.cost_total",
+            "text": "Cost to build"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.2",
+            "kind": "content",
+            "content": "row.cost_rate",
+            "text": "Cost per sq ft"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.3",
+            "kind": "content",
+            "content": "row.cost_area",
+            "text": "Area priced"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.4",
+            "kind": "content",
+            "content": "row.cost_basis",
+            "text": "Area based on"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.5",
+            "kind": "content",
+            "content": "row.cost_conf",
+            "text": "Confidence"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.row.label",
+            "brief": "B10.6",
+            "kind": "content",
+            "content": "row.cost_excl",
+            "text": "Not included"
+          },
+          {
+            "role": "cost.row.value",
+            "brief": "B10.6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.note",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.ver",
+            "brief": "B10",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "cost.panel.hide",
+            "brief": "B10",
+            "kind": "content",
+            "content": "btn.hide_details",
+            "text": "Hide details"
+          },
+          {
+            "role": "var_label",
+            "brief": "B11",
+            "kind": "content",
+            "content": "var.label",
+            "text": "By-law variances"
+          },
+          {
+            "role": "bigger.q",
+            "brief": "B12",
+            "kind": "content",
+            "content": "q.bigger",
+            "text": "Can you build bigger?"
+          },
+          {
+            "role": "bigger.answer",
+            "brief": "B12",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "coming_soon",
+        "id": "soon",
+        "parts": [
+          {
+            "role": "heading",
+            "brief": "E1",
+            "kind": "content",
+            "content": "soon.h",
+            "text": "Coming soon"
+          },
+          {
+            "role": "items",
+            "brief": "E1",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "lot_facts",
+        "id": "lot",
+        "parts": [
+          {
+            "role": "heading",
+            "brief": "F1",
+            "kind": "content",
+            "content": "lot.h",
+            "text": "About this lot"
+          },
+          {
+            "role": "row.label",
+            "brief": "F2",
+            "kind": "content",
+            "content": "lot.size",
+            "text": "Lot size"
+          },
+          {
+            "role": "row.value",
+            "brief": "F2",
+            "kind": "value",
+            "field": "lot_size_sqm",
+            "key": "lot.size",
+            "rule": "area_sqft_m2_dot",
+            "text": "3,057 sq ft · 284 m²"
+          },
+          {
+            "role": "row.label",
+            "brief": "F3",
+            "kind": "content",
+            "content": "lot.fd",
+            "text": "Frontage × depth"
+          },
+          {
+            "role": "row.value",
+            "brief": "F3",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F4",
+            "kind": "content",
+            "content": "lot.zone",
+            "text": "Zone"
+          },
+          {
+            "role": "row.value",
+            "brief": "F4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F5",
+            "kind": "content",
+            "content": "lot.heritage",
+            "text": "Heritage"
+          },
+          {
+            "role": "row.value",
+            "brief": "F5",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F6",
+            "kind": "content",
+            "content": "lot.ravine",
+            "text": "Ravine protection area"
+          },
+          {
+            "role": "row.value",
+            "brief": "F6",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F7",
+            "kind": "content",
+            "content": "lot.corner",
+            "text": "Corner lot"
+          },
+          {
+            "role": "row.value",
+            "brief": "F7",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.label",
+            "brief": "F8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "row.value",
+            "brief": "F8",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "legal",
+        "id": "legal",
+        "parts": [
+          {
+            "role": "line",
+            "brief": "G1",
+            "kind": "content",
+            "content": "legal.line",
+            "text": "Based on our reading of Toronto zoning by-laws. Not a City zoning review, legal advice or a permit decision. Confirm with the City before you buy, design or apply."
+          }
+        ]
+      },
+      {
+        "kind": "footer",
+        "id": "footer",
+        "parts": [
+          {
+            "role": "sources",
+            "brief": "G2",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "change",
+            "brief": "G3",
+            "kind": "content",
+            "content": "footer.change",
+            "text": "By-laws and maps change and may not show recent amendments. For a formal answer, apply to Toronto Building for a Zoning Applicable Law Certificate."
+          },
+          {
+            "role": "copyright",
+            "brief": "G4",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "sheet",
+        "id": "sheet",
+        "parts": [
+          {
+            "role": "title",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.h",
+            "text": "Add your lot size"
+          },
+          {
+            "role": "body",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.p",
+            "text": "Use the lot area from your survey. It replaces the City lot record for this report, and every option is recalculated."
+          },
+          {
+            "role": "record.label",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.now",
+            "text": "City lot record"
+          },
+          {
+            "role": "record.value",
+            "brief": "H0",
+            "kind": "value",
+            "field": "lot_size_sqm",
+            "key": "sheet.record",
+            "rule": "area_sqft_m2_dot",
+            "text": "3,057 sq ft · 284 m²"
+          },
+          {
+            "role": "input.label",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.label",
+            "text": "Lot size from your survey"
+          },
+          {
+            "role": "input.placeholder",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.placeholder",
+            "text": "e.g. 3,120"
+          },
+          {
+            "role": "unit.sqft",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.unit_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "unit.m2",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.unit_m2",
+            "text": "m²"
+          },
+          {
+            "role": "error",
+            "brief": "H0",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "note",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.note",
+            "text": "You can enter the lot size once. It is saved with this lot and marked as entered by you."
+          },
+          {
+            "role": "submit",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.submit",
+            "text": "Recalculate"
+          },
+          {
+            "role": "cancel",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.cancel",
+            "text": "Cancel"
+          }
+        ]
+      }
+    ]
+  },
+  "props": {
+    "page": {
+      "component": "ScrollView",
+      "props": {
+        "key": "report",
+        "testID": "report-page",
+        "className": "flex-1 bg-report-page"
+      },
+      "children": [
+        {
+          "component": "View",
+          "props": {
+            "key": "report-column",
+            "className": "mx-auto w-full max-w-[430px] gap-[24px] px-[16px] pb-[56px] pt-[16px]"
+          },
+          "children": [
+            {
+              "component": "View",
+              "props": {
+                "key": "title"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "title-title",
+                    "className": "text-[28px] leading-[34px] font-bold tracking-tight text-report-ink",
+                    "role": "header"
+                  },
+                  "children": [
+                    {
+                      "part": "title.0.title"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "address"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "address-address",
+                    "className": "text-[18px] leading-[24px] font-semibold text-report-ink -mt-[16px] text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                  },
+                  "children": [
+                    {
+                      "part": "address.0.address"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "o1",
+                "testID": "report-o1",
+                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]"
+              },
+              "children": [
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "o1-top",
+                    "className": "gap-[12px] pb-[14px]"
+                  },
+                  "children": [
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o1-picture",
+                        "className": "relative h-[240px] overflow-hidden rounded-[14px] bg-report-sky"
+                      },
+                      "children": [
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o1-ground",
+                            "className": "absolute bottom-[0px] left-[0px] right-[0px] h-[48px] bg-report-line"
+                          },
+                          "children": []
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o1-head",
+                            "className": "absolute left-[16px] right-[16px] top-[14px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-label",
+                                "className": "text-[14px] leading-[18px] font-bold uppercase tracking-widest text-report-option-label text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.0.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-title",
+                                "className": "mt-[4px] text-[22px] leading-[28px] font-bold text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal",
+                                "role": "header"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.1.title"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "o1-spec",
+                        "className": "mx-[2px] mt-[2px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft mb-[8px]"
+                      },
+                      "children": [
+                        {
+                          "part": "o1.2.spec_label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o1-tiles",
+                        "className": "mx-[2px] flex-row flex-wrap gap-[10px] px-[2px]"
+                      },
+                      "children": [
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o1-size-tile",
+                            "testID": "report-o1-size-tile",
+                            "className": "flex-1 items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-size-badge",
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.3.size.badge"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-size-label",
+                                "className": "text-center text-[14px] leading-[20px] font-semibold text-report-ink"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.4.size.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-size-sub",
+                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.5.size.sub"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "View",
+                              "props": {
+                                "key": "o1-size-value-row",
+                                "className": "mt-[8px] flex-row items-baseline gap-[4px]"
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o1-size-value",
+                                    "className": "text-[26px] leading-[30px] font-bold text-report-ink tabular-nums"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o1.6.size.value"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o1-size-unit",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-dim"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o1.7.size.unit"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-size-m2",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.8.size.m2"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o1-size-open",
+                                "testID": "report-o1-size-open",
+                                "className": "mt-[10px] min-h-[44px] w-full flex-row items-center justify-center gap-[4px] rounded-full border border-report-button-border bg-report-button px-[8px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_panel",
+                                  "option": "o1",
+                                  "panel": "size"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o1-size-open-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o1.9.size.button"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o1-cost-tile",
+                            "testID": "report-o1-cost-tile",
+                            "className": "flex-1 items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-cost-badge",
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.11.cost.badge"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-cost-label",
+                                "className": "text-center text-[14px] leading-[20px] font-semibold text-report-ink"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.12.cost.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-cost-sub",
+                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.13.cost.sub"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "View",
+                              "props": {
+                                "key": "o1-cost-value-row",
+                                "className": "mt-[8px] flex-row items-baseline gap-[4px]"
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o1-cost-value",
+                                    "className": "text-[26px] leading-[30px] font-bold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o1.14.cost.value"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-cost-rate",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.15.cost.rate"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o1-cost-open",
+                                "testID": "report-o1-cost-open",
+                                "className": "mt-[10px] min-h-[44px] w-full flex-row items-center justify-center gap-[4px] rounded-full border border-report-button-border bg-report-button px-[8px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_panel",
+                                  "option": "o1",
+                                  "panel": "cost"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o1-cost-open-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o1.16.cost.button"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "o1-vars",
+                    "className": "gap-[20px] border-t border-report-outer-border px-[2px] pb-[2px] pt-[16px]"
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "o1-var",
+                        "className": "mb-[4px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft"
+                      },
+                      "children": [
+                        {
+                          "part": "o1.64.var_label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o1-bigger",
+                        "testID": "report-o1-bigger",
+                        "className": "gap-[10px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o1-bigger-q",
+                            "className": "text-[16px] leading-[22px] font-bold text-report-ink",
+                            "role": "header"
+                          },
+                          "children": [
+                            {
+                              "part": "o1.65.bigger.q"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o1-bigger-row",
+                            "className": "flex-row items-center justify-between gap-[8px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-bigger-answer",
+                                "className": "flex-1 text-[15px] leading-[22px] font-normal text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.66.bigger.answer"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o1-how",
+                                "testID": "report-o1-how",
+                                "className": "min-h-[44px] rounded-full border border-report-button-border bg-report-button px-[18px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_how",
+                                  "option": "o1"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o1-how-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o1.67.bigger.how"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o1-nbr",
+                        "testID": "report-o1-nbr",
+                        "className": "gap-[10px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o1-nbr-q",
+                            "className": "text-[16px] leading-[22px] font-bold text-report-ink",
+                            "role": "header"
+                          },
+                          "children": [
+                            {
+                              "part": "o1.69.nbr.q"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o1-nbr-answer",
+                            "className": "flex-1 text-[15px] leading-[22px] font-normal text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "o1.70.nbr.answer"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o1-nbr-recent",
+                            "className": "mt-[4px] flex-row items-center justify-between border-t border-report-outer-border pt-[10px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-nbr-recent-text",
+                                "className": "text-[12px] leading-[16px] font-semibold uppercase tracking-wide text-report-dim"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.71.nbr.recent"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o1-nbr-swipe",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o1.72.nbr.swipe"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o1-nbr-projects",
+                            "className": "mb-[8px] text-[13px] leading-[18px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "o1.73.nbr.projects"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "lot_size",
+                "testID": "report-lot_size",
+                "className": "gap-[10px] rounded-[14px] bg-report-card px-[24px] py-[16px]"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "lot_size-title",
+                    "className": "text-[17px] leading-[24px] font-semibold text-report-ink",
+                    "role": "header"
+                  },
+                  "children": [
+                    {
+                      "part": "lot_size.0.title"
+                    }
+                  ]
+                },
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "lot_size-body",
+                    "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                  },
+                  "children": [
+                    {
+                      "part": "lot_size.1.body"
+                    }
+                  ]
+                },
+                {
+                  "component": "Button",
+                  "props": {
+                    "key": "lot_size-open",
+                    "testID": "report-lot-size-open",
+                    "className": "min-h-[44px] rounded-[12px] border border-report-amber bg-transparent h-auto shadow-none opacity-100 active:bg-report-card",
+                    "accessibilityRole": "button",
+                    "onPress": {
+                      "action": "open_sheet"
+                    }
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "lot_size-button",
+                        "className": "text-[16px] leading-[24px] font-semibold text-report-amber"
+                      },
+                      "children": [
+                        {
+                          "part": "lot_size.2.button"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "o2",
+                "testID": "report-o2",
+                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]"
+              },
+              "children": [
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "o2-top",
+                    "className": "gap-[12px] pb-[14px]"
+                  },
+                  "children": [
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o2-picture",
+                        "className": "relative h-[240px] overflow-hidden rounded-[14px] bg-report-sky"
+                      },
+                      "children": [
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o2-ground",
+                            "className": "absolute bottom-[0px] left-[0px] right-[0px] h-[48px] bg-report-line"
+                          },
+                          "children": []
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o2-head",
+                            "className": "absolute left-[16px] right-[16px] top-[14px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-label",
+                                "className": "text-[14px] leading-[18px] font-bold uppercase tracking-widest text-report-option-label text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.0.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-title",
+                                "className": "mt-[4px] text-[22px] leading-[28px] font-bold text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal",
+                                "role": "header"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.1.title"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o2-tag",
+                            "className": "absolute bottom-[12px] left-[16px] overflow-hidden rounded-full bg-report-sky px-[8px] py-[2px] text-[12px] leading-[18px] font-semibold text-report-ink border border-report-line text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "o2.2.tag"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "o2-spec",
+                        "className": "mx-[2px] mt-[2px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft mb-[8px]"
+                      },
+                      "children": [
+                        {
+                          "part": "o2.3.spec_label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o2-tiles",
+                        "className": "mx-[2px] flex-row flex-wrap gap-[10px] px-[2px]"
+                      },
+                      "children": [
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o2-size-tile",
+                            "testID": "report-o2-size-tile",
+                            "className": "flex-1 items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-size-badge",
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.4.size.badge"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-size-label",
+                                "className": "text-center text-[14px] leading-[20px] font-semibold text-report-ink"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.5.size.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-size-sub",
+                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.6.size.sub"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "View",
+                              "props": {
+                                "key": "o2-size-value-row",
+                                "className": "mt-[8px] flex-row items-baseline gap-[4px]"
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o2-size-value",
+                                    "className": "text-[26px] leading-[30px] font-bold text-report-ink tabular-nums"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o2.7.size.value"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o2-size-unit",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-dim"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o2.8.size.unit"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-size-m2",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.9.size.m2"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o2-size-open",
+                                "testID": "report-o2-size-open",
+                                "className": "mt-[10px] min-h-[44px] w-full flex-row items-center justify-center gap-[4px] rounded-full border border-report-button-border bg-report-button px-[8px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_panel",
+                                  "option": "o2",
+                                  "panel": "size"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o2-size-open-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o2.10.size.button"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o2-cost-tile",
+                            "testID": "report-o2-cost-tile",
+                            "className": "flex-1 items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-cost-badge",
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.12.cost.badge"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-cost-label",
+                                "className": "text-center text-[14px] leading-[20px] font-semibold text-report-ink"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.13.cost.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-cost-sub",
+                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.14.cost.sub"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "View",
+                              "props": {
+                                "key": "o2-cost-value-row",
+                                "className": "mt-[8px] flex-row items-baseline gap-[4px]"
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o2-cost-value",
+                                    "className": "text-[26px] leading-[30px] font-bold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o2.15.cost.value"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-cost-rate",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.16.cost.rate"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o2-cost-open",
+                                "testID": "report-o2-cost-open",
+                                "className": "mt-[10px] min-h-[44px] w-full flex-row items-center justify-center gap-[4px] rounded-full border border-report-button-border bg-report-button px-[8px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_panel",
+                                  "option": "o2",
+                                  "panel": "cost"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o2-cost-open-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o2.17.cost.button"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "o2-vars",
+                    "className": "gap-[20px] border-t border-report-outer-border px-[2px] pb-[2px] pt-[16px]"
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "o2-var",
+                        "className": "mb-[4px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft"
+                      },
+                      "children": [
+                        {
+                          "part": "o2.65.var_label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o2-bigger",
+                        "testID": "report-o2-bigger",
+                        "className": "gap-[10px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o2-bigger-q",
+                            "className": "text-[16px] leading-[22px] font-bold text-report-ink",
+                            "role": "header"
+                          },
+                          "children": [
+                            {
+                              "part": "o2.66.bigger.q"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o2-bigger-row",
+                            "className": "flex-row items-center justify-between gap-[8px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o2-bigger-answer",
+                                "className": "flex-1 text-[15px] leading-[22px] font-normal text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o2.67.bigger.answer"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o2-how",
+                                "testID": "report-o2-how",
+                                "className": "min-h-[44px] rounded-full border border-report-button-border bg-report-button px-[18px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_how",
+                                  "option": "o2"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o2-how-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o2.68.bigger.how"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o2-nbr",
+                        "testID": "report-o2-nbr",
+                        "className": "gap-[10px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o2-nbr-q",
+                            "className": "text-[16px] leading-[22px] font-bold text-report-ink",
+                            "role": "header"
+                          },
+                          "children": [
+                            {
+                              "part": "o2.70.nbr.q"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o2-nbr-answer",
+                            "className": "flex-1 text-[15px] leading-[22px] font-normal text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "o2.71.nbr.answer"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o2-nbr-pointer",
+                            "className": "mb-[8px] text-[13px] leading-[18px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "o2.72.nbr.pointer"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "o3",
+                "testID": "report-o3",
+                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]"
+              },
+              "children": [
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "o3-top",
+                    "className": "gap-[12px] pb-[14px]"
+                  },
+                  "children": [
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o3-picture",
+                        "className": "relative h-[240px] overflow-hidden rounded-[14px] bg-report-sky"
+                      },
+                      "children": [
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o3-ground",
+                            "className": "absolute bottom-[0px] left-[0px] right-[0px] h-[48px] bg-report-line"
+                          },
+                          "children": []
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o3-head",
+                            "className": "absolute left-[16px] right-[16px] top-[14px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-label",
+                                "className": "text-[14px] leading-[18px] font-bold uppercase tracking-widest text-report-option-label text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.0.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-title",
+                                "className": "mt-[4px] text-[22px] leading-[28px] font-bold text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal",
+                                "role": "header"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.1.title"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "o3-spec",
+                        "className": "mx-[2px] mt-[2px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft mb-[8px]"
+                      },
+                      "children": [
+                        {
+                          "part": "o3.2.spec_label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o3-tiles",
+                        "className": "mx-[2px] flex-row flex-wrap gap-[10px] px-[2px]"
+                      },
+                      "children": [
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o3-size-tile",
+                            "testID": "report-o3-size-tile",
+                            "className": "flex-1 items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-size-badge",
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.3.size.badge"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-size-label",
+                                "className": "text-center text-[14px] leading-[20px] font-semibold text-report-ink"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.4.size.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-size-sub",
+                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.5.size.sub"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "View",
+                              "props": {
+                                "key": "o3-size-value-row",
+                                "className": "mt-[8px] flex-row items-baseline gap-[4px]"
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o3-size-value",
+                                    "className": "text-[26px] leading-[30px] font-bold text-report-ink tabular-nums"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o3.6.size.value"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o3-size-unit",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-dim"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o3.7.size.unit"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-size-m2",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.8.size.m2"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o3-size-open",
+                                "testID": "report-o3-size-open",
+                                "className": "mt-[10px] min-h-[44px] w-full flex-row items-center justify-center gap-[4px] rounded-full border border-report-button-border bg-report-button px-[8px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_panel",
+                                  "option": "o3",
+                                  "panel": "size"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o3-size-open-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o3.9.size.button"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o3-cost-tile",
+                            "testID": "report-o3-cost-tile",
+                            "className": "flex-1 items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-cost-badge",
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.11.cost.badge"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-cost-label",
+                                "className": "text-center text-[14px] leading-[20px] font-semibold text-report-ink"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.12.cost.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-cost-sub",
+                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.13.cost.sub"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "View",
+                              "props": {
+                                "key": "o3-cost-value-row",
+                                "className": "mt-[8px] flex-row items-baseline gap-[4px]"
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o3-cost-value",
+                                    "className": "text-[26px] leading-[30px] font-bold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o3.14.cost.value"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-cost-rate",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.15.cost.rate"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Button",
+                              "props": {
+                                "key": "o3-cost-open",
+                                "testID": "report-o3-cost-open",
+                                "className": "mt-[10px] min-h-[44px] w-full flex-row items-center justify-center gap-[4px] rounded-full border border-report-button-border bg-report-button px-[8px] h-auto shadow-none opacity-100 active:bg-report-sky",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "expanded": false
+                                },
+                                "onPress": {
+                                  "action": "toggle_panel",
+                                  "option": "o3",
+                                  "panel": "cost"
+                                }
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o3-cost-open-label",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-ink"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o3.16.cost.button"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o3-unit-tile",
+                            "testID": "report-o3-unit-tile",
+                            "className": "mt-[12px] w-full items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-unit-badge",
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.17.unit.badge"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-unit-label",
+                                "className": "text-center text-[14px] leading-[20px] font-semibold text-report-ink"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.18.unit.label"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-unit-sub",
+                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.19.unit.sub"
+                                }
+                              ]
+                            },
+                            {
+                              "component": "View",
+                              "props": {
+                                "key": "o3-unit-value-row",
+                                "className": "mt-[8px] flex-row items-baseline gap-[4px]"
+                              },
+                              "children": [
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o3-unit-value",
+                                    "className": "text-[26px] leading-[30px] font-bold text-report-ink tabular-nums"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o3.20.unit.value"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "component": "Text",
+                                  "props": {
+                                    "key": "o3-unit-unit",
+                                    "className": "text-[13px] leading-[18px] font-semibold text-report-dim"
+                                  },
+                                  "children": [
+                                    {
+                                      "part": "o3.21.unit.unit"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-unit-m2",
+                                "className": "text-[12px] leading-[16px] font-normal text-report-quiet"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.22.unit.m2"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "o3-vars",
+                    "className": "gap-[20px] border-t border-report-outer-border px-[2px] pb-[2px] pt-[16px]"
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "o3-var",
+                        "className": "mb-[4px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft"
+                      },
+                      "children": [
+                        {
+                          "part": "o3.66.var_label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "o3-bigger",
+                        "testID": "report-o3-bigger",
+                        "className": "gap-[10px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "o3-bigger-q",
+                            "className": "text-[16px] leading-[22px] font-bold text-report-ink",
+                            "role": "header"
+                          },
+                          "children": [
+                            {
+                              "part": "o3.67.bigger.q"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "View",
+                          "props": {
+                            "key": "o3-bigger-row",
+                            "className": "flex-row items-center justify-between gap-[8px]"
+                          },
+                          "children": [
+                            {
+                              "component": "Text",
+                              "props": {
+                                "key": "o3-bigger-answer",
+                                "className": "flex-1 text-[15px] leading-[22px] font-normal text-report-ink text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                              },
+                              "children": [
+                                {
+                                  "part": "o3.68.bigger.answer"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "soon",
+                "testID": "report-soon"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "soon-heading",
+                    "className": "mb-[10px] text-[20px] leading-[26px] font-bold text-report-ink",
+                    "role": "header"
+                  },
+                  "children": [
+                    {
+                      "part": "soon.0.heading"
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "soon-list",
+                    "className": "gap-[8px]"
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "soon-item-1",
+                        "className": "text-[16px] leading-[24px] font-normal text-report-muted text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                      },
+                      "children": [
+                        {
+                          "part": "soon.1.items"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "lot",
+                "testID": "report-lot"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "lot-heading",
+                    "className": "mb-[10px] text-[20px] leading-[26px] font-bold text-report-ink",
+                    "role": "header"
+                  },
+                  "children": [
+                    {
+                      "part": "lot.0.heading"
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "lot-box",
+                    "className": "rounded-[14px] bg-report-card px-[24px] py-[4px]"
+                  },
+                  "children": [
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "lot-row-1",
+                        "className": "flex-row justify-between gap-[12px] py-[12px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-l-1",
+                            "className": "flex-1 text-[16px] leading-[24px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.1.row.label"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-v-2",
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.2.row.value"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "lot-row-3",
+                        "className": "flex-row justify-between gap-[12px] border-t border-report-line py-[12px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-l-3",
+                            "className": "flex-1 text-[16px] leading-[24px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.3.row.label"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-v-4",
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.4.row.value"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "lot-row-5",
+                        "className": "flex-row justify-between gap-[12px] border-t border-report-line py-[12px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-l-5",
+                            "className": "flex-1 text-[16px] leading-[24px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.5.row.label"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-v-6",
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.6.row.value"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "lot-row-7",
+                        "className": "flex-row justify-between gap-[12px] border-t border-report-line py-[12px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-l-7",
+                            "className": "flex-1 text-[16px] leading-[24px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.7.row.label"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-v-8",
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.8.row.value"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "lot-row-9",
+                        "className": "flex-row justify-between gap-[12px] border-t border-report-line py-[12px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-l-9",
+                            "className": "flex-1 text-[16px] leading-[24px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.9.row.label"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-v-10",
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.10.row.value"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "lot-row-11",
+                        "className": "flex-row justify-between gap-[12px] border-t border-report-line py-[12px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-l-11",
+                            "className": "flex-1 text-[16px] leading-[24px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.11.row.label"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-v-12",
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.12.row.value"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "lot-row-13",
+                        "className": "flex-row justify-between gap-[12px] border-t border-report-line py-[12px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-l-13",
+                            "className": "flex-1 text-[16px] leading-[24px] font-normal text-report-muted text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.13.row.label"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "lot-row-v-14",
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                          },
+                          "children": [
+                            {
+                              "part": "lot.14.row.value"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "legal",
+                "testID": "report-legal"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "legal-line",
+                    "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                  },
+                  "children": [
+                    {
+                      "part": "legal.0.line"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "footer",
+                "testID": "report-footer",
+                "className": "gap-[8px] border-t border-report-line pt-[16px]"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "footer-sources",
+                    "className": "text-[14px] leading-[20px] font-normal text-report-soft text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                  },
+                  "children": [
+                    {
+                      "part": "footer.0.sources"
+                    }
+                  ]
+                },
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "footer-change",
+                    "className": "text-[14px] leading-[20px] font-normal text-report-soft"
+                  },
+                  "children": [
+                    {
+                      "part": "footer.1.change"
+                    }
+                  ]
+                },
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "footer-copyright",
+                    "className": "text-[14px] leading-[20px] font-normal text-report-soft text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                  },
+                  "children": [
+                    {
+                      "part": "footer.2.copyright"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "sheet": {
+      "component": "View",
+      "props": {
+        "key": "sheet",
+        "testID": "report-sheet",
+        "className": "gap-[12px] px-[16px] pb-[24px] pt-[12px]"
+      },
+      "children": [
+        {
+          "component": "Text",
+          "props": {
+            "key": "sheet-title",
+            "className": "mt-[4px] text-[18px] leading-[24px] font-bold text-report-ink",
+            "role": "header"
+          },
+          "children": [
+            {
+              "part": "sheet.0.title"
+            }
+          ]
+        },
+        {
+          "component": "Text",
+          "props": {
+            "key": "sheet-body",
+            "className": "text-[14px] leading-[20px] font-normal text-report-dim"
+          },
+          "children": [
+            {
+              "part": "sheet.1.body"
+            }
+          ]
+        },
+        {
+          "component": "View",
+          "props": {
+            "key": "sheet-record",
+            "className": "flex-row justify-between gap-[12px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] py-[12px]"
+          },
+          "children": [
+            {
+              "component": "Text",
+              "props": {
+                "key": "sheet-record-label",
+                "className": "text-[14px] leading-[20px] font-normal text-report-quiet"
+              },
+              "children": [
+                {
+                  "part": "sheet.2.record.label"
+                }
+              ]
+            },
+            {
+              "component": "Text",
+              "props": {
+                "key": "sheet-record-value",
+                "className": "text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums"
+              },
+              "children": [
+                {
+                  "part": "sheet.3.record.value"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "component": "Text",
+          "props": {
+            "key": "sheet-input-label",
+            "className": "text-[14px] leading-[20px] font-semibold text-report-ink"
+          },
+          "children": [
+            {
+              "part": "sheet.4.input.label"
+            }
+          ]
+        },
+        {
+          "component": "View",
+          "props": {
+            "key": "sheet-input-row",
+            "className": "flex-row gap-[8px]"
+          },
+          "children": [
+            {
+              "component": "Input",
+              "props": {
+                "key": "sheet-input",
+                "testID": "report-sheet-input",
+                "className": "min-h-[44px] flex-1 rounded-[12px] border border-report-button-border bg-report-tile px-[14px] text-[18px] font-semibold text-report-ink",
+                "editable": false,
+                "inputMode": "decimal",
+                "accessibilityState": {
+                  "disabled": true
+                },
+                "placeholder": {
+                  "part": "sheet.5.input.placeholder"
+                }
+              },
+              "children": []
+            },
+            {
+              "component": "View",
+              "props": {
+                "key": "sheet-units",
+                "className": "flex-row overflow-hidden rounded-[12px] border border-report-button-border"
+              },
+              "children": [
+                {
+                  "component": "Button",
+                  "props": {
+                    "key": "sheet-sqft",
+                    "testID": "report-sheet-sqft",
+                    "className": "min-h-[44px] min-w-[56px] bg-report-button h-auto shadow-none opacity-100 active:bg-report-button",
+                    "accessibilityRole": "radio",
+                    "accessibilityState": {
+                      "checked": true,
+                      "disabled": true
+                    },
+                    "disabled": true
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "sheet-sqft-label",
+                        "className": "text-[14px] leading-[20px] font-semibold text-report-ink"
+                      },
+                      "children": [
+                        {
+                          "part": "sheet.6.unit.sqft"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "component": "Button",
+                  "props": {
+                    "key": "sheet-m2",
+                    "testID": "report-sheet-m2",
+                    "className": "min-h-[44px] min-w-[56px] bg-transparent h-auto shadow-none opacity-100 active:bg-transparent",
+                    "accessibilityRole": "radio",
+                    "accessibilityState": {
+                      "checked": false,
+                      "disabled": true
+                    },
+                    "disabled": true
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "sheet-m2-label",
+                        "className": "text-[14px] leading-[20px] font-semibold text-report-dim"
+                      },
+                      "children": [
+                        {
+                          "part": "sheet.7.unit.m2"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "component": "Text",
+          "props": {
+            "key": "sheet-note",
+            "className": "text-[13px] leading-[20px] font-normal text-report-quiet"
+          },
+          "children": [
+            {
+              "part": "sheet.9.note"
+            }
+          ]
+        },
+        {
+          "component": "Button",
+          "props": {
+            "key": "sheet-submit",
+            "testID": "report-sheet-submit",
+            "className": "min-h-[44px] rounded-[12px] bg-report-amber h-auto shadow-none opacity-100 active:bg-report-amber",
+            "accessibilityRole": "button",
+            "accessibilityState": {
+              "disabled": true
+            },
+            "disabled": true
+          },
+          "children": [
+            {
+              "component": "Text",
+              "props": {
+                "key": "sheet-submit-label",
+                "className": "text-[16px] leading-[24px] font-bold text-report-page"
+              },
+              "children": [
+                {
+                  "part": "sheet.10.submit"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "component": "Button",
+          "props": {
+            "key": "sheet-cancel",
+            "testID": "report-sheet-cancel",
+            "className": "min-h-[44px] rounded-[12px] bg-transparent h-auto shadow-none opacity-100 active:bg-transparent",
+            "accessibilityRole": "button",
+            "onPress": {
+              "action": "close_sheet"
+            }
+          },
+          "children": [
+            {
+              "component": "Text",
+              "props": {
+                "key": "sheet-cancel-label",
+                "className": "text-[15px] leading-[20px] font-semibold text-report-dim"
+              },
+              "children": [
+                {
+                  "part": "sheet.11.cancel"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

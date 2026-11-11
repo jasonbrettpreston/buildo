@@ -1,0 +1,31 @@
+{
+  "harness": "MF-48 mobile props golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b.2",
+  "surface": "mobile_parcel_detail",
+  "state": "miss",
+  "target": "mobile",
+  "lifecycle": "miss",
+  "props": {
+    "component": "View",
+    "props": {
+      "key": "report-lifecycle",
+      "testID": "report-miss",
+      "className": "flex-1 items-center justify-center gap-[12px] bg-report-page px-[16px] py-[56px]"
+    },
+    "children": [
+      {
+        "component": "Text",
+        "props": {
+          "key": "message",
+          "className": "text-center text-[16px] leading-[24px] font-normal text-report-muted",
+          "accessibilityRole": "text"
+        },
+        "children": [
+          {
+            "content": "states.lifecycle.miss"
+          }
+        ]
+      }
+    ]
+  }
+}

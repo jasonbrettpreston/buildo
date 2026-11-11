@@ -31,7 +31,12 @@ describe('FE-32 (a) the contract kind is declared on both sides', () => {
     const c = rj('scripts/surfaces/_schema/binding-sources.json').sources.contract;
     expect([c.register, c.resolver, typeof c.file, c.file === null]).toEqual(['FE-32', 'contract_projection', 'string', false]);
     // MF-35 (dated 2026-11-10; P35-D14 a): ref_kinds gains derived, a declared per-surface deviation (not a binding source), after content and contract.
-    expect(rj('scripts/surfaces/_schema/bindings.json').ref_kinds).toEqual(['content', 'contract', 'derived']);
+    // MF-48 (dated 2026-11-11; D-4 a): ref_kinds gains part (a part of MF-57's page view), after the first three, kept in order.
+    expect(rj('scripts/surfaces/_schema/bindings.json').ref_kinds).toEqual(['content', 'contract', 'derived', 'part']);
+    // MF-48 OUTPUT fold RG R2: non_display_keys is ONE list for every platform (a key here is never judged by SV-SBIND); MF-48 added exactly these three
+    // at the end, so any further addition needs a dated edit of this pin.
+    const nd = rj('scripts/surfaces/_schema/bindings.json').non_display_keys as string[];
+    expect([nd.length, nd.slice(-3)]).toEqual([50, ['option', 'panel', 'pressBehavior']]);
   });
 });
 

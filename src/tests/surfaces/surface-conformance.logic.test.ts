@@ -183,6 +183,20 @@ export const bindingsProblems = ({ b, exists, descriptor, policy, rootsTexts, co
   }
   return out;
 };
+/** MF-48 (dated 2026-11-11; operator "MF-35 a" amended by MF-48 D-2 a for the render half only): every module a promoted entry owns carries exactly
+ * the entry's one archetype, except the ONE shared mobile renderer (RENDER_HALF), which lists every archetype it renders and must list its owner's. */
+export const RENDER_HALF = 'mobile/src/components/surfaces/SurfaceRenderer.tsx';
+export const archetypeProblems = (b: Json, archOf: (id: string) => string | undefined): string[] => {
+  const out: string[] = [];
+  for (const id of b.promoted_entries as string[]) {
+    const owned = (b.modules as Json[]).filter((m) => m.owner === id);
+    const want = archOf(id);
+    const arch = [...new Set<string>(owned.filter((m) => m.path !== RENDER_HALF).flatMap((m) => m.archetypes))];
+    if (JSON.stringify(arch) !== JSON.stringify([want])) out.push(`C-3 ${id}: owned modules carry ${JSON.stringify(arch)}, the entry is ${String(want)}`);
+    for (const m of owned.filter((x) => x.path === RENDER_HALF)) if (!m.archetypes.includes(want)) out.push(`C-3 ${m.path}: the render half does not list its owner's archetype ${String(want)}`);
+  }
+  return out;
+};
 /** C-4: a converted surface renders through bindings only, so it owns no component (R-13). */
 export const handProblems = (converted: Json[]): string[] => converted.flatMap((d) => (d.identity.owns?.components ?? []).map((c: string) => `C-4 ${d.identity.id}: owns ${c}`));
 /** C-5: the vendored manifest exists, has its shape, and equals the vendor dir both directions with sha256. */
@@ -317,10 +331,20 @@ describe('C-3 bindings.json integrity', () => {
   const rootsTexts = ['src/tests/surface-registry.infra.test.ts', 'scripts/violations/generate-surface-registry.mjs'].map((p) => fs.readFileSync(path.join(REPO, p), 'utf8'));
   const real: C3In = { b: B, exists: (p) => fs.existsSync(path.join(REPO, p)), descriptor: realDescriptor, policy: POLICY, rootsTexts, converted: B_CONVERTED };
   it('MF-35 OUTPUT fold MEDIUM 3 (operator "MF-35 a"): each promoted entry carries the one archetype of the modules it owns', () => {
-    for (const id of B.promoted_entries as string[]) {
-      const arch = [...new Set<string>(B.modules.filter((m: Json) => m.owner === id).flatMap((m: Json) => m.archetypes))];
-      expect([id, arch]).toEqual([id, [(DESCRIPTORS.get(id) as Json).identity.archetype]]);
-    }
+    // MF-48 (dated 2026-11-11; D-2 a, Spec 126 §11b.2 dated note 2026-11-11): amended for the render half only (archetypeProblems above). The
+    // shared mobile renderer lists every archetype it renders, its owner's among them; every other owned module still carries exactly the owner's one.
+    expect(archetypeProblems(B, (id) => (DESCRIPTORS.get(id) as Json | undefined)?.identity?.archetype)).toEqual([]);
+    expect(B.modules.find((m: Json) => m.path === RENDER_HALF).archetypes).toEqual(['SEARCH', 'REPORT']);
+  });
+  it('MF-48 RED (in memory): the props half listing a second archetype, the render half without its owner\'s archetype, and a second render half all fail', () => {
+    const arch = (id: string): string | undefined => (DESCRIPTORS.get(id) as Json | undefined)?.identity?.archetype;
+    const edit = (f: (ms: Json[]) => void): Json => { const b = structuredClone(B); f(b.modules); return b; };
+    expect(archetypeProblems(edit((ms) => { ms.find((m) => m.path === 'mobile/src/components/surfaces/SearchBinding.tsx')!.archetypes = ['SEARCH', 'REPORT']; }), arch))
+      .toEqual(['C-3 shared_mobile_surface_binding: owned modules carry ["SEARCH","REPORT"], the entry is SEARCH']);
+    expect(archetypeProblems(edit((ms) => { ms.find((m) => m.path === RENDER_HALF)!.archetypes = ['REPORT']; }), arch))
+      .toEqual(['C-3 mobile/src/components/surfaces/SurfaceRenderer.tsx: the render half does not list its owner\'s archetype SEARCH']);
+    expect(archetypeProblems(edit((ms) => { ms.find((m) => m.path.endsWith('ReportBinding.tsx'))!.archetypes = ['REPORT', 'SEARCH']; }), arch))
+      .toEqual(['C-3 binding_mobile_report: owned modules carry ["REPORT","SEARCH"], the entry is REPORT']);
   });
   it('the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid', () => {
     expect(shapeProblems(REPO, 'bindings', B)).toEqual([]);
@@ -328,7 +352,8 @@ describe('C-3 bindings.json integrity', () => {
     console.log(`C-3: ${B.modules.length} modules`);
     // MF-35 (dated 2026-11-10): + the two mobile modules, their promoted entry shared_mobile_surface_binding and the search screen mount.
     // MF-44 (dated 2026-11-11; Spec 126 §11b.5): + the web SEARCH module, its promoted entry binding_web_search and the four web search mounts.
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([5, 4, 14]); // MF-40: +5 mounts (the placements page, client mount, error boundary)
+    // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([7, 5, 14]); // MF-40: +5 mounts (the placements page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -434,7 +459,8 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     for (const a of ARCHETYPES) { const d = convert(a); expect([a, v(d), unresearchedCount(d)]).toEqual([a, [], 0]); }
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
-    expect(all.length).toBe(157); // MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    // MF-48 (dated 2026-11-11; D-2 a): +1 promoted binding entry (binding_mobile_report).
+    expect(all.length).toBe(158); // MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
@@ -656,8 +682,12 @@ describe('C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-
 // mapping.mobile.<archetype> and whose values are identifiers imported from the vendored Reusables (the vendor dir), React Native core or
 // react-native-safe-area-context (the layout parts plan v2 §2.2 names); no intrinsic tag, no createElement/jsx call, no other JSX tag.
 const MOBILE_PARTS = ['react-native', 'react-native-safe-area-context'];
-const fromVendorOrParts = (spec: string): boolean => spec.startsWith('@/vendor/rnr/') || MOBILE_PARTS.includes(spec);
-export const mobileMappingProblems = (text: string, file: string, allowed: string[]): string[] => {
+// MF-48 (dated 2026-11-11; D-3 a, Spec 126 §11b.4 dated note 2026-11-11): the C-8m HOST LIST. A listed host module's COMPONENTS table equals
+// mapping.mobile.<archetype>_HOST, and its values may also come from the packages listed for it here: the app's existing bottom sheet and the one
+// shared renderer. Any other package still fails, and no other module may take a part from them.
+export const MOBILE_HOSTS: Record<string, string[]> = { 'mobile/src/components/surfaces/ReportPageHost.tsx': ['@gorhom/bottom-sheet', '@/components/surfaces/SurfaceRenderer'] };
+const fromVendorOrParts = (spec: string, extra: string[] = []): boolean => spec.startsWith('@/vendor/rnr/') || MOBILE_PARTS.includes(spec) || extra.includes(spec);
+export const mobileMappingProblems = (text: string, file: string, allowed: string[], hostParts: string[] = []): string[] => {
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const out: string[] = [];
   const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
@@ -686,7 +716,7 @@ export const mobileMappingProblems = (text: string, file: string, allowed: strin
       const name = p.name && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) ? p.name.text : '?';
       keys.push(name);
       const value = ts.isShorthandPropertyAssignment(p) ? p.name.text : ts.isPropertyAssignment(p) && ts.isIdentifier(p.initializer) ? p.initializer.text : undefined;
-      if (value === undefined || !fromVendorOrParts(fromSpec.get(value) ?? '')) out.push(`C-8m ${file}:${at(p)}: COMPONENTS.${name} is not an imported library part`);
+      if (value === undefined || !fromVendorOrParts(fromSpec.get(value) ?? '', hostParts)) out.push(`C-8m ${file}:${at(p)}: COMPONENTS.${name} is not an imported library part`);
     }
     if (JSON.stringify([...keys].sort()) !== JSON.stringify([...allowed].sort())) out.push(`C-8m ${file}: COMPONENTS keys ${JSON.stringify(keys)} differ from mapping.mobile ${JSON.stringify(allowed)}`);
   }
@@ -712,12 +742,18 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
   const mods = B.modules.filter((m: Json) => m.platform === 'mobile');
   it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile.SEARCH; no FlashList', () => {
     console.log(`C-8m: ${mods.length} mobile modules`);
-    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx']);
+    // MF-48 (dated 2026-11-11): + ReportBinding.tsx (no JSX) and the host ReportPageHost.tsx (its own table, mapping.mobile.REPORT_HOST, host list).
+    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']);
     for (const m of mods) {
-      const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[a] ?? []))];
-      expect([m.path, mobileMappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowed)]).toEqual([m.path, []]);
+      const host = MOBILE_HOSTS[m.path];
+      const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[host ? `${a}_HOST` : a] ?? []))];
+      expect([m.path, mobileMappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowed, host)]).toEqual([m.path, []]);
     }
+    expect(Object.keys(MOBILE_HOSTS).every((p) => mods.some((m: Json) => m.path === p))).toBe(true);
     expect(B.mapping.mobile.SEARCH).not.toContain('FlashList');
+    // MF-48 OUTPUT fold RG R5: the renderer's REPORT list is a subset of its SEARCH parts (so its COMPONENTS table is unchanged), and no FlashList.
+    expect((B.mapping.mobile.REPORT as string[]).filter((c) => !B.mapping.mobile.SEARCH.includes(c))).toEqual([]);
+    expect(B.mapping.mobile.REPORT).not.toContain('FlashList');
   });
   it('every component a converted mobile golden names is in mapping.mobile for its archetype', () => {
     const conv = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json')).converted as string[];
@@ -732,6 +768,19 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
       }
     }
     expect(n).toBeGreaterThan(0);
+  });
+  it('MF-48 RED (in memory): the host list admits only its listed packages, and only for the listed host', () => {
+    const host = MOBILE_HOSTS['mobile/src/components/surfaces/ReportPageHost.tsx'] as string[];
+    const real = fs.readFileSync(path.join(REPO, 'mobile/src/components/surfaces/ReportPageHost.tsx'), 'utf8');
+    const allowed = B.mapping.mobile.REPORT_HOST as string[];
+    expect(mobileMappingProblems(real, 'h.tsx', allowed, host)).toEqual([]);
+    const other = real.replace("from '@gorhom/bottom-sheet';", "from 'react-native-modal';");
+    expect(mobileMappingProblems(other, 'h.tsx', allowed, host)).toEqual([
+      'C-8m h.tsx:18: COMPONENTS.BottomSheet is not an imported library part',
+      'C-8m h.tsx:18: COMPONENTS.BottomSheetView is not an imported library part',
+      'C-8m h.tsx:18: COMPONENTS.BottomSheetBackdrop is not an imported library part',
+    ]);
+    expect(mobileMappingProblems(real, 'h.tsx', allowed).filter((l) => l.includes('is not an imported library part')).length).toBe(4);
   });
   it('RED: a hand-built Row, an intrinsic <view>, a fragment, createElement, a table entry from a hand-built file, a table missing a mapped key', () => {
     const src = [

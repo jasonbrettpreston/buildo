@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **82 surfaces, 69 contracts and 6 jobs** in it today.
+There are **83 surfaces, 69 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 82 |
+| SURFACE | 83 |
 | CONTRACT | 69 |
 | JOB | 6 |
-| **Total** | **157** |
+| **Total** | **158** |
 
 ### 2.1 By archetype
 
@@ -222,7 +222,7 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `LIST` | SURFACE | 10 | 6 | 2 | 18 |
 | `MUTATION` | CONTRACT | 20 | 5 | 0 | 25 |
 | `QUERY` | CONTRACT | 33 | 2 | 0 | 35 |
-| `REPORT` | SURFACE | 2 | 3 | 0 | 5 |
+| `REPORT` | SURFACE | 2 | 4 | 0 | 6 |
 | `SCHEDULED` | JOB | 6 | 0 | 0 | 6 |
 | `SEARCH` | SURFACE | 3 | 2 | 1 | 6 |
 | `SHELL` | SURFACE | 6 | 0 | 0 | 6 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**20 of 157 rows fully researched · 137 still open · 438 unresearched fields in total.**
+**21 of 158 rows fully researched · 137 still open · 438 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
-| `mobile-product.json` | 38 | 8 | 30 | 63 |
+| `mobile-product.json` | 39 | 9 | 30 | 63 |
 | `web-product.json` | 13 | 3 | 10 | 89 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 16 | 8 | 8 | 15 |
 | `contracts.json` | 69 | 1 | 68 | 166 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **157** | **20** | **137** | **438** |
+| **total** | **158** | **21** | **137** | **438** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -265,7 +265,7 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | Status | Count | Meaning |
 |---|---:|---|
 | exists | 129 | the code is in the tree today |
-| new | 21 | specified, not built |
+| new | 22 | specified, not built |
 | generated | 7 | will be rendered from descriptors, not hand-written |
 
 ---
@@ -278,9 +278,9 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 |---|---|---:|---:|---:|---|
 | **A** | `parcel_product` | 11 | 8 (73%) | 9 | yes |
 | **B** | `parcel_admin` | 24 | 8 (33%) | 19 | yes |
-| **C** | `platform_shared` | 76 | 4 (5%) | 43 | yes |
+| **C** | `platform_shared` | 77 | 5 (6%) | 43 | yes |
 | **D** | `estate_other` | 46 | 0 (0%) | 40 | **no** — inventory + seam only (R-03) |
-| | **total** | **157** | **20** | | |
+| | **total** | **158** | **21** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -365,7 +365,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-014`](#s-014) | surface | `admin_role_matrix` | `REPORT` | `F09` surface-registry-drift | 2093 | 100% | [detail](#s-014) |
 | [`S-016`](#s-016) | surface | `admin_surface_registry` | `LIST` | `F09` surface-registry-drift | 2093 | 97% | [detail](#s-016) |
 
-**§C `platform_shared` (76)**
+**§C `platform_shared` (77)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -410,6 +410,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-049`](#s-049) | surface | `shell_web_root` | `SHELL` | `F14` navigation-shells | 3143 | 91% | [detail](#s-049) |
 | [`S-077`](#s-077) | surface | `binding_web_form` | `FORM` | `F14` navigation-shells | 3144 | 100% | [detail](#s-077) |
 | [`S-078`](#s-078) | surface | `binding_web_list` | `LIST` | `F14` navigation-shells | 3144 | 100% | [detail](#s-078) |
+| [`S-083`](#s-083) | surface | `binding_mobile_report` | `REPORT` | `F14` navigation-shells | 3145 | 100% | [detail](#s-083) |
 | [`S-082`](#s-082) | surface | `binding_web_search` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-082) |
 | [`S-079`](#s-079) | surface | `shared_mobile_surface_binding` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-079) |
 | [`C-027`](#c-027) | contract | `contract_products` | `QUERY` | `F15` user-profile-settings | 3152 | 88% | [detail](#c-027) |
@@ -520,7 +521,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F11** onboarding | `platform_shared` | [`C-026`](#c-026) · [`S-028`](#s-028) · [`S-029`](#s-029) · [`S-030`](#s-030) · [`S-031`](#s-031) · [`S-032`](#s-032) · [`S-033`](#s-033) · [`S-034`](#s-034) · [`S-035`](#s-035) · [`S-048`](#s-048) | 1 | 2 | 10 descriptor(s), 1 contract(s), and would orphan 1 table(s): `trade_suppliers` |
 | **F12** subscription-billing | `platform_shared` | [`C-020`](#c-020) · [`C-021`](#c-021) · [`C-022`](#c-022) · [`C-030`](#c-030) · [`C-031`](#c-031) · [`C-032`](#c-032) · [`C-038`](#c-038) · [`S-043`](#s-043) · [`S-044`](#s-044) · [`S-051`](#s-051) · [`S-052`](#s-052) · [`S-053`](#s-053) | 7 | 8 | 12 descriptor(s), 7 contract(s), and would orphan 1 table(s): `subscribe_nonces` |
 | **F13** notifications | `platform_shared` | [`C-006`](#c-006) · [`C-007`](#c-007) · [`C-023`](#c-023) · [`C-024`](#c-024) · [`C-025`](#c-025) · [`S-041`](#s-041) · [`S-022`](#s-022) | 5 | 6 | 7 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
-| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) · [`S-082`](#s-082) | 0 | 3 | 8 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) · [`S-083`](#s-083) · [`S-082`](#s-082) | 0 | 3 | 9 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F15** user-profile-settings | `platform_shared` | [`C-027`](#c-027) · [`C-034`](#c-034) · [`C-035`](#c-035) · [`C-036`](#c-036) · [`C-037`](#c-037) · [`S-036`](#s-036) | 5 | 3 | 6 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
 | **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 11 table(s): `trade_configurations` · `trade_sqft_rates` · `data_quality_snapshots` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
 | **F17** tracked-lots | `parcel_product` | [`C-062`](#c-062) · [`S-072`](#s-072) | 1 | 3 | 2 descriptor(s), 1 contract(s), and would orphan 1 table(s): `user_tracked_lots` |
@@ -3167,7 +3168,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ Report §1.1 row 17 and §5 — the RECOMMENDED PILOT surface, to land at /admin/surfaces. Its other inputs are the SURFACE + CONTRACT + JOB descriptor files, which are not DB tables and do not exist in the tree yet (VERIFIED: no surfaces/, contracts/ or jobs/ directory at the repo root). Measured defect it makes visible: the census headline finding, /api/leads/view — a live metered route with zero production callers — would have been a red row on day one instead of months of silence. Per AQ9 the usage column renders 'not_yet_metered' until usage_events exists, never a zero. DESIGNED, NOT MEASURED — every category on this row is a design choice grounded in a spec §, not an observation of code. THREE DECISIONS THIS ROW COULD NOT TAKE: (1) `status` — the task asked for `status: "designed"`, which is not in the closed set {exists, new, generated} (surface.schema.json properties.status; generate-surface-registry.mjs:182 refuses anything else). Per the research brief §4 rule 1 a value the menu lacks is an escalation, never a per-row invention, so the row keeps `new` ("Specified, not built. Nothing is measured.") and the gap is filed here. (2) `inputs.contract_ref` is EMPTY although the surface calls a designed contract: generate-surface-registry.mjs:195 refuses a contract_ref entry that is neither a census contract path nor a census id, so the designed `GET /api/admin/surfaces` is recorded in evidence.contracts instead. A designed surface therefore renders as a zero-out-degree node in the very fan-out graph this estate is building. (3) `identity.route` is set only because Spec 126 §2.2.2 fixes /admin/surfaces by name.
 
-### §C `platform_shared` — shared by both products, owned by neither (76)
+### §C `platform_shared` — shared by both products, owned by neither (77)
 
 Auth, the user profile, the subscription and Stripe hand-off, entitlements, notifications, and the navigation shells. Changing one of these changes **both** products, which is exactly why it is its own scope rather than being filed under whichever product noticed it first.
 
@@ -6179,6 +6180,76 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ MF-37 (P42-D9 a, batch C-3).
 
+<a id="s-083"></a>
+
+###### `S-083` `binding_mobile_report`
+
+**Programme.** `S-083` · scope `platform_shared` · feature `F14` · build order 3145 · batch `B2` · review `unreviewed` — Shared rendering infrastructure: the binding every mobile REPORT surface renders through.
+
+**What it is.** The mobile REPORT binding: ReportBinding.tsx maps a v21 report page view (MF-57 pageViewOf) and the screen-local UI state to props trees (part refs only), and ReportPageHost.tsx holds that UI state and the existing bottom sheet and renders the trees through the one shared renderer (SurfaceRenderer.tsx, owned by shared_mobile_surface_binding). It holds no display text of its own.
+
+**What it reads and writes.** It reads nothing itself: the screen passes the page view (built and checked on the server by MF-57 buildPage / pageViewOf; Stage B, after MB-44) and the lifecycle content strings.
+
+**Under Spec 126.** **PROMOTED BINDING ENTRY** (MF-48 D-2 a, operator 2026-11-11 "except all recommendations"): a platform_shared census entry that owns the REPORT binding modules, so R-13 totality holds while the report surface owns no component.
+
+**kind** SURFACE · **archetype** `REPORT` · **platforms** `mobile` · **status** new · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (Its consumer is the MaxBLD report screen behind the parcel_tool gate (MF-49); each consumer declares its own guard.) · role **shared**
+
+**Calls.** —
+
+**Components owned.** `mobile/src/components/surfaces/ReportBinding.tsx` · `mobile/src/components/surfaces/ReportPageHost.tsx`
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-48/plan.v2.md` · `~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md` |
+| `contracts` | — |
+| `tables` | — |
+| `gate` | — |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.7 — the report lifecycle states (dated note 2026-11-09 item (1))` |
+| `emits` | — |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 dated note 2026-11-11 — the mobile REPORT binding and the part ref` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `props` | The page view, the lifecycle state and the content strings arrive as props from the screen. — `mobile/src/components/surfaces/ReportBinding.tsx`, `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| 3 | `outputs` | `none` | A binding writes nothing; the sheet input is read-only until MF-19. — `mobile/src/components/surfaces/ReportBinding.tsx`, `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| 4 | `state` | `none` | No store: the open panels, How? and the sheet are screen-local UI state (useState in the host), never persisted (Spec 99). — `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| 5 | `staleness` | `none` | It renders what it is given. — `mobile/src/components/surfaces/ReportBinding.tsx`, `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | Errors belong to the consuming surface; the binding throws on an unknown section kind or an unplaced part, and the renderer on an unresolved part ref, so a gap is loud. — `mobile/src/components/surfaces/ReportBinding.tsx`, `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| 13 | `emits` | `none` | Rendering emits nothing. — `mobile/src/components/surfaces/ReportBinding.tsx`, `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| 14 | `offers` | `none` | It renders the ad sections the server placed (their Sponsored disclosure as sent); it decides no placement. — `mobile/src/components/surfaces/ReportBinding.tsx — the ad section case` |
+| 15 | `metering` | `none` | Rendering is not a metered product action. — `mobile/src/components/surfaces/ReportBinding.tsx`, `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| 16 | `config` | `none` | No tunable of its own: the binding consumes no registered logic variable; the layout row (report-layout.json) is read by the server projection, not here. — `mobile/src/components/surfaces/ReportBinding.tsx — no config read` |
+| 17 | `sharing` | `shared` | Every mobile REPORT surface (the parcel report first). — `scripts/surfaces/_schema/bindings.json — modules` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `mobile/src/components/surfaces/ReportBinding.tsx` · `mobile/src/components/surfaces/ReportPageHost.tsx`
+
+> ⚠️ MF-48 Stage A (D-1 a: synthetic goldens, mounted nowhere; D-2 a: this owner entry; the shared renderer lists SEARCH and REPORT). Archetype REPORT, the archetype of the modules it owns.
+
 <a id="s-082"></a>
 
 ###### `S-082` `binding_web_search`
@@ -8960,7 +9031,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 14 of 69 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 14 of 71 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -9000,4 +9071,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 157 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 158 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

@@ -1,0 +1,43 @@
+MF-48 Stage A red evidence (2026-11-11; base d618d86e8 + prereg 7e1ba7e9d + notes fbce5fdce; worktree ~/Buildo-wt-mf48).
+
+== 1. Mobile tests against the BASE code (ReportBinding.tsx, ReportPageHost.tsx, reportPage.ts moved aside; SurfaceRenderer.tsx from HEAD):
+   npx jest __tests__/reportScreens.golden.test.ts __tests__/reportPage.behaviour.test.tsx
+FAIL __tests__/reportScreens.golden.test.ts
+FAIL __tests__/reportPage.behaviour.test.tsx
+Test Suites: 2 failed, 2 total
+Tests:       0 total
+   (both suites fail to load: Cannot find module '@/components/surfaces/ReportBinding' — no binding.)
+
+== 2. Mobile tests with the binding but bindings.json not yet extended and the opener's other label unplaced (first green attempt):
+   T1 totality and T2 threw 'ReportBinding: part o1.9.size.button of a option section is not placed' (fixed: the open opener marks its closed label);
+   T3 reported 126 'raw string at .../part' and '.../onPress/option|panel' lines (fixed: ref_kinds + part, non_display_keys + option, panel).
+
+== 3. Root locks after the bindings.json edit, before the lock edits and the census entry:
+   npx vitest run src/tests/surfaces/surface-conformance.logic.test.ts src/tests/surfaces/contract-binding.logic.test.ts
+   × FE-32 (a) the contract kind is declared on both sides > binding-sources.json: contract, register FE-32, resolver contract_projection, file set; bindings.json ref_kinds has contract 5ms
+   × C-3 bindings.json integrity > MF-35 OUTPUT fold MEDIUM 3 (operator "MF-35 a"): each promoted entry carries the one archetype of the modules it owns 5ms
+   × C-3 bindings.json integrity > the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid 2ms
+   × C-3 bindings.json integrity > RED (in memory): a COMPONENT_ROOTS copy changed, and the vendor glob absent from the policy 1ms
+   × C-8m the mobile closed table (MF-35; every element of a mobile binding module comes through COMPONENTS = mapping.mobile) > the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile.SEARCH; no FlashList 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [ 'content', 'contract', …(2) ] to deeply equal [ 'content', 'contract', 'derived' ]
+AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]
+AssertionError: expected [ …(3) ] to deeply equal []
+AssertionError: expected [ …(4) ] to deeply equal [ Array(1) ]
+AssertionError: expected [ …(4) ] to deeply equal [ …(2) ]
+      Tests  5 failed | 47 passed (52)
+
+== 4. Lane finding L-1: listing @gorhom/bottom-sheet in bindings.json libraries.mobile (in memory, boundaryProblems):
+L1-PROBE [
+ "C-2 mobile/app/(auth)/sign-in.tsx:24: library @gorhom/bottom-sheet (import) outside a binding module",
+ "C-2 mobile/app/(auth)/sign-up.tsx:8: library @gorhom/bottom-sheet (import) outside a binding module",
+ "C-2 mobile/app/(onboarding)/profession.tsx:13: library @gorhom/bottom-sheet (import) outside a binding module",
+ "C-2 mobile/src/components/auth/AccountLinkingSheet.tsx:12: library @gorhom/bottom-sheet (import) outside a binding module",
+ "C-2 mobile/src/components/feed/LeadFilterSheet.tsx:10: library @gorhom/bottom-sheet (import) outside a binding module",
+ "C-2 mobile/src/components/feed/SearchPermitsSheet.tsx:6: library @gorhom/bottom-sheet (import) outside a binding module",
+ "C-2 mobile/src/components/shared/NotificationPermissionModal.tsx:16: library @gorhom/bottom-sheet (import) outside a binding module"
+]
+
+== 5. Planted RED cases kept in the committed tests (each asserted, all pass): reportScreens.golden.test.ts T2 RED, T3 RED, T3 part-ref throws,
+   T4 RED, T5 throws; reportPage.behaviour.test.tsx unknown panel / unknown action; report-mobile.logic.test.ts hand-edited view, SV-SBIND raw string
+   and unknown kind; surface-conformance.logic.test.ts 'MF-48 RED' render-half plants and the C-8m host-list plant.

@@ -1,0 +1,120 @@
+// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 dated note 2026-11-11 (MF-48: the mobile REPORT binding),
+//            §11b.1 dated note 2026-11-11 (Button and a plain View, no new component kind), approved mock v21 (oq "mock v21: APPROVED",
+//            rulings 1 a and 2: the named report-* colours; MF-57 D-E: one muted pending style).
+//
+// MF-48 · the class table of the mobile v21 report page (the MF-35 form: one import-free layout table the binding reads, P35-D11). Every colour
+// is a named report-* key of mobile/tailwind.config.js (the twin of the web --color-report-*); sizes follow the web ReportPage.tsx classes.
+// NativeWind's rem is 14 here, so the 44 px touch target is min-h-[44px] (bindings.json touch_targets.mobile). No value, no text: those are the
+// page view's (the server's) and reach the screen only through part refs.
+
+/** The one muted pending style (MF-57 D-E): appended LAST to a slot's class, so the vendored cn (tailwind-merge) resolves it last-wins. */
+export const REPORT_PENDING = 'text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal';
+
+/** Hex values a React Native prop needs as a value (not a class): the spinner and the sheet chrome. Twins of mobile/tailwind.config.js. */
+export const REPORT_HEX = {
+  amber: '#f59e0b',
+  inner: '#19191d',
+  buttonBorder: '#3e3e48',
+} as const;
+
+export const REPORT_PAGE_LAYOUT = {
+  host: 'flex-1 bg-report-page',
+  scroll: 'flex-1 bg-report-page',
+  column: 'mx-auto w-full max-w-[430px] gap-[24px] px-[16px] pb-[56px] pt-[16px]',
+  lifecycle: 'flex-1 items-center justify-center gap-[12px] bg-report-page px-[16px] py-[56px]',
+  lifecycleText: 'text-center text-[16px] leading-[24px] font-normal text-report-muted',
+  // page top
+  title: 'text-[28px] leading-[34px] font-bold tracking-tight text-report-ink',
+  address: 'text-[18px] leading-[24px] font-semibold text-report-ink -mt-[16px]',
+  // option card
+  option: 'gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]',
+  optionTop: 'gap-[12px] pb-[14px]',
+  picture: 'relative h-[240px] overflow-hidden rounded-[14px] bg-report-sky',
+  ground: 'absolute bottom-[0px] left-[0px] right-[0px] h-[48px] bg-report-line',
+  pictureHead: 'absolute left-[16px] right-[16px] top-[14px]',
+  optionLabel: 'text-[14px] leading-[18px] font-bold uppercase tracking-widest text-report-option-label',
+  optionTitle: 'mt-[4px] text-[22px] leading-[28px] font-bold text-report-ink',
+  tag: 'absolute bottom-[12px] left-[16px] overflow-hidden rounded-full bg-report-sky px-[8px] py-[2px] text-[12px] leading-[18px] font-semibold text-report-ink border border-report-line',
+  caption: 'absolute bottom-[15px] right-[16px] overflow-hidden rounded-[4px] bg-report-chip px-[8px] py-[2px] text-[11px] leading-[16px] font-normal text-report-muted',
+  specLabel: 'mx-[2px] mt-[2px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft mb-[8px]',
+  tiles: 'mx-[2px] flex-row flex-wrap gap-[10px] px-[2px]',
+  tile: 'flex-1 items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]',
+  tileWide: 'mt-[12px] w-full items-center gap-[2px] rounded-[12px] border border-report-tile-border bg-report-tile px-[12px] pb-[12px] pt-[18px]',
+  badge: 'absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim',
+  tileLabel: 'text-center text-[14px] leading-[20px] font-semibold text-report-ink',
+  tileSub: 'text-center text-[12px] leading-[16px] font-normal text-report-quiet',
+  tileValueRow: 'mt-[8px] flex-row items-baseline gap-[4px]',
+  tileValue: 'text-[26px] leading-[30px] font-bold text-report-ink tabular-nums',
+  tileUnitWord: 'text-[13px] leading-[18px] font-semibold text-report-dim', // MF-57 D-J: the unit is its own part, in the smaller v21 unit style
+  tileUnit: 'text-[12px] leading-[16px] font-normal text-report-quiet',
+  pill: 'mt-[10px] min-h-[44px] w-full flex-row items-center justify-center gap-[4px] rounded-full border border-report-button-border bg-report-button px-[8px] h-auto shadow-none opacity-100 active:bg-report-sky',
+  pillOpen: 'bg-report-sky',
+  pillText: 'text-[13px] leading-[18px] font-semibold text-report-ink',
+  count: 'overflow-hidden rounded-full bg-report-amber px-[4px] text-[11px] leading-[18px] font-bold text-report-count-ink h-[18px] min-w-[18px] text-center',
+  // details panels (a plain View, present only while open)
+  panel: 'mx-[2px] rounded-[14px] border border-report-tile-border bg-report-tile px-[16px] pb-[8px] pt-[12px]',
+  panelH: 'my-[4px] text-[14px] leading-[20px] font-semibold text-report-muted',
+  panelP: 'mb-[4px] text-[14px] leading-[20px] font-normal text-report-muted',
+  panelH5: 'mb-2 mt-4 text-[13px] leading-[18px] font-semibold uppercase tracking-wider text-report-soft',
+  panelNotes: 'text-[14px] leading-[20px] font-normal text-report-ink',
+  panelNote: 'mb-[8px] text-[13px] leading-[18px] font-normal text-report-quiet',
+  panelVer: 'mt-[10px] text-[13px] leading-[18px] font-normal text-report-soft',
+  row: 'flex-row justify-between gap-[12px] border-b border-report-line py-[8px]',
+  rowLabel: 'flex-1 text-[14px] leading-[20px] font-normal text-report-muted',
+  rowValue: 'text-right text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums',
+  hide: 'mb-[8px] mt-[12px] min-h-[44px] w-full rounded-[12px] border border-report-line bg-transparent h-auto shadow-none opacity-100 active:bg-report-line',
+  hideText: 'text-[15px] leading-[20px] font-semibold text-report-ink',
+  // the variables box
+  vars: 'gap-[20px] border-t border-report-outer-border px-[2px] pb-[2px] pt-[16px]',
+  varLabel: 'mb-[4px] text-[11px] leading-[14px] font-semibold uppercase tracking-wider text-report-soft',
+  qa: 'gap-[10px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]',
+  qaQ: 'text-[16px] leading-[22px] font-bold text-report-ink',
+  qaRow: 'flex-row items-center justify-between gap-[8px]',
+  qaAnswer: 'flex-1 text-[15px] leading-[22px] font-normal text-report-ink',
+  how: 'min-h-[44px] rounded-full border border-report-button-border bg-report-button px-[18px] h-auto shadow-none opacity-100 active:bg-report-sky',
+  howSteps: 'text-[14px] leading-[20px] font-normal text-report-muted',
+  recent: 'mt-[4px] flex-row items-center justify-between border-t border-report-outer-border pt-[10px]',
+  recentText: 'text-[12px] leading-[16px] font-semibold uppercase tracking-wide text-report-dim',
+  swipe: 'text-[12px] leading-[16px] font-normal text-report-quiet',
+  pointer: 'mb-[8px] text-[13px] leading-[18px] font-normal text-report-quiet',
+  // lot-size box, ad, lists, legal, footer
+  box: 'gap-[10px] rounded-[14px] bg-report-card px-[24px] py-[16px]',
+  boxTitle: 'text-[17px] leading-[24px] font-semibold text-report-ink',
+  boxBody: 'text-[14px] leading-[20px] font-normal text-report-muted',
+  boxButton: 'min-h-[44px] rounded-[12px] border border-report-amber bg-transparent h-auto shadow-none opacity-100 active:bg-report-card',
+  boxButtonText: 'text-[16px] leading-[24px] font-semibold text-report-amber',
+  ad: 'gap-[4px] rounded-[14px] border border-dashed border-report-line px-[24px] py-[16px]',
+  adLabel: 'text-[12px] leading-[16px] font-semibold uppercase tracking-wider text-report-soft',
+  adValue: 'text-[16px] leading-[24px] font-semibold text-report-ink',
+  h2: 'mb-[10px] text-[20px] leading-[26px] font-bold text-report-ink',
+  list: 'gap-[8px]',
+  listItem: 'text-[16px] leading-[24px] font-normal text-report-muted',
+  facts: 'rounded-[14px] bg-report-card px-[24px] py-[4px]',
+  factRow: 'flex-row justify-between gap-[12px] border-t border-report-line py-[12px]',
+  factLabel: 'flex-1 text-[16px] leading-[24px] font-normal text-report-muted',
+  factRowFirst: 'flex-row justify-between gap-[12px] py-[12px]',
+  factValue: 'text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums',
+  legal: 'text-[14px] leading-[20px] font-normal text-report-muted',
+  footer: 'gap-[8px] border-t border-report-line pt-[16px]',
+  footerText: 'text-[14px] leading-[20px] font-normal text-report-soft',
+  // the Add lot size sheet body (the host holds the sheet itself)
+  sheet: 'gap-[12px] px-[16px] pb-[24px] pt-[12px]',
+  sheetTitle: 'mt-[4px] text-[18px] leading-[24px] font-bold text-report-ink',
+  sheetBody: 'text-[14px] leading-[20px] font-normal text-report-dim',
+  record: 'flex-row justify-between gap-[12px] rounded-[12px] border border-report-tile-border bg-report-tile px-[14px] py-[12px]',
+  recordLabel: 'text-[14px] leading-[20px] font-normal text-report-quiet',
+  recordValue: 'text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums',
+  inputLabel: 'text-[14px] leading-[20px] font-semibold text-report-ink',
+  inputRow: 'flex-row gap-[8px]',
+  input: 'min-h-[44px] flex-1 rounded-[12px] border border-report-button-border bg-report-tile px-[14px] text-[18px] font-semibold text-report-ink',
+  units: 'flex-row overflow-hidden rounded-[12px] border border-report-button-border',
+  unitOn: 'min-h-[44px] min-w-[56px] bg-report-button h-auto shadow-none opacity-100 active:bg-report-button',
+  unitOff: 'min-h-[44px] min-w-[56px] bg-transparent h-auto shadow-none opacity-100 active:bg-transparent',
+  unitOnText: 'text-[14px] leading-[20px] font-semibold text-report-ink',
+  unitOffText: 'text-[14px] leading-[20px] font-semibold text-report-dim',
+  sheetNote: 'text-[13px] leading-[20px] font-normal text-report-quiet',
+  submit: 'min-h-[44px] rounded-[12px] bg-report-amber h-auto shadow-none opacity-100 active:bg-report-amber',
+  submitText: 'text-[16px] leading-[24px] font-bold text-report-page',
+  cancel: 'min-h-[44px] rounded-[12px] bg-transparent h-auto shadow-none opacity-100 active:bg-transparent',
+  cancelText: 'text-[15px] leading-[20px] font-semibold text-report-dim',
+} as const;

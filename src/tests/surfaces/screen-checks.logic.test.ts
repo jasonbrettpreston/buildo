@@ -338,7 +338,7 @@ describe('SV-SBIND: content keys, columns, and no display text in goldens', () =
   });
   it('a ref of a kind not in ref_kinds', async () => {
     const fx = fresh(); editGolden(fx, 'STATIC', 'static.web.json', (g) => { g.props.children[0].children = [{ catalogue: 'x' }]; });
-    // MF-35 (dated 2026-11-10): derived joined ref_kinds (P35-D14 a); the plant uses catalogue, still not a ref kind.
+    // MF-35 (dated 2026-11-10): derived joined ref_kinds (P35-D14 a); the plant uses catalogue, still not a ref kind. MF-48 (dated 2026-11-11): part joined too; catalogue is still not one.
     await has(fx, 'SV-SBIND web_landing/static.web.json: unknown binding kind catalogue at /props/children/0/children/0');
   });
   it('a non-string value under a display key (MIN-2)', async () => {

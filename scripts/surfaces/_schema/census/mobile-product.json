@@ -14211,5 +14211,225 @@
         "status": "unreviewed"
       }
     }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "new",
+    "docs": {
+      "purpose": "The mobile REPORT binding: ReportBinding.tsx maps a v21 report page view (MF-57 pageViewOf) and the screen-local UI state to props trees (part refs only), and ReportPageHost.tsx holds that UI state and the existing bottom sheet and renders the trees through the one shared renderer (SurfaceRenderer.tsx, owned by shared_mobile_surface_binding). It holds no display text of its own.",
+      "data_story": "It reads nothing itself: the screen passes the page view (built and checked on the server by MF-57 buildPage / pageViewOf; Stage B, after MB-44) and the lifecycle content strings.",
+      "under_126": "**PROMOTED BINDING ENTRY** (MF-48 D-2 a, operator 2026-11-11 \"except all recommendations\"): a platform_shared census entry that owns the REPORT binding modules, so R-13 totality holds while the report surface owns no component."
+    },
+    "evidence": {
+      "files": [
+        "~/Buildo-scratch/mcfrontend/MF-48/plan.v2.md",
+        "~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md"
+      ],
+      "contracts": [],
+      "tables": [],
+      "gate": [],
+      "states": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.7 — the report lifecycle states (dated note 2026-11-09 item (1))"
+      ],
+      "emits": []
+    },
+    "identity": {
+      "id": "binding_mobile_report",
+      "archetype": "REPORT",
+      "platforms": [
+        "mobile"
+      ],
+      "owns": {
+        "components": [
+          "mobile/src/components/surfaces/ReportBinding.tsx",
+          "mobile/src/components/surfaces/ReportPageHost.tsx"
+        ]
+      },
+      "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+      "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+      "spec_refs": [
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 dated note 2026-11-11 — the mobile REPORT binding and the part ref"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "A binding module has no wire contract of its own: its input is the page view whose shape is the MF-57 page contract (report-page.schema.json) and its output is library parts. A change shows up as a golden or render-smoke failure.",
+        "evidence": [
+          "mobile/__tests__/reportScreens.golden.test.ts — the props goldens equal reportProps(view)",
+          "mobile/__tests__/reportPage.behaviour.test.tsx — the mobile REPORT render smoke (FE-33 mobile case)"
+        ]
+      },
+      "ref": "S-083"
+    },
+    "inputs": {
+      "answer": "props",
+      "why": "The page view, the lifecycle state and the content strings arrive as props from the screen.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ],
+      "contract_ref": [],
+      "query_key": [],
+      "field_whitelist": []
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "A binding writes nothing; the sheet input is read-only until MF-19.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ],
+      "contract_ref": [],
+      "tables": [],
+      "rollback": "n/a"
+    },
+    "state": {
+      "answer": "none",
+      "why": "No store: the open panels, How? and the sheet are screen-local UI state (useState in the host), never persisted (Spec 99).",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "none",
+      "why": "It renders what it is given.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ],
+      "offline": "none"
+    },
+    "guards": {
+      "session": {
+        "answer": "entitled",
+        "why": "Its consumer is the MaxBLD report screen behind the parcel_tool gate (MF-49); each consumer declares its own guard.",
+        "evidence": [
+          "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json — the report surface"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "It renders the report page view the consumer already read; it reads no table itself.",
+        "evidence": [
+          "src/lib/surfaces/report/core.ts — pageViewOf, the server projection"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "detail",
+      "breakpoints": "mobile_first",
+      "export": "none"
+    },
+    "checks": [
+      {
+        "id": "binding_mobile_report_components_owned",
+        "kind": "components_owned",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "The two modules are listed in bindings.json modules and owned by this entry (FE-31 C-3); a module nobody owns is a hand-built component."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "hit",
+        "golden": "none"
+      }
+    ],
+    "errors": {
+      "answer": "none",
+      "why": "Errors belong to the consuming surface; the binding throws on an unknown section kind or an unplaced part, and the renderer on an unresolved part ref, so a gap is loud.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "Rendering emits nothing.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ]
+    },
+    "offers": {
+      "answer": "none",
+      "why": "It renders the ad sections the server placed (their Sponsored disclosure as sent); it decides no placement.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx — the ad section case"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "Rendering is not a metered product action.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable of its own: the binding consumes no registered logic variable; the layout row (report-layout.json) is read by the server projection, not here.",
+      "evidence": [
+        "mobile/src/components/surfaces/ReportBinding.tsx — no config read"
+      ],
+      "logic_variables": [],
+      "retired": []
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "Every mobile REPORT surface (the parcel report first).",
+      "evidence": [
+        "scripts/surfaces/_schema/bindings.json — modules"
+      ],
+      "surfaces": [],
+      "varies_by_surface": "Only the page view and content passed in."
+    },
+    "a11y": {
+      "touch_target_min_px": 44,
+      "labels": "complete",
+      "dark_mode": "hardcoded",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": "none"
+    },
+    "deviations": "none",
+    "limitations": [],
+    "interpretation": "none",
+    "notes": "MF-48 Stage A (D-1 a: synthetic goldens, mounted nowhere; D-2 a: this owner entry; the shared renderer lists SEARCH and REPORT). Archetype REPORT, the archetype of the modules it owns.",
+    "x-draft": {
+      "shard": "mobile-product",
+      "files": [
+        "mobile/src/components/surfaces/ReportBinding.tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ],
+      "role": "shared",
+      "generated": "binding",
+      "net_new_tables": [],
+      "designed": true
+    },
+    "programme": {
+      "scope": "platform_shared",
+      "phase": "B2",
+      "why": "Shared rendering infrastructure: the binding every mobile REPORT surface renders through.",
+      "feature": "F14",
+      "build_order": 3145,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
   }
 ]

@@ -8,6 +8,10 @@
 // It has no layout, style or text of its own. It resolves refs (content, contract paths, derived names), `{text, vars}` templates (a 0 is "0",
 // never dropped) and action data (the screen's callbacks). An unmapped component, icon, content key or action throws: the screen's ErrorBoundary
 // reports it; nothing is skipped silently. React keys come from the tree's `key` props, never from an array index.
+// MF-48 (Spec 126 §11b.2 dated note 2026-11-11, D-2 a and D-4 a): the same renderer also renders REPORT trees (ReportBinding.tsx), whose parts are a
+// subset of this table (bindings.json mapping.mobile.REPORT), so the table is unchanged. A REPORT tree's texts are `part` refs into the page view
+// built by MF-57's core (pageViewOf): this file only looks a ref up (section id, part index, role must match; an ad section's value or
+// disclosure) and throws on anything else. The REPORT actions carry their arguments as data and each has its own case; there is no default.
 import * as React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,8 +35,20 @@ export type SurfaceActions = {
   push: (route: string) => void;
   open_account: () => void;
 };
+/** MF-48: the REPORT callbacks (ReportPageHost.tsx holds the UI state they change). */
+export type ReportActions = {
+  toggle_panel: (option: string, panel: 'size' | 'cost') => void;
+  toggle_how: (option: string) => void;
+  open_sheet: () => void;
+  close_sheet: () => void;
+};
 export type SurfaceTree = { component: string; props: Json; children: unknown[] };
-type Ctx = { content: Record<string, string>; data: { contract: Json; derived: Json }; actions: SurfaceActions };
+/** MF-48: the page view a `part` ref is looked up in (MF-57 pageViewOf; only what the lookup reads). */
+type PageData = { sections: { id: string; ad?: Json; parts: { role: string; text: string }[] }[] };
+type Ctx = { content: Record<string, string>; data: { contract: Json; derived: Json; page?: PageData }; actions: SurfaceActions | ReportActions };
+// OUTPUT fold CR LOW-3: the actions prop is the union of the two sets on purpose; a tree naming an action the screen did not pass fails at run time
+// (the `in` guard in action()), as MF-35's unknown-action plant pins.
+type AllActions = SurfaceActions & ReportActions;
 
 const isObj = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
 const walk = (root: unknown, segs: string[]): unknown => {
@@ -56,6 +72,7 @@ export function resolveValue(v: unknown, ctx: Ctx): unknown {
     if (found === undefined) throw new Error(`SurfaceRenderer: unresolved ref ${JSON.stringify(v)}`);
     return found;
   }
+  if (keys.length === 1 && keys[0] === 'part') return partText(String(v.part), ctx);
   if (keys.every((k) => k === 'text' || k === 'vars') && 'text' in v && 'vars' in v && isObj(v.vars)) {
     const vars = v.vars;
     return String(resolveValue(v.text, ctx)).replace(/\{(\w+)\}/g, (m, name: string) => (Object.hasOwn(vars, name) ? String(resolveValue(vars[name], ctx) ?? '') : m));
@@ -63,20 +80,51 @@ export function resolveValue(v: unknown, ctx: Ctx): unknown {
   return v;
 }
 
+const PART_ID = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const PART_INDEX = /^(0|[1-9][0-9]*)$/;
+const AD_ROLES = ['value', 'disclosure'];
+/** MF-48 · a `part` ref → its text: `<section id>.<part index>.<role>` or `<section id>.ad.<value|disclosure>`. Anything else throws. */
+function partText(ref: string, ctx: Ctx): unknown {
+  const [id = '', at = '', ...rest] = ref.split('.');
+  const role = rest.join('.');
+  const fail = (): never => { throw new Error(`SurfaceRenderer: unresolved ref ${JSON.stringify({ part: ref })}`); };
+  const s = PART_ID.test(id) ? ctx.data.page?.sections.find((x) => x.id === id) : undefined;
+  if (!s) return fail();
+  if (at === 'ad') return s.ad && AD_ROLES.includes(role) && typeof s.ad[role] === 'string' ? s.ad[role] : fail();
+  const p = PART_INDEX.test(at) ? (s.parts as unknown as Record<string, { role: string; text: string } | undefined>)[at] : undefined;
+  return p && p.role === role ? p.text : fail();
+}
+
 const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
-  const name = a.action as keyof SurfaceActions;
+  const name = a.action as keyof AllActions;
   if (!(name in ctx.actions)) throw new Error(`SurfaceRenderer: unknown action "${String(a.action)}"`);
+  const act = ctx.actions as AllActions;
   switch (name) {
     case 'change_input':
-      return (text) => ctx.actions.change_input(String(text));
+      return (text) => act.change_input(String(text));
     case 'set_input':
-      return () => ctx.actions.set_input(String(resolveValue(a.value, ctx)));
+      return () => act.set_input(String(resolveValue(a.value, ctx)));
     case 'select':
-      return () => ctx.actions.select(String(resolveValue(a.parcelId, ctx)));
+      return () => act.select(String(resolveValue(a.parcelId, ctx)));
     case 'push':
-      return () => ctx.actions.push(String(a.route));
-    default:
-      return () => ctx.actions[name as 'retry' | 'open_account']();
+      return () => act.push(String(a.route));
+    case 'retry':
+      return () => act.retry();
+    case 'open_account':
+      return () => act.open_account();
+    case 'toggle_panel':
+      if (a.panel !== 'size' && a.panel !== 'cost') throw new Error(`SurfaceRenderer: unknown panel "${String(a.panel)}"`);
+      return () => act.toggle_panel(String(a.option), a.panel as 'size' | 'cost');
+    case 'toggle_how':
+      return () => act.toggle_how(String(a.option));
+    case 'open_sheet':
+      return () => act.open_sheet();
+    case 'close_sheet':
+      return () => act.close_sheet();
+    default: {
+      const unhandled: never = name;
+      throw new Error(`SurfaceRenderer: no case for action "${String(unhandled)}"`);
+    }
   }
 };
 
@@ -110,6 +158,6 @@ function renderNode(n: SurfaceTree, ctx: Ctx): React.ReactNode {
 }
 
 /** Renders one props tree with the content strings, the bound data and the screen's callbacks. */
-export function SurfaceRenderer({ tree, content, data, actions }: { tree: SurfaceTree; content: Record<string, string>; data: Ctx['data']; actions: SurfaceActions }) {
+export function SurfaceRenderer({ tree, content, data, actions }: { tree: SurfaceTree; content: Record<string, string>; data: Ctx['data']; actions: SurfaceActions | ReportActions }) {
   return renderNode(tree, { content, data, actions });
 }
