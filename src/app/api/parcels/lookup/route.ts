@@ -16,7 +16,11 @@
 // Rate: `parcels-search:${uid}` 60/min on the q path; `parcels-lookup:${uid}` 30/min on parcelId.
 // Response: the WHITELIST (Spec 100 §3.2) — Tier 1 cost menu + headline areas, Tier 2 neighbourhood;
 // NO Tier-3 `groups` (the .strict() boundary parse rejects a leak).
-// Log hygiene: uid + outcome + parcelId + matchType + duration + access + meter — NEVER the raw q (Spec 100 §2.8).
+// Log hygiene: uid + outcome + parcelId + matchType + resolution + map counts + duration + access + meter — NEVER the raw q, the map address,
+//   the pin or the start view (Spec 100 §2.8; MF-53 security L-4).
+// MF-53 (Spec 100 §2.6 / §3.2 dated note 2026-11-11): every response names its `resolution`; `map` (lot outlines, pin, start view, faint
+//   neighbours) is read and sent ONLY for multi_parcel / unlinked on the q path, from the resolver's own seed. It is not metered: no report
+//   is shown (MF-45 fold 12). A map-read failure is a 500 through the catch below, never a silent fallback to the list.
 //
 // Status: 200 ok (hit, candidates, or miss) · 400 bad params · 401 no session · 403 inactive sub
 //   (SUBSCRIPTION_REQUIRED) or monthly limit (REPORT_LIMIT_REACHED) · 429 rate limited · 500 logged+sanitized.
@@ -38,7 +42,8 @@ import {
 import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus, openReport } from '@/lib/entitlements';
 import { logInfo, logWarn } from '@/lib/logger';
 import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
-import { assembleConsumerPayload } from '@/lib/parcels/consumer-lookup';
+import { assembleConsumerPayload, assembleLotMap } from '@/lib/parcels/consumer-lookup';
+import { resolveLotMap } from '@/lib/parcels/lot-map';
 import {
   ConsumerParcelLookupQuerySchema,
   ConsumerParcelLookupResponseSchema,
@@ -86,34 +91,41 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const t0 = Date.now();
   try {
     // Resolution: direct id (candidate click) bypasses address parsing.
-    const resolution = parcelId
-      ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false }
-      : await resolveAddress(q!);
+    const resolved = parcelId
+      ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
+      : await resolveAddress(q!, { classifyUnlinked: true });
+
+    // The map read runs only on the resolver's own seed (never on the parcelId path).
+    const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;
 
     let response: ConsumerParcelLookupResponse = {
-      match: resolution.match,
-      candidates: resolution.candidates,
-      warnings: resolution.truncated ? ['more matches exist — refine the address (e.g. add a unit number)'] : [],
+      match: resolved.match,
+      candidates: resolved.candidates,
+      warnings: resolved.truncated ? ['more matches exist — refine the address (e.g. add a unit number)'] : [],
       parcel: null,
+      resolution: resolved.resolution,
+      map,
     };
 
     // The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text.
     let parcelRef: string | null = null;
-    if (resolution.match) {
-      const row = await fetchParcelById(resolution.match.parcelId);
+    if (resolved.match) {
+      const row = await fetchParcelById(resolved.match.parcelId);
       if (!row) {
         // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
-        response = { match: null, candidates: [], warnings: [], parcel: null };
+        response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null };
       } else {
         const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
         const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
         const { payload, warnings } = assembleConsumerPayload(row, coaProjects);
         parcelRef = String(row.parcel_id);
         response = {
-          match: { ...resolution.match, address: resolution.match.address || String(row.__display_address ?? '') },
+          match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
           candidates: [],
           warnings,
           parcel: payload,
+          resolution: 'unique',
+          map: null,
         };
       }
     }
@@ -143,6 +155,9 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       outcome,
       parcelId: response.match?.parcelId ?? parcelId ?? null,
       matchType: response.match?.matchType ?? null,
+      resolution: response.resolution,
+      map_lots: response.map?.lots.length ?? null,
+      map_neighbours: response.map?.neighbours.length ?? null,
       duration_ms,
       access,
       meter,

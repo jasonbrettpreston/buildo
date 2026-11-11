@@ -10457,5 +10457,25 @@
     "admin": {
       "group": "MaxBLD Report"
     }
+  },
+  "parcel_map_neighbour_radius_m": {
+    "default": 25,
+    "type": "number",
+    "min": 5,
+    "max": 100,
+    "description": "MF-53 (Spec 100 section 3.2 dated note 2026-11-11; DECISIONS-v3 item 2, operator 2026-11-11 \"b\"; Spec 128 rule 3): on the \"choose your lot\" map page, when an address is found but no lot is linked to it, the faint neighbour lots drawn are those within this many metres of the address pin. Whole metres. Measured at 25 m: p50 2, p95 13, max 23 neighbours over the 276 unlinked address points. Inserted by migration 307. CONSUMED by src/lib/parcels/lot-map.ts (readLotMapLimits: a missing, non-integer or out-of-bounds value fails the lookup closed, 500).",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "parcel_map_neighbour_limit": {
+    "default": 30,
+    "type": "number",
+    "min": 1,
+    "max": 50,
+    "description": "MF-53 (Spec 100 section 3.2 dated note 2026-11-11; DECISIONS-v3 item 2, operator 2026-11-11 \"b\"; Spec 128 rule 3): the most neighbour lots the \"choose your lot\" map page draws around an address with no linked lot, nearest first. At most 50 (PLAN panel security L-3: response size). Inserted by migration 307. CONSUMED by src/lib/parcels/lot-map.ts (readLotMapLimits: a missing, non-integer or out-of-bounds value fails the lookup closed, 500).",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
   }
 }

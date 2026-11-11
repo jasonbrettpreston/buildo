@@ -1,0 +1,147 @@
+{
+  "surface": "mobile_parcel_disambiguation_map",
+  "state": "rate_limited",
+  "target": "mobile",
+  "covers": [
+    "rate_limited"
+  ],
+  "situation": "rate_limited",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-lotmap-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-lotmap-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "pill",
+                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "search-icon",
+                      "icon": "Search",
+                      "size": 16,
+                      "color": "#a1a1aa"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "query",
+                      "testID": "parcel-lotmap-query",
+                      "className": "flex-1 px-2 py-3 text-base font-normal text-zinc-100",
+                      "numberOfLines": 1
+                    },
+                    "children": [
+                      {
+                        "derived": "query"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "clear",
+                      "testID": "parcel-lotmap-clear",
+                      "variant": "ghost",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "map.clear.label"
+                      },
+                      "onPress": {
+                        "action": "back"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "clear-icon",
+                          "icon": "X",
+                          "size": 16,
+                          "color": "#a1a1aa"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Alert",
+                "props": {
+                  "key": "ratelimit",
+                  "testID": "parcel-lotmap-ratelimit",
+                  "icon": "AlertTriangle",
+                  "iconClassName": "text-red-400",
+                  "className": "mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]"
+                },
+                "children": [
+                  {
+                    "component": "AlertDescription",
+                    "props": {
+                      "key": "ratelimit-text",
+                      "className": "text-xs font-normal text-red-400"
+                    },
+                    "children": [
+                      {
+                        "text": {
+                          "content": "state.ratelimit"
+                        },
+                        "vars": {
+                          "seconds": {
+                            "contract": "contract_parcels_lookup.errors.429.retryAfterSeconds"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "a5e3c7f2da75009e",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "33e4e665d090b1b5"
+    }
+  }
+}

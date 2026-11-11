@@ -10,7 +10,7 @@ One card per entry that Spec 126 governs — scopes A, B and C — **in build or
 
 Every card answers the **same nine questions** from the descriptor, with the evidence inline. Walk them in order. When a card is right, set `programme.review` to `{"status": "reviewed", "reviewer": "...", "date": "..."}` in the census shard and regenerate; when something must change, set `needs_change` and put what in `notes`. **The status lives in the descriptor, not in anyone's memory.**
 
-**112 cards** — 112 unreviewed.
+**113 cards** — 113 unreviewed.
 
 | # | id | entry | scope | feature | build | review |
 |---:|---|---|---|---|---:|---|
@@ -93,39 +93,40 @@ Every card answers the **same nine questions** from the descriptor, with the evi
 | 77 | [`S-085`](#card-s-085) | [`binding_mobile_report`](#card-s-085) | `platform_shared` | `F14` | 3145 | `unreviewed` |
 | 78 | [`S-082`](#card-s-082) | [`binding_web_search`](#card-s-082) | `platform_shared` | `F14` | 3145 | `unreviewed` |
 | 79 | [`S-079`](#card-s-079) | [`shared_mobile_surface_binding`](#card-s-079) | `platform_shared` | `F14` | 3145 | `unreviewed` |
-| 80 | [`C-027`](#card-c-027) | [`contract_products`](#card-c-027) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 81 | [`C-034`](#card-c-034) | [`contract_trades`](#card-c-034) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 82 | [`C-035`](#card-c-035) | [`contract_user_profile`](#card-c-035) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 83 | [`C-036`](#card-c-036) | [`contract_user_profile_delete`](#card-c-036) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 84 | [`C-037`](#card-c-037) | [`contract_user_profile_reactivate`](#card-c-037) | `platform_shared` | `F15` | 3152 | `unreviewed` |
-| 85 | [`S-036`](#card-s-036) | [`mobile_settings`](#card-s-036) | `platform_shared` | `F15` | 3153 | `unreviewed` |
-| 86 | [`C-003`](#card-c-003) | [`contract_admin_app_health`](#card-c-003) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 87 | [`C-004`](#card-c-004) | [`contract_admin_control_panel_configs`](#card-c-004) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 88 | [`C-005`](#card-c-005) | [`contract_admin_control_panel_resync`](#card-c-005) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 89 | [`C-008`](#card-c-008) | [`contract_admin_pipeline_step_output`](#card-c-008) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 90 | [`C-009`](#card-c-009) | [`contract_admin_pipelines_history`](#card-c-009) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 91 | [`C-010`](#card-c-010) | [`contract_admin_pipelines_runs`](#card-c-010) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 92 | [`C-011`](#card-c-011) | [`contract_admin_pipelines_schedules`](#card-c-011) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 93 | [`C-012`](#card-c-012) | [`contract_admin_pipelines_slug`](#card-c-012) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 94 | [`C-013`](#card-c-013) | [`contract_admin_pipelines_status`](#card-c-013) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 95 | [`C-014`](#card-c-014) | [`contract_admin_security_mfa`](#card-c-014) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 96 | [`C-015`](#card-c-015) | [`contract_admin_security_mfa_verify`](#card-c-015) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 97 | [`C-016`](#card-c-016) | [`contract_admin_stats`](#card-c-016) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 98 | [`C-017`](#card-c-017) | [`contract_admin_sync`](#card-c-017) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 99 | [`C-018`](#card-c-018) | [`contract_admin_users`](#card-c-018) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 100 | [`C-019`](#card-c-019) | [`contract_admin_users_uid`](#card-c-019) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 101 | [`C-028`](#card-c-028) | [`contract_quality`](#card-c-028) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 102 | [`C-029`](#card-c-029) | [`contract_quality_refresh`](#card-c-029) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 103 | [`C-033`](#card-c-033) | [`contract_sync`](#card-c-033) | `platform_shared` | `F16` | 3162 | `unreviewed` |
-| 104 | [`S-018`](#card-s-018) | [`admin_app_health`](#card-s-018) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 105 | [`S-019`](#card-s-019) | [`admin_control_panel`](#card-s-019) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 106 | [`S-020`](#card-s-020) | [`admin_data_quality`](#card-s-020) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 107 | [`S-021`](#card-s-021) | [`admin_home`](#card-s-021) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 108 | [`S-023`](#card-s-023) | [`admin_pipeline_step_output`](#card-s-023) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 109 | [`S-024`](#card-s-024) | [`admin_security`](#card-s-024) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 110 | [`S-025`](#card-s-025) | [`admin_user_detail`](#card-s-025) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 111 | [`S-026`](#card-s-026) | [`admin_users`](#card-s-026) | `platform_shared` | `F16` | 3163 | `unreviewed` |
-| 112 | [`S-050`](#card-s-050) | [`web_login`](#card-s-050) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 80 | [`S-083`](#card-s-083) | [`binding_mobile_list`](#card-s-083) | `platform_shared` | `F14` | 3146 | `unreviewed` |
+| 81 | [`C-027`](#card-c-027) | [`contract_products`](#card-c-027) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 82 | [`C-034`](#card-c-034) | [`contract_trades`](#card-c-034) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 83 | [`C-035`](#card-c-035) | [`contract_user_profile`](#card-c-035) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 84 | [`C-036`](#card-c-036) | [`contract_user_profile_delete`](#card-c-036) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 85 | [`C-037`](#card-c-037) | [`contract_user_profile_reactivate`](#card-c-037) | `platform_shared` | `F15` | 3152 | `unreviewed` |
+| 86 | [`S-036`](#card-s-036) | [`mobile_settings`](#card-s-036) | `platform_shared` | `F15` | 3153 | `unreviewed` |
+| 87 | [`C-003`](#card-c-003) | [`contract_admin_app_health`](#card-c-003) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 88 | [`C-004`](#card-c-004) | [`contract_admin_control_panel_configs`](#card-c-004) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 89 | [`C-005`](#card-c-005) | [`contract_admin_control_panel_resync`](#card-c-005) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 90 | [`C-008`](#card-c-008) | [`contract_admin_pipeline_step_output`](#card-c-008) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 91 | [`C-009`](#card-c-009) | [`contract_admin_pipelines_history`](#card-c-009) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 92 | [`C-010`](#card-c-010) | [`contract_admin_pipelines_runs`](#card-c-010) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 93 | [`C-011`](#card-c-011) | [`contract_admin_pipelines_schedules`](#card-c-011) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 94 | [`C-012`](#card-c-012) | [`contract_admin_pipelines_slug`](#card-c-012) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 95 | [`C-013`](#card-c-013) | [`contract_admin_pipelines_status`](#card-c-013) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 96 | [`C-014`](#card-c-014) | [`contract_admin_security_mfa`](#card-c-014) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 97 | [`C-015`](#card-c-015) | [`contract_admin_security_mfa_verify`](#card-c-015) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 98 | [`C-016`](#card-c-016) | [`contract_admin_stats`](#card-c-016) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 99 | [`C-017`](#card-c-017) | [`contract_admin_sync`](#card-c-017) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 100 | [`C-018`](#card-c-018) | [`contract_admin_users`](#card-c-018) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 101 | [`C-019`](#card-c-019) | [`contract_admin_users_uid`](#card-c-019) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 102 | [`C-028`](#card-c-028) | [`contract_quality`](#card-c-028) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 103 | [`C-029`](#card-c-029) | [`contract_quality_refresh`](#card-c-029) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 104 | [`C-033`](#card-c-033) | [`contract_sync`](#card-c-033) | `platform_shared` | `F16` | 3162 | `unreviewed` |
+| 105 | [`S-018`](#card-s-018) | [`admin_app_health`](#card-s-018) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 106 | [`S-019`](#card-s-019) | [`admin_control_panel`](#card-s-019) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 107 | [`S-020`](#card-s-020) | [`admin_data_quality`](#card-s-020) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 108 | [`S-021`](#card-s-021) | [`admin_home`](#card-s-021) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 109 | [`S-023`](#card-s-023) | [`admin_pipeline_step_output`](#card-s-023) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 110 | [`S-024`](#card-s-024) | [`admin_security`](#card-s-024) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 111 | [`S-025`](#card-s-025) | [`admin_user_detail`](#card-s-025) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 112 | [`S-026`](#card-s-026) | [`admin_users`](#card-s-026) | `platform_shared` | `F16` | 3163 | `unreviewed` |
+| 113 | [`S-050`](#card-s-050) | [`web_login`](#card-s-050) | `platform_shared` | `F16` | 3163 | `unreviewed` |
 
 ---
 
@@ -185,19 +186,23 @@ Registry detail: [`S-071`](../../../docs/reports/generated/127-surface-registry.
 
 **1. What does it do, and for whom?**
 
-The map you land on when an address does not resolve to exactly one lot. Three ways to get here: the address is linked to several lots (a corner, severed or ranged property), the address exists but no lot is linked to it, or what was typed is an intersection rather than an address. In each case it is supposed to draw the lots on a map and let you tap the one you meant, and say plainly when nothing is linked rather than quietly picking the nearest polygon. Today it is a STUB: the route, the navigation and the three explanations are real, and the map is not drawn yet.
+The "choose your lot" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message "No lot linked yet", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: "This address has many lots. Add a unit number or pick a nearby address." An intersection: "That looks like an intersection. Type a house number to see the lots." (the map version is MF-60). Nothing is selected when the page opens.
 
 **2. Which tables and columns, produced by which step?**
 
-_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `parcels` | `parcel_id` · `lot_size_sqm` · `frontage_m` · `zoning_zn_string` · `centroid_lat` · `centroid_lng` · `geom` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `parcels` | `sources[1]` | `docs/specs/01-pipeline/55_source_parcels.md` |
+| reads | `address_points` | `address_point_id` · `address_full` · `latitude` · `longitude` · `addr_num_normalized` · `linear_name_normalized` · `address_status` · `maint_stage` · `retired_at` | `address_point_id` · `latitude` · `longitude` · `address_number` · `linear_name_full` · `address_full` · `lo_num` · `hi_num` · `maint_stage` · `address_status` · `address_class_desc` · `class_family_desc` · `place_name` · `addr_num_normalized` · `linear_name_normalized` · `geom` · `retired_at` · `street_type_normalized` | `address_points` | `sources[2]` | `docs/specs/01-pipeline/54_source_address_points.md` |
+| reads | `parcel_address_points` | `parcel_id` · `address_point_id` | `parcel_id` · `address_point_id` · `computed_at` | `link_parcel_addresses` | `sources[3]` | `docs/specs/01-pipeline/56_link_parcel_addresses.md` |
 
 **3. Which contracts, and who calls them?**
 
-It reaches no contract — every value is local, a prop, or device state.
+Calls 1: `/api/parcels/lookup` (idiom: hook)
 
 **4. What gate, role or entitlement stands in front of it?**
 
-session `entitled` — It inherits the tab gate and the parcel-tool Stack: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed. · RLS class `none` · entitlement `lead_gen`
+session `entitled` — It inherits the tab gate and the parcel-tool Stack: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed. · RLS class `B` · entitlement `parcel_tool`
 
 **5. What archetype, and why that one?**
 
@@ -209,7 +214,7 @@ Swept; none found.
 
 **7. Does it match its owning spec section?**
 
-Spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · anchors: `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1`
+Spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · anchors: `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7`
 
 **8. What is still unresearched?**
 
@@ -336,12 +341,13 @@ Lets a paying subscriber search for a property by address, or pick a specific cl
 
 | | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
 |---|---|---|---|---|---|---|
-| reads | `address_points` | `address_point_id` · `address_full` · `linear_name_normalized` · `addr_num_normalized` · `address_status` · `maint_stage` | `address_point_id` · `latitude` · `longitude` · `address_number` · `linear_name_full` · `address_full` · `lo_num` · `hi_num` · `maint_stage` · `address_status` · `address_class_desc` · `class_family_desc` · `place_name` · `addr_num_normalized` · `linear_name_normalized` · `geom` · `retired_at` · `street_type_normalized` | `address_points` | `sources[2]` | `docs/specs/01-pipeline/43_chain_sources.md` |
+| reads | `address_points` | `address_point_id` · `address_full` · `linear_name_normalized` · `addr_num_normalized` · `address_status` · `maint_stage` · `latitude` · `longitude` · `retired_at` · `address_number` · `linear_name_full` | `address_point_id` · `latitude` · `longitude` · `address_number` · `linear_name_full` · `address_full` · `lo_num` · `hi_num` · `maint_stage` · `address_status` · `address_class_desc` · `class_family_desc` · `place_name` · `addr_num_normalized` · `linear_name_normalized` · `geom` · `retired_at` · `street_type_normalized` | `address_points` | `sources[2]` | `docs/specs/01-pipeline/43_chain_sources.md` |
 | reads | `coa_applications` | `application_number` · `address` · `status` · `decision` · `decision_date` · `hearing_date` · `description` · `project_type` · `modeled_gfa_sqm` · `estimated_cost` · `neighbourhood_id` | `id` · `application_number` · `address` · `street_num` · `street_name` · `ward` · `status` · `decision` · `decision_date` · `hearing_date` · `description` · `applicant` · `linked_permit_num` · `linked_confidence` · `data_hash` · `first_seen_at` · `last_seen_at` · `sub_type` · `street_name_normalized` · `lifecycle_phase` · `lifecycle_classified_at` · `lifecycle_stalled` · `lead_id` · `coa_type_class` · `project_type` · `scope_tags` · `scope_classified_at` · `scope_source` · `structure_type` · `neighbourhood_id` · `latitude` · `longitude` · `modeled_gfa_sqm` · `estimated_cost` · `cost_source` · `cost_classified_at` · `lifecycle_seq` · `lifecycle_group` · `lifecycle_block` · `lifecycle_stage` · `bid_value` · `parcel_linked_at` · `trade_classified_at` · `matched_status` · `matched_rule` · `unmapped_status` · `unmapped_decision` · `zoning_class` · `bylaw_max_coverage_pct` · `bylaw_max_fsi` · `bylaw_max_height_m` · `exception_number` · `variance_context` · `zoning_parcel_count` · `zoning_dominant_parcel_id` · `zoning_dominant_parcel_method` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `lot_size_sqm` · `frontage_m` · `depth_m` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `zoning_designation` | `classify_coa_scope` · `classify_coa_trades` · `classify_lifecycle_phase` · `coa` · `compute_coa_cost_estimates` · `enrich_coa_zoning` · `link_coa` · `link_coa_to_parcels` | `coa[5] · coa[6] · permits[23], coa[12] · coa[1] · coa[7] · coa[4] · permits[19], coa[8] · coa[3]` | `docs/specs/01-pipeline/42_chain_coa.md` |
 | reads | `entitlements` | `status` · `user_id` · `product` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `none` | `n/a` | `docs/specs/00-architecture/116_multi_product_architecture.md` |
 | reads | `parcel_address_points` | `address_point_id` · `parcel_id` | `parcel_id` · `address_point_id` · `computed_at` | `link_parcel_addresses` | `sources[8]` | `docs/specs/01-pipeline/54_source_address_points.md` |
-| reads | `parcels` | `parcel_id` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `id` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `lot_size_sqm` · `lot_size_sqft` · `opt_aor_gfa_sqm` · `opt_aor_storeys` · `opt_coa_gfa_sqm` · `opt_coa_storeys` · `max_buildable_gfa_sqm` · `max_buildable_footprint_sqm` · `imagery_roof_gfa_sqm` · `imagery_roof_footprint_sqm` · `cur_floor_gfa_sqm` · `max_newbuild_coa_gfa_sqm` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `neighbourhood_id` · `neighbourhood_cost_premium` · `feature_type` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `street_type_normalized` · `stated_area_raw` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `lot_size_confidence` · `lot_size_basis` · `lot_size_source` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `abuts_laneway` · `existing_stories` · `existing_height_m` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `existing_data_quality_flag` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `max_build_setback_basis` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_basis` · `max_build_confidence` · `envelope_constrained` · `envelope_constraint_reason` · `max_build_stories_basis` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `massing_enriched_at` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `garden_suite_fits` · `max_garden_suite_gfa_sqm` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `opt_aor_units` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `compute_centroids` · `compute_parcel_cost_estimates` · `enrich_centreline` · `enrich_heritage` · `enrich_parcels` · `enrich_ravines` · `parcels` | `sources[9] · sources[22] · sources[13] · sources[12] · sources[21] · sources[11] · sources[4]` | `docs/specs/01-pipeline/43_chain_sources.md` |
+| reads | `parcels` | `parcel_id` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `id` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `lot_size_sqm` · `lot_size_sqft` · `opt_aor_gfa_sqm` · `opt_aor_storeys` · `opt_coa_gfa_sqm` · `opt_coa_storeys` · `max_buildable_gfa_sqm` · `max_buildable_footprint_sqm` · `imagery_roof_gfa_sqm` · `imagery_roof_footprint_sqm` · `cur_floor_gfa_sqm` · `max_newbuild_coa_gfa_sqm` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `neighbourhood_id` · `neighbourhood_cost_premium` · `feature_type` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `street_type_normalized` · `stated_area_raw` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `lot_size_confidence` · `lot_size_basis` · `lot_size_source` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `abuts_laneway` · `existing_stories` · `existing_height_m` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `existing_data_quality_flag` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `max_build_setback_basis` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_basis` · `max_build_confidence` · `envelope_constrained` · `envelope_constraint_reason` · `max_build_stories_basis` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `massing_enriched_at` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `garden_suite_fits` · `max_garden_suite_gfa_sqm` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `opt_aor_units` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `geom` | `id` · `parcel_id` · `feature_type` · `address_number` · `linear_name_full` · `addr_num_normalized` · `street_name_normalized` · `street_type_normalized` · `stated_area_raw` · `lot_size_sqm` · `lot_size_sqft` · `frontage_m` · `frontage_ft` · `depth_m` · `depth_ft` · `geometry` · `date_effective` · `date_expiry` · `created_at` · `centroid_lat` · `centroid_lng` · `is_irregular` · `geom` · `zoning_class` · `zoning_zn_string` · `zoning_gen_zone` · `zoning_holding` · `zone_status` · `bylaw_max_fsi` · `bylaw_max_coverage_pct` · `bylaw_max_height_m` · `bylaw_max_stories` · `bylaw_max_units` · `bylaw_max_density` · `bylaw_min_frontage_m` · `bylaw_min_area_sqm` · `bylaw_standard_setback_m` · `bylaw_pct_commercial_max` · `bylaw_pct_residential_max` · `bylaw_pct_employment_max` · `bylaw_pct_office_max` · `exception_number` · `exception_text` · `bylaw_chapter` · `bylaw_section` · `bylaw_exception_ref` · `in_policy_area` · `on_policy_road` · `in_rooming_house_overlay` · `in_parking_zone_overlay` · `in_building_setback_overlay` · `on_priority_retail` · `in_queenstw_eat_overlay` · `zoning_overlays` · `zoning_base_source_id` · `zoning_dominant_area_share` · `zoning_is_ambiguous` · `zoning_base_source_dataset_version` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `ravine_dataset_version_when_enriched` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `heritage_dataset_version_when_enriched` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `centreline_dataset_version_when_enriched` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_id` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `optimal_config` · `nearby_builds_summary` · `comparable_builds` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cur_gfa_low_sqm` · `cur_gfa_high_sqm` · `cur_storeys_range` · `cur_gfa_band_basis` · `parcel_cost_menu` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `lot_size_source` · `massing_enriched_at` · `in_sixplex_area` · `sixplex_area_type` · `sixplex_membership_basis` | `compute_centroids` · `compute_parcel_cost_estimates` · `enrich_centreline` · `enrich_heritage` · `enrich_parcels` · `enrich_ravines` · `parcels` | `sources[9] · sources[22] · sources[13] · sources[12] · sources[21] · sources[11] · sources[4]` | `docs/specs/01-pipeline/43_chain_sources.md` |
 | reads | `user_profiles` | `trade_slug` · `trade_slugs_override` · `display_name` · `user_id` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `none` | `n/a` | `docs/specs/02-web-admin/102_admin_notifications_tool.md` |
+| reads | `logic_variables` | `variable_key` · `variable_value` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `none` | `n/a` | `docs/specs/02-web-admin/128_surface_standard_policy.md` |
 | writes | `user_profiles` | `user_id` · `trade_slug` · `display_name` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `none` | `n/a` | `docs/specs/02-web-admin/102_admin_notifications_tool.md` |
 | writes | `usage_events` | `user_id` · `product` · `event` · `subject_kind` · `subject_key` · `occurred_at` · `meta` | `event_id` · `user_id` · `session_id` · `product` · `event` · `subject_kind` · `subject_key` · `occurred_at` · `meta` | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
 
@@ -3586,7 +3592,7 @@ Spec: [`docs/specs/03-mobile/90_mobile_engineering_protocol.md`](../../../docs/s
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `mobile/src/components/shared/OfflineBanner.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `mobile/src/components/shared/OfflineBanner.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3638,7 +3644,7 @@ Spec: [`docs/specs/03-mobile/93_mobile_auth.md`](../../../docs/specs/03-mobile/9
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `mobile/src/components/shared/NotificationToast.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `mobile/src/components/shared/NotificationToast.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3687,7 +3693,7 @@ Spec: [`docs/specs/03-mobile/96_mobile_subscription.md`](../../../docs/specs/03-
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `mobile/src/components/onboarding/IncompleteBanner.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `mobile/src/components/onboarding/IncompleteBanner.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3733,7 +3739,7 @@ Spec: [`docs/specs/archive/75_lead_feed_implementation_guide.md`](../../../docs/
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `src/components/observability/PostHogProvider.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `src/components/observability/PostHogProvider.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3779,7 +3785,7 @@ Nothing — every field is answered with a why and a citation.
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 2 owned component(s): `src/components/surfaces/web/FormBinding.tsx` · `src/components/surfaces/web/AdminMantineProvider.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 2 owned component(s): `src/components/surfaces/web/FormBinding.tsx` · `src/components/surfaces/web/AdminMantineProvider.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3825,7 +3831,7 @@ Nothing — every field is answered with a why and a citation.
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `src/components/surfaces/web/ListBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `src/components/surfaces/web/ListBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3871,7 +3877,7 @@ Nothing — every field is answered with a why and a citation.
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 2 owned component(s): `mobile/src/components/surfaces/ReportBinding.tsx` · `mobile/src/components/surfaces/ReportPageHost.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 2 owned component(s): `mobile/src/components/surfaces/ReportBinding.tsx` · `mobile/src/components/surfaces/ReportPageHost.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3917,7 +3923,7 @@ Nothing — every field is answered with a why and a citation.
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `src/components/surfaces/web/SearchBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `src/components/surfaces/web/SearchBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
@@ -3963,13 +3969,59 @@ Nothing — every field is answered with a why and a citation.
 
 **9. What would removing it delete?**
 
-It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 2 owned component(s): `mobile/src/components/surfaces/SurfaceRenderer.tsx` · `mobile/src/components/surfaces/SearchBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 2 owned component(s): `mobile/src/components/surfaces/SurfaceRenderer.tsx` · `mobile/src/components/surfaces/SearchBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+
+---
+
+<a id="card-s-083"></a>
+
+## Card 80 — `S-083` `binding_mobile_list`
+
+Registry detail: [`S-083`](../../../docs/reports/generated/127-surface-registry.md#s-083) `binding_mobile_list`.
+
+`SURFACE` · `LIST` · scope `platform_shared` · feature `F14` navigation-shells · build order 3146 · batch B2 · **review: `unreviewed`**
+
+**1. What does it do, and for whom?**
+
+The mobile LIST binding (props half): LotMapBinding.tsx maps a situation of the choose-your-lot page (S-071, LIST with render.projection map) to a props tree (refs only); the shared renderer SurfaceRenderer.tsx (owned by shared_mobile_surface_binding) draws it, react-native-maps' MapView, Polygon and Marker included. It holds no display text of its own.
+
+**2. Which tables and columns, produced by which step?**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**3. Which contracts, and who calls them?**
+
+It reaches no contract — every value is local, a prop, or device state.
+
+**4. What gate, role or entitlement stands in front of it?**
+
+session `entitled` — Its only consumer today is the MaxBLD search page; each consumer declares its own guard. · RLS class `B` · entitlement `none`
+
+**5. What archetype, and why that one?**
+
+`LIST` — its profile makes specific fields mandatory (see [the schema](../../../scripts/surfaces/_schema/surface.schema.json)). If this archetype is wrong, the wrong fields are being demanded and the right ones are not.
+
+**6. Is any behaviour here lead-gen leakage?**
+
+Swept; none found.
+
+**7. Does it match its owning spec section?**
+
+Spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · anchors: `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 dated note 2026-11-11 — the mobile LIST binding (MF-53)`
+
+**8. What is still unresearched?**
+
+Nothing — every field is answered with a why and a citation.
+
+**9. What would removing it delete?**
+
+It is 1 of 10 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s): `mobile/src/components/surfaces/LotMapBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 
 <a id="card-c-027"></a>
 
-## Card 80 — `C-027` `contract_products`
+## Card 81 — `C-027` `contract_products`
 
 Registry detail: [`C-027`](../../../docs/reports/generated/127-surface-registry.md#c-027) `contract_products`.
 
@@ -4015,7 +4067,7 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 <a id="card-c-034"></a>
 
-## Card 81 — `C-034` `contract_trades`
+## Card 82 — `C-034` `contract_trades`
 
 Registry detail: [`C-034`](../../../docs/reports/generated/127-surface-registry.md#c-034) `contract_trades`.
 
@@ -4061,7 +4113,7 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 <a id="card-c-035"></a>
 
-## Card 82 — `C-035` `contract_user_profile`
+## Card 83 — `C-035` `contract_user_profile`
 
 Registry detail: [`C-035`](../../../docs/reports/generated/127-surface-registry.md#c-035) `contract_user_profile`.
 
@@ -4112,7 +4164,7 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 <a id="card-c-036"></a>
 
-## Card 83 — `C-036` `contract_user_profile_delete`
+## Card 84 — `C-036` `contract_user_profile_delete`
 
 Registry detail: [`C-036`](../../../docs/reports/generated/127-surface-registry.md#c-036) `contract_user_profile_delete`.
 
@@ -4162,7 +4214,7 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 <a id="card-c-037"></a>
 
-## Card 84 — `C-037` `contract_user_profile_reactivate`
+## Card 85 — `C-037` `contract_user_profile_reactivate`
 
 Registry detail: [`C-037`](../../../docs/reports/generated/127-surface-registry.md#c-037) `contract_user_profile_reactivate`.
 
@@ -4214,7 +4266,7 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 <a id="card-s-036"></a>
 
-## Card 85 — `S-036` `mobile_settings`
+## Card 86 — `S-036` `mobile_settings`
 
 Registry detail: [`S-036`](../../../docs/reports/generated/127-surface-registry.md#s-036) `mobile_settings`.
 
@@ -4264,7 +4316,7 @@ It is 1 of 6 entr(ies) in feature `F15`. It owns no component. Every table it to
 
 <a id="card-c-003"></a>
 
-## Card 86 — `C-003` `contract_admin_app_health`
+## Card 87 — `C-003` `contract_admin_app_health`
 
 Registry detail: [`C-003`](../../../docs/reports/generated/127-surface-registry.md#c-003) `contract_admin_app_health`.
 
@@ -4310,7 +4362,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-004"></a>
 
-## Card 87 — `C-004` `contract_admin_control_panel_configs`
+## Card 88 — `C-004` `contract_admin_control_panel_configs`
 
 Registry detail: [`C-004`](../../../docs/reports/generated/127-surface-registry.md#c-004) `contract_admin_control_panel_configs`.
 
@@ -4365,7 +4417,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-005"></a>
 
-## Card 88 — `C-005` `contract_admin_control_panel_resync`
+## Card 89 — `C-005` `contract_admin_control_panel_resync`
 
 Registry detail: [`C-005`](../../../docs/reports/generated/127-surface-registry.md#c-005) `contract_admin_control_panel_resync`.
 
@@ -4411,7 +4463,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-008"></a>
 
-## Card 89 — `C-008` `contract_admin_pipeline_step_output`
+## Card 90 — `C-008` `contract_admin_pipeline_step_output`
 
 Registry detail: [`C-008`](../../../docs/reports/generated/127-surface-registry.md#c-008) `contract_admin_pipeline_step_output`.
 
@@ -4463,7 +4515,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. It is the ONLY r
 
 <a id="card-c-009"></a>
 
-## Card 90 — `C-009` `contract_admin_pipelines_history`
+## Card 91 — `C-009` `contract_admin_pipelines_history`
 
 Registry detail: [`C-009`](../../../docs/reports/generated/127-surface-registry.md#c-009) `contract_admin_pipelines_history`.
 
@@ -4511,7 +4563,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-010"></a>
 
-## Card 91 — `C-010` `contract_admin_pipelines_runs`
+## Card 92 — `C-010` `contract_admin_pipelines_runs`
 
 Registry detail: [`C-010`](../../../docs/reports/generated/127-surface-registry.md#c-010) `contract_admin_pipelines_runs`.
 
@@ -4559,7 +4611,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-011"></a>
 
-## Card 92 — `C-011` `contract_admin_pipelines_schedules`
+## Card 93 — `C-011` `contract_admin_pipelines_schedules`
 
 Registry detail: [`C-011`](../../../docs/reports/generated/127-surface-registry.md#c-011) `contract_admin_pipelines_schedules`.
 
@@ -4608,7 +4660,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-012"></a>
 
-## Card 93 — `C-012` `contract_admin_pipelines_slug`
+## Card 94 — `C-012` `contract_admin_pipelines_slug`
 
 Registry detail: [`C-012`](../../../docs/reports/generated/127-surface-registry.md#c-012) `contract_admin_pipelines_slug`.
 
@@ -4658,7 +4710,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-013"></a>
 
-## Card 94 — `C-013` `contract_admin_pipelines_status`
+## Card 95 — `C-013` `contract_admin_pipelines_status`
 
 Registry detail: [`C-013`](../../../docs/reports/generated/127-surface-registry.md#c-013) `contract_admin_pipelines_status`.
 
@@ -4706,7 +4758,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-014"></a>
 
-## Card 95 — `C-014` `contract_admin_security_mfa`
+## Card 96 — `C-014` `contract_admin_security_mfa`
 
 Registry detail: [`C-014`](../../../docs/reports/generated/127-surface-registry.md#c-014) `contract_admin_security_mfa`.
 
@@ -4757,7 +4809,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-015"></a>
 
-## Card 96 — `C-015` `contract_admin_security_mfa_verify`
+## Card 97 — `C-015` `contract_admin_security_mfa_verify`
 
 Registry detail: [`C-015`](../../../docs/reports/generated/127-surface-registry.md#c-015) `contract_admin_security_mfa_verify`.
 
@@ -4808,7 +4860,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-016"></a>
 
-## Card 97 — `C-016` `contract_admin_stats`
+## Card 98 — `C-016` `contract_admin_stats`
 
 Registry detail: [`C-016`](../../../docs/reports/generated/127-surface-registry.md#c-016) `contract_admin_stats`.
 
@@ -4877,7 +4929,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-017"></a>
 
-## Card 98 — `C-017` `contract_admin_sync`
+## Card 99 — `C-017` `contract_admin_sync`
 
 Registry detail: [`C-017`](../../../docs/reports/generated/127-surface-registry.md#c-017) `contract_admin_sync`.
 
@@ -4933,7 +4985,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-018"></a>
 
-## Card 99 — `C-018` `contract_admin_users`
+## Card 100 — `C-018` `contract_admin_users`
 
 Registry detail: [`C-018`](../../../docs/reports/generated/127-surface-registry.md#c-018) `contract_admin_users`.
 
@@ -4988,7 +5040,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-019"></a>
 
-## Card 100 — `C-019` `contract_admin_users_uid`
+## Card 101 — `C-019` `contract_admin_users_uid`
 
 Registry detail: [`C-019`](../../../docs/reports/generated/127-surface-registry.md#c-019) `contract_admin_users_uid`.
 
@@ -5045,7 +5097,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-028"></a>
 
-## Card 101 — `C-028` `contract_quality`
+## Card 102 — `C-028` `contract_quality`
 
 Registry detail: [`C-028`](../../../docs/reports/generated/127-surface-registry.md#c-028) `contract_quality`.
 
@@ -5096,7 +5148,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-029"></a>
 
-## Card 102 — `C-029` `contract_quality_refresh`
+## Card 103 — `C-029` `contract_quality_refresh`
 
 Registry detail: [`C-029`](../../../docs/reports/generated/127-surface-registry.md#c-029) `contract_quality_refresh`.
 
@@ -5154,7 +5206,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-c-033"></a>
 
-## Card 103 — `C-033` `contract_sync`
+## Card 104 — `C-033` `contract_sync`
 
 Registry detail: [`C-033`](../../../docs/reports/generated/127-surface-registry.md#c-033) `contract_sync`.
 
@@ -5210,7 +5262,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-s-018"></a>
 
-## Card 104 — `S-018` `admin_app_health`
+## Card 105 — `S-018` `admin_app_health`
 
 Registry detail: [`S-018`](../../../docs/reports/generated/127-surface-registry.md#s-018) `admin_app_health`.
 
@@ -5258,7 +5310,7 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 1 owned component(
 
 <a id="card-s-019"></a>
 
-## Card 105 — `S-019` `admin_control_panel`
+## Card 106 — `S-019` `admin_control_panel`
 
 Registry detail: [`S-019`](../../../docs/reports/generated/127-surface-registry.md#s-019) `admin_control_panel`.
 
@@ -5314,7 +5366,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-s-020"></a>
 
-## Card 106 — `S-020` `admin_data_quality`
+## Card 107 — `S-020` `admin_data_quality`
 
 Registry detail: [`S-020`](../../../docs/reports/generated/127-surface-registry.md#s-020) `admin_data_quality`.
 
@@ -5386,7 +5438,7 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 4 owned component(
 
 <a id="card-s-021"></a>
 
-## Card 107 — `S-021` `admin_home`
+## Card 108 — `S-021` `admin_home`
 
 Registry detail: [`S-021`](../../../docs/reports/generated/127-surface-registry.md#s-021) `admin_home`.
 
@@ -5432,7 +5484,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-s-023"></a>
 
-## Card 108 — `S-023` `admin_pipeline_step_output`
+## Card 109 — `S-023` `admin_pipeline_step_output`
 
 Registry detail: [`S-023`](../../../docs/reports/generated/127-surface-registry.md#s-023) `admin_pipeline_step_output`.
 
@@ -5483,7 +5535,7 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 1 owned component(
 
 <a id="card-s-024"></a>
 
-## Card 109 — `S-024` `admin_security`
+## Card 110 — `S-024` `admin_security`
 
 Registry detail: [`S-024`](../../../docs/reports/generated/127-surface-registry.md#s-024) `admin_security`.
 
@@ -5534,7 +5586,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-s-025"></a>
 
-## Card 110 — `S-025` `admin_user_detail`
+## Card 111 — `S-025` `admin_user_detail`
 
 Registry detail: [`S-025`](../../../docs/reports/generated/127-surface-registry.md#s-025) `admin_user_detail`.
 
@@ -5593,7 +5645,7 @@ It is 1 of 27 entr(ies) in feature `F16`. Removing it deletes 1 owned component(
 
 <a id="card-s-026"></a>
 
-## Card 111 — `S-026` `admin_users`
+## Card 112 — `S-026` `admin_users`
 
 Registry detail: [`S-026`](../../../docs/reports/generated/127-surface-registry.md#s-026) `admin_users`.
 
@@ -5646,7 +5698,7 @@ It is 1 of 27 entr(ies) in feature `F16`. It owns no component. Every table it t
 
 <a id="card-s-050"></a>
 
-## Card 112 — `S-050` `web_login`
+## Card 113 — `S-050` `web_login`
 
 Registry detail: [`S-050`](../../../docs/reports/generated/127-surface-registry.md#s-050) `web_login`.
 

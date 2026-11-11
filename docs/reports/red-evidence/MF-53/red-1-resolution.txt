@@ -1,0 +1,4 @@
+MF-53 red-1 (base e088bf072 + test file only, before src/lib/parcels/lot-map.ts and the resolver change): 2026-11-11T15:43:58Z
+ FAIL  src/tests/parcel-lookup-resolution.logic.test.ts [ src/tests/parcel-lookup-resolution.logic.test.ts ]
+Error: Cannot find module '@/lib/parcels/lot-map' imported from '/Users/brettpreston_macmini/Buildo-wt-mf53/src/tests/parcel-lookup-resolution.logic.test.ts'.
+ Test Files  1 failed (1)

@@ -1,0 +1,36 @@
+{
+  "task": "MF-53",
+  "item": "The MaxBLD \"choose your lot\" map page and its message states (S-071 mobile_parcel_disambiguation_map, LIST with render.projection map) converted on the binding standard, and the lookup contract C-001 widened with resolution and the map block (Spec 100 section 3.2 dated note 2026-11-11); the neighbour radius and limit as logic variables (migration 307, written, not applied).",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "3c2335442",
+  "cards": [
+    "Operator 2026-11-11: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now and we should only be using the new report obviosuly\".",
+    "Operator 2026-11-11: \"D-A a, 1. yes 2. explain this to me 3. c as long as this is the simple and best in class solution here 4. b\" and \"b\" (record ~/Buildo-scratch/mcfrontend/MF-53/DECISIONS-v3.md); message states small-pages-v4/choose-lot-states.html."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md (section 8 folds win). PLAN panel ~/Buildo-scratch/mcfrontend/MF-53/panel-v4/: code-reviewer-grounded APPROVE WITH FOLDS (react-native-maps kept out of libraries.mobile, lot-map.ts as the map SQL home, lock edits listed, typeahead LIMIT 10 measured), regression-guardian APPROVE WITH FOLDS (the intersection state reachable through the same deriveMatchType, the admin call unchanged, the strict leak test fixed, empty printed addresses, descriptor checks), security (general-purpose) APPROVE WITH FOLDS (Spec 100 note amends section 2 item 2 / 3.2 / 6, CONSUMER_MAP_COLS both ways, bounds, outline cap, log hygiene). All 17 folds built.",
+  "output": "OUTPUT panel on the uncommitted build at 3c2335442 (~/Buildo-scratch/mcfrontend/MF-53/panel-out/): code-reviewer-grounded PASS (0 HIGH, 0 MEDIUM; 8 planted defects each red; tsc, targeted vitest 936 and jest 133 green); regression-guardian PASS WITH FOLDS (MEDIUM: a server unique without a match is not trusted; LOW: test title); security (general-purpose) PASS WITH FOLDS (LOW: no-insert assertion on a map response; the persisted query cache follow-up card). Folds applied before the code commit: the unique-without-match guard with its test, the C-8m test title, the no-insert and no-meter assertions on the unlinked map case, the persisted-cache card in the MF-53 queue note, pointId dropped from the unlinked seed (unused), neighbours without a drawable outline dropped (tested). The neighbour statement was executed read-only on the dev DB with real parameters (3 rows, 29 ms) and the lot / pin statements through the real modules (live-probe.txt).",
+  "seats": [
+    "code-reviewer-grounded (PLAN): APPROVE WITH FOLDS",
+    "regression-guardian (PLAN): APPROVE WITH FOLDS",
+    "security, general-purpose (PLAN): APPROVE WITH FOLDS",
+    "code-reviewer-grounded (OUTPUT): PASS",
+    "regression-guardian (OUTPUT): PASS WITH FOLDS",
+    "security, general-purpose (OUTPUT): PASS WITH FOLDS"
+  ],
+  "verdict": "PASS-WITH-FOLDS: every OUTPUT fold applied before the code commit. Held for the operator: the chosen lot opens the report route a single match opens (the REPORT surface mobile_parcel_detail); the new report (MF-48) is mounted nowhere yet, so that route still draws the hand-built screen until MF-48 Stage B (plan v4 section 4).",
+  "blockers": [],
+  "followups": [
+    "DB job: apply migration 307 before deploying the code (until then a search for an address with no linked lot fails closed, 500).",
+    "MF-48 Stage B converts the report route in place; both the single-match and the map-page flows then open the new report.",
+    "MF-46 adds \"Report incorrect lot match\" and the \"report it\" link; MF-60 the intersection map; MF-39 moves the map-tiles deviation to one map_tiles line.",
+    "Follow-up cards: the lookup route's literal caps to admin settings; the typeahead LIKE escape; a Sentry q scrub; persisted query-cache exclusion for parcel-search / parcel-lookup.",
+    "Device run (iOS Apple Maps dark, Android Google tiles without a key) owed and UNVERIFIED."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-53/",
+  "notes": [
+    "Commit order: docs 14dd107a8 (spec and queue notes), prereg 3c2335442 alone (prereg-MF-53-1, round 148), then the code commit; each with real hooks.",
+    "Merge note: MF-48 (wf1/mf48-1111, not on origin) edits the same renderer, bindings.json and conformance locks with the same render-half amendment text; whichever lands second rebases (S-082 stays MF-48's, this entry is S-083)."
+  ]
+}

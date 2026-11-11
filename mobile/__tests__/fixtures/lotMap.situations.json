@@ -1,0 +1,1182 @@
+{
+  "$comment": "MF-53 (plan v4 §3, §5 T6; Spec 126 §11b.2): the named render inputs of the choose-your-lot page (S-071). Each entry is the HOOK VALUES the mount passes to buildLotMapSituation (mobile/src/lib/lotMap.ts): query, the lookup response (data), the error class (rate_limited | entitlement | unexpected | schema_drift; rate_limited_zero is a RateLimitError(0)), isFetching and the tapped lot. `goldens` maps each committed golden (src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map/<golden>.mobile.json) to its descriptor state and input; every other input is a named case of lotMapScreens.golden.test.ts. The situation is always rebuilt from these inputs, so a golden cannot drift from the helper. Parcel ids, coordinates and figures are synthetic; the display strings follow the server rules (src/lib/parcels/display-rules.ts).",
+  "goldens": {
+    "loading": {
+      "state": "loading",
+      "situation": "loading"
+    },
+    "multi_parcel_2": {
+      "state": "ambiguous",
+      "situation": "multi_parcel_2"
+    },
+    "multi_parcel_3plus": {
+      "state": "hit",
+      "situation": "multi_parcel_3plus"
+    },
+    "unlinked": {
+      "state": "miss",
+      "situation": "unlinked"
+    },
+    "intersection": {
+      "state": "static",
+      "situation": "intersection"
+    },
+    "redirect": {
+      "state": "redirect",
+      "situation": "redirect"
+    },
+    "error": {
+      "state": "error",
+      "situation": "error"
+    },
+    "schema_drift": {
+      "state": "schema_drift",
+      "situation": "schema_drift"
+    },
+    "rate_limited": {
+      "state": "rate_limited",
+      "situation": "rate_limited"
+    },
+    "unauthorized": {
+      "state": "unauthorized",
+      "situation": "unauthorized"
+    },
+    "too_many_lots": {
+      "state": "empty",
+      "situation": "too_many_lots"
+    }
+  },
+  "inputs": {
+    "loading": {
+      "query": "5 Elm St",
+      "isFetching": true
+    },
+    "multi_parcel_2": {
+      "query": "5 Elm St",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "multi_parcel",
+        "map": {
+          "address": null,
+          "pin": {
+            "lat": 43.65004,
+            "lng": -79.38008
+          },
+          "fit": {
+            "north": 43.6501,
+            "south": 43.65,
+            "east": -79.3798,
+            "west": -79.381
+          },
+          "truncated": false,
+          "lots": [
+            {
+              "parcelId": "PCL-A1",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38095
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.381,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-B2",
+              "area": "2,153 sq ft · 200 m²",
+              "frontage": "6.1 m",
+              "zoning": null,
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38085
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3808,
+                      43.65
+                    ],
+                    [
+                      -79.3808,
+                      43.6501
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            }
+          ],
+          "neighbours": []
+        }
+      }
+    },
+    "multi_parcel_3plus": {
+      "query": "5 Elm St",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "multi_parcel",
+        "map": {
+          "address": null,
+          "pin": {
+            "lat": 43.65004,
+            "lng": -79.38008
+          },
+          "fit": {
+            "north": 43.6501,
+            "south": 43.65,
+            "east": -79.3807,
+            "west": -79.381
+          },
+          "truncated": false,
+          "lots": [
+            {
+              "parcelId": "PCL-A1",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38095
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.381,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-B2",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38085
+              },
+              "outline": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                  [
+                    [
+                      [
+                        -79.3809,
+                        43.65
+                      ],
+                      [
+                        -79.3808,
+                        43.65
+                      ],
+                      [
+                        -79.3808,
+                        43.6501
+                      ],
+                      [
+                        -79.3809,
+                        43.6501
+                      ],
+                      [
+                        -79.3809,
+                        43.65
+                      ]
+                    ]
+                  ],
+                  [
+                    [
+                      [
+                        -79.38085,
+                        43.65012
+                      ],
+                      [
+                        -79.38082999999999,
+                        43.65012
+                      ],
+                      [
+                        -79.38082999999999,
+                        43.65014
+                      ],
+                      [
+                        -79.38085,
+                        43.65014
+                      ],
+                      [
+                        -79.38085,
+                        43.65012
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-C3",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38074999999999
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.3808,
+                      43.65
+                    ],
+                    [
+                      -79.38069999999999,
+                      43.65
+                    ],
+                    [
+                      -79.38069999999999,
+                      43.6501
+                    ],
+                    [
+                      -79.3808,
+                      43.6501
+                    ],
+                    [
+                      -79.3808,
+                      43.65
+                    ]
+                  ],
+                  [
+                    [
+                      -79.38078,
+                      43.65002
+                    ],
+                    [
+                      -79.38076,
+                      43.65002
+                    ],
+                    [
+                      -79.38076,
+                      43.65004
+                    ],
+                    [
+                      -79.38078,
+                      43.65004
+                    ],
+                    [
+                      -79.38078,
+                      43.65002
+                    ]
+                  ]
+                ]
+              }
+            }
+          ],
+          "neighbours": []
+        }
+      },
+      "selectedParcelId": "PCL-B2"
+    },
+    "unlinked": {
+      "query": "12 Laneway Rear",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "unlinked",
+        "map": {
+          "address": "12 Laneway Rear",
+          "pin": {
+            "lat": 43.66,
+            "lng": -79.4
+          },
+          "fit": {
+            "north": 43.6603,
+            "south": 43.6597,
+            "east": -79.3997,
+            "west": -79.4003
+          },
+          "truncated": false,
+          "lots": [],
+          "neighbours": [
+            {
+              "parcelId": "PCL-N1",
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.4002,
+                      43.6599
+                    ],
+                    [
+                      -79.4001,
+                      43.6599
+                    ],
+                    [
+                      -79.4001,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4002,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4002,
+                      43.6599
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-N2",
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.4,
+                      43.6599
+                    ],
+                    [
+                      -79.3999,
+                      43.6599
+                    ],
+                    [
+                      -79.3999,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4,
+                      43.6599
+                    ]
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "unlinked_no_pin": {
+      "query": "12 Main",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "unlinked",
+        "map": {
+          "address": "12 Main Ave",
+          "pin": null,
+          "fit": null,
+          "truncated": false,
+          "lots": [],
+          "neighbours": []
+        }
+      }
+    },
+    "intersection": {
+      "query": "Queen and Spadina",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "no_match",
+        "map": null
+      }
+    },
+    "redirect": {
+      "query": "5 Elm St",
+      "data": {
+        "match": null,
+        "candidates": [
+          {
+            "parcelId": "X",
+            "address": "5 Elm St"
+          },
+          {
+            "parcelId": "Y",
+            "address": "5 Elm Ave"
+          }
+        ],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "text_candidates",
+        "map": null
+      }
+    },
+    "error": {
+      "query": "5 Elm St",
+      "error": "unexpected"
+    },
+    "schema_drift": {
+      "query": "5 Elm St",
+      "error": "schema_drift"
+    },
+    "rate_limited": {
+      "query": "5 Elm St",
+      "error": "rate_limited"
+    },
+    "unauthorized": {
+      "query": "5 Elm St",
+      "error": "entitlement"
+    },
+    "too_many_lots": {
+      "query": "1 Big Rd",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "multi_parcel",
+        "map": {
+          "address": null,
+          "pin": null,
+          "fit": null,
+          "truncated": true,
+          "lots": [],
+          "neighbours": []
+        }
+      }
+    },
+    "multi_parcel_2_lot_b": {
+      "query": "5 Elm St",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "multi_parcel",
+        "map": {
+          "address": null,
+          "pin": {
+            "lat": 43.65004,
+            "lng": -79.38008
+          },
+          "fit": {
+            "north": 43.6501,
+            "south": 43.65,
+            "east": -79.3798,
+            "west": -79.381
+          },
+          "truncated": false,
+          "lots": [
+            {
+              "parcelId": "PCL-A1",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38095
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.381,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-B2",
+              "area": "2,153 sq ft · 200 m²",
+              "frontage": "6.1 m",
+              "zoning": "R (d0.6)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38085
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3808,
+                      43.65
+                    ],
+                    [
+                      -79.3808,
+                      43.6501
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            }
+          ],
+          "neighbours": []
+        }
+      },
+      "selectedParcelId": "PCL-B2"
+    },
+    "multi_parcel_3plus_none": {
+      "query": "5 Elm St",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "multi_parcel",
+        "map": {
+          "address": null,
+          "pin": {
+            "lat": 43.65004,
+            "lng": -79.38008
+          },
+          "fit": {
+            "north": 43.6501,
+            "south": 43.65,
+            "east": -79.3807,
+            "west": -79.381
+          },
+          "truncated": false,
+          "lots": [
+            {
+              "parcelId": "PCL-A1",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38095
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.381,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-B2",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38085
+              },
+              "outline": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                  [
+                    [
+                      [
+                        -79.3809,
+                        43.65
+                      ],
+                      [
+                        -79.3808,
+                        43.65
+                      ],
+                      [
+                        -79.3808,
+                        43.6501
+                      ],
+                      [
+                        -79.3809,
+                        43.6501
+                      ],
+                      [
+                        -79.3809,
+                        43.65
+                      ]
+                    ]
+                  ],
+                  [
+                    [
+                      [
+                        -79.38085,
+                        43.65012
+                      ],
+                      [
+                        -79.38082999999999,
+                        43.65012
+                      ],
+                      [
+                        -79.38082999999999,
+                        43.65014
+                      ],
+                      [
+                        -79.38085,
+                        43.65014
+                      ],
+                      [
+                        -79.38085,
+                        43.65012
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-C3",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38074999999999
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.3808,
+                      43.65
+                    ],
+                    [
+                      -79.38069999999999,
+                      43.65
+                    ],
+                    [
+                      -79.38069999999999,
+                      43.6501
+                    ],
+                    [
+                      -79.3808,
+                      43.6501
+                    ],
+                    [
+                      -79.3808,
+                      43.65
+                    ]
+                  ],
+                  [
+                    [
+                      -79.38078,
+                      43.65002
+                    ],
+                    [
+                      -79.38076,
+                      43.65002
+                    ],
+                    [
+                      -79.38076,
+                      43.65004
+                    ],
+                    [
+                      -79.38078,
+                      43.65004
+                    ],
+                    [
+                      -79.38078,
+                      43.65002
+                    ]
+                  ]
+                ]
+              }
+            }
+          ],
+          "neighbours": []
+        }
+      }
+    },
+    "lot_facts_null": {
+      "query": "5 Elm St",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "multi_parcel",
+        "map": {
+          "address": null,
+          "pin": null,
+          "fit": {
+            "north": 43.6501,
+            "south": 43.65,
+            "east": -79.3808,
+            "west": -79.381
+          },
+          "truncated": false,
+          "lots": [
+            {
+              "parcelId": "PCL-A1",
+              "area": null,
+              "frontage": null,
+              "zoning": null,
+              "centroid": null,
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.381,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-B2",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38085
+              },
+              "outline": null
+            }
+          ],
+          "neighbours": []
+        }
+      }
+    },
+    "unlinked_neighbour_picked": {
+      "query": "12 Laneway Rear",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "unlinked",
+        "map": {
+          "address": "12 Laneway Rear",
+          "pin": {
+            "lat": 43.66,
+            "lng": -79.4
+          },
+          "fit": {
+            "north": 43.6603,
+            "south": 43.6597,
+            "east": -79.3997,
+            "west": -79.4003
+          },
+          "truncated": false,
+          "lots": [],
+          "neighbours": [
+            {
+              "parcelId": "PCL-N1",
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.4002,
+                      43.6599
+                    ],
+                    [
+                      -79.4001,
+                      43.6599
+                    ],
+                    [
+                      -79.4001,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4002,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4002,
+                      43.6599
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-N2",
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.4,
+                      43.6599
+                    ],
+                    [
+                      -79.3999,
+                      43.6599
+                    ],
+                    [
+                      -79.3999,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4,
+                      43.6599
+                    ]
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "selectedParcelId": "PCL-N2"
+    },
+    "unlinked_stale_pick": {
+      "query": "12 Laneway Rear",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "unlinked",
+        "map": {
+          "address": "12 Laneway Rear",
+          "pin": {
+            "lat": 43.66,
+            "lng": -79.4
+          },
+          "fit": {
+            "north": 43.6603,
+            "south": 43.6597,
+            "east": -79.3997,
+            "west": -79.4003
+          },
+          "truncated": false,
+          "lots": [],
+          "neighbours": [
+            {
+              "parcelId": "PCL-N1",
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.4002,
+                      43.6599
+                    ],
+                    [
+                      -79.4001,
+                      43.6599
+                    ],
+                    [
+                      -79.4001,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4002,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4002,
+                      43.6599
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-N2",
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.4,
+                      43.6599
+                    ],
+                    [
+                      -79.3999,
+                      43.6599
+                    ],
+                    [
+                      -79.3999,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4,
+                      43.660000000000004
+                    ],
+                    [
+                      -79.4,
+                      43.6599
+                    ]
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "selectedParcelId": "PCL-A1"
+    },
+    "redirect_unique": {
+      "query": "5 Elm St",
+      "data": {
+        "match": {
+          "parcelId": "PCL-U1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "unique",
+        "map": null
+      }
+    },
+    "redirect_no_match": {
+      "query": "99 Nowhere St",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "no_match",
+        "map": null
+      }
+    },
+    "intersection_loading": {
+      "query": "Queen and Spadina",
+      "isFetching": true
+    },
+    "refetching_multi_parcel": {
+      "query": "5 Elm St",
+      "data": {
+        "match": null,
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "resolution": "multi_parcel",
+        "map": {
+          "address": null,
+          "pin": {
+            "lat": 43.65004,
+            "lng": -79.38008
+          },
+          "fit": {
+            "north": 43.6501,
+            "south": 43.65,
+            "east": -79.3798,
+            "west": -79.381
+          },
+          "truncated": false,
+          "lots": [
+            {
+              "parcelId": "PCL-A1",
+              "area": "3,052 sq ft · 284 m²",
+              "frontage": "7.6 m",
+              "zoning": "RD (f12.0; a370)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38095
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.381,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.6501
+                    ],
+                    [
+                      -79.381,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            },
+            {
+              "parcelId": "PCL-B2",
+              "area": "2,153 sq ft · 200 m²",
+              "frontage": "6.1 m",
+              "zoning": "R (d0.6)",
+              "centroid": {
+                "lat": 43.65005,
+                "lng": -79.38085
+              },
+              "outline": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [
+                      -79.3809,
+                      43.65
+                    ],
+                    [
+                      -79.3808,
+                      43.65
+                    ],
+                    [
+                      -79.3808,
+                      43.6501
+                    ],
+                    [
+                      -79.3809,
+                      43.6501
+                    ],
+                    [
+                      -79.3809,
+                      43.65
+                    ]
+                  ]
+                ]
+              }
+            }
+          ],
+          "neighbours": []
+        }
+      },
+      "isFetching": true
+    },
+    "rate_limited_zero": {
+      "query": "5 Elm St",
+      "error": "rate_limited"
+    }
+  }
+}

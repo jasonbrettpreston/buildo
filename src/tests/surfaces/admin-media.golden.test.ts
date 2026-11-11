@@ -60,7 +60,7 @@ describe('T7 (b) coverage', () => {
   it('each golden covers its state, every state of the three surfaces has one', () => {
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted too; its mobile goldens are built and checked by mobile jest
     // (mobile/__tests__/parcelScreens.golden.test.ts), so this web coverage case reads the web surfaces only.
-    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry']);
+    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map']); // MF-53: + the map page (mobile only)
     for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {
@@ -88,7 +88,7 @@ describe('T7 (c) the page passes plain data only', () => {
 describe('T7 (d) non-web targets fail closed', () => {
   it('every converted surface with a mobile target names its mobile golden test, and that file exists', () => {
     const mobile = convertedIds(ROOT).filter((id) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8')).identity.platforms.includes('mobile'));
-    expect(mobile).toEqual(['mobile_parcel_search']);
+    expect(mobile).toEqual(['mobile_parcel_search', 'mobile_parcel_disambiguation_map']); // MF-53: + the map page
     for (const id of mobile) expect([id, fs.existsSync(path.join(ROOT, MOBILE_GOLDEN_TESTS[id] ?? 'none'))]).toEqual([id, true]);
   });
   it('RED: a mobile target with no declared test, and a pdf target, throw', () => {

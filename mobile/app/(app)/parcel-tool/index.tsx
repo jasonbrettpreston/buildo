@@ -97,6 +97,7 @@ export default function ParcelSearchScreen() {
       select: (parcelId: string) => setSelectedParcelId(parcelId),
       push: (to: string) => navigate(to),
       open_account: () => router.push(PARCEL_TAB_ROUTE.account),
+      back: () => router.back(),
     }),
     [refetch, navigate, router],
   );

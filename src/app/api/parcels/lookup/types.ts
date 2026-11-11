@@ -91,12 +91,52 @@ export const ConsumerParcelSchema = z
   .strict();
 export type ConsumerParcel = z.infer<typeof ConsumerParcelSchema>;
 
+// ── MF-53 the map fields (Spec 100 §3.2 dated note 2026-11-11; D-2 a and DECISIONS-v3 item 1): present ONLY when resolution is
+// multi_parcel or unlinked. Every level is .strict(); each value names its parcels / address_points column in the Spec 100 note.
+const LatLngSchema = z.object({ lat: z.number(), lng: z.number() }).strict();
+const Ring = z.array(z.tuple([z.number(), z.number()]));
+/** ST_AsGeoJSON(parcels.geom, 6): a Polygon or MultiPolygon, no crs / bbox passthrough (security M-1). */
+export const LotOutlineSchema = z.union([
+  z.object({ type: z.literal('Polygon'), coordinates: z.array(Ring) }).strict(),
+  z.object({ type: z.literal('MultiPolygon'), coordinates: z.array(z.array(Ring)) }).strict(),
+]);
+export const ConsumerMapLotSchema = z
+  .object({
+    parcelId: z.string(), // parcels.parcel_id
+    area: z.string().nullable(), // parcels.lot_size_sqm, rule area_sqft_m2_dot (the report's lot.size rule)
+    frontage: z.string().nullable(), // parcels.frontage_m, rule len1
+    zoning: z.string().nullable(), // parcels.zoning_zn_string, verbatim
+    centroid: LatLngSchema.nullable(), // parcels.centroid_lat / centroid_lng (the letter marker)
+    outline: LotOutlineSchema.nullable(), // parcels.geom
+  })
+  .strict();
+export const ConsumerMapNeighbourSchema = z.object({ parcelId: z.string(), outline: LotOutlineSchema.nullable() }).strict();
+export const ConsumerLotMapSchema = z
+  .object({
+    address: z.string().nullable(), // address_points.address_full of the unlinked address (the message names it)
+    pin: LatLngSchema.nullable(), // address_points.latitude / longitude
+    fit: z.object({ north: z.number(), south: z.number(), east: z.number(), west: z.number() }).strict().nullable(), // the start view
+    truncated: z.boolean(), // more than 10 lots on one address: no lots are sent
+    lots: z.array(ConsumerMapLotSchema),
+    neighbours: z.array(ConsumerMapNeighbourSchema), // unlinked with a pin only (faint, tappable)
+  })
+  .strict();
+export type ConsumerLotMap = z.infer<typeof ConsumerLotMapSchema>;
+export const RESOLUTIONS = ['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match'] as const;
+export const MAP_RESOLUTIONS: readonly string[] = ['multi_parcel', 'unlinked'];
+
 export const ConsumerParcelLookupResponseSchema = z
   .object({
     match: ParcelMatchSchema.nullable(),
     candidates: z.array(ParcelCandidateSchema),
     warnings: z.array(z.string()),
     parcel: ConsumerParcelSchema.nullable(),
+    resolution: z.enum(RESOLUTIONS),
+    map: ConsumerLotMapSchema.nullable(),
   })
-  .strict();
+  .strict()
+  .refine((r) => (r.map !== null) === MAP_RESOLUTIONS.includes(r.resolution), {
+    message: 'map is present exactly when resolution is multi_parcel or unlinked',
+    path: ['map'],
+  });
 export type ConsumerParcelLookupResponse = z.infer<typeof ConsumerParcelLookupResponseSchema>;

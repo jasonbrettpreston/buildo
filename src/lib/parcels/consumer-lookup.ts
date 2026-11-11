@@ -23,7 +23,13 @@ import {
   type CoaProject,
   type ConsumerComparableBuild,
   type ConsumerParcel,
+  LotOutlineSchema,
+  type ConsumerLotMap,
 } from '@/app/api/parcels/lookup/types';
+import type { LotMapRows } from '@/lib/parcels/lot-map';
+import { areaSqftM2Dot, len1 } from '@/lib/parcels/display-rules';
+
+type LotOutline = NonNullable<ConsumerLotMap['lots'][number]['outline']>;
 
 const TAG = '[api/parcel-lookup]';
 
@@ -155,5 +161,73 @@ export function assembleConsumerPayload(
       },
     },
     warnings,
+  };
+}
+
+// ── MF-53 · the map block (Spec 100 §3.2 dated note 2026-11-11; D-2 a, DECISIONS-v3 item 1, Q8) ─────────────────────────────────────
+// Assembly only (no SQL here: the read is src/lib/parcels/lot-map.ts). Every value is server-formatted (FE-05): area and frontage through the
+// report's display rules, the start view as a box. A GeoJSON outline that fails the strict schema is dropped to null (no polygon drawn) with
+// one logWarn naming the parcel, never a blank response.
+
+/** The smallest start-view span in degrees (about 30 m), so a pin alone or a sliver lot still opens at street scale (PLAN panel CR F-5). */
+export const FIT_MIN_SPAN_DEG = 0.0003;
+
+const coordsOf = (o: LotOutline | null): Array<[number, number]> =>
+  o === null ? [] : o.type === 'Polygon' ? o.coordinates.flat() : o.coordinates.flat(2);
+
+function parseOutline(raw: string | null, parcelId: string): LotOutline | null {
+  if (raw === null) return null;
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    json = null;
+  }
+  const parsed = LotOutlineSchema.safeParse(json);
+  if (parsed.success) return parsed.data;
+  logWarn(TAG, 'outline-drift', { parcelId });
+  return null;
+}
+
+/** The box around every outline and the pin, widened to FIT_MIN_SPAN_DEG; null when there is nothing to show. */
+export function fitOf(outlines: Array<LotOutline | null>, pin: { lat: number; lng: number } | null): ConsumerLotMap['fit'] {
+  const pts = [...outlines.flatMap(coordsOf), ...(pin ? [[pin.lng, pin.lat] as [number, number]] : [])];
+  if (pts.length === 0) return null;
+  const lngs = pts.map((p) => p[0]);
+  const lats = pts.map((p) => p[1]);
+  const widen = (lo: number, hi: number): [number, number] => {
+    const pad = Math.max(0, FIT_MIN_SPAN_DEG - (hi - lo)) / 2;
+    return [lo - pad, hi + pad];
+  };
+  const [south, north] = widen(Math.min(...lats), Math.max(...lats));
+  const [west, east] = widen(Math.min(...lngs), Math.max(...lngs));
+  return { north, south, east, west };
+}
+
+export function assembleLotMap(rows: LotMapRows): ConsumerLotMap {
+  const lots = rows.lots.map((l) => {
+    const lat = num(l.centroid_lat);
+    const lng = num(l.centroid_lng);
+    return {
+      parcelId: String(l.parcel_id),
+      area: areaSqftM2Dot(l.lot_size_sqm),
+      frontage: len1(l.frontage_m),
+      zoning: l.zoning_zn_string == null || l.zoning_zn_string === '' ? null : String(l.zoning_zn_string),
+      centroid: lat !== null && lng !== null ? { lat, lng } : null,
+      outline: parseOutline(l.outline, String(l.parcel_id)),
+    };
+  });
+  // A neighbour is only an outline: one whose outline is missing, drifted or over the cap is dropped (it could not be drawn or tapped;
+  // OUTPUT panel code reviewer LOW-2). A matched lot keeps its card without an outline.
+  const neighbours = rows.neighbours
+    .map((n) => ({ parcelId: String(n.parcel_id), outline: parseOutline(n.outline, String(n.parcel_id)) }))
+    .filter((n) => n.outline !== null);
+  return {
+    address: rows.address,
+    pin: rows.pin,
+    fit: fitOf([...lots.map((l) => l.outline), ...neighbours.map((n) => n.outline)], rows.pin),
+    truncated: rows.truncated,
+    lots,
+    neighbours,
   };
 }

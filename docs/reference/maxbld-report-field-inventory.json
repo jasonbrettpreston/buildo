@@ -19815,7 +19815,7 @@
     },
     {
       "path": "scripts/seeds/logic_variables.json",
-      "sha256": "54cddf9e57d46fd1"
+      "sha256": "6346c174f64f99db"
     },
     {
       "path": "scripts/surfaces/_schema/report-fields.decl.json",
@@ -19839,11 +19839,11 @@
     },
     {
       "path": "src/lib/admin/parcel-lookup.ts",
-      "sha256": "c00e8c78b6bab179"
+      "sha256": "a8061a12d30d073f"
     },
     {
       "path": "src/lib/parcels/consumer-lookup.ts",
-      "sha256": "8ad1f851841c6e7e"
+      "sha256": "df65b27a51dd1ce7"
     }
   ],
   "logic_variables": [

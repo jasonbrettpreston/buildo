@@ -1289,6 +1289,13 @@ const GROUP_ORDER = [
       "report_check_skip_after_ms",
       "report_check_ready_hold_ms"
     ]
+  },
+  {
+    "label": "Parcel Lookup",
+    "keys": [
+      "parcel_map_neighbour_radius_m",
+      "parcel_map_neighbour_limit"
+    ]
   }
 ];
 

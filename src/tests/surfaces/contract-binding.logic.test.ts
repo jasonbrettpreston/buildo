@@ -36,7 +36,8 @@ describe('FE-32 (a) the contract kind is declared on both sides', () => {
     // MF-48 OUTPUT fold RG R2: non_display_keys is ONE list for every platform (a key here is never judged by SV-SBIND); MF-48 added exactly these three
     // at the end, so any further addition needs a dated edit of this pin.
     const nd = rj('scripts/surfaces/_schema/bindings.json').non_display_keys as string[];
-    expect([nd.length, nd.slice(-3)]).toEqual([50, ['option', 'panel', 'pressBehavior']]);
+    // MF-53 (dated 2026-11-11; plan v4 §3): + 19 react-native-maps prop names that carry no display text (initialRegion ... height), appended after MF-48's three.
+    expect([nd.length, nd.slice(47, 50), nd.slice(-3)]).toEqual([69, ['option', 'panel', 'pressBehavior'], ['pinColor', 'numberOfLines', 'height']]);
   });
 });
 

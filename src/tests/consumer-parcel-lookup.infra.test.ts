@@ -13,7 +13,8 @@ import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ConsumerParcelLookupQuerySchema, ConsumerParcelLookupResponseSchema } from '@/app/api/parcels/lookup/types';
-import { assembleConsumerPayload, CONSUMER_HEADLINE_COLS } from '@/lib/parcels/consumer-lookup';
+import { assembleConsumerPayload, assembleLotMap, CONSUMER_HEADLINE_COLS, FIT_MIN_SPAN_DEG, fitOf } from '@/lib/parcels/consumer-lookup';
+import { CONSUMER_MAP_COLS } from '@/lib/parcels/lot-map';
 import { T3_GROUPS } from '@/lib/admin/parcel-lookup';
 
 const ROUTE = path.resolve(__dirname, '../app/api/parcels/lookup/route.ts');
@@ -83,6 +84,8 @@ describe('consumer lib is read-only + reuses the admin resolver (no fork)', () =
     const src = route();
     expect(src).toContain("from '@/lib/admin/parcel-lookup'");
     expect(src).toMatch(/resolveAddress,\s*fetchParcelById,\s*fetchCoaProjects/);
+    // MF-53: the map read is its own import line (src/lib/parcels/lot-map.ts, the one SQL home of the map), never the admin resolver's.
+    expect(src).toContain("import { resolveLotMap } from '@/lib/parcels/lot-map';");
     // No SQL / normalizer parsing lives in the consumer lib (assembly only).
     expect(lib()).not.toMatch(/SELECT\s/i);
     expect(lib()).not.toContain('normalizeAddressNumber');
@@ -167,13 +170,16 @@ describe('WHITELIST — the assembler never leaks a diagnostic column or `groups
 
   it('the full response is .strict() — a `groups` leak fails the boundary parse', () => {
     const { payload } = assembleConsumerPayload(row, []);
+    // MF-53 (PLAN panel regression MEDIUM-4): `good` carries the two added keys, so the leak below fails for the right reason.
     const good = {
       match: { parcelId: 'WL-1', matchType: 'exact' as const, address: '5 Elm' },
-      candidates: [], warnings: [], parcel: payload,
+      candidates: [], warnings: [], parcel: payload, resolution: 'unique' as const, map: null,
     };
     expect(() => ConsumerParcelLookupResponseSchema.parse(good)).not.toThrow();
     const leaked = { ...good, parcel: { ...payload, groups: { identity: { id: 1 } } } };
-    expect(ConsumerParcelLookupResponseSchema.safeParse(leaked).success).toBe(false);
+    const res = ConsumerParcelLookupResponseSchema.safeParse(leaked);
+    expect(res.success).toBe(false);
+    expect(res.error?.issues.map((i) => [i.code, (i as { keys?: string[] }).keys])).toEqual([['unrecognized_keys', ['groups']]]);
   });
 });
 
@@ -188,5 +194,60 @@ describe('request Zod (Spec 100 §3)', () => {
   });
   it('rejects a too-short q', () => {
     expect(ConsumerParcelLookupQuerySchema.safeParse({ q: 'ab' }).success).toBe(false);
+  });
+});
+
+// ── MF-53 THE MAP BLOCK (Spec 100 §3.2 dated note 2026-11-11; PLAN panel security M-1, M-2) ───────────────────────────────────────
+describe('MF-53 map whitelist — the lot statement projects exactly CONSUMER_MAP_COLS; map is .strict() at every level', () => {
+  const LOTMAP = path.resolve(__dirname, '../lib/parcels/lot-map.ts');
+  const lotStatement = (src: string): string => /SELECT (parcel_id, [^]*?)\s+FROM parcels\s+WHERE parcel_id = ANY/.exec(src)?.[1] ?? '';
+  const projected = (sel: string): string[] => sel.split(/,(?![^(]*\))/).map((c) => c.trim()).map((c) => /^ST_AsGeoJSON\((\w+), 6\) AS outline$/.exec(c)?.[1] ?? c);
+  it('the lot SELECT list equals CONSUMER_MAP_COLS (both ways)', () => {
+    expect(projected(lotStatement(fs.readFileSync(LOTMAP, 'utf8')))).toEqual([...CONSUMER_MAP_COLS]);
+  });
+  it('RED (planted): a Tier-3 column added to the lot statement fails the equality', () => {
+    const planted = fs.readFileSync(LOTMAP, 'utf8').replace('zoning_zn_string, ', 'zoning_zn_string, zoning_class, ');
+    expect(projected(lotStatement(planted))).not.toEqual([...CONSUMER_MAP_COLS]);
+  });
+  it('the assembled map carries only the declared camelCase keys and no snake_case column name', () => {
+    const map = assembleLotMap({
+      address: null, pin: { lat: 43.65, lng: -79.38 }, truncated: false,
+      lots: [{ parcel_id: 'P1', lot_size_sqm: '283.5', frontage_m: '7.62', zoning_zn_string: 'RD', centroid_lat: '43.65', centroid_lng: '-79.38',
+        outline: '{"type":"Polygon","coordinates":[[[-79.38,43.65],[-79.37,43.65],[-79.38,43.65]]],"crs":{"x":1}}' }],
+      neighbours: [],
+    });
+    expect(Object.keys(map).sort()).toEqual(['address', 'fit', 'lots', 'neighbours', 'pin', 'truncated']);
+    expect(Object.keys(map.lots[0]!).sort()).toEqual(['area', 'centroid', 'frontage', 'outline', 'parcelId', 'zoning']);
+    expect(map.lots[0]!.outline).toBeNull(); // a crs passthrough fails the strict outline schema: no polygon, never a leak
+    expect(map.lots[0]!.area).toBe('3,052 sq ft · 284 m²');
+    expect(JSON.stringify(map)).not.toMatch(/"[a-z]+_[a-z_]+"/);
+  });
+  it('the response schema refuses a stray key in a map lot, a map on unique, and no map on a map outcome', () => {
+    const base = { match: null, candidates: [], warnings: [], parcel: null };
+    const map = { address: null, pin: null, fit: null, truncated: false, lots: [{ parcelId: 'P', area: null, frontage: null, zoning: null, centroid: null, outline: null }], neighbours: [] };
+    expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'multi_parcel', map }).success).toBe(true);
+    expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'multi_parcel', map: { ...map, lots: [{ ...map.lots[0], zoning_class: 'R' }] } }).success).toBe(false);
+    expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'unique', map }).success).toBe(false);
+    expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'unlinked', map: null }).success).toBe(false);
+  });
+  it('a degenerate start view (a pin alone) still opens at street scale', () => {
+    const fit = fitOf([], { lat: 43.65, lng: -79.38 })!;
+    expect(fit.north - fit.south).toBeCloseTo(FIT_MIN_SPAN_DEG, 9);
+    expect(fit.east - fit.west).toBeCloseTo(FIT_MIN_SPAN_DEG, 9);
+    expect(fitOf([], null)).toBeNull();
+  });
+});
+
+describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel code reviewer LOW-2)', () => {
+  it('null and drifted neighbour outlines leave the map; a lot without an outline keeps its card', () => {
+    const map = assembleLotMap({
+      address: '12 Main St', pin: { lat: 43.65, lng: -79.38 }, truncated: false, lots: [],
+      neighbours: [
+        { parcel_id: 'N1', outline: null },
+        { parcel_id: 'N2', outline: '{"type":"Point","coordinates":[1,2]}' },
+        { parcel_id: 'N3', outline: '{"type":"Polygon","coordinates":[[[-79.38,43.65],[-79.37,43.65],[-79.38,43.65]]]}' },
+      ],
+    });
+    expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
   });
 });

@@ -319,8 +319,6 @@ const ALLOW: Allow[] = [
   { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable#signup-send-code', handler: "setPhoneStage('otp')", count: 1, kind: 'disclosure', audit: 21,
     why: 'the code stage inside the sign-up phone sheet, gated off by PHONE_AUTH_ENABLED' },
   // --- Audited FLAGs the rules reach: a real router call missing a guard; not navigation by state. Owed by the named row. ---
-  { file: 'mobile/app/(app)/parcel-tool/disambiguate.tsx', rule: 'NAV-5', component: 'Pressable#parcel-disambiguate-back', handler: 'router.back()', count: 1, kind: 'flag', audit: 10,
-    why: 'owed: MF-53 (canGoBack ? back : replace(PARCEL_TAB_ROUTE.lookup); superseded by the Clear (X) on its branch)' },
   { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#account', handler: 'action:open_account', count: 1, kind: 'flag', audit: 45,
     why: 'owed: MF-44 / MF-52 (Button component={Link} href; unwired while MAXBLD_WEB_LIVE=false, fixed before the switch flips)' },
   { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select', handler: 'action:push', count: 1, kind: 'flag', audit: 46,

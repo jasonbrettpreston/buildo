@@ -1,0 +1,22 @@
+MF-53 red-2 (lot-map.ts + seeds present; resolveAddress unchanged at e088bf072): 2026-11-11T15:44:45Z
+   × T1 resolveAddress: the outcome name (one rule, both paths) > exact, 1 row -> unique; match as today 6ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > exact, 2 rows printing ONE address -> multi_parcel (the map); candidates unchanged for admin 1ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > exact, 2 rows printing DIFFERENT addresses -> text_candidates (the list, today) 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > exact, 11 rows printing one address -> multi_parcel with truncated (too many lots); no lot ids sent 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > typeahead, 1 row -> unique 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > typeahead, 2+ rows printing one address with a house number -> multi_parcel 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > typeahead, 2+ rows printing one address WITHOUT a house number -> text_candidates (never a map without a number) 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > typeahead, rows printing different addresses -> text_candidates 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > typeahead miss + one unlinked live point -> unlinked with its pin 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > typeahead miss + several unlinked addresses -> unlinked, no pin (Q5 i: the honest message, no map) 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > typeahead miss + no unlinked point -> no_match (NEVER unlinked on zero points: the anti-guess rule) 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > a miss with no house number never reads the unlinked statement 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > the unlinked read repeats the live-point filters and asks for points with NO lot link 2ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > a street carrying a LIKE wildcard (% or _) never runs the unlinked read (security L-1) 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > the admin call (no option) never reads the unlinked statement: a miss stays no_match with two reads, as today 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > rows whose printed address is empty never count as one address (legacy columns; regression MEDIUM-5) -> text_candidates 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > 10 typeahead rows on one printed address -> multi_parcel without truncated (the typeahead LIMIT 10 has no overflow probe) 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > the WF3 city-suffix strip still runs on the new path ("..., Toronto") 0ms
+   × T1 resolveAddress: the outcome name (one rule, both paths) > an unparseable query is no_match with no read 0ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 19 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  19 failed | 18 passed (37)

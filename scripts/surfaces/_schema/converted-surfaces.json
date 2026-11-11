@@ -4,9 +4,8 @@
     "programme_scopes": ["parcel_product", "parcel_admin"],
     "expected_count": 25
   },
-  "converted": ["admin_media", "admin_media_upload", "admin_media_delete", "mobile_parcel_search", "admin_placements", "admin_offers", "admin_advertiser_entry"],
+  "converted": ["admin_media", "admin_media_upload", "admin_media_delete", "mobile_parcel_search", "admin_placements", "admin_offers", "admin_advertiser_entry", "mobile_parcel_disambiguation_map"],
   "pending_conversion": [
-    { "id": "mobile_parcel_disambiguation_map", "row": "MF-53" },
     { "id": "web_landing", "row": "MF-46" },
     { "id": "admin_surface_registry", "row": "MF-30" },
     { "id": "admin_drift_status", "row": "MF-30" },

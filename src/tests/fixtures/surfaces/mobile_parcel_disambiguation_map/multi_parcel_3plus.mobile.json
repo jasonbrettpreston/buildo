@@ -1,0 +1,794 @@
+{
+  "surface": "mobile_parcel_disambiguation_map",
+  "state": "hit",
+  "target": "mobile",
+  "covers": [
+    "hit"
+  ],
+  "situation": "multi_parcel_3plus",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-lotmap-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-lotmap-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "pill",
+                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "search-icon",
+                      "icon": "Search",
+                      "size": 16,
+                      "color": "#a1a1aa"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "query",
+                      "testID": "parcel-lotmap-query",
+                      "className": "flex-1 px-2 py-3 text-base font-normal text-zinc-100",
+                      "numberOfLines": 1
+                    },
+                    "children": [
+                      {
+                        "derived": "query"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "clear",
+                      "testID": "parcel-lotmap-clear",
+                      "variant": "ghost",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "map.clear.label"
+                      },
+                      "onPress": {
+                        "action": "back"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "clear-icon",
+                          "icon": "X",
+                          "size": 16,
+                          "color": "#a1a1aa"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "list-header",
+                  "testID": "parcel-lotmap-header",
+                  "className": "mt-4 flex-row items-center justify-between"
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "rail",
+                      "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400",
+                      "role": "header"
+                    },
+                    "children": [
+                      {
+                        "content": "map.rail"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "badge",
+                      "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-[#f59e0b]"
+                    },
+                    "children": [
+                      {
+                        "text": {
+                          "content": "map.badge"
+                        },
+                        "vars": {
+                          "count": {
+                            "derived": "lot_count"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "map-frame",
+                  "testID": "parcel-lotmap-map",
+                  "className": "mt-4 w-full overflow-hidden rounded-xl border border-[#2a2a2c]",
+                  "importantForAccessibility": "no-hide-descendants",
+                  "accessibilityElementsHidden": true
+                },
+                "children": [
+                  {
+                    "component": "MapView",
+                    "props": {
+                      "key": "map",
+                      "style": {
+                        "height": 280
+                      },
+                      "initialRegion": {
+                        "derived": "region"
+                      },
+                      "userInterfaceStyle": "dark",
+                      "customMapStyle": {
+                        "derived": "map_style"
+                      },
+                      "rotateEnabled": false,
+                      "pitchEnabled": false,
+                      "toolbarEnabled": false
+                    },
+                    "children": [
+                      {
+                        "component": "Polygon",
+                        "props": {
+                          "key": "lot-PCL-A1-0",
+                          "coordinates": {
+                            "derived": "lots.0.polygons.0.coordinates"
+                          },
+                          "holes": {
+                            "derived": "lots.0.polygons.0.holes"
+                          },
+                          "strokeColor": "#f59e0b",
+                          "fillColor": "rgba(245,158,11,0.12)",
+                          "strokeWidth": 2,
+                          "tappable": true,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.lots.0.parcelId"
+                            }
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Polygon",
+                        "props": {
+                          "key": "lot-PCL-B2-0",
+                          "coordinates": {
+                            "derived": "lots.1.polygons.0.coordinates"
+                          },
+                          "holes": {
+                            "derived": "lots.1.polygons.0.holes"
+                          },
+                          "strokeColor": "#f59e0b",
+                          "fillColor": "rgba(245,158,11,0.40)",
+                          "strokeWidth": 2,
+                          "tappable": true,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.lots.1.parcelId"
+                            }
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Polygon",
+                        "props": {
+                          "key": "lot-PCL-B2-1",
+                          "coordinates": {
+                            "derived": "lots.1.polygons.1.coordinates"
+                          },
+                          "holes": {
+                            "derived": "lots.1.polygons.1.holes"
+                          },
+                          "strokeColor": "#f59e0b",
+                          "fillColor": "rgba(245,158,11,0.40)",
+                          "strokeWidth": 2,
+                          "tappable": true,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.lots.1.parcelId"
+                            }
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Polygon",
+                        "props": {
+                          "key": "lot-PCL-C3-0",
+                          "coordinates": {
+                            "derived": "lots.2.polygons.0.coordinates"
+                          },
+                          "holes": {
+                            "derived": "lots.2.polygons.0.holes"
+                          },
+                          "strokeColor": "#f59e0b",
+                          "fillColor": "rgba(245,158,11,0.12)",
+                          "strokeWidth": 2,
+                          "tappable": true,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.lots.2.parcelId"
+                            }
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Marker",
+                        "props": {
+                          "key": "marker-PCL-A1",
+                          "coordinate": {
+                            "derived": "lots.0.marker"
+                          },
+                          "tracksViewChanges": false,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.lots.0.parcelId"
+                            }
+                          }
+                        },
+                        "children": [
+                          {
+                            "component": "View",
+                            "props": {
+                              "key": "marker-chip",
+                              "className": "min-w-[24px] items-center rounded-full bg-[#18181b] px-2 py-1 border border-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "marker-letter",
+                                  "className": "text-xs font-bold text-[#f59e0b]"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "letter.0"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Marker",
+                        "props": {
+                          "key": "marker-PCL-B2",
+                          "coordinate": {
+                            "derived": "lots.1.marker"
+                          },
+                          "tracksViewChanges": false,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.lots.1.parcelId"
+                            }
+                          }
+                        },
+                        "children": [
+                          {
+                            "component": "View",
+                            "props": {
+                              "key": "marker-chip",
+                              "className": "min-w-[24px] items-center rounded-full bg-[#f59e0b] px-2 py-1 border border-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "marker-letter",
+                                  "className": "text-xs font-bold text-[#472a00]"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "letter.1"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Marker",
+                        "props": {
+                          "key": "marker-PCL-C3",
+                          "coordinate": {
+                            "derived": "lots.2.marker"
+                          },
+                          "tracksViewChanges": false,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.lots.2.parcelId"
+                            }
+                          }
+                        },
+                        "children": [
+                          {
+                            "component": "View",
+                            "props": {
+                              "key": "marker-chip",
+                              "className": "min-w-[24px] items-center rounded-full bg-[#18181b] px-2 py-1 border border-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "marker-letter",
+                                  "className": "text-xs font-bold text-[#f59e0b]"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "letter.2"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Marker",
+                        "props": {
+                          "key": "pin",
+                          "coordinate": {
+                            "derived": "pin"
+                          },
+                          "pinColor": "#f4f4f5",
+                          "tracksViewChanges": false
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "card-PCL-A1",
+                  "testID": "parcel-lotmap-card-PCL-A1",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "text": {
+                      "content": "lot.label"
+                    },
+                    "vars": {
+                      "letter": {
+                        "derived": "letter.0"
+                      },
+                      "area": {
+                        "contract": "contract_parcels_lookup.map.lots.0.area"
+                      },
+                      "frontage": {
+                        "contract": "contract_parcels_lookup.map.lots.0.frontage"
+                      },
+                      "zoning": {
+                        "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                      }
+                    }
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.map.lots.0.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "View",
+                        "props": {
+                          "key": "card-text"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-title",
+                              "className": "font-mono text-[11px] font-semibold uppercase tracking-widest text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "text": {
+                                  "content": "lot.letter"
+                                },
+                                "vars": {
+                                  "letter": {
+                                    "derived": "letter.0"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-area",
+                              "className": "mt-1 text-base font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "contract": "contract_parcels_lookup.map.lots.0.area"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-facts",
+                              "className": "mt-1 text-sm font-normal text-zinc-400"
+                            },
+                            "children": [
+                              {
+                                "text": {
+                                  "content": "lot.facts"
+                                },
+                                "vars": {
+                                  "frontage": {
+                                    "contract": "contract_parcels_lookup.map.lots.0.frontage"
+                                  },
+                                  "zoning": {
+                                    "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "card-PCL-B2",
+                  "testID": "parcel-lotmap-card-PCL-B2",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-primary dark:border-primary active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": true
+                  },
+                  "accessibilityLabel": {
+                    "text": {
+                      "content": "lot.label"
+                    },
+                    "vars": {
+                      "letter": {
+                        "derived": "letter.1"
+                      },
+                      "area": {
+                        "contract": "contract_parcels_lookup.map.lots.1.area"
+                      },
+                      "frontage": {
+                        "contract": "contract_parcels_lookup.map.lots.1.frontage"
+                      },
+                      "zoning": {
+                        "contract": "contract_parcels_lookup.map.lots.1.zoning"
+                      }
+                    }
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.map.lots.1.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "View",
+                        "props": {
+                          "key": "card-text"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-title",
+                              "className": "font-mono text-[11px] font-semibold uppercase tracking-widest text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "text": {
+                                  "content": "lot.letter"
+                                },
+                                "vars": {
+                                  "letter": {
+                                    "derived": "letter.1"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-area",
+                              "className": "mt-1 text-base font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "contract": "contract_parcels_lookup.map.lots.1.area"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-facts",
+                              "className": "mt-1 text-sm font-normal text-zinc-400"
+                            },
+                            "children": [
+                              {
+                                "text": {
+                                  "content": "lot.facts"
+                                },
+                                "vars": {
+                                  "frontage": {
+                                    "contract": "contract_parcels_lookup.map.lots.1.frontage"
+                                  },
+                                  "zoning": {
+                                    "contract": "contract_parcels_lookup.map.lots.1.zoning"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "check",
+                          "icon": "Check",
+                          "size": 16,
+                          "color": "#f59e0b"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "card-PCL-C3",
+                  "testID": "parcel-lotmap-card-PCL-C3",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "text": {
+                      "content": "lot.label"
+                    },
+                    "vars": {
+                      "letter": {
+                        "derived": "letter.2"
+                      },
+                      "area": {
+                        "contract": "contract_parcels_lookup.map.lots.2.area"
+                      },
+                      "frontage": {
+                        "contract": "contract_parcels_lookup.map.lots.2.frontage"
+                      },
+                      "zoning": {
+                        "contract": "contract_parcels_lookup.map.lots.2.zoning"
+                      }
+                    }
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "contract": "contract_parcels_lookup.map.lots.2.parcelId"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "View",
+                        "props": {
+                          "key": "card-text"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-title",
+                              "className": "font-mono text-[11px] font-semibold uppercase tracking-widest text-[#f59e0b]"
+                            },
+                            "children": [
+                              {
+                                "text": {
+                                  "content": "lot.letter"
+                                },
+                                "vars": {
+                                  "letter": {
+                                    "derived": "letter.2"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-area",
+                              "className": "mt-1 text-base font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "contract": "contract_parcels_lookup.map.lots.2.area"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "card-facts",
+                              "className": "mt-1 text-sm font-normal text-zinc-400"
+                            },
+                            "children": [
+                              {
+                                "text": {
+                                  "content": "lot.facts"
+                                },
+                                "vars": {
+                                  "frontage": {
+                                    "contract": "contract_parcels_lookup.map.lots.2.frontage"
+                                  },
+                                  "zoning": {
+                                    "contract": "contract_parcels_lookup.map.lots.2.zoning"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "continue",
+                  "testID": "parcel-lotmap-continue",
+                  "variant": "default",
+                  "className": "mt-4 min-h-[44px] w-full rounded-xl",
+                  "disabled": false,
+                  "accessibilityRole": "button",
+                  "accessibilityState": {
+                    "disabled": false
+                  },
+                  "accessibilityLabel": {
+                    "content": "select.label"
+                  },
+                  "onPress": {
+                    "action": "push",
+                    "route": "/(app)/parcel-tool/PCL-B2"
+                  }
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "continue-text",
+                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
+                    },
+                    "children": [
+                      {
+                        "text": {
+                          "content": "select.lot"
+                        },
+                        "vars": {
+                          "letter": {
+                            "derived": "letter.1"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "a5e3c7f2da75009e",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "33e4e665d090b1b5"
+    }
+  }
+}

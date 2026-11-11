@@ -1,0 +1,227 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "The mobile LIST binding (props half): LotMapBinding.tsx maps a situation of the choose-your-lot page (S-071, LIST with render.projection map) to a props tree (refs only); the shared renderer SurfaceRenderer.tsx (owned by shared_mobile_surface_binding) draws it, react-native-maps' MapView, Polygon and Marker included. It holds no display text of its own.",
+    "data_story": "It reads nothing itself: the mount passes the situation built by mobile/src/lib/lotMap.ts from the lookup response.",
+    "under_126": "**PROMOTED BINDING ENTRY** (MF-53; the MF-48 D-2 a form): a platform_shared census entry that owns the mobile LIST binding module, so R-13 totality holds while the map page owns no component."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/surfaces/LotMapBinding.tsx",
+      "~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md"
+    ],
+    "contracts": [
+      "contract_parcels_lookup"
+    ],
+    "tables": [],
+    "gate": [],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states"
+    ],
+    "emits": []
+  },
+  "identity": {
+    "id": "binding_mobile_list",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": [
+        "mobile/src/components/surfaces/LotMapBinding.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 dated note 2026-11-11 — the mobile LIST binding (MF-53)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "A binding module has no wire contract of its own: its input is a situation whose shape is pinned by the consuming surface's goldens (mobile_parcel_disambiguation_map) and its output is a props tree. A change shows up as a golden or render-smoke failure of the consumer.",
+      "evidence": [
+        "mobile/__tests__/lotMapScreens.golden.test.ts — the consumer goldens equal lotMapProps(situation)",
+        "mobile/__tests__/lotMapPage.behaviour.test.tsx — the mobile LIST render smoke (FE-33 mobile case)"
+      ]
+    },
+    "ref": "S-083"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "The situation arrives as an argument from the mount file.",
+    "evidence": [
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A binding writes nothing; a form submit is handed back to the mount file.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a"
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store: the library component holds its own local UI state.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders what it is given.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "Its only consumer today is the MaxBLD search page; each consumer declares its own guard.",
+      "evidence": [
+        "mobile/app/(app)/parcel-tool/index.tsx — the mount file"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "It renders lookup data the consumer already read through GET /api/parcels/lookup (parcels and address points, Class B); it reads no table itself.",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts — the route the consumer calls"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": {
+      "item_archetype": "none — a binding renders the consumer's items (the map page: lot cards and map polygons)",
+      "pagination": "none",
+      "recycling": "none — the consumer's list is bounded (at most 10 lots)"
+    }
+  },
+  "checks": [
+    {
+      "id": "binding_mobile_list_components_owned",
+      "kind": "components_owned",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The module is listed in bindings.json modules and owned by this entry (FE-31 C-3); a module nobody owns is a hand-built component."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Rendering emits nothing.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Rendering is not a metered product action.",
+    "evidence": [
+      "mobile/src/components/surfaces/SurfaceRenderer.tsx",
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable of its own. The SEARCH profile requires debounce_ms and min_query_len, which have no \"none\" value: 0 states that the binding itself neither debounces nor gates on length. The consuming surface declares its own (mobile_parcel_search: 400 ms, 3 characters), and the screen applies them.",
+    "evidence": [
+      "mobile/src/components/surfaces/LotMapBinding.tsx — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN re-exported from the consumer slice",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3"
+    ],
+    "debounce_ms": 0,
+    "min_query_len": 0
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Every converted mobile surface (the parcel search page first).",
+    "evidence": [
+      "scripts/surfaces/_schema/bindings.json — modules"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "Only the props tree, content and data passed in."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [],
+  "interpretation": "none",
+  "notes": "MF-53 (plan v4 §3, §8 item 2; the MF-48 D-2 a form for a second archetype): archetype LIST; the render half stays SurfaceRenderer.tsx (shared_mobile_surface_binding), which lists SEARCH and LIST. The SEARCH/LIST-gated fields describe the consuming surface, not this binding, and are answered none with a why. Ref S-083 (the next free ref: S-082 is binding_web_search, MF-44).",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/surfaces/LotMapBinding.tsx"
+    ],
+    "role": "shared",
+    "generated": "binding",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "B2",
+    "why": "Shared rendering infrastructure: the LIST binding the converted mobile LIST surfaces (first, the map page S-071) render through.",
+    "feature": "F14",
+    "build_order": 3146,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

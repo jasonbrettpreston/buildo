@@ -17,6 +17,12 @@
 //                      linked to this address" state. NEVER a silent nearest-polygon fallback
 //   intersection    -> map: the corner lots highlighted, no list
 //
+// MF-53 (Spec 100 §2.6 dated note 2026-11-11; D-2 a, operator 2026-11-10): THE SERVER NOW NAMES THE OUTCOME. `GET /api/parcels/lookup?q=`
+// returns `resolution` ('unique' | 'text_candidates' | 'multi_parcel' | 'unlinked' | 'no_match') and, for the two map kinds, a `map` block.
+// `deriveMatchType` obeys it; `no_match` still falls through to the intersection query shape (the server has no intersection parsing), and a
+// server `text_candidates` now beats the intersection shape. The text below describes the payload BEFORE MF-53 and the client derivation,
+// which still runs when `resolution` is absent (a payload from an older server). Prior text kept.
+//
 // WHAT THE SERVER ACTUALLY SENDS TODAY, measured.
 // `GET /api/parcels/lookup?q=` returns `{ match, candidates, warnings, parcel }`. `match.matchType`
 // is the closed enum `'exact' | 'typeahead' | 'direct'` (src/app/api/parcels/lookup/types.ts, via
@@ -176,6 +182,13 @@ export function deriveMatchType(
   if (isOutsideToronto(trimmed)) return 'outside_toronto';
 
   if (!data) return 'idle';
+
+  // 0. MF-53: the server's outcome name wins. Only its no_match defers to the query shape (intersection).
+  // A server `unique` without a match (never sent today) is not trusted: it falls through to the derivation below (OUTPUT panel RG-1).
+  if (data.resolution !== undefined && !(data.resolution === 'unique' && !data.match)) {
+    if (data.resolution === 'no_match') return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';
+    return data.resolution;
+  }
 
   // 1. Forward-compatible path: the contract declares the type, we obey it.
   //    `matchType` is currently typed as the narrow 'exact' | 'typeahead' | 'direct' enum, so this

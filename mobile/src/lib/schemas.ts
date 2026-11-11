@@ -364,11 +364,41 @@ export const ParcelCandidateSchema = z.object({
   address: z.string(),
 });
 
+// MF-53 (Spec 100 §3.2 dated note 2026-11-11): the outcome name and the map block. Both OPTIONAL, and the map objects are plain (not
+// .strict()), so a payload from an older server still parses and a server-added field never raises ParcelLookupSchemaError on an installed
+// build (PLAN panel regression LOW-9). The client derivation in parcelSearchMatch.ts runs only when `resolution` is absent.
+const LatLngSchema = z.object({ lat: z.number(), lng: z.number() });
+const RingSchema = z.array(z.tuple([z.number(), z.number()]));
+export const LotOutlineSchema = z.union([
+  z.object({ type: z.literal('Polygon'), coordinates: z.array(RingSchema) }),
+  z.object({ type: z.literal('MultiPolygon'), coordinates: z.array(z.array(RingSchema)) }),
+]);
+export const ParcelMapLotSchema = z.object({
+  parcelId: z.string(),
+  area: z.string().nullable(),
+  frontage: z.string().nullable(),
+  zoning: z.string().nullable(),
+  centroid: LatLngSchema.nullable(),
+  outline: LotOutlineSchema.nullable(),
+});
+export const ParcelLotMapSchema = z.object({
+  address: z.string().nullable(),
+  pin: LatLngSchema.nullable(),
+  fit: z.object({ north: z.number(), south: z.number(), east: z.number(), west: z.number() }).nullable(),
+  truncated: z.boolean(),
+  lots: z.array(ParcelMapLotSchema),
+  neighbours: z.array(z.object({ parcelId: z.string(), outline: LotOutlineSchema.nullable() })),
+});
+export type ParcelLotMap = z.infer<typeof ParcelLotMapSchema>;
+export type LotOutline = z.infer<typeof LotOutlineSchema>;
+
 export const ConsumerParcelLookupResultSchema = z.object({
   match: ParcelMatchSchema.nullable(),
   candidates: z.array(ParcelCandidateSchema),
   warnings: z.array(z.string()),
   parcel: ConsumerParcelSchema.nullable(),
+  resolution: z.enum(['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']).optional(),
+  map: ParcelLotMapSchema.nullable().optional(),
 });
 export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
 export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;

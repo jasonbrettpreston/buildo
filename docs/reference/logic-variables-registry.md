@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (1074) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 36 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (1076) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 36 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **1083** logic variables (1074 numeric, 6 JSONB, 3 string).
+Total: **1085** logic variables (1076 numeric, 6 JSONB, 3 string).
 
 ---
 
@@ -957,6 +957,8 @@ Total: **1083** logic variables (1074 numeric, 6 JSONB, 3 string).
 | `p16_inference_layer_enabled` | numeric | 0 | 0 – 1 | — | seed | group: Scope Inference | Spec 80 §5.C / P16-D3 [BUG-6] — HARD gate for the lean scope-mapped inference layer in classify-permits.js + classify-coa-trades.js. 0 = OFF (evidence-only emission; 16C/16D wire the code but emit NO inference rows). 1 = ON (the LINE_TRADE_COMPLEMENT lean inference is UNIONed onto evidence at is_active=true / attachment_basis='inference'). Seeded OFF on the 16B GO gate (2026-07-10, hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2); flips to 1 in 16F only AFTER 16E's consumer contract ships. A NO-GO complement cannot ship by accident. The deep_scrapes-resume re-measure can flip it back to 0. |
 | `parcel_cost_menu_coverage_pass_pct` | numeric | 85 | 0 – 100 | — | seed | group: Cost Audit Thresholds | assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> PASS CONSUMED by assert_global_coverage. |
 | `parcel_cost_menu_coverage_warn_pct` | numeric | 80 | 0 – 100 | — | seed | group: Cost Audit Thresholds | assert-global-coverage: sources-chain parcel_cost_menu calibrated coverage (residential w/ building) -> WARN, else FAIL CONSUMED by assert_global_coverage. |
+| `parcel_map_neighbour_limit` | numeric | 30 | 1 – 50 | — | seed | group: Parcel Lookup | MF-53 (Spec 100 section 3.2 dated note 2026-11-11; DECISIONS-v3 item 2, operator 2026-11-11 "b"; Spec 128 rule 3): the most neighbour lots the "choose your lot" map page draws around an address with no linked lot, nearest first. At most 50 (PLAN panel security L-3: response size). Inserted by migration 307. CONSUMED by src/lib/parcels/lot-map.ts (readLotMapLimits: a missing, non-integer or out-of-bounds value fails the lookup closed, 500). |
+| `parcel_map_neighbour_radius_m` | numeric | 25 | 5 – 100 | — | seed | group: Parcel Lookup | MF-53 (Spec 100 section 3.2 dated note 2026-11-11; DECISIONS-v3 item 2, operator 2026-11-11 "b"; Spec 128 rule 3): on the "choose your lot" map page, when an address is found but no lot is linked to it, the faint neighbour lots drawn are those within this many metres of the address pin. Whole metres. Measured at 25 m: p50 2, p95 13, max 23 neighbours over the 276 unlinked address points. Inserted by migration 307. CONSUMED by src/lib/parcels/lot-map.ts (readLotMapLimits: a missing, non-integer or out-of-bounds value fails the lookup closed, 500). |
 | `parcel_sanity_bylaw_fsi_max` | numeric | 8 | 0 – 50 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: residential bylaw_max_fsi upper bound (corrupt-source watch). Ported verbatim from the pre-conversion literal (8). CONSUMED by assert_parcel_sanity. |
 | `parcel_sanity_coa_fsi_max` | numeric | 5 | 0 – 50 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: coa_fsi upper bound (garbage-GFA watch). Ported verbatim from the pre-conversion literal (5). CONSUMED by assert_parcel_sanity. |
 | `parcel_sanity_comp_fsi_p50_max` | numeric | 4 | 0 – 50 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: comp_fsi_p50 upper bound (INFO-first, 212 standing). Ported verbatim from the pre-conversion literal (4.0). CONSUMED by assert_parcel_sanity. |
@@ -1106,4 +1108,4 @@ Total: **1083** logic variables (1074 numeric, 6 JSONB, 3 string).
 
 ---
 
-*Generated from 1047 seed vars + 36 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*
+*Generated from 1049 seed vars + 36 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*

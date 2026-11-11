@@ -77,8 +77,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
     // string (154 -> 155); red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
     // MF-38 (FE-13 dated note 2026-11-11): amended deliberately again, still an exact toBe: two image states join (14 -> 16 states; owed unchanged, RG-4).
     // MF-44 (FE-13 dated note 2026-11-11): amended deliberately again, still an exact toBe: the 10 web goldens of mobile_parcel_search join (44 -> 54).
-    // MF-62 (FE-35; Spec 126 11a.7 dated note 2026-11-11): amended deliberately again, still an exact toBe: two loading states join (16 -> 18 states; owed unchanged).
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4) · S-screen ok (7 surfaces, 54 goldens) · S-sbind ok (7 surfaces, 155 strings)\n');
+    // MF-62 (FE-35; Spec 126 11a.7 dated note 2026-11-11): amended deliberately again, still an exact toBe: two loading states join (16 -> 18 states; owed unchanged). MF-53: + the map page (8 surfaces, 65 goldens, 176 strings).
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 25 in scope: converted 8, pending 4, parked 9, report 4) · S-screen ok (8 surfaces, 65 goldens) · S-sbind ok (8 surfaces, 176 strings)\n');
     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
     expect(r.stdout).toContain('S-desc ok (examined 25 in scope:');
   });

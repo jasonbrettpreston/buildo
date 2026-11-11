@@ -477,7 +477,7 @@
   ],
   "limitations": [
     {
-      "what": "Two of the five ruled match types — `multi_parcel` and `unlinked` — cannot be reached from the current contract. The response carries no address-point fan-out signal and cannot distinguish \"address resolved, no lot linked\" from \"address did not resolve\", so both arrive as an ordinary zero-candidate miss. The screen reports `no_match` rather than guessing, which is why the ruling’s ban on a silent nearest-polygon fallback is not violated — but it also means the map surface is unreachable for those two until the API declares a resolution type.",
+      "what": "Two of the five ruled match types — `multi_parcel` and `unlinked` — cannot be reached from the current contract. The response carries no address-point fan-out signal and cannot distinguish \"address resolved, no lot linked\" from \"address did not resolve\", so both arrive as an ordinary zero-candidate miss. The screen reports `no_match` rather than guessing, which is why the ruling’s ban on a silent nearest-polygon fallback is not violated — but it also means the map surface is unreachable for those two until the API declares a resolution type. Closed 2026-11-11 (MF-53, prior text kept): the contract now emits `resolution`; deriveMatchType takes the server value first, so multi_parcel and unlinked reach the map page; the client derivation runs only when `resolution` is absent (an older server).",
       "measured": "src/app/api/admin/parcels/lookup/types.ts:123 — matchType is the closed enum ['exact','typeahead','direct']; src/lib/admin/parcel-lookup.ts:161-217 collapses every ambiguity into candidates[] with no fan-out signal and no intersection parsing.",
       "check_id": "parcelsearch_match_type_branch"
     },

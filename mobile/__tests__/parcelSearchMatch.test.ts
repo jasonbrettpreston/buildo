@@ -418,3 +418,33 @@ describe('MF-35 situation helpers', () => {
     expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands), selectedParcelId: 'gone' }).selectedParcelId).toBeNull();
   });
 });
+
+// MF-53 · T5 (Spec 100 §2.6 dated note 2026-11-11; PLAN panel regression MED-4/MED-6): the server's `resolution` wins; a payload without it
+// keeps the client derivation above (an older server); a server `no_match` still defers to the intersection shape; a server
+// `text_candidates` now beats the intersection shape. The anti-guess and five-types tests above are unchanged.
+describe('deriveMatchType — the server resolution (MF-53)', () => {
+  const withResolution = (resolution: NonNullable<ConsumerParcelLookupResult['resolution']>, extra: Partial<ConsumerParcelLookupResult> = {}) =>
+    ({ ...response(), resolution, map: null, ...extra }) as ConsumerParcelLookupResult;
+  it.each(['unique', 'text_candidates', 'multi_parcel', 'unlinked'] as const)('server %s is the outcome', (r) => {
+    const extra = r === 'unique' ? { match: { parcelId: 'P', matchType: 'exact' as const, address: '12 Main St' } } : {};
+    expect(deriveMatchType('12 Main St', withResolution(r, extra))).toBe(r);
+  });
+  it('server no_match on an address is no_match, and on an intersection-shaped query is intersection', () => {
+    expect(deriveMatchType('12 Main St', withResolution('no_match'))).toBe('no_match');
+    expect(deriveMatchType('Queen and Spadina', withResolution('no_match'))).toBe('intersection');
+  });
+  it('server text_candidates beats the intersection shape (the new order, stated)', () => {
+    expect(deriveMatchType('Queen and Spadina', withResolution('text_candidates', { candidates: [candidate('P', 'Queen St')] }))).toBe('text_candidates');
+  });
+  it('server unlinked is taken as sent even with zero candidates; without resolution a zero-candidate payload stays no_match', () => {
+    expect(deriveMatchType('12 Main St', withResolution('unlinked'))).toBe('unlinked');
+    expect(deriveMatchType('12 Main St', response())).toBe('no_match');
+  });
+  it('a server unique without a match is not trusted (falls through to the derivation; OUTPUT panel RG-1)', () => {
+    expect(deriveMatchType('12 Main St', withResolution('unique', { match: null }))).toBe('no_match');
+  });
+  it('RED (planted): a client that ignores resolution would guess no_match for a server unlinked', () => {
+    const legacy = ({ resolution: _r, ...rest }: ConsumerParcelLookupResult) => rest as ConsumerParcelLookupResult;
+    expect(deriveMatchType('12 Main St', legacy(withResolution('unlinked')))).toBe('no_match');
+  });
+});

@@ -13,6 +13,7 @@
 import { query } from '@/lib/db/client';
 import { normalizeAddressNumber, parseLinearName } from '@/lib/parcels/address';
 import { logWarn } from '@/lib/logger';
+import type { LotMapSeed } from '@/lib/parcels/lot-map';
 import {
   CostMenuSchema,
   NearbyBuildsSummarySchema,
@@ -128,11 +129,37 @@ function ident(col: string): string {
 }
 
 // ── Address resolution (Spec 89 §3; Spec 54 keys) ────────────────────────────
+/**
+ * MF-53 (Spec 100 §2.6 dated note 2026-11-11; operator ruling 2026-09-16, "we should know the difference and just present the right one"):
+ * the outcome name. Intersections are not named here (the parser has no intersection handling; the app reads the query shape on no_match).
+ */
+export type ParcelResolution = 'unique' | 'text_candidates' | 'multi_parcel' | 'unlinked' | 'no_match';
+
 export interface Resolution {
   match: ParcelMatch | null;
   candidates: ParcelCandidate[];
   /** true when >10 parcels share the address (e.g. a large condo) — the list is truncated. */
   truncated?: boolean;
+  /** MF-53: added; match / candidates / truncated are unchanged on every outcome (the admin tool reads only those, Spec 89 §3). */
+  resolution: ParcelResolution;
+  /** MF-53: what the consumer map read needs, built only from this resolver's own rows; null unless multi_parcel / unlinked. */
+  lotMap: LotMapSeed | null;
+}
+
+/**
+ * MF-53 · ONE rule on both paths (plan v4 §2.1): 2+ rows printing ONE non-empty address with a house number typed is one address over
+ * several lots (the map); different printed addresses are the list. An empty printed address never counts as "one address" (legacy columns,
+ * PLAN panel regression MEDIUM-5).
+ */
+function classifyRows(rows: { parcel_id: string; address: string }[], num: string, truncated: boolean): Pick<Resolution, 'resolution' | 'lotMap'> {
+  const printed = new Set(rows.map((r) => r.address.trim()));
+  if (num && printed.size === 1 && !printed.has('')) {
+    return {
+      resolution: 'multi_parcel',
+      lotMap: { kind: 'multi_parcel', parcelIds: truncated ? [] : rows.map((r) => r.parcel_id), num, truncated },
+    };
+  }
+  return { resolution: 'text_candidates', lotMap: null };
 }
 
 /**
@@ -159,9 +186,13 @@ export function parseFreeTextAddress(q: string): { num: string; streetName: stri
 
 const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(linear_name_full, ''))`;
 
-export async function resolveAddress(q: string): Promise<Resolution> {
+/**
+ * `opts.classifyUnlinked` (MF-53, the consumer route only): on a typeahead miss with a house number, read whether live address points exist
+ * with NO lot link (`unlinked`), else `no_match`. The admin call leaves it off and keeps today's two reads (PLAN panel regression MEDIUM-3).
+ */
+export async function resolveAddress(q: string, opts: { classifyUnlinked?: boolean } = {}): Promise<Resolution> {
   const { num, streetName } = parseFreeTextAddress(q);
-  if (!streetName) return { match: null, candidates: [] };
+  if (!streetName) return { match: null, candidates: [], resolution: 'no_match', lotMap: null };
 
   // 1) Exact match on the parcels normalized keys (idx_parcels_address).
   if (num) {
@@ -176,6 +207,8 @@ export async function resolveAddress(q: string): Promise<Resolution> {
       return {
         match: { parcelId: exact[0]!.parcel_id, matchType: 'exact', address: exact[0]!.address },
         candidates: [],
+        resolution: 'unique',
+        lotMap: null,
       };
     }
     if (exact.length > 1) {
@@ -183,6 +216,7 @@ export async function resolveAddress(q: string): Promise<Resolution> {
         match: null,
         candidates: exact.slice(0, 10).map((r) => ({ parcelId: r.parcel_id, address: r.address })),
         truncated: exact.length > 10, // LIMIT 11 → an 11th row means more exist (Gemini fold)
+        ...classifyRows(exact, num, exact.length > 10),
       };
     }
   }
@@ -210,12 +244,46 @@ export async function resolveAddress(q: string): Promise<Resolution> {
     return {
       match: { parcelId: typeahead[0]!.parcel_id, matchType: 'typeahead', address: typeahead[0]!.address },
       candidates: [],
+      resolution: 'unique',
+      lotMap: null,
     };
   }
-  return {
-    match: null,
-    candidates: typeahead.map((r) => ({ parcelId: r.parcel_id, address: r.address })),
-  };
+  const candidates = typeahead.map((r) => ({ parcelId: r.parcel_id, address: r.address }));
+  // The typeahead LIMIT 10 has no overflow probe: measured 0 (street, number) keys reach more than 10 linked lots (MF-53 plan v4 §8 item 8).
+  if (typeahead.length > 1) return { match: null, candidates, ...classifyRows(typeahead, num, false) };
+
+  // 3) MF-53 unlinked (consumer only): live points with this number and NO lot link. Skipped for a street carrying a LIKE wildcard, so the
+  //    new read never widens on % or _ (security L-1; the typeahead's own escape is a follow-up card).
+  if (opts.classifyUnlinked && num && !/[%_]/.test(streetName)) {
+    const unlinked = await query<{ address_point_id: number; address: string; latitude: unknown; longitude: unknown }>(
+      `SELECT ap.address_point_id, COALESCE(ap.address_full, TRIM(COALESCE(ap.address_number, '') || ' ' || COALESCE(ap.linear_name_full, ''))) AS address,
+              ap.latitude, ap.longitude
+       FROM address_points ap
+       WHERE ap.linear_name_normalized LIKE $1
+         AND ap.addr_num_normalized = $2
+         AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
+         AND UPPER(ap.maint_stage) = 'REGULAR'
+         AND ap.retired_at IS NULL
+         AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id)
+       ORDER BY address, ap.address_point_id LIMIT 11`,
+      [streetName + '%', num],
+    );
+    if (unlinked.length > 0) {
+      const first = unlinked[0]!;
+      const one = new Set(unlinked.map((u) => u.address)).size === 1;
+      const lat = first.latitude == null ? NaN : Number(first.latitude);
+      const lng = first.longitude == null ? NaN : Number(first.longitude);
+      const pin = one && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+      return {
+        match: null,
+        candidates,
+        resolution: 'unlinked',
+        // One printed address: the pin and its neighbours (operator ruling 2026-09-16). Several: the honest message, no map (DECISIONS-v3 Q5 i).
+        lotMap: { kind: 'unlinked', address: first.address, pin },
+      };
+    }
+  }
+  return { match: null, candidates, resolution: 'no_match', lotMap: null };
 }
 
 // ── Parcel + CoA reads ───────────────────────────────────────────────────────

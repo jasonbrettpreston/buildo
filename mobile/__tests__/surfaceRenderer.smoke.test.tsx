@@ -23,7 +23,7 @@ jest.mock('react-native-safe-area-context', () => {
 
 const S = situations as unknown as Record<string, SearchSituation>;
 const actions = (): jest.Mocked<SurfaceActions> => ({
-  change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), open_account: jest.fn(),
+  change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), open_account: jest.fn(), back: jest.fn(),
 });
 const show = (k: string, a = actions()) => {
   const s = S[k] as SearchSituation;

@@ -61,6 +61,22 @@ describe('lib SQL locks (Spec 89 Known Failure Modes)', () => {
     expect(lib()).toMatch(/address_status IS NULL OR UPPER\(ap\.address_status\) IN \('CURRENT', 'NONE'\)/);
     expect(lib()).toMatch(/UPPER\(ap\.maint_stage\) = 'REGULAR'/);
   });
+  // MF-53 (PLAN panel regression HIGH-2, CR F-2): `toMatch` sees only the first statement, so every statement that reads address_points, in
+  // the resolver and in the map read (src/lib/parcels/lot-map.ts), must carry each live-point filter: the counts are equal per file.
+  it('every FROM address_points read carries the status, maint_stage and retired_at filters (counted, both SQL files)', () => {
+    const count = (src: string, re: RegExp) => (src.match(re) ?? []).length;
+    for (const [name, src] of [['parcel-lookup.ts', lib()], ['lot-map.ts', fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lot-map.ts'), 'utf8')]] as const) {
+      const reads = count(src, /FROM address_points ap/g);
+      expect([name, reads > 0]).toEqual([name, true]);
+      expect([name, count(src, /address_status IS NULL OR UPPER\(ap\.address_status\) IN \('CURRENT', 'NONE'\)/g)]).toEqual([name, reads]);
+      expect([name, count(src, /UPPER\(ap\.maint_stage\) = 'REGULAR'/g)]).toEqual([name, reads]);
+      expect([name, count(src, /AND ap\.retired_at IS NULL/g)]).toEqual([name, reads]);
+    }
+  });
+  it('RED (planted): dropping one filter from one statement breaks the count', () => {
+    const src = lib().replace(/\n\s*AND UPPER\(ap\.maint_stage\) = 'REGULAR'/, '');
+    expect((src.match(/UPPER\(ap\.maint_stage\) = 'REGULAR'/g) ?? []).length).toBeLessThan((src.match(/FROM address_points ap/g) ?? []).length);
+  });
   it('CoA ORDER BY includes application_number ASC tiebreaker', () => {
     expect(lib()).toMatch(/application_number ASC/);
   });

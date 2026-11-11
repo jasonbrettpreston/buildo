@@ -33,6 +33,8 @@ vi.mock('@/lib/parcels/consumer-lookup', async (orig) => {
   const a = await orig<typeof import('@/lib/parcels/consumer-lookup')>();
   return { ...a, assembleConsumerPayload: vi.fn(a.assembleConsumerPayload) };
 });
+// MF-53: the map read is mocked here (its SQL is pinned in parcel-lookup-resolution.logic.test.ts); a map response must meter nothing.
+vi.mock('@/lib/parcels/lot-map', async (orig) => ({ ...(await orig<typeof import('@/lib/parcels/lot-map')>()), resolveLotMap: vi.fn() }));
 const logInfo = vi.fn();
 vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
 
@@ -40,6 +42,7 @@ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
 import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
 import { assembleConsumerPayload } from '@/lib/parcels/consumer-lookup';
+import { resolveLotMap } from '@/lib/parcels/lot-map';
 import { GET } from '@/app/api/parcels/lookup/route';
 
 const UID = '00000000-0000-0000-0000-0000000045a1';
@@ -179,8 +182,13 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
     expect(inserts()).toHaveLength(0);
   });
   it.each([
-    ['candidates', () => vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [{ parcelId: 'A', address: 'a' }, { parcelId: 'B', address: 'b' }], truncated: false } as never), `q=${encodeURIComponent(RAW_Q)}`],
-    ['a miss', () => vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [], truncated: false } as never), `q=${encodeURIComponent(RAW_Q)}`],
+    ['candidates', () => vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [{ parcelId: 'A', address: 'a' }, { parcelId: 'B', address: 'b' }], truncated: false, resolution: 'text_candidates', lotMap: null } as never), `q=${encodeURIComponent(RAW_Q)}`],
+    ['a miss', () => vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [], truncated: false, resolution: 'no_match', lotMap: null } as never), `q=${encodeURIComponent(RAW_Q)}`],
+    // MF-53 (PLAN panel CR F-5, security M-2): a map response shows no report, so it meters nothing (MF-45 fold 12 carry).
+    ['a multi_parcel map', () => {
+      vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [{ parcelId: 'A', address: '5 Elm St' }, { parcelId: 'B', address: '5 Elm St' }], truncated: false, resolution: 'multi_parcel', lotMap: { kind: 'multi_parcel', parcelIds: ['A', 'B'], num: '5', truncated: false } } as never);
+      vi.mocked(resolveLotMap).mockResolvedValue({ address: null, pin: { lat: 43.6, lng: -79.4 }, truncated: false, lots: [], neighbours: [] });
+    }, `q=${encodeURIComponent(RAW_Q)}`],
     ['a dangling id', () => vi.mocked(fetchParcelById).mockResolvedValue(null), 'parcelId=GONE'],
   ])('%s writes nothing and carries parcel: null (fold 12)', async (_l, arrange, qs) => {
     arrange();
@@ -253,5 +261,45 @@ describe('T10 fail closed: the payload is never served unmetered', () => {
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
     expect(JSON.stringify(r.body)).not.toContain('lot_size');
+  });
+});
+
+// MF-53 (PLAN panel security M-2, L-4): the map is read only from the resolver's seed, never on the parcelId path; the log line carries the
+// outcome name and the map counts, never q, the map address, the pin or the start view.
+describe('MF-53 the map block on the route', () => {
+  beforeEach(() => {
+    vi.mocked(resolveLotMap).mockReset();
+    logInfo.mockClear();
+    ctx(null); parcelTool('active');
+  });
+  it('the parcelId path never reads the map and answers map: null, resolution unique', async () => {
+    const r = await call('parcelId=P-45');
+    expect(r.status).toBe(200);
+    expect(vi.mocked(resolveLotMap)).not.toHaveBeenCalled();
+    expect((r.body.data as unknown as { map: unknown; resolution: string }).map).toBeNull();
+    expect((r.body.data as unknown as { resolution: string }).resolution).toBe('unique');
+  });
+  it('an unlinked q: map from the seed; the log carries resolution and counts, never q / address / pin / fit', async () => {
+    const seed = { kind: 'unlinked', address: '12 Secret St', pin: { lat: 43.6111, lng: -79.4222 } } as const;
+    vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [], truncated: false, resolution: 'unlinked', lotMap: seed } as never);
+    vi.mocked(resolveLotMap).mockResolvedValue({ address: '12 Secret St', pin: seed.pin, truncated: false, lots: [], neighbours: [{ parcel_id: 'N1', outline: '{"type":"Polygon","coordinates":[[[-79.4,43.6],[-79.39,43.6],[-79.4,43.6]]]}' }] });
+    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(r.status).toBe(200);
+    expect(vi.mocked(resolveLotMap)).toHaveBeenCalledWith(seed);
+    const data = r.body.data as unknown as { resolution: string; map: { address: string; neighbours: unknown[] } };
+    expect([data.resolution, data.map.address, data.map.neighbours.length]).toEqual(['unlinked', '12 Secret St', 1]);
+    const log = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup')?.[2] as Record<string, unknown>;
+    expect(log).toMatchObject({ resolution: 'unlinked', map_lots: 0, map_neighbours: 1, meter: 'none' });
+    expect(inserts()).toHaveLength(0); // a map response never reaches openReport (OUTPUT panel security L-1)
+    expect(meterCalls()).toBe(0);
+    const flat = JSON.stringify(logInfo.mock.calls);
+    for (const leak of ['secret-typed-text', '12 Secret St', '43.6111', '-79.4222', 'north']) expect(flat).not.toContain(leak);
+  });
+  it('a map-read failure is a 500 (no silent fallback to the list)', async () => {
+    vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [], truncated: false, resolution: 'unlinked', lotMap: { kind: 'unlinked', address: 'x', pin: { lat: 1, lng: 1 } } } as never);
+    vi.mocked(resolveLotMap).mockRejectedValue(new Error('logic_variables missing'));
+    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(r.status).toBe(500);
+    expect(r.body.data).toBeNull();
   });
 });

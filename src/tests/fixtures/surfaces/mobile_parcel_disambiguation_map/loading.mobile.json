@@ -1,0 +1,150 @@
+{
+  "surface": "mobile_parcel_disambiguation_map",
+  "state": "loading",
+  "target": "mobile",
+  "covers": [
+    "loading"
+  ],
+  "situation": "loading",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-lotmap-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-lotmap-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "pill",
+                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "search-icon",
+                      "icon": "Search",
+                      "size": 16,
+                      "color": "#a1a1aa"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "query",
+                      "testID": "parcel-lotmap-query",
+                      "className": "flex-1 px-2 py-3 text-base font-normal text-zinc-100",
+                      "numberOfLines": 1
+                    },
+                    "children": [
+                      {
+                        "derived": "query"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "clear",
+                      "testID": "parcel-lotmap-clear",
+                      "variant": "ghost",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "map.clear.label"
+                      },
+                      "onPress": {
+                        "action": "back"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "clear-icon",
+                          "icon": "X",
+                          "size": 16,
+                          "color": "#a1a1aa"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "loading",
+                  "className": "mt-10 items-center"
+                },
+                "children": [
+                  {
+                    "component": "ActivityIndicator",
+                    "props": {
+                      "key": "spinner",
+                      "testID": "parcel-lotmap-spinner",
+                      "size": "small",
+                      "color": "#f59e0b",
+                      "accessibilityLabel": {
+                        "content": "state.loading"
+                      }
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "loading-text",
+                      "className": "mt-2 text-center text-sm font-normal text-zinc-400"
+                    },
+                    "children": [
+                      {
+                        "content": "state.loading"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "a5e3c7f2da75009e",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "33e4e665d090b1b5"
+    }
+  }
+}

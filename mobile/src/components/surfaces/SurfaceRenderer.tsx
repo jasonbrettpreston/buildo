@@ -4,6 +4,8 @@
 //
 // MF-35 · the mobile binding (render half), shared by the mobile archetypes (P35-D10 a). It turns a props tree (SearchBinding.tsx) into the
 // library parts. It renders ONLY through the COMPONENTS table below, whose keys equal bindings.json mapping.mobile.SEARCH and whose values are
+// (MF-53, dated 2026-11-11: the table is the union of mapping.mobile.SEARCH and mapping.mobile.LIST; LIST adds react-native-maps' own MapView,
+// Polygon and Marker for S-071's `render.projection: map`, configured by props, no hand-built part; the action `back` leaves the page)
 // imported library parts (the vendored Reusables, React Native core layout, safe-area): the FE-31 C-8 mobile half reads this literal by AST.
 // It has no layout, style or text of its own. It resolves refs (content, contract paths, derived names), `{text, vars}` templates (a 0 is "0",
 // never dropped) and action data (the screen's callbacks). An unmapped component, icon, content key or action throws: the screen's ErrorBoundary
@@ -15,16 +17,17 @@
 import * as React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AlertTriangle, ArrowRight, Ban, Check, Lock, MapPin, RefreshCw, Search, User } from 'lucide-react-native';
+import MapView, { Marker, Polygon } from 'react-native-maps';
+import { AlertTriangle, ArrowRight, Ban, Check, Lock, MapPin, RefreshCw, Search, User, X } from 'lucide-react-native';
 import { Alert, AlertDescription } from '@/vendor/rnr/components/ui/alert';
 import { Button } from '@/vendor/rnr/components/ui/button';
 import { Icon } from '@/vendor/rnr/components/ui/icon';
 import { Input } from '@/vendor/rnr/components/ui/input';
 import { Text } from '@/vendor/rnr/components/ui/text';
 
-export const COMPONENTS = { SafeAreaView, ScrollView, View, Text, Input, Button, Alert, AlertDescription, Icon, ActivityIndicator };
+export const COMPONENTS = { SafeAreaView, ScrollView, View, Text, Input, Button, Alert, AlertDescription, Icon, ActivityIndicator, MapView, Polygon, Marker };
 /** The closed icon table (plan v3 §2.2). */
-export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight };
+export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X };
 
 type Json = Record<string, unknown>;
 export type SurfaceActions = {
@@ -34,6 +37,8 @@ export type SurfaceActions = {
   select: (parcelId: string) => void;
   push: (route: string) => void;
   open_account: () => void;
+  /** MF-53: leave the page (the map page's clear button). */
+  back: () => void;
 };
 /** MF-48: the REPORT callbacks (ReportPageHost.tsx holds the UI state they change). */
 export type ReportActions = {
@@ -112,6 +117,8 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
       return () => act.retry();
     case 'open_account':
       return () => act.open_account();
+    case 'back':
+      return () => act.back();
     case 'toggle_panel':
       if (a.panel !== 'size' && a.panel !== 'cost') throw new Error(`SurfaceRenderer: unknown panel "${String(a.panel)}"`);
       return () => act.toggle_panel(String(a.option), a.panel as 'size' | 'cost');

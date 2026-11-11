@@ -228,13 +228,14 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted (converted 3 -> 4, pending 7 -> 6); its 10 mobile goldens and 23 content strings join.
     // MF-40 (dated 2026-11-10; operator "y recommendation: C, with the four trims. approved"): admin_placements converted from pending, admin_offers and
     // admin_advertiser_entry new (25 in scope, converted 4 -> 7, pending 6 -> 5); 17 web goldens and 75 content strings join (re-measured on the MF-35 tip).
-    expect(d.note).toBe('S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4)');
+    expect(d.note).toBe('S-desc ok (examined 25 in scope: converted 8, pending 4, parked 9, report 4)'); // MF-53: the map page converted
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
     // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
     // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
     // MF-44 (dated 2026-11-11; operator "01-a 0-2 b as long as they are complaint"): mobile_parcel_search gains its web target, so its 10 web goldens
     // join (44 -> 54); no content key is added (the web reads the same 23 strings).
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (7 surfaces, 54 goldens)' }, { findings: [], note: 'S-sbind ok (7 surfaces, 155 strings)' }]);
+    // MF-53 (dated 2026-11-11): + the map page (11 mobile goldens, 21 strings).
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (8 surfaces, 65 goldens)' }, { findings: [], note: 'S-sbind ok (8 surfaces, 176 strings)' }]);
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -334,7 +335,7 @@ describe('C-3 bindings.json integrity', () => {
     // MF-48 (dated 2026-11-11; D-2 a, Spec 126 §11b.2 dated note 2026-11-11): amended for the render half only (archetypeProblems above). The
     // shared mobile renderer lists every archetype it renders, its owner's among them; every other owned module still carries exactly the owner's one.
     expect(archetypeProblems(B, (id) => (DESCRIPTORS.get(id) as Json | undefined)?.identity?.archetype)).toEqual([]);
-    expect(B.modules.find((m: Json) => m.path === RENDER_HALF).archetypes).toEqual(['SEARCH', 'REPORT']);
+    expect(B.modules.find((m: Json) => m.path === RENDER_HALF).archetypes).toEqual(['SEARCH', 'REPORT', 'LIST']); // MF-53: + LIST (the map page)
   });
   it('MF-48 RED (in memory): the props half listing a second archetype, the render half without its owner\'s archetype, and a second render half all fail', () => {
     const arch = (id: string): string | undefined => (DESCRIPTORS.get(id) as Json | undefined)?.identity?.archetype;
@@ -346,6 +347,16 @@ describe('C-3 bindings.json integrity', () => {
     expect(archetypeProblems(edit((ms) => { ms.find((m) => m.path.endsWith('ReportBinding.tsx'))!.archetypes = ['REPORT', 'SEARCH']; }), arch))
       .toEqual(['C-3 binding_mobile_report: owned modules carry ["REPORT","SEARCH"], the entry is REPORT']);
   });
+  it('MF-53 RED (in memory): the props half listing a second archetype, the render half without its owner\'s archetype both fail', () => {
+    const arch = (id: string): string | undefined => (DESCRIPTORS.get(id) as Json | undefined)?.identity?.archetype;
+    const edit = (f: (ms: Json[]) => void): Json => { const b = structuredClone(B); f(b.modules); return b; };
+    expect(archetypeProblems(edit((ms) => { ms.find((m) => m.path === 'mobile/src/components/surfaces/SearchBinding.tsx')!.archetypes = ['SEARCH', 'LIST']; }), arch))
+      .toEqual(['C-3 shared_mobile_surface_binding: owned modules carry ["SEARCH","LIST"], the entry is SEARCH']);
+    expect(archetypeProblems(edit((ms) => { ms.find((m) => m.path === RENDER_HALF)!.archetypes = ['LIST']; }), arch))
+      .toEqual(['C-3 mobile/src/components/surfaces/SurfaceRenderer.tsx: the render half does not list its owner\'s archetype SEARCH']);
+    expect(archetypeProblems(edit((ms) => { ms.find((m) => m.path.endsWith('LotMapBinding.tsx'))!.archetypes = ['LIST', 'SEARCH']; }), arch))
+      .toEqual(['C-3 binding_mobile_list: owned modules carry ["LIST","SEARCH"], the entry is LIST']);
+  });
   it('the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid', () => {
     expect(shapeProblems(REPO, 'bindings', B)).toEqual([]);
     expect(bindingsProblems(real)).toEqual([]);
@@ -353,7 +364,7 @@ describe('C-3 bindings.json integrity', () => {
     // MF-35 (dated 2026-11-10): + the two mobile modules, their promoted entry shared_mobile_surface_binding and the search screen mount.
     // MF-44 (dated 2026-11-11; Spec 126 §11b.5): + the web SEARCH module, its promoted entry binding_web_search and the four web search mounts.
     // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([7, 5, 14]); // MF-40: +5 mounts (the placements page, client mount, error boundary)
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([8, 6, 15]); // MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -460,7 +471,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
     // MF-48 (dated 2026-11-11; D-2 a): +1 promoted binding entry (binding_mobile_report).
-    expect(all.length).toBe(158); // MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    expect(all.length).toBe(159); // MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
@@ -681,7 +692,9 @@ describe('C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-
 // A mobile binding module may render <C/> only where C is bound from ONE object literal named COMPONENTS (const C = COMPONENTS[...]) whose keys equal
 // mapping.mobile.<archetype> and whose values are identifiers imported from the vendored Reusables (the vendor dir), React Native core or
 // react-native-safe-area-context (the layout parts plan v2 §2.2 names); no intrinsic tag, no createElement/jsx call, no other JSX tag.
-const MOBILE_PARTS = ['react-native', 'react-native-safe-area-context'];
+// MF-53 (dated 2026-11-11; plan v4 §8 item 1): + react-native-maps, whose own MapView, Polygon and Marker the renderer draws for the map
+// projection (S-071). It is a part source here, not a libraries.mobile entry (two Buildo-app files import it; the MF-48 L-1 precedent).
+const MOBILE_PARTS = ['react-native', 'react-native-safe-area-context', 'react-native-maps'];
 // MF-48 (dated 2026-11-11; D-3 a, Spec 126 §11b.4 dated note 2026-11-11): the C-8m HOST LIST. A listed host module's COMPONENTS table equals
 // mapping.mobile.<archetype>_HOST, and its values may also come from the packages listed for it here: the app's existing bottom sheet and the one
 // shared renderer. Any other package still fails, and no other module may take a part from them.
@@ -740,10 +753,10 @@ export const mobileMappingProblems = (text: string, file: string, allowed: strin
 
 describe('C-8m the mobile closed table (MF-35; every element of a mobile binding module comes through COMPONENTS = mapping.mobile)', () => {
   const mods = B.modules.filter((m: Json) => m.platform === 'mobile');
-  it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile.SEARCH; no FlashList', () => {
+  it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile for their archetypes (SEARCH; the renderer SEARCH and LIST); no FlashList', () => {
     console.log(`C-8m: ${mods.length} mobile modules`);
-    // MF-48 (dated 2026-11-11): + ReportBinding.tsx (no JSX) and the host ReportPageHost.tsx (its own table, mapping.mobile.REPORT_HOST, host list).
-    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']);
+    // MF-48 (dated 2026-11-11): + ReportBinding.tsx (no JSX) and the host ReportPageHost.tsx (its own table, mapping.mobile.REPORT_HOST, host list). MF-53: + LotMapBinding.tsx (no JSX).
+    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/LotMapBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']);
     for (const m of mods) {
       const host = MOBILE_HOSTS[m.path];
       const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[host ? `${a}_HOST` : a] ?? []))];
@@ -754,6 +767,18 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
     // MF-48 OUTPUT fold RG R5: the renderer's REPORT list is a subset of its SEARCH parts (so its COMPONENTS table is unchanged), and no FlashList.
     expect((B.mapping.mobile.REPORT as string[]).filter((c) => !B.mapping.mobile.SEARCH.includes(c))).toEqual([]);
     expect(B.mapping.mobile.REPORT).not.toContain('FlashList');
+    // MF-53: the LIST table adds exactly react-native-maps' three parts to the SEARCH parts it reuses, and no FlashList.
+    expect((B.mapping.mobile.LIST as string[]).filter((c) => !B.mapping.mobile.SEARCH.includes(c))).toEqual(['MapView', 'Polygon', 'Marker']);
+    expect(B.mapping.mobile.LIST).not.toContain('FlashList');
+  });
+  it('MF-53 RED (in memory): a map part taken from any other package is not an imported library part', () => {
+    const real = fs.readFileSync(path.join(REPO, 'mobile/src/components/surfaces/SurfaceRenderer.tsx'), 'utf8');
+    const allowed = [...new Set<string>(['SEARCH', 'REPORT', 'LIST'].flatMap((a) => B.mapping.mobile[a] as string[]))];
+    expect(mobileMappingProblems(real, 'r.tsx', allowed)).toEqual([]);
+    const other = real.replace("from 'react-native-maps';", "from '@/components/map/HandMap';");
+    expect(mobileMappingProblems(other, 'r.tsx', allowed).filter((l) => l.includes('is not an imported library part')).map((l) => l.replace(/:\d+:/, ':'))).toEqual([
+      'C-8m r.tsx: COMPONENTS.MapView is not an imported library part', 'C-8m r.tsx: COMPONENTS.Polygon is not an imported library part', 'C-8m r.tsx: COMPONENTS.Marker is not an imported library part',
+    ]);
   });
   it('every component a converted mobile golden names is in mapping.mobile for its archetype', () => {
     const conv = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json')).converted as string[];
@@ -764,7 +789,9 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
         const walkC = (o: Json): string[] => [o.component, ...((o.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap(walkC)];
         const names = walkC(rj(path.join(dir, f)).props);
         n += names.length;
-        expect([f, names.filter((c) => !B.mapping.mobile.SEARCH.includes(c))]).toEqual([f, []]);
+        // MF-53 (CR F-2): the surface's own archetype table (SEARCH for the search page, LIST for the map page).
+        const archetype = (DESCRIPTORS.get(id) as Json).identity.archetype as string;
+        expect([f, names.filter((c) => !(B.mapping.mobile[archetype] as string[]).includes(c))]).toEqual([f, []]);
       }
     }
     expect(n).toBeGreaterThan(0);

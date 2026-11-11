@@ -1,0 +1,283 @@
+{
+  "surface": "mobile_parcel_disambiguation_map",
+  "state": "miss",
+  "target": "mobile",
+  "covers": [
+    "miss"
+  ],
+  "situation": "unlinked",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-lotmap-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-lotmap-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "pill",
+                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "Icon",
+                    "props": {
+                      "key": "search-icon",
+                      "icon": "Search",
+                      "size": 16,
+                      "color": "#a1a1aa"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "query",
+                      "testID": "parcel-lotmap-query",
+                      "className": "flex-1 px-2 py-3 text-base font-normal text-zinc-100",
+                      "numberOfLines": 1
+                    },
+                    "children": [
+                      {
+                        "derived": "query"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "clear",
+                      "testID": "parcel-lotmap-clear",
+                      "variant": "ghost",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "map.clear.label"
+                      },
+                      "onPress": {
+                        "action": "back"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "clear-icon",
+                          "icon": "X",
+                          "size": 16,
+                          "color": "#a1a1aa"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Alert",
+                "props": {
+                  "key": "unlinked",
+                  "testID": "parcel-lotmap-unlinked",
+                  "icon": "MapPin",
+                  "iconClassName": "text-zinc-400",
+                  "className": "mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]"
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "unlinked-heading",
+                      "className": "text-base font-semibold text-zinc-100",
+                      "role": "header"
+                    },
+                    "children": [
+                      {
+                        "content": "unlinked.heading"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "AlertDescription",
+                    "props": {
+                      "key": "unlinked-text",
+                      "className": "text-sm font-normal text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "text": {
+                          "content": "unlinked.body"
+                        },
+                        "vars": {
+                          "address": {
+                            "contract": "contract_parcels_lookup.map.address"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "map-frame",
+                  "testID": "parcel-lotmap-map",
+                  "className": "mt-4 w-full overflow-hidden rounded-xl border border-[#2a2a2c]",
+                  "importantForAccessibility": "no-hide-descendants",
+                  "accessibilityElementsHidden": true
+                },
+                "children": [
+                  {
+                    "component": "MapView",
+                    "props": {
+                      "key": "map",
+                      "style": {
+                        "height": 280
+                      },
+                      "initialRegion": {
+                        "derived": "region"
+                      },
+                      "userInterfaceStyle": "dark",
+                      "customMapStyle": {
+                        "derived": "map_style"
+                      },
+                      "rotateEnabled": false,
+                      "pitchEnabled": false,
+                      "toolbarEnabled": false
+                    },
+                    "children": [
+                      {
+                        "component": "Polygon",
+                        "props": {
+                          "key": "neighbour-PCL-N1-0",
+                          "coordinates": {
+                            "derived": "neighbours.0.polygons.0.coordinates"
+                          },
+                          "holes": {
+                            "derived": "neighbours.0.polygons.0.holes"
+                          },
+                          "strokeColor": "#52525b",
+                          "fillColor": "rgba(161,161,170,0.08)",
+                          "strokeWidth": 1,
+                          "tappable": true,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.neighbours.0.parcelId"
+                            }
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Polygon",
+                        "props": {
+                          "key": "neighbour-PCL-N2-0",
+                          "coordinates": {
+                            "derived": "neighbours.1.polygons.0.coordinates"
+                          },
+                          "holes": {
+                            "derived": "neighbours.1.polygons.0.holes"
+                          },
+                          "strokeColor": "#52525b",
+                          "fillColor": "rgba(161,161,170,0.08)",
+                          "strokeWidth": 1,
+                          "tappable": true,
+                          "onPress": {
+                            "action": "select",
+                            "parcelId": {
+                              "contract": "contract_parcels_lookup.map.neighbours.1.parcelId"
+                            }
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Marker",
+                        "props": {
+                          "key": "pin",
+                          "coordinate": {
+                            "derived": "pin"
+                          },
+                          "pinColor": "#f4f4f5",
+                          "tracksViewChanges": false
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "continue",
+                  "testID": "parcel-lotmap-continue",
+                  "variant": "default",
+                  "className": "mt-4 min-h-[44px] w-full rounded-xl",
+                  "disabled": true,
+                  "accessibilityRole": "button",
+                  "accessibilityState": {
+                    "disabled": true
+                  },
+                  "accessibilityLabel": {
+                    "content": "select.label"
+                  },
+                  "onPress": null
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "continue-text",
+                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
+                    },
+                    "children": [
+                      {
+                        "content": "select.none"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "a5e3c7f2da75009e",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "33e4e665d090b1b5"
+    }
+  }
+}

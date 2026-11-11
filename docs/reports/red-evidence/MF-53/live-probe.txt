@@ -1,0 +1,12 @@
+MF-53 live read-only probe, 2026-11-11 (PGOPTIONS default_transaction_read_only=on; dev DB via the repo's .env loader; no write).
+The real modules (resolveAddress with classifyUnlinked, resolveLotMap, assembleLotMap) over five queries (house numbers masked as N):
+N The Queensway -> multi_parcel 3 lots: areas "11,706 sq ft · 1,088 m²" / "11,845 sq ft · 1,100 m²" / "11,437 sq ft · 1,063 m²", frontages 32.4 / 25.8 / 31.7 m, zoning null (shows the null value), outlines drawn, pin + start view present, map 3,402 bytes, 116 ms
+N Lawrence Ave E -> unlinked; map read FAILS CLOSED: "logic_variables missing ... parcel_map_neighbour_radius_m, parcel_map_neighbour_limit" (migration 307 not applied: the DB job is owed)
+N Queens Quay W -> unique (an exact parcels match exists)
+N Acacia -> unique
+N Nowhere Imaginary St -> no_match (226 ms)
+Measurements behind the plan (plan.v4.md §1, §8): 0 of 507,294 live (street, number) keys reach one lot through two differently written addresses (the Q1 sub-claim);
+typeahead one point -> 2-10 lots 700, several points one printed address 1,539; exact one printed address 2-4 rows 1,402; the only exact key with
+12+ rows on one printed address is the legacy "None None" key (26,535 rows), so too_many_lots is reachable only by that query today;
+max 3 lots per address point; neighbours within 25 m p50 2 / p95 13 / max 23 (limit 30 never cuts); EXPLAIN uses idx_parcels_geom_gist (33 ms);
+outline GeoJSON bytes p95 502, max 61,910 (under the 64 KB cap).

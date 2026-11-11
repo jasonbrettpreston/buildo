@@ -3,7 +3,7 @@
   "status": "exists",
   "docs": {
     "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
-    "data_story": "It reads 7 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `usage_events` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`.",
+    "data_story": "It reads 7 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `usage_events` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered.",
     "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
   },
   "evidence": {
@@ -116,7 +116,19 @@
       "coa_decision",
       "build_ratio",
       "structure_family",
-      "parcelId"
+      "parcelId",
+      "resolution",
+      "map",
+      "pin",
+      "fit",
+      "truncated",
+      "lots",
+      "neighbours",
+      "area",
+      "frontage",
+      "zoning",
+      "centroid",
+      "outline"
     ],
     "tables": [
       {
@@ -127,7 +139,12 @@
           "linear_name_normalized",
           "addr_num_normalized",
           "address_status",
-          "maint_stage"
+          "maint_stage",
+          "latitude",
+          "longitude",
+          "retired_at",
+          "address_number",
+          "linear_name_full"
         ],
         "producing_steps": [
           "address_points"
@@ -139,7 +156,9 @@
           "scripts/load-address-points.js",
           "docs/reference/data-lineage-map.md:133",
           "scripts/manifest.json#chains",
-          "docs/reference/data-lineage-map.md"
+          "docs/reference/data-lineage-map.md",
+          "src/lib/parcels/lot-map.ts — the pin statement (MF-53)",
+          "src/lib/admin/parcel-lookup.ts — the unlinked statement (MF-53)"
         ]
       },
       {
@@ -372,7 +391,8 @@
           "opt_suite_fits_full",
           "opt_binding_constraint",
           "opt_config_confidence",
-          "optimal_config"
+          "optimal_config",
+          "geom"
         ],
         "producing_steps": [
           "compute_centroids",
@@ -395,7 +415,8 @@
           "scripts/compute-centroids.js",
           "docs/reference/data-lineage-map.md:757",
           "scripts/manifest.json#chains",
-          "docs/reference/data-lineage-map.md"
+          "docs/reference/data-lineage-map.md",
+          "src/lib/parcels/lot-map.ts — the lot statement: parcel_id, lot_size_sqm, frontage_m, zoning_zn_string, centroid_lat, centroid_lng, ST_AsGeoJSON(geom, 6) (MF-53, CONSUMER_MAP_COLS)"
         ]
       },
       {
@@ -413,6 +434,19 @@
           "src/lib/auth/get-user-context.ts:99-101",
           "docs/specs/00-architecture/00_system_map.md:80",
           "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "logic_variables",
+        "columns": [
+          "variable_key",
+          "variable_value"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/128_surface_standard_policy.md",
+        "evidence": [
+          "src/lib/parcels/lot-map.ts — readLotMapLimits (MF-53, migration 307)"
         ]
       }
     ]
@@ -578,7 +612,7 @@
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
-      "why": "operator ruling 2026-09-16 (match TYPE, never count) declares this contract’s resolution vocabulary as exactly five values — unique, text_candidates, multi_parcel, unlinked, intersection — and every consumer branches on that value, never on a result count. The contract does NOT emit them yet: matchType is still the closed enum ['exact','typeahead','direct'] and resolveAddress collapses every ambiguity into candidates[]. The declared enum is therefore the target, and the shim is deriveMatchType (mobile/src/lib/parcelSearchMatch.ts:93), which is written server-value-first so it becomes dead code the day this contract carries the type. multi_parcel and unlinked are NOT derivable from the present payload — that is the gap this check exists to keep visible."
+      "why": "operator ruling 2026-09-16 (match TYPE, never count) declares this contract’s resolution vocabulary as exactly five values — unique, text_candidates, multi_parcel, unlinked, intersection — and every consumer branches on that value, never on a result count. The contract does NOT emit them yet: matchType is still the closed enum ['exact','typeahead','direct'] and resolveAddress collapses every ambiguity into candidates[]. The declared enum is therefore the target, and the shim is deriveMatchType (mobile/src/lib/parcelSearchMatch.ts:93), which is written server-value-first so it becomes dead code the day this contract carries the type. multi_parcel and unlinked are NOT derivable from the present payload — that is the gap this check exists to keep visible. Dated note 2026-11-11 (MF-53, prior text kept; D-1 a, D-2 a, operator 2026-11-10): the contract now emits `resolution` (unique | text_candidates | multi_parcel | unlinked | no_match; intersection stays a client query-shape check on no_match), computed by resolveAddress (src/lib/admin/parcel-lookup.ts) with one rule on both paths; multi_parcel and unlinked are now derivable. Locked by src/tests/parcel-lookup-resolution.logic.test.ts and the .strict() response schema (a map exactly on multi_parcel / unlinked)."
     }
   ],
   "invariants": "none",
@@ -698,12 +732,27 @@
     "on_exceeded": "403"
   },
   "config": {
-    "answer": "none",
-    "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+    "answer": "logic_variables",
+    "why": "Dated 2026-11-11 (MF-53; DECISIONS-v3 item 2 b, operator \"b\"): the choose-your-lot map neighbour radius and limit are logic variables read on the unlinked-with-pin path only, failing closed (500) outside the seed bounds. The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings.",
     "evidence": [
-      "src/app/api/parcels/lookup/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+      "src/lib/parcels/lot-map.ts — readLotMapLimits",
+      "scripts/seeds/logic_variables.json parcel_map_neighbour_radius_m / parcel_map_neighbour_limit",
+      "migrations/307_parcel_map_logic_variables.sql"
     ],
-    "logic_variables": [],
+    "logic_variables": [
+      {
+        "name": "parcel_map_neighbour_radius_m",
+        "min": 5,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_map_neighbour_limit",
+        "min": 1,
+        "max": 50,
+        "on_invalid": "fail"
+      }
+    ],
     "retired": []
   },
   "sharing": {

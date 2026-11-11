@@ -1748,15 +1748,29 @@
     },
     "src/lib/admin/parcel-lookup.ts": {
       "class": "interpolated",
-      "statements": 1,
+      "statements": 2,
       "interpolated": 3,
       "unparsed": [],
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
-        "22a0943b35395c6b"
+        "22a0943b35395c6b",
+        "818814fc5fc9ee0c"
       ],
       "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_full",
+          "address_number",
+          "address_point_id",
+          "address_status",
+          "latitude",
+          "linear_name_full",
+          "linear_name_normalized",
+          "longitude",
+          "maint_stage",
+          "retired_at"
+        ],
         "coa_applications": [
           "address",
           "application_number",
@@ -1769,6 +1783,9 @@
           "neighbourhood_id",
           "project_type",
           "status"
+        ],
+        "parcel_address_points": [
+          "address_point_id"
         ]
       },
       "writes": {}
@@ -2466,6 +2483,46 @@
           "mime",
           "position",
           "scenario_key"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/parcels/lot-map.ts": {
+      "class": "static",
+      "statements": 4,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "325b25acaf51bfab",
+        "47d11032f483f9c3",
+        "a902283bc3527996",
+        "b5a1b0d462a3ba3c"
+      ],
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_point_id",
+          "address_status",
+          "latitude",
+          "longitude",
+          "maint_stage",
+          "retired_at"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "frontage_m",
+          "geom",
+          "id",
+          "lot_size_sqm",
+          "parcel_id",
+          "zoning_zn_string"
         ]
       },
       "writes": {}

@@ -232,6 +232,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'report_check_skip_after_ms',
   // MF-62 follow-up (operator 2026-11-11, the processing sequence: a pause, the ready line, then the report): the ready-line hold, migration 312
   'report_check_ready_hold_ms',
+  // MF-53 the choose-your-lot map neighbours (DECISIONS-v3 item 2, operator 2026-11-11 "b"): admin group "Parcel Lookup", migration 307
+  'parcel_map_neighbour_radius_m',
+  'parcel_map_neighbour_limit',
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',

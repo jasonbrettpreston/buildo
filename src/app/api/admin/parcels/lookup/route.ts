@@ -25,6 +25,7 @@ import {
   fetchParcelById,
   fetchCoaProjects,
   assembleParcelPayload,
+  type Resolution,
 } from '@/lib/admin/parcel-lookup';
 import { ParcelLookupQuerySchema, ParcelLookupResponseSchema, type ParcelLookupResponse } from './types';
 
@@ -52,7 +53,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const t0 = Date.now();
   try {
     // Resolution: direct id (candidate click) bypasses address parsing (Spec 89 §3.4).
-    const resolution = parcelId
+    // MF-53: the admin tool reads only match / candidates / truncated (the added resolution fields are the consumer's; Spec 89 §3 note).
+    const resolution: Pick<Resolution, 'match' | 'candidates' | 'truncated'> = parcelId
       ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [] }
       : await resolveAddress(q!);
 

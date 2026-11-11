@@ -1,0 +1,10 @@
+MF-53 red evidence index (2026-11-11).
+red-1-resolution.txt  T1/T4 before src/lib/parcels/lot-map.ts existed: the test file fails to import (module missing).
+red-2-resolution.txt  T1/T4 with lot-map.ts and the seeds present but resolveAddress unchanged (base e088bf072): 19 red (every resolution case), 18 green (the map read, the limits, the display rules).
+In-memory RED plants (each asserted red inside its own green test file, never a file edit):
+- src/tests/consumer-parcel-lookup.infra.test.ts: a Tier-3 column (zoning_class) added to the lot statement breaks CONSUMER_MAP_COLS equality; a crs passthrough outline is dropped to null; a stray lot key, a map on unique and no map on unlinked are refused by the response schema.
+- src/tests/parcel-lookup.infra.test.ts: one live-point filter dropped from one address_points statement breaks the per-file filter count.
+- src/tests/surfaces/surface-conformance.logic.test.ts: a second archetype on a props-half module, the render half without its owner's archetype, a map part from any other package (C-8m).
+- mobile/__tests__/lotMapScreens.golden.test.ts: a pre-checked card, an enabled Continue with nothing picked, a map visible to screen readers, an animated / controlled map, an undeclared derived name, a Card component.
+- mobile/__tests__/parcelSearchMatch.test.ts: a client that ignores `resolution` derives no_match for a server unlinked.
+live-probe.txt  the real statements on the dev DB, read-only: multi_parcel drawn, unlinked fails closed until migration 307 is applied.
