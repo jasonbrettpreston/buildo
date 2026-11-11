@@ -9,3 +9,6 @@ surface-validate-plant-red.txt   a blank alt planted in images_present.web.json:
 restamp-fingerprint-only.txt     the 56 existing goldens differ from the base only in fingerprint.files (report-tree.schema.json, report-v2.decl.json);
                                  rendered_tree, response_fixture and the fixture hash are byte-identical (D-7).
 capture-twice.txt                report-capture written, then --check: 0 stale over 64 goldens.
+output-folds-red.txt             OUTPUT panel folds: the new fold tests against the code of 1bde1d3e9 (the selector rule-type case RED), and the code
+                                 reviewer's two plants (the lifecycle-image guard deleted, the one-image-node guard disabled) each RED on the new T20 case.
+output-folds-green.txt           the same 25 targeted files GREEN on the folded code; the 64 goldens differ from 1bde1d3e9 only in the decl stamp.

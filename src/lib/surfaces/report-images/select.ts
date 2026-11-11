@@ -35,6 +35,7 @@ export const selectImage = (sets: ImageSet[], facts: ImageFacts, edges: Frontage
   const order: string[] = (cfg.selectors as Json[]).map((s) => String(s.id));
   const deferred: string[] = cfg.deferred ?? [];
   const bandIds: string[] = cfg.bands.frontage.ids;
+  // narrow_max == wide_min is allowed (plan: narrow_max <= wide_min); the standard band is then empty, by design.
   if (!isNum(edges?.narrow_max) || !isNum(edges?.wide_min) || edges.wide_min < edges.narrow_max) throw new ImageSelectError('frontage edges: two numbers with narrow_max <= wide_min are required');
   if (facts.frontage_m !== null && !isNum(facts.frontage_m)) throw new ImageSelectError(`frontage_m: ${String(facts.frontage_m)} is not a finite number or null`);
   if (facts.storeys !== null && !isNum(facts.storeys)) throw new ImageSelectError(`storeys: ${String(facts.storeys)} is not a finite number or null`);
@@ -48,6 +49,9 @@ export const selectImage = (sets: ImageSet[], facts: ImageFacts, edges: Frontage
       if (deferred.includes(k)) throw new ImageSelectError(`rule key ${k}: a deferred selector has no resolver yet`);
       if (!order.includes(k)) throw new ImageSelectError(`rule key ${k}: not a selector (${order.join(', ')})`);
     }
+    // OUTPUT panel fold (code reviewer LOW-2): a value of the wrong type (or null) would never match and say nothing, so it throws.
+    if ('storeys' in rule && !isNum(rule.storeys)) throw new ImageSelectError(`rule storeys ${String(rule.storeys)}: not a finite number`);
+    if ('corner' in rule && typeof rule.corner !== 'boolean') throw new ImageSelectError(`rule corner ${String(rule.corner)}: not a boolean`);
     if ('frontage_band' in rule && !bandIds.includes(String(rule.frontage_band))) throw new ImageSelectError(`frontage_band ${String(rule.frontage_band)}: not a declared band`);
     const key = canon(rule, order);
     if (seen.has(key)) throw new ImageSelectError(key === '[]' ? 'two default sets for one scenario key' : `two sets with identical rules: ${key}`);

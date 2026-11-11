@@ -291,4 +291,12 @@ describe('T20 the image node (MF-38)', () => {
     const bad = clone(t); imageNode(bad)!.images[0].scenario = 'made/up';
     expect(has(problemsOf(() => assertTree(bad, reportCtx)), 'RR-FIELD card_image')).toBe(true);
   });
+  // OUTPUT panel folds (code reviewer MEDIUM-1, LOW-1): each guard is locked by its own message, apart from the rules that would also fire.
+  it('assertTree RED: a lifecycle tree whose one node is an image names the image rule; two image nodes name the one-node rule', () => {
+    const t = build([it1()]);
+    const life = { lifecycle: 'loading', nodes: [clone(imageNode(t))] };
+    expect(problemsOf(() => assertTree(life, reportCtx))).toContain('RR-LIFECYCLE card_image: a lifecycle tree carries no image');
+    const two = clone(t); two.nodes.push(clone(imageNode(t)));
+    expect(problemsOf(() => assertTree(two, reportCtx))).toContain('RR-FIELD card_image: at most one image node per tree');
+  });
 });

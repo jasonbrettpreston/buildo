@@ -112,6 +112,14 @@ describe('MF-38 selector: RED inputs throw (FE-24 spirit: never a guess)', () =>
     throwsWith(() => pick([set(null, img('a', 0, '   '))]), 'alt');
     throwsWith(() => pick([set(null, img('a', 0, 'Houseplex {dwelling_units} units'))]), 'alt');
   });
+  // OUTPUT panel fold (code reviewer LOW-2): a rule value of the wrong type would never match and say nothing, so it throws.
+  it('a rule value of the wrong type (or null) throws', () => {
+    throwsWith(() => pick([set({ corner: 'true' }, img('x'))]), 'corner');
+    throwsWith(() => pick([set({ corner: null }, img('x'))]), 'corner');
+    throwsWith(() => pick([set({ storeys: null }, img('x'))]), 'storeys');
+    throwsWith(() => pick([set({ storeys: '3' }, img('x'))]), 'storeys');
+    throwsWith(() => pick([set({ frontage_band: null }, img('x'))]), 'band');
+  });
   it('a string or non-finite frontage, a non-integer storeys and overlapping edges throw', () => {
     throwsWith(() => pick([set(null, img('d'))], { ...FACTS, frontage_m: '12' }), 'frontage_m');
     throwsWith(() => pick([set(null, img('d'))], { ...FACTS, frontage_m: Infinity }), 'frontage_m');

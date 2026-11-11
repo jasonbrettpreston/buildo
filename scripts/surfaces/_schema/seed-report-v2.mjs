@@ -474,7 +474,7 @@ log.push(`catalogue: ${catalogueFields.length} effective-ON rows are fields, ${o
 // item per scenario key. A content field typed object[] is the image list (the renderer names no field). Generated, never hand-edited.
 const imgSec = out.find((x) => x.id === 'images');
 imgSec.title = 'Scenario image (one per option)';
-imgSec.fields = [{ path: 'scenarios.cards[].card_image', name: 'card_image', label: 'Illustration', type: 'object[]', status: 'proposed', source: 'content:illustrations', render: 'rendered', note: 'Q-10 (decided) as amended by MF-38 O-1 b (operator 2026-11-11, "0-1 b"): one image per option, no carousel, dots or swipe; each item {scenario, asset_id, alt, caption?} names its scenario key; alt required; caption defaults to illustrations.caption_default; the image bytes come from media_assets (MF-37) through a signed URL, never in the tree' }];
+imgSec.fields = [{ path: 'scenarios.cards[].card_image', name: 'card_image', label: 'Illustration', type: 'object[]', status: 'proposed', source: 'content:illustrations', render: 'rendered', note: 'Q-10 (decided) as amended by MF-38 O-1 b (operator 2026-11-11, "0-1 b"): one image per option, no carousel, dots or swipe; each item {scenario, asset_id, alt, caption?} names its scenario key; alt required; caption defaults to illustrations.caption_default; the per-asset kind enum is retired (street_view keeps its own row, Q-9; massing_diagram is not planned); the image bytes come from media_assets (MF-37) through a signed URL, never in the tree' }];
 log.push('images: the four per-asset rows -> one card_image field (MF-38)');
 
 // not_in_report: catalogue rows the report does not declare (RS-9)

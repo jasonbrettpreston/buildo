@@ -187,7 +187,7 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 | Label | Path | Type | Unit | Status | Render | Source | Note |
 |---|---|---|---|---|---|---|---|
-| Illustration | `scenarios.cards[].card_image` | object[] |  | proposed | rendered | `content:illustrations` | Q-10 (decided) as amended by MF-38 O-1 b (operator 2026-11-11, "0-1 b"): one image per option, no carousel, dots or swipe; each item {scenario, asset_id, alt, caption?} names its scenario key; alt required; caption defaults to illustrations.caption_default; the image bytes come from media_assets (MF-37) through a signed URL, never in the tree |
+| Illustration | `scenarios.cards[].card_image` | object[] |  | proposed | rendered | `content:illustrations` | Q-10 (decided) as amended by MF-38 O-1 b (operator 2026-11-11, "0-1 b"): one image per option, no carousel, dots or swipe; each item {scenario, asset_id, alt, caption?} names its scenario key; alt required; caption defaults to illustrations.caption_default; the per-asset kind enum is retired (street_view keeps its own row, Q-9; massing_diagram is not planned); the image bytes come from media_assets (MF-37) through a signed URL, never in the tree |
 
 ## Market and neighbourhood context (`market`)
 

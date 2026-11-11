@@ -8,6 +8,7 @@
 // a `not_evaluated:<reason>` has text in the content registry, and every disclosure code is a key of disclosure_texts (F-3). Each check is proven RED on a mutated tree. No DB, no network.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { honestProblems } from '../../../scripts/surfaces/report-checks.mjs'; // MF-15 D-1 a: the checks have one home, shared with surface-validate.mjs (R-27)
 
@@ -94,5 +95,20 @@ describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
     expect(honestProblems(t({ ...image, source: 'catalogue' }))).not.toEqual([]);
     expect(honestProblems({ lifecycle: 'miss', nodes: [{ ...reason, value: null, status: 'none' }, image] })).not.toEqual([]); // no image in a lifecycle tree
     expect(honestProblems({ nodes: [image] })).toEqual([]); // an image needs no reading beside it
+  });
+  // OUTPUT panel fold (regression-guardian LOW-3): the gate takes the scenario keys from the ad contract's scenario_fields (locked equal to
+  // row-presentation.json by ad-targeting-keys.logic.test.ts); without them every image item is refused (fails closed).
+  it('RED: an ad contract without scenario_fields refuses every image item', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mf38-honest-'));
+    try {
+      const SD = 'scripts/surfaces/_schema';
+      fs.mkdirSync(path.join(root, SD), { recursive: true });
+      for (const f of ['report-tree.schema.json', 'report-presentation.json', 'report-v2.decl.json']) fs.copyFileSync(path.join(ROOT, SD, f), path.join(root, SD, f));
+      const { scenario_fields: _gone, ...ad } = readJson(`${SD}/ad-contract.json`); // eslint-disable-line @typescript-eslint/no-unused-vars
+      fs.writeFileSync(path.join(root, SD, 'ad-contract.json'), JSON.stringify(ad));
+      const tree = { nodes: [{ field: 'card_image', source: 'content', kind: 'image', label: 'Illustration', images: [{ scenario: 'detached_house/pitched', asset_id: 'a1', alt: 'A house', caption: 'c' }] }] };
+      expect(honestProblems(tree)).toEqual([]);
+      expect(honestProblems(tree, root).join()).toContain('scenario is not a key of row-presentation.json');
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
   });
 });
