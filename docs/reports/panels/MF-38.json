@@ -1,0 +1,20 @@
+{
+  "task": "MF-38",
+  "item": "Report images, single image per option (operator O-1 b, 2026-11-11): one closed image node kind in the report tree with one {scenario, asset_id, alt, caption} item per scenario key; the decl images rows folded into one card_image row (object[], content:illustrations); the pure image selector (storeys > corner > frontage band, default images only) with report-images.json; the same one native img on every target (pdf included); synthetic placeholder URLs on the admin preview; goldens images_present and images_empty x 4 targets. No carousel, dots, swipe, layout key or new dependency.",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "PENDING",
+  "cards": [
+    "Operator 2026-11-11: \"0-1 b\" (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"2026-11-11 MF-38 O-1\"): single image per option, no carousel, no install; amends the photos-with-dots ruling for v1.",
+    "Operator 2026-11-09 Wave 1 batch (open-questions.md:463, approve-as-recommended): MF-38 D-1..D-11."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-38/plan.md (sections 11 and 13 folds; PLAN panel ~/Buildo-scratch/mcfrontend/MF-38/panel/: regression-guardian, code-reviewer-grounded, compliance, PASS-WITH-FOLDS) with ~/Buildo-scratch/mcfrontend/MF-38/plan.delta-1.md (re-measured on 2db1bdd67; wins where they differ); pre-approved D-35 and D-36 (logged first as D-29 and D-30; renumbered for an id collision) in ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md.",
+  "output": "PENDING: the OUTPUT panel (code-reviewer-grounded, regression-guardian) runs on the code commit; this placeholder is replaced by the record commit.",
+  "seats": [],
+  "verdict": "PENDING",
+  "blockers": [],
+  "followups": [],
+  "evidence": "docs/reports/red-evidence/MF-38/",
+  "notes": []
+}

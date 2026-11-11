@@ -14,8 +14,10 @@ import miss from '../../../tests/fixtures/surfaces/report/miss.web.json';
 import error from '../../../tests/fixtures/surfaces/report/error.web.json';
 import ad_slot_present from '../../../tests/fixtures/surfaces/report/ad_slot_present.web.json';
 import ad_slot_absent from '../../../tests/fixtures/surfaces/report/ad_slot_absent.web.json';
+import images_present from '../../../tests/fixtures/surfaces/report/images_present.web.json';
+import images_empty from '../../../tests/fixtures/surfaces/report/images_empty.web.json';
 
-export const GOLDENS: Record<string, unknown> = { permitted, not_permitted, not_evaluated, variant_flat, variant_pitched_a, variant_pitched_b, at_least, loading, miss, error, ad_slot_present, ad_slot_absent };
+export const GOLDENS: Record<string, unknown> = { permitted, not_permitted, not_evaluated, variant_flat, variant_pitched_a, variant_pitched_b, at_least, loading, miss, error, ad_slot_present, ad_slot_absent, images_present, images_empty };
 export const STATES: string[] = Object.keys(GOLDENS);
 
 // MF-57: the four v21 page goldens (src/tests/fixtures/report-page), keyed by target; the four carry the same tree (S-parity).

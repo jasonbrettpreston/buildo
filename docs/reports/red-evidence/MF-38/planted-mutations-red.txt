@@ -1,0 +1,41 @@
+M1 null fact coerced (null matches corner:false)
+  planted in src/lib/surfaces/report-images/select.ts: "value[k] !== null && value[k] === rule[k]" -> "(value[k] ?? false) === rule[k]"
+  lock src/tests/surfaces/report-image-select.logic.test.ts: exit 1 RED; Tests  1 failed | 16 passed (17)
+    FAIL  src/tests/surfaces/report-image-select.logic.test.ts > MF-38 selector: choice > e. a null fact never matches a condition, not even corner:false
+
+M2 frontage edge <= for <
+  planted in src/lib/surfaces/report-images/select.ts: "if (frontage < edges.narrow_max)" -> "if (frontage <= edges.narrow_max)"
+  lock src/tests/surfaces/report-image-select.logic.test.ts: exit 1 RED; Tests  1 failed | 16 passed (17)
+    FAIL  src/tests/surfaces/report-image-select.logic.test.ts > MF-38 selector: choice > j. frontage at each edge value lands in the ruled band (< narrow_max narrow, >= wide_min wide, else standard)
+
+M3 a threshold literal in the selector (FE-05)
+  planted in src/lib/surfaces/report-images/select.ts: "if (frontage >= edges.wide_min)" -> "if (frontage >= 15)"
+  lock src/tests/surfaces/report-no-maths.logic.test.ts: exit 1 RED; Tests  1 failed | 51 passed (52)
+    FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 report-no-maths: the real projection files > the real files carry no maths (zero findings, no allow-list)
+
+M4 caption default dropped (RG-2)
+  planted in src/lib/surfaces/report/core.ts: "caption: x.caption ?? captionDefault" -> "caption: x.caption"
+  lock src/tests/surfaces/report-render.logic.test.ts: exit 1 RED; Tests  9 failed | 90 passed (99)
+    FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.mobile
+    FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.web
+    FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.admin
+    FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.pdf
+    FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files
+    FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > a list becomes ONE image node after the readings; caption defaults to content.illustrations.caption_default
+
+M5 a url key let through (RG-7)
+  planted in src/lib/surfaces/report/core.ts: "const IMAGE_KEYS = ['scenario', 'asset_id', 'alt', 'caption'];" -> "const IMAGE_KEYS = ['scenario', 'asset_id', 'alt', 'caption', 'url'];"
+  lock src/tests/surfaces/report-render.logic.test.ts: exit 1 RED; Tests  1 failed | 98 passed (99)
+    FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > RED: a non-list, a URL key, a missing or placeholder alt, an unknown scenario, two images for one option each raise RR-FIELD
+
+M6 one image per option not enforced in the honest checks
+  planted in scripts/surfaces/report-checks.mjs: "else if (seen.has(it.scenario)) out.push" -> "else if (false) out.push"
+  lock src/tests/surfaces/report-honest.logic.test.ts: exit 1 RED; Tests  1 failed | 66 passed (67)
+    FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > RED fixtures: the image node (MF-38)
+
+M7 the picture dropped from the component on every target
+  planted in src/components/report/ReportView.tsx: "{view.image ? <Picture im={view.image} /> : null}" -> "{null}"
+  lock src/tests/surfaces/parity.golden.test.ts: exit 1 RED; Tests  3 failed | 19 passed (22)
+    FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 parity: the real output of every target (goldens) > the four targets and the golden tree agree on all 48 combinations
+    FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > images_present carries an image record on every target for each scenario pick, none at the no-scenario pick
+    FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > control: images_present and images_empty report nothing

@@ -21,7 +21,9 @@
     "not_buildable",
     "not_modelled",
     "ad_slot_present",
-    "ad_slot_absent"
+    "ad_slot_absent",
+    "images_present",
+    "images_empty"
   ],
   "owed_states": 13,
   "owed_files": 52

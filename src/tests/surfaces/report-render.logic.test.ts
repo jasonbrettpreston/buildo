@@ -42,7 +42,7 @@ describe('T1 buildTree reproduces every golden (the capture)', () => {
     const a = captureAll(ROOT);
     const b = captureAll(ROOT);
     expect([...a.entries()]).toEqual([...b.entries()]);
-    expect(a.size).toBe(56);
+    expect(a.size).toBe(64); // MF-38: 16 states x 4 targets
     for (const [file, text] of a) expect(fs.readFileSync(path.join(GOLD, file), 'utf8')).toBe(text);
   });
   it('no maths: a float is shown as the producer sent it', () => {
@@ -213,5 +213,82 @@ describe('T7 viewOf', () => {
     expect(viewOf(t, { scenario: null, target: 'admin' }, reportCtx).detail.every((n: Json) => n.showMeta === true)).toBe(true);
     t.nodes[1].confidence = 'high';
     expect(viewOf(t, { scenario: null, target: 'web' }, reportCtx).detail.some((n: Json) => n.showMeta)).toBe(true);
+  });
+});
+
+// MF-38 (126 11a.7 dated note 2026-11-11; O-1 b): single image per option. The one declared field card_image carries a list of
+// {scenario, asset_id, alt, caption?}; one item per scenario key; caption defaults from content; the tree never carries a URL; the view shows the
+// picked scenario's image with the injected URL; nothing at all when the list is empty, no scenario is picked or no URL was issued.
+describe('T20 the image node (MF-38)', () => {
+  const P = 'detached_house/pitched';
+  const F = 'detached_house/flat_or_shallow_roof';
+  const it1 = (over: Json = {}): Json => ({ scenario: P, asset_id: 'a1', alt: 'A pitched-roof house', ...over });
+  const build = (card_image: unknown): Json => buildTree({ status: 'permitted', gfa_flat_m2: 1, card_image }, reportCtx);
+  const imageNode = (t: Json): Json | undefined => t.nodes.find((n: Json) => n.kind === 'image');
+  it('a list becomes ONE image node after the readings; caption defaults to content.illustrations.caption_default', () => {
+    const t = build([it1(), it1({ scenario: F, asset_id: 'a2', alt: 'A flat-roof house', caption: 'Own caption' })]);
+    expect(t.nodes.map((n: Json) => n.field)).toEqual(['status_text', 'gfa_flat_m2', 'card_image']);
+    expect(imageNode(t)).toEqual({ field: 'card_image', source: 'content', kind: 'image', label: 'Illustration', images: [
+      { scenario: P, asset_id: 'a1', alt: 'A pitched-roof house', caption: reportCtx.content.illustrations.caption_default },
+      { scenario: F, asset_id: 'a2', alt: 'A flat-roof house', caption: 'Own caption' },
+    ] });
+    expect(reportCtx.content.illustrations.caption_default).toBe('Illustrative — not this lot');
+    expect(() => assertTree(t, reportCtx)).not.toThrow();
+  });
+  it('an empty list or null emits no node (empty renders nothing)', () => {
+    for (const v of [[], null]) expect(imageNode(build(v))).toBeUndefined();
+  });
+  it('RED: a non-list, a URL key, a missing or placeholder alt, an unknown scenario, two images for one option each raise RR-FIELD', () => {
+    const cases: Array<[unknown, string]> = [
+      ['a1', 'not a list'], [{ a: 1 }, 'not a list'], [[it1({ url: 'https://x/y.png' })], 'url'], [[it1({ alt: '' })], 'alt'], [[it1({ alt: ' ' })], 'alt'],
+      [[it1({ alt: 'x {y}' })], 'alt'], [[it1({ scenario: 'made/up' })], 'scenario'], [[it1(), it1({ asset_id: 'a2' })], 'one image per option'],
+      [[it1({ asset_id: '' })], 'asset_id'], [[it1({ caption: '' })], 'caption'], [['x'], 'not an object'],
+    ];
+    for (const [v, word] of cases) {
+      const ps = problemsOf(() => build(v));
+      expect(ps.some((p) => p.startsWith('RR-FIELD card_image') && p.includes(word)), JSON.stringify(v)).toBe(true);
+    }
+  });
+  it('RED: a list on a scalar field and a scalar on the image field stay RR-FIELD', () => {
+    expect(has(problemsOf(() => buildTree({ status: 'permitted', gfa_flat_m2: [1] }, reportCtx)), 'RR-FIELD gfa_flat_m2: value is not a scalar')).toBe(true);
+    expect(has(problemsOf(() => buildTree({ status: 'permitted', card_image: 'a1' }, reportCtx)), 'RR-FIELD card_image')).toBe(true);
+  });
+  it('a lifecycle response carries no image', () => {
+    expect(has(problemsOf(() => buildTree({ lifecycle: 'loading', card_image: [it1()] }, reportCtx)), 'RR-FIELD')).toBe(true);
+  });
+  it('viewOf: the picked scenario image with its URL; none without a scenario; no_url without a URL; nothing for an empty tree', () => {
+    const t = build([it1(), it1({ scenario: F, asset_id: 'a2', alt: 'A flat-roof house' })]);
+    const urls = { a1: '/u/a1.png', a2: '/u/a2.png' };
+    const v = viewOf(t, { scenario: P, target: 'pdf', urls }, reportCtx);
+    expect(v.image).toEqual({ field: 'card_image', label: 'Illustration', asset_id: 'a1', alt: 'A pitched-roof house', caption: 'Illustrative — not this lot', src: '/u/a1.png' });
+    expect(v.image_state).toBe('shown');
+    expect(viewOf(t, { scenario: F, target: 'web', urls }, reportCtx).image?.asset_id).toBe('a2');
+    const none = viewOf(t, { scenario: null, target: 'web', urls }, reportCtx);
+    expect([none.image, none.image_state]).toEqual([undefined, 'none']);
+    const nourl = viewOf(t, { scenario: P, target: 'web', urls: { a2: '/u/a2.png' } }, reportCtx);
+    expect([nourl.image, nourl.image_state]).toEqual([undefined, 'no_url']);
+    const nopick = viewOf(t, { scenario: P, target: 'web' }, reportCtx);
+    expect([nopick.image, nopick.image_state]).toEqual([undefined, 'no_url']);
+    const empty = viewOf(build([]), { scenario: P, target: 'web', urls }, reportCtx);
+    expect([empty.image, empty.image_state]).toEqual([undefined, 'none']);
+  });
+  it('viewOf: the image node never becomes a headline or detail row', () => {
+    const v = viewOf(build([it1()]), { scenario: P, target: 'admin', urls: { a1: '/u' } }, reportCtx);
+    expect([...v.headline, ...v.detail].some((n: Json) => n.field === 'card_image')).toBe(false);
+  });
+  it('the same image on every target: the layout table has no image key', () => {
+    const t = build([it1()]);
+    const views = (TARGETS as string[]).map((target) => viewOf(t, { scenario: P, target, urls: { a1: '/u' } }, reportCtx).image);
+    for (const x of views) expect(x).toEqual(views[0]);
+    expect(Object.keys((reportCtx.layout as Json).closed)).toEqual(['columns', 'details', 'meta', 'page_break']);
+  });
+  it('assertTree RED: two image nodes, an image in a lifecycle tree, an item whose scenario is unknown', () => {
+    const t = build([it1()]);
+    const two = clone(t); two.nodes.push(clone(imageNode(t)));
+    expect(has(problemsOf(() => assertTree(two, reportCtx)), 'RR-FIELD card_image')).toBe(true);
+    const life = { lifecycle: 'loading', nodes: [buildTree({ lifecycle: 'loading' }, reportCtx).nodes[0], clone(imageNode(t))] };
+    expect(has(problemsOf(() => assertTree(life, reportCtx)), 'RR-LIFECYCLE')).toBe(true);
+    const bad = clone(t); imageNode(bad)!.images[0].scenario = 'made/up';
+    expect(has(problemsOf(() => assertTree(bad, reportCtx)), 'RR-FIELD card_image')).toBe(true);
   });
 });

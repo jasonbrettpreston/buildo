@@ -1,0 +1,74 @@
+MF-38 locks against the BASE code (2db1bdd67 + the MF-38 test edits and the two new golden response fixtures, rendered trees not yet captured): RED
+Command: npx vitest run <the 9 lock files below>
+
+ FAIL  src/tests/report-preview.ui.test.tsx > /admin/report-preview > images_present shows one image per picked option with a synthetic URL; images_empty shows none
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > control: images_present and images_empty report nothing
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > images_present carries an image record on every target for each scenario pick, none at the no-scenario pick
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > RED admin: a dropped image is reported by name
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > RED mobile: a dropped image is reported by name
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > RED pdf: a dropped image is reported by name
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 MF-38: the image leg > RED web: a dropped image is reported by name
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 parity: the real output of every target (goldens) > no state normalises to fewer nodes than its golden tree, and the lifecycle states carry their one message node
+ FAIL  src/tests/surfaces/parity.golden.test.ts > FE-07 parity: the real output of every target (goldens) > the four targets and the golden tree agree on all 48 combinations
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > images_empty > fingerprint is fresh (response_fixture hash and the three input files)
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > images_empty > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock)
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > images_present > fingerprint is fresh (response_fixture hash and the three input files)
+ FAIL  src/tests/surfaces/report-golden-parity.logic.test.ts > MF-12 tranche 1 goldens (S-golden, S-parity) > images_present > shape: pair + fingerprint, state and target named, bound fields only (node keys: report-honest lock)
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_empty.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_empty.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_empty.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_empty.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_present.admin.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_present.mobile.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_present.pdf.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > images_present.web.json: validates against the node contract; none only in lifecycle trees; lifecycle closed
+ FAIL  src/tests/surfaces/report-honest.logic.test.ts > FE-06 report-honest lock (schema: report-tree.schema.json) > RED fixtures: the image node (MF-38)
+ FAIL  src/tests/surfaces/report-image-select.logic.test.ts [ src/tests/surfaces/report-image-select.logic.test.ts ]
+ FAIL  src/tests/surfaces/report-no-maths.logic.test.ts > FE-05 report-no-maths: the real projection files > the walk finds the known files and every directory contributes
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > capture twice writes identical bytes and equals the committed files
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_empty.admin
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_empty.mobile
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_empty.pdf
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_empty.web
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.admin
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.mobile
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.pdf
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T1 buildTree reproduces every golden (the capture) > images_present.web
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > a list becomes ONE image node after the readings; caption defaults to content.illustrations.caption_default
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > an empty list or null emits no node (empty renders nothing)
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > assertTree RED: two image nodes, an image in a lifecycle tree, an item whose scenario is unknown
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > RED: a list on a scalar field and a scalar on the image field stay RR-FIELD
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > RED: a non-list, a URL key, a missing or placeholder alt, an unknown scenario, two images for one option each raise RR-FIELD
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > the same image on every target: the layout table has no image key
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > viewOf: the image node never becomes a headline or detail row
+ FAIL  src/tests/surfaces/report-render.logic.test.ts > T20 the image node (MF-38) > viewOf: the picked scenario image with its URL; none without a scenario; no_url without a URL; nothing for an empty tree
+ FAIL  src/tests/surfaces/report-view.ui.test.tsx [ src/tests/surfaces/report-view.ui.test.tsx ]
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > done-condition: a planted bad descriptor exits 1 > case B: goldens re-stamped so the hash is clean: the descriptor itself is judged, SV-BIND lines alone
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > done-condition: a planted bad descriptor exits 1 > the same tree unedited exits 0
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > FE-13 surface-validate gate: real tree > MF-42: a missing screen-checks.mjs gives three unavailable lines, the REPORT arms still report, exit 1 (no stack)
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > FE-13 surface-validate gate: real tree > MF-42: a temp tree that examines nothing prints WAITS for the generic arms, never a finding
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > malformed input is a finding, never a crash > a declaration whose sections are not a list gives an SV-BIND line and exit 1
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-gen: the committed generators' --check > a failing report-schema --check is relayed line by line; the warning line is not taken for the finding
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-gen: the committed generators' --check > a missing generator is a finding
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-gen: the committed generators' --check > every generator exits 0: the GEN arm is clean
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-gen: the committed generators' --check > MF-35: a missing mobile surfaces generator is a finding
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-gen: the committed generators' --check > MF-35: a missing mobile theme generator is a finding, and a failing one is relayed
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a deleted target file
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a dropped fingerprint.files key
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a missing file and a bad target list together give two lines in the fixed order
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a state dropped from the manifest while its files remain: each file is not in manifest
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > a stray file beside the goldens
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > manifest targets are three
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in ad-contract.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in binding-sources.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-presentation.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-tree.schema.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-golden: existence and fingerprint > one byte changed in report-v2.decl.json: every golden is stale on it
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-parity: the four target files agree > the state field names the wrong state
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > S-parity: the four target files agree > the target field names the wrong target
+ FAIL  src/tests/surfaces/surface-validate.logic.test.ts > usage, output and read-only > a two-defect tree twice (fresh copy each time): identical findings in a fixed order
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 65 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  9 failed (9)
+      Tests  65 failed | 284 passed (349)

@@ -84,6 +84,31 @@ export const honestProblems = (tree, root = REPO) => {
     if (isLife && s !== 'none') out.push(`node ${i}: lifecycle node must carry none`);
   });
   out.push(...slotProblems(tree, c));
+  out.push(...imageProblems(tree, c));
+  return out;
+};
+
+// MF-38 (Spec 126 11a.7 and FE-29 dated notes 2026-11-11; O-1 b): what the schema cannot say about the image node, the same rules as the
+// renderer's assertTree. At most one image node; its field is a declared content object[] field; each item names a scenario key of
+// row-presentation.json, one item per scenario (one image per option). The schema already refuses a reading key, a URL, a blank or placeholder alt.
+const imageProblems = (tree, c) => {
+  const out = [];
+  const images = (Array.isArray(tree?.nodes) ? tree.nodes : []).filter((n) => n?.kind === 'image');
+  if (images.length > 1) out.push('at most one image node per tree');
+  const decls = c.decl.sections.flatMap((x) => x.fields);
+  // The scenario keys: the ad contract's scenario_fields keys, an existing fingerprint input, locked equal to the keys of
+  // report-v2-seed/row-presentation.json in both directions by ad-targeting-keys.logic.test.ts (FE-22); so the gate gains no new input file.
+  const scenarios = Object.keys(c.ad.scenario_fields ?? {});
+  for (const n of images) {
+    const d = decls.find((f) => f.name === n?.field);
+    if (!d || d.source?.split(':')[0] !== 'content' || d.type !== 'object[]') out.push(`image node ${n?.field}: field is not a declared content object[] field`);
+    const seen = new Set();
+    (Array.isArray(n?.images) ? n.images : []).forEach((it, i) => {
+      if (!scenarios.includes(it?.scenario)) out.push(`image node ${n?.field}: item ${i}: scenario is not a key of row-presentation.json: ${it?.scenario}`);
+      else if (seen.has(it.scenario)) out.push(`image node ${n?.field}: item ${i}: two images for scenario ${it.scenario} (one image per option)`);
+      seen.add(it?.scenario);
+    });
+  }
   return out;
 };
 

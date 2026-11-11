@@ -1,0 +1,5 @@
+Planted: images_present.web.json rendered_tree image item 0 alt set to a blank; surface-validate --check:
+SV-PARITY images_present: rendered_tree differs: mobile vs web
+SV-STATUS images_present.web.json: /nodes/3/images/0/alt must match pattern "^[^{}]*\S[^{}]*$"
+SV-STATUS images_present.web.json: /nodes/3 must match "then" schema
+exit=1

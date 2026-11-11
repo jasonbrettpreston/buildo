@@ -4,6 +4,9 @@
 //
 // MF-20 (Spec 126 11a.10, FE-22, FE-23; Spec 128 R-17, R-34): the one closed source kind `ad_slot` is routed to the root `slots[]`, never to `nodes[]`.
 // Which scenario a slot sits beside is DATA (the ad contract's scenario_fields map); no field is named here.
+// MF-38 (Spec 126 11a.7 and FE-29 dated notes 2026-11-11; O-1 b): ONE closed image node kind. A declared content field typed object[] is the image
+// list: one {scenario, asset_id, alt, caption?} item per scenario key; caption defaults to content.illustrations.caption_default; the tree never
+// carries a URL. viewOf shows the picked scenario's one image with its injected URL (pick.urls), the same on every target; no layout key.
 // MF-14 · McFrontend queue · lane E-MF14. THE one REPORT renderer core: three pure functions. Every datum (schema, declaration, content registry,
 // headline lists, layout table) is an argument, so a test can inject a synthetic one and nothing here names a field. Runs on the server (the schema
 // check is AJV, the engine of the gate: scripts/surfaces/report-checks.mjs). No maths: String(n), the declared unit, the dash for null.
@@ -15,10 +18,14 @@ type Json = Record<string, any>;
 export type ReportCtx = Json;
 export interface ReportNode { field: string; source: string; label: string; value: string | null; status: string; confidence: string; provenance: string; disclosures: string[] }
 export interface ReportSlot { field: string; slot: string; source: string; label: string; value: string; disclosure: string; scenario?: string }
-export interface ReportTree { lifecycle?: string; nodes: ReportNode[]; slots?: ReportSlot[] }
+export interface ReportImageItem { scenario: string; asset_id: string; alt: string; caption: string }
+export interface ReportImageNode { field: string; source: 'content'; kind: 'image'; label: string; images: ReportImageItem[] }
+export interface ReportTree { lifecycle?: string; nodes: Array<ReportNode | ReportImageNode>; slots?: ReportSlot[] }
+export interface ViewImage { field: string; label: string; asset_id: string; alt: string; caption: string; src: string }
 export interface ViewSlot { field: string; slot: string; scenario?: string; label: string; text: string; disclosure: string; placement: 'beside_card' | 'after_card' }
 export interface ViewNode { field: string; label: string; text: string; status: string; badge: string | null; confidence: string; provenance: string; disclosures: string[]; showMeta: boolean; unavailable: boolean }
-export interface ReportView { target: string; layout: Json; lifecycle?: string; reason?: ViewNode; headline: ViewNode[]; detail: ViewNode[]; slots: ViewSlot[] }
+// image_state: shown (the picked option's image with a URL), none (no image for this pick), no_url (an image exists but no URL was issued).
+export interface ReportView { target: string; layout: Json; lifecycle?: string; reason?: ViewNode; headline: ViewNode[]; detail: ViewNode[]; slots: ViewSlot[]; image?: ViewImage; image_state: 'shown' | 'none' | 'no_url' }
 
 // Control keys of a response pick the tree kind; information keys ride along and are never emitted (MF-14 D-11, closed list).
 const CONTROL_KEYS = ['status', 'lifecycle'];
@@ -68,6 +75,29 @@ const slotOf = (f: Json, v: unknown, ctx: ReportCtx): Json | null => {
   return { field: String(f.name), slot: member, source: AD_KIND, label: String(f.label), value: String(v), disclosure: String(ctx.content.sponsored_label), ...(scenario !== undefined ? { scenario } : {}) };
 };
 
+// MF-38: the image list. A content field typed object[] (the decl type, fold CR-9); items are checked here and again by the schema (alt both ends, D-10).
+const IMAGE_KIND = 'image';
+const IMAGE_KEYS = ['scenario', 'asset_id', 'alt', 'caption'];
+const isImageField = (f: Json): boolean => kindOf(f) === 'content' && f.type === 'object[]';
+const concrete = (v: unknown): boolean => typeof v === 'string' && v.trim() !== '' && !/[{}]/.test(v);
+const imageItemProblems = (field: string, items: unknown[], ctx: ReportCtx): string[] => {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  items.forEach((it, i) => {
+    const at = `RR-FIELD ${field}: item ${i}`;
+    if (it === null || typeof it !== 'object' || Array.isArray(it)) { out.push(`${at} is not an object`); return; }
+    const x = it as Json;
+    for (const k of Object.keys(x)) if (!IMAGE_KEYS.includes(k)) out.push(`${at}: key ${k} is not allowed (the tree never carries a url or bytes)`);
+    if (typeof x.scenario !== 'string' || !Object.prototype.hasOwnProperty.call(ctx.lists, x.scenario)) out.push(`${at}: scenario ${JSON.stringify(x.scenario)} is not a key of row-presentation.json`);
+    else if (seen.has(x.scenario)) out.push(`${at}: scenario ${x.scenario} has two images (one image per option)`);
+    else seen.add(x.scenario);
+    if (typeof x.asset_id !== 'string' || x.asset_id === '') out.push(`${at}: asset_id is required`);
+    if (!concrete(x.alt)) out.push(`${at}: alt is required, non-blank and concrete (no {placeholder})`);
+    if ('caption' in x && !concrete(x.caption)) out.push(`${at}: caption, when sent, is non-blank and concrete`);
+  });
+  return out;
+};
+
 // 1. The capture: the declaration plus a response produce the tree. Accumulates every problem, then throws once.
 export const buildTree = (response: Json, ctx: ReportCtx): Json => {
   const out: string[] = [];
@@ -99,12 +129,18 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
     if (k === REASON_FIELD || k === PAGE_TEXT_FIELD) out.push(`RR-FIELD ${k}: produced by the renderer, not accepted from a response`);
     else if (hits.length === 0) out.push(`RR-FIELD unknown field: ${k}`);
     else if (hits.length > 1) out.push(`RR-FIELD ambiguous field name: ${k}`);
+    else if (isImageField(hits[0] as Json)) { // MF-38: the image list
+      if (v !== null && !Array.isArray(v)) out.push(`RR-FIELD ${k}: value is not a list of images`);
+      else { const ps = imageItemProblems(k, v ?? [], ctx); out.push(...ps); if (!ps.length) picked.push(hits[0] as Json); }
+    }
     else if (!(v === null || typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v)))) out.push(`RR-FIELD ${k}: value is not a scalar`);
     else picked.push(hits[0] as Json);
   }
   const text = typeof status === 'string' ? registryText(ctx.content, status) : undefined;
   if (typeof status === 'string' && /^not_(permitted|evaluated):/.test(status) && text === undefined) out.push(`RR-CONTENT status: no content text for ${status}`);
   if (text !== undefined && !reason) out.push(`RR-FIELD declaration: no field ${REASON_FIELD}`);
+  const captionDefault = ctx.content.illustrations?.caption_default;
+  if (picked.some(isImageField) && !concrete(captionDefault)) out.push('RR-CONTENT illustrations.caption_default: missing');
   if (out.length) throw new ReportRenderError(out);
 
   const nodes: Json[] = [];
@@ -116,6 +152,11 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
       const slot = slotOf(f, response[f.name], ctx);
       if (slot && slot.scenario !== undefined && /^not_(permitted|evaluated):/.test(String(status))) continue; // operator "4. D-7 yes": no scenario ad beside a card that is not permitted or not evaluated
       if (slot) slots.push(slot);
+      continue;
+    }
+    if (isImageField(f)) { // MF-38: one image node; an empty or null list emits nothing (empty renders nothing)
+      const items = (response[f.name] ?? []) as Json[];
+      if (items.length) nodes.push({ field: String(f.name), source: kindOf(f), kind: IMAGE_KIND, label: String(f.label), images: items.map((x) => ({ scenario: x.scenario, asset_id: x.asset_id, alt: x.alt, caption: x.caption ?? captionDefault })) });
       continue;
     }
     const v = response[f.name];
@@ -163,12 +204,19 @@ export const assertTree = (tree: Json, ctx: ReportCtx): void => {
   const isLife = tree?.lifecycle !== undefined;
   if (isLife && nodes.length !== 1) out.push('RR-LIFECYCLE tree: a lifecycle tree carries exactly one message node');
   const seen = new Set<string>();
+  if (nodes.filter((n) => n?.kind === IMAGE_KIND).length > 1) out.push(`RR-FIELD ${String(nodes.find((n) => n?.kind === IMAGE_KIND)?.field)}: at most one image node per tree`);
   nodes.forEach((n, i) => {
     if (seen.has(n?.field)) out.push(`RR-FIELD ${String(n?.field)}: duplicate node`);
     seen.add(n?.field);
     const hits = fields.filter((f) => f.name === n?.field);
     if (hits.length === 0) out.push(`RR-FIELD ${String(n?.field)}: node ${i} field is not declared`);
     else if (!hits.some((f) => kindOf(f) === n.source)) out.push(`RR-SOURCE ${String(n.field)}: node ${i} source ${String(n.source)} is not the declared kind`);
+    if (n?.kind === IMAGE_KIND) { // MF-38: an image is not a reading; its own checks, and never in a lifecycle tree
+      if (hits.length && !hits.some(isImageField)) out.push(`RR-FIELD ${String(n.field)}: node ${i} is an image but the field is not a content object[] field`);
+      imageItemProblems(String(n.field), Array.isArray(n.images) ? n.images : [], ctx).forEach((p) => out.push(p));
+      if (isLife) out.push(`RR-LIFECYCLE ${String(n.field)}: a lifecycle tree carries no image`);
+      return;
+    }
     const s = n?.status;
     if (typeof s === 'string' && /^not_(permitted|evaluated):/.test(s) && registryText(ctx.content, s) === undefined) out.push(`RR-CONTENT ${String(n.field)}: no content text for ${s}`);
     for (const c of Array.isArray(n?.disclosures) ? n.disclosures : []) if (!codes.includes(c)) out.push(`RR-CONTENT ${String(n.field)}: disclosure code not in disclosure_texts: ${String(c)}`);
@@ -202,7 +250,7 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
       showMeta: row.meta === 'always' || set, unavailable: false,
     };
   };
-  const all: Json[] = tree.nodes;
+  const all: Json[] = (tree.nodes as Json[]).filter((n) => n.kind !== IMAGE_KIND);
   const reasonNode = all.find((n) => n.field === REASON_FIELD);
   const rest = all.filter((n) => n !== reasonNode);
   const listed: string[] = noScenario ? [] : (ctx.lists[sc as string] as string[]);
@@ -214,7 +262,12 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
   });
   const detail = rest.filter((n) => !listed.includes(n.field)).map(view);
   const slots: ViewSlot[] = ((tree.slots ?? []) as Json[]).filter((x) => x.scenario === undefined || x.scenario === sc).map((x) => ({ field: x.field, slot: x.slot, ...(x.scenario !== undefined ? { scenario: x.scenario } : {}), label: x.label, text: x.value, disclosure: x.disclosure, placement: x.scenario !== undefined ? 'beside_card' : 'after_card' }));
-  const out: Json = { target: pick.target, layout: row, headline, detail, slots };
+  // MF-38: the picked option's one image, the same on every target; src only from the injected URL map (never from the tree).
+  const imageNode = (tree.nodes as Json[]).find((n) => n.kind === IMAGE_KIND);
+  const item = noScenario ? undefined : (imageNode?.images as Json[] | undefined)?.find((x) => x.scenario === sc);
+  const src = item ? pick.urls?.[item.asset_id] : undefined;
+  const out: Json = { target: pick.target, layout: row, headline, detail, slots, image_state: !item ? 'none' : typeof src === 'string' && src !== '' ? 'shown' : 'no_url' };
+  if (item && out.image_state === 'shown') out.image = { field: imageNode?.field, label: imageNode?.label, asset_id: item.asset_id, alt: item.alt, caption: item.caption, src } as ViewImage;
   if (tree.lifecycle !== undefined) out.lifecycle = tree.lifecycle;
   if (reasonNode) out.reason = view(reasonNode);
   return out;

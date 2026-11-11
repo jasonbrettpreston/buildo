@@ -1,0 +1,58 @@
+{
+  "harness": "mf12-report-golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md#11a.7",
+  "surface": "report",
+  "state": "images_empty",
+  "target": "admin",
+  "response_fixture": {
+    "synthetic": true,
+    "status": "permitted",
+    "gfa_flat_m2": 212.4,
+    "gfa_pitched_m2": 198.6,
+    "card_image": []
+  },
+  "rendered_tree": {
+    "nodes": [
+      {
+        "field": "status_text",
+        "source": "content",
+        "label": "Status reason (plain words)",
+        "value": "Allowed as of right.",
+        "status": "permitted",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      },
+      {
+        "field": "gfa_flat_m2",
+        "source": "catalogue",
+        "label": "GFA (flat roof)",
+        "value": "212.4 m²",
+        "status": "permitted",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      },
+      {
+        "field": "gfa_pitched_m2",
+        "source": "catalogue",
+        "label": "GFA (pitched roof)",
+        "value": "198.6 m²",
+        "status": "permitted",
+        "confidence": "none",
+        "provenance": "none",
+        "disclosures": []
+      }
+    ]
+  },
+  "fingerprint": {
+    "response_fixture": "668cbb240aff64ff",
+    "files": {
+      "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
+      "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
+      "scripts/surfaces/_schema/report-presentation.json": "4be73a0159502365",
+      "scripts/surfaces/_schema/report-tree.schema.json": "536e323ffd531d98",
+      "scripts/surfaces/_schema/report-v2.decl.json": "21e2eb90cae62e66"
+    }
+  }
+}

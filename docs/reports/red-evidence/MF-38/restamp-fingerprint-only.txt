@@ -1,0 +1,2 @@
+existing goldens: 56; identical apart from fingerprint.files: 56; other differences: 0 
+fingerprint inputs that moved: scripts/surfaces/_schema/report-tree.schema.json, scripts/surfaces/_schema/report-v2.decl.json

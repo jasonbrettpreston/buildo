@@ -68,6 +68,7 @@
               "basement_units",
               "buildable_depth_m",
               "buildable_width_m",
+              "card_image",
               "depth_room_m",
               "disclosure_texts",
               "display_label",
@@ -84,7 +85,6 @@
               "half_span_b_m",
               "height_max_m",
               "houseplex_bedrooms",
-              "illustrations",
               "mechanical_attic_outside_gfa_a_m2",
               "mechanical_attic_outside_gfa_b_m2",
               "permitted",
@@ -340,6 +340,19 @@
                   "null"
                 ]
               },
+              "card_image": {
+                "description": "Illustration",
+                "x-source": "content:illustrations",
+                "x-status": "proposed",
+                "x-render": "rendered",
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "object"
+                }
+              },
               "depth_room_m": {
                 "description": "depth_room_m",
                 "x-source": "catalogue:depth_room_m",
@@ -549,63 +562,6 @@
                   "number",
                   "null"
                 ]
-              },
-              "illustrations": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "alt",
-                    "asset_id",
-                    "caption",
-                    "kind"
-                  ],
-                  "properties": {
-                    "alt": {
-                      "description": "Alt text",
-                      "x-source": "content:illustrations",
-                      "x-status": "proposed",
-                      "x-render": "rendered",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "asset_id": {
-                      "description": "Illustration asset",
-                      "x-source": "content:illustrations",
-                      "x-status": "proposed",
-                      "x-render": "rendered",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "caption": {
-                      "description": "Caption",
-                      "x-source": "content:illustrations",
-                      "x-status": "proposed",
-                      "x-render": "rendered",
-                      "type": [
-                        "string",
-                        "null"
-                      ]
-                    },
-                    "kind": {
-                      "description": "Kind",
-                      "x-source": "content:illustrations",
-                      "x-status": "proposed",
-                      "x-render": "rendered",
-                      "enum": [
-                        "illustration",
-                        "massing_diagram",
-                        "street_view",
-                        null
-                      ]
-                    }
-                  }
-                }
               },
               "mechanical_attic_outside_gfa_a_m2": {
                 "description": "mechanical_attic_outside_gfa_a_m2",

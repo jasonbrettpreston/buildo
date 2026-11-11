@@ -1,0 +1,3 @@
+report-capture run twice (write, then --check):
+report-capture wrote 64 goldens; 64 changed
+report-capture checked 64 goldens; 0 stale

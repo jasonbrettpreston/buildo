@@ -95,3 +95,32 @@ describe('T18 the component holds no target literal, status word or field name',
     for (const w of ['permitted', 'not_buildable', 'not_modelled', 'at_least', 'not_evaluated', 'gfa_', 'storeys', 'height_max']) expect(src).not.toContain(w);
   });
 });
+
+// MF-38 (126 11a.7 dated note 2026-11-11; O-1 b): one picture per option, a plain <img> with alt and caption at the top of the card, the same on
+// every target; no carousel, dots or swipe; an empty list, no picked scenario or no issued URL renders no image element and no empty box.
+describe('MF-38 the one image per option', () => {
+  const P = 'detached_house/pitched';
+  const t = buildTree({ status: 'permitted', gfa_pitched_m2: 1, card_image: [{ scenario: P, asset_id: 'a1', alt: 'A pitched-roof house' }] }, reportCtx);
+  const show = (target: string, scenario: string | null = P, urls: Json = { a1: '/u/a1.png' }, tree: Json = t) =>
+    render(<ReportView view={viewOf(tree, { scenario, target, urls }, reportCtx) as View} />).container;
+  for (const target of TARGETS as string[]) {
+    it(`${target}: exactly one img with the alt, the URL and the caption, first in the card, data-image shown`, () => {
+      const c = show(target);
+      const imgs = c.querySelectorAll('img');
+      expect(imgs).toHaveLength(1);
+      expect(imgs[0]?.getAttribute('alt')).toBe('A pitched-roof house');
+      expect(imgs[0]?.getAttribute('src')).toBe('/u/a1.png');
+      expect(c.querySelector('[data-block="image"] figcaption')?.textContent).toBe('Illustrative — not this lot');
+      expect(c.querySelector('[data-block="card"]')?.firstElementChild?.getAttribute('data-block')).toBe('image');
+      expect((c.querySelector('[data-report]') as HTMLElement).dataset.image).toBe('shown');
+      expect(c.querySelector('button, [role="tablist"], [data-dots]')).toBeNull();
+    });
+  }
+  it('nothing renders for an empty list, no picked scenario, or no URL; data-image says which', () => {
+    const empty = buildTree({ status: 'permitted', gfa_pitched_m2: 1, card_image: [] }, reportCtx);
+    for (const [c, state] of [[show('web', P, {}, empty), 'none'], [show('web', null), 'none'], [show('pdf', P, {}), 'no_url']] as Array<[HTMLElement, string]>) {
+      expect(c.querySelector('img, [data-block="image"], figure')).toBeNull();
+      expect((c.querySelector('[data-report]') as HTMLElement).dataset.image).toBe(state);
+    }
+  });
+});

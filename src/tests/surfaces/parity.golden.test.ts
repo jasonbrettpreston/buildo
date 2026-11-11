@@ -38,8 +38,10 @@ const REASON = 'status_text';
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
 // The real outputs.
+// MF-38: every image item of the tree gets a synthetic URL so the image leg is emitted and compared on every target.
+const urlsOf = (tree: Json): Record<string, string> => Object.fromEntries(((tree.nodes as Json[]).find((n) => n.kind === 'image')?.images ?? []).map((i: Json) => [i.asset_id, `/synthetic/${i.asset_id}.png`]));
 const emit: Emit = (target, tree, scenario, ctx) => {
-  const view = viewOf(tree, { scenario, target }, ctx) as View;
+  const view = viewOf(tree, { scenario, target, urls: urlsOf(tree) }, ctx) as View;
   if (target === 'mobile') return view as unknown as Json;
   return renderToStaticMarkup(createElement(ReportView, { view }));
 };
@@ -51,7 +53,7 @@ const fromView = (view: Json): Rec[] => {
     field: n.field, label: isReason ? '' : n.label, value: n.text, status: n.status, badge: n.badge ?? '',
     confidence: n.confidence, provenance: n.provenance, disclosures: [...n.disclosures], unavailable: n.unavailable,
   });
-  return [...(view.reason ? [rec(view.reason, true)] : []), ...view.headline.map((n: Json) => rec(n, false)), ...view.detail.map((n: Json) => rec(n, false)), ...view.slots.map((x: Json) => adRec(x.field, x.text, x.placement, x.disclosure))].sort(byField);
+  return [...(view.reason ? [rec(view.reason, true)] : []), ...view.headline.map((n: Json) => rec(n, false)), ...view.detail.map((n: Json) => rec(n, false)), ...view.slots.map((x: Json) => adRec(x.field, x.text, x.placement, x.disclosure)), ...(view.image ? [imgRec(view.image.field, view.image.alt, view.image.caption, view.image.src)] : [])].sort(byField);
 };
 const textWithout = (el: Element, sel: string): string => {
   const c = el.cloneNode(true) as Element;
@@ -79,8 +81,15 @@ const fromMarkup = (markup: string): Rec[] => {
   box.querySelectorAll('aside[data-block="ad-slot"]').forEach((el) => {
     out.push(adRec(el.getAttribute('data-ad-field') ?? '', el.querySelector('p:not([data-disclosure])')?.textContent?.trim() ?? '', el.getAttribute('data-placement') ?? '', el.querySelector('[data-disclosure]')?.textContent?.trim() ?? ''));
   });
+  box.querySelectorAll('figure[data-block="image"]').forEach((el) => {
+    const im = el.querySelector('img');
+    out.push(imgRec(el.getAttribute('data-image-field') ?? '', im?.getAttribute('alt') ?? '', el.querySelector('figcaption')?.textContent?.trim() ?? '', im?.getAttribute('src') ?? ''));
+  });
   return out.sort(byField);
 };
+// MF-38: the one image of the picked option is a record too (field img:<field>, value = alt, label = caption, status = src), so a target that drops,
+// swaps or re-captions the image is RED. Same image on every target (O-1 b; Rule 15 dated note 2026-11-11).
+const imgRec = (field: string, alt: string, caption: string, src: string): Rec => ({ field: `img:${field}`, label: caption, value: alt, status: src, badge: '', confidence: 'none', provenance: 'none', disclosures: [], unavailable: false });
 // MF-20: a sponsored slot is compared as a record too (field ad:<field>, value = the offer text, status = its placement, disclosures = [Sponsored]), so a target that drops or misplaces a slot is RED.
 const adRec = (field: string, text: string, placement: string, disclosure: string): Rec => ({ field: `ad:${field}`, label: '', value: text, status: placement, badge: '', confidence: 'none', provenance: 'none', disclosures: [disclosure], unavailable: false });
 const normalise = (target: string, raw: Raw): Rec[] => (target === 'mobile' ? fromView(raw as Json) : fromMarkup(raw as string));
@@ -94,7 +103,11 @@ const expected = (tree: Json, scenario: string | null, ctx: Json): Rec[] => {
     field: n.field, label: n.field === REASON ? '' : n.label, value: n.value === null ? dash : n.value, status: n.status, badge: badgeOf(n.status),
     confidence: n.confidence, provenance: n.provenance, disclosures: n.disclosures.map((c: string) => String(ctx.content.disclosure_texts[c].template ?? c)), unavailable: false,
   });
-  const recs = (tree.nodes as Json[]).map(recOf);
+  const recs = (tree.nodes as Json[]).filter((n) => n.kind !== 'image').map(recOf);
+  // MF-38: the picked option's image, from the tree alone (caption as captured), with the synthetic URL emit issues.
+  const im = (tree.nodes as Json[]).find((n) => n.kind === 'image');
+  const item = im?.images.find((i: Json) => i.scenario === scenario);
+  if (im && item) recs.push(imgRec(im.field, item.alt, item.caption, `/synthetic/${item.asset_id}.png`));
   const listed: string[] = scenario === null ? [] : (ctx.lists[scenario] as string[]);
   for (const id of listed) {
     if (recs.some((r) => r.field === id)) continue;
@@ -159,8 +172,8 @@ const all = (fix: (r: Raw) => Raw): Emit => (t, tree, sc, ctx) => fix(emit(t, tr
 const FLAT = 'detached_house/flat_or_shallow_roof';
 
 describe('FE-07 parity: the real output of every target (goldens)', () => {
-  it('covers the manifest: 14 states x 3 picks, four targets', () => {
-    expect(manifest.states).toHaveLength(14);
+  it('covers the manifest: 16 states x 3 picks, four targets', () => { // MF-38: + images_present, images_empty
+    expect(manifest.states).toHaveLength(16);
     expect(PICKS).toHaveLength(3);
     expect(TARGETS).toHaveLength(4);
   });
@@ -169,13 +182,13 @@ describe('FE-07 parity: the real output of every target (goldens)', () => {
       const tree = goldenTree(s);
       for (const t of TARGETS as string[]) {
         const recs = normalise(t, emit(t, tree, null, reportCtx));
-        expect(recs.length).toBeGreaterThanOrEqual(tree.nodes.length);
+        expect(recs.length).toBeGreaterThanOrEqual(tree.nodes.filter((n: Json) => n.kind !== 'image').length); // MF-38: no image at the no-scenario pick
         expect(recs.length).toBeGreaterThan(0);
       }
       if (tree.lifecycle) expect(expected(tree, null, reportCtx).map((r) => r.field)).toEqual([REASON]);
     }
   });
-  it('the four targets and the golden tree agree on all 42 combinations', () => {
+  it('the four targets and the golden tree agree on all 48 combinations', () => {
     expect(goldenFindings(emit)).toEqual([]);
   });
   it('a hand-written literal pins the at_least state apart from the generator', () => {
@@ -222,5 +235,23 @@ describe('FE-07 RED: one planted change in ONE target is reported by name', () =
   it('control: the untouched emit reports nothing on the same cases', () => {
     expect(goldenFindings(emit, ['permitted'], [FLAT])).toEqual([]);
     expect(richFindings(emit)).toEqual([]);
+  });
+});
+
+describe('FE-07 MF-38: the image leg', () => {
+  const P = 'detached_house/pitched';
+  it('images_present carries an image record on every target for each scenario pick, none at the no-scenario pick', () => {
+    for (const t of TARGETS as string[]) {
+      for (const p of SCENARIOS) expect(normalise(t, emit(t, goldenTree('images_present'), p, reportCtx)).filter((r) => r.field.startsWith('img:')), `${t} ${p}`).toHaveLength(1);
+      expect(normalise(t, emit(t, goldenTree('images_present'), null, reportCtx)).some((r) => r.field.startsWith('img:'))).toBe(false);
+    }
+  });
+  const dropImg = (raw: Raw): Raw => (typeof raw === 'string' ? raw.replace(/<figure[^]*?<\/figure>/, '') : ((): Json => { const v = clone(raw as Json); delete v.image; return v; })());
+  it.each(TARGETS as string[])('RED %s: a dropped image is reported by name', (target) => {
+    const found = goldenFindings(only(target, dropImg), ['images_present'], [P]);
+    expect(found.some((f) => f.startsWith(`images_present [${P}] ${target} vs golden: img:card_image: missing`))).toBe(true);
+  });
+  it('control: images_present and images_empty report nothing', () => {
+    expect(goldenFindings(emit, ['images_present', 'images_empty'])).toEqual([]);
   });
 });

@@ -124,6 +124,8 @@ export type ReportV2Scenarios = {
     buildable_depth_m: number | null;
     /** buildable_width_m — catalogue:buildable_width_m (m) */
     buildable_width_m: number | null;
+    /** Illustration — content:illustrations */
+    card_image: Array<Record<string, unknown>> | null;
     /** depth_room_m — catalogue:depth_room_m (m) */
     depth_room_m: number | null;
     disclosure_texts: Array<{
@@ -164,16 +166,6 @@ export type ReportV2Scenarios = {
     height_max_m: number | null;
     /** houseplex_bedrooms — catalogue:houseplex_bedrooms */
     houseplex_bedrooms: number | null;
-    illustrations: Array<{
-      /** Alt text — content:illustrations */
-      alt: string | null;
-      /** Illustration asset — content:illustrations */
-      asset_id: string | null;
-      /** Caption — content:illustrations */
-      caption: string | null;
-      /** Kind — content:illustrations */
-      kind: "illustration" | "massing_diagram" | "street_view" | null;
-    }>;
     /** mechanical_attic_outside_gfa_a_m2 — catalogue:mechanical_attic_outside_gfa_a_m2 (m²) */
     mechanical_attic_outside_gfa_a_m2: number | null;
     /** mechanical_attic_outside_gfa_b_m2 — catalogue:mechanical_attic_outside_gfa_b_m2 (m²) */

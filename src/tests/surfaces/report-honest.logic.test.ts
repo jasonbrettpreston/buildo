@@ -26,8 +26,8 @@ const CODES = Object.keys(PRESENTATION.disclosure_texts).filter((k) => !DISCLOSU
 const goldens = fs.existsSync(DIR) ? fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== 'states.json').sort() : [];
 
 describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
-  it('there are 56 goldens to check', () => {
-    expect(goldens).toHaveLength(56);
+  it('there are 64 goldens to check', () => { // MF-38: + images_present, images_empty x 4 targets
+    expect(goldens).toHaveLength(64);
   });
 
   for (const f of goldens) {
@@ -65,5 +65,34 @@ describe('FE-06 report-honest lock (schema: report-tree.schema.json)', () => {
     expect(honestProblems(mut(life, {}, { lifecycle: 'empty' }))).not.toEqual([]);
     expect(honestProblems({ ...life, nodes: [life.nodes[0], life.nodes[0]] })).not.toEqual([]);
     expect(honestProblems({ nodes: [] })).not.toEqual([]);
+  });
+
+  // MF-38 (FE-29 dated note 2026-11-11): ONE closed image node kind, single image per option. It carries no reading (no value, status,
+  // confidence, provenance or disclosures); each item names its scenario; alt is required, non-blank and concrete; no URL ever.
+  it('RED fixtures: the image node (MF-38)', () => {
+    const reason = { field: 'status_text', source: 'content', label: 'l', value: 'v', status: 'permitted', confidence: 'none', provenance: 'none', disclosures: [] };
+    const item = { scenario: 'detached_house/pitched', asset_id: 'a1', alt: 'A pitched-roof house', caption: 'Illustrative — not this lot' };
+    const image = { field: 'card_image', source: 'content', kind: 'image', label: 'Illustration', images: [item] };
+    const t = (img: Json, extra: Json[] = []): Json => ({ nodes: [reason, img, ...extra] });
+    const withItem = (over: Json): Json => t({ ...image, images: [{ ...item, ...over }] });
+    expect(honestProblems(t(image))).toEqual([]);
+    expect(honestProblems(t({ ...image, images: [item, { ...item, scenario: 'detached_house/flat_or_shallow_roof', asset_id: 'a2' }] }))).toEqual([]);
+    for (const key of SCHEMA.$defs.image_node.required as string[]) { const { [key]: _gone, ...rest } = image as Json; expect(honestProblems(t(rest)), `missing ${key}`).not.toEqual([]); } // eslint-disable-line @typescript-eslint/no-unused-vars
+    for (const key of SCHEMA.$defs.image_item.required as string[]) { const { [key]: _gone, ...rest } = item as Json; expect(honestProblems(t({ ...image, images: [rest] })), `item missing ${key}`).not.toEqual([]); } // eslint-disable-line @typescript-eslint/no-unused-vars
+    expect(honestProblems(withItem({ alt: '' }))).not.toEqual([]);
+    expect(honestProblems(withItem({ alt: '   ' }))).not.toEqual([]);
+    expect(honestProblems(withItem({ alt: 'Houseplex {dwelling_units} units' }))).not.toEqual([]);
+    expect(honestProblems(withItem({ caption: '' }))).not.toEqual([]);
+    expect(honestProblems(withItem({ url: 'https://x/y.png' }))).not.toEqual([]);
+    expect(honestProblems(withItem({ asset_id: '' }))).not.toEqual([]);
+    expect(honestProblems(withItem({ scenario: 'made/up' }))).not.toEqual([]);
+    expect(honestProblems(t({ ...image, images: [] }))).not.toEqual([]);
+    for (const k of ['value', 'status', 'confidence', 'provenance', 'disclosures', 'url', 'extra']) expect(honestProblems(t({ ...image, [k]: k === 'disclosures' ? [] : 'none' })), `image with ${k}`).not.toEqual([]);
+    expect(honestProblems(t({ ...image, kind: 'video' }))).not.toEqual([]);
+    expect(honestProblems(t(image, [{ ...image }]))).not.toEqual([]); // two image nodes
+    expect(honestProblems(t({ ...image, images: [item, { ...item, asset_id: 'a2' }] }))).not.toEqual([]); // two images for one option
+    expect(honestProblems(t({ ...image, source: 'catalogue' }))).not.toEqual([]);
+    expect(honestProblems({ lifecycle: 'miss', nodes: [{ ...reason, value: null, status: 'none' }, image] })).not.toEqual([]); // no image in a lifecycle tree
+    expect(honestProblems({ nodes: [image] })).toEqual([]); // an image needs no reading beside it
   });
 });

@@ -24,7 +24,8 @@ import ts from 'typescript';
 
 const ROOT = process.cwd();
 // The projection directories (Spec 128 2.2a dated note 2026-11-09). A new file under any of them is covered by the walk.
-const DIRS = ['src/lib/surfaces/report', 'src/components/report', 'src/app/admin/report-preview'];
+// MF-38 (Spec 128 2.2a dated note 2026-11-11): + the pure image selection, so its band comparisons stay comparisons and its thresholds stay injected.
+const DIRS = ['src/lib/surfaces/report', 'src/components/report', 'src/app/admin/report-preview', 'src/lib/surfaces/report-images'];
 const K = ts.SyntaxKind;
 const BANNED_BINARY = new Set<ts.SyntaxKind>([
   K.PlusToken, K.MinusToken, K.AsteriskToken, K.SlashToken, K.PercentToken, K.AsteriskAsteriskToken,
@@ -217,7 +218,7 @@ describe('FE-05 RED on disk: the walk reaches a violating file in a new subdirec
     const root = fs.mkdtempSync(path.join(tmpRoot, 'empty-'));
     fs.mkdirSync(path.join(root, DIRS[0] as string), { recursive: true });
     const { files } = scanTree(root);
-    expect(coverageProblems(root, files)).toEqual([`no .ts/.tsx file under ${DIRS[0]}`, `no .ts/.tsx file under ${DIRS[1]}`, `no .ts/.tsx file under ${DIRS[2]}`]);
+    expect(coverageProblems(root, files)).toEqual([`no .ts/.tsx file under ${DIRS[0]}`, `no .ts/.tsx file under ${DIRS[1]}`, `no .ts/.tsx file under ${DIRS[2]}`, `no .ts/.tsx file under ${DIRS[3]}`]);
   });
 });
 

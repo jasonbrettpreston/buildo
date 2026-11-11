@@ -6,7 +6,7 @@
 // word, no target comparison, no layout number. Every layout key is honoured through a data attribute and a class. No state: a collapsed block is a
 // natively toggled <details>, so the component is safe in a server component.
 import type { ReactElement } from 'react';
-import type { ReportView as View, ViewNode, ViewSlot } from '../../lib/surfaces/report/core';
+import type { ReportView as View, ViewImage, ViewNode, ViewSlot } from '../../lib/surfaces/report/core';
 
 const Item = ({ n }: { n: ViewNode }): ReactElement => (
   <div data-field={n.field} data-status={n.status} data-unavailable={n.unavailable ? 'true' : 'false'} className="py-1">
@@ -35,6 +35,16 @@ const Slot = ({ s }: { s: ViewSlot }): ReactElement => (
   </aside>
 );
 
+// MF-38 (Spec 126 11a.7 dated note 2026-11-11; O-1 b; plan D-5): the picked option's ONE image, a plain <img> with its alt and caption at the top of
+// the card, the same on every target (pdf included: no script island in a print row). No carousel, dots or swipe. The URL is the server-issued one.
+const Picture = ({ im }: { im: ViewImage }): ReactElement => (
+  <figure data-block="image" data-image-field={im.field} data-asset-id={im.asset_id} className="relative overflow-hidden rounded">
+    {/* eslint-disable-next-line @next/next/no-img-element -- plan D-5: a native img (signed URL, print row); next/image would add a loader to the pdf row */}
+    <img src={im.src} alt={im.alt} className="block h-auto w-full" />
+    <figcaption className="text-xs text-gray-600">{im.caption}</figcaption>
+  </figure>
+);
+
 export function ReportView({ view }: { view: View }): ReactElement {
   const { layout } = view;
   const collapsed = layout.details === 'collapsed';
@@ -50,6 +60,7 @@ export function ReportView({ view }: { view: View }): ReactElement {
       data-meta={layout.meta}
       data-page-break={layout.page_break}
       data-lifecycle={view.lifecycle ?? ''}
+      data-image={view.image_state}
       className="space-y-4"
     >
       {view.reason ? (
@@ -60,6 +71,7 @@ export function ReportView({ view }: { view: View }): ReactElement {
       ) : null}
       <div data-block="card-row" className="flex flex-col gap-4 md:flex-row">
         <div data-block="card" className="min-w-0 flex-1 space-y-4">
+          {view.image ? <Picture im={view.image} /> : null}
           {view.headline.length > 0 ? <Block name="headline" nodes={view.headline} columns={layout.columns} /> : null}
           {hasDetail ? (
             collapsed ? (

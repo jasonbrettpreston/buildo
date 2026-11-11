@@ -862,53 +862,18 @@
     },
     {
       "id": "images",
-      "title": "Scenario structure images (browse carousel)",
+      "title": "Scenario image (one per option)",
       "proposal_path": "presentation registry → scenarios.cards[i].illustrations[]",
       "fields": [
         {
-          "path": "scenarios.cards[].illustrations[].asset_id",
-          "name": "asset_id",
-          "label": "Illustration asset",
-          "type": "text",
+          "path": "scenarios.cards[].card_image",
+          "name": "card_image",
+          "label": "Illustration",
+          "type": "object[]",
           "status": "proposed",
           "source": "content:illustrations",
           "render": "rendered",
-          "note": "Q-10 (decided, operator: \"Each scenario shown will have a few different photos with it\"): a small carousel of several static illustrations per card. static asset keyed scenario × roof_form_headline × suite_type × semi variant"
-        },
-        {
-          "path": "scenarios.cards[].illustrations[].kind",
-          "name": "kind",
-          "label": "Kind",
-          "type": "text",
-          "status": "proposed",
-          "source": "content:illustrations",
-          "enum": [
-            "illustration",
-            "massing_diagram",
-            "street_view"
-          ],
-          "render": "rendered",
-          "note": "Q-10 (decided, operator: \"Each scenario shown will have a few different photos with it\"): a small carousel of several static illustrations per card. illustration · massing_diagram (later, drawn client-side from the card numbers) · street_view (reno only)"
-        },
-        {
-          "path": "scenarios.cards[].illustrations[].caption",
-          "name": "caption",
-          "label": "Caption",
-          "type": "text",
-          "status": "proposed",
-          "source": "content:illustrations",
-          "render": "rendered",
-          "note": "Q-10 (decided, operator: \"Each scenario shown will have a few different photos with it\"): a small carousel of several static illustrations per card. \"Illustrative — not this lot\" for static art"
-        },
-        {
-          "path": "scenarios.cards[].illustrations[].alt",
-          "name": "alt",
-          "label": "Alt text",
-          "type": "text",
-          "status": "proposed",
-          "source": "content:illustrations",
-          "render": "rendered",
-          "note": "Q-10 (decided, operator: \"Each scenario shown will have a few different photos with it\"): a small carousel of several static illustrations per card."
+          "note": "Q-10 (decided) as amended by MF-38 O-1 b (operator 2026-11-11, \"0-1 b\"): one image per option, no carousel, dots or swipe; each item {scenario, asset_id, alt, caption?} names its scenario key; alt required; caption defaults to illustrations.caption_default; the image bytes come from media_assets (MF-37) through a signed URL, never in the tree"
         }
       ]
     },

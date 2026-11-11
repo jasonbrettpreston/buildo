@@ -1,0 +1,16 @@
+{
+  "$comment": "MF-38 · THE one home of the report image selection data (Spec 126 11a.7 dated note 2026-11-11; operator 2026-11-09 'targeted scenario images'; O-1 b 2026-11-11: single image per option). `selectors` is the closed selector list in RULED precedence order (storeys > corner > frontage band); each `member` is a binding member resolved by the RS-1 resolvers. `bands.frontage` names the band ids and the two logic_variables KEY NAMES of the edges (the values are logic_variables rows, injected at call time; they land with the first frontage-conditioned image set, D-3 a). `deferred` selectors are named and refused until their resolver lands (design group; income band, images only, pending a human-rights review). v1 ships default images only. Read by src/lib/surfaces/report-images/select.ts; locked by src/tests/surfaces/report-image-select.logic.test.ts.",
+  "version": 1,
+  "selectors": [
+    { "id": "storeys", "member": "catalogue:storeys_max" },
+    { "id": "corner", "member": "parcels:is_corner_lot" },
+    { "id": "frontage_band", "member": "parcels:frontage_m" }
+  ],
+  "bands": {
+    "frontage": {
+      "ids": ["narrow", "standard", "wide"],
+      "edges": { "narrow_max": "report_image_frontage_narrow_max_m", "wide_min": "report_image_frontage_wide_min_m" }
+    }
+  },
+  "deferred": ["design_group", "income_band"]
+}

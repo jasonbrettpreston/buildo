@@ -8,13 +8,13 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-124 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+121 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
 | `ad_slot` | 4 |
 | `catalogue` | 55 |
-| `content` | 38 |
+| `content` | 35 |
 | `parcels` | 27 |
 
 ## Gates
@@ -183,14 +183,11 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | Label | Path | Type | Unit | Status | Render | Source | Note |
 |---|---|---|---|---|---|---|---|
 
-## Scenario structure images (browse carousel) (`images`)
+## Scenario image (one per option) (`images`)
 
 | Label | Path | Type | Unit | Status | Render | Source | Note |
 |---|---|---|---|---|---|---|---|
-| Illustration asset | `scenarios.cards[].illustrations[].asset_id` | text |  | proposed | rendered | `content:illustrations` | Q-10 (decided, operator: "Each scenario shown will have a few different photos with it"): a small carousel of several static illustrations per card. static asset keyed scenario × roof_form_headline × suite_type × semi variant |
-| Kind | `scenarios.cards[].illustrations[].kind` | text |  | proposed | rendered | `content:illustrations` | Q-10 (decided, operator: "Each scenario shown will have a few different photos with it"): a small carousel of several static illustrations per card. illustration · massing_diagram (later, drawn client-side from the card numbers) · street_view (reno only) |
-| Caption | `scenarios.cards[].illustrations[].caption` | text |  | proposed | rendered | `content:illustrations` | Q-10 (decided, operator: "Each scenario shown will have a few different photos with it"): a small carousel of several static illustrations per card. "Illustrative — not this lot" for static art |
-| Alt text | `scenarios.cards[].illustrations[].alt` | text |  | proposed | rendered | `content:illustrations` | Q-10 (decided, operator: "Each scenario shown will have a few different photos with it"): a small carousel of several static illustrations per card. |
+| Illustration | `scenarios.cards[].card_image` | object[] |  | proposed | rendered | `content:illustrations` | Q-10 (decided) as amended by MF-38 O-1 b (operator 2026-11-11, "0-1 b"): one image per option, no carousel, dots or swipe; each item {scenario, asset_id, alt, caption?} names its scenario key; alt required; caption defaults to illustrations.caption_default; the image bytes come from media_assets (MF-37) through a signed URL, never in the tree |
 
 ## Market and neighbourhood context (`market`)
 

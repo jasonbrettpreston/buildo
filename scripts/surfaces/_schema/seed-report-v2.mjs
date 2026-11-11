@@ -469,6 +469,13 @@ const adField = (name, label, slot, note) => adSec.fields.push({ path: `ui.ad_sl
 for (const slot of AD.slots) if (slot !== 'scenario_card') adField(slot, `Sponsored slot (${slot.replace(/_/g, ' ')})`, slot, 'Q-8 (decided): first-party text offer, never inside a card, labelled Sponsored (R-17)');
 for (const [scenario, name] of Object.entries(AD.scenario_fields)) adField(name, `Sponsored slot (beside the ${scenario} card)`, 'scenario_card', `Operator 2026-11-09: one sponsored slot BESIDE the ${scenario} card, outside it (R-34), targeted by the scenario key`);
 log.push(`catalogue: ${catalogueFields.length} effective-ON rows are fields, ${owed.length} detail rows owe a label`);
+// MF-38 (Spec 126 11a.1 and 11a.7 dated notes 2026-11-11; plan D-6 with fold CR-9; O-1 b, single image per option): the four per-asset rows of the
+// images section become ONE field, card_image, typed object[] and bound content:illustrations: a list of {scenario, asset_id, alt, caption?}, one
+// item per scenario key. A content field typed object[] is the image list (the renderer names no field). Generated, never hand-edited.
+const imgSec = out.find((x) => x.id === 'images');
+imgSec.title = 'Scenario image (one per option)';
+imgSec.fields = [{ path: 'scenarios.cards[].card_image', name: 'card_image', label: 'Illustration', type: 'object[]', status: 'proposed', source: 'content:illustrations', render: 'rendered', note: 'Q-10 (decided) as amended by MF-38 O-1 b (operator 2026-11-11, "0-1 b"): one image per option, no carousel, dots or swipe; each item {scenario, asset_id, alt, caption?} names its scenario key; alt required; caption defaults to illustrations.caption_default; the image bytes come from media_assets (MF-37) through a signed URL, never in the tree' }];
+log.push('images: the four per-asset rows -> one card_image field (MF-38)');
 
 // not_in_report: catalogue rows the report does not declare (RS-9)
 const declared = new Set();

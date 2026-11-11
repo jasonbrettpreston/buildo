@@ -17,6 +17,11 @@ const TARGETS = Object.keys((reportCtx.layout as { targets: object }).targets);
 const SCENARIOS = Object.keys(reportCtx.lists);
 type Q = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined): string | undefined => (Array.isArray(v) ? v[0] : v);
+// MF-38 (plan fold RG-8): the goldens carry asset ids only, never a URL, so the preview gives every image item one synthetic same-origin placeholder
+// (an inline SVG data URL, under the synthetic banner). It is never a real asset and never stored.
+const PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3"><rect width="4" height="3" fill="#3f3f46"/></svg>')}`;
+type Tree = { nodes: Array<{ kind?: string; images?: Array<{ asset_id: string }> }> };
+const syntheticUrls = (tree: Tree): Record<string, string> => Object.fromEntries((tree.nodes.find((n) => n.kind === 'image')?.images ?? []).map((i) => [i.asset_id, PLACEHOLDER]));
 const pick = (v: string | undefined, allowed: string[], fallback: string): string => (v !== undefined && allowed.includes(v) ? v : fallback);
 
 export default async function ReportPreviewPage({ searchParams }: { searchParams: Promise<Q> }) {
@@ -40,7 +45,7 @@ export default async function ReportPreviewPage({ searchParams }: { searchParams
     );
   }
   const golden = GOLDENS[state] as { response_fixture: { synthetic?: boolean }; rendered_tree: object };
-  const view = viewOf(golden.rendered_tree, { scenario, target }, reportCtx) as View;
+  const view = viewOf(golden.rendered_tree, { scenario, target, urls: syntheticUrls(golden.rendered_tree as Tree) }, reportCtx) as View;
   const href = (patch: Record<string, string | null>): string => {
     const p = new URLSearchParams();
     const next = { state, target, scenario, ...patch } as Record<string, string | null>;
