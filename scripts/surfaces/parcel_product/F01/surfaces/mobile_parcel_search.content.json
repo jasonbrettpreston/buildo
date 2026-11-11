@@ -11,6 +11,7 @@
   "search.input.hint": "Enter at least 3 characters to search for a lot",
   "search.input.label": "Search a Toronto address",
   "search.input.placeholder": "Search Toronto address...",
+  "search.legal": "Based on our reading of Toronto zoning by-laws. Not a City zoning review, legal advice or a permit decision. Confirm with the City before you buy, design or apply.",
   "search.miss": "No parcel found for that address.",
   "search.outside_toronto": "Lots are only available in Toronto.",
   "search.prompt": "Type at least 3 characters to search.",

@@ -211,3 +211,26 @@ describe('shape lock (rows 19-20; RG-11, RG-17)', () => {
     expect(specs.filter((s) => !/^(react|expo-router|@\/components\/surfaces\/(SurfaceRenderer|SearchBinding)|@\/lib\/|@\/hooks\/|@\/store\/)/.test(s))).toEqual([]);
   });
 });
+
+// MF-58 · the legal line (operator ruling 2026-11-10, report panel item 16 "yes critical - we should also have a legal not on the landing and
+// search page"; wording ruling 2026-11-10 item 5 "all three accepted": "Search: under the address input, before results. Never only in a modal
+// or collapsible. Lawyer check before launch." (the lawyer check is owed before launch, recorded on the queue row; it does not block the build)).
+const LEGAL_TEXT =
+  'Based on our reading of Toronto zoning by-laws. Not a City zoning review, legal advice or a permit decision. Confirm with the City before you buy, design or apply.';
+
+describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 and 5)', () => {
+  const column = (t: PropsNode): PropsNode => (t.children[0] as PropsNode).children[0] as PropsNode;
+  const keys = (t: PropsNode): unknown[] => column(t).children.map((c) => (isNode(c) ? c.props.key : null));
+  it('the content key search.legal holds the ruled text verbatim', () => {
+    expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);
+  });
+  it('in every golden and every named case the line is the column child right after the address input, before any result block', () => {
+    for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {
+      const t = searchProps(situations[k] as SearchSituation);
+      const ks = keys(t);
+      expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'legal']);
+      const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
+      expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
+    }
+  });
+});

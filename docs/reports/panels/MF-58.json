@@ -1,0 +1,30 @@
+{
+  "task": "MF-58",
+  "item": "The legal line on the mobile search page mobile_parcel_search: the ruled text under the address input, before results (one content key search.legal through the MF-35 mobile SEARCH binding, plus the golden edits); lawyer check before launch",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-10",
+  "head": "712d818de",
+  "cards": [
+    "Operator 2026-11-10 (report panel item 16): \"16. yes critical - we should also have a legal not on the landing and search page\".",
+    "Operator 2026-11-10 (report wording item 5): \"all three accepted\": the legal line text; Search: under the address input, before results; never only in a modal or collapsible; lawyer check before launch."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-58/plan.md (small row; the queue review 20261110 section 3 R4 row text). Red first: two MF-58 cases in mobile/__tests__/parcelScreens.golden.test.ts. Build through the MF-35 route (content file -> emit-mobile-surfaces.mjs slice -> SearchBinding searchProps); goldens edited (node plus content fingerprint restamp); FE-13 and FE-31 lock counts 154 -> 155 with red evidence. Prereg MF-58-2 (round 139) committed alone before the code commit.",
+  "output": "OUTPUT panel (Spec 08 smallest: code-reviewer-grounded + regression-guardian) on the uncommitted diff over base 2db1bdd67 (~/Buildo-scratch/mcfrontend/MF-58/diff-v1.patch). The seats re-ran surface-validate --check (155 strings), emit-mobile-surfaces --check, mobile jest (parcelScreens.golden, surfaceRenderer.smoke, parcelSearchScreen.behaviour) and root vitest (surface-conformance, surface-validate, parcel-legacy-oracle): all green. The text is verbatim the ruled text; it is unconditional and sits right after the pill in every golden and named case; golden diffs are only the added node and the fingerprint restamp; lock asserts stay exact.",
+  "seats": [
+    "code review (code-reviewer-grounded): APPROVE (two LOW, no fold: the Text line carries no accessibilityRole, as the tagline; the 13 px size cites the small-pages draft only)",
+    "regression (regression-guardian): PASS (one LOW, no fold: the pre-existing row-17 order lock checks one named case only; the new MF-58 case pins the line after the pill in every golden and named case)"
+  ],
+  "verdict": "APPROVE: no HIGH, no MEDIUM; LOWs recorded, no fold. Owed before launch: the lawyer check of the wording (ruling item 5). Owed: a device run of the search page (UNVERIFIED on device, as MF-35).",
+  "blockers": [],
+  "followups": [
+    "Lawyer check of the legal line wording before launch (ruling 2026-11-10 item 5).",
+    "Landing page legal line: MF-46 note; web search: MF-44 note (queue review section 3 R4).",
+    "The MF-45 reports-left line sits between the field and the legal line in the small-pages draft; placement to confirm when MF-45 is built."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-58/",
+  "notes": [
+    "Lane choices: the line sits directly under the field and above the recent-search chips (the draft draws it directly under the field; chips are not results); zinc-400 rather than the draft muted shade, for contrast at 13 px on #0e0e10.",
+    "Refuted: none."
+  ]
+}

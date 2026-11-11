@@ -91,6 +91,9 @@ const pill = (s: SearchSituation): PropsNode =>
     }, [node('Icon', { key: 'account-icon', icon: 'User', size: I.button, color: H.onPrimary })]),
   ]);
 
+/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block. */
+const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
+
 const chips = (s: SearchSituation): PropsNode[] =>
   s.recent.length === 0
     ? []
@@ -210,6 +213,7 @@ export function searchProps(s: SearchSituation): PropsNode {
     }, [node('View', { key: 'column', testID: 'parcel-search-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
       header(),
       pill(s),
+      legal(),
       ...chips(s),
       ...notices(s),
       ...addressList(s),

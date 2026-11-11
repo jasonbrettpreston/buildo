@@ -216,7 +216,9 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // admin_advertiser_entry new (25 in scope, converted 4 -> 7, pending 6 -> 5); 17 web goldens and 75 content strings join (re-measured on the MF-35 tip).
     expect(d.note).toBe('S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4)');
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (7 surfaces, 44 goldens)' }, { findings: [], note: 'S-sbind ok (7 surfaces, 154 strings)' }]);
+    // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
+    // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (7 surfaces, 44 goldens)' }, { findings: [], note: 'S-sbind ok (7 surfaces, 155 strings)' }]);
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));

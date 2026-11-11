@@ -158,6 +158,8 @@ export const PARCEL_SEARCH_LAYOUT = {
   input:
     'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]',
   account: 'min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary',
+  /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as the small-pages draft, zinc-400 for contrast. */
+  legal: 'mt-3 text-[13px] leading-[18px] font-normal text-zinc-400',
   chipRow: 'mt-3 flex-row flex-wrap gap-2',
   chip:
     'min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]',

@@ -162,6 +162,19 @@
                 ]
               },
               {
+                "component": "Text",
+                "props": {
+                  "key": "legal",
+                  "testID": "parcel-search-legal",
+                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-zinc-400"
+                },
+                "children": [
+                  {
+                    "content": "search.legal"
+                  }
+                ]
+              },
+              {
                 "component": "View",
                 "props": {
                   "key": "miss",
@@ -201,7 +214,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "b0fc775e4b33b337",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "428897799fb83339",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "a23f2dd433b87c4b"
     }
   }

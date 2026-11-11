@@ -1,0 +1,57 @@
+MF-58 red evidence: the legal line on the mobile search page (mobile_parcel_search), ruling 2026-11-10 items 16 and 5.
+
+1. The new MF-58 cases in mobile/__tests__/parcelScreens.golden.test.ts, run BEFORE the content key, the binding node and the golden edits (npx jest __tests__/parcelScreens.golden.test.ts):
+   x the content key search.legal holds the ruled text verbatim (received undefined)
+   x in every golden and every named case the line is the column child right after the address input (received "chips" after "pill")
+   Tests: 2 failed, 17 passed, 19 total
+
+Excerpt:
+         226 |   });
+         227 |   it('in every golden and every named case the line is the column child right after the address input, before any result block', () => {
+         228 |     for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {
+         at Object.toBe (__tests__/parcelScreens.golden.test.ts:225:50)
+     ● MF-58 the legal line on the search page (ruling 2026-11-10 items 16 and 5) › in every golden and every named case the line is the column child right after the address input, before any result block
+       expect(received).toEqual(expected) // deep equality
+       - Expected  - 1
+       + Received  + 1
+         Array [
+           "ambiguous",
+       -   "legal",
+       +   "chips",
+         ]
+         229 |       const t = searchProps(situations[k] as SearchSituation);
+         230 |       const ks = keys(t);
+       > 231 |       expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'legal']);
+             |                                               ^
+         232 |       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
+         233 |       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
+         234 |     }
+         at Object.toEqual (__tests__/parcelScreens.golden.test.ts:231:47)
+   Test Suites: 1 failed, 1 total
+   Tests:       2 failed, 17 passed, 19 total
+   Snapshots:   0 total
+   Time:        0.67 s
+   Ran all test suites matching __tests__/parcelScreens.golden.test.ts.
+
+2. The RULED locks the one new content string moves, run with the line built and BEFORE the lock edits (npx vitest run surface-conformance.logic + surface-validate.logic):
+   x FE-31 C-1 surface-conformance: S-sbind ok (7 surfaces, 155 strings) received, 154 asserted
+   x FE-13 surface-validate gate: the exact success line now ends 'S-sbind ok (7 surfaces, 155 strings)', 154 asserted
+   Tests: 2 failed | 88 passed (90)
+
+Excerpt:
+       221|   it('every row the manifest names (waits and each pending row) is an …
+   ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+    FAIL  src/tests/surfaces/surface-validate.logic.test.ts > FE-13 surface-validate gate: real tree > GREEN on the real tree with the real generators; budget is a stated waiting
+   AssertionError: expected 'surface-validate current; S-gen ok · …' to be 'surface-validate current; S-gen ok · …' // Object.is equality
+   - Expected
+   + Received
+   - surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4) · S-screen ok (7 surfaces, 44 goldens) · S-sbind ok (7 surfaces, 154 strings)
+   + surface-validate current; S-gen ok · S-golden ok (14 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 25 in scope: converted 7, pending 5, parked 9, report 4) · S-screen ok (7 surfaces, 44 goldens) · S-sbind ok (7 surfaces, 155 strings)
+    ❯ src/tests/surfaces/surface-validate.logic.test.ts:76:22
+   ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+    Test Files  2 failed (2)
+         Tests  2 failed | 88 passed (90)
+      Start at  20:32:22
+      Duration  14.16s (transform 79ms, setup 16ms, collect 317ms, tests 15.47s, environment 0ms, prepare 59ms)
+
+Figures applied (exact asserts kept, never toContain or a regex): C-1 S-sbind 7 surfaces, 155 strings; FE-13 the success line with 155 strings. S-screen stays 7 surfaces, 44 goldens (the 10 mobile goldens are edited, none added).
