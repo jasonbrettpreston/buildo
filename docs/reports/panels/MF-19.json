@@ -2,28 +2,35 @@
   "task": "MF-19",
   "item": "Add lot size, the minimal user-input path with the entry switch OFF (operator 2026-11-11 D-1..D-8 \"all as recommmended\"): parcel_user_inputs as its own record (migration 305, written not applied), the range / City-ratio / entries-a-day settings in the existing Admin Control Panel, POST /api/parcels/lot-size behind the switch, the audited admin revert FORM, the declared user FORM and its input contract, the report page flags and the after-entry line, the author emptied on erasure, one McBylaws LATER row (MB-88).",
   "class": "G",
-  "stage": 6,
+  "stage": 8,
   "date": "2026-11-11",
-  "head": "PENDING (filled after the OUTPUT panel)",
+  "head": "8608f0e33 (the restacked tip the OUTPUT panel reviewed; every fold lands in the commit that carries this record)",
   "cards": [
     "Operator 2026-11-11 (verbatim): \"all as recommmended\" (MF-19 DECISIONS.md D-1..D-8, incl. the corrections block)",
     "Operator 2026-11-11: \"building anything just using existing components\""
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-19/plan.md (v1 + section 7 folds F1-F20) and plan.v2.md (rulings folded). PLAN panel 2026-11-11 (~/Buildo-scratch/mcfrontend/MF-19/panel/record.md): code-reviewer-grounded PASS-WITH-FOLDS (11 findings, 0 blockers); security and data integrity (general-purpose) PASS-WITH-FOLDS (10 findings, 0 blockers, 3 DECISION); DeepSeek spec lens (deepseek-reasoner, ran, not downgraded) not approvable as-is, 33 findings, folded F1-F20; post-fold PASS-WITH-FOLDS, build-ready once D-1, D-2, D-6 answered (answered 2026-11-11).",
-  "output": "PENDING: the OUTPUT panel (code-reviewer-grounded, regression-guardian, security general-purpose) runs on the build restacked onto origin fa4fff51d (MF-45); this record is filled with the verdicts and folds before READY TO PUSH.",
+  "output": "OUTPUT panel on 8608f0e33 against origin fa4fff51d (reports ~/Buildo-scratch/mcfrontend/MF-19/panel-out/; shared brief BRIEF.md): code-reviewer-grounded PASS-WITH-FOLDS (0 HIGH, 1 MEDIUM, 3 LOW; tsc clean, surface-validate clean, 180 targeted tests, 9 planted defects each red); regression-guardian PASS-WITH-FOLDS (0 HIGH, 0 MEDIUM, 3 LOW; every altered line fenced; the 64 REPORT goldens fingerprint-only, 192/192 lines; no MF-45 line dropped by the rebase); security, general-purpose PASS-WITH-FOLDS (7 LOW; the switch lock held for 9 settings shapes, PLAN findings F-1..F-10 met or carried). Folded in this commit: CR-1 (MEDIUM) the fail-closed buildPage flag branches locked (unknown flag, non-boolean, not an object, unknown when on a section and a part); CR-2 the D-3 refusal logs its own outcome and the two 400s leave a bad_request trace without the body; CR-3 LotSizeSettingsError and PAGE_FLAGS unexported; CR-4 the arity check replaced by value equality; RG-1 report-binding user_input cases (members green, unknown member and no file red); RG-2 an ad section carrying when throws; RG-3 count-locks-red.txt re-measure note; S-2 the City-ratio seed max 20 -> 10 (under the 10.76x slip) with its lock; S-3 the route types read the contract JSON, never the library that imports the seed, with its lock; S-4 the DB test grants the sequence so its RLS refusal is RLS (message asserted) and removes its race user. Red evidence docs/reports/red-evidence/MF-19/output-folds-red.txt.",
   "seats": [
     "code-reviewer-grounded (PLAN): PASS-WITH-FOLDS",
     "security and data integrity, general-purpose (PLAN): PASS-WITH-FOLDS",
     "DeepSeek spec lens (PLAN): not approvable as-is, folded F1-F20",
-    "code-reviewer-grounded (OUTPUT): PENDING",
-    "regression-guardian (OUTPUT): PENDING",
-    "security, general-purpose (OUTPUT): PENDING"
+    "code-reviewer-grounded (OUTPUT): PASS-WITH-FOLDS (0 HIGH, 1 MEDIUM, 3 LOW), all folded",
+    "regression-guardian (OUTPUT): PASS-WITH-FOLDS (0 HIGH, 0 MEDIUM, 3 LOW), all folded",
+    "security, general-purpose (OUTPUT): PASS-WITH-FOLDS (7 LOW): S-2, S-3, S-4 folded; S-1, S-5, S-6 carried; S-7 for the operator"
   ],
-  "verdict": "PENDING",
+  "verdict": "PASS-WITH-FOLDS: every OUTPUT fold applied; the entry switch stays OFF (locked: off means one settings read and nothing else; the seed bound 0-0 keeps a DB value of 1 off).",
   "blockers": [],
-  "followups": [],
+  "followups": [
+    "Flip conditions (the switch stays off until all are met): MB-42 and McBylaws MB-88 (the one-lot re-evaluation and the results stamp that sets lot_size_entry_used); the user FORM mounted in the report sheet with the live report (MF-44) and mobile (MF-48); the other lot-size readers (consumer lookup, public projections, lead and admin views) switched to effectiveLotSize (plan F17); S-1 an Origin allowlist check on the cookie-path consumer POST (reuse isOriginAllowed from verify-admin.ts) with a test; S-6 getVerifiedUid for the user write, or a Spec 13 ruling that user-input writes may use getClaimsUid; S-2b a DB count of lots with no City lot record (no ratio check applies to them) for the flip panel; the switch seed bound raised in code with its own panel.",
+    "S-5 (existing behaviour, not MF-19): logError prints the whole pg error, whose detail can carry a failing row; a general scrub is a separate item.",
+    "S-7 / CR note for the operator: the page table gains one section kind, lot_size_entered (the approved v21 C2 after-entry line, listed owed by MF-57), drawn by the existing ReportPage with its existing T part; all seats read it as a section of an existing component, not a new component kind.",
+    "DB job: apply migration 305 alone, db:generate, run src/tests/db/parcel-user-inputs.db.test.ts and the pgTAP Class B suite, recapture the witness catalog (the src-sql-ledger live lock then returns to the matview alone), and refresh the Rule 13 scorecards (owed drift from the new migration).",
+    "McBylaws id MB-88 was the next free id on the base; confirm no other lane took it."
+  ],
   "evidence": "docs/reports/red-evidence/MF-19/",
   "notes": [
-    "Commit order: prereg 9a25611f1 alone (round 144), the docs notes 18c40d02b, the DB files 580510652, then the code commit."
+    "Commit order: prereg alone (round 144), the docs notes, the DB files, the code commit, the restack fix, then this fold commit; each with real hooks.",
+    "Restack onto origin fa4fff51d (MF-45): old -> new prereg 9a25611f1 -> f172535ae, docs 18c40d02b -> 5244eecbb, DB files 580510652 -> be17bbb82, code 7a157f3eb -> 18b34acda (commit messages keep the pre-restack ids); restack fix 8608f0e33."
   ]
 }

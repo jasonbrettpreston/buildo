@@ -469,6 +469,7 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
     const vocab: unknown = T.kinds?.[s.kind];
     if (!Array.isArray(vocab)) out.push(`RR-PAGE ${String(s.id)}: unknown section kind ${String(s.kind)}`);
     if (s.kind === AD_KIND_SECTION) { // MF-20 path: a declared ad_slot field; a null or empty creative yields no section (no empty box)
+      if (s.when !== undefined) out.push(`RR-PAGE ${String(s.id)}: an ad section takes no when (it shows by its creative only; MF-19 OUTPUT fold RG-2)`);
       const f = oneField(fields, s.field, String(s.id), out);
       if (f && kindOf(f) !== AD_KIND) out.push(`RR-SLOT ${String(s.field)}: field is not declared with kind ${AD_KIND}`);
       keys.add(String(s.field));

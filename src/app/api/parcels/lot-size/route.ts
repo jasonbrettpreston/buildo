@@ -30,6 +30,8 @@ import { LotSizeEntryRequestSchema, LotSizeEntryResponseSchema } from './types';
 
 const TAG = '[api/parcel-lot-size]';
 const ROUTE = 'POST /api/parcels/lot-size';
+/** The log outcome per refusal code (OUTPUT fold CR-2: the D-3 refusal is its own outcome). */
+const OUTCOME: Record<string, string> = { LOT_SIZE_ALREADY_ENTERED: 'already_entered', PARCEL_NOT_FOUND: 'not_found', OUT_OF_RANGE: 'out_of_range', FAR_FROM_CITY_RECORD: 'far_from_city_record' };
 const RATE_WINDOW_SEC = 86_400; // D-4: "a day"; the count is the admin setting user_lot_size_entries_per_day
 
 
@@ -62,10 +64,14 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     try {
       raw = await request.json();
     } catch {
+      done('bad_request', null);
       return err('INVALID_JSON', 'Request body is not valid JSON', 400);
     }
     const parsed = LotSizeEntryRequestSchema.safeParse(raw);
-    if (!parsed.success) return badRequestZod(parsed.error);
+    if (!parsed.success) {
+      done('bad_request', null); // never the body
+      return badRequestZod(parsed.error);
+    }
     const body = parsed.data;
 
     // 5. Rate: the admin-editable entries a day, through the existing limiter.
@@ -82,7 +88,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       return ok(LotSizeEntryResponseSchema.parse({ lot_size }));
     } catch (cause) {
       if (cause instanceof LotSizeRefusal) {
-        done(cause.code === 'LOT_SIZE_ALREADY_ENTERED' ? 'already_entered' : cause.status === 404 ? 'not_found' : 'out_of_range', body.parcel_id);
+        done(OUTCOME[cause.code] ?? cause.code.toLowerCase(), body.parcel_id);
         return err(cause.code, cause.message, cause.status, cause.details);
       }
       throw cause;

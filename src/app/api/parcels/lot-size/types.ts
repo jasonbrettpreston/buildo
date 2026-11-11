@@ -5,7 +5,11 @@
 // test pins route_request = entry_request + parcel_id) and adds the two rules a JSON Schema in MF-42's keyword subset cannot say: a finite number
 // and at most 2 decimals. The response is the stored-entry projection, .strict(): never entered_by, never the typed value.
 import { z } from 'zod';
-import { CONTRACT, UNITS } from '@/lib/parcels/lot-size-entry';
+// OUTPUT fold S-3: this module reads the contract JSON only, never src/lib/parcels/lot-size-entry.ts (which imports the whole logic-variable
+// seed), so a client that imports these types (the admin revert hook today, the user form at the flip) does not bundle the seed.
+import CONTRACT from '../../../../../scripts/surfaces/_schema/lot-size-entry-contract.json';
+
+const UNITS = ['sqft', 'm2'] as const;
 
 type Schema = Parameters<typeof z.fromJSONSchema>[0];
 const base = z.fromJSONSchema(CONTRACT.route_request as unknown as Schema) as unknown as z.ZodType<LotSizeEntryRequest>;

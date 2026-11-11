@@ -43,7 +43,7 @@ export type LotUnit = (typeof UNITS)[number];
 
 export interface LotSizeSettings { enabled: boolean; min_sqm: number; max_sqm: number; ratio_max: number; per_day: number }
 
-export class LotSizeSettingsError extends Error {
+class LotSizeSettingsError extends Error {
   constructor(readonly bad: string[]) {
     super(`logic_variables missing, non-numeric or outside the seed bounds: ${bad.join(', ')}`);
     this.name = 'LotSizeSettingsError';
@@ -179,7 +179,7 @@ export function effectiveLotSize(read: LotSizeRead): EffectiveLotSize {
 
 // ---- the report page flags and values (D-5, D-6) -------------------------------------------------------------------------------------------
 
-export const PAGE_FLAGS = ['lot_size_entry_open', 'lot_size_entered', 'lot_size_entry_used'] as const;
+const PAGE_FLAGS = ['lot_size_entry_open', 'lot_size_entered', 'lot_size_entry_used'] as const;
 export type PageFlags = Record<(typeof PAGE_FLAGS)[number], boolean>;
 
 /**

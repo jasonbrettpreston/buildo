@@ -100,8 +100,25 @@ describe('Rule 20 RED fixture: an invented field fails (both directions)', () =>
     aField(inp2, 'parcels').source = 'parcels:no_such_column';
     expect(gate(inp2, 'RS-1').failing.join('\n') + gate(inp2, 'RS-3').failing.join('\n')).toContain('no_such_column');
   });
-  it('FAILs user_input and external_embed members until their contract file exists', () => {
-    for (const kind of ['user_input', 'external_embed']) {
+  // MF-19 (OUTPUT fold RG-1): the user_input contract landed (scripts/surfaces/_schema/lot-size-entry-contract.json), so its members resolve against
+  // the contract's members; external_embed keeps the no-file case.
+  it('user_input: lot_area and entered_at are GREEN, an unknown member FAILs, and with no contract file every member FAILs (RS-1 contract_id)', () => {
+    for (const m of ['lot_area', 'entered_at']) {
+      const ok = fresh();
+      aField(ok, 'content').source = `user_input:${m}`;
+      expect(gate(ok, 'RS-1').failing.join('\n'), m).not.toContain(`user_input:${m}`);
+    }
+    const bad = fresh();
+    aField(bad, 'content').source = 'user_input:some_id';
+    expect(gate(bad, 'RS-1').failing.join('\n')).toContain('user_input:some_id is not a member of the input contract');
+    const none = fresh();
+    none.bindingSources.sources.user_input.file = null;
+    none.inputContract = null;
+    aField(none, 'content').source = 'user_input:lot_area';
+    expect(gate(none, 'RS-1').failing.join('\n')).toContain('the user_input contract has not landed');
+  });
+  it('FAILs external_embed members until their contract file exists', () => {
+    for (const kind of ['external_embed']) {
       const inp = fresh();
       aField(inp, 'content').source = `${kind}:some_id`;
       expect(gate(inp, 'RS-1').failing.join('\n'), kind).toContain(kind);

@@ -67,6 +67,32 @@ describe('P1 the page table covers the brief and binds only what exists', () => 
   });
 });
 
+describe('P2b MF-19 page flags fail closed (OUTPUT folds CR-1, RG-2)', () => {
+  const T = (): Json => clone(reportCtx.page as Json);
+  const withPage = (page: Json): typeof reportCtx => ({ ...reportCtx, page }) as typeof reportCtx;
+  it('an unknown flag, a non-boolean flag and a flags value that is not an object each throw', () => {
+    expect(() => buildPage({ ...response(), flags: { no_such_flag: true } }, reportCtx)).toThrow(/RR-PAGE flag no_such_flag: not a flag of the page table/);
+    expect(() => buildPage({ ...response(), flags: { lot_size_entered: 'yes' } }, reportCtx)).toThrow(/RR-PAGE flag lot_size_entered: not a boolean/);
+    expect(() => buildPage({ ...response(), flags: [] }, reportCtx)).toThrow(/RR-PAGE response: flags is not an object/);
+  });
+  it('a when naming no table flag throws, on a section and on a part', () => {
+    const a = T();
+    (a.sections as Json[]).find((s) => s.kind === 'lot_size')!.when = 'no_such_flag';
+    expect(() => buildPage(response(), withPage(a))).toThrow(/RR-PAGE lot_size: when no_such_flag is not a flag of the page table/);
+    const b = T();
+    (b.sections as Json[]).find((s) => s.kind === 'lot_size_entered')!.parts[0].when = 'no_such_flag';
+    expect(() => buildPage(response(), withPage(b))).toThrow(/when no_such_flag is not a flag of the page table/);
+  });
+  it('an ad section carrying when throws (an ad section is shown by its creative only, never by a flag)', () => {
+    const a = T();
+    (a.sections as Json[]).find((s) => s.kind === 'ad')!.when = 'lot_size_entered';
+    expect(() => buildPage(response(), withPage(a))).toThrow(/RR-PAGE ad_o2: an ad section takes no when/);
+  });
+  it('control: the committed table and fixture build', () => {
+    expect(() => buildPage(response(), reportCtx)).not.toThrow();
+  });
+});
+
 describe('P2 buildPage: the capture, the throw and Q-G4 a', () => {
   for (const t of TARGETS as string[]) {
     it(`v21.${t}: the committed tree is buildPage(response_fixture) and passes assertPage`, () => {

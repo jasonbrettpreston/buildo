@@ -29,4 +29,5 @@ AssertionError: expected 'surface-validate current; S-gen ok · …' to be 'surf
  Test Files  3 failed | 32 passed (35)
       Tests  6 failed | 833 passed (839)
 
+Re-measure after the restack onto origin fa4fff51d (MF-45; OUTPUT fold RG-3, 2026-11-11): MF-45 added one CONTRACT descriptor (contract_parcels_entitlement), so the C-7 live descriptor count reads 156 on the base and 160 with the four MF-19 descriptors (2 SURFACE + 2 CONTRACT); the other counts in this file are unchanged by the restack (MF-45 added no SURFACE, golden, mount or content string). The edited lock reads toBe(160) and is green on the restacked tip 8608f0e33.
 Re-measure after the restack onto origin dd24c95ff (MF-44: mobile_parcel_search gains its web target and the web SEARCH binding, 2026-11-11): T7 goldens 44 -> 56, S-screen 54 -> 66 goldens on 9 surfaces, strings 155 -> 184, mounts 14 -> 17, live descriptors 157 -> 161; each lock stays an exact value, green on the restacked tree.

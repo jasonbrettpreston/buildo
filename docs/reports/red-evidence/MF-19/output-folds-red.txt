@@ -1,0 +1,14 @@
+MF-19 · OUTPUT panel folds, red first (2026-11-11). Throwaway worktree at the restack tip 8608f0e33 with the new test cases copied in (removed after).
+
+Run 1 — the tip as committed: the RG-2 case (an ad section carrying when) is red; the CR-1 and RG-1 cases lock branches that already exist.
+   × P2b MF-19 page flags fail closed (OUTPUT folds CR-1, RG-2) > an ad section carrying when throws (an ad section is shown by its creative only, never by a flag)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 51 passed (52)
+
+Run 2 — the four fail-closed branches of buildPage (unknown flag, non-boolean flag, flags not an object, unknown when) and the RS-1 user_input member line removed: the CR-1 and RG-1 cases go red.
+   × P2b MF-19 page flags fail closed (OUTPUT folds CR-1, RG-2) > an unknown flag, a non-boolean flag and a flags value that is not an object each throw
+   × P2b MF-19 page flags fail closed (OUTPUT folds CR-1, RG-2) > a when naming no table flag throws, on a section and on a part
+   × P2b MF-19 page flags fail closed (OUTPUT folds CR-1, RG-2) > an ad section carrying when throws (an ad section is shown by its creative only, never by a flag)
+   × Rule 20 RED fixture: an invented field fails (both directions) > user_input: lot_area and entered_at are GREEN, an unknown member FAILs, and with no contract file every member FAILs (RS-1 contract_id)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 48 passed (52)

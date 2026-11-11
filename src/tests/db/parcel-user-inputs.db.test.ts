@@ -118,6 +118,7 @@ describe.skipIf(!dbAvailable())('migration 305: parcel_user_inputs and the MF-19
     } finally {
       await pool.query('DELETE FROM parcel_user_inputs WHERE parcel_id = $1', [pk]);
       await pool.query('DELETE FROM parcels WHERE id = $1', [pk]);
+      await pool.query('DELETE FROM auth.users WHERE id = $1', [USER]); // fold S-4: leave no test user behind
     }
     arms++;
   });
@@ -139,9 +140,13 @@ describe.skipIf(!dbAvailable())('migration 305: parcel_user_inputs and the MF-19
     await inTxn(pool, async (c, pk) => {
       await c.query(...row(pk));
       await c.query('GRANT SELECT, INSERT ON parcel_user_inputs TO authenticated');
+      await c.query('GRANT USAGE ON SEQUENCE parcel_user_inputs_id_seq TO authenticated'); // so the refusal below is RLS, not the sequence (fold S-4)
       await c.query('SET LOCAL ROLE authenticated');
       expect((await c.query('SELECT count(*)::int AS n FROM parcel_user_inputs')).rows[0].n).toBe(0);
-      expect(await code(c, ...row(pk, { value_sqm: 300 }))).toBe('42501');
+      await c.query('SAVEPOINT r');
+      const msg = await c.query(...row(pk, { value_sqm: 300 })).then(() => '', (e: Error) => e.message);
+      await c.query('ROLLBACK TO SAVEPOINT r');
+      expect(msg).toMatch(/row-level security/);
     });
     arms++;
   });

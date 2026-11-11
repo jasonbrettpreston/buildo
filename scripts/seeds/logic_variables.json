@@ -10512,7 +10512,7 @@
     "default": 3,
     "type": "number",
     "min": 1.5,
-    "max": 20,
+    "max": 10,
     "description": "MF-19 (Spec 126 section 11a.9 dated note 2026-11-11; operator 2026-11-11 D-1..D-8 \"all as recommmended\"; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md): D-3: an entry more than this many times the City lot record, or less than the City lot record divided by it, is refused with a server message (catches a sq ft number typed as m2, a 10.76x slip). No City record: no ratio check. Edited in the Admin Control Panel. Inserted by migration 305. CONSUMED by src/lib/parcels/lot-size-entry.ts (lotSizeProblems).",
     "admin": {
       "group": "MaxBLD Lot Size"

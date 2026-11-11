@@ -168,6 +168,7 @@ describe('POST /api/parcels/lot-size with the switch on (test copy of the seed b
   }
   it('invalid JSON -> 400 INVALID_JSON', async () => {
     expect((await post(null, true)).body.error?.code).toBe('INVALID_JSON');
+    expect(vi.mocked(logInfo).mock.calls.at(-1)?.[2]).toMatchObject({ outcome: 'bad_request', parcel_id: null }); // OUTPUT fold CR-2
   });
   it('429 on the parcels-lot-size:{uid} bucket, the admin per-day setting over a one-day window; nothing read or written', async () => {
     vi.mocked(withRateLimit).mockResolvedValueOnce({ allowed: false, remaining: 0 } as never);
@@ -214,6 +215,7 @@ describe('POST /api/parcels/lot-size with the switch on (test copy of the seed b
     db({ lot: { city: 290 } });
     const slip = await post({ parcel_id: 'P-1', lot_area_value: 3120, lot_area_unit: 'm2' });
     expect([slip.status, slip.body.error?.code]).toEqual([400, 'FAR_FROM_CITY_RECORD']);
+    expect(vi.mocked(logInfo).mock.calls.at(-1)?.[2]).toMatchObject({ outcome: 'far_from_city_record' }); // OUTPUT fold CR-2
     expect(slip.body.error?.message).toBe('This is far from the City lot record of 3,122 sq ft · 290 m². Check the number and the unit.');
     for (const [v, s] of [[870, 200], [870.01, 400], [96.67, 200], [96.66, 400]] as const) {
       db({ lot: { city: 290 } });
@@ -296,6 +298,15 @@ describe('PUT /api/admin/parcels/lot-size/revert (D-4: the audited admin revert)
 });
 
 describe('contract and boundary pins', () => {
+  it('OUTPUT fold S-2: the City-ratio seed max stays under the sq ft-as-m2 slip (10.7639), so no admin value can let it through', () => {
+    const s = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/logic_variables.json'), 'utf8'))[LOT_SIZE_SETTING_KEYS.ratio_max];
+    expect(s.max).toBeLessThan(SQM_TO_SQFT);
+  });
+  it('OUTPUT fold S-3: the route types never import the server library (the seed stays out of any client bundle)', () => {
+    const types = fs.readFileSync(path.join(ROOT, 'src/app/api/parcels/lot-size/types.ts'), 'utf8');
+    expect(types).not.toMatch(/from '@\/lib\/parcels\/lot-size-entry'/);
+    expect(types).not.toMatch(/logic_variables\.json/);
+  });
   it('fold F5: route_request = entry_request + parcel_id; revert_request is parcel_id only', () => {
     const e = CONTRACT.entry_request as { properties: Record<string, unknown>; required: string[] };
     const r = CONTRACT.route_request as { properties: Record<string, unknown>; required: string[] };

@@ -60,7 +60,9 @@ describe('FE-19 (2) shared, never private', () => {
     expect(() => LotSizeEntryResponseSchema.parse({ lot_size: { ...lot_size, typed_value: 3120 } })).toThrow();
   });
   it('every viewer gets the same flags and values: the functions take no viewer, and the page values carry no author', () => {
-    expect(lotSizePageFlags.length).toBe(3); // (read, settings, results stamp): no viewer argument
+    // OUTPUT fold CR-4: the same read gives the same flags and values on every call (nothing per viewer can enter).
+    expect(lotSizePageFlags(READ, { enabled: true }, null)).toEqual(lotSizePageFlags(structuredClone(READ), { enabled: true }, null));
+    expect(lotSizeEntryValues(READ)).toEqual(lotSizeEntryValues(structuredClone(READ)));
     expect(lotSizeEntryValues(READ)).toEqual({ 'entered.value': '3,120 sq ft · 290 m²', 'entered.date': '10 Nov 2026' });
     expect(lotSizePageFlags(READ, { enabled: false }, null)).toEqual({ lot_size_entry_open: false, lot_size_entered: true, lot_size_entry_used: false });
   });

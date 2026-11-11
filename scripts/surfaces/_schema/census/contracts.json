@@ -32983,9 +32983,9 @@
         {
           "name": "user_lot_size_city_ratio_max",
           "min": 1.5,
-          "max": 20,
+          "max": 10,
           "on_invalid": "fail",
-          "why": "Write-affecting (D-3)."
+          "why": "Write-affecting (D-3); max 10 keeps the 10.76x sq ft-as-m2 slip refused (OUTPUT fold S-2)."
         },
         {
           "name": "user_lot_size_entries_per_day",
