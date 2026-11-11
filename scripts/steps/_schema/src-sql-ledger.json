@@ -2042,28 +2042,43 @@
     },
     "src/lib/entitlements/index.ts": {
       "class": "static",
-      "statements": 8,
+      "statements": 13,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
+        "00fd6830f0d11518",
+        "072b81adb9652cce",
         "5a3a5e7865c273dc",
+        "67b0a070eb354148",
         "7b8a36047dd0c8f9",
         "85b2c3054ed56b87",
         "8cc15981e45cf670",
         "976901a3dcb12915",
         "9f70cd68fa2a66ed",
+        "b5a1b0d462a3ba3c",
         "b9e4d97481d18bef",
+        "da9d8d20be874962",
         "f1be7dfe3e05a9ac"
       ],
       "reads": {
         "entitlements": [
+          "created_at",
+          "current_period_end",
           "last_stripe_event_at",
           "product",
           "status",
           "stripe_subscription_id",
           "trial_started_at",
+          "user_id"
+        ],
+        "usage_events": [
+          "event",
+          "occurred_at",
+          "product",
+          "subject_key",
+          "subject_kind",
           "user_id"
         ]
       },
@@ -2077,6 +2092,15 @@
           "stripe_subscription_id",
           "trial_started_at",
           "updated_at",
+          "user_id"
+        ],
+        "usage_events": [
+          "event",
+          "meta",
+          "occurred_at",
+          "product",
+          "subject_key",
+          "subject_kind",
           "user_id"
         ]
       }

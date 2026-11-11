@@ -10397,5 +10397,25 @@
     "admin": {
       "group": "Admin Placements"
     }
+  },
+  "parcel_tool_report_limit_plan": {
+    "default": 20,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "MF-45 (Spec 126 section 11b.7 rules 5-6 dated note 2026-11-11; operator D-2..D-6 \"all five a\"; plan ~/Buildo-scratch/mcfrontend/MF-45/plan.md section 3.2): new reports a parcel_tool plan holder (active, past_due, admin_managed) may open per billing month (operator ruling 2026-11-10, \"3. 20\"). The month runs from the billing date (entitlements.current_period_end, else the monthly date of created_at); a lot counts once per month. Edited in the Admin Control Panel (operator 2026-11-11: \"we should be able to change the number of reports per month in the amdin\"). Inserted by migration 303. CONSUMED by src/lib/entitlements/index.ts (readReportLimits: the lookup meter refuses to serve, 500, on a missing or out-of-bounds value; the read contract shows the counts as null).",
+    "admin": {
+      "group": "MaxBLD Plan"
+    }
+  },
+  "parcel_tool_report_limit_trial": {
+    "default": 20,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "MF-45 (Spec 126 section 11b.7 rules 5-6 dated note 2026-11-11; operator D-2..D-6 \"all five a\"; plan ~/Buildo-scratch/mcfrontend/MF-45/plan.md section 3.2): new reports a parcel_tool trial holder may open per billing month (operator ruling 2026-11-10, trial 20 reports). The month runs from the billing date (entitlements.current_period_end, else the monthly date of created_at); a lot counts once per month. Edited in the Admin Control Panel (operator 2026-11-11: \"we should be able to change the number of reports per month in the amdin\"). Inserted by migration 303. CONSUMED by src/lib/entitlements/index.ts (readReportLimits: the lookup meter refuses to serve, 500, on a missing or out-of-bounds value; the read contract shows the counts as null).",
+    "admin": {
+      "group": "MaxBLD Plan"
+    }
   }
 }

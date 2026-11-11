@@ -6316,7 +6316,7 @@
       },
       "disclosure": "none",
       "entitlement": {
-        "product": "lead_gen",
+        "product": "parcel_tool",
         "statuses": [
           "trial",
           "active",
@@ -6534,7 +6534,14 @@
         "top"
       ]
     },
-    "deviations": "none",
+    "deviations": [
+      {
+        "from": "Spec 126 R-01 / Spec 116 §5 OD5 amendment: a parcel_tool surface is gated on the parcel_tool entitlement",
+        "why": "Declared parcel_tool, but the report page is still reached through the transitional lead_gen path: the lookup route admits the lead_gen status (src/app/api/parcels/lookup/route.ts:66-69) and the App A shelf passes the Buildo app gate (mobile/app/(app)/_layout.tsx, MF-49). A lead_gen-only user is served unmetered. Removed by MF-50 (and the app gate by MF-49).",
+        "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
+        "date": "2026-11-11"
+      }
+    ],
     "limitations": [
       {
         "what": "The route SELECTs every mapped parcels column — Tier 1, Tier 2 AND all Tier-3 diagnostic groups — and only then drops Tier 3 at the .strict() response parse.",
@@ -7118,7 +7125,7 @@
       },
       "disclosure": "none",
       "entitlement": {
-        "product": "lead_gen",
+        "product": "parcel_tool",
         "statuses": [
           "trial",
           "active",
@@ -7367,6 +7374,12 @@
         "why": "P35-D14 a: the field text, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other).",
         "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"): \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\"",
         "date": "2026-11-10"
+      },
+      {
+        "from": "Spec 126 R-01 / Spec 116 §5 OD5 amendment: a parcel_tool surface is gated on the parcel_tool entitlement",
+        "why": "Declared parcel_tool, but the search page is still reached through the transitional lead_gen path: the lookup route admits the lead_gen status (src/app/api/parcels/lookup/route.ts:66-69) and the App A shelf passes the Buildo app gate (mobile/app/(app)/_layout.tsx, MF-49). A lead_gen-only user is served unmetered. Removed by MF-50 (and the app gate by MF-49).",
+        "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
+        "date": "2026-11-11"
       }
     ],
     "limitations": [

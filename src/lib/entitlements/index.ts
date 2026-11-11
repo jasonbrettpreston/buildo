@@ -1,5 +1,7 @@
 // SPEC LINK: docs/specs/00-architecture/116_multi_product_architecture.md §4 N2/N3 + OD3/OD5
 //            docs/specs/00-architecture/13_authentication.md §3.4 (uid at the API boundary)
+//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §7 + §11b.7 rules 5-6 (MF-45 report meter,
+//            dated notes 2026-11-11)
 //
 // Per-product entitlements (Spec 116 N2) — the successor surface for the
 // retired `user_profiles.subscription_status` / `trial_started_at` /
@@ -23,6 +25,7 @@
 
 import type { QueryResult, QueryResultRow } from 'pg';
 import { logWarn } from '@/lib/logger';
+import seedJson from '../../../scripts/seeds/logic_variables.json';
 
 /** A pg Pool or PoolClient — anything exposing parameterised `query`. */
 export interface Queryable {
@@ -32,14 +35,22 @@ export interface Queryable {
   ): Promise<QueryResult<R>>;
 }
 
-// Mirrors migration 228's chk_entitlements_product CHECK constraint AND the
+// Mirrors the chk_entitlements_product CHECK of the NEWEST migration that
+// defines it (303 since MF-45; 228 keeps its historical two keys) AND the
 // `_contracts.json` key schema.entitlement_products (landed with migration
 // 229's commit, plan P1-F3g) — contracts.infra.test.ts locks all three
-// against each other.
-export const PRODUCTS = ['lead_gen', 'flight_center'] as const;
+// against each other. 'parcel_tool' (R-01) and 'agent_reports' (R-09) were
+// added together (Spec 116 §5 OD5 amendment).
+export const PRODUCTS = ['lead_gen', 'flight_center', 'parcel_tool', 'agent_reports'] as const;
 export type Product = (typeof PRODUCTS)[number];
 
-/** OD5 (RULED): the shipped parcel tool + every Phase-1 gate folds into lead_gen. */
+/**
+ * The fallback product for an unmapped or null Stripe price (resolvePriceProduct).
+ * OD5's original ruling folded the parcel tool into lead_gen; the 2026-09-15
+ * amendment (Spec 116 §5) supersedes that: the parcel tool is its own product,
+ * 'parcel_tool'. The price-map FALLBACK stays lead_gen (MF-47 owns the parcel_tool
+ * price-map entry), so an unmapped price still entitles the shipped product.
+ */
 export const DEFAULT_PRODUCT: Product = 'lead_gen';
 
 // Mirrors migration 228's chk_entitlements_status CHECK constraint AND
@@ -53,6 +64,16 @@ export const ENTITLEMENT_STATUSES = [
   'admin_managed',
 ] as const;
 export type EntitlementStatus = (typeof ENTITLEMENT_STATUSES)[number];
+
+/**
+ * Statuses that grant app content — the one constant of Spec 96 §10 (mirrors the
+ * mobile AppLayout gate). The parcel lookup uses it for both arms (parcel_tool
+ * and the transitional lead_gen path) and the report meter re-tests it under
+ * the row lock.
+ */
+export const ACTIVE_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set([
+  'trial', 'active', 'past_due', 'admin_managed',
+]);
 
 /**
  * Reusable SQL fragment: LEFT JOIN the lead_gen entitlement row onto a
@@ -329,4 +350,211 @@ export async function resolvePriceProduct(
     return DEFAULT_PRODUCT;
   }
   return product as Product;
+}
+
+// ---------------------------------------------------------------------------
+// The parcel_tool report meter (MF-45; Spec 126 §7 usage_events; §11b.7 rules
+// 5-6 and the D-1..D-6 rulings of 2026-11-11). The counter is DERIVED, never
+// stored (§7, P10): reports used = the distinct lots opened in the billing
+// month, read from usage_events at query time.
+// ---------------------------------------------------------------------------
+
+// Mirror migration 303's chk_usage_events_event / chk_usage_events_subject_kind
+// AND _contracts.json schema.usage_events (contracts.infra.test.ts).
+export const USAGE_EVENTS = [
+  'property_view',
+  'pdf_send',
+  'offer_impression',
+  'offer_click',
+  'export',
+  'parcel_id_translated',
+] as const;
+export const USAGE_SUBJECT_KINDS = ['parcel_ref', 'parcel_pk', 'permit_rev', 'offer_id'] as const;
+
+/** The two monthly allowances (operator-editable in the Admin Control Panel, seed group "MaxBLD Plan"). */
+export const REPORT_LIMIT_KEYS = {
+  plan: 'parcel_tool_report_limit_plan',
+  trial: 'parcel_tool_report_limit_trial',
+} as const;
+export interface ReportLimits {
+  plan: number;
+  trial: number;
+}
+
+/** The seed's declared bounds of the two keys (scripts/seeds/logic_variables.json min/max; the seed is the truth). */
+const REPORT_LIMIT_BOUNDS: Record<string, { min: number; max: number }> = Object.fromEntries(
+  Object.values(REPORT_LIMIT_KEYS).map((k) => {
+    const s = (seedJson as Record<string, { min?: number; max?: number }>)[k];
+    if (!s || typeof s.min !== 'number' || typeof s.max !== 'number') throw new Error(`logic_variables seed has no bounds for ${k}`);
+    return [k, { min: s.min, max: s.max }];
+  }),
+);
+
+/** A limits read that cannot be trusted: a key missing, not a whole number, or outside its seed bounds. */
+export class ReportLimitsMissingError extends Error {
+  constructor(public readonly keys: string[]) {
+    super(`report limits missing or out of bounds: ${keys.join(', ')}`);
+    this.name = 'ReportLimitsMissingError';
+  }
+}
+
+/**
+ * Reads both allowances (the readMediaLimits pattern). Fails closed: no literal
+ * fallback; a value that is missing, not an integer or outside the seed's
+ * [min, max] throws, so an admin edit or a direct write cannot open the meter.
+ */
+export async function readReportLimits(db: Queryable): Promise<ReportLimits> {
+  const keys = Object.values(REPORT_LIMIT_KEYS);
+  const res = await db.query<{ variable_key: string; variable_value: string | number | null }>(
+    `SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1::text[])`,
+    [keys],
+  );
+  const byKey = new Map(
+    res.rows.map((r) => [r.variable_key, r.variable_value === null ? Number.NaN : Number(r.variable_value)]),
+  );
+  const bad: string[] = [];
+  const read = (k: string): number => {
+    const v = byKey.get(k);
+    const b = REPORT_LIMIT_BOUNDS[k];
+    if (v === undefined || !Number.isInteger(v) || !b || v < b.min || v > b.max) {
+      bad.push(k);
+      return Number.NaN;
+    }
+    return v;
+  };
+  const out = { plan: read(REPORT_LIMIT_KEYS.plan), trial: read(REPORT_LIMIT_KEYS.trial) };
+  if (bad.length > 0) throw new ReportLimitsMissingError(bad);
+  return out;
+}
+
+/** anchor + k whole months, UTC, the day clamped to the target month's end (Postgres `+ interval 'k months'`). */
+function addMonthsClamped(anchor: Date, k: number): Date {
+  const m = anchor.getUTCMonth() + k;
+  const y = anchor.getUTCFullYear() + Math.floor(m / 12);
+  const mm = ((m % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(y, mm + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(
+    y, mm, Math.min(anchor.getUTCDate(), lastDay),
+    anchor.getUTCHours(), anchor.getUTCMinutes(), anchor.getUTCSeconds(), anchor.getUTCMilliseconds(),
+  ));
+}
+
+/**
+ * The billing month holding `now` (D-2 a): whole months stepped from the anchor
+ * (entitlements.current_period_end, else created_at), so start <= now < end.
+ * Pure: no DB and no clock read. Works for an anchor far ahead or far behind
+ * (a late renewal webhook still yields the current month, never an empty window).
+ */
+export function reportPeriod(anchor: Date, now: Date): { start: Date; end: Date } {
+  let k = (now.getUTCFullYear() - anchor.getUTCFullYear()) * 12 + (now.getUTCMonth() - anchor.getUTCMonth());
+  if (addMonthsClamped(anchor, k).getTime() > now.getTime()) k -= 1;
+  else if (addMonthsClamped(anchor, k + 1).getTime() <= now.getTime()) k += 1;
+  return { start: addMonthsClamped(anchor, k), end: addMonthsClamped(anchor, k + 1) };
+}
+
+interface ParcelToolRow {
+  status: EntitlementStatus;
+  current_period_end: Date | string | null;
+  created_at: Date | string;
+  now: Date | string;
+}
+
+/** The window, the allowance for the status, and the used count, for one parcel_tool row. */
+async function usageFor(db: Queryable, uid: string, row: ParcelToolRow, limits: ReportLimits, subjectKey: string | null) {
+  const now = new Date(row.now);
+  const { end, start } = reportPeriod(new Date(row.current_period_end ?? row.created_at), now);
+  const reportsLimit = row.status === 'trial' ? limits.trial : limits.plan;
+  const res = await db.query<{ used: number; already: boolean }>(
+    `SELECT COUNT(DISTINCT subject_key)::int AS used, COALESCE(bool_or(subject_key = $4), false) AS already
+     FROM usage_events
+     WHERE user_id = $1 AND product = 'parcel_tool' AND event = 'property_view' AND subject_kind = 'parcel_ref'
+       AND occurred_at >= $2 AND occurred_at < $3`,
+    [uid, start, end, subjectKey],
+  );
+  const reportsUsed = Number(res.rows[0]?.used ?? 0);
+  return { now, reportsLimit, reportsUsed, already: res.rows[0]?.already === true, resetsOn: end.toISOString() };
+}
+
+export type ReportMeterResult =
+  | { kind: 'not_entitled' }
+  | { kind: 'counted' | 'already_counted' | 'limit_reached'; reportsUsed: number; reportsLimit: number; resetsOn: string };
+
+/**
+ * Meters one report open for a parcel_tool holder. MUST run inside the caller's
+ * withTransaction: it takes the (user, parcel_tool) row lock, so concurrent new
+ * lots cannot pass the limit (the lock serialises count-and-insert; READ
+ * COMMITTED, so the count after the lock sees committed rows). Re-tests the
+ * status under the lock (expired since the gate -> not_entitled). One clock: the
+ * transaction's now() picks the window AND stamps occurred_at. A lot already in
+ * the window is free and writes nothing (D-3 a). `parcelRef` is the matched
+ * parcels.parcel_id of the fetched row, never request text (R-04 parcel_ref).
+ * Errors propagate (fail closed: the caller serves no payload).
+ * Callers are locked by parcel-tool-meter.logic.test.ts T13.
+ */
+export async function openReport(db: Queryable, uid: string, parcelRef: string): Promise<ReportMeterResult> {
+  if (!isUuid(uid)) return { kind: 'not_entitled' };
+  const res = await db.query<ParcelToolRow>(
+    `SELECT status, current_period_end, created_at, now() AS now
+     FROM entitlements WHERE user_id = $1 AND product = 'parcel_tool' FOR UPDATE`,
+    [uid],
+  );
+  const row = res.rows[0];
+  if (!row || !ACTIVE_SUBSCRIPTION_STATUSES.has(row.status)) return { kind: 'not_entitled' };
+  const limits = await readReportLimits(db);
+  const u = await usageFor(db, uid, row, limits, parcelRef);
+  const base = { reportsLimit: u.reportsLimit, resetsOn: u.resetsOn };
+  if (u.already) return { kind: 'already_counted', reportsUsed: u.reportsUsed, ...base };
+  if (u.reportsUsed >= u.reportsLimit) return { kind: 'limit_reached', reportsUsed: u.reportsUsed, ...base };
+  await db.query(
+    `INSERT INTO usage_events (user_id, product, event, subject_kind, subject_key, occurred_at, meta)
+     VALUES ($1, 'parcel_tool', 'property_view', 'parcel_ref', $2, $3, '{}'::jsonb)`,
+    [uid, parcelRef, u.now],
+  );
+  return { kind: 'counted', reportsUsed: u.reportsUsed + 1, ...base };
+}
+
+/** The entitlement read contract (MF-45): every value server-computed (FE-05); a display, never a gate. */
+export interface ParcelToolUsage {
+  status: EntitlementStatus | null;
+  reportsUsed: number | null;
+  reportsLimit: number | null;
+  reportsLeft: number | null;
+  reportsLimitReached: boolean | null;
+  resetsOn: string | null;
+}
+
+/**
+ * Reads the caller's parcel_tool plan and this month's report counts, unlocked.
+ * No row -> every field null (a zero-entitlement user is a legal state). A status
+ * outside the allowed set -> the status with every count null. A limits-read
+ * failure degrades to null counts with a WARN (the meter itself stays fail-closed).
+ */
+export async function readParcelToolUsage(db: Queryable, uid: string): Promise<ParcelToolUsage> {
+  const empty = { reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null };
+  if (!isUuid(uid)) return { status: null, ...empty };
+  const res = await db.query<ParcelToolRow>(
+    `SELECT status, current_period_end, created_at, now() AS now
+     FROM entitlements WHERE user_id = $1 AND product = 'parcel_tool'`,
+    [uid],
+  );
+  const row = res.rows[0];
+  if (!row) return { status: null, ...empty };
+  if (!ACTIVE_SUBSCRIPTION_STATUSES.has(row.status)) return { status: row.status, ...empty };
+  let limits: ReportLimits;
+  try {
+    limits = await readReportLimits(db);
+  } catch (err) {
+    if (!(err instanceof ReportLimitsMissingError)) throw err;
+    logWarn('[entitlements/parcel-tool-usage]', 'report limits unreadable, counts shown as null', { keys: err.keys });
+    return { status: row.status, ...empty };
+  }
+  const u = await usageFor(db, uid, row, limits, null);
+  return {
+    status: row.status,
+    reportsUsed: u.reportsUsed,
+    reportsLimit: u.reportsLimit,
+    reportsLeft: Math.max(0, u.reportsLimit - u.reportsUsed),
+    reportsLimitReached: u.reportsUsed >= u.reportsLimit,
+    resetsOn: u.resetsOn,
+  };
 }

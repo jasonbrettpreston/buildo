@@ -1,0 +1,96 @@
+MF-45 red evidence, 2026-11-11, worktree wf1/mf45-1111 at 08556a53b (docs + prereg committed; tests and docs/specs/_contracts.json widened, NO migration 303, NO lib, NO route change yet).
+Command: npx vitest run src/tests/parcel-tool-meter.logic.test.ts src/tests/migration-303-parcel-tool.infra.test.ts src/tests/parcel-lookup-gate.infra.test.ts src/tests/contracts.infra.test.ts src/tests/control-panel.logic.test.ts
+Expected red: T1 (contract widened, newest CHECK is still 228), T2 (PRODUCTS), T3 (no usage_events CHECK), T4 (no migration), T6/T7 (no reportPeriod/readReportLimits), T8-T10 (the route gates on lead_gen only and writes no usage row), T13 (no openReport caller), T14 (descriptors still lead_gen, metering none), the admin listing (no seed keys).
+
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf45/migrations/303_parcel_tool_entitlement_usage.sql'
+ FAIL  src/tests/migration-303-parcel-tool.infra.test.ts [ src/tests/migration-303-parcel-tool.infra.test.ts ]
+TypeError: Cannot convert undefined or null to object
+⎯⎯⎯⎯⎯⎯ Failed Tests 51 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/contracts.infra.test.ts > contracts.json — drift enforcement across spec/SQL/Zod/migration > schema.entitlement_products → the newest migration defining chk_entitlements_product CHECK
+AssertionError: expected '228_entitlements.sql' not to be '228_entitlements.sql' // Object.is equality
+ FAIL  src/tests/contracts.infra.test.ts > contracts.json — drift enforcement across spec/SQL/Zod/migration > schema.usage_events.{products,events,subject_kinds} → migration 303 CHECKs and the TS constants
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf45/migrations/303_parcel_tool_entitlement_usage.sql'
+ FAIL  src/tests/contracts.infra.test.ts > contracts.json — drift enforcement across spec/SQL/Zod/migration > schema.entitlement_products → src/lib/entitlements PRODUCTS constant
+AssertionError: expected [ 'lead_gen', 'flight_center' ] to deeply equal [ 'lead_gen', 'flight_center', …(2) ]
+ FAIL  src/tests/control-panel.logic.test.ts > LOGIC_VAR_DEFAULTS — complete key set > contains all expected logic variable keys
+AssertionError: expected { …(1038) } to have property "parcel_tool_report_limit_plan"
+ FAIL  src/tests/control-panel.logic.test.ts > Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ config-loader > logic_variables.json contains all expected keys
+AssertionError: JSON missing key: parcel_tool_report_limit_plan: expected { …(1041) } to have property "parcel_tool_report_limit_plan"
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > parcel_tool trial -> 200, metered (one property_view row)
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > parcel_tool active -> 200, metered (one property_view row)
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > parcel_tool past_due -> 200, metered (one property_view row)
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > parcel_tool admin_managed -> 200, metered (one property_view row)
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > lead_gen trial, no parcel_tool -> 200 on the transitional path, NO usage write
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > lead_gen active, no parcel_tool -> 200 on the transitional path, NO usage write
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > lead_gen past_due, no parcel_tool -> 200 on the transitional path, NO usage write
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > lead_gen admin_managed, no parcel_tool -> 200 on the transitional path, NO usage write
+AssertionError: expected 500 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > lead_gen active and parcel_tool expired -> the transitional path (unmetered), D-4 a
+AssertionError: expected 500 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T8 the gate: product x status (Spec 96 §10 status set; D-4 a) > both held -> metered (D-4 a: a parcel_tool holder is metered everywhere)
+AssertionError: expected 500 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > a hit writes one row: parcel_tool / property_view / parcel_ref, keyed on the matched parcels.parcel_id, meta {} and the transaction clock
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > the same lot via q and via parcelId counts once (the second open is already_counted, no insert)
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > candidates writes nothing and carries parcel: null (fold 12)
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > a miss writes nothing and carries parcel: null (fold 12)
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > a dangling id writes nothing and carries parcel: null (fold 12)
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > a re-open of a counted lot at used = limit is served, no insert (D-3 a)
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > a new lot at used = limit -> 403 REPORT_LIMIT_REACHED with reportsLimit and resetsOn, no parcel, no insert (D-6 a)
+AssertionError: expected 'SUBSCRIPTION_REQUIRED' to be 'REPORT_LIMIT_REACHED' // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > a new lot at used = limit - 1 is counted (the last report of the period)
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > trial and plan limits are told apart (fixture: trial 2, plan 3; D-5 a)
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > a response that fails its .strict() parse charges nothing (meter last, fold 3)
+AssertionError: expected 403 to be 500 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > the log line carries access and meter and never the raw q (Spec 100 §2.8)
+AssertionError: expected undefined to match object { access: 'parcel_tool', …(2) }
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T9 the meter (D-2, D-3, D-5, D-6 a) > the transitional path logs access lead_gen_transitional, meter unmetered
+AssertionError: expected { …(5) } to match object { …(2) }
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T10 fail closed: the payload is never served unmetered > the limits read throws -> 500 and no payload
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T10 fail closed: the payload is never served unmetered > a limit is out of the seed bounds -> 500 and no payload
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T10 fail closed: the payload is never served unmetered > a limit is missing -> 500 and no payload
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > T10 fail closed: the payload is never served unmetered > the insert throws -> 500 and no payload
+AssertionError: expected 403 to be 500 // Object.is equality
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T6 reportPeriod (billing-date window, D-2 a) > anchor ahead of now (current_period_end): the window is the month ending at the anchor
+TypeError: reportPeriod is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T6 reportPeriod (billing-date window, D-2 a) > anchor ahead by more than a month still yields the window holding now
+TypeError: reportPeriod is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T6 reportPeriod (billing-date window, D-2 a) > a stale anchor several months behind (late renewal webhook, or created_at) yields the current month, never an empty window
+TypeError: reportPeriod is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T6 reportPeriod (billing-date window, D-2 a) > the boundary: now == start is inside; now == end is the next window
+TypeError: reportPeriod is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T6 reportPeriod (billing-date window, D-2 a) > a Jan 31 anchor clamps to the month end (Feb 28, leap Feb 29), from the anchor each time, never cumulative
+TypeError: reportPeriod is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T6 reportPeriod (billing-date window, D-2 a) > across a year end
+TypeError: reportPeriod is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T6 reportPeriod (billing-date window, D-2 a) > every window holds now and spans one stepped month (property sweep)
+TypeError: reportPeriod is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > the two keys exist in the seed with default 20 and bounds 1..1000 (oq rulings: plan 20, trial 20)
+TypeError: Cannot convert undefined or null to object
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > reads plan and trial from the rows (pg returns NUMERIC as text)
+TypeError: Cannot read properties of undefined (reading 'trial')
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > throws ReportLimitsMissingError when the plan value is missing
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > throws ReportLimitsMissingError when the plan value is null
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > throws ReportLimitsMissingError when the plan value is NaN
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > throws ReportLimitsMissingError when the plan value is zero (below min 1)
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > throws ReportLimitsMissingError when the plan value is above max 1000
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > throws ReportLimitsMissingError when the plan value is not an integer
+TypeError: Cannot convert undefined or null to object
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > RED plant: a reader with a literal 20 fallback would serve on a missing row; the real one refuses
+TypeError: readReportLimits is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T13 the report meter has exactly the listed callers (a shared view never counts) > only the lookup route imports openReport
+AssertionError: expected [] to deeply equal [ Array(1) ]
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T14 descriptors declare parcel_tool and carry the transitional deviation (fold 15) > each of the four descriptors declares parcel_tool and the lead_gen deviation removed by MF-50
+AssertionError: expected [ …(8) ] to deeply equal []
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T14 descriptors declare parcel_tool and carry the transitional deviation (fold 15) > the lookup contract is metered on parcel_tool with the ledger event, subject kind and the two 403 codes
+AssertionError: expected { answer: 'none', …(2) } to match object { answer: 'metered', …(4) }
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T14 descriptors declare parcel_tool and carry the transitional deviation (fold 15) > RED plant: removing the deviation is caught
+AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+ Test Files  5 failed (5)
+      Tests  51 failed | 137 passed (188)

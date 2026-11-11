@@ -1,0 +1,39 @@
+{
+  "task": "MF-45",
+  "item": "The parcel_tool entitlement and the monthly report limit: migration 303 (written, not applied) widens chk_entitlements_product to four keys and creates usage_events narrow (D-1 a: signed-in rows, select own, no anon insert, property_view only) with the two 20-a-month allowances as logic variables in the existing Admin Control Panel; the lookup gate per product (parcel_tool metered, lead_gen transitional and unmetered until MF-50, D-4 a) with the meter (billing-month window D-2 a, a re-open free D-3 a, trial/plan allowance D-5 a, 403 REPORT_LIMIT_REACHED with reportsLimit and resetsOn D-6 a); four descriptors declare parcel_tool; the read-contract values in the lib (the route held for a ruling).",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "08556a53b",
+  "cards": [
+    "Operator 2026-11-11: \"a\" (D-1), \"all five a\" (D-2..D-6), \"y\" (the MB-44 wait dropped; build starts) (record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md; ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"2026-11-11 MF-45: operator \\\"y\\\"\").",
+    "Operator 2026-11-11 (relayed by the orchestrator): \"we should be able to change the number of reports per month in the amdin\".",
+    "Operator 2026-11-11: \"also we should be building anything just using existing components\"."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-45/plan.md (section 12 folds win). PLAN panel ~/Buildo-scratch/mcfrontend/MF-45/panel/ (record.md): code-reviewer-grounded PASS-WITH-FOLDS, security and compliance (general-purpose) PASS-WITH-FOLDS, DeepSeek spec lens (deepseek-reasoner via scripts/deepseek-review.js; two blockers refuted at source, one recorded as D-4 c, one accepted). Docs d6e909b0f (Spec 126 sections 6.3, 11b.3, 11b.7; Spec 114 section 2; Spec 96; Spec 100; queue row; system map), prereg 1 08556a53b at round 140.",
+  "output": "OUTPUT panel on the staged build at 08556a53b (~/Buildo-scratch/mcfrontend/MF-45/panel-out/, brief BRIEF.md, diff staged.diff): code-reviewer-grounded PASS WITH FOLDS (M-1 stale evidence line refs, L-1 blank line, L-2 refusal logs outcome hit, L-3 lock pinned indirectly, L-4 seed import); regression-guardian FAIL on H1 (six pgTAP lines with single-dollar quotes, five new and one existing), PASS WITH FOLDS once fixed (L1 stale OD5 comment in get-user-context, L2 source-string lock, L3 apply order); security (general-purpose) PASS WITH FOLDS (H1 the same pgTAP quoting, M1 admin bounds follow-up unrecorded, L1 retention and MF-53 carries unrecorded, L2 T15 admin schema tests missing, L3 one-request false refusal accepted, L4 informational; three planted route defects each red). All folds applied before the build commit; red docs/reports/red-evidence/MF-45/meter-red.txt (51 failed), green meter-green.txt, folds output-panel-folds-red.txt. Not run here (DB job): src/tests/db/parcel-tool-meter.db.test.ts and supabase/tests/rls_class_a.test.sql.",
+  "seats": [
+    "code-reviewer-grounded (PLAN): PASS-WITH-FOLDS",
+    "security and compliance, general-purpose (PLAN): PASS-WITH-FOLDS",
+    "DeepSeek spec lens (PLAN): findings adjudicated by the lane",
+    "code-reviewer-grounded (OUTPUT): PASS WITH FOLDS",
+    "regression-guardian (OUTPUT): FAIL (H1) -> PASS WITH FOLDS after the fold",
+    "security, general-purpose (OUTPUT): PASS WITH FOLDS"
+  ],
+  "verdict": "PASS-WITH-FOLDS: every OUTPUT fold applied before the build commit (H1 pgTAP quoting restored and locked; M-1 evidence lines; L-1; RG L1 comment; T15 schema tests; follow-ups recorded on the queue row). Push waits on the DB job (migration 303 apply, test:db, pgTAP, schema.ts regen) and the operator ruling on the read-contract route.",
+  "blockers": [],
+  "followups": [
+    "STOP item for the operator: the entitlement read contract route GET /api/parcels/entitlement is a new route module (plan section 3.5; queue row text \"an entitlement read contract\"); held under the 2026-11-11 \"existing components\" rule. Its values are built and tested (readParcelToolUsage).",
+    "Admin Control Panel write-time bounds: PUT /api/admin/control-panel/configs does not enforce seed min/max for any numeric variable; an out-of-range allowance fails the meter closed (500). Own row owed (queue MF-45 note 2026-11-11).",
+    "usage_events time-based retention value (plan fold 13): own row owed.",
+    "MF-53 carry: map-only fields stay unmetered only while they are not report content (plan fold 12).",
+    "MF-47: map Stripe trialing to trial for parcel_tool and the price-map entry; until then a card-up-front trial lands as active (plan section 12 fold 16).",
+    "MF-44 adds its web report page to the openReport caller list (T13); MF-56 must never call it.",
+    "src/lib/db/generated/schema.ts regenerates after the DB job applies 303, as its own commit."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-45/",
+  "notes": [
+    "Commit order: docs d6e909b0f, prereg 08556a53b alone (round 140), then the build commit with the folds and this record; each with real hooks.",
+    "The Spec 114 section 2 note landed in the docs commit d6e909b0f, not in the migration commit (rows first)."
+  ]
+}

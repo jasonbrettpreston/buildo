@@ -18,7 +18,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(72);
+select plan(77);
 
 -- ── Seed (as table owner, RLS-exempt) ─────────────────────────────────────
 insert into auth.users (id, email) values
@@ -54,6 +54,10 @@ insert into notification_dispatches (user_id, lead_id, type, toronto_date) value
 insert into entitlements (user_id, product, status) values
   ('00000000-0000-0000-0000-0000000000aa', 'lead_gen', 'trial'),
   ('00000000-0000-0000-0000-0000000000cc', 'lead_gen', 'trial');
+-- usage_events (MF-45, migration 303; Spec 114 §2 dated note 2026-11-11): server-written report ledger rows.
+insert into usage_events (user_id, product, event, subject_kind, subject_key) values
+  ('00000000-0000-0000-0000-0000000000aa', 'parcel_tool', 'property_view', 'parcel_ref', 'P-A'),
+  ('00000000-0000-0000-0000-0000000000cc', 'parcel_tool', 'property_view', 'parcel_ref', 'P-C');
 insert into admin_watchlist (admin_uid, lead_type, lead_key, permit_num, revision_num) values
   ('00000000-0000-0000-0000-0000000000cc', 'permit', 'permit:P1', 'P1', '00'),
   ('00000000-0000-0000-0000-0000000000aa', 'permit', 'permit:P1', 'P1', '00');
@@ -64,7 +68,7 @@ insert into admin_audit_log (admin_uid, action) values
 grant select, insert, update, delete on
   user_profiles, lead_views, lead_view_events, subscribe_nonces, device_tokens,
   tracked_projects, notifications, notification_dispatches, admin_watchlist,
-  admin_audit_log, entitlements
+  admin_audit_log, entitlements, usage_events
 to authenticated;
 -- The §3.2 admin-subtype policies embed EXISTS (SELECT 1 FROM profiles ...);
 -- evaluating that subquery as the policy-bound role requires SELECT on
@@ -185,6 +189,16 @@ select throws_ok($$insert into entitlements (user_id, product, status) values ('
 update entitlements set status = 'active' where user_id = '00000000-0000-0000-0000-0000000000aa';
 delete from entitlements where user_id = '00000000-0000-0000-0000-0000000000aa';
 
+-- usage_events (select own ONLY — server-written report ledger, MF-45; Class A by the Spec 114 §2 note 2026-11-11)
+select results_eq($$select count(*) from usage_events$$, ARRAY[1::bigint],
+  'usage_events_select_own positive: A sees exactly own row');
+select is_empty($$select 1 from usage_events where user_id = '00000000-0000-0000-0000-0000000000cc'$$,
+  'usage_events_select_own negative: the C row is invisible to A');
+select throws_ok($$insert into usage_events (user_id, product, event, subject_kind, subject_key) values ('00000000-0000-0000-0000-0000000000aa', 'parcel_tool', 'property_view', 'parcel_ref', 'P-X')$$,
+  '42501', NULL, 'usage_events no-INSERT-policy negative: rejected even for own uid');
+update usage_events set subject_key = 'NOPOL' where user_id = '00000000-0000-0000-0000-0000000000aa';
+delete from usage_events where user_id = '00000000-0000-0000-0000-0000000000aa';
+
 -- admin tables, still as A (NON-admin — the §10 "denied even if it owns the
 -- row" negative: A owns an admin_watchlist row and authored an audit row)
 select is_empty($$select 1 from admin_watchlist$$,
@@ -273,6 +287,10 @@ select results_eq($$select count(*) from entitlements where user_id = '00000000-
   'entitlements no-UPDATE-policy negative held: A could not self-upgrade trial to active');
 select results_eq($$select count(*) from entitlements where user_id = '00000000-0000-0000-0000-0000000000aa'$$, ARRAY[1::bigint],
   'entitlements no-DELETE-policy negative held: the A row survives');
+select is_empty($$select 1 from usage_events where subject_key = 'NOPOL'$$,
+  'usage_events no-UPDATE-policy negative held: A could not rewrite its own ledger row');
+select results_eq($$select count(*) from usage_events where user_id = '00000000-0000-0000-0000-0000000000aa'$$, ARRAY[1::bigint],
+  'usage_events no-DELETE-policy negative held: the A row survives (a user cannot erase a counted report)');
 select is_empty($$select 1 from admin_watchlist where lead_key = 'HACKED'$$,
   'admin_watchlist_update_own_admin negative held: the non-admin A update affected 0 rows');
 select results_eq($$select count(*) from admin_watchlist where admin_uid = '00000000-0000-0000-0000-0000000000aa'$$, ARRAY[1::bigint],

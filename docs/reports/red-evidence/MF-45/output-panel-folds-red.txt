@@ -1,0 +1,22 @@
+MF-45 OUTPUT panel folds, red evidence, 2026-11-11 (worktree wf1/mf45-1111, staged build before the folds).
+
+H1 (regression-guardian H1, security H1): the staged supabase/tests/rls_class_a.test.sql had single-dollar quotes (a JS String.replace collapsed $$ to $). The new lock in src/tests/migration-303-parcel-tool.infra.test.ts flags every line matching /\(\$[a-z]/i. On the staged (pre-fold) file:
+$ git show :supabase/tests/rls_class_a.test.sql | grep -nE "\(\$[a-z]"
+193:select results_eq($select count(*) from usage_events$, ARRAY[1::bigint],
+195:select is_empty($select 1 from usage_events where user_id = '00000000-0000-0000-0000-0000000000cc'$,
+197:select throws_ok($insert into usage_events (user_id, product, event, subject_kind, subject_key) values ('00000000-0000-0000-0000-0000000000aa', 'parcel_tool', 'property_view', 'parcel_ref', 'P-X')$,
+290:select is_empty($select 1 from usage_events where subject_key = 'NOPOL'$,
+292:select results_eq($select count(*) from usage_events where user_id = '00000000-0000-0000-0000-0000000000aa'$, ARRAY[1::bigint],
+294:select is_empty($select 1 from admin_watchlist where lead_key = 'HACKED'$,
+
+-> 6 lines (5 new usage_events assertions + the existing admin_watchlist update negative): the lock is red on the pre-fold file; after the fold:
+$ grep -nE "\(\$[a-z]" supabase/tests/rls_class_a.test.sql
+(no output) ; git diff 8f6a7626b -- supabase/tests/rls_class_a.test.sql removes only plan(72) and the grant line.
+
+Security L2 / plan fold 10 (T15): subscription-ops.logic.test.ts gains the parcel_tool/agent_reports acceptance and unknown-key refusal case for ReconcileApplySchema and AdminUserMutationSchema. It is a coverage addition on behaviour the PRODUCTS widening already produced, so it was green when written (no red claimed).
+
+Code reviewer M-1 (stale evidence line refs) and L-1 (double blank line), regression-guardian L1 (stale OD5 comment in get-user-context.ts): text-only folds, no test.
+
+After the folds:
+ Test Files  7 passed (7)
+      Tests  243 passed (243)

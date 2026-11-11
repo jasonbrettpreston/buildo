@@ -20,6 +20,7 @@ import {
   type Queryable,
 } from '@/lib/entitlements';
 import { ReconcileApplySchema, RetryCancelSchema, RECONCILE_PROTECTED_STATUSES } from '@/lib/admin/subscription-ops-schemas';
+import { AdminUserMutationSchema } from '@/lib/admin/user-management-schemas';
 
 const sub = (status: string, priceId?: string): Stripe.Subscription =>
   ({
@@ -143,6 +144,15 @@ describe('ReconcileApplySchema', () => {
     expect(ReconcileApplySchema.safeParse({ apply: true, reason: 'drift', product: 'lead_gen' }).success).toBe(true);
     expect(ReconcileApplySchema.safeParse({ apply: true, reason: 'drift', product: 'flight_center' }).success).toBe(true);
     expect(ReconcileApplySchema.safeParse({ apply: true, reason: 'drift', product: 'lot_opt' }).success).toBe(false);
+  });
+
+  it('MF-45 (plan fold 10): the widened PRODUCTS reach the admin scope: parcel_tool and agent_reports accepted, unknown still refused', () => {
+    for (const product of ['parcel_tool', 'agent_reports']) {
+      expect(ReconcileApplySchema.safeParse({ apply: true, reason: 'drift', product }).success, product).toBe(true);
+      expect(AdminUserMutationSchema.safeParse({ action: 'revoke', product, reason: 'ops test' }).success, product).toBe(true);
+    }
+    expect(ReconcileApplySchema.safeParse({ apply: true, reason: 'drift', product: 'maxbld' }).success).toBe(false);
+    expect(AdminUserMutationSchema.safeParse({ action: 'revoke', product: 'maxbld', reason: 'ops test' }).success).toBe(false);
   });
 });
 

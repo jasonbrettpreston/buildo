@@ -3,7 +3,7 @@
   "status": "exists",
   "docs": {
     "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
-    "data_story": "It reads 6 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles` and `entitlements` and writes nothing. Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`.",
+    "data_story": "It reads 7 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `usage_events` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`.",
     "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
   },
   "evidence": {
@@ -33,7 +33,7 @@
     "gate": [
       "src/lib/auth/route-guard.ts — AUTHENTICATED_API_ROUTES prefix — '/api/parcels'",
       "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path → \"authenticated\"",
-      "in-handler: getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:53 (FIRST await); implementation src/lib/auth/get-user-context.ts:59, uid from getClaimsUid (get-user-context.ts:68), profile+entitlement row at get-user-context.ts:93-103; null -> 401 at route.ts:54"
+      "in-handler: getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:57 (FIRST await); implementation src/lib/auth/get-user-context.ts:59, uid from getClaimsUid (get-user-context.ts:68), profile+entitlement row at get-user-context.ts:93-103; null -> 401 at route.ts:58"
     ],
     "states": [
       "hit: src/app/api/parcels/lookup/route.ts:101-106 (match + parcel payload); outcome label route.ts:112",
@@ -419,11 +419,12 @@
   },
   "outputs": {
     "answer": "contract_only",
-    "why": "This route IS the mutation contract: it writes 1 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
+    "why": "This route IS the mutation contract: it writes 2 table(s) synchronously inside the request and returns the result — there is no optimistic client-side flip to reconcile.",
     "evidence": [
       "src/lib/auth/get-user-context.ts:83-89",
       "docs/specs/00-architecture/00_system_map.md:80",
-      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+      "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)",
+      "src/lib/entitlements/index.ts:508-512"
     ],
     "contract_ref": [],
     "tables": [
@@ -441,6 +442,25 @@
           "src/lib/auth/get-user-context.ts:83-89",
           "docs/specs/00-architecture/00_system_map.md:80",
           "docs/reference/data-lineage-map.md — no `## `user_profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
+        ]
+      },
+      {
+        "table": "usage_events",
+        "columns": [
+          "user_id",
+          "product",
+          "event",
+          "subject_kind",
+          "subject_key",
+          "occurred_at",
+          "meta"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts:508-512",
+          "migrations/303_parcel_tool_entitlement_usage.sql"
         ]
       }
     ]
@@ -468,11 +488,11 @@
   "guards": {
     "session": {
       "answer": "entitled",
-      "why": "classifyRoute returns \"authenticated\", and the handler adds a server-side subscription gate: a session alone is refused unless subscription_status is in ACTIVE_SUBSCRIPTION_STATUSES.",
+      "why": "classifyRoute returns \"authenticated\", and the handler adds a server-side entitlement gate: a session alone is refused unless the parcel_tool entitlement (or, on the transitional path until MF-50, the lead_gen status) is in ACTIVE_SUBSCRIPTION_STATUSES.",
       "evidence": [
         "src/lib/auth/route-guard.ts:150-201 — classifyRoute executed 2026-09-15 with the concrete path",
-        "getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:53 (FIRST await); implementation src/lib/auth/get-user-context.ts:59, uid from getClaimsUid (get-user-context.ts:68), profile+entitlement row at get-user-context.ts:93-103; null -> 401 at route.ts:54",
-        "src/app/api/parcels/lookup/route.ts:47-60"
+        "getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:57 (FIRST await); implementation src/lib/auth/get-user-context.ts:59, uid from getClaimsUid (get-user-context.ts:68), profile+entitlement row at get-user-context.ts:93-103; null -> 401 at route.ts:58",
+        "src/app/api/parcels/lookup/route.ts:60-69"
       ]
     },
     "rls_class": {
@@ -489,10 +509,19 @@
       ]
     },
     "disclosure": "none",
-    "entitlement": "none",
+    "entitlement": {
+      "product": "parcel_tool",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "403"
+    },
     "flag": "none",
     "permission": "none",
-    "rate_bucket": "parcels-search:<uid> | parcels-lookup:<uid> (src/app/api/parcels/lookup/route.ts:72-75)"
+    "rate_bucket": "parcels-search:<uid> | parcels-lookup:<uid> (src/app/api/parcels/lookup/route.ts:82-84)"
   },
   "render": {
     "targets": [
@@ -509,7 +538,7 @@
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "guards.session must equal classifyRoute(\"/api/parcels/lookup\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:53 (FIRST await); implementation sr). Locked by consumer-parcel-lookup.infra.test.ts."
+      "why": "guards.session must equal classifyRoute(\"/api/parcels/lookup\"), executed 2026-09-15 → \"authenticated\" plus the in-handler guard (getCurrentUserContext(request, pool) — src/app/api/parcels/lookup/route.ts:57 (FIRST await); implementation sr). Locked by consumer-parcel-lookup.infra.test.ts."
     },
     {
       "id": "contract_parcels_lookup__error_envelope",
@@ -614,7 +643,11 @@
       },
       {
         "class": "403",
-        "ui": "{data:null,error:{code,message},meta:null} — src/features/leads/api/error-mapping.ts:28-29 — src/app/api/parcels/lookup/route.ts:59 (code SUBSCRIPTION_REQUIRED)"
+        "ui": "{data:null,error:{code,message},meta:null} — src/features/leads/api/error-mapping.ts:28-29 — src/app/api/parcels/lookup/route.ts:69, :136 (code SUBSCRIPTION_REQUIRED) | {data:null,error:{code,message,details:{reportsLimit,resetsOn}},meta:null} — src/features/leads/api/error-mapping.ts:37-38 — src/app/api/parcels/lookup/route.ts:135 (code REPORT_LIMIT_REACHED, MF-45 D-6 a: the monthly allowance is used; no report data; resetsOn is the billing-month end, ISO-8601)",
+        "fields": [
+          "reportsLimit",
+          "resetsOn"
+        ]
       },
       {
         "class": "429",
@@ -648,13 +681,21 @@
     ]
   },
   "metering": {
-    "answer": "none",
-    "why": "DESIGNED, ABSENT: Spec 126 R-01 makes the parcel tool its own metered product, but this handler writes no counter and no usage_events row (the table does not exist). Nothing about a lookup is counted today.",
+    "answer": "metered",
+    "why": "Each new lot a parcel_tool holder opens in the billing month writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45, D-2..D-6 a). The transitional lead_gen arm is unmetered (deviation below).",
     "evidence": [
-      "src/app/api/parcels/lookup/route.ts:41-129 — no counter write",
-      "src/lib/db/generated/schema.ts — no usage_events table",
-      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §2"
-    ]
+      "src/app/api/parcels/lookup/route.ts:124 (the .strict() parse runs before the meter)",
+      "src/app/api/parcels/lookup/route.ts:132-137 (openReport in withTransaction; limit_reached and not_entitled refusals)",
+      "src/lib/entitlements/index.ts:494-514 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
+      "migrations/303_parcel_tool_entitlement_usage.sql (usage_events, chk_usage_events_*; the two allowance variables)",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
+    ],
+    "unit": "report",
+    "product": "parcel_tool",
+    "ledger_event": "property_view",
+    "subject_kind": "parcel_ref",
+    "quota_from_config": "parcel_tool_report_limit_plan (active, past_due, admin_managed) | parcel_tool_report_limit_trial (trial)",
+    "on_exceeded": "403"
   },
   "config": {
     "answer": "none",
@@ -683,7 +724,14 @@
     "i18n": "none",
     "safe_area": "none"
   },
-  "deviations": "none",
+  "deviations": [
+    {
+      "from": "Spec 126 R-01 / R-23: a parcel_tool lookup is metered and writes a ledger row",
+      "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/app/api/parcels/lookup/route.ts:66-68; meter \"unmetered\" in the log line). Removed by MF-50.",
+      "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
+      "date": "2026-11-11"
+    }
+  ],
   "limitations": [
     {
       "what": "a11y.touch_target_min_px has no legal answer for a CONTRACT",

@@ -23,6 +23,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as os from 'node:os';
 import { describe, expect, it } from 'vitest';
 
 interface Contracts {
@@ -50,6 +51,7 @@ interface Contracts {
     // uid columns are uuid FKs now — no max-width concept survives.
     entitlement_products: string[];
     entitlement_statuses: string[];
+    usage_events: { events: string[]; subject_kinds: string[] };
     // Spec 44 §3 (WF2 2026-07-31): the 8-outcome scrape-outcome vocabulary.
     scrape_outcomes: string[];
     trade_slug_max: number;
@@ -672,12 +674,55 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
   // the TypeScript union.
   const quotedList = (values: string[]) => values.map((v) => `'${v}'`).join(`,\\s*`);
 
-  it('schema.entitlement_products → migration 228 chk_entitlements_product CHECK', () => {
+  // MF-45 (Spec 116 §5 OD5 amendment; Spec 126 §6.3 row 3): a later migration re-defines the CHECK (228 cannot be
+  // edited), so the contract follows the NEWEST migration that defines chk_entitlements_product (highest numeric
+  // prefix, comment lines stripped so a commented DOWN's older text never matches), and 228 keeps its own frozen pin
+  // to its historical two keys. Extended, not loosened: both pins are exact.
+  const productCheck = (sql: string): string[] | null => {
+    const live = sql.split('\n').filter((l) => !/^\s*--/.test(l)).join('\n');
+    const m = /chk_entitlements_product\s*\n?\s*CHECK \(product IN \(([^)]*)\)\)/.exec(live);
+    return m ? [...(m[1] ?? '').matchAll(/'([a-z_]+)'/g)].map((r) => r[1]!) : null;
+  };
+  const newestProductCheck = (dir: string): { file: string; keys: string[] } => {
+    const hits = fs.readdirSync(dir).filter((f) => /^\d+_.*\.sql$/.test(f))
+      .map((f) => ({ file: f, n: Number(f.split('_')[0]), keys: productCheck(fs.readFileSync(path.join(dir, f), 'utf8')) }))
+      .filter((h): h is { file: string; n: number; keys: string[] } => h.keys !== null)
+      .sort((a, b) => b.n - a.n);
+    if (!hits[0]) throw new Error('no migration defines chk_entitlements_product');
+    return { file: hits[0].file, keys: hits[0].keys };
+  };
+
+  it('schema.entitlement_products → the newest migration defining chk_entitlements_product CHECK', () => {
+    const newest = newestProductCheck(path.join(REPO_ROOT, 'migrations'));
+    expect(newest.file).not.toBe('228_entitlements.sql');
+    expect(newest.keys).toEqual(contracts.schema.entitlement_products);
+  });
+
+  it('migration 228 keeps its historical two-key chk_entitlements_product CHECK (frozen pin)', () => {
     const sql = fs.readFileSync(path.join(REPO_ROOT, 'migrations/228_entitlements.sql'), 'utf8');
-    const pattern = new RegExp(
-      `chk_entitlements_product\\s*\\n?\\s*CHECK \\(product IN \\(${quotedList(contracts.schema.entitlement_products)}\\)\\)`,
-    );
-    expect(sql).toMatch(pattern);
+    expect(productCheck(sql)).toEqual(['lead_gen', 'flight_center']);
+  });
+
+  it('RED plant: a newer migration whose only two-key CHECK text sits in its commented DOWN is not read as the definition', () => {
+    const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'mf45-contracts-'));
+    fs.writeFileSync(path.join(tmp, '228_entitlements.sql'), "CONSTRAINT chk_entitlements_product\n    CHECK (product IN ('lead_gen', 'flight_center'))");
+    fs.writeFileSync(path.join(tmp, '303_x.sql'), "ALTER TABLE entitlements ADD CONSTRAINT chk_entitlements_product CHECK (product IN ('lead_gen', 'flight_center', 'parcel_tool', 'agent_reports'));\n-- DOWN\n--   ADD CONSTRAINT chk_entitlements_product CHECK (product IN ('lead_gen', 'flight_center'));");
+    expect(newestProductCheck(tmp)).toEqual({ file: '303_x.sql', keys: ['lead_gen', 'flight_center', 'parcel_tool', 'agent_reports'] });
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  // MF-45 (Spec 126 §7, R-04): the usage_events closed vocabularies, contract <-> migration CHECK <-> TS constants.
+  it('schema.usage_events.{products,events,subject_kinds} → migration 303 CHECKs and the TS constants', async () => {
+    const mod = await import('../lib/entitlements');
+    const sql = fs.readFileSync(path.join(REPO_ROOT, 'migrations/303_parcel_tool_entitlement_usage.sql'), 'utf8');
+    const ue = contracts.schema.usage_events;
+    expect(sql).toMatch(new RegExp(`chk_usage_events_product\\s+CHECK \\(product IN \\(${quotedList(contracts.schema.entitlement_products)}\\)\\)`));
+    expect(sql).toMatch(new RegExp(`chk_usage_events_event\\s+CHECK \\(event IN \\(${quotedList(ue.events)}\\)\\)`));
+    expect(sql).toMatch(new RegExp(`chk_usage_events_subject_kind\\s+CHECK \\(subject_kind IN \\(${quotedList(ue.subject_kinds)}\\)\\)`));
+    expect([...mod.USAGE_EVENTS]).toEqual(ue.events);
+    expect([...mod.USAGE_SUBJECT_KINDS]).toEqual(ue.subject_kinds);
+    // RED plant: dropping parcel_pk from the CHECK breaks the pin.
+    expect(sql.replace("'parcel_pk', ", '')).not.toMatch(new RegExp(`chk_usage_events_subject_kind\\s+CHECK \\(subject_kind IN \\(${quotedList(ue.subject_kinds)}\\)\\)`));
   });
 
   it('schema.entitlement_statuses → migration 228 chk_entitlements_status CHECK', () => {

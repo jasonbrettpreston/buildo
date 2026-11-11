@@ -1273,6 +1273,13 @@ const GROUP_ORDER = [
       "admin_placement_default_flight_days",
       "admin_placement_max_horizon_days"
     ]
+  },
+  {
+    "label": "MaxBLD Plan",
+    "keys": [
+      "parcel_tool_report_limit_plan",
+      "parcel_tool_report_limit_trial"
+    ]
   }
 ];
 

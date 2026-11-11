@@ -26,8 +26,9 @@
 // `subscription_status` FIELD NAME is KEPT on UserContext (its consumers —
 // leads/view R2's trial counter and parcels/lookup R4's subscription gate —
 // depend on it), but the VALUE is now the per-product `entitlements` row's
-// status for 'lead_gen' (OD5: every Phase-1 gate, including the parcel tool,
-// folds into lead_gen), sourced via a LEFT JOIN. A zero-entitlement user
+// status for 'lead_gen' (OD5: every Phase-1 gate folds into lead_gen; since
+// MF-45 the parcel lookup reads its own 'parcel_tool' row first and uses this
+// lead_gen status only on its transitional path until MF-50), sourced via a LEFT JOIN. A zero-entitlement user
 // reads null — exactly what the legacy nullable column yielded, so both
 // consumers' gating semantics are unchanged (null → not trial / not active).
 

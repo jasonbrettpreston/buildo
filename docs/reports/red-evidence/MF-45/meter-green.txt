@@ -1,0 +1,8 @@
+MF-45 green evidence, 2026-11-11 (worktree wf1/mf45-1111, the build with the OUTPUT panel folds, before the build commit). Same command as meter-red.txt.
+ ✓ src/tests/contracts.infra.test.ts (99 tests) 73ms
+ ✓ src/tests/parcel-tool-meter.logic.test.ts (28 tests) 31ms
+ ✓ src/tests/parcel-lookup-gate.infra.test.ts (34 tests) 10ms
+ ✓ src/tests/control-panel.logic.test.ts (33 tests) 36ms
+ ✓ src/tests/migration-303-parcel-tool.infra.test.ts (14 tests) 3ms
+ Test Files  5 passed (5)
+      Tests  208 passed (208)

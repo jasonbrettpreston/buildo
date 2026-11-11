@@ -29,6 +29,15 @@ export const forbiddenSubscription = () =>
   err('SUBSCRIPTION_REQUIRED', 'An active subscription is required to view parcel details', 403);
 
 /**
+ * 403 for a parcel_tool holder who has opened this month's allowance of new reports (MF-45, D-6 a: the existing 403
+ * class with its own code; Spec 126 §11b.7 dated note 2026-11-11). `details` carries the two fields the limit-reached
+ * state binds to (descriptor contract_parcels_lookup errors.403.fields); no report data. `resetsOn` is the end of the
+ * billing month as an ISO-8601 timestamp; the page formats it.
+ */
+export const reportLimitReached = (reportsLimit: number, resetsOn: string) =>
+  err('REPORT_LIMIT_REACHED', 'The monthly report limit is reached', 403, { reportsLimit, resetsOn });
+
+/**
  * 429 with `Retry-After` header per RFC 6585. The value is the lower bound
  * in seconds before the client may retry — `withRateLimit` doesn't expose
  * a precise reset time, so we use a conservative 60s default that matches
