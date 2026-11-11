@@ -1,0 +1,23 @@
+MF-57/MF-38 follow-ups (operator 2026-11-11 "y to all as built"): red run of the edited locks on base d618d86e8 + prereg 0be097f1c, before the code change.
+Command: npx vitest run src/tests/surfaces/report-page.logic.test.ts src/tests/surfaces/report-page.ui.test.tsx
+
+   × P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture > D-J: every tile value bound to an area field has its unit as its own value part on the same field and rule (no screen maths) 2ms
+   × P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture > D-J: the producer sends the number and the unit as two server-formatted strings; the page shows each as sent 3ms
+   × P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture > D-K: the table marks exactly the lot-size box and the sheet as drawn only where details is collapsed (a closed layout value) 1ms
+   × P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture > D-K: expanded rows (admin, pdf) leave out the lot-size box and the sheet; collapsed rows (mobile, web) keep them; no target is named 1ms
+   × P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture > D-K: a table details value outside the layout closed set throws RR-PAGE 12ms
+   × P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture > MF-38: no option carries a pending caption part; B4 is listed owed (the reused figure, its caption default and the owed signed-URL read) 0ms
+   × the 2026-11-11 rulings on the v21 page > mobile: D-J the size number and its unit are two parts on one line, the unit in the smaller v21 unit style 14ms
+   × the 2026-11-11 rulings on the v21 page > mobile: MF-38 empty state, no signed URL yet: no figure, no caption, no "Illustration" chip 8ms
+   × the 2026-11-11 rulings on the v21 page > web: D-J the size number and its unit are two parts on one line, the unit in the smaller v21 unit style 5ms
+   × the 2026-11-11 rulings on the v21 page > web: MF-38 empty state, no signed URL yet: no figure, no caption, no "Illustration" chip 5ms
+   × the 2026-11-11 rulings on the v21 page > admin: D-J the size number and its unit are two parts on one line, the unit in the smaller v21 unit style 12ms
+   × the 2026-11-11 rulings on the v21 page > admin: D-K the lot-size box and the sheet follow the layout row (expanded) 5ms
+   × the 2026-11-11 rulings on the v21 page > admin: MF-38 empty state, no signed URL yet: no figure, no caption, no "Illustration" chip 6ms
+   × the 2026-11-11 rulings on the v21 page > pdf: D-J the size number and its unit are two parts on one line, the unit in the smaller v21 unit style 5ms
+   × the 2026-11-11 rulings on the v21 page > pdf: D-K the lot-size box and the sheet follow the layout row (expanded) 5ms
+   × the 2026-11-11 rulings on the v21 page > pdf: MF-38 empty state, no signed URL yet: no figure, no caption, no "Illustration" chip 6ms
+   × the 2026-11-11 rulings on the v21 page > MF-38: an option image renders the reused ReportView figure inside that option picture box, caption from the image item 10ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  2 failed (2)
+      Tests  17 failed | 48 passed (65)

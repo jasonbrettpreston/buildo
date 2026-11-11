@@ -159,6 +159,10 @@
     {
       "id": "fe.33",
       "section": "rules"
+    },
+    {
+      "id": "fe.34",
+      "section": "rules"
     }
   ],
   "rules": [
@@ -523,6 +527,17 @@
         "register": true,
         "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
         "anchor": "FE-33"
+      }
+    },
+    {
+      "id": "FE-34",
+      "kind": "fe-row",
+      "status": "active",
+      "handbook_line": "fe.34",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-34"
       }
     }
   ]

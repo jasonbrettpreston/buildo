@@ -8,21 +8,25 @@
     "page": "v21",
     "synthetic": true,
     "values": {
-      "o1.size.value": "2,670 sq ft",
+      "o1.size.value": "2,670",
+      "o1.size.unit": "sq ft",
       "o1.size.m2": "248 m²",
       "o1.row.max": "2,670 sq ft (248 m²)",
       "o1.row.storeys": "3",
       "o1.row.footprint": "1,292 sq ft (120 m²)",
       "o1.row.homes": "1",
-      "o2.size.value": "2,885 sq ft",
+      "o2.size.value": "2,885",
+      "o2.size.unit": "sq ft",
       "o2.size.m2": "268 m²",
       "o2.row.max": "2,885 sq ft (268 m²)",
       "o2.row.storeys": "3",
       "o2.row.footprint": "1,292 sq ft (120 m²)",
       "o2.row.homes": "1",
-      "o3.size.value": "4,435 sq ft",
+      "o3.size.value": "4,435",
+      "o3.size.unit": "sq ft",
       "o3.size.m2": "412 m²",
-      "o3.unit.value": "739 sq ft",
+      "o3.unit.value": "739",
+      "o3.unit.unit": "sq ft",
       "o3.unit.m2": "69 m²",
       "o3.row.max": "4,435 sq ft (412 m²)",
       "o3.row.units": "6",
@@ -84,13 +88,6 @@
             "text": "not yet estimated"
           },
           {
-            "role": "picture.caption",
-            "brief": "B4",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
-          },
-          {
             "role": "spec_label",
             "brief": "B5",
             "kind": "content",
@@ -125,7 +122,16 @@
             "field": "gfa_pitched_m2",
             "key": "o1.size.value",
             "rule": "area_sqft",
-            "text": "2,670 sq ft"
+            "text": "2,670"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
           },
           {
             "role": "size.m2",
@@ -655,13 +661,6 @@
             "text": "not yet estimated"
           },
           {
-            "role": "picture.caption",
-            "brief": "B4",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
-          },
-          {
             "role": "spec_label",
             "brief": "B5",
             "kind": "content",
@@ -696,7 +695,16 @@
             "field": "gfa_flat_m2",
             "key": "o2.size.value",
             "rule": "area_sqft",
-            "text": "2,885 sq ft"
+            "text": "2,885"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
           },
           {
             "role": "size.m2",
@@ -1193,13 +1201,6 @@
             "text": "not yet estimated"
           },
           {
-            "role": "picture.caption",
-            "brief": "B4",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
-          },
-          {
             "role": "spec_label",
             "brief": "B5",
             "kind": "content",
@@ -1234,7 +1235,16 @@
             "field": "gfa_max_m2",
             "key": "o3.size.value",
             "rule": "area_sqft",
-            "text": "4,435 sq ft"
+            "text": "4,435"
+          },
+          {
+            "role": "size.unit",
+            "brief": "B6",
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
           },
           {
             "role": "size.m2",
@@ -1329,7 +1339,16 @@
             "field": "unit_area_m2",
             "key": "o3.unit.value",
             "rule": "area_sqft",
-            "text": "739 sq ft"
+            "text": "739"
+          },
+          {
+            "role": "unit.unit",
+            "brief": "B8",
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.unit",
+            "rule": "area_sqft",
+            "text": "sq ft"
           },
           {
             "role": "unit.m2",
@@ -1944,14 +1963,14 @@
     ]
   },
   "fingerprint": {
-    "response_fixture": "20cb28202b0b108a",
+    "response_fixture": "23861442812ce15d",
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
       "scripts/surfaces/_schema/report-presentation.json": "4be73a0159502365",
       "scripts/surfaces/_schema/report-tree.schema.json": "536e323ffd531d98",
       "scripts/surfaces/_schema/report-v2.decl.json": "104b8bf064956c8e",
-      "scripts/surfaces/_schema/report-page.json": "b3580ca51e61ef95",
+      "scripts/surfaces/_schema/report-page.json": "030c601ad0852bbc",
       "scripts/surfaces/_schema/report-page.schema.json": "77977c56590697d6"
     }
   }

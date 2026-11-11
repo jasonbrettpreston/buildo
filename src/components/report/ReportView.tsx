@@ -37,11 +37,14 @@ const Slot = ({ s }: { s: ViewSlot }): ReactElement => (
 
 // MF-38 (Spec 126 11a.7 dated note 2026-11-11; O-1 b; plan D-5): the picked option's ONE image, a plain <img> with its alt and caption at the top of
 // the card, the same on every target (pdf included: no script island in a print row). No carousel, dots or swipe. The URL is the server-issued one.
-const Picture = ({ im }: { im: ViewImage }): ReactElement => (
-  <figure data-block="image" data-image-field={im.field} data-asset-id={im.asset_id} className="relative overflow-hidden rounded">
+// MF-38 follow-up (operator 2026-11-11, "y to all as built"): the SAME figure fills the v21 option picture box of ReportPage (`fill`; no second
+// picture part). There the caption sits on the dark frame report-outer in the named report colour report-soft (#8f8f99 on #141417, 5.7:1, WCAG 2.1
+// SC 1.4.3; text-gray-600 there is 2.4:1). In the card on the light admin preview the caption keeps text-gray-600 (report-soft on white is 3.2:1).
+export const Picture = ({ im, fill = false }: { im: ViewImage; fill?: boolean }): ReactElement => (
+  <figure data-block="image" data-image-field={im.field} data-asset-id={im.asset_id} className={fill ? 'absolute inset-0 m-0 flex flex-col overflow-hidden bg-report-outer' : 'relative overflow-hidden rounded'}>
     {/* eslint-disable-next-line @next/next/no-img-element -- plan D-5: a native img (signed URL, print row); next/image would add a loader to the pdf row */}
-    <img src={im.src} alt={im.alt} className="block h-auto w-full" />
-    <figcaption className="text-xs text-gray-600">{im.caption}</figcaption>
+    <img src={im.src} alt={im.alt} className={fill ? 'block min-h-0 w-full flex-1 object-cover' : 'block h-auto w-full'} />
+    <figcaption className={fill ? 'self-end px-4 py-1 text-xs text-report-soft' : 'text-xs text-gray-600'}>{im.caption}</figcaption>
   </figure>
 );
 

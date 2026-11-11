@@ -209,7 +209,68 @@ describe('P3 pageViewOf: the layout row', () => {
     it(`${t}: the view carries the target's layout row`, () => {
       const v = pageViewOf(golden(t).rendered_tree, { target: t }, reportCtx) as Json;
       expect(v.layout).toEqual((reportCtx.layout as Json).targets[t]);
-      expect(v.sections.length).toBe(golden(t).rendered_tree.sections.length);
+      // D-K: a section the page table marks with a `details` value is drawn only on rows with that value; every other section is kept, in order.
+      const only = new Map((table().sections as Json[]).filter((s) => s.details !== undefined).map((s) => [s.id, s.details]));
+      const kept = (golden(t).rendered_tree.sections as Json[]).filter((s) => !only.has(s.id) || only.get(s.id) === v.layout.details);
+      expect(v.sections).toEqual(kept);
     });
   }
+});
+
+// MF-57 and MF-38 follow-ups (operator 2026-11-11, verbatim "y to all as built"; record ~/Buildo-scratch/mcfrontend/MF-57/decisions.md bottom).
+describe('P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture', () => {
+  const options = (): Json[] => (table().sections as Json[]).filter((s) => s.kind === 'option');
+  it('D-J: every tile value bound to an area field has its unit as its own value part on the same field and rule (no screen maths)', () => {
+    let n = 0;
+    for (const s of options()) for (const pre of ['size', 'unit']) {
+      const v = (s.parts as Json[]).find((p) => p.role === `${pre}.value`);
+      if (!v || v.field === undefined) continue;
+      const u = (s.parts as Json[]).find((p) => p.role === `${pre}.unit`) as Json;
+      expect(u, `${s.id} ${pre}.unit`).toBeDefined();
+      expect([u.field, u.rule, u.brief]).toEqual([v.field, v.rule, v.brief]);
+      expect(u.key).toBe(`${s.id}.${pre}.unit`);
+      n += 1;
+    }
+    expect(n).toBe(4); // o1 size, o2 size, o3 size, o3 size per unit
+  });
+  it('D-J: the producer sends the number and the unit as two server-formatted strings; the page shows each as sent', () => {
+    const tree = buildPage(response(), reportCtx);
+    const pv = parts(tree).filter((p) => /[.](size|unit)[.](value|unit)$/.test(String(p.key)));
+    expect(pv.length).toBe(8);
+    for (const p of pv) {
+      expect(p.text, p.key).toBe(response().values[p.key]);
+      if (String(p.key).endsWith('.unit')) expect(p.text).toBe('sq ft');
+      else expect(p.text.includes('sq ft'), p.key).toBe(false);
+    }
+  });
+  it('D-K: the table marks exactly the lot-size box and the sheet as drawn only where details is collapsed (a closed layout value)', () => {
+    const marked = (table().sections as Json[]).filter((s) => s.details !== undefined).map((s) => [s.kind, s.details]);
+    expect(marked).toEqual([['lot_size', 'collapsed'], ['sheet', 'collapsed']]);
+    for (const [, d] of marked) expect((reportCtx.layout as Json).closed.details).toContain(d);
+  });
+  it('D-K: expanded rows (admin, pdf) leave out the lot-size box and the sheet; collapsed rows (mobile, web) keep them; no target is named', () => {
+    for (const t of TARGETS as string[]) {
+      const v = pageViewOf(golden(t).rendered_tree, { target: t }, reportCtx) as Json;
+      const kinds = (v.sections as Json[]).map((s) => s.kind);
+      const expanded = (reportCtx.layout as Json).targets[t].details === 'expanded';
+      expect(kinds.includes('lot_size'), t).toBe(!expanded);
+      expect(kinds.includes('sheet'), t).toBe(!expanded);
+    }
+    const c = clone(reportCtx) as Json;
+    c.layout.targets.web.details = 'expanded'; // the layout row decides, not the target name
+    expect((pageViewOf(golden('web').rendered_tree, { target: 'web' }, c).sections as Json[]).some((s) => s.kind === 'lot_size')).toBe(false);
+  });
+  it('D-K: a table details value outside the layout closed set throws RR-PAGE', () => {
+    const c = clone(reportCtx) as Json;
+    ((c.page.sections as Json[]).find((s) => s.kind === 'sheet') as Json).details = 'folded';
+    expect(has(problemsOf(() => pageViewOf(golden('web').rendered_tree, { target: 'web' }, c)), 'RR-PAGE sheet: details folded')).toBe(true);
+  });
+  it('MF-38: no option carries a pending caption part; B4 is listed owed (the reused figure, its caption default and the owed signed-URL read)', () => {
+    for (const s of options()) expect((s.parts as Json[]).some((p) => p.role === 'picture.caption' || p.brief === 'B4'), s.id).toBe(false);
+    expect((table().kinds as Json).option).not.toContain('picture.caption');
+    const b4 = (table().owed as Json[]).find((x) => x.brief === 'B4') as Json;
+    expect(b4, 'B4 owed').toBeDefined();
+    for (const w of ['MF-44', 'MF-22', 'caption_default']) expect(String(b4.why)).toContain(w);
+    expect(String(reportCtx.content.illustrations.caption_default)).toBe('Illustrative — not this lot');
+  });
 });

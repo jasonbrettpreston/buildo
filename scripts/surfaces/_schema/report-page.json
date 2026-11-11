@@ -1,5 +1,5 @@
 {
-  "$comment": "MF-57 · THE v21 report page table (approved mock v21, oq:866-869; binding brief fields/REPORT-LAYOUT-BRIEF-v4.md). Sections in the brief screen order; each part is ONE shown text with ONE binding: `field` (a declared report-v2.decl.json field; the producer sends its server-formatted text under `key`, R17/FE-05), `content` (a key of report-presentation.json `page`), or `pending` (Q-G4 a: the ruled text, no value; `why` names the brief status or the open item that blocks it). Read by src/lib/surfaces/report/core.ts buildPage; locked by src/tests/surfaces/report-page.logic.test.ts. No field is invented; an undeclared field is pending and listed.",
+  "$comment": "MF-57 · THE v21 report page table (approved mock v21, oq:866-869; binding brief fields/REPORT-LAYOUT-BRIEF-v4.md). Sections in the brief screen order; each part is ONE shown text with ONE binding: `field` (a declared report-v2.decl.json field; the producer sends its server-formatted text under `key`, R17/FE-05), `content` (a key of report-presentation.json `page`), or `pending` (Q-G4 a: the ruled text, no value; `why` names the brief status or the open item that blocks it). Read by src/lib/surfaces/report/core.ts buildPage; locked by src/tests/surfaces/report-page.logic.test.ts. No field is invented; an undeclared field is pending and listed. Dated 2026-11-11 (operator \"y to all as built\"): D-J a tile area value is two value parts, the number (`<tile>.value`) and its unit (`<tile>.unit`), both server-formatted under their own keys; D-K a section with `details` is drawn only on layout rows (report-layout.json) whose `details` equals it (the lot-size box and the sheet: collapsed rows only); MF-38 the picture is the reused figure, B4 listed owed.",
   "layout": "v21",
   "pending_texts": {
     "estimated": "pending.estimated",
@@ -16,6 +16,10 @@
     }
   ],
   "owed": [
+    {
+      "brief": "B4",
+      "why": "picture and its caption: the reused MF-38 figure (src/components/report/ReportView.tsx Picture) inside the option picture box, caption in report-soft (operator 2026-11-11 \"y to all as built\", MF-38 ruling; WCAG 2.1 SC 1.4.3). The image item is the declared field card_image (content:illustrations; caption from content.illustrations.caption_default \"Illustrative — not this lot\", which replaces the v21 \"Illustration\" chip and closes brief v4 open item 5) with a URL from the server read that signs image URLs (MF-44 / MF-22), owed; until then the ruled empty state: no figure and no caption (MF-38: empty is nothing)"
+    },
     {
       "brief": "C2",
       "why": "after-entry line: shows the stored user lot size (MF-19 input); no entry in the synthetic golden"
@@ -52,12 +56,12 @@
     "option": [
       "label",
       "title",
-      "picture.caption",
       "spec_label",
       "size.badge",
       "size.label",
       "size.sub",
       "size.value",
+      "size.unit",
       "size.m2",
       "size.button",
       "size.count",
@@ -98,6 +102,7 @@
       "unit.label",
       "unit.sub",
       "unit.value",
+      "unit.unit",
       "unit.m2"
     ],
     "lot_size": [
@@ -180,12 +185,6 @@
           "why": "display_label: declared slot, values owed"
         },
         {
-          "role": "picture.caption",
-          "brief": "B4",
-          "pending": "estimated",
-          "why": "open item 19 (caption \"Illustration\" vs \"Illustrative — not this lot\", C13)"
-        },
-        {
           "role": "spec_label",
           "brief": "B5",
           "content": "spec.label"
@@ -212,6 +211,13 @@
           "field": "gfa_pitched_m2",
           "rule": "area_sqft",
           "key": "o1.size.value"
+        },
+        {
+          "role": "size.unit",
+          "brief": "B6",
+          "field": "gfa_pitched_m2",
+          "rule": "area_sqft",
+          "key": "o1.size.unit"
         },
         {
           "role": "size.m2",
@@ -605,7 +611,8 @@
           "brief": "C1",
           "content": "ls.button"
         }
-      ]
+      ],
+      "details": "collapsed"
     },
     {
       "kind": "option",
@@ -629,12 +636,6 @@
           "brief": "B3",
           "pending": "estimated",
           "why": "open item 19 (\"Most space\" wording, W6); a detached-only headline flag is owed from the server (is_headline can land on the houseplex; the ★ is for the detached roofs only, oq:741); never computed on screen"
-        },
-        {
-          "role": "picture.caption",
-          "brief": "B4",
-          "pending": "estimated",
-          "why": "open item 19 (caption \"Illustration\" vs \"Illustrative — not this lot\", C13)"
         },
         {
           "role": "spec_label",
@@ -663,6 +664,13 @@
           "field": "gfa_flat_m2",
           "rule": "area_sqft",
           "key": "o2.size.value"
+        },
+        {
+          "role": "size.unit",
+          "brief": "B6",
+          "field": "gfa_flat_m2",
+          "rule": "area_sqft",
+          "key": "o2.size.unit"
         },
         {
           "role": "size.m2",
@@ -1050,12 +1058,6 @@
           "why": "display_label values owed; open item 7; the count must be unit_count (units that fit), not units_max (brief v4 review HIGH b)"
         },
         {
-          "role": "picture.caption",
-          "brief": "B4",
-          "pending": "estimated",
-          "why": "open item 19 (caption \"Illustration\" vs \"Illustrative — not this lot\", C13)"
-        },
-        {
           "role": "spec_label",
           "brief": "B5",
           "content": "spec.label"
@@ -1082,6 +1084,13 @@
           "field": "gfa_max_m2",
           "rule": "area_sqft",
           "key": "o3.size.value"
+        },
+        {
+          "role": "size.unit",
+          "brief": "B6",
+          "field": "gfa_max_m2",
+          "rule": "area_sqft",
+          "key": "o3.size.unit"
         },
         {
           "role": "size.m2",
@@ -1158,6 +1167,13 @@
           "field": "unit_area_m2",
           "rule": "area_sqft",
           "key": "o3.unit.value"
+        },
+        {
+          "role": "unit.unit",
+          "brief": "B8",
+          "field": "unit_area_m2",
+          "rule": "area_sqft",
+          "key": "o3.unit.unit"
         },
         {
           "role": "unit.m2",
@@ -1635,7 +1651,8 @@
           "brief": "H0",
           "content": "sheet.cancel"
         }
-      ]
+      ],
+      "details": "collapsed"
     }
   ]
 }

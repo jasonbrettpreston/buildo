@@ -281,7 +281,9 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
 export interface PagePart { role: string; brief: string; kind: 'value' | 'content' | 'pending'; field?: string; key?: string; rule?: string; content?: string; pending?: string; text: string }
 export interface PageSection { kind: string; id: string; brief?: string; scenario?: string; ad?: ReportSlot; parts: PagePart[] }
 export interface PageTree { page: string; sections: PageSection[] }
-export interface PageView { target: string; layout: Json; sections: PageSection[] }
+// MF-38 follow-up (operator 2026-11-11, "y to all as built"): `images` maps a scenario key to that option's one image (the MF-38 view image, its URL
+// injected, never in the tree). The server read that signs image URLs is owed (MF-44 / MF-22), so pageViewOf sets none yet: the ruled empty state.
+export interface PageView { target: string; layout: Json; sections: PageSection[]; images?: Record<string, ViewImage> }
 
 const AD_KIND_SECTION = 'ad';
 const PAGE_RESPONSE_KEYS = ['page', 'synthetic', 'values', 'hidden', 'not_evaluated'];
@@ -432,9 +434,14 @@ export const assertPage = (tree: Json, ctx: ReportCtx): void => {
 };
 
 // The projection: the page tree plus the target's layout row. The target is checked first, then the tree.
+// D-K (operator 2026-11-11, "y to all as built"): a page-table section that names `details` is drawn only on layout rows whose `details` equals it
+// (the lot-size box and the Add lot size sheet: collapsed rows only, so admin and pdf print no inert input). Data, not a target name.
 export const pageViewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
   const row = ctx.layout.targets[pick.target];
   if (typeof pick.target !== 'string' || !Object.prototype.hasOwnProperty.call(ctx.layout.targets, pick.target) || !row) throw new ReportRenderError([`RR-TARGET ${String(pick.target)}: not a key of the layout table`]);
   assertPage(tree, ctx);
-  return { target: pick.target, layout: row, sections: tree.sections };
+  const only = new Map<string, unknown>(((ctx.page as Json).sections as Json[]).filter((s) => s.details !== undefined).map((s) => [String(s.id), s.details]));
+  const bad = [...only].filter(([, d]) => !(ctx.layout.closed?.details ?? []).includes(d)).map(([id, d]) => `RR-PAGE ${id}: details ${String(d)} is not a layout details value`);
+  if (bad.length) throw new ReportRenderError(bad);
+  return { target: pick.target, layout: row, sections: (tree.sections as Json[]).filter((s) => !only.has(s.id) || only.get(s.id) === row.details) };
 };

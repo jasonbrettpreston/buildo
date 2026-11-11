@@ -8,8 +8,9 @@
 // pending text in its own slot in one muted style (data-pending). Colours are the named report-* theme colours (ruling 1 a); geometry is in
 // class strings (the FE-05 lock bans number literals here). The one client island is ReportPageToggles (UI state only).
 import type { ReactElement } from 'react';
-import type { PagePart, PageSection, PageView } from '../../lib/surfaces/report/core';
+import type { PagePart, PageSection, PageView, ViewImage } from '../../lib/surfaces/report/core';
 import { ReportPageToggles } from './ReportPageToggles';
+import { Picture } from './ReportView';
 
 type Part = PagePart | undefined;
 // Important (trailing !): in Tailwind 4 the stylesheet order, not the class order, decides, so the slot's own type would otherwise win (design seat fold 1).
@@ -66,7 +67,11 @@ const Tile = ({ s, pre, panelId, open, wide = false }: { s: PageSection; pre: st
       <T p={one(s, `${pre}.label`)} />
       <T p={one(s, `${pre}.sub`)} className="text-[12px]/[16px] font-normal text-report-quiet" />
     </div>
-    <T p={one(s, `${pre}.value`)} as="div" className="mt-2 text-[26px]/[30px] font-bold tracking-[-0.01em] tabular-nums" />
+    {/* D-J (operator 2026-11-11): the number and its unit are two server-formatted parts; the unit takes the smaller v21 unit style (13/18, report-dim). */}
+    <div className="mt-2 text-[26px]/[30px] font-bold tracking-[-0.01em] tabular-nums">
+      <T p={one(s, `${pre}.value`)} />
+      {one(s, `${pre}.unit`) ? <>{' '}<T p={one(s, `${pre}.unit`)} className="text-[13px]/[18px] font-semibold tracking-normal text-report-dim" /></> : null}
+    </div>
     <T p={one(s, `${pre}.m2`) ?? one(s, `${pre}.rate`)} as="div" className="text-[12px]/[16px] text-report-quiet" />
     {panelId ? <PanelButton panelId={panelId} see={one(s, `${pre}.button`)} hide={one(s, `${pre}.panel.hide`)} count={one(s, `${pre}.count`)} open={open} /> : null}
   </div>
@@ -108,20 +113,22 @@ const QA = ({ children, labelId }: { children: ReactElement[]; labelId: string }
   <section aria-labelledby={labelId} className="relative grid gap-[10px] rounded-xl border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]">{children}</section>
 );
 
-const Option = ({ s, open }: { s: PageSection; open: boolean }): ReactElement => {
+const Option = ({ s, open, image }: { s: PageSection; open: boolean; image: ViewImage | undefined }): ReactElement => {
   const id = (x: string): string => `${s.id}-${x}`;
   const how = one(s, 'bigger.how');
   return (
     <article data-section="option" data-scenario={s.scenario} aria-labelledby={id('t')} className="grid gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-3">
       <div className="grid gap-3 pb-[14px]">
-        <div className="relative h-60 overflow-hidden rounded-[14px] bg-[linear-gradient(0deg,var(--color-report-line)_0_20%,var(--color-report-sky)_20%)]">
+        {/* MF-38 follow-up (operator 2026-11-11): the option's one image is the reused ReportView figure filling this box; with no signed URL yet
+            (MF-44 / MF-22) nothing is drawn in it: no figure, no caption (the ruled empty state). */}
+        <div data-picture className="relative h-60 overflow-hidden rounded-[14px] bg-[linear-gradient(0deg,var(--color-report-line)_0_20%,var(--color-report-sky)_20%)]">
+          {image ? <Picture im={image} fill /> : null}
           <div aria-hidden="true" className="absolute inset-0 z-[1] bg-[linear-gradient(0deg,transparent_50%,var(--color-report-shade)_100%)]" />
           <div className="absolute left-4 right-4 top-[14px] z-[2]">
             <T p={one(s, 'label')} as="div" className="text-[14px]/[18px] font-bold uppercase tracking-[.1em] text-report-option-label" />
             <T p={one(s, 'title')} as="h2" id={id('t')} className="mb-0 mt-1 text-[22px]/[28px] font-bold text-report-ink [text-wrap:balance]" />
           </div>
           <T p={one(s, 'tag')} className="absolute bottom-3 left-4 z-[2] rounded-full bg-report-sky px-2 py-[2px] text-[12px]/[18px] font-semibold text-report-ink shadow-[0_0_0_1px_var(--color-report-line)]" />
-          <T p={one(s, 'picture.caption')} className="absolute bottom-[15px] right-4 z-[2] rounded bg-report-chip px-2 py-[2px] text-[11px]/[16px] text-report-muted" />
         </div>
         <T p={one(s, 'spec_label')} as="div" className="mx-[2px] mb-2 mt-[2px] text-[11px]/[14px] font-semibold uppercase tracking-[.08em] text-report-soft" />
         <div className="mx-[2px] grid grid-cols-[repeat(2,minmax(0,1fr))] gap-[10px] px-[2px]">
@@ -166,14 +173,14 @@ const Option = ({ s, open }: { s: PageSection; open: boolean }): ReactElement =>
 
 const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2" id={id} className="mb-[10px] mt-0 text-[20px]/[26px] font-bold" />;
 
-const Section = ({ s, open }: { s: PageSection; open: boolean }): ReactElement | null => {
+const Section = ({ s, open, images }: { s: PageSection; open: boolean; images: PageView['images'] }): ReactElement | null => {
   switch (s.kind) {
     case 'title':
       return <header data-section="title"><T p={one(s, 'title')} as="h1" className="m-0 text-[28px]/[34px] font-bold tracking-[-0.02em]" /></header>;
     case 'address':
       return <div data-section="address" className="-mt-4"><T p={one(s, 'address')} as="div" className="text-[18px]/[24px] font-semibold" /></div>;
     case 'option':
-      return <Option s={s} open={open} />;
+      return <Option s={s} open={open} image={s.scenario !== undefined ? images?.[s.scenario] : undefined} />;
     case 'lot_size':
       return (
         <section data-section="lot_size" aria-labelledby="report-ls-t" className="grid gap-[10px] rounded-[14px] bg-report-card px-6 py-4">
@@ -259,7 +266,7 @@ export function ReportPage({ view }: { view: PageView }): ReactElement {
   return (
     <ReportPageToggles>
       <div data-report-page data-target={view.target} data-details={view.layout.details} className="mx-auto grid max-w-[430px] gap-6 bg-report-page px-4 pb-14 pt-4 font-sans text-[16px]/[24px] text-report-ink">
-        {view.sections.map((s) => <Section key={s.id} s={s} open={open} />)}
+        {view.sections.map((s) => <Section key={s.id} s={s} open={open} images={view.images} />)}
       </div>
     </ReportPageToggles>
   );
