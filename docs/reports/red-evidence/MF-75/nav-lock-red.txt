@@ -1,0 +1,25 @@
+MF-75 navigation lock red evidence (src/tests/surfaces/nav-by-route.logic.test.ts), 2026-11-11, base 9160fb4db (origin/wf1/mb-rulings 6b5ef8e22 + the two restacked rulings commits).
+Operator 2026-11-11: "yes" (the lock lands now with the six audited violations as named exceptions tied to MF-46, MF-48/MF-74, MF-49).
+
+RED 1: the audit #15 exception entry (sign-in Continue with Email, setMode('email'), owed MF-49) removed from ALLOW; real tree unchanged:
+   × NAV lock: the real tree > every finding is explained by an allow-list entry, and every entry matches exactly its count (a stale entry fails) 301ms
+     → expected { …(2) } to deeply equal { unexplained: [], miscounted: [] }
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/surfaces/nav-by-route.logic.test.ts > NAV lock: the real tree > every finding is explained by an allow-list entry, and every entry matches exactly its count (a stale entry fails)
+AssertionError: expected { …(2) } to deeply equal { unexplained: [], miscounted: [] }
+-   "unexplained": Array [],
++   "unexplained": Array [
++     "mobile/app/(auth)/sign-in.tsx:509 NAV-1 Pressable#email-button setMode('email')",
+      Tests  1 failed | 38 skipped (39)
+
+RED 2: audit #22 fixed in the tree (sign-up 'Sign in' Pressable given accessibilityRole and accessibilityLabel) while its exception entry stays; the stale entry fails:
+   × NAV lock: the real tree > every finding is explained by an allow-list entry, and every entry matches exactly its count (a stale entry fails) 297ms
+     → expected { unexplained: [], …(1) } to deeply equal { unexplained: [], miscounted: [] }
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected { unexplained: [], …(1) } to deeply equal { unexplained: [], miscounted: [] }
+-   "miscounted": Array [],
++   "miscounted": Array [
++     "mobile/app/(auth)/sign-up.tsx | NAV-3 | Pressable | router.replace('/(auth)/sign-in') (no role): expected 1, found 0",
+      Tests  1 failed | 39 skipped (40)
+
+Both edits were reverted; the lock is green on the unmodified tree (40 tests at red time; 43 after the OUTPUT panel folds added three planted cases). In-file proofs: one RED case per exception entry (removal -> unexplained finding), a stale-entry case, an exact-count case, 16 planted faults over NAV-1..NAV-6 (13 before the panel folds) with 10 passing siblings, plants in copies of the real LoginForm.tsx (NAV-1) and confirm.tsx (NAV-3), and the on-disk walk and NOT_YET guard.

@@ -1,0 +1,14 @@
+{
+  "task": "MF-75",
+  "item": "The navigation lock: src/tests/surfaces/nav-by-route.logic.test.ts (NAV-1..NAV-6) with the six audited violations as named exceptions owed by MF-46, MF-48/MF-74 and MF-49; Spec 126 section 0b item 11 \"Navigation is a route\"",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "19042fb41",
+  "cards": [
+    "Operator 2026-11-11: \"with impeccable review - can we ensuring all novaigation buttons use actual components or router pushes rather than local state toggles\".",
+    "Operator 2026-11-11: \"yes\" (the lock now with the six violations as named exceptions tied to MF-46, MF-48/MF-74, MF-49; \"Navigation is a route\" into Spec 126 section 0b)."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md (Proposed LOCK; Where the rule goes in Spec 126), ruled by the operator's \"yes\". Docs commit c663a0401 (Spec 126 section 0b item 11, section 5.3 item 5 cross-reference, queue row MF-75); prereg MF-75-1 (round 156) 19042fb41 committed alone; red first: docs/reports/red-evidence/MF-75/nav-lock-red.txt (an exception entry removed -> unexplained finding; a fixed control with its entry kept -> stale entry).",
+  "output": "OUTPUT panel (Spec 08 smallest: code-reviewer-grounded + regression-guardian) on the uncommitted lock over 19042fb41. code-reviewer-grounded: APPROVE WITH LOWS; 40/40 green, lint and typecheck clean; allow-list = exactly audit #3 (two rules), #15, #16, #22, #29, #30 with matching owners; 23 bypass probes. Two MED false negatives FOLDED: NAV-1 now also reads `if (x === 'lit') return <jsx>` as a discriminant; NAV-6 now also covers a, div, span and li with an imperative router push; three planted cases added (43/43 green, real tree unchanged). LOWs folded: the unused sf parameters and the test-file exports removed; the Spec 126 note now says the tab-switch and Stripe sentences are convention, not lock-checked. LOWs recorded, not folded: one-hop helper calls inside an inline handler, a router under another name or destructured push, href += / element-access location / window.open, non-literal setter arguments, NAV-5 needing canGoBack inside the handler, a spread-supplied label. regression-guardian: PASS WITH LOWS; the two rulings re-makes are patch-id identical to f67a790ab and 69aef2718; Spec 126 and the queue edits keep prior text (M-246); no existing lock weakened; 40 files / 961 tests green. LOWs: queue line 3 and the system map will conflict textually with wf1/mf62-1111, wf1/queue-owed-1111(b) and wf1/mf74-1111 (resolve to the highest next free id, keep every lane's dated note; regenerate the map); MF-75 is reserved by note only."
+}
