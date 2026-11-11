@@ -28,9 +28,10 @@ export const plainProblems = (v: unknown, at = '/'): string[] => {
 
 describe('T7 (a) the committed goldens equal a fresh build', () => {
   // MF-40 (2026-11-10): the builder covers the three admin placements surfaces too (17 + 17 = 34 web goldens; mobile_parcel_search is built by mobile jest).
-  it('34 goldens, byte for byte', () => {
+  // MF-44 (dated 2026-11-11): + the 10 web goldens of mobile_parcel_search (searchWebTree over the mobile golden's situation; 34 -> 44).
+  it('44 goldens, byte for byte', () => {
     const fresh = buildGoldens(ROOT);
-    expect(fresh.size).toBe(34);
+    expect(fresh.size).toBe(44);
     for (const [p, text] of fresh) expect([p, fs.readFileSync(path.join(ROOT, p), 'utf8') === text]).toEqual([p, true]);
   });
   it('RED: a hand edit of one golden differs from the fresh build', () => {

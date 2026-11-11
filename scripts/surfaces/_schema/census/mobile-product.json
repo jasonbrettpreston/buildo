@@ -6919,7 +6919,8 @@
       "files": [
         "mobile/app/(app)/parcel-tool/index.tsx:1",
         "mobile/src/lib/parcelSearchMatch.ts:1 — the match-type branch, extracted so it is testable without a renderer",
-        "mobile/src/constants/parcelSearch.ts:1 — config.debounce_ms / config.min_query_len / the candidate cap"
+        "mobile/src/constants/parcelSearch.ts:1 — config.debounce_ms / config.min_query_len / the candidate cap",
+        "src/app/(maxbld)/parcel-tool/page.tsx:1 — the web mount (MF-44): gate first, then SearchPageClient.tsx; no lookup request while the live switch is off"
       ],
       "contracts": [
         "mobile/src/hooks/useParcelLookup.ts:34 — fetchWithAuth(`/api/parcels/lookup?${qs}`)",
@@ -6949,7 +6950,8 @@
       "route": "mobile/app/(app)/parcel-tool/index.tsx",
       "archetype": "SEARCH",
       "platforms": [
-        "mobile"
+        "mobile",
+        "web"
       ],
       "owns": {
         "components": []

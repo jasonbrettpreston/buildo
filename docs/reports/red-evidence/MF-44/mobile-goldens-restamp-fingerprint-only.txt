@@ -1,0 +1,10 @@
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/error.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/loading.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/miss.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/redirect.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/static.mobile.json  fingerprint restamped
+IDENTICAL surface/state/target/covers/situation/props  src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.mobile.json  fingerprint restamped

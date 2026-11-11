@@ -1,0 +1,214 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "The one web SEARCH binding: SearchBinding.tsx maps a SEARCH situation to a props tree (refs only; the same blocks, refs and actions as the mobile binding) and renders it with the mapped Mantine parts (bindings.json mapping.web.SEARCH). It holds no display text of its own.",
+    "data_story": "It reads nothing itself: the mount file passes the situation, the content strings and the bound data.",
+    "under_126": "**PROMOTED BINDING ENTRY** (P42-D9 a; Spec 126 §11b.5, the first web consumer of SEARCH; MF-44 plan v2 §1 P1-P3): a platform_shared census entry that owns the binding module, so R-13 totality holds while the converted surfaces own no component."
+  },
+  "evidence": {
+    "files": [
+      "~/Buildo-scratch/mcfrontend/MF-44/plan.v2.md"
+    ],
+    "contracts": [
+      "contract_parcels_lookup"
+    ],
+    "tables": [],
+    "gate": [],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states"
+    ],
+    "emits": []
+  },
+  "identity": {
+    "id": "binding_web_search",
+    "archetype": "SEARCH",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/surfaces/web/SearchBinding.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3 dated note 2026-11-11 — MF-44, the web target of mobile_parcel_search through the one web SEARCH binding"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "A binding module has no wire contract of its own: its input is a props tree whose shape is pinned by the consuming surface's goldens (mobile_parcel_search, src/tests/fixtures/surfaces/mobile_parcel_search/*.web.json) and its output is library parts. A change shows up as a golden, parity or render-smoke failure of the consumer.",
+      "evidence": [
+        "src/tests/surfaces/admin-media.golden.test.ts — T7: the consumer web goldens equal a fresh build from searchWebTree",
+        "src/tests/surfaces/search-web-binding.ui.test.tsx — the web render smoke of every golden"
+      ]
+    },
+    "ref": "S-082"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "Descriptor, content and data arrive as props from the mount file.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A binding writes nothing; a form submit is handed back to the mount file.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a"
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store: the library component holds its own local UI state.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders what it is given.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "Its only consumer today is the MaxBLD web search page; each consumer declares its own guard.",
+      "evidence": [
+        "src/app/(maxbld)/parcel-tool/page.tsx — the mount file; require-parcel-tool-page.ts first"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "It renders lookup data the consumer reads through GET /api/parcels/lookup (parcels and address points, Class B) once the live switch is on; it reads no table itself.",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts — the route the consumer calls"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "list",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "binding_web_search_components_owned",
+      "kind": "components_owned",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The module is listed in bindings.json modules and owned by this entry (FE-31 C-3); a module nobody owns is a hand-built component."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "Errors belong to the consuming surface; the binding throws on a missing content key or an unknown widget so a gap is loud.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Rendering emits nothing.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Rendering is not a metered product action.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable of its own. The SEARCH profile requires debounce_ms and min_query_len, which have no \"none\" value: 0 states that the binding itself neither debounces nor gates on length. The consuming surface declares its own (mobile_parcel_search: 400 ms, 3 characters), applied by the mount when the live switch is on.",
+    "evidence": [
+      "src/components/surfaces/web/SearchBinding.tsx — no debounce or length gate of its own",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3"
+    ],
+    "debounce_ms": 0,
+    "min_query_len": 0
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Every converted web SEARCH surface (the parcel search page first).",
+    "evidence": [
+      "scripts/surfaces/_schema/bindings.json — modules"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "Only the props tree, content and data passed in."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [],
+  "interpretation": "none",
+  "notes": "MF-44 (operator \"01-a 0-2 b as long as they are complaint\"; Spec 126 §11b.5). Archetype SEARCH: the entry carries the archetype of the module it owns (MF-35 OUTPUT fold MEDIUM 3); the SEARCH-gated fields describe the consuming surface, not this binding, and are answered none with a why.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/components/surfaces/web/SearchBinding.tsx"
+    ],
+    "role": "shared",
+    "generated": "binding",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "B2",
+    "why": "Shared rendering infrastructure: the binding every converted web SEARCH surface renders through.",
+    "feature": "F14",
+    "build_order": 3145,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

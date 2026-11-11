@@ -1,0 +1,34 @@
+{
+  "task": "MF-44",
+  "item": "The MaxBLD web pages on synthetic goldens: the one web SEARCH binding (Spec 126 §11b.5) and the web target of mobile_parcel_search with parity to the mobile goldens (FE-07); the nested (maxbld)/parcel-tool layout; the web search page and the web report route behind a page-side sign-in and parcel_tool check; the live switch MAXBLD_WEB_LIVE off until MB-44 (no lookup request, no report charged; the report route not found for every lot).",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "106236634",
+  "cards": [
+    "Operator 2026-11-11: \"Build Mf-44 on synthetic goldens\" (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, bottom).",
+    "Operator 2026-11-11 (relayed by the coordinator): \"01-a 0-2 b as long as they are complaint\" (record ~/Buildo-scratch/mcfrontend/MF-44/DECISIONS.md): O-1 (a) the web SEARCH binding; O-2 (b) not found for every lot until the live switch, the web lookup off; every part compliant with its cited rule, checked by the OUTPUT panel.",
+    "Operator 2026-11-11 morning: \"also we should be building anything just using existing components\"."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-44/plan.md (sections 1, 2, 8 stand) and plan.v2.md (section 1: the compliance table P1-P17). PLAN panel ~/Buildo-scratch/mcfrontend/MF-44/panel/: code-reviewer-grounded APPROVE WITH FOLDS; regression-guardian APPROVE WITH FOLDS; Security (general-purpose) APPROVE WITH FOLDS; DeepSeek lens (deepseek-reasoner, rc 0) grounded by the lane. Main fold (all four seats): the lookup route charges a report inside the GET, so the web lookup sits on the same live switch as the report. Decisions O-1 and O-2 went to the operator and were ruled (cards).",
+  "output": "OUTPUT panel on the staged build at 106236634 (~/Buildo-scratch/mcfrontend/MF-44/panel-out/, brief BRIEF.md, diff staged.diff): code-reviewer-grounded PASS WITH FOLDS (P1-P17 all COMPLIANT; core move byte-identical over 169 cases; folds: test the fail-closed throw past the switch, a RED for the other parity direction, the FE-31 note promise); regression-guardian PASS WITH FOLDS (every altered file fenced: verbatim move, append-only bindings.json, fingerprint-only re-stamp, locks extended not loosened; folds: scan the binding and maxbld-web.ts for fetch/meter, a scheme lock per layout); Security and Compliance (general-purpose) PASS WITH FOLDS, P1-P17 all COMPLIANT, no STOP (folds F1 the MF-46 internal-prefix note, F2 the live-switch conditions, F3 an import-free lock on the core, F4 the login return path, F5 the Spec 33 cite, F7 the components clause, F8 the getClaims-throws row); DeepSeek lens (deepseek-reasoner, rc 0, panel-out/deepseek-lens.md) grounded by the lane: folded F11 (a thrown sign-in call goes to the error boundary, never a redirect) and F13 (the switch typed boolean); not folded with reason: F1/F3 (controls disabled while the switch is off is the ruled O-2 b), F2 (false: surface-goldens.ts imports searchWebTree), F8 (false: the address list renders only for text candidates, as on mobile), F5/F6/F18 (behaviour mirrors the MF-35 mobile renderer), F14/F19 (plan P12 order and contract reuse, security S-6). All folds applied before this commit.",
+  "seats": {
+    "code-reviewer-grounded": "PASS WITH FOLDS (panel-out/code-reviewer-grounded.md)",
+    "regression-guardian": "PASS WITH FOLDS (panel-out/regression-guardian.md)",
+    "security-compliance": "PASS WITH FOLDS, P1-P17 COMPLIANT, no STOP (panel-out/security-compliance.md)",
+    "deepseek-lens": "grounded by the lane (panel-out/deepseek-lens.md)"
+  },
+  "verdict": "PASS WITH FOLDS (folds applied)",
+  "blockers": [],
+  "followups": [
+    "Live switch row (MB-44): mobile_parcel_detail gains its web target and the v21 render on /parcel-tool/<lot>; the report meter on the web route (T13 gains it); same-site and no-prefetch metering on the cookie path (security S-5); one rate bucket parcels-lookup:{uid}; the mount passes its action callbacks; no navigation to the disambiguate ?q= path (MF-53 owns the map); the web no-plan and limit-reached report copy; the 25 golden lots on web (FE-25).",
+    "MF-46: parcel-tool is the one internal prefix (queue MF-46 dated note 2026-11-11); a neutral MaxBLD not-found text may replace the idle search page (security F6).",
+    "Spec 135: FE-35 reserved for MF-44 by the coordinator, unused (no register row, status or lock path change)."
+  ],
+  "evidence": [
+    "docs/reports/red-evidence/MF-44/red-1.txt",
+    "docs/reports/red-evidence/MF-44/mobile-goldens-restamp-fingerprint-only.txt",
+    "surface-validate --check: S-screen ok (7 surfaces, 54 goldens), S-sbind ok (7 surfaces, 155 strings)"
+  ],
+  "notes": "C-3 mounts are 14, not plan v2's first 12: the not-found and error boundaries are listed mounts too, so C-2 judges them (stricter). Base fa4fff51d (MF-45 final); prereg 142 at 106236634. Restacked 2026-11-11 onto origin wf1/mb-rulings e088bf072 (the MF-57/MF-38 follow-ups; shared files the queue, Spec 126 and the generated system map, which was regenerated), each commit re-made with real hooks. Old -> new: afa5b9b0d -> 3b11eb2f3 (queue note), 1f02d6070 -> b7d8485db (dated notes), 106236634 -> 692bee3dd (prereg, round 142), c1d34866f -> the build commit carrying this note. Commit messages keep the old ids."
+}

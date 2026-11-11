@@ -39,6 +39,7 @@
 
 import type { ParcelCandidate, ConsumerParcelLookupResult } from '@/lib/schemas';
 import { ApiError, RateLimitError } from '@/lib/errors';
+import { parcelSearchPath } from './parcelSearchCore';
 
 // ── The Toronto-only rule (operator ruling 2026-09-16 (b)) ──────────────────
 //
@@ -200,29 +201,14 @@ export function isOverCandidateCap(candidates: readonly ParcelCandidate[], cap: 
 }
 
 /**
- * Where each outcome navigates. Returning `null` means "render in place, do not navigate".
- *
- * `unique` pushes the detail route by path segment — `[parcelId].tsx` reads a PATH param via
- * `useLocalSearchParams`, so this must stay a path segment and must not be harmonised onto the
- * query-param style the `[lead]` / `[flight-job]` root routes use.
+ * Where each outcome navigates in the app. Returning `null` means "render in place, do not navigate".
+ * MF-44: the body moved verbatim to parcelSearchCore.ts (shared with the web SEARCH binding); the app's base is `/(app)/parcel-tool`.
  */
 export function parcelSearchRoute(
   outcome: ParcelSearchOutcome,
   args: { parcelId?: string | null; query: string },
 ): string | null {
-  switch (outcome) {
-    case 'unique':
-      return args.parcelId ? `/(app)/parcel-tool/${encodeURIComponent(args.parcelId)}` : null;
-    case 'multi_parcel':
-    case 'unlinked':
-    case 'intersection':
-      return `/(app)/parcel-tool/disambiguate?q=${encodeURIComponent(args.query.trim())}&kind=${outcome}`;
-    case 'text_candidates':
-    case 'no_match':
-    case 'outside_toronto':
-    case 'idle':
-      return null;
-  }
+  return parcelSearchPath(outcome, args, '/(app)/parcel-tool');
 }
 
 /**
@@ -266,31 +252,8 @@ export function activeParcelTab(pathname: string): ParcelTab {
   return 'lookup';
 }
 
-/** One run of address text, flagged for highlighting. */
-export type AddressSegment = { text: string; differs: boolean };
-
-/**
- * Split a candidate address into runs, flagging the part that DIFFERS from what the user typed —
- * the ruling's "differing part highlighted". A token the user already typed is not highlighted;
- * everything else is, which is what makes a list of near-identical addresses scannable.
- *
- * Whitespace is preserved as its own non-differing run so the rendered line reads normally.
- */
-export function diffCandidateAddress(query: string, address: string): AddressSegment[] {
-  const typed = new Set(
-    query
-      .toLowerCase()
-      .split(/[^a-z0-9]+/i)
-      .filter(Boolean),
-  );
-  if (!address) return [];
-  // Split into alternating word / separator runs so nothing is lost.
-  const runs = address.match(/[a-zA-Z0-9]+|[^a-zA-Z0-9]+/g) ?? [];
-  return runs.map((run) => {
-    const isWord = /[a-zA-Z0-9]/.test(run);
-    return { text: run, differs: isWord && !typed.has(run.toLowerCase()) };
-  });
-}
+// MF-44: AddressSegment and diffCandidateAddress moved verbatim to parcelSearchCore.ts (shared with the web SEARCH binding); re-exported here.
+export { diffCandidateAddress, type AddressSegment } from './parcelSearchCore';
 
 // ── MF-35: the search page's declared client derivations (programme D-7 "binding config, no server endpoint"; plan v2 §2.1) ──────────────
 // Pure helpers the screen feeds and the binding (mobile/src/components/surfaces/SearchBinding.tsx) reads. They carry the legacy rules of

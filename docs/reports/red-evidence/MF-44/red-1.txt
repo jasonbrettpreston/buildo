@@ -1,0 +1,14 @@
+MF-44 red-1: the three new lock files run on the build base 106236634 (the prereg commit; no MF-44 code), copied into a throwaway detached worktree, then removed.
+Command: npx vitest run src/tests/surfaces/search-parity.golden.test.ts src/tests/surfaces/search-web-binding.ui.test.tsx src/tests/maxbld-web-pages.logic.test.ts
+
+ FAIL  src/tests/maxbld-web-pages.logic.test.ts [ src/tests/maxbld-web-pages.logic.test.ts ]
+Error: Cannot find module '@/lib/auth/require-parcel-tool-page' imported from '<worktree>/src/tests/maxbld-web-pages.logic.test.ts'.
+     22| const log = vi.hoisted(() => ({ logInfo: vi.fn(), logError: vi.fn(), l…
+ FAIL  src/tests/surfaces/search-parity.golden.test.ts [ src/tests/surfaces/search-parity.golden.test.ts ]
+Error: ENOENT: no such file or directory, open '<worktree>/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.web.json'
+ FAIL  src/tests/surfaces/search-web-binding.ui.test.tsx [ src/tests/surfaces/search-web-binding.ui.test.tsx ]
+Error: Failed to resolve import "../../components/surfaces/web/SearchBinding" from "src/tests/surfaces/search-web-binding.ui.test.tsx". Does the file exist?
+ Test Files  3 failed (3)
+      Tests  no tests
+
+Green on the build tip: 3 files, 26 tests passed (6 + 9 + 11). The in-memory RED cases inside each file (planted parity changes, an unmapped component, a missing content key, an unresolved ref, an unknown action, each banned import form) pass on the tip, i.e. each plant is caught.

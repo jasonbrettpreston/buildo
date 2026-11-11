@@ -218,7 +218,9 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
     // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
     // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (7 surfaces, 44 goldens)' }, { findings: [], note: 'S-sbind ok (7 surfaces, 155 strings)' }]);
+    // MF-44 (dated 2026-11-11; operator "01-a 0-2 b as long as they are complaint"): mobile_parcel_search gains its web target, so its 10 web goldens
+    // join (44 -> 54); no content key is added (the web reads the same 23 strings).
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (7 surfaces, 54 goldens)' }, { findings: [], note: 'S-sbind ok (7 surfaces, 155 strings)' }]);
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -325,7 +327,8 @@ describe('C-3 bindings.json integrity', () => {
     expect(bindingsProblems(real)).toEqual([]);
     console.log(`C-3: ${B.modules.length} modules`);
     // MF-35 (dated 2026-11-10): + the two mobile modules, their promoted entry shared_mobile_surface_binding and the search screen mount.
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([4, 3, 10]); // MF-40: +5 mounts (the placements page, client mount, error boundary)
+    // MF-44 (dated 2026-11-11; Spec 126 §11b.5): + the web SEARCH module, its promoted entry binding_web_search and the four web search mounts.
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([5, 4, 14]); // MF-40: +5 mounts (the placements page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -431,7 +434,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     for (const a of ARCHETYPES) { const d = convert(a); expect([a, v(d), unresearchedCount(d)]).toEqual([a, [], 0]); }
     const walkD = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkD(path.join(d, e.name)) : e.name.endsWith('.descriptor.json') ? [path.join(d, e.name)] : []));
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
-    expect(all.length).toBe(156); // MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    expect(all.length).toBe(157); // MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
@@ -573,7 +576,8 @@ describe('C-9 the web 44 px case (golden nodes of a sized component carry a 44 p
       }
     }
     console.log(`C-9: sized nodes per archetype ${JSON.stringify(per)}`);
-    expect(Object.keys(per).sort()).toEqual(['FORM', 'LIST']);
+    // MF-44 (dated 2026-11-11): the web SEARCH goldens join, judged by the same touch_targets.web (Button and TextInput lg).
+    expect(Object.keys(per).sort()).toEqual(['FORM', 'LIST', 'SEARCH']);
     for (const v of Object.values(per)) expect(v).toBeGreaterThan(0);
   });
   it('RED: Button size sm, a Button with no size, ActionIcon lg, a bare Select', () => {

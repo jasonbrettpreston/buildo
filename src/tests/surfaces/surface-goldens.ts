@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { formTree, type FormState } from '../../components/surfaces/web/FormBinding';
 import { listTree, type ListState } from '../../components/surfaces/web/ListBinding';
+import { searchWebTree, type WebSituation } from '../../components/surfaces/web/SearchBinding';
 import { fingerprintFiles, GOLDEN_ROOT, MANIFEST, resolveSchemaRef } from '../../../scripts/surfaces/screen-checks.mjs';
 import { sha16 } from '../../../scripts/surfaces/report-checks.mjs';
 
@@ -48,10 +49,25 @@ export const otherTarget = (id: string, target: string): string => {
   return t;
 };
 
+/**
+ * MF-44 (dated 2026-11-11; Spec 126 §11b.5, FE-07): a web SEARCH golden renders the SAME situation as the committed mobile golden of its state
+ * (its `situation` field, a key of the committed situations file the mobile golden test reads), so the two targets of one state cannot be built
+ * from different inputs. A state with no committed mobile golden, or a situation name the file lacks, throws.
+ */
+export const SITUATIONS = 'mobile/__tests__/fixtures/parcelSearch.situations.json';
+export const situationOf = (root: string, d: Json, state: string): string => {
+  const s = (d.states as Json[]).find((x) => x.name === state);
+  if (!s) throw new Error(`surface-goldens: ${d.identity.id} has no state ${state}`);
+  const name = rj(root, `${GOLDEN_ROOT}/${d.identity.id}/${s.golden}.mobile.json`).situation;
+  if (typeof name !== 'string' || !Object.hasOwn(rj(root, SITUATIONS), name)) throw new Error(`surface-goldens: no situation for ${d.identity.id} ${state}`);
+  return name;
+};
+
 /** The props tree of one surface in one state on one target. */
 export const treeOf = (root: string, d: Json, state: string, target = 'web'): Json => {
   if (target !== 'web') throw new Error(`surface-goldens: no ${target} binding for ${d.identity.id}`);
   if (d.identity.archetype === 'LIST') return listTree(d as Parameters<typeof listTree>[0], state as ListState);
+  if (d.identity.archetype === 'SEARCH') return searchWebTree(rj(root, SITUATIONS)[situationOf(root, d, state)] as WebSituation);
   if (d.identity.archetype !== 'FORM') throw new Error(`surface-goldens: no web ${d.identity.archetype} binding for ${d.identity.id}`);
   const r = resolveSchemaRef(root, d.render.form.schema_ref);
   if (r.problem) throw new Error(r.problem);
@@ -69,7 +85,8 @@ export const buildGoldens = (root: string): Map<string, string> => {
       // MF-35 (dated 2026-11-10; OUTPUT fold MEDIUM 2): a non-web target is checked by its declared mobile golden test, or the build throws.
       if (target !== 'web') { otherTarget(id, target); continue; }
       for (const s of d.states) {
-        const doc = { surface: id, state: s.name, target, covers: [s.name], props: treeOf(root, d, s.name, target), fingerprint: { files } };
+        const situation = d.identity.archetype === 'SEARCH' ? { situation: situationOf(root, d, s.name) } : {}; // MF-44: the mobile golden's key order
+        const doc = { surface: id, state: s.name, target, covers: [s.name], ...situation, props: treeOf(root, d, s.name, target), fingerprint: { files } };
         out.set(`${GOLDEN_ROOT}/${id}/${s.golden}.${target}.json`, `${JSON.stringify(doc, null, 2)}\n`);
       }
     }
