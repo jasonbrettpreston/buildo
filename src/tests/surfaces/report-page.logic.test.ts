@@ -243,6 +243,13 @@ describe('P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 pic
       else expect(p.text.includes('sq ft'), p.key).toBe(false);
     }
   });
+  it('D-J: a null number and a null unit each show the declared null dash in their own part (no screen logic joins them)', () => {
+    const r = clone(response());
+    r.values['o1.size.value'] = null;
+    r.values['o1.size.unit'] = null;
+    const ps = parts(buildPage(r, reportCtx));
+    for (const k of ['o1.size.value', 'o1.size.unit']) expect((ps.find((p) => p.key === k) as Json).text, k).toBe(reportCtx.content.states.null_value);
+  });
   it('D-K: the table marks exactly the lot-size box and the sheet as drawn only where details is collapsed (a closed layout value)', () => {
     const marked = (table().sections as Json[]).filter((s) => s.details !== undefined).map((s) => [s.kind, s.details]);
     expect(marked).toEqual([['lot_size', 'collapsed'], ['sheet', 'collapsed']]);
@@ -255,6 +262,13 @@ describe('P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 pic
       const expanded = (reportCtx.layout as Json).targets[t].details === 'expanded';
       expect(kinds.includes('lot_size'), t).toBe(!expanded);
       expect(kinds.includes('sheet'), t).toBe(!expanded);
+    }
+    // Exact kinds per row (panel fold B: an independent count, not the filter re-implemented).
+    const KINDS = ['title', 'address', 'option', 'lot_size', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
+    for (const t of TARGETS as string[]) {
+      const v = pageViewOf(golden(t).rendered_tree, { target: t }, reportCtx) as Json;
+      const expanded = (reportCtx.layout as Json).targets[t].details === 'expanded';
+      expect((v.sections as Json[]).map((s) => s.kind), t).toEqual(expanded ? KINDS.filter((k) => k !== 'lot_size' && k !== 'sheet') : KINDS);
     }
     const c = clone(reportCtx) as Json;
     c.layout.targets.web.details = 'expanded'; // the layout row decides, not the target name

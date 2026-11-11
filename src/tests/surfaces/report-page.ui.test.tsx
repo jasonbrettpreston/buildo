@@ -152,5 +152,8 @@ describe('the 2026-11-11 rulings on the v21 page', () => {
     expect(token('report-outer').toLowerCase()).toBe('#141417');
     expect(ratio(token('report-soft'), token('report-outer'))).toBeGreaterThanOrEqual(4.5);
     expect(ratio('#4b5563', token('report-outer'))).toBeLessThan(4.5); // the old text-gray-600 caption fails on the frame (control)
+    // Why the node card on the light admin preview keeps text-gray-600 (panel fold): report-soft on white fails, gray-600 on white passes.
+    expect(ratio(token('report-soft'), '#ffffff')).toBeLessThan(4.5);
+    expect(ratio('#4b5563', '#ffffff')).toBeGreaterThanOrEqual(4.5);
   });
 });

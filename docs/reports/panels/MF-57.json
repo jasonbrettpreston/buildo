@@ -17,7 +17,9 @@
     "DeepSeek spec lens (PLAN): findings adjudicated by the lane",
     "code-reviewer-grounded (OUTPUT): PASS WITH FOLDS",
     "regression-guardian (OUTPUT): PASS WITH FOLDS",
-    "design fidelity, general-purpose (OUTPUT): PASS WITH FOLDS"
+    "design fidelity, general-purpose (OUTPUT): PASS WITH FOLDS",
+    "code-reviewer-grounded (OUTPUT, follow-up 2026-11-11 on e8db10d61): PASS-WITH-FOLDS (0 HIGH; LOW: PageView.images seam set by no producer until MF-44/MF-22; D-J null pair unlocked; tag may straddle the caption strip, design pass; white-ratio only in a comment); tsc, eslint, generators --check clean, 859 surface tests green, 3 planted defects each red",
+    "regression-guardian (OUTPUT, follow-up 2026-11-11 on e8db10d61): PASS-WITH-FOLDS (LOW A: report-chip token unused by the page; LOW B: P3 kept-sections expectation re-implements the filter, add an exact count); every removal fenced (picture.caption, chip, P3 and UI-order locks, Picture fill, D-J keys); 863 tests green"
   ],
   "verdict": "PASS-WITH-FOLDS: every OUTPUT fold applied before the code commit; push waits on the operator decision list ~/Buildo-scratch/mcfrontend/MF-57/decisions.md (D-A page contract, D-B value rule, D-C content home, D-D golden dir, D-E pending style, D-F font, D-G hidden options, D-H ads, D-I owner sign-off, D-J the unit as its own part) and the 25 brief v4 open items (pending list ~/Buildo-scratch/mcfrontend/MF-57/pending-fields.md).",
   "blockers": [],
@@ -31,6 +33,7 @@
   "evidence": "docs/reports/red-evidence/MF-57/",
   "notes": [
     "Commit order: prereg f776189af alone (round 138), then the theme commit, then the renderer commit; each made with real hooks.",
-    "The prereg and theme commits were made in a clean temporary worktree and fast-forwarded, because the pre-commit generators read the whole working tree."
+    "The prereg and theme commits were made in a clean temporary worktree and fast-forwarded, because the pre-commit generators read the whole working tree.",
+    "Follow-up 2026-11-11 (operator, verbatim: \"y to all as built\"; record ~/Buildo-scratch/mcfrontend/MF-57/decisions.md bottom): prereg 0be097f1c (prereg-MF-57-2, round 143) alone, then e8db10d61 (D-J the tile unit as its own server-formatted part; D-K no lot-size box or sheet on details: expanded rows by page-table data; MF-38 figure reused in the option picture box, caption report-soft, empty until signed URLs; Spec 126 11a.7 dated note, Spec 135 FE-34, queue notes with the D-I sign-off). Red evidence docs/reports/red-evidence/MF-57/follow-1111/red-1.txt. OUTPUT folds applied in the fold commit: exact section kinds per layout row, the null value/unit dash pair, the white-background ratio asserted. Not folded (listed): report-chip token unused (owner paths globals.css / mobile/tailwind.config.js, retire or reserve in a later token commit); PageView.images gets its producer test with MF-44/MF-22; the tag/caption overlap is checked in a browser design pass."
   ]
 }
