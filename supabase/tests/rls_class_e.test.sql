@@ -13,10 +13,12 @@ select ok(
   (select relrowsecurity from pg_class where oid = 'public.placements'::regclass),
   'placements has RLS enabled'
 );
-select results_eq(
-  $$select policyname::text, cmd::text, roles::text[] from pg_policies
-     where schemaname = 'public' and tablename = 'placements' order by 1$$,
-  $$values ('placements_select_public', 'SELECT', array['anon', 'authenticated'])$$,
+-- is() over string_agg (the rls_admin_media.test.sql form): results_eq over pg_policies' name columns against a
+-- VALUES literal fails with "could not determine which collation to use" (MF-40 DB job 2026-11-10, D-32).
+select is(
+  (select string_agg(policyname::text || ':' || cmd::text || ':' || array_to_string(roles::text[], '+'), ',' order by policyname::text)
+     from pg_policies where schemaname = 'public' and tablename = 'placements'),
+  'placements_select_public:SELECT:anon+authenticated',
   'placements carries exactly one policy: placements_select_public, SELECT, anon and authenticated'
 );
 

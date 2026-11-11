@@ -105,6 +105,14 @@
       "revision_num",
       "saved_at"
     ],
+    "advertisers": [
+      "active",
+      "advertiser_id",
+      "contact_user_id",
+      "created_at",
+      "name",
+      "updated_at"
+    ],
     "archetype_cost_rates": [
       "archetype",
       "as_of_date",
@@ -1013,6 +1021,19 @@
       "type",
       "user_id"
     ],
+    "offers": [
+      "active",
+      "advertiser_id",
+      "created_at",
+      "creative_asset_id",
+      "creative_text",
+      "flight_end",
+      "flight_start",
+      "offer_id",
+      "placement_key",
+      "targeting",
+      "updated_at"
+    ],
     "parcel_abutments": [
       "bldg_to_subject_m",
       "est_status",
@@ -1215,6 +1236,10 @@
       "zoning_is_ambiguous",
       "zoning_overlays",
       "zoning_zn_string"
+    ],
+    "parcels_cohort_bak_20261111t0119z": [
+      "cost_fb_total",
+      "id"
     ],
     "permit_history": [
       "changed_at",
@@ -1545,6 +1570,12 @@
       "enabled",
       "pipeline",
       "updated_at"
+    ],
+    "placements": [
+      "disclosure_required",
+      "max_slots",
+      "placement_key",
+      "surface_archetype"
     ],
     "product_groups": [
       "created_at",

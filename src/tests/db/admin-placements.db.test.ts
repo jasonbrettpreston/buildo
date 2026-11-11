@@ -45,6 +45,9 @@ const inTxn = async (pool: Pool, fn: (c: PoolClient) => Promise<void>): Promise<
   const c = await pool.connect();
   try {
     await c.query('BEGIN');
+    // D-33: asUser(null) sets request.jwt.claims to '' on this pooled connection, and Postgres keeps a custom setting's empty value after the
+    // rollback; the profiles trigger (migration 226) casts it ::json. Start every transaction from a valid empty claim set.
+    await c.query("SELECT set_config('request.jwt.claims', '{}', true)");
     await c.query('INSERT INTO auth.users (id) VALUES ($1), ($2) ON CONFLICT DO NOTHING', [ADMIN, USER]);
     await c.query('INSERT INTO profiles (id, is_admin) VALUES ($1, true), ($2, false) ON CONFLICT (id) DO UPDATE SET is_admin = EXCLUDED.is_admin', [ADMIN, USER]);
     await fn(c);
@@ -215,8 +218,9 @@ describe.skipIf(!dbAvailable())('migration 302: advertisers, placements, offers,
     }
     // WARN, never silent: the query runs; a non-zero count is a commercial state the admin list shows (fold 8).
     await pool.query(one('placements_active_offers_within_max_slots', DESCRIPTOR.invariants));
-    const cov = await pool.query(one('placements_disclosure_coverage', DESCRIPTOR.plausibility));
-    expect(Object.values(cov.rows[0] ?? {}).map(Number)).toEqual([0, CONTRACT.slots.length]);
+    // D-33: both columns are named count, so object rows keep one key; read the row as an array (only this test runs the query).
+    const cov = await pool.query<unknown[]>({ text: one('placements_disclosure_coverage', DESCRIPTOR.plausibility), rowMode: 'array' });
+    expect((cov.rows[0] ?? []).map(Number)).toEqual([0, CONTRACT.slots.length]);
   });
 
   it('(h) the two Admin Placements logic_variables rows equal the seed', async () => {
