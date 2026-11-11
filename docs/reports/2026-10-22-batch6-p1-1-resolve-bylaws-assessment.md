@@ -186,7 +186,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 24 · unexplained: 0
+- compare ran: true · diffs found: 0 · unexplained: 0
 
 ### Test suite (item iii)
 - SKIPPED or failed to run: --fast: vitest spawn skipped
