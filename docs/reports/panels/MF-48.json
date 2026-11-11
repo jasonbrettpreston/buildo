@@ -32,6 +32,7 @@
   ],
   "evidence": "docs/reports/red-evidence/MF-48/",
   "notes": [
-    "Commit order: prereg 7e1ba7e9d alone (round 145), docs notes fbce5fdce, then this code commit; each with real hooks. Rebased onto origin fa4fff51d (MF-45) before the full suite."
+    "Commit order: prereg 7e1ba7e9d alone (round 145), docs notes fbce5fdce, then this code commit; each with real hooks. Rebased onto origin fa4fff51d (MF-45) before the full suite.",
+    "Nav-audit #62 (~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md; operator \"yes\" 2026-11-11), follow-up commit before the push: while the Add lot size sheet is open, the Android Back button closes it and is consumed (React Native BackHandler in ReportPageHost.tsx, removed when closed); red-first test in reportPage.behaviour.test.tsx, red evidence section 6. MF-48 draws no Back or close navigation control (Cancel only closes the sheet), so the router.back()/canGoBack() rule has no site here."
   ]
 }

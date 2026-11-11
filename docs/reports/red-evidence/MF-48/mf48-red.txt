@@ -41,3 +41,12 @@ L1-PROBE [
 == 5. Planted RED cases kept in the committed tests (each asserted, all pass): reportScreens.golden.test.ts T2 RED, T3 RED, T3 part-ref throws,
    T4 RED, T5 throws; reportPage.behaviour.test.tsx unknown panel / unknown action; report-mobile.logic.test.ts hand-edited view, SV-SBIND raw string
    and unknown kind; surface-conformance.logic.test.ts 'MF-48 RED' render-half plants and the C-8m host-list plant.
+
+== 6. Nav-audit #62 (2026-11-11, operator "yes"): Android Back with the sheet open, before the host fix:
+   npx jest __tests__/reportPage.behaviour.test.tsx -t nav-audit
+  ● MF-48 behaviour (parity with the web ReportPageToggles) › nav-audit #62: while the sheet is open, Android Back closes it and is consumed; closed, Back is not intercepted (the listener is removed)
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+Tests:       1 failed, 15 skipped, 16 total
+   (no hardwareBackPress listener while the sheet is open; green after the BackHandler effect in ReportPageHost.tsx)

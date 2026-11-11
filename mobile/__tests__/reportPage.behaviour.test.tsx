@@ -11,6 +11,7 @@ require('react-native-css-interop/test');
 import * as React from 'react';
 import fs from 'node:fs';
 import path from 'node:path';
+import { BackHandler } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { ReportPageHost, REPORT_UI } from '@/components/surfaces/ReportPageHost';
@@ -108,6 +109,21 @@ describe('MF-48 behaviour (parity with the web ReportPageToggles)', () => {
     fireEvent.press(screen.getByTestId('report-lot-size-open'));
     React.act(() => { (screen.UNSAFE_getByType(BottomSheet).props.onClose as () => void)(); }); // a swipe down or a backdrop tap
     expect(sheetIndex()).toBe(-1);
+  });
+  it('nav-audit #62: while the sheet is open, Android Back closes it and is consumed; closed, Back is not intercepted (the listener is removed)', () => {
+    const handlers: (() => boolean)[] = [];
+    const remove = jest.fn();
+    const spy = jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_e, h) => { handlers.push(h as () => boolean); return { remove }; });
+    show('page_v21');
+    expect(handlers).toHaveLength(0);
+    fireEvent.press(screen.getByTestId('report-lot-size-open'));
+    expect(sheetIndex()).toBe(0);
+    expect(handlers).toHaveLength(1);
+    let consumed = false;
+    React.act(() => { consumed = handlers[0]!(); });
+    expect([consumed, sheetIndex()]).toEqual([true, -1]);
+    expect(remove).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
   });
   it('the pure UI changes: one panel per option, the same opener closes, How? flips', () => {
     let u = REPORT_UI.togglePanel(REPORT_UI_CLOSED, 'o1', 'size');

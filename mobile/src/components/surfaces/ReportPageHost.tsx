@@ -8,8 +8,11 @@
 // ReportBinding.tsx, the texts from the page view and the content strings the screen passes in. Every element comes through its COMPONENTS table
 // (bindings.json mapping.mobile.REPORT_HOST; FE-31 C-8m host list). The sheet is driven by its `index` prop (gorhom 5 snaps when it changes):
 // open = 0, closed = -1; a swipe down or a tap on the backdrop calls onClose. Panel state starts closed on every visit (web parity).
+// Nav-audit #62 (~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md; operator "yes" 2026-11-11): while the sheet is open, the Android Back
+// button closes it and is consumed (the React Native BackHandler, an existing core API); closed, Back is not intercepted. The host has no
+// navigation control of its own (Cancel only closes the sheet), so no router.back() is needed here.
 import * as React from 'react';
-import { View } from 'react-native';
+import { BackHandler, View } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { SurfaceRenderer, type ReportActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { lifecycleProps, reportProps, REPORT_UI_CLOSED, type LifecycleState, type PageView, type ReportUi } from '@/components/surfaces/ReportBinding';
@@ -38,6 +41,11 @@ export function ReportPageHost({ view, lifecycle, content }: { view: PageView | 
     open_sheet: () => setSheetOpen(true),
     close_sheet: () => setSheetOpen(false),
   };
+  React.useEffect(() => {
+    if (!sheetOpen) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { setSheetOpen(false); return true; });
+    return () => sub.remove();
+  }, [sheetOpen]);
   const backdrop = React.useCallback((p: BottomSheetBackdropProps) => <Backdrop {...p} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />, [Backdrop]);
   if (view === null) return <Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />;
   const trees = reportProps(view, ui);
