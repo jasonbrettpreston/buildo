@@ -1,0 +1,4 @@
+MF-53 red-nav (NAV-AUDIT-20261111 #64), on 871156c66 before the fix: the Clear (X) button on a cold open (router.canGoBack() false) calls router.back() and never replaces with the Lookup route.
+    - Expected  - 6
+    + Received  + 2
+Tests:       1 failed, 17 passed, 18 total

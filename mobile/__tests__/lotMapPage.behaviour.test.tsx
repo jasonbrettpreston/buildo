@@ -26,8 +26,9 @@ jest.mock('react-native-safe-area-context', () => {
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
+let mockCanGoBack = true;
 let mockParams: { q?: string } = {};
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, replace: mockReplace, back: mockBack }), useLocalSearchParams: () => mockParams }));
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, replace: mockReplace, back: mockBack, canGoBack: () => mockCanGoBack }), useLocalSearchParams: () => mockParams }));
 type Hook = { data?: unknown; isFetching: boolean; error: unknown; refetch: jest.Mock };
 let mockHook: Hook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
 const mockCalls: string[] = [];
@@ -52,7 +53,7 @@ const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: j
 const parts = (name: string) => screen.UNSAFE_root.findAll((n: { props: Record<string, unknown>; type: unknown }) => n.props.rnmPart === name && typeof n.type !== 'string');
 
 beforeEach(() => {
-  mockPush.mockClear(); mockReplace.mockClear(); mockBack.mockClear();
+  mockPush.mockClear(); mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true;
   mockCalls.length = 0;
   mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
 });
@@ -132,6 +133,18 @@ describe('the real mount (disambiguate.tsx)', () => {
     view.rerender(<Page />);
     view.rerender(<Page />);
     expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/PCL-U1']]);
+  });
+  it('the Clear (X) button goes back when there is history, and replaces with the Lookup route on a cold open (NAV-AUDIT #64)', () => {
+    mockParams = { q: '5 Elm St' };
+    mockHook = { data: input('multi_parcel_2').data, isFetching: false, error: null, refetch: jest.fn() };
+    render(<Page />);
+    const clear = screen.getByTestId('parcel-lotmap-clear');
+    expect([clear.props.accessibilityRole, clear.props.accessibilityLabel]).toEqual(['button', 'Back to search']);
+    fireEvent.press(clear);
+    expect([mockBack.mock.calls.length, mockReplace.mock.calls]).toEqual([1, []]);
+    mockCanGoBack = false;
+    fireEvent.press(clear);
+    expect([mockBack.mock.calls.length, mockReplace.mock.calls]).toEqual([1, [['/(app)/parcel-tool']]]);
   });
   it('the error notice Retry calls refetch', () => {
     mockParams = { q: '5 Elm St' };

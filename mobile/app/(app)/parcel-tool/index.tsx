@@ -97,7 +97,8 @@ export default function ParcelSearchScreen() {
       select: (parcelId: string) => setSelectedParcelId(parcelId),
       push: (to: string) => navigate(to),
       open_account: () => router.push(PARCEL_TAB_ROUTE.account),
-      back: () => router.back(),
+      // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
+      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
     }),
     [refetch, navigate, router],
   );

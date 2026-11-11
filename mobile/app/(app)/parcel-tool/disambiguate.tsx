@@ -15,7 +15,7 @@ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/Surface
 import { LOT_MAP_SLICE, lotMapData, lotMapProps } from '@/components/surfaces/LotMapBinding';
 import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { buildLotMapSituation } from '@/lib/lotMap';
-import { searchQueryArg } from '@/lib/parcelSearchMatch';
+import { PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
 
 export default function ParcelDisambiguationScreen() {
   const router = useRouter();
@@ -47,7 +47,8 @@ export default function ParcelDisambiguationScreen() {
       select: (parcelId: string) => setSelectedParcelId(parcelId),
       push,
       open_account: () => undefined,
-      back: () => router.back(),
+      // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
+      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
     }),
     [refetch, push, router],
   );
