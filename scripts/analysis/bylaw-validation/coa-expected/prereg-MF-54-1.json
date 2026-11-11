@@ -1,0 +1,86 @@
+{
+ "$comment": "Pre-registration, task MF-54 (the closed error-class list gains 409: surface.schema.json errors.classes[].class adds 409, the generated types follow; contract_admin_offer_upsert (STALE_OFFER) and contract_admin_advertiser_upsert (ADVERTISER_ID_TAKEN) move their 409 out of the 400 class row into a 409 row), prereg 1, committed ALONE directly before the MF-54 code commit. rules[]: FE-31 (a converted surface descriptor is valid against the schema; SV-DESC validates every converted descriptor with the generated validator) and FE-32 (the contract binding kind, whose error-detail segment <contract_id>.errors.<class>.<field> takes the class from the contract errors.classes[]) are RULED and are cited by the new test src/tests/surfaces/error-class-409.logic.test.ts (not a lock); no FE lock file is edited. No OWED id is cited. Zero scorer moves (no file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes); totals and floors copied from prereg-MF-40-2.json. In-file round 136 (the next after 135, MF-40-2; to be confirmed by the orchestrator; the round field is only checked as an integer).",
+ "schema": "coa-round-prereg-v1",
+ "round": 136,
+ "task": "MF-54",
+ "rules": [
+  "FE-31",
+  "FE-32"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/MF-54/plan.md; ~/Buildo-scratch/mcfrontend/phase1/open-questions.md (Operator answers 2026-11-10: MF-40 OUTPUT panel questions, answer c)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 407,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 283,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 459,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 3
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK (172 overall accuracy and answered at or above 92 and 71; cumulative overall accuracy at or above 92)",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
