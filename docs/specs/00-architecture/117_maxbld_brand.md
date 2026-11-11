@@ -88,6 +88,8 @@ Case-insensitive `buildo` matches across `src/` + `mobile/` (`.ts`/`.tsx`/`.json
 
 **Placeholder — operator to ratify (OD-B2).** Working line for internal use only, not yet cleared for external copy: *"Building intelligence for the trades that build."* Do not ship this externally without explicit sign-off; use the bare name + a one-line factual description (e.g. "MaxBLD — building permit leads for Toronto trades") wherever copy is needed before OD-B2 resolves.
 
+> Dated note 2026-11-11 (M-246, prior text kept; OD-B2 · McFrontend small pages item 1 · lane R; operator, verbatim: "We haven't done the landing yet for MAxbld or can show it to me? 1 y ..."; record `~/Buildo-scratch/mcfrontend/small-pages-v2/DECISIONS.md`, item 1 and the bottom entry; Spec 126 §11b.7 dated note 2026-11-11 item 3): OD-B2 is ratified. The MaxBLD tagline is "Lot Intelligence", for every sign-in page and Search, held as content (Spec 126 §11a.1 `content`). It replaces the placeholder line above for MaxBLD; the landing headline is a separate, still pending choice (Spec 126 §11b.7 dated note 2026-11-11 item 7).
+
 ### 2.3 Mood / personality
 
 Derived from the product, not from mood-boarding: a B2B tool trades use on a job site (App A: lead-gen + flight-center) expanding toward a B2C/developer audience (App B: lot-optimization, per Spec 116). The Spec 74 design brief already did this work correctly for App A ("Bloomberg-terminal efficiency over Pinterest-style browsing") — this spec generalizes it across the brand:
