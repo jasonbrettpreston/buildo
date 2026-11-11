@@ -2,7 +2,7 @@
 //            docs/specs/02-web-admin/128_surface_standard_policy.md Rule 15 (same everywhere), Rule 16 (no maths), Rule 17 (honest display), R-34 (an ad is never inside a card),
 //            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05, FE-24; approved mock v21 (open-questions.md "mock v21: APPROVED", rulings 1 a and 2).
 //
-// MF-57 · McFrontend queue. THE v21 report page over the page view (pageViewOf). MF-19 (2026-11-11): the after-entry line section (D-5). It reads parts by ROLE (scripts/surfaces/_schema/report-page.json
+// MF-57 · McFrontend queue. THE v21 report page over the page view (pageViewOf). MF-19 (2026-11-11): the after-entry line section (D-5); the accessibility fold A12 on the sheet (scroll cap, alert, native radio pair). It reads parts by ROLE (scripts/surfaces/_schema/report-page.json
 // `kinds`), never a field name, a target name or a number: the layout row decides whether the details panels start closed with toggles
 // (`details: collapsed`) or open without them (`expanded`). Every text is a part's text as built on the server; a pending part shows the ruled
 // pending text in its own slot in one muted style (data-pending). Colours are the named report-* theme colours (ruling 1 a); geometry is in
@@ -242,7 +242,7 @@ const Section = ({ s, open, images }: { s: PageSection; open: boolean; images: P
       );
     case 'sheet':
       return (
-        <dialog data-section="sheet" id="report-sheet" aria-labelledby="report-sheet-t" className="mx-auto mb-0 mt-auto max-h-none w-full max-w-[430px] rounded-t-[20px] border border-b-0 border-report-outer-border bg-report-inner p-0 text-report-ink backdrop:bg-report-scrim">
+        <dialog data-section="sheet" id="report-sheet" aria-labelledby="report-sheet-t" className="mx-auto mb-0 mt-auto max-h-[100dvh] overflow-y-auto w-full max-w-[430px] rounded-t-[20px] border border-b-0 border-report-outer-border bg-report-inner p-0 text-report-ink backdrop:bg-report-scrim">
           <form method="dialog" className="m-0 grid gap-3 px-4 pb-6 pt-3">
             <div aria-hidden="true" className="h-1 w-10 justify-self-center rounded-sm bg-report-button-border" />
             <T p={one(s, 'title')} as="h2" id="report-sheet-t" className="mb-0 mt-1 text-[18px]/[24px] font-bold" />
@@ -251,15 +251,23 @@ const Section = ({ s, open, images }: { s: PageSection; open: boolean; images: P
               <T p={one(s, 'record.label')} className="text-report-quiet" />
               <T p={one(s, 'record.value')} className="font-semibold tabular-nums" />
             </div>
-            <label htmlFor="report-sheet-in" className="text-[14px]/[20px] font-semibold">{one(s, 'input.label')?.text}</label>
+            <label id="report-sheet-lbl" htmlFor="report-sheet-in" className="text-[14px]/[20px] font-semibold">{one(s, 'input.label')?.text}</label>
             <div className="flex gap-2">
               <input id="report-sheet-in" readOnly inputMode="decimal" autoComplete="off" placeholder={one(s, 'input.placeholder')?.text} data-part="input.placeholder" aria-describedby="report-sheet-err" className="min-h-12 min-w-0 flex-1 rounded-xl border border-report-button-border bg-report-tile px-[14px] text-[18px]/[24px] font-semibold text-report-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-report-amber" />
-              <div role="radiogroup" className="flex overflow-hidden rounded-xl border border-report-button-border">
-                <button type="button" role="radio" aria-checked="true" className="min-h-12 min-w-14 border-0 bg-report-button text-[14px]/[20px] font-semibold text-report-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-report-amber">{one(s, 'unit.sqft')?.text}</button>
-                <button type="button" role="radio" aria-checked="false" className="min-h-12 min-w-14 border-0 bg-transparent text-[14px]/[20px] font-semibold text-report-dim focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-report-amber">{one(s, 'unit.m2')?.text}</button>
+              {/* MF-19 A12 (WCAG 1.4.11, 4.1.2): a native radio pair (one tab stop, arrow keys, checked state from the browser); the selected segment draws a report-ink border. */}
+              <div role="radiogroup" aria-labelledby="report-sheet-lbl" className="flex overflow-hidden rounded-xl border border-report-button-border">
+                <label className="cursor-pointer">
+                  <input type="radio" name="report-sheet-unit" value="sqft" defaultChecked className="peer sr-only" />
+                  <span className="flex min-h-12 min-w-14 items-center justify-center rounded-xl border border-transparent px-2 text-[14px]/[20px] font-semibold text-report-dim peer-checked:border-report-ink peer-checked:bg-report-button peer-checked:text-report-ink peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-report-amber">{one(s, 'unit.sqft')?.text}</span>
+                </label>
+                <label className="cursor-pointer">
+                  <input type="radio" name="report-sheet-unit" value="m2" className="peer sr-only" />
+                  <span className="flex min-h-12 min-w-14 items-center justify-center rounded-xl border border-transparent px-2 text-[14px]/[20px] font-semibold text-report-dim peer-checked:border-report-ink peer-checked:bg-report-button peer-checked:text-report-ink peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-report-amber">{one(s, 'unit.m2')?.text}</span>
+                </label>
               </div>
             </div>
-            <div id="report-sheet-err" hidden><T p={one(s, 'error')} as="p" className="m-0 text-[13px]/[18px] text-report-refused" /></div>
+            {/* A12 (WCAG 3.3.1, 4.1.3): the refusal text the server sends is announced when it appears. */}
+            <div id="report-sheet-err" role="alert" hidden><T p={one(s, 'error')} as="p" className="m-0 text-[13px]/[18px] text-report-refused" /></div>
             <T p={one(s, 'note')} as="p" className="m-0 text-[13px]/[20px] text-report-quiet" />
             <button type="submit" disabled className="min-h-12 rounded-xl border-0 bg-report-amber text-[16px]/[24px] font-bold text-report-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-ink">{one(s, 'submit')?.text}</button>
             <button type="button" data-toggle="sheet-close" className="min-h-11 rounded-xl border-0 bg-transparent text-[15px]/[20px] font-semibold text-report-dim focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-ink">{one(s, 'cancel')?.text}</button>

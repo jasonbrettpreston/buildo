@@ -1,0 +1,15 @@
+MF-19 · the accessibility audit fold A12 (~/Buildo-scratch/mcfrontend/small-pages-review/6-accessibility.md B2, S2, S3; CONSOLIDATED.md A12), red first: the new lock src/tests/surfaces/report-sheet-a11y.ui.test.tsx on the restacked tip (origin dd24c95ff) before the fold, 2026-11-11.
+
+   × A12 (1) focus stays in the open sheet and returns to its opener (2.4.3, 2.4.11) > opening makes every sibling of the dialog inert and moves focus into the sheet
+   × A12 (1) focus stays in the open sheet and returns to its opener (2.4.3, 2.4.11) > closing by Escape lifts inert and returns focus to the Add lot size button
+   × A12 (1) focus stays in the open sheet and returns to its opener (2.4.3, 2.4.11) > closing by the dialog close event lifts inert and returns focus to the Add lot size button
+   × A12 (2) the sheet scrolls within the viewport at 200 % zoom (1.4.4, 1.4.10) > the dialog is capped at the dynamic viewport height and scrolls; no unbounded height
+   × A12 (3) the entry error is announced (3.3.1, 4.1.3) > the error container is role="alert" and is the field's description
+   × A12 (4) the unit selector is a real radio group with a visible selected state (1.4.11, 4.1.2) > two native radios in one group (one tab stop, arrow keys by the browser), sq ft checked first; no ARIA radio buttons
+   × A12 (4) the unit selector is a real radio group with a visible selected state (1.4.11, 4.1.2) > the selected segment draws a report-ink border, at least 3:1 against the sheet and the segment fill
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  7 failed | 1 passed (8)
+
+Green after the fold (ReportPageToggles.tsx: siblings inert while open, restore on the dialog close event, Escape; ReportPage.tsx: max-h-[100dvh] overflow-y-auto, role="alert" on the error container, a native radio pair with a report-ink selected border): 1 file, 8 tests passed; src/tests/surfaces/ 40 files, 904 tests passed.
+Not in this fold (owed with MF-48, the app report): the app sheet as React Native Modal with accessibilityViewIsModal and a ScrollView body, and announceForAccessibility for the app error; MF-19 builds no app sheet. The 200% zoom and arrow-key behaviour are locked structurally here (jsdom has no layout or radio keyboard model): the scroll cap classes and the native radio inputs.
