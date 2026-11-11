@@ -410,7 +410,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-049`](#s-049) | surface | `shell_web_root` | `SHELL` | `F14` navigation-shells | 3143 | 91% | [detail](#s-049) |
 | [`S-077`](#s-077) | surface | `binding_web_form` | `FORM` | `F14` navigation-shells | 3144 | 100% | [detail](#s-077) |
 | [`S-078`](#s-078) | surface | `binding_web_list` | `LIST` | `F14` navigation-shells | 3144 | 100% | [detail](#s-078) |
-| [`S-083`](#s-083) | surface | `binding_mobile_report` | `REPORT` | `F14` navigation-shells | 3145 | 100% | [detail](#s-083) |
+| [`S-085`](#s-085) | surface | `binding_mobile_report` | `REPORT` | `F14` navigation-shells | 3145 | 100% | [detail](#s-085) |
 | [`S-082`](#s-082) | surface | `binding_web_search` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-082) |
 | [`S-079`](#s-079) | surface | `shared_mobile_surface_binding` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-079) |
 | [`C-027`](#c-027) | contract | `contract_products` | `QUERY` | `F15` user-profile-settings | 3152 | 88% | [detail](#c-027) |
@@ -521,7 +521,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F11** onboarding | `platform_shared` | [`C-026`](#c-026) · [`S-028`](#s-028) · [`S-029`](#s-029) · [`S-030`](#s-030) · [`S-031`](#s-031) · [`S-032`](#s-032) · [`S-033`](#s-033) · [`S-034`](#s-034) · [`S-035`](#s-035) · [`S-048`](#s-048) | 1 | 2 | 10 descriptor(s), 1 contract(s), and would orphan 1 table(s): `trade_suppliers` |
 | **F12** subscription-billing | `platform_shared` | [`C-020`](#c-020) · [`C-021`](#c-021) · [`C-022`](#c-022) · [`C-030`](#c-030) · [`C-031`](#c-031) · [`C-032`](#c-032) · [`C-038`](#c-038) · [`S-043`](#s-043) · [`S-044`](#s-044) · [`S-051`](#s-051) · [`S-052`](#s-052) · [`S-053`](#s-053) | 7 | 8 | 12 descriptor(s), 7 contract(s), and would orphan 1 table(s): `subscribe_nonces` |
 | **F13** notifications | `platform_shared` | [`C-006`](#c-006) · [`C-007`](#c-007) · [`C-023`](#c-023) · [`C-024`](#c-024) · [`C-025`](#c-025) · [`S-041`](#s-041) · [`S-022`](#s-022) | 5 | 6 | 7 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
-| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) · [`S-083`](#s-083) · [`S-082`](#s-082) | 0 | 3 | 9 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) · [`S-085`](#s-085) · [`S-082`](#s-082) | 0 | 3 | 9 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F15** user-profile-settings | `platform_shared` | [`C-027`](#c-027) · [`C-034`](#c-034) · [`C-035`](#c-035) · [`C-036`](#c-036) · [`C-037`](#c-037) · [`S-036`](#s-036) | 5 | 3 | 6 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
 | **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 11 table(s): `trade_configurations` · `trade_sqft_rates` · `data_quality_snapshots` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
 | **F17** tracked-lots | `parcel_product` | [`C-062`](#c-062) · [`S-072`](#s-072) | 1 | 3 | 2 descriptor(s), 1 contract(s), and would orphan 1 table(s): `user_tracked_lots` |
@@ -6180,11 +6180,11 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ MF-37 (P42-D9 a, batch C-3).
 
-<a id="s-083"></a>
+<a id="s-085"></a>
 
-###### `S-083` `binding_mobile_report`
+###### `S-085` `binding_mobile_report`
 
-**Programme.** `S-083` · scope `platform_shared` · feature `F14` · build order 3145 · batch `B2` · review `unreviewed` — Shared rendering infrastructure: the binding every mobile REPORT surface renders through.
+**Programme.** `S-085` · scope `platform_shared` · feature `F14` · build order 3145 · batch `B2` · review `unreviewed` — Shared rendering infrastructure: the binding every mobile REPORT surface renders through.
 
 **What it is.** The mobile REPORT binding: ReportBinding.tsx maps a v21 report page view (MF-57 pageViewOf) and the screen-local UI state to props trees (part refs only), and ReportPageHost.tsx holds that UI state and the existing bottom sheet and renders the trees through the one shared renderer (SurfaceRenderer.tsx, owned by shared_mobile_surface_binding). It holds no display text of its own.
 
@@ -6248,7 +6248,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `mobile/src/components/surfaces/ReportBinding.tsx` · `mobile/src/components/surfaces/ReportPageHost.tsx`
 
-> ⚠️ MF-48 Stage A (D-1 a: synthetic goldens, mounted nowhere; D-2 a: this owner entry; the shared renderer lists SEARCH and REPORT). Archetype REPORT, the archetype of the modules it owns.
+> ⚠️ MF-48 Stage A (D-1 a: synthetic goldens, mounted nowhere; D-2 a: this owner entry; the shared renderer lists SEARCH and REPORT). Archetype REPORT, the archetype of the modules it owns. Dated note 2026-11-11 (MF-48 restack; orchestrator id assignment): the census ref is S-085. S-082 is MF-44's binding_web_search on origin; S-083 is MF-53's binding_mobile_list and S-084 MF-19's admin_lot_size_revert on their unlanded lanes, so MF-48 takes the next free id (it read S-082, then S-083, before this note).
 
 <a id="s-082"></a>
 

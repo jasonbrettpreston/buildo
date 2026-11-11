@@ -90,7 +90,7 @@ Every card answers the **same nine questions** from the descriptor, with the evi
 | 74 | [`S-049`](#card-s-049) | [`shell_web_root`](#card-s-049) | `platform_shared` | `F14` | 3143 | `unreviewed` |
 | 75 | [`S-077`](#card-s-077) | [`binding_web_form`](#card-s-077) | `platform_shared` | `F14` | 3144 | `unreviewed` |
 | 76 | [`S-078`](#card-s-078) | [`binding_web_list`](#card-s-078) | `platform_shared` | `F14` | 3144 | `unreviewed` |
-| 77 | [`S-083`](#card-s-083) | [`binding_mobile_report`](#card-s-083) | `platform_shared` | `F14` | 3145 | `unreviewed` |
+| 77 | [`S-085`](#card-s-085) | [`binding_mobile_report`](#card-s-085) | `platform_shared` | `F14` | 3145 | `unreviewed` |
 | 78 | [`S-082`](#card-s-082) | [`binding_web_search`](#card-s-082) | `platform_shared` | `F14` | 3145 | `unreviewed` |
 | 79 | [`S-079`](#card-s-079) | [`shared_mobile_surface_binding`](#card-s-079) | `platform_shared` | `F14` | 3145 | `unreviewed` |
 | 80 | [`C-027`](#card-c-027) | [`contract_products`](#card-c-027) | `platform_shared` | `F15` | 3152 | `unreviewed` |
@@ -3829,11 +3829,11 @@ It is 1 of 9 entr(ies) in feature `F14`. Removing it deletes 1 owned component(s
 
 ---
 
-<a id="card-s-083"></a>
+<a id="card-s-085"></a>
 
-## Card 77 — `S-083` `binding_mobile_report`
+## Card 77 — `S-085` `binding_mobile_report`
 
-Registry detail: [`S-083`](../../../docs/reports/generated/127-surface-registry.md#s-083) `binding_mobile_report`.
+Registry detail: [`S-085`](../../../docs/reports/generated/127-surface-registry.md#s-085) `binding_mobile_report`.
 
 `SURFACE` · `REPORT` · scope `platform_shared` · feature `F14` navigation-shells · build order 3145 · batch B2 · **review: `unreviewed`**
 

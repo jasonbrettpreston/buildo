@@ -14259,7 +14259,7 @@
           "mobile/__tests__/reportPage.behaviour.test.tsx — the mobile REPORT render smoke (FE-33 mobile case)"
         ]
       },
-      "ref": "S-083"
+      "ref": "S-085"
     },
     "inputs": {
       "answer": "props",
@@ -14407,7 +14407,7 @@
     "deviations": "none",
     "limitations": [],
     "interpretation": "none",
-    "notes": "MF-48 Stage A (D-1 a: synthetic goldens, mounted nowhere; D-2 a: this owner entry; the shared renderer lists SEARCH and REPORT). Archetype REPORT, the archetype of the modules it owns.",
+    "notes": "MF-48 Stage A (D-1 a: synthetic goldens, mounted nowhere; D-2 a: this owner entry; the shared renderer lists SEARCH and REPORT). Archetype REPORT, the archetype of the modules it owns. Dated note 2026-11-11 (MF-48 restack; orchestrator id assignment): the census ref is S-085. S-082 is MF-44's binding_web_search on origin; S-083 is MF-53's binding_mobile_list and S-084 MF-19's admin_lot_size_revert on their unlanded lanes, so MF-48 takes the next free id (it read S-082, then S-083, before this note).",
     "x-draft": {
       "shard": "mobile-product",
       "files": [
