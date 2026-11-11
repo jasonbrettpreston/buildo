@@ -1196,7 +1196,7 @@
     },
     "src/app/api/subscribe/exchange/route.ts": {
       "class": "static",
-      "statements": 4,
+      "statements": 5,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,
@@ -1205,6 +1205,7 @@
         "229beb993a3e10d4",
         "5a3a5e7865c273dc",
         "8c2f1fb500dfc5aa",
+        "b3922286641fbc73",
         "f17234ab9e318492"
       ],
       "reads": {
@@ -1223,7 +1224,8 @@
         "subscribe_nonces": [],
         "user_profiles": [
           "stripe_customer_id",
-          "updated_at"
+          "updated_at",
+          "user_id"
         ]
       }
     },
@@ -1235,10 +1237,11 @@
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
-        "8acac9c3449c1756"
+        "23f0258255bbd311"
       ],
       "reads": {
         "user_profiles": [
+          "account_deleted_at",
           "stripe_customer_id",
           "user_id"
         ]
@@ -1305,19 +1308,26 @@
     },
     "src/app/api/user-profile/delete/route.ts": {
       "class": "static",
-      "statements": 3,
+      "statements": 5,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
-        "23f0258255bbd311",
         "3da120db82bb9dad",
-        "6f4937ba1a4499f8"
+        "9d72be8b087bbdfd",
+        "b07e0e8525ab4cf4",
+        "b3922286641fbc73",
+        "cb73261d3d59bd54"
       ],
       "reads": {
+        "entitlements": [
+          "stripe_subscription_id",
+          "user_id"
+        ],
         "user_profiles": [
           "account_deleted_at",
+          "stripe_cancel_failed_at",
           "stripe_customer_id",
           "user_id"
         ]
@@ -1326,7 +1336,8 @@
         "user_profiles": [
           "account_deleted_at",
           "stripe_cancel_failed_at",
-          "updated_at"
+          "updated_at",
+          "user_id"
         ]
       }
     },

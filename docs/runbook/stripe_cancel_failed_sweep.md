@@ -49,6 +49,19 @@ plus the directory `stripe_cancel_failed` filter.
    still bill or resume billing (the shared helper skips only the terminal
    `canceled` / `incomplete_expired` states).
 
+   **Rows with `stripe_customer_id` NULL** (added 2026-11-11, WF3 account
+   delete): self-serve delete also sets the marker when the account has a
+   subscription but no stored customer (checkout created a Customer it could
+   not store). Find the subscription by id, then cancel it at period end:
+
+   ```sql
+   SELECT product, stripe_subscription_id FROM entitlements
+   WHERE user_id = '<uid>' AND stripe_subscription_id IS NOT NULL;
+   ```
+
+   Do not use the admin "Retry cancel" button for these rows: with no stored
+   customer it clears the marker without calling Stripe.
+
 3. Clear the marker ONLY after confirming every live subscription is scheduled
    to cancel (or, for a reactivated row, immediately):
 

@@ -564,8 +564,11 @@ describe('POST /api/user-profile/delete', () => {
 
   it('returns 200 ok:true and fans deletion out to EVERY entitlement row (W5, one transaction)', async () => {
     mockGetUser.mockResolvedValueOnce(UID);
-    mockQuery.mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: null }]);
-    fakeTxQuery.mockResolvedValue({ rowCount: 1, rows: [] });
+    mockQuery.mockResolvedValueOnce([]); // create-if-missing INSERT (WF3 2026-11-11)
+    fakeTxQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ account_deleted_at: null, stripe_customer_id: null }] }) // SELECT ... FOR UPDATE
+      .mockResolvedValueOnce({ rowCount: 0, rows: [] }) // no subscription without a stored customer
+      .mockResolvedValue({ rowCount: 1, rows: [] });
     const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
     expect(res.status).toBe(200);
     const body = await res.json() as { data: { ok: boolean } };
@@ -589,10 +592,16 @@ describe('POST /api/user-profile/delete', () => {
 
   it('returns 200 ok:true when already deleted (idempotency)', async () => {
     mockGetUser.mockResolvedValueOnce(UID);
-    mockQuery.mockResolvedValueOnce([{ account_deleted_at: new Date().toISOString(), stripe_customer_id: null }]);
+    mockQuery.mockResolvedValueOnce([]); // create-if-missing INSERT (no-op: the row exists)
+    fakeTxQuery.mockResolvedValueOnce({
+      rowCount: 1,
+      rows: [{ account_deleted_at: new Date().toISOString(), stripe_customer_id: null }],
+    }); // SELECT ... FOR UPDATE
     const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
     expect(res.status).toBe(200);
-    expect(fakeTxQuery).not.toHaveBeenCalled();
+    // Only the locked read ran: no deletion write, no fan-out.
+    expect(fakeTxQuery).toHaveBeenCalledTimes(1);
+    expect(String(fakeTxQuery.mock.calls[0]![0])).toMatch(/FOR UPDATE/);
   });
 });
 

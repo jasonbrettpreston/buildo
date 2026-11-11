@@ -12,7 +12,7 @@
 // the invoice-event identity bridge), and the indistinguishable-400
 // nonce-failure contract.
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 
 const mockSessionsCreate = vi.fn();
@@ -304,5 +304,67 @@ describe('POST /api/subscribe/exchange — named config 500s', () => {
     expect(res.status).toBe(500);
     const text = JSON.stringify(await res.json());
     expect(text).not.toContain('SECRET_X1');
+  });
+});
+
+// WF3 2026-11-11 (MF-52 D-1 a part 3 = MF-47 D-4; panel security F1). Sign-up
+// creates only a `profiles` row (migration 226:35-45). A buyer with no
+// user_profiles row got a Stripe Customer the UPDATE could not store (0 rows),
+// and checkout still opened, so delete could not cancel the subscription.
+// Mocks are keyed by SQL text so the cases run against the old and new route.
+describe('POST /api/subscribe/exchange — no user_profiles row', () => {
+  function stubNoRow(opts: { storeReturns: Array<{ stripe_customer_id: string }> }) {
+    fakeTxQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ user_id: UID }] });
+    fakeQuery.mockImplementation(async (sql: string, params?: unknown[]) => {
+      if (/FROM logic_variables/.test(sql)) {
+        return params?.[0] === 'stripe_price_id_default'
+          ? [{ variable_value_json: 'price_live_123' }]
+          : [{ variable_value_json: { price_live_123: 'lead_gen' } }];
+      }
+      if (/SELECT email, stripe_customer_id FROM user_profiles/.test(sql)) return [];
+      if (/INSERT INTO user_profiles/.test(sql)) return [];
+      if (/UPDATE user_profiles/.test(sql)) return opts.storeReturns;
+      throw new Error(`unexpected SQL in test: ${sql}`);
+    });
+    mockCustomersCreate.mockResolvedValueOnce({ id: 'cus_created_norow' });
+  }
+
+  // clearAllMocks clears calls, not implementations or queued once-values:
+  // reset everything this describe stubs so nothing leaks under shuffle.
+  afterEach(() => {
+    fakeQuery.mockReset();
+    fakeTxQuery.mockReset();
+    mockCustomersCreate.mockReset();
+    mockSessionsCreate.mockReset();
+  });
+
+  it('creates the missing row (ON CONFLICT DO NOTHING) before storing the Customer, then opens checkout on it', async () => {
+    stubNoRow({ storeReturns: [{ stripe_customer_id: 'cus_created_norow' }] });
+    mockSessionsCreate.mockResolvedValueOnce({
+      id: 'cs_test_norow',
+      url: 'https://checkout.stripe.com/c/pay/cs_test_norow',
+    });
+
+    const res = await POST(makeRequest({ nonce: VALID_NONCE }));
+
+    expect(res.status).toBe(200);
+    const sqls = fakeQuery.mock.calls.map((c) => String(c[0]));
+    const insertAt = sqls.findIndex((s) => /INSERT INTO user_profiles/.test(s));
+    const storeAt = sqls.findIndex((s) => /UPDATE user_profiles/.test(s));
+    expect(insertAt).toBeGreaterThanOrEqual(0);
+    expect(sqls[insertAt]).toMatch(/ON CONFLICT \(user_id\) DO NOTHING/);
+    expect(fakeQuery.mock.calls[insertAt]?.[1]).toEqual([UID]);
+    expect(insertAt).toBeLessThan(storeAt);
+    expect(mockSessionsCreate.mock.calls[0]?.[0]).toMatchObject({ customer: 'cus_created_norow' });
+  });
+
+  it('refuses to open Stripe checkout when the Customer id could not be stored (0 rows)', async () => {
+    stubNoRow({ storeReturns: [] });
+
+    const res = await POST(makeRequest({ nonce: VALID_NONCE }));
+
+    expect(res.status).toBe(500);
+    expect((await res.json()).error.code).toBe('INTERNAL_ERROR');
+    expect(mockSessionsCreate).not.toHaveBeenCalled();
   });
 });

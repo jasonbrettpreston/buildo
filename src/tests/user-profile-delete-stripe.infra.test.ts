@@ -11,7 +11,7 @@
 //   - the webhook's deletion-state fence: subscription.updated/deleted arriving
 //     after the delete cannot overwrite 'cancelled_pending_deletion'.
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const mockSubsList = vi.fn();
@@ -43,6 +43,7 @@ vi.mock('@/lib/logger', () => ({
 import { POST as DELETE_POST } from '@/app/api/user-profile/delete/route';
 import { POST as WEBHOOK_POST } from '@/app/api/webhooks/stripe/route';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
+import { logError } from '@/lib/logger';
 
 const mockGetUser = vi.mocked(getUserIdFromSession);
 
@@ -51,6 +52,16 @@ beforeEach(() => {
   process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
   process.env.STRIPE_WEBHOOK_SECRET = 'whsec_dummy';
 });
+
+/** The route first runs the create-if-missing INSERT through `query`, then
+ *  reads the row FOR UPDATE inside the transaction (WF3 2026-11-11); the
+ *  deletion writes follow on the same transaction client. */
+function stubLockedRow(row: { account_deleted_at: string | null; stripe_customer_id: string | null }) {
+  mockQuery.mockResolvedValueOnce([]); // INSERT ... ON CONFLICT (user_id) DO NOTHING
+  fakeTxQuery
+    .mockResolvedValueOnce({ rowCount: 1, rows: [row] }) // SELECT ... FOR UPDATE
+    .mockResolvedValue({ rowCount: 1, rows: [] }); // deletion writes
+}
 
 function makePOST(pathname: string): NextRequest {
   return {
@@ -63,10 +74,10 @@ function makePOST(pathname: string): NextRequest {
 describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)', () => {
   it('schedules cancel_at_period_end on EVERY non-terminal subscription (multi-sub)', async () => {
     mockGetUser.mockResolvedValueOnce('uid-del-1');
-    // The deletion UPDATE + entitlement fan-out ride the txn client now
-    // (fakeTxQuery) — `query` serves only the SELECT (and the marker on
-    // failure paths).
-    mockQuery.mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: 'cus_del_1' }]); // SELECT
+    // The locked SELECT, the deletion UPDATE and the entitlement fan-out ride
+    // the txn client (fakeTxQuery) — `query` serves only the create-if-missing
+    // INSERT (and the marker on failure paths).
+    stubLockedRow({ account_deleted_at: null, stripe_customer_id: 'cus_del_1' });
     mockSubsList.mockResolvedValueOnce({
       data: [
         { id: 'sub_active', status: 'active' },
@@ -103,9 +114,8 @@ describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)'
 
   it('a Stripe throw is NON-FATAL but writes the durable stripe_cancel_failed_at marker', async () => {
     mockGetUser.mockResolvedValueOnce('uid-del-2');
-    mockQuery
-      .mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: 'cus_del_2' }])
-      .mockResolvedValueOnce(undefined); // marker UPDATE
+    stubLockedRow({ account_deleted_at: null, stripe_customer_id: 'cus_del_2' });
+    mockQuery.mockResolvedValueOnce(undefined); // marker UPDATE
     mockSubsList.mockRejectedValueOnce(new Error('stripe is down'));
 
     const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
@@ -124,9 +134,8 @@ describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)'
 
   it('a mid-loop update throw also lands the marker (partial cancellation is still debt)', async () => {
     mockGetUser.mockResolvedValueOnce('uid-del-3');
-    mockQuery
-      .mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: 'cus_del_3' }])
-      .mockResolvedValueOnce(undefined); // marker UPDATE
+    stubLockedRow({ account_deleted_at: null, stripe_customer_id: 'cus_del_3' });
+    mockQuery.mockResolvedValueOnce(undefined); // marker UPDATE
     mockSubsList.mockResolvedValueOnce({
       data: [
         { id: 'sub_a', status: 'active' },
@@ -146,13 +155,139 @@ describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)'
 
   it('makes NO Stripe calls when the profile has no customer id', async () => {
     mockGetUser.mockResolvedValueOnce('uid-del-4');
-    mockQuery.mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: null }]);
+    stubLockedRow({ account_deleted_at: null, stripe_customer_id: null });
 
     const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
 
     expect(res.status).toBe(200);
     expect(mockSubsList).not.toHaveBeenCalled();
     expect(mockSubsUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// WF3 2026-11-11 (MF-52 D-1 a, MF-47 D-4; panel security F1 + F6). The mocks
+// are keyed by SQL text, not call order, so the same cases run against the
+// old route (unlocked SELECT before the transaction) and the fixed one
+// (create-if-missing, then a locked read inside the transaction).
+describe('POST /api/user-profile/delete — no user_profiles row; subscription with no stored customer', () => {
+  const UID_NOROW = '00000000-0000-0000-0000-0000000d0e01';
+  const UID_SUBONLY = '00000000-0000-0000-0000-0000000d0e02';
+
+  // The SQL-keyed implementations below must not leak into later describes
+  // (clearAllMocks clears calls, not implementations).
+  afterEach(() => {
+    mockQuery.mockReset();
+    fakeTxQuery.mockReset();
+  });
+
+  function stubDb(opts: {
+    rowBeforeInsert: { account_deleted_at: string | null; stripe_customer_id: string | null } | null;
+    subscriptionId: string | null;
+  }) {
+    let row = opts.rowBeforeInsert;
+    mockQuery.mockImplementation(async (sql: string) => {
+      if (/INSERT INTO user_profiles/.test(sql)) {
+        row ??= { account_deleted_at: null, stripe_customer_id: null };
+        return [];
+      }
+      if (/SELECT account_deleted_at, stripe_customer_id FROM user_profiles/.test(sql)) {
+        return row ? [row] : [];
+      }
+      return undefined; // marker UPDATE (Stripe-failure path)
+    });
+    fakeTxQuery.mockImplementation(async (sql: string) => {
+      if (/FROM user_profiles/.test(sql) && /FOR UPDATE/.test(sql)) {
+        return { rowCount: row ? 1 : 0, rows: row ? [row] : [] };
+      }
+      if (/FROM entitlements/.test(sql)) {
+        return opts.subscriptionId
+          ? { rowCount: 1, rows: [{ stripe_subscription_id: opts.subscriptionId }] }
+          : { rowCount: 0, rows: [] };
+      }
+      return { rowCount: 1, rows: [] };
+    });
+  }
+
+  function markerWrites(uid: string) {
+    return [...mockQuery.mock.calls, ...fakeTxQuery.mock.calls].filter((c) => {
+      const sql = String(c[0]);
+      const params = (c[1] ?? []) as unknown[];
+      return (
+        /UPDATE user_profiles/.test(sql) &&
+        /stripe_cancel_failed_at\s*=/.test(sql) &&
+        params[0] === uid &&
+        (params.length === 1 || params[1] === true)
+      );
+    });
+  }
+
+  it('creates the missing row, reads it locked, and deletes (200, not 404)', async () => {
+    mockGetUser.mockResolvedValueOnce(UID_NOROW);
+    stubDb({ rowBeforeInsert: null, subscriptionId: null });
+
+    const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ data: { ok: true }, error: null, meta: null });
+    const insert = mockQuery.mock.calls.find((c) => /INSERT INTO user_profiles/.test(String(c[0])));
+    expect(insert).toBeDefined();
+    expect(String(insert![0])).toMatch(/ON CONFLICT \(user_id\) DO NOTHING/);
+    expect(insert![1]).toEqual([UID_NOROW]);
+    const locked = fakeTxQuery.mock.calls.find(
+      (c) => /FROM user_profiles/.test(String(c[0])) && /FOR UPDATE/.test(String(c[0])),
+    );
+    expect(locked).toBeDefined();
+    const flag = fakeTxQuery.mock.calls.find((c) => /SET account_deleted_at = NOW\(\)/.test(String(c[0])));
+    expect(flag).toBeDefined();
+    expect(markerWrites(UID_NOROW)).toHaveLength(0);
+    expect(mockSubsList).not.toHaveBeenCalled();
+  });
+
+  it('a subscription with no stored customer sets stripe_cancel_failed_at and logs, so the operator sweep picks it up', async () => {
+    mockGetUser.mockResolvedValueOnce(UID_SUBONLY);
+    stubDb({
+      rowBeforeInsert: { account_deleted_at: null, stripe_customer_id: null },
+      subscriptionId: 'sub_orphan_1',
+    });
+
+    const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
+
+    expect(res.status).toBe(200);
+    expect(markerWrites(UID_SUBONLY)).toHaveLength(1);
+    expect(vi.mocked(logError)).toHaveBeenCalledWith(
+      '[user-profile/delete]',
+      expect.anything(),
+      expect.objectContaining({ uid: UID_SUBONLY, stripe_subscription_id: 'sub_orphan_1' }),
+    );
+    // No customer to cancel against: no Stripe call.
+    expect(mockSubsList).not.toHaveBeenCalled();
+  });
+
+  it('no subscription and no customer: no marker (nothing is billing)', async () => {
+    mockGetUser.mockResolvedValueOnce(UID_SUBONLY);
+    stubDb({
+      rowBeforeInsert: { account_deleted_at: null, stripe_customer_id: null },
+      subscriptionId: null,
+    });
+
+    const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
+
+    expect(res.status).toBe(200);
+    expect(markerWrites(UID_SUBONLY)).toHaveLength(0);
+  });
+
+  it('a second POST after the row was created and deleted is the idempotent 200 (no second write)', async () => {
+    mockGetUser.mockResolvedValueOnce(UID_NOROW);
+    stubDb({
+      rowBeforeInsert: { account_deleted_at: '2026-11-11T00:00:00Z', stripe_customer_id: null },
+      subscriptionId: 'sub_orphan_2',
+    });
+
+    const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
+
+    expect(res.status).toBe(200);
+    expect(fakeTxQuery.mock.calls.some((c) => /^\s*UPDATE/.test(String(c[0])))).toBe(false);
+    expect(markerWrites(UID_NOROW)).toHaveLength(0);
   });
 });
 

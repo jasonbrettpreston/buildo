@@ -156,6 +156,13 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       `SELECT email, stripe_customer_id FROM user_profiles WHERE user_id = $1`,
       [userId],
     );
+    if (profileRows.length === 0) {
+      // Create-if-missing (WF3 2026-11-11, MF-52 D-1 a part 3 = MF-47 D-4;
+      // the pattern at user-profile/route.ts:141). Sign-up creates only a
+      // `profiles` row (migration 226:35-45); without a user_profiles row the
+      // customer store below matched 0 rows, so delete could not cancel.
+      await query(`INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, [userId]);
+    }
     const email = profileRows[0]?.email ?? null;
     let customerId = profileRows[0]?.stripe_customer_id ?? null;
     if (!customerId) {
@@ -170,7 +177,22 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
          RETURNING stripe_customer_id`,
         [userId, created.id],
       );
-      customerId = stored[0]?.stripe_customer_id ?? created.id;
+      if (stored.length === 0) {
+        // The Customer id could not be stored, so account deletion would have
+        // no customer to cancel against. Refuse to open Stripe rather than bill
+        // an account we cannot stop billing. The Customer just created has no
+        // subscription (inert, like the race loser's above).
+        logError('[subscribe/exchange]', new Error('Stripe customer id not stored (0 rows)'), {
+          event: 'customer_store_failed',
+          uid: userId,
+          stripe_customer_id: created.id,
+        });
+        return NextResponse.json(
+          { data: null, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' }, meta: null },
+          { status: 500 },
+        );
+      }
+      customerId = stored[0]!.stripe_customer_id;
     }
 
     // [P1-F6 fold — Gemini MED race] Resolve the PRODUCT at session-creation

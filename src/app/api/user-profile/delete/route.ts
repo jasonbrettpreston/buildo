@@ -29,22 +29,12 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   }
 
   try {
-    const rows = await query<{ account_deleted_at: string | null; stripe_customer_id: string | null }>(
-      `SELECT account_deleted_at, stripe_customer_id FROM user_profiles WHERE user_id = $1`,
-      [uid],
-    );
-
-    if (rows.length === 0) {
-      return NextResponse.json(
-        { data: null, error: { code: 'NOT_FOUND', message: 'Profile not found' }, meta: null },
-        { status: 404 },
-      );
-    }
-
-    // Idempotency: already deleted → 200
-    if (rows[0]!.account_deleted_at) {
-      return NextResponse.json({ data: { ok: true }, error: null, meta: null });
-    }
+    // Create-if-missing (WF3 2026-11-11, MF-52 D-1 a; the pattern at
+    // user-profile/route.ts:141). Sign-up creates only a `profiles` row
+    // (migration 226:35-45), so a user who never hit PATCH /api/user-profile
+    // has no user_profiles row. The old 404 here meant that user could not
+    // delete their account in the app (App Store 5.1.1(v)).
+    await query(`INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, [uid]);
 
     // Entitlements swap (`.cursor/phase1_plan.md` Item 4 W5): deletion is
     // account-level — account_deleted_at on user_profiles PLUS a fan-out to
@@ -52,17 +42,75 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     // 'cancelled_pending_deletion' must block re-subscribe on all products).
     // Both writes commit together or not at all (fold: withTransaction added
     // this phase — a mid-write failure must not leave a deleted account with
-    // live entitlements, or vice versa).
-    await withTransaction(async (client) => {
+    // live entitlements, or vice versa). The row is read FOR UPDATE inside the
+    // same transaction (panel security F6), so the idempotency check, the
+    // stored Stripe customer and the write all use one locked row.
+    const outcome = await withTransaction(async (client) => {
+      const locked = await client.query<{ account_deleted_at: string | null; stripe_customer_id: string | null }>(
+        `SELECT account_deleted_at, stripe_customer_id FROM user_profiles WHERE user_id = $1 FOR UPDATE`,
+        [uid],
+      );
+      const row = locked.rows[0];
+      if (!row) return { kind: 'no_profile' as const };
+
+      // Idempotency: already deleted → 200
+      if (row.account_deleted_at) return { kind: 'already_deleted' as const };
+
+      // A subscription with no stored customer (panel security F1): checkout
+      // could create a Stripe Customer it failed to store, so the cancel below
+      // has nothing to call. Mark the debt with the existing
+      // stripe_cancel_failed_at marker so the operator sweep
+      // (docs/runbook/stripe_cancel_failed_sweep.md) cancels it by hand.
+      let orphanSubscriptionId: string | null = null;
+      if (!row.stripe_customer_id) {
+        const subs = await client.query<{ stripe_subscription_id: string }>(
+          `SELECT stripe_subscription_id FROM entitlements
+           WHERE user_id = $1 AND stripe_subscription_id IS NOT NULL
+           LIMIT 1`,
+          [uid],
+        );
+        orphanSubscriptionId = subs.rows[0]?.stripe_subscription_id ?? null;
+      }
+
       await client.query(
         `UPDATE user_profiles
          SET account_deleted_at = NOW(),
+             stripe_cancel_failed_at = CASE WHEN $2 THEN NOW() ELSE stripe_cancel_failed_at END,
              updated_at = NOW()
          WHERE user_id = $1`,
-        [uid],
+        [uid, orphanSubscriptionId !== null],
       );
       await markAllEntitlementsCancelledPendingDeletion(client, uid);
+      return {
+        kind: 'deleted' as const,
+        stripeCustomerId: row.stripe_customer_id,
+        orphanSubscriptionId,
+      };
     });
+
+    if (outcome.kind === 'no_profile') {
+      // The insert above ran, so a missing row here is data corruption (same
+      // handling as subscribe/session's no_profile branch).
+      logError('[user-profile/delete]', new Error('No user_profiles row after create-if-missing'), {
+        event: 'data_inconsistency',
+        uid,
+      });
+      return NextResponse.json(
+        { data: null, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' }, meta: null },
+        { status: 500 },
+      );
+    }
+    if (outcome.kind === 'already_deleted') {
+      return NextResponse.json({ data: { ok: true }, error: null, meta: null });
+    }
+
+    if (outcome.orphanSubscriptionId) {
+      logError('[user-profile/delete]', new Error('Subscription has no stored Stripe customer; cancel marked for the operator sweep'), {
+        uid,
+        stage: 'stripe_cancel_no_customer',
+        stripe_subscription_id: outcome.orphanSubscriptionId,
+      });
+    }
 
     // Delete-time Stripe cancel (P26-26D): schedule cancel_at_period_end for
     // every live subscription (user ruling 2026-07-12 — deleter keeps the paid
@@ -71,7 +119,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     // stripe_cancel_failed_at so the operator sweep
     // (docs/runbook/stripe_cancel_failed_sweep.md) retries it. Without the
     // marker, a swallowed failure means a deleted user keeps getting billed.
-    const stripeCustomerId = rows[0]!.stripe_customer_id;
+    const stripeCustomerId = outcome.stripeCustomerId;
     if (stripeCustomerId) {
       try {
         await cancelAllStripeSubscriptions(stripeCustomerId);

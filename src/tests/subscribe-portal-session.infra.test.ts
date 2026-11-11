@@ -84,6 +84,33 @@ describe('POST /api/subscribe/portal-session', () => {
     expect(mockPortalCreate).not.toHaveBeenCalled();
   });
 
+  // WF3 2026-11-11 (MF-52 D-3, panel security F2): a deleted account's token
+  // lives about an hour; in that hour the portal must not open (a portal
+  // renewal could undo the delete-time period-end cancel).
+  it('returns 403 ACCOUNT_DELETED for an account scheduled for deletion, with no Stripe call', async () => {
+    const deletedAt = new Date(Date.now() - 2 * 86_400_000).toISOString();
+    mockedGetUid.mockResolvedValueOnce('uid-portal-deleted');
+    fakeQuery.mockResolvedValueOnce([
+      { account_deleted_at: deletedAt, stripe_customer_id: 'cus_stored_del' },
+    ]);
+
+    const res = await POST(makeRequest('/api/subscribe/portal-session'));
+
+    expect(res.status).toBe(403);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    // The body the mobile apiClient reads into AccountDeletedError (the same
+    // shape user-profile/route.ts returns).
+    const body = await res.json();
+    expect(body.error).toMatchObject({
+      code: 'ACCOUNT_DELETED',
+      account_deleted_at: deletedAt,
+      days_remaining: expect.any(Number),
+    });
+    expect(body.error.days_remaining).toBeGreaterThanOrEqual(0);
+    expect(body.error.days_remaining).toBeLessThanOrEqual(30);
+    expect(mockPortalCreate).not.toHaveBeenCalled();
+  });
+
   it('returns 401 without a session', async () => {
     mockedGetUid.mockResolvedValueOnce(null);
 
