@@ -1,0 +1,1641 @@
+{
+  "$comment": "MF-57 · THE v21 report page table (approved mock v21, oq:866-869; binding brief fields/REPORT-LAYOUT-BRIEF-v4.md). Sections in the brief screen order; each part is ONE shown text with ONE binding: `field` (a declared report-v2.decl.json field; the producer sends its server-formatted text under `key`, R17/FE-05), `content` (a key of report-presentation.json `page`), or `pending` (Q-G4 a: the ruled text, no value; `why` names the brief status or the open item that blocks it). Read by src/lib/surfaces/report/core.ts buildPage; locked by src/tests/surfaces/report-page.logic.test.ts. No field is invented; an undeclared field is pending and listed.",
+  "layout": "v21",
+  "pending_texts": {
+    "estimated": "pending.estimated",
+    "classified": "pending.classified"
+  },
+  "frames": [
+    {
+      "brief": "A0",
+      "why": "page frame: one column, max 430, gutter 16 (component)"
+    },
+    {
+      "brief": "B0",
+      "why": "option frame (component)"
+    }
+  ],
+  "owed": [
+    {
+      "brief": "C2",
+      "why": "after-entry line: shows the stored user lot size (MF-19 input); no entry in the synthetic golden"
+    },
+    {
+      "brief": "D2",
+      "why": "ad after Option 3: slot key ad_scenario_detached_houseplex is not declared (open item 17; MF-61); no empty box (MF-20)"
+    }
+  ],
+  "fe05_flagged_rules": [
+    "rate_sqft",
+    "rate_sqft_unit",
+    "option_label",
+    "len1_each",
+    "pct0",
+    "fsi2",
+    "notes_h",
+    "coa_answer",
+    "coa_neighbours",
+    "coa_varied",
+    "roof_options",
+    "units_pitched",
+    "lot_range_error",
+    "lot_range_error_m2",
+    "after_entry"
+  ],
+  "kinds": {
+    "title": [
+      "title"
+    ],
+    "address": [
+      "address"
+    ],
+    "option": [
+      "label",
+      "title",
+      "picture.caption",
+      "spec_label",
+      "size.badge",
+      "size.label",
+      "size.sub",
+      "size.value",
+      "size.m2",
+      "size.button",
+      "size.count",
+      "cost.badge",
+      "cost.label",
+      "cost.sub",
+      "cost.value",
+      "cost.rate",
+      "cost.button",
+      "size.panel.h",
+      "size.panel.why",
+      "size.panel.notes_h",
+      "size.panel.notes",
+      "size.panel.all",
+      "size.row.label",
+      "size.row.value",
+      "size.panel.ver",
+      "size.panel.hide",
+      "cost.panel.h",
+      "cost.row.label",
+      "cost.row.value",
+      "cost.panel.note",
+      "cost.panel.ver",
+      "cost.panel.hide",
+      "var_label",
+      "bigger.q",
+      "bigger.answer",
+      "bigger.how",
+      "bigger.how.steps",
+      "nbr.q",
+      "nbr.answer",
+      "nbr.recent",
+      "nbr.swipe",
+      "nbr.projects",
+      "tag",
+      "nbr.pointer",
+      "unit.badge",
+      "unit.label",
+      "unit.sub",
+      "unit.value",
+      "unit.m2"
+    ],
+    "lot_size": [
+      "title",
+      "body",
+      "button"
+    ],
+    "ad": [],
+    "coming_soon": [
+      "heading",
+      "items"
+    ],
+    "lot_facts": [
+      "heading",
+      "row.label",
+      "row.value"
+    ],
+    "legal": [
+      "line"
+    ],
+    "footer": [
+      "sources",
+      "change",
+      "copyright"
+    ],
+    "sheet": [
+      "title",
+      "body",
+      "record.label",
+      "record.value",
+      "input.label",
+      "input.placeholder",
+      "unit.sqft",
+      "unit.m2",
+      "error",
+      "note",
+      "submit",
+      "cancel"
+    ]
+  },
+  "sections": [
+    {
+      "kind": "title",
+      "id": "title",
+      "parts": [
+        {
+          "role": "title",
+          "brief": "A1",
+          "content": "page.title"
+        }
+      ]
+    },
+    {
+      "kind": "address",
+      "id": "address",
+      "parts": [
+        {
+          "role": "address",
+          "brief": "A2",
+          "pending": "estimated",
+          "why": "no report field declared (brief: undeclared): match.address retired by MF-10; open item 21"
+        }
+      ]
+    },
+    {
+      "kind": "option",
+      "id": "o1",
+      "scenario": "detached_house/pitched",
+      "parts": [
+        {
+          "role": "label",
+          "brief": "B1",
+          "pending": "estimated",
+          "why": "option_label: no field carries the position (FE-05 FLAG)"
+        },
+        {
+          "role": "title",
+          "brief": "B2",
+          "pending": "estimated",
+          "why": "display_label: declared slot, values owed"
+        },
+        {
+          "role": "picture.caption",
+          "brief": "B4",
+          "pending": "estimated",
+          "why": "open item 19 (caption \"Illustration\" vs \"Illustrative — not this lot\", C13)"
+        },
+        {
+          "role": "spec_label",
+          "brief": "B5",
+          "content": "spec.label"
+        },
+        {
+          "role": "size.badge",
+          "brief": "B6",
+          "pending": "estimated",
+          "why": "card_confidence: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.label",
+          "brief": "B6",
+          "content": "tile.size.label"
+        },
+        {
+          "role": "size.sub",
+          "brief": "B6",
+          "content": "tile.size.sub"
+        },
+        {
+          "role": "size.value",
+          "brief": "B6",
+          "field": "gfa_pitched_m2",
+          "rule": "area_sqft",
+          "key": "o1.size.value"
+        },
+        {
+          "role": "size.m2",
+          "brief": "B6",
+          "field": "gfa_pitched_m2",
+          "rule": "area_m2",
+          "key": "o1.size.m2"
+        },
+        {
+          "role": "size.button",
+          "brief": "B6",
+          "content": "btn.see_details"
+        },
+        {
+          "role": "size.count",
+          "brief": "B6",
+          "pending": "estimated",
+          "why": "disclosure_count: no report field declared (brief: undeclared); open item 19 (chip colour)"
+        },
+        {
+          "role": "cost.badge",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 area_confidence not on origin"
+        },
+        {
+          "role": "cost.label",
+          "brief": "B7",
+          "content": "tile.cost.label"
+        },
+        {
+          "role": "cost.sub",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "open item 19 (\"(estimate)\", W9)"
+        },
+        {
+          "role": "cost.value",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin; open item 2 (money format)"
+        },
+        {
+          "role": "cost.rate",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 per_sqm; rate_sqft_unit FE-05 FLAG"
+        },
+        {
+          "role": "cost.button",
+          "brief": "B7",
+          "content": "btn.see_details"
+        },
+        {
+          "role": "size.panel.h",
+          "brief": "B9",
+          "content": "panel.size.h"
+        },
+        {
+          "role": "size.panel.why",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "confidence_reason: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.panel.notes_h",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "notes_h: disclosure_count no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.panel.notes",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "disclosure texts per option: no report field declared (brief: undeclared); open item 13"
+        },
+        {
+          "role": "size.panel.all",
+          "brief": "B9",
+          "content": "panel.all_numbers"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.1",
+          "content": "row.max_build_size"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.1",
+          "field": "gfa_pitched_m2",
+          "rule": "area_sqft_m2_paren",
+          "key": "o1.row.max"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.2",
+          "content": "row.storeys"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.2",
+          "field": "storeys_max",
+          "rule": "int",
+          "key": "o1.row.storeys"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.3",
+          "content": "row.height"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.3",
+          "pending": "estimated",
+          "why": "len1 owed server rule; open item 3"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.11",
+          "content": "row.footprint"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.11",
+          "field": "footprint_max_m2",
+          "rule": "area_sqft_m2_paren",
+          "key": "o1.row.footprint"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.12",
+          "content": "row.coverage"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.12",
+          "pending": "estimated",
+          "why": "pct0 FE-05 FLAG, no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.13",
+          "content": "row.fsi"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.13",
+          "pending": "estimated",
+          "why": "fsi2 FE-05 FLAG, no per-option field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.14",
+          "content": "row.front_setback"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.14",
+          "pending": "estimated",
+          "why": "len1 owed server rule; open item 3"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.15",
+          "content": "row.rear_setback"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.15",
+          "pending": "estimated",
+          "why": "no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.16",
+          "content": "row.side_setbacks"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.16",
+          "pending": "estimated",
+          "why": "len1_each FE-05 FLAG, no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.17",
+          "content": "row.depth"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.17",
+          "pending": "estimated",
+          "why": "len1 owed server rule; open item 3"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.18",
+          "content": "row.main_wall"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.18",
+          "pending": "estimated",
+          "why": "no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.19",
+          "content": "row.homes"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.19",
+          "field": "units_max",
+          "rule": "int",
+          "key": "o1.row.homes"
+        },
+        {
+          "role": "size.panel.ver",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "ver_line: owed content key + server date rule; open item 23"
+        },
+        {
+          "role": "size.panel.hide",
+          "brief": "B9",
+          "content": "btn.hide_details"
+        },
+        {
+          "role": "cost.panel.h",
+          "brief": "B10",
+          "content": "panel.cost.h"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.1",
+          "content": "row.cost_total"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.1",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.2",
+          "content": "row.cost_rate"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.2",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.3",
+          "content": "row.cost_area"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.3",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.4",
+          "content": "row.cost_basis"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.4",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.5",
+          "content": "row.cost_conf"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.5",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.6",
+          "content": "row.cost_excl"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.6",
+          "pending": "estimated",
+          "why": "open item 24 (not checked against the MB-86 scope)"
+        },
+        {
+          "role": "cost.panel.note",
+          "brief": "B10",
+          "pending": "estimated",
+          "why": "open item 24"
+        },
+        {
+          "role": "cost.panel.ver",
+          "brief": "B10",
+          "pending": "estimated",
+          "why": "no computed-date field on the cost line; open item 24"
+        },
+        {
+          "role": "cost.panel.hide",
+          "brief": "B10",
+          "content": "btn.hide_details"
+        },
+        {
+          "role": "var_label",
+          "brief": "B11",
+          "content": "var.label"
+        },
+        {
+          "role": "bigger.q",
+          "brief": "B12",
+          "content": "q.bigger"
+        },
+        {
+          "role": "bigger.answer",
+          "brief": "B12",
+          "pending": "estimated",
+          "why": "coa_status / coa_gfa_sqm: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "bigger.how",
+          "brief": "B13",
+          "content": "btn.how"
+        },
+        {
+          "role": "bigger.how.steps",
+          "brief": "B13",
+          "pending": "estimated",
+          "why": "open item 19 (How? steps; lawyer check owed)"
+        },
+        {
+          "role": "nbr.q",
+          "brief": "B14",
+          "content": "q.neighbours"
+        },
+        {
+          "role": "nbr.answer",
+          "brief": "B14",
+          "pending": "classified",
+          "why": "nbhd_coa counts: no report field declared (brief: undeclared); open item 11; nbhd_coa_* count the whole neighbourhood, a same-filter count of the shown projects is an owed server rule (brief v4 review)"
+        },
+        {
+          "role": "nbr.recent",
+          "brief": "B15",
+          "content": "row.most_recent"
+        },
+        {
+          "role": "nbr.swipe",
+          "brief": "B15",
+          "pending": "estimated",
+          "why": "open item 19 (\"Swipe ›\")"
+        },
+        {
+          "role": "nbr.projects",
+          "brief": "B15",
+          "pending": "classified",
+          "why": "CoA project fields: no report field declared (brief: undeclared); open items 9, 10, 12; variance codes on origin (height_m, side_setback_m, fsi, units in required_unit/proposed_unit) need an owed server words rule"
+        }
+      ]
+    },
+    {
+      "kind": "lot_size",
+      "id": "lot_size",
+      "after_option": 1,
+      "parts": [
+        {
+          "role": "title",
+          "brief": "C1",
+          "content": "ls.title"
+        },
+        {
+          "role": "body",
+          "brief": "C1",
+          "content": "ls.body"
+        },
+        {
+          "role": "button",
+          "brief": "C1",
+          "content": "ls.button"
+        }
+      ]
+    },
+    {
+      "kind": "option",
+      "id": "o2",
+      "scenario": "detached_house/flat_or_shallow_roof",
+      "parts": [
+        {
+          "role": "label",
+          "brief": "B1",
+          "pending": "estimated",
+          "why": "option_label: no field carries the position (FE-05 FLAG)"
+        },
+        {
+          "role": "title",
+          "brief": "B2",
+          "pending": "estimated",
+          "why": "display_label: declared slot, values owed"
+        },
+        {
+          "role": "tag",
+          "brief": "B3",
+          "pending": "estimated",
+          "why": "open item 19 (\"Most space\" wording, W6); a detached-only headline flag is owed from the server (is_headline can land on the houseplex; the ★ is for the detached roofs only, oq:741); never computed on screen"
+        },
+        {
+          "role": "picture.caption",
+          "brief": "B4",
+          "pending": "estimated",
+          "why": "open item 19 (caption \"Illustration\" vs \"Illustrative — not this lot\", C13)"
+        },
+        {
+          "role": "spec_label",
+          "brief": "B5",
+          "content": "spec.label"
+        },
+        {
+          "role": "size.badge",
+          "brief": "B6",
+          "pending": "estimated",
+          "why": "card_confidence: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.label",
+          "brief": "B6",
+          "content": "tile.size.label"
+        },
+        {
+          "role": "size.sub",
+          "brief": "B6",
+          "content": "tile.size.sub"
+        },
+        {
+          "role": "size.value",
+          "brief": "B6",
+          "field": "gfa_flat_m2",
+          "rule": "area_sqft",
+          "key": "o2.size.value"
+        },
+        {
+          "role": "size.m2",
+          "brief": "B6",
+          "field": "gfa_flat_m2",
+          "rule": "area_m2",
+          "key": "o2.size.m2"
+        },
+        {
+          "role": "size.button",
+          "brief": "B6",
+          "content": "btn.see_details"
+        },
+        {
+          "role": "size.count",
+          "brief": "B6",
+          "pending": "estimated",
+          "why": "disclosure_count: no report field declared (brief: undeclared); open item 19 (chip colour)"
+        },
+        {
+          "role": "cost.badge",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 area_confidence not on origin"
+        },
+        {
+          "role": "cost.label",
+          "brief": "B7",
+          "content": "tile.cost.label"
+        },
+        {
+          "role": "cost.sub",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "open item 19 (\"(estimate)\", W9)"
+        },
+        {
+          "role": "cost.value",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin; open item 2 (money format)"
+        },
+        {
+          "role": "cost.rate",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 per_sqm; rate_sqft_unit FE-05 FLAG"
+        },
+        {
+          "role": "cost.button",
+          "brief": "B7",
+          "content": "btn.see_details"
+        },
+        {
+          "role": "size.panel.h",
+          "brief": "B9",
+          "content": "panel.size.h"
+        },
+        {
+          "role": "size.panel.why",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "confidence_reason: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.panel.notes_h",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "notes_h: disclosure_count no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.panel.notes",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "disclosure texts per option: no report field declared (brief: undeclared); open item 13"
+        },
+        {
+          "role": "size.panel.all",
+          "brief": "B9",
+          "content": "panel.all_numbers"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.1",
+          "content": "row.max_build_size"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.1",
+          "field": "gfa_flat_m2",
+          "rule": "area_sqft_m2_paren",
+          "key": "o2.row.max"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.2",
+          "content": "row.storeys"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.2",
+          "field": "storeys_max",
+          "rule": "int",
+          "key": "o2.row.storeys"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.3",
+          "content": "row.height"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.3",
+          "pending": "estimated",
+          "why": "len1 owed server rule; open item 3"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.11",
+          "content": "row.footprint"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.11",
+          "field": "footprint_max_m2",
+          "rule": "area_sqft_m2_paren",
+          "key": "o2.row.footprint"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.12",
+          "content": "row.coverage"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.12",
+          "pending": "estimated",
+          "why": "pct0 FE-05 FLAG, no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.13",
+          "content": "row.fsi"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.13",
+          "pending": "estimated",
+          "why": "fsi2 FE-05 FLAG, no per-option field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.14",
+          "content": "row.front_setback"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.14",
+          "pending": "estimated",
+          "why": "len1 owed server rule; open item 3"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.15",
+          "content": "row.rear_setback"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.15",
+          "pending": "estimated",
+          "why": "no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.16",
+          "content": "row.side_setbacks"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.16",
+          "pending": "estimated",
+          "why": "len1_each FE-05 FLAG, no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.17",
+          "content": "row.depth"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.17",
+          "pending": "estimated",
+          "why": "len1 owed server rule; open item 3"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.18",
+          "content": "row.main_wall"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.18",
+          "pending": "estimated",
+          "why": "no field; open item 5"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.19",
+          "content": "row.homes"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.19",
+          "field": "units_max",
+          "rule": "int",
+          "key": "o2.row.homes"
+        },
+        {
+          "role": "size.panel.ver",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "ver_line: owed content key + server date rule; open item 23"
+        },
+        {
+          "role": "size.panel.hide",
+          "brief": "B9",
+          "content": "btn.hide_details"
+        },
+        {
+          "role": "cost.panel.h",
+          "brief": "B10",
+          "content": "panel.cost.h"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.1",
+          "content": "row.cost_total"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.1",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.2",
+          "content": "row.cost_rate"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.2",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.3",
+          "content": "row.cost_area"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.3",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.4",
+          "content": "row.cost_basis"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.4",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.5",
+          "content": "row.cost_conf"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.5",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.6",
+          "content": "row.cost_excl"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.6",
+          "pending": "estimated",
+          "why": "open item 24 (not checked against the MB-86 scope)"
+        },
+        {
+          "role": "cost.panel.note",
+          "brief": "B10",
+          "pending": "estimated",
+          "why": "open item 24"
+        },
+        {
+          "role": "cost.panel.ver",
+          "brief": "B10",
+          "pending": "estimated",
+          "why": "no computed-date field on the cost line; open item 24"
+        },
+        {
+          "role": "cost.panel.hide",
+          "brief": "B10",
+          "content": "btn.hide_details"
+        },
+        {
+          "role": "var_label",
+          "brief": "B11",
+          "content": "var.label"
+        },
+        {
+          "role": "bigger.q",
+          "brief": "B12",
+          "content": "q.bigger"
+        },
+        {
+          "role": "bigger.answer",
+          "brief": "B12",
+          "pending": "estimated",
+          "why": "coa_status / coa_gfa_sqm: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "bigger.how",
+          "brief": "B13",
+          "content": "btn.how"
+        },
+        {
+          "role": "bigger.how.steps",
+          "brief": "B13",
+          "pending": "estimated",
+          "why": "open item 19 (How? steps; lawyer check owed)"
+        },
+        {
+          "role": "nbr.q",
+          "brief": "B14",
+          "content": "q.neighbours"
+        },
+        {
+          "role": "nbr.answer",
+          "brief": "B14",
+          "pending": "classified",
+          "why": "nbhd_coa counts: no report field declared (brief: undeclared); open item 11; nbhd_coa_* count the whole neighbourhood, a same-filter count of the shown projects is an owed server rule (brief v4 review)"
+        },
+        {
+          "role": "nbr.pointer",
+          "brief": "B16",
+          "pending": "classified",
+          "why": "open item 14"
+        }
+      ]
+    },
+    {
+      "kind": "ad",
+      "id": "ad_o2",
+      "field": "ad_scenario_detached_house_flat_or_shallow_roof",
+      "brief": "D1",
+      "parts": []
+    },
+    {
+      "kind": "option",
+      "id": "o3",
+      "scenario": "detached_houseplex",
+      "parts": [
+        {
+          "role": "label",
+          "brief": "B1",
+          "pending": "estimated",
+          "why": "option_label: no field carries the position (FE-05 FLAG)"
+        },
+        {
+          "role": "title",
+          "brief": "B2",
+          "pending": "estimated",
+          "why": "display_label values owed; open item 7; the count must be unit_count (units that fit), not units_max (brief v4 review HIGH b)"
+        },
+        {
+          "role": "picture.caption",
+          "brief": "B4",
+          "pending": "estimated",
+          "why": "open item 19 (caption \"Illustration\" vs \"Illustrative — not this lot\", C13)"
+        },
+        {
+          "role": "spec_label",
+          "brief": "B5",
+          "content": "spec.label"
+        },
+        {
+          "role": "size.badge",
+          "brief": "B6",
+          "pending": "estimated",
+          "why": "card_confidence: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.label",
+          "brief": "B6",
+          "content": "tile.size.label"
+        },
+        {
+          "role": "size.sub",
+          "brief": "B6",
+          "content": "tile.size.sub"
+        },
+        {
+          "role": "size.value",
+          "brief": "B6",
+          "field": "gfa_max_m2",
+          "rule": "area_sqft",
+          "key": "o3.size.value"
+        },
+        {
+          "role": "size.m2",
+          "brief": "B6",
+          "field": "gfa_max_m2",
+          "rule": "area_m2",
+          "key": "o3.size.m2"
+        },
+        {
+          "role": "size.button",
+          "brief": "B6",
+          "content": "btn.see_details"
+        },
+        {
+          "role": "size.count",
+          "brief": "B6",
+          "pending": "estimated",
+          "why": "disclosure_count: no report field declared (brief: undeclared); open item 19 (chip colour)"
+        },
+        {
+          "role": "cost.badge",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 area_confidence not on origin; open item 1"
+        },
+        {
+          "role": "cost.label",
+          "brief": "B7",
+          "content": "tile.cost.label"
+        },
+        {
+          "role": "cost.sub",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "open item 19 (\"(estimate)\", W9)"
+        },
+        {
+          "role": "cost.value",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin; open item 2 (money format)"
+        },
+        {
+          "role": "cost.rate",
+          "brief": "B7",
+          "pending": "estimated",
+          "why": "MB-86 per_sqm; rate_sqft_unit FE-05 FLAG"
+        },
+        {
+          "role": "cost.button",
+          "brief": "B7",
+          "content": "btn.see_details"
+        },
+        {
+          "role": "unit.badge",
+          "brief": "B8",
+          "pending": "estimated",
+          "why": "open item 8 (no confidence field for the per-unit figure)"
+        },
+        {
+          "role": "unit.label",
+          "brief": "B8",
+          "content": "tile.unit.label"
+        },
+        {
+          "role": "unit.sub",
+          "brief": "B8",
+          "pending": "estimated",
+          "why": "unit_avg_label: content key owed; binds unit_count, not units_max (brief v4 review HIGH b)"
+        },
+        {
+          "role": "unit.value",
+          "brief": "B8",
+          "field": "unit_area_m2",
+          "rule": "area_sqft",
+          "key": "o3.unit.value"
+        },
+        {
+          "role": "unit.m2",
+          "brief": "B8",
+          "field": "unit_area_m2",
+          "rule": "area_m2",
+          "key": "o3.unit.m2"
+        },
+        {
+          "role": "size.panel.h",
+          "brief": "B9",
+          "content": "panel.size.h"
+        },
+        {
+          "role": "size.panel.why",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "confidence_reason: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.panel.notes_h",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "notes_h: disclosure_count no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "size.panel.notes",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "disclosure texts per option: no report field declared (brief: undeclared); open item 13"
+        },
+        {
+          "role": "size.panel.all",
+          "brief": "B9",
+          "content": "panel.all_numbers"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.1",
+          "content": "row.max_build_size"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.1",
+          "field": "gfa_max_m2",
+          "rule": "area_sqft_m2_paren",
+          "key": "o3.row.max"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.4",
+          "content": "row.units"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.4",
+          "field": "unit_count",
+          "rule": "int",
+          "key": "o3.row.units"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.5",
+          "content": "row.unit_size"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.5",
+          "field": "unit_area_m2",
+          "rule": "area_sqft_m2_paren",
+          "key": "o3.row.unit_size"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.6",
+          "content": "row.basement"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.6",
+          "pending": "estimated",
+          "why": "basement rule: content key owed"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.7",
+          "content": "row.bedrooms"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.7",
+          "field": "houseplex_bedrooms",
+          "rule": "int",
+          "key": "o3.row.bedrooms"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.2",
+          "content": "row.storeys"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.2",
+          "field": "storeys_max",
+          "rule": "int",
+          "key": "o3.row.storeys"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.3",
+          "content": "row.height"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.3",
+          "pending": "estimated",
+          "why": "len1 owed server rule; open item 3"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.8",
+          "content": "row.roof"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.8",
+          "pending": "estimated",
+          "why": "no field; open item 6"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.9",
+          "content": "row.units_flat"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.9",
+          "field": "units_flat",
+          "rule": "int",
+          "key": "o3.row.units_flat"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.10",
+          "content": "row.units_pitched"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.10",
+          "pending": "estimated",
+          "why": "units_pitched FE-05 FLAG; open item 6"
+        },
+        {
+          "role": "size.panel.ver",
+          "brief": "B9",
+          "pending": "estimated",
+          "why": "ver_line: owed content key + server date rule; open item 23"
+        },
+        {
+          "role": "size.panel.hide",
+          "brief": "B9",
+          "content": "btn.hide_details"
+        },
+        {
+          "role": "cost.panel.h",
+          "brief": "B10",
+          "content": "panel.cost.h"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.1",
+          "content": "row.cost_total"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.1",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.2",
+          "content": "row.cost_rate"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.2",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.3",
+          "content": "row.cost_area"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.3",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.4",
+          "content": "row.cost_basis"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.4",
+          "pending": "estimated",
+          "why": "MB-86 scenario cost line not on origin"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.5",
+          "content": "row.cost_conf"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.5",
+          "pending": "estimated",
+          "why": "MB-86 not on origin; open item 1"
+        },
+        {
+          "role": "cost.row.label",
+          "brief": "B10.6",
+          "content": "row.cost_excl"
+        },
+        {
+          "role": "cost.row.value",
+          "brief": "B10.6",
+          "pending": "estimated",
+          "why": "open item 24 (not checked against the MB-86 scope)"
+        },
+        {
+          "role": "cost.panel.note",
+          "brief": "B10",
+          "pending": "estimated",
+          "why": "open item 24"
+        },
+        {
+          "role": "cost.panel.ver",
+          "brief": "B10",
+          "pending": "estimated",
+          "why": "no computed-date field on the cost line; open item 24"
+        },
+        {
+          "role": "cost.panel.hide",
+          "brief": "B10",
+          "content": "btn.hide_details"
+        },
+        {
+          "role": "var_label",
+          "brief": "B11",
+          "content": "var.label"
+        },
+        {
+          "role": "bigger.q",
+          "brief": "B12",
+          "content": "q.bigger"
+        },
+        {
+          "role": "bigger.answer",
+          "brief": "B12",
+          "pending": "estimated",
+          "why": "CoA fields: no report field declared (brief: undeclared); open item 15"
+        }
+      ]
+    },
+    {
+      "kind": "coming_soon",
+      "id": "soon",
+      "parts": [
+        {
+          "role": "heading",
+          "brief": "E1",
+          "content": "soon.h"
+        },
+        {
+          "role": "items",
+          "brief": "E1",
+          "pending": "estimated",
+          "why": "open item 16 (the Coming soon list)"
+        }
+      ]
+    },
+    {
+      "kind": "lot_facts",
+      "id": "lot",
+      "parts": [
+        {
+          "role": "heading",
+          "brief": "F1",
+          "content": "lot.h"
+        },
+        {
+          "role": "row.label",
+          "brief": "F2",
+          "content": "lot.size"
+        },
+        {
+          "role": "row.value",
+          "brief": "F2",
+          "field": "lot_size_sqm",
+          "rule": "area_sqft_m2_dot",
+          "key": "lot.size"
+        },
+        {
+          "role": "row.label",
+          "brief": "F3",
+          "content": "lot.fd"
+        },
+        {
+          "role": "row.value",
+          "brief": "F3",
+          "pending": "estimated",
+          "why": "frontage / depth: no report field declared (brief: undeclared); len_pair owed; open item 3"
+        },
+        {
+          "role": "row.label",
+          "brief": "F4",
+          "content": "lot.zone"
+        },
+        {
+          "role": "row.value",
+          "brief": "F4",
+          "pending": "estimated",
+          "why": "zone: no report field declared (brief: undeclared)"
+        },
+        {
+          "role": "row.label",
+          "brief": "F5",
+          "content": "lot.heritage"
+        },
+        {
+          "role": "row.value",
+          "brief": "F5",
+          "pending": "estimated",
+          "why": "heritage: no report field declared (brief: undeclared); yes/no columns are NOT NULL DEFAULT false: never-enriched lots must show the null value via *_dataset_version_when_enriched (owed server rule)"
+        },
+        {
+          "role": "row.label",
+          "brief": "F6",
+          "content": "lot.ravine"
+        },
+        {
+          "role": "row.value",
+          "brief": "F6",
+          "pending": "estimated",
+          "why": "ravine: no report field declared (brief: undeclared); yes/no columns are NOT NULL DEFAULT false: never-enriched lots must show the null value via *_dataset_version_when_enriched (owed server rule)"
+        },
+        {
+          "role": "row.label",
+          "brief": "F7",
+          "content": "lot.corner"
+        },
+        {
+          "role": "row.value",
+          "brief": "F7",
+          "pending": "estimated",
+          "why": "corner lot: no report field declared (brief: undeclared); yes/no columns are NOT NULL DEFAULT false: never-enriched lots must show the null value via *_dataset_version_when_enriched (owed server rule)"
+        },
+        {
+          "role": "row.label",
+          "brief": "F8",
+          "pending": "estimated",
+          "why": "open item 18 (\"Backs onto\" vs \"Abuts a laneway\")"
+        },
+        {
+          "role": "row.value",
+          "brief": "F8",
+          "pending": "estimated",
+          "why": "laneway: no report field declared (brief: undeclared); NOT NULL DEFAULT false: never-enriched lots must show the null value (owed server rule)"
+        }
+      ]
+    },
+    {
+      "kind": "legal",
+      "id": "legal",
+      "parts": [
+        {
+          "role": "line",
+          "brief": "G1",
+          "content": "legal.line"
+        }
+      ]
+    },
+    {
+      "kind": "footer",
+      "id": "footer",
+      "parts": [
+        {
+          "role": "sources",
+          "brief": "G2",
+          "pending": "estimated",
+          "why": "no data-date field; sources wording not ruled; open item 25"
+        },
+        {
+          "role": "change",
+          "brief": "G3",
+          "content": "footer.change"
+        },
+        {
+          "role": "copyright",
+          "brief": "G4",
+          "pending": "estimated",
+          "why": "open item 25 (\"© MaxBLD\" not ruled)"
+        }
+      ]
+    },
+    {
+      "kind": "sheet",
+      "id": "sheet",
+      "parts": [
+        {
+          "role": "title",
+          "brief": "H0",
+          "content": "sheet.h"
+        },
+        {
+          "role": "body",
+          "brief": "H0",
+          "content": "sheet.p"
+        },
+        {
+          "role": "record.label",
+          "brief": "H0",
+          "content": "sheet.now"
+        },
+        {
+          "role": "record.value",
+          "brief": "H0",
+          "field": "lot_size_sqm",
+          "rule": "area_sqft_m2_dot",
+          "key": "sheet.record"
+        },
+        {
+          "role": "input.label",
+          "brief": "H0",
+          "content": "sheet.label"
+        },
+        {
+          "role": "input.placeholder",
+          "brief": "H0",
+          "content": "sheet.placeholder"
+        },
+        {
+          "role": "unit.sqft",
+          "brief": "H0",
+          "content": "sheet.unit_sqft"
+        },
+        {
+          "role": "unit.m2",
+          "brief": "H0",
+          "content": "sheet.unit_m2"
+        },
+        {
+          "role": "error",
+          "brief": "H0",
+          "pending": "estimated",
+          "why": "lot_range_error FE-05 FLAG; bounds have no field (MB-42); open item 22"
+        },
+        {
+          "role": "note",
+          "brief": "H0",
+          "content": "sheet.note"
+        },
+        {
+          "role": "submit",
+          "brief": "H0",
+          "content": "sheet.submit"
+        },
+        {
+          "role": "cancel",
+          "brief": "H0",
+          "content": "sheet.cancel"
+        }
+      ]
+    }
+  ]
+}

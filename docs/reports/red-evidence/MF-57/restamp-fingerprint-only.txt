@@ -1,0 +1,11 @@
+MF-57 re-stamp of the 56 REPORT goldens (npx tsx scripts/surfaces/report-capture.ts), base 2db1bdd67.
+Cause: report-v2.decl.json and report-presentation.json gain the content:page field and the page block (fingerprint inputs, report-checks.mjs FP_FILES).
+Check: every changed line of every golden is a fingerprint.files sha line of one of those two files; no response_fixture or rendered_tree line moved.
+
+  56 -      "scripts/surfaces/_schema/report-presentation.json": "<sha16>",
+  56 -      "scripts/surfaces/_schema/report-v2.decl.json": "<sha16>"
+  56 +      "scripts/surfaces/_schema/report-presentation.json": "<sha16>",
+  56 +      "scripts/surfaces/_schema/report-v2.decl.json": "<sha16>"
+
+changed lines not matching the two fingerprint keys:
+0

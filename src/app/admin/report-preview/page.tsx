@@ -3,10 +3,13 @@
 //
 // MF-14 · lane E-MF14. Admin report-renderer preview. A server component: it runs viewOf over the committed synthetic golden trees and renders the one
 // ReportView. No state, no client bundle. Admin-only via route-guard.ts (/admin/* blanket), as the other admin pages. Not stored lot data.
+// MF-57: `?view=page&target=<t>` renders the approved v21 report PAGE (pageViewOf over the synthetic page golden) full-bleed on the report page
+// colour, with the synthetic banner and the target picker above it; the existing states are unchanged.
 import { ReportView } from '@/components/report/ReportView';
-import { viewOf, type ReportView as View } from '@/lib/surfaces/report/core';
+import { ReportPage } from '@/components/report/ReportPage';
+import { pageViewOf, viewOf, type PageView, type ReportView as View } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
-import { GOLDENS, STATES } from './goldens';
+import { GOLDENS, PAGE_GOLDENS, STATES } from './goldens';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +25,20 @@ export default async function ReportPreviewPage({ searchParams }: { searchParams
   const target = pick(one(q.target), TARGETS, 'web');
   const scenarioQ = one(q.scenario);
   const scenario = scenarioQ !== undefined && SCENARIOS.includes(scenarioQ) ? scenarioQ : null;
+  if (one(q.view) === 'page') {
+    const pg = PAGE_GOLDENS[target] as { response_fixture: { synthetic?: boolean }; rendered_tree: object };
+    const pv = pageViewOf(pg.rendered_tree, { target }, reportCtx) as PageView;
+    const link = (t: string): string => `/admin/report-preview?view=page&target=${t}`;
+    return (
+      <section aria-label="Report page preview (v21)" className="min-h-screen bg-report-page">
+        <div className="mx-auto max-w-[430px] space-y-2 px-4 pt-4 text-sm text-report-muted">
+          {pg.response_fixture.synthetic ? <p data-synthetic className="rounded border border-report-amber p-2">Synthetic golden fixture. Not this lot.</p> : null}
+          <nav aria-label="Target" className="flex flex-wrap gap-2">{TARGETS.map((t) => <a key={t} href={link(t)} aria-current={t === target ? 'true' : undefined} className={t === target ? 'font-semibold underline' : ''}>{t}</a>)}<a href="/admin/report-preview">states</a></nav>
+        </div>
+        <ReportPage view={pv} />
+      </section>
+    );
+  }
   const golden = GOLDENS[state] as { response_fixture: { synthetic?: boolean }; rendered_tree: object };
   const view = viewOf(golden.rendered_tree, { scenario, target }, reportCtx) as View;
   const href = (patch: Record<string, string | null>): string => {

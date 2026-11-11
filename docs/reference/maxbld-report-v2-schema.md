@@ -8,13 +8,13 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-123 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+124 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
 | `ad_slot` | 4 |
 | `catalogue` | 55 |
-| `content` | 37 |
+| `content` | 38 |
 | `parcels` | 27 |
 
 ## Gates
@@ -249,6 +249,7 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | Semi lot: needs your input | `ui.states.semi_needs_input` | text |  | new | rendered | `content:states.semi_needs_input` | Q-1/Q-2/Q-3 (decided 2026-10-20): on a semi_half lot only renovation cards, each asking for the owner input first; no estimate shown |
 | Semi lot: "it's detached" correction | `ui.states.semi_correction` | text |  | new | rendered | `content:states.semi_correction` | Q-2: the correction prompt; sets lot_form_user_override |
 | Lot-form display rules | `ui.lot_form_rules` | jsonb |  | new | rendered | `content:lot_form_rules` | Q-1/Q-2/Q-3: what a semi_half lot shows |
+| Report page text (v21) | `ui.page_text` | text |  | proposed | rendered | `content:page` | MF-57: fixed texts and the two ruled pending texts of the v21 page (report-v2-seed/page-text.json); read by buildPage, never sent in a response |
 | Street View photo block (display rules) | `ui.street_view` | jsonb |  | new | rendered | `content:street_view` | Q-9 (decided): caption, attribution template, placement |
 | Sponsored placements | `ui.ad_placements` | jsonb |  | new | rendered | `content:ad_placements` | Q-7/Q-8 (decided): first-party ads, two slots, never inside a card, always "Sponsored" |
 

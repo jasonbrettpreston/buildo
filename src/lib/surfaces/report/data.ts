@@ -9,6 +9,9 @@ import content from '../../../../scripts/surfaces/_schema/report-presentation.js
 import lists from '../../../../scripts/surfaces/_schema/report-v2-seed/row-presentation.json';
 import adContract from '../../../../scripts/surfaces/_schema/ad-contract.json';
 import layout from '../../../../scripts/surfaces/_schema/report-layout.json';
+import pageSchema from '../../../../scripts/surfaces/_schema/report-page.schema.json';
+import page from '../../../../scripts/surfaces/_schema/report-page.json';
 import type { ReportCtx } from './core';
 
-export const reportCtx: ReportCtx = { schema, decl, content, lists, layout, adContract };
+// MF-57: the v21 page contract and page table ride the same context (one home each).
+export const reportCtx: ReportCtx = { schema, decl, content, lists, layout, adContract, pageSchema, page };

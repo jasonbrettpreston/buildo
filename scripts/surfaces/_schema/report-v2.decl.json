@@ -11,7 +11,7 @@
     },
     "review": "scratchpad/report-review/REVIEW.md §6",
     "seeded": "2026-10-20",
-    "inputs_sha256_16": "a414da2494a3f717"
+    "inputs_sha256_16": "73601b5f311d6d49"
   },
   "inputs": {
     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
@@ -1314,6 +1314,16 @@
           "source": "content:lot_form_rules",
           "render": "rendered",
           "note": "Q-1/Q-2/Q-3: what a semi_half lot shows"
+        },
+        {
+          "path": "ui.page_text",
+          "name": "page_text",
+          "label": "Report page text (v21)",
+          "type": "text",
+          "status": "proposed",
+          "source": "content:page",
+          "render": "rendered",
+          "note": "MF-57: fixed texts and the two ruled pending texts of the v21 page (report-v2-seed/page-text.json); read by buildPage, never sent in a response"
         },
         {
           "path": "ui.street_view",

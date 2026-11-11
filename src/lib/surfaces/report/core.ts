@@ -25,6 +25,8 @@ const CONTROL_KEYS = ['status', 'lifecycle'];
 const INFO_KEYS = ['synthetic', 'roof_form'];
 // The one field the renderer itself produces: the plain-words reason (or the lifecycle message). Declared as a content field.
 const REASON_FIELD = 'status_text';
+// MF-57: the declared field that reads the v21 page texts (content:page). Read by buildPage from the registry, never accepted from a response.
+const PAGE_TEXT_FIELD = 'page_text';
 
 export class ReportRenderError extends Error {
   problems: string[];
@@ -94,7 +96,7 @@ export const buildTree = (response: Json, ctx: ReportCtx): Json => {
   for (const k of keys) {
     const hits = fields.filter((f) => f.name === k);
     const v = response[k];
-    if (k === REASON_FIELD) out.push(`RR-FIELD ${k}: produced by the renderer, not accepted from a response`);
+    if (k === REASON_FIELD || k === PAGE_TEXT_FIELD) out.push(`RR-FIELD ${k}: produced by the renderer, not accepted from a response`);
     else if (hits.length === 0) out.push(`RR-FIELD unknown field: ${k}`);
     else if (hits.length > 1) out.push(`RR-FIELD ambiguous field name: ${k}`);
     else if (!(v === null || typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v)))) out.push(`RR-FIELD ${k}: value is not a scalar`);
@@ -216,4 +218,170 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
   if (tree.lifecycle !== undefined) out.lifecycle = tree.lifecycle;
   if (reasonNode) out.reason = view(reasonNode);
   return out;
+};
+
+// ---- MF-57: the v21 report PAGE (approved mock v21; decision D-A (a), held for the operator) ------------------------------------------------
+// A page tree is built from the page table (ctx.page = scripts/surfaces/_schema/report-page.json) and a page response
+// { page, synthetic?, values: { <part key>: <server-formatted string> | null } }. Every shown text is a value the producer sent (R17, FE-05: a string,
+// never a number, shown as sent), a content text (report-presentation.json `page`) or a ruled pending text (Q-G4 a: never a value).
+// The contract is report-page.schema.json (it reuses the node contract's slot by $ref). Accumulates every problem, then throws once.
+export interface PagePart { role: string; brief: string; kind: 'value' | 'content' | 'pending'; field?: string; key?: string; rule?: string; content?: string; pending?: string; text: string }
+export interface PageSection { kind: string; id: string; brief?: string; scenario?: string; ad?: ReportSlot; parts: PagePart[] }
+export interface PageTree { page: string; sections: PageSection[] }
+export interface PageView { target: string; layout: Json; sections: PageSection[] }
+
+const AD_KIND_SECTION = 'ad';
+const PAGE_RESPONSE_KEYS = ['page', 'synthetic', 'values', 'hidden', 'not_evaluated'];
+const pageValidators = new WeakMap<object, any>();
+const pageValidatorOf = (pageSchema: Json, treeSchema: Json): any => {
+  let v = pageValidators.get(pageSchema);
+  if (!v) {
+    const ajv = new Ajv2020({ allErrors: true, strict: true }) as any;
+    ajv.addSchema(treeSchema);
+    v = ajv.compile(pageSchema);
+    pageValidators.set(pageSchema, v);
+  }
+  return v;
+};
+const pageTexts = (ctx: ReportCtx): Json => (ctx.content.page ?? {}) as Json;
+const oneField = (fields: Json[], name: unknown, at: string, out: string[]): Json | undefined => {
+  const hits = fields.filter((f) => f.name === name);
+  if (hits.length === 0) out.push(`RR-FIELD ${String(name)}: not declared (${at})`);
+  else if (hits.length > 1) out.push(`RR-FIELD ${String(name)}: ambiguous field name (${at})`);
+  return hits.length === 1 ? hits[0] : undefined;
+};
+
+export const buildPage = (response: Json, ctx: ReportCtx): Json => {
+  const out: string[] = [];
+  const T = ctx.page as Json;
+  const texts = pageTexts(ctx);
+  const fields = fieldsOf(ctx.decl);
+  const dash = String(ctx.content.states.null_value);
+  if (response?.page !== T.layout) out.push(`RR-PAGE response: page is not ${String(T.layout)}`);
+  for (const k of Object.keys(response ?? {})) if (!PAGE_RESPONSE_KEYS.includes(k)) out.push(`RR-PAGE response: unexpected key ${k}`);
+  const values: Json = response?.values !== null && typeof response?.values === 'object' ? response.values : {};
+  if (values !== response?.values) out.push('RR-PAGE response: values is not an object');
+  const keys = new Set<string>();
+  const built: [Json, Json | null][] = []; // [table section, built section or null], in table order
+  for (const s of T.sections as Json[]) {
+    const vocab: unknown = T.kinds?.[s.kind];
+    if (!Array.isArray(vocab)) out.push(`RR-PAGE ${String(s.id)}: unknown section kind ${String(s.kind)}`);
+    if (s.kind === AD_KIND_SECTION) { // MF-20 path: a declared ad_slot field; a null or empty creative yields no section (no empty box)
+      const f = oneField(fields, s.field, String(s.id), out);
+      if (f && kindOf(f) !== AD_KIND) out.push(`RR-SLOT ${String(s.field)}: field is not declared with kind ${AD_KIND}`);
+      keys.add(String(s.field));
+      const v = values[s.field];
+      if (!(v === undefined || v === null || typeof v === 'string')) out.push(`RR-PAGE ${String(s.field)}: value is not a string`);
+      const slot = f && kindOf(f) === AD_KIND && typeof v === 'string' ? slotOf(f, v, ctx) : null;
+      built.push([s, slot ? { kind: s.kind, id: s.id, brief: s.brief, ad: slot, parts: [] } : null]);
+      continue;
+    }
+    const parts = (s.parts as Json[]).map((p): Json => {
+      const at = `${String(s.id)}.${String(p.role)}`;
+      if (Array.isArray(vocab) && !vocab.includes(p.role)) out.push(`RR-PAGE ${at}: role not in the ${String(s.kind)} vocabulary`);
+      const base = { role: p.role, brief: p.brief };
+      if (p.field !== undefined) {
+        const f = oneField(fields, p.field, at, out);
+        if (f && kindOf(f) === AD_KIND) out.push(`RR-FIELD ${String(p.field)}: an ad_slot field is a section, never a part (R-34)`);
+        if (typeof p.key !== 'string' || p.key === '') out.push(`RR-PAGE ${at}: a value part has no key`);
+        else if (keys.has(p.key)) out.push(`RR-PAGE ${p.key}: duplicate key`);
+        keys.add(String(p.key));
+        const v = values[p.key];
+        if (!(v === undefined || v === null || typeof v === 'string')) out.push(`RR-PAGE ${String(p.key)}: value is not a string (the server formats, R17)`);
+        return { ...base, kind: 'value', field: p.field, key: p.key, rule: p.rule, text: typeof v === 'string' && v !== '' ? v : dash };
+      }
+      if (p.key !== undefined) { out.push(`RR-PAGE ${String(p.key)}: a ${p.content !== undefined ? 'content' : 'pending'} part takes no value (Q-G4 a)`); keys.add(String(p.key)); }
+      if (p.content !== undefined) {
+        const t = texts[p.content];
+        if (typeof t !== 'string' || t === '') out.push(`RR-CONTENT ${String(p.content)}: no page text`);
+        return { ...base, kind: 'content', content: p.content, text: String(t) };
+      }
+      const key = T.pending_texts?.[p.pending];
+      const t = typeof key === 'string' ? texts[key] : undefined;
+      if (typeof t !== 'string' || t === '') out.push(`RR-CONTENT ${at}: no pending text for ${String(p.pending)}`);
+      return { ...base, kind: 'pending', pending: p.pending, text: String(t) };
+    });
+    built.push([s, { kind: s.kind, id: s.id, ...(s.scenario !== undefined ? { scenario: s.scenario } : {}), parts }]);
+  }
+  for (const k of Object.keys(values)) if (!keys.has(k)) out.push(`RR-PAGE ${k}: not a key of the page table`);
+  // Which options show is the server's: `hidden` (option section ids the server hides: report-presentation.json states.hidden) and `not_evaluated`
+  // (option ids shown with a not_evaluated result). A hidden option is left out. A section anchored `after_option: N` follows the N-th SHOWN option,
+  // or the last shown option when fewer show: positions follow the visible cards (brief v4 review). A scenario ad (its slot names a scenario,
+  // ad-contract.json scenario_fields) follows ITS OWN option card and is left out when that option is hidden or not_evaluated (MF-20 D-7, operator
+  // "4. D-7 yes": no scenario ad beside a card that is not permitted or not evaluated). Nothing anchored is ever dropped silently.
+  const optionIds = (T.sections as Json[]).filter((x) => x.kind === 'option').map((x) => x.id);
+  const listOf = (k: string): unknown[] => {
+    const v = response?.[k];
+    if (v !== undefined && !Array.isArray(v)) out.push(`RR-PAGE response: ${k} is not a list`);
+    const xs: unknown[] = Array.isArray(v) ? v : [];
+    for (const h of xs) if (!optionIds.includes(h)) out.push(`RR-PAGE ${k} ${String(h)}: not an option section id`);
+    return xs;
+  };
+  const hidden = listOf('hidden');
+  const notEvaluated = listOf('not_evaluated');
+  if (out.length) throw new ReportRenderError(out);
+  const scenarioOf = (b: [Json, Json | null]): unknown => b[1]?.ad?.scenario;
+  let lastOption = -1;
+  built.forEach(([t], i) => { if (t.kind === 'option') lastOption = i; });
+  const anchored = built.filter(([t]) => t.after_option !== undefined);
+  const placed = new Set<[Json, Json | null]>();
+  const ordered: Json[] = [];
+  const shown: string[] = [];
+  const place = (b: [Json, Json | null]): void => { placed.add(b); if (b[1]) ordered.push(b[1]); };
+  built.forEach((b, i) => {
+    const [t, x] = b;
+    if (t.after_option !== undefined || scenarioOf(b) !== undefined) return;
+    if (t.kind === 'option') {
+      if (hidden.includes(t.id)) return;
+      if (x) ordered.push(x);
+      shown.push(t.id);
+      for (const a of anchored) if (a[0].after_option === shown.length) place(a);
+      if (!notEvaluated.includes(t.id)) for (const a of built) if (scenarioOf(a) === t.scenario) place(a);
+      return;
+    }
+    if (i > lastOption) for (const a of anchored) if (!placed.has(a)) place(a);
+    if (x) ordered.push(x);
+  });
+  for (const a of anchored) if (!placed.has(a)) place(a);
+  return { page: T.layout, sections: ordered };
+};
+
+// The throw: the page schema (AJV) plus what it cannot say. Accumulates, then throws once.
+export const assertPage = (tree: Json, ctx: ReportCtx): void => {
+  const out: string[] = [];
+  const validate = pageValidatorOf(ctx.pageSchema, ctx.schema);
+  if (!validate(tree)) for (const e of validate.errors ?? []) out.push(`RR-SCHEMA ${e.instancePath || '/'}: ${e.message}`);
+  const T = ctx.page as Json;
+  const texts = pageTexts(ctx);
+  const pend = new Set(Object.values(T.pending_texts ?? {}).map((k) => texts[k as string]));
+  const fields = fieldsOf(ctx.decl);
+  const ad = ctx.adContract;
+  for (const s of (Array.isArray(tree?.sections) ? tree.sections : []) as Json[]) {
+    const vocab: unknown = T.kinds?.[s?.kind];
+    if (s?.kind === AD_KIND_SECTION) {
+      const sl = s.ad as Json | undefined;
+      const f = sl ? fields.find((x) => x.name === sl.field) : undefined;
+      if (!sl || !f || kindOf(f) !== AD_KIND) out.push(`RR-SLOT ${String(s?.id)}: an ad section carries one declared ${AD_KIND} slot`);
+      if (sl && !(ad?.slots ?? []).includes(sl.slot)) out.push(`RR-SLOT ${String(sl.field)}: slot ${String(sl.slot)} is not in the ad contract`);
+      if (sl && sl.disclosure !== ctx.content.sponsored_label) out.push(`RR-SLOT ${String(sl.field)}: disclosure is not content.sponsored_label (R-17)`);
+      if ((s.parts ?? []).length) out.push(`RR-SLOT ${String(s.id)}: an ad section has no parts`);
+      continue;
+    }
+    if (s?.ad !== undefined) out.push(`RR-SLOT ${String(s?.id)}: an ad is never inside a ${String(s?.kind)} section (R-34)`);
+    for (const p of (Array.isArray(s?.parts) ? s.parts : []) as Json[]) {
+      const at = `${String(s?.id)}.${String(p?.role)}`;
+      if (Array.isArray(vocab) && !vocab.includes(p?.role)) out.push(`RR-PAGE ${at}: role not in the ${String(s?.kind)} vocabulary`);
+      if (p?.kind === 'value' && fields.filter((x) => x.name === p.field).length !== 1) out.push(`RR-FIELD ${String(p?.field)}: not one declared field (${at})`);
+      if (p?.kind === 'pending' && !pend.has(p.text)) out.push(`RR-CONTENT ${at}: a pending part shows only a ruled pending text (Q-G4 a)`);
+    }
+  }
+  if (out.length) throw new ReportRenderError(out);
+};
+
+// The projection: the page tree plus the target's layout row. The target is checked first, then the tree.
+export const pageViewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
+  const row = ctx.layout.targets[pick.target];
+  if (typeof pick.target !== 'string' || !Object.prototype.hasOwnProperty.call(ctx.layout.targets, pick.target) || !row) throw new ReportRenderError([`RR-TARGET ${String(pick.target)}: not a key of the layout table`]);
+  assertPage(tree, ctx);
+  return { target: pick.target, layout: row, sections: tree.sections };
 };

@@ -49,9 +49,9 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
-      "scripts/surfaces/_schema/report-presentation.json": "42fffef25debd50e",
+      "scripts/surfaces/_schema/report-presentation.json": "4be73a0159502365",
       "scripts/surfaces/_schema/report-tree.schema.json": "22d09e1b704ef8d6",
-      "scripts/surfaces/_schema/report-v2.decl.json": "fbc1d1be9285a268"
+      "scripts/surfaces/_schema/report-v2.decl.json": "dbd6415b737a7fe6"
     }
   }
 }

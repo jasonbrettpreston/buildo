@@ -1,0 +1,10 @@
+MF-57 red 1: the two new lock files on the base 2db1bdd67 (throwaway worktree, test files copied in, nothing else).
+Command: npx vitest run src/tests/surfaces/report-page.logic.test.ts src/tests/surfaces/report-page.ui.test.tsx
+Expected: both files fail: no buildPage/assertPage/pageViewOf in core.ts, no ReportPage component, no page capture, no page table.
+
+ FAIL  src/tests/surfaces/report-page.logic.test.ts [ src/tests/surfaces/report-page.logic.test.ts ]
+Error: Failed to load url ../../../scripts/surfaces/report-page-capture (resolved id: ../../../scripts/surfaces/report-page-capture) in /Users/brettpreston_macmini/Buildo-wt-mf57-red/src/tests/surfaces/report-page.logic.test.ts. Does the file exist?
+ FAIL  src/tests/surfaces/report-page.ui.test.tsx [ src/tests/surfaces/report-page.ui.test.tsx ]
+Error: Failed to resolve import "../../components/report/ReportPage" from "src/tests/surfaces/report-page.ui.test.tsx". Does the file exist?
+ Test Files  2 failed (2)
+      Tests  no tests
