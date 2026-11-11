@@ -25,6 +25,8 @@
 
 ### `GET /api/admin/parcels/lookup?q=<address>` | `?parcelId=<id>`
 
+> Dated note 2026-11-11 (M-246, prior text kept; MF-53 · McFrontend queue · lane E; operator, verbatim: ""choose your lot" and "address issues" screens should be built now and we should only be using the new report obviosuly"; plan `~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md`): `resolveAddress` also returns `resolution` and a map seed for the consumer route (Spec 100 §3.2 dated note 2026-11-11). This tool reads only `match`, `candidates` and `truncated`, which are unchanged on every outcome; its call passes no option, so it keeps today's two reads (the consumer-only unlinked read is off).
+
 Exactly one of `q` / `parcelId` (400 otherwise). `verifyAdminAuth` first line; `withApiEnvelope`; `{ data, error, meta }` envelope; **parameterized SQL only** (`$1…` — never interpolated input).
 
 **Resolution (`q` path):**
