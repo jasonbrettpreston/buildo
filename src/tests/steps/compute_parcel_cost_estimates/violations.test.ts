@@ -732,7 +732,10 @@ describe('compute_parcel_cost_estimates — MB-86: the parcel_maxbld_scenarios r
   it('table present: the cost pass streams buildScenarioSourceSql (all 8 declared scenario columns) through the guarded handle', async () => {
     const compute = loadCompute();
     const client = guardedClient(() => ({ rows: [] }));
-    const ctx = {
+    // The per-pass ctx the runner hands a post_commit pass (`passCtx`, scripts/lib/step/index.js ~:5612: contract, stream,
+    // flushBatch, onProgress and the write seams incl. retract) — NOT the generic stepCtx, so it is named `passCtx`, the
+    // runner's own name and the enrich_parcels violations-suite form (LW-D11 reads the first `const ctx` as a stepCtx).
+    const passCtx = {
       config: {
         cost_escalation_index: 100,
         compute_parcel_cost_fsi_max_plausible: 99.999,
@@ -755,7 +758,7 @@ describe('compute_parcel_cost_estimates — MB-86: the parcel_maxbld_scenarios r
       onProgress: () => {},
       retract: async () => 0,
     };
-    const result = await compute.runCostMenuPass(null, ctx);
+    const result = await compute.runCostMenuPass(null, passCtx);
     expect(result.scanned).toBe(0);
     expect(client.sql).toContain(compute.buildScenarioSourceSql());
     expect(guard.record().reads.parcel_maxbld_scenarios).toEqual(
