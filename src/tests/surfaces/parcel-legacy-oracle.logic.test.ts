@@ -22,7 +22,7 @@ const CONFIG: Record<string, string> = { SEARCH_MIN_QUERY_LEN: '3', SEARCH_CANDI
 /** Ruled changes (CONTRACT, S6 vocabulary), each with its cite: plan v3 §4 rows 6, 9, 18 and the operator rulings quoted in plan v3 §0.2. */
 export const INTENTIONALLY_CHANGED: Record<string, string> = {
   'Toronto lot lookup': 'the tagline becomes "Lot & Zoning Intelligence" (ruling 2026-11-09 item 1, the operator search layout)',
-  'placeholder=Search an address, e.g. 26 Hurlingham Cres': 'the placeholder becomes "Search Toronto address..." (ruling 2026-11-09 item 1)',
+  'placeholder=Search an address, e.g. 26 Hurlingham Cres': 'the placeholder becomes "Search Toronto address..." (ruling 2026-11-09 item 1), then "Enter lot address" (operator 2026-11-11, small pages v7.1 item 9, verbatim "inside the search box - should be enter lot address")',
   'accessibilityLabel=Search ${s.label}': 'the chips are the recent searches; the label is "Search <query>" (ruling 2026-11-09 item 2, P35-D16 a)',
   'accessibilityLabel=Open lot at ${c.address || c.parcelId}': 'a tap now selects a radio card labelled with the address; SELECT opens the lot (accepted 2026-11-09 item 1, P35-D17 a)',
   'Parcel {c.parcelId}': 'the radio cards carry the address only, as the layout (accepted 2026-11-09 item 1; plan v3 §2.2)',

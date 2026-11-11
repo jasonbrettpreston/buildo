@@ -9,7 +9,9 @@
 // carries a URL. viewOf shows the picked scenario's one image with its injected URL (pick.urls), the same on every target; no layout key.
 // MF-62 (Spec 126 11a.7 dated note 2026-11-11, FE-35; operator "Mf-62 - yes"): a loading response may carry `what_we_checked`; its tree then carries ONE
 // root-only `checked` object (as `slots`, never a node; never on miss, error or a reading tree): every text a content template of
-// states.checked filled with the server-formatted value, the pace as sent. viewOf adds `paced` (layout rows with details: collapsed) and the skip href.
+// states.checked filled with the server-formatted value, the pace as sent. MF-62 follow-up (operator 2026-11-11, the processing sequence): each
+// line carries its loading verb (content `verbs`) and its resolve time done_ms; `ready` (the line naming the report and the address, at ready_ms),
+// `open` (the reduce-motion action "View report"); the order is checked here: done after delay, ready after every fact and the dates, by the minimum. viewOf adds `paced` (layout rows with details: collapsed) and the skip href.
 // MF-14 · McFrontend queue · lane E-MF14. THE one REPORT renderer core: three pure functions. Every datum (schema, declaration, content registry,
 // headline lists, layout table) is an argument, so a test can inject a synthetic one and nothing here names a field. Runs on the server (the schema
 // check is AJV, the engine of the gate: scripts/surfaces/report-checks.mjs). No maths: String(n), the declared unit, the dash for null.
@@ -23,8 +25,8 @@ export interface ReportNode { field: string; source: string; label: string; valu
 export interface ReportSlot { field: string; slot: string; source: string; label: string; value: string; disclosure: string; scenario?: string }
 export interface ReportImageItem { scenario: string; asset_id: string; alt: string; caption: string }
 export interface ReportImageNode { field: string; source: 'content'; kind: 'image'; label: string; images: ReportImageItem[] }
-export interface CheckedLine { key: string; text: string; delay_ms: number }
-export interface CheckedTree { summary: string; groups: Array<{ key: string; lines: CheckedLine[] }>; dates?: { text: string; delay_ms: number }; skip: { text: string; after_ms: number }; min_ms: number }
+export interface CheckedLine { key: string; text: string; verb: string; delay_ms: number; done_ms: number }
+export interface CheckedTree { summary: string; groups: Array<{ key: string; lines: CheckedLine[] }>; dates?: { text: string; delay_ms: number }; skip: { text: string; after_ms: number }; ready: { text: string; at_ms: number }; open: { text: string }; min_ms: number }
 // MF-62: `paced` (lines fade in at their delay, the skip appears after its delay) on layout rows with details: collapsed; `href` the skip target, or null.
 export interface ViewChecked extends CheckedTree { paced: boolean; href: string | null }
 export interface ReportTree { lifecycle?: string; nodes: Array<ReportNode | ReportImageNode>; slots?: ReportSlot[]; checked?: CheckedTree }
@@ -108,9 +110,9 @@ const imageItemProblems = (field: string, items: unknown[], ctx: ReportCtx): str
 // MF-62: the loading state "What we checked". Closed keys; every value a server-formatted string (FE-05); the pace as integer milliseconds.
 const LOADING = 'loading';
 const CHECKED_KEY = 'what_we_checked';
-const CHECKED_KEYS = ['groups', 'dates', 'skip_after_ms', 'min_ms'];
+const CHECKED_KEYS = ['groups', 'dates', 'skip_after_ms', 'ready_ms', 'address', 'min_ms'];
 // The closed placeholders of a checked template and the response key that fills each (N-1 b, 2026-11-11: the limits line also names its house types).
-const SLOTS: Array<[string, string]> = [['{value}', 'value'], ['{types}', 'types']];
+const SLOTS: Array<[string, string]> = [['{value}', 'value'], ['{types}', 'types'], ['{address}', 'address']];
 const isObj = (v: unknown): v is Json => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isMs = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && /^\d+$/.test(String(v));
 const strayKeys = (x: Json, keys: string[], at: string, out: string[]): void => { for (const k of Object.keys(x)) if (!keys.includes(k)) out.push(`RR-CHECKED ${at}: key ${k} is not allowed`); };
@@ -133,6 +135,9 @@ const buildChecked = (w: unknown, ctx: ReportCtx, out: string[]): Json | undefin
   if (!isMs(w.min_ms)) out.push(`RR-CHECKED ${CHECKED_KEY}.min_ms: not integer milliseconds`);
   if (!isMs(w.skip_after_ms)) out.push(`RR-CHECKED ${CHECKED_KEY}.skip_after_ms: not integer milliseconds`);
   else if (isMs(w.min_ms) && w.skip_after_ms > w.min_ms) out.push(`RR-CHECKED ${CHECKED_KEY}.skip_after_ms: above min_ms`);
+  if (!isMs(w.ready_ms)) out.push(`RR-CHECKED ${CHECKED_KEY}.ready_ms: not integer milliseconds`);
+  else if (isMs(w.min_ms) && w.ready_ms > w.min_ms) out.push(`RR-CHECKED ${CHECKED_KEY}.ready_ms: after min_ms (the report opens before the ready line)`);
+  let lastDone = 0;
   const groups: unknown[] = Array.isArray(w.groups) ? w.groups : [];
   if (!groups.length) out.push(`RR-CHECKED ${CHECKED_KEY}.groups: at least one group`);
   const seen = new Set<string>();
@@ -149,9 +154,14 @@ const buildChecked = (w: unknown, ctx: ReportCtx, out: string[]): Json | undefin
     return { key: g.key, lines: lines.map((x, li) => {
       const lat = `${at}.lines.${li}`;
       if (!isObj(x)) { out.push(`RR-CHECKED ${lat}: not an object`); return {}; }
-      strayKeys(x, ['key', 'value', 'types', 'delay_ms'], lat, out);
+      strayKeys(x, ['key', 'value', 'types', 'delay_ms', 'done_ms'], lat, out);
       if (!isMs(x.delay_ms)) out.push(`RR-CHECKED ${lat}.delay_ms: not integer milliseconds`);
-      return { key: x.key, text: checkedLine(tpls[x.key], x, lat, out), delay_ms: x.delay_ms };
+      if (!isMs(x.done_ms)) out.push(`RR-CHECKED ${lat}.done_ms: not integer milliseconds`);
+      else if (isMs(x.delay_ms) && x.done_ms <= x.delay_ms) out.push(`RR-CHECKED ${lat}.done_ms: not after delay_ms`);
+      if (isMs(x.done_ms) && x.done_ms > lastDone) lastDone = x.done_ms;
+      const verb = c.verbs?.[g.key]?.[x.key];
+      if (typeof verb !== 'string' || verb === '') out.push(`RR-CHECKED ${lat}: no content verb for ${String(x.key)}`);
+      return { key: x.key, text: checkedLine(tpls[x.key], x, lat, out), verb, delay_ms: x.delay_ms, done_ms: x.done_ms };
     }) };
   });
   const tree: Json = { summary: c.summary, groups: built };
@@ -161,6 +171,7 @@ const buildChecked = (w: unknown, ctx: ReportCtx, out: string[]): Json | undefin
     else {
       strayKeys(d, ['lines', 'delay_ms'], 'dates', out);
       if (!isMs(d.delay_ms)) out.push('RR-CHECKED dates.delay_ms: not integer milliseconds');
+      else if (isMs(w.ready_ms) && d.delay_ms > w.ready_ms) out.push('RR-CHECKED dates.delay_ms: after ready_ms');
       const ls: unknown[] = Array.isArray(d.lines) ? d.lines : [];
       if (!ls.length) out.push('RR-CHECKED dates.lines: at least one date (the producer omits the dates when none)');
       const texts = ls.map((x, li) => {
@@ -172,6 +183,9 @@ const buildChecked = (w: unknown, ctx: ReportCtx, out: string[]): Json | undefin
     }
   }
   tree.skip = { text: c.skip, after_ms: w.skip_after_ms };
+  if (isMs(w.ready_ms) && w.ready_ms < lastDone) out.push(`RR-CHECKED ${CHECKED_KEY}.ready_ms: before the last fact resolves`);
+  tree.ready = { text: checkedLine(c.ready, w, `${CHECKED_KEY}.ready`, out), at_ms: w.ready_ms };
+  tree.open = { text: c.open };
   tree.min_ms = w.min_ms;
   return tree;
 };
@@ -190,10 +204,13 @@ const checkedProblems = (tree: Json, ctx: ReportCtx): string[] => {
   if (!isObj(c) || !isObj(ch)) return [...out, ...(isObj(c) ? [] : ['RR-CONTENT states.checked: missing'])];
   if (ch.skip?.text !== c.skip) out.push('RR-CONTENT checked.skip: not content states.checked.skip');
   if (ch.summary !== c.summary) out.push('RR-CONTENT checked.summary: not content states.checked.summary');
+  if (ch.open?.text !== c.open) out.push('RR-CONTENT checked.open: not content states.checked.open');
+  if (typeof c.ready !== 'string' || !new RegExp(`^${tplRe(c.ready)}$`).test(String(ch.ready?.text))) out.push('RR-CONTENT checked.ready: text is not its content template');
   for (const g of Array.isArray(ch.groups) ? ch.groups : []) {
     for (const l of Array.isArray(g?.lines) ? g.lines : []) {
       const t = c.lines?.[g.key]?.[l?.key];
       if (typeof t !== 'string' || !new RegExp(`^${tplRe(t)}$`).test(String(l?.text))) out.push(`RR-CONTENT checked.${String(g.key)}.${String(l?.key)}: text is not its content template`);
+      if (l?.verb !== c.verbs?.[g.key]?.[l?.key]) out.push(`RR-CONTENT checked.${String(g.key)}.${String(l?.key)}: verb is not its content verb`);
     }
   }
   if (ch.dates !== undefined) {

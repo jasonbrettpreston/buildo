@@ -4,8 +4,10 @@
 // MF-62 · McFrontend queue · lane E. Reads migrations/306_report_check_trust_counts.sql as text (no DB; the DB job applies it):
 //   (a) six nullable columns on data_quality_snapshots, no default (NULL = not captured; the producer then omits the citywide group), each the
 //       type the refresh_snapshot write binds; nothing backfilled, no other table altered;
-//   (b) the two pace rows equal the seed (keys, defaults; operator D-2 a: 6000 and 2000), ON CONFLICT (variable_key) DO NOTHING, and the seed
-//       lists them in the "MaxBLD Report" admin group (the existing Admin Control Panel shows them through the generated groups);
+//   (b) the two pace rows as first inserted (operator D-2 a: 6000 and 2000), ON CONFLICT (variable_key) DO NOTHING, and the seed lists them in
+//       the "MaxBLD Report" admin group (the existing Admin Control Panel shows them through the generated groups). Dated 2026-11-11 (MF-62
+//       follow-up, the processing-sequence ruling): the seed defaults moved on (23000, 0) by migration 312, which is pinned to the seed by
+//       src/tests/migration-312-report-check-sequence.infra.test.ts; this file keeps 306's own first values as history;
 //   (c) one transaction; the DOWN is comment-only.
 // Each RED plant is an in-memory copy of the text, never a file edit.
 import { describe, expect, it } from 'vitest';
@@ -47,17 +49,16 @@ describe('(a) the six stored, dated citywide columns', () => {
   });
 });
 
-describe('(b) the two pace rows equal the seed (D-2 a)', () => {
-  it('both keys inserted with the seed defaults, ON CONFLICT DO NOTHING; the seed lists them in "MaxBLD Report"', () => {
+describe('(b) the two pace rows as first inserted (D-2 a)', () => {
+  it('both keys inserted with their first values (6000, 2000), ON CONFLICT DO NOTHING; the seed lists them in "MaxBLD Report"', () => {
     const up = upOf(read(MIGRATION));
+    const FIRST: Record<string, number> = { report_check_min_ms: 6000, report_check_skip_after_ms: 2000 };
     for (const k of Object.values(REPORT_CHECK_KEYS)) {
-      expect(up).toMatch(new RegExp(`\\('${k}',\\s*${SEED[k].default},\\s*NULL,`));
+      expect(up).toMatch(new RegExp(`\\('${k}',\\s*${FIRST[k]},\\s*NULL,`));
       expect(SEED[k].admin.group).toBe('MaxBLD Report');
       expect(SEED[k].type).toBe('number');
     }
     expect(up).toMatch(/ON CONFLICT \(variable_key\) DO NOTHING;/);
-    expect(SEED.report_check_min_ms.default).toBe(6000);
-    expect(SEED.report_check_skip_after_ms.default).toBe(2000);
   });
 });
 

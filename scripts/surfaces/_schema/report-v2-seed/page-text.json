@@ -1,7 +1,7 @@
 {
   "$comment": "MF-57 · authored INPUT of seed-report-v2.mjs: the fixed texts of the approved v21 report page (fields/REPORT-LAYOUT-BRIEF-v4.md, display-rules-v4.json `content`, verbatim) and the two ruled pending texts (Q-G4 a: \"not yet estimated\", \"not yet classified\"). A text named by an operator open item of the brief is NOT here: its part is pending (scripts/surfaces/_schema/report-page.json). Generated into report-presentation.json `page`; never read from here at run time.",
   "texts": {
-    "page.title": "Build Possibilities",
+    "page.title": "The Building Possibilities Report",
     "spec.label": "By-law specifications",
     "tile.size.label": "Max Build Size",
     "tile.size.sub": "(by-law allows)",
@@ -53,7 +53,7 @@
     "lot.heritage": "Heritage",
     "lot.ravine": "Ravine protection area",
     "lot.corner": "Corner lot",
-    "legal.line": "Based on our reading of Toronto zoning by-laws. Not a City zoning review, legal advice or a permit decision. Confirm with the City before you buy, design or apply.",
+    "legal.line": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
     "footer.change": "By-laws and maps change and may not show recent amendments. For a formal answer, apply to Toronto Building for a Zoning Applicable Law Certificate.",
     "sheet.h": "Add your lot size",
     "sheet.p": "Use the lot area from your survey. It replaces the City lot record for this report, and every option is recalculated.",

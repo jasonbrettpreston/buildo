@@ -15,27 +15,32 @@
             {
               "key": "lots",
               "value": "496,536",
-              "delay_ms": 0
+              "delay_ms": 0,
+              "done_ms": 1954
             },
             {
               "key": "regulations",
               "value": "4,356",
-              "delay_ms": 545
+              "delay_ms": 1954,
+              "done_ms": 3908
             },
             {
               "key": "buildings",
               "value": "427,077",
-              "delay_ms": 1090
+              "delay_ms": 3908,
+              "done_ms": 5862
             },
             {
               "key": "builds",
               "value": "194,110",
-              "delay_ms": 1636
+              "delay_ms": 5862,
+              "done_ms": 7816
             },
             {
               "key": "map_areas",
               "value": "27,759",
-              "delay_ms": 2181
+              "delay_ms": 7816,
+              "done_ms": 9770
             }
           ]
         },
@@ -45,28 +50,37 @@
             {
               "key": "area",
               "value": "246 m²",
-              "delay_ms": 2727
+              "delay_ms": 9770,
+              "done_ms": 11724
             },
             {
               "key": "limits_gated",
-              "delay_ms": 3272
+              "delay_ms": 11724,
+              "done_ms": 13678
             },
             {
               "key": "ravine_out",
-              "delay_ms": 3818
+              "delay_ms": 13678,
+              "done_ms": 15632
             },
             {
               "key": "heritage_out",
-              "delay_ms": 4363
+              "delay_ms": 15632,
+              "done_ms": 17586
             },
             {
               "key": "decisions",
               "value": "12",
-              "delay_ms": 4909
+              "delay_ms": 17586,
+              "done_ms": 19540
             }
           ]
         }
       ],
+      "skip_after_ms": 0,
+      "ready_ms": 21494,
+      "address": "100 Example Ave",
+      "min_ms": 23000,
       "dates": {
         "lines": [
           {
@@ -82,10 +96,8 @@
             "value": "2026-10-23"
           }
         ],
-        "delay_ms": 5454
-      },
-      "skip_after_ms": 2000,
-      "min_ms": 6000
+        "delay_ms": 19540
+      }
     }
   },
   "rendered_tree": {
@@ -103,7 +115,7 @@
       }
     ],
     "checked": {
-      "summary": "Everything we checked is shown. Choose Show report to open your report.",
+      "summary": "Your report is ready.",
       "groups": [
         {
           "key": "citywide",
@@ -111,27 +123,37 @@
             {
               "key": "lots",
               "text": "496,536 lots scanned",
-              "delay_ms": 0
+              "verb": "Loading the lot…",
+              "delay_ms": 0,
+              "done_ms": 1954
             },
             {
               "key": "regulations",
               "text": "4,356 by-law rules searched",
-              "delay_ms": 545
+              "verb": "Pulling by-law results…",
+              "delay_ms": 1954,
+              "done_ms": 3908
             },
             {
               "key": "buildings",
               "text": "427,077 buildings measured",
-              "delay_ms": 1090
+              "verb": "Loading building outlines…",
+              "delay_ms": 3908,
+              "done_ms": 5862
             },
             {
               "key": "builds",
               "text": "194,110 builds examined",
-              "delay_ms": 1636
+              "verb": "Loading permits and applications…",
+              "delay_ms": 5862,
+              "done_ms": 7816
             },
             {
               "key": "map_areas",
               "text": "27,759 map areas checked",
-              "delay_ms": 2181
+              "verb": "Loading zoning maps…",
+              "delay_ms": 7816,
+              "done_ms": 9770
             }
           ]
         },
@@ -141,50 +163,67 @@
             {
               "key": "area",
               "text": "Lot: 246 m²",
-              "delay_ms": 2727
+              "verb": "Loading the lot size…",
+              "delay_ms": 9770,
+              "done_ms": 11724
             },
             {
               "key": "limits_gated",
               "text": "Site exception: exception noted, not yet modelled",
-              "delay_ms": 3272
+              "verb": "Matching by-law limits…",
+              "delay_ms": 11724,
+              "done_ms": 13678
             },
             {
               "key": "ravine_out",
               "text": "Not in a ravine area",
-              "delay_ms": 3818
+              "verb": "Loading ravine areas…",
+              "delay_ms": 13678,
+              "done_ms": 15632
             },
             {
               "key": "heritage_out",
               "text": "Not heritage designated",
-              "delay_ms": 4363
+              "verb": "Loading heritage records…",
+              "delay_ms": 15632,
+              "done_ms": 17586
             },
             {
               "key": "decisions",
               "text": "12 decisions nearby",
-              "delay_ms": 4909
+              "verb": "Matching nearby applications…",
+              "delay_ms": 17586,
+              "done_ms": 19540
             }
           ]
         }
       ],
       "dates": {
         "text": "Zoning maps 2026-02-20. Permits to 2026-10-25. Decisions to 2026-10-23.",
-        "delay_ms": 5454
+        "delay_ms": 19540
       },
       "skip": {
-        "text": "Show report",
-        "after_ms": 2000
+        "text": "Skip",
+        "after_ms": 0
       },
-      "min_ms": 6000
+      "ready": {
+        "text": "The Building Possibilities Report for 100 Example Ave is ready.",
+        "at_ms": 21494
+      },
+      "open": {
+        "text": "View report"
+      },
+      "min_ms": 23000
     }
   },
   "fingerprint": {
-    "response_fixture": "7cb3fbb02e6fad6e",
+    "response_fixture": "8446f591ea88fa3c",
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
-      "scripts/surfaces/_schema/report-presentation.json": "e18794ea5d5461c6",
-      "scripts/surfaces/_schema/report-tree.schema.json": "29ee07b69a0fe74f",
-      "scripts/surfaces/_schema/report-v2.decl.json": "da8eb967fbdfde83"
+      "scripts/surfaces/_schema/report-presentation.json": "f7e1ecfd073b9068",
+      "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
+      "scripts/surfaces/_schema/report-v2.decl.json": "26e67dafcf6a087e"
     }
   }
 }

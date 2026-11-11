@@ -51,7 +51,7 @@
             "brief": "A1",
             "kind": "content",
             "content": "page.title",
-            "text": "Build Possibilities"
+            "text": "The Building Possibilities Report"
           }
         ]
       },
@@ -1837,7 +1837,7 @@
             "brief": "G1",
             "kind": "content",
             "content": "legal.line",
-            "text": "Based on our reading of Toronto zoning by-laws. Not a City zoning review, legal advice or a permit decision. Confirm with the City before you buy, design or apply."
+            "text": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City."
           }
         ]
       },
@@ -1967,9 +1967,9 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "5ab0471de3edd350",
-      "scripts/surfaces/_schema/report-presentation.json": "e18794ea5d5461c6",
-      "scripts/surfaces/_schema/report-tree.schema.json": "29ee07b69a0fe74f",
-      "scripts/surfaces/_schema/report-v2.decl.json": "da8eb967fbdfde83",
+      "scripts/surfaces/_schema/report-presentation.json": "f7e1ecfd073b9068",
+      "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
+      "scripts/surfaces/_schema/report-v2.decl.json": "26e67dafcf6a087e",
       "scripts/surfaces/_schema/report-page.json": "030c601ad0852bbc",
       "scripts/surfaces/_schema/report-page.schema.json": "77977c56590697d6"
     }

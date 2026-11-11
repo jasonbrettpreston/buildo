@@ -49,26 +49,39 @@ export const Picture = ({ im, fill = false }: { im: ViewImage; fill?: boolean })
 );
 
 // MF-62 (Spec 126 11a.7 dated note 2026-11-11, FE-35; operator "Mf-62 - yes"): the loading state "What we checked", drawn from the view only.
-// Every line sits in ONE role="log" region (WCAG 2.2 SC 4.1.3, ARIA23); the lines are in the DOM from the first paint, so the fade is visual only
-// (opacity, globals.css .report-check-line) and nothing is announced per line. On a paced row each line carries the server delay as --d and the skip
-// link appears after --skip (revealed by visibility, so it is not focusable while unseen); reduce motion and print show everything at once.
-// No title and no section labels (operator 2026-11-11: "it doesnt need a title"). Admin and pdf (not paced) draw every line at once and no skip. No href, no skip: never an inert control. No state, no handler.
+// Every line sits in ONE role="log" region (WCAG 2.2 SC 4.1.3, ARIA23); the lines are in the DOM from the first paint, so the motion is visual only
+// (opacity and visibility, globals.css .report-check-*) and nothing is announced per line. No title and no section labels (operator 2026-11-11:
+// "it doesnt need a title"). MF-62 follow-up (operator 2026-11-11, the processing sequence; Spec 126 11a.7 dated note): on a paced row each line
+// is its loading verb (aria-hidden: a staged word, not a fact) until the server time --done, then its fact; the quiet "Skip" link shows from --skip
+// and leaves at --ready; the ready line and "View report" show at --ready. The web never opens the report by itself (plan-panel RG-2: the web
+// cannot tell a screen reader is on; the app opens it, MF-48). Reduce motion and print: every fact, the ready line and "View report" at once, no
+// verb, no Skip. Admin and pdf (not paced): the facts, the dates and the ready line; no verb, no link. No href: no link at all (never an inert
+// control). No state, no handler.
 const Checked = ({ c }: { c: ViewChecked }): ReactElement => (
   <section data-block="checked" data-paced={c.paced ? 'true' : 'false'} className="space-y-4 rounded bg-report-page p-4 text-report-ink">
+    {c.paced && c.href ? (
+      <a href={c.href} data-block="checked-skip" className="report-check-skip ml-auto flex min-h-11 w-fit items-center rounded-full px-3 text-sm font-semibold text-report-muted hover:underline" style={{ ['--skip' as string]: `${c.skip.after_ms}ms`, ['--ready' as string]: `${c.ready.at_ms}ms` }}>{c.skip.text}</a>
+    ) : null}
     <div role="log" className="grid gap-3">
       {c.groups.map((g) => (
         <div key={g.key} data-group={g.key} className="grid gap-2">
           <ul className="grid gap-1.5 text-sm text-report-muted">
-            {g.lines.map((l) => (
-              <li key={l.key} data-check={`${g.key}.${l.key}`} className={c.paced ? 'report-check-line' : undefined} style={c.paced ? { ['--d' as string]: `${l.delay_ms}ms` } : undefined}>{l.text}</li>
-            ))}
+            {g.lines.map((l) => (c.paced ? (
+              <li key={l.key} data-check={`${g.key}.${l.key}`} className="report-check-line grid" style={{ ['--d' as string]: `${l.delay_ms}ms`, ['--done' as string]: `${l.done_ms}ms` }}>
+                <span data-verb aria-hidden="true" className="report-check-verb [grid-area:1/1]">{l.verb}</span>
+                <span data-fact className="report-check-fact [grid-area:1/1]">{l.text}</span>
+              </li>
+            ) : (
+              <li key={l.key} data-check={`${g.key}.${l.key}`}>{l.text}</li>
+            )))}
           </ul>
         </div>
       ))}
     </div>
     {c.dates ? <p data-block="checked-dates" className={c.paced ? 'report-check-line text-xs text-report-soft' : 'text-xs text-report-soft'} style={c.paced ? { ['--d' as string]: `${c.dates.delay_ms}ms` } : undefined}>{c.dates.text}</p> : null}
+    <p data-block="checked-ready" className={c.paced ? 'report-check-ready text-base font-semibold' : 'text-base font-semibold'} style={c.paced ? { ['--ready' as string]: `${c.ready.at_ms}ms` } : undefined}>{c.ready.text}</p>
     {c.paced && c.href ? (
-      <a href={c.href} data-block="checked-skip" className="report-check-skip flex min-h-12 items-center justify-center rounded-xl border border-report-button-border bg-report-button px-4 font-semibold text-report-ink" style={{ ['--skip' as string]: `${c.skip.after_ms}ms` }}>{c.skip.text}</a>
+      <a href={c.href} data-block="checked-open" className="report-check-view flex min-h-12 items-center justify-center rounded-xl border border-report-button-border bg-report-button px-4 font-semibold text-report-ink" style={{ ['--ready' as string]: `${c.ready.at_ms}ms` }}>{c.open.text}</a>
     ) : null}
   </section>
 );

@@ -12,6 +12,11 @@
 //      stay below the minimum, the dates line last.
 //   P4 the re-opened-lot rule (MF-45 meter kinds).
 //   P5 every produced value builds a valid tree (the producer and the contract agree).
+//   P7 the processing sequence (operator 2026-11-11, "Processing demo + choose-lot": no "Show report" mid-animation; a pause after the last
+//      fact, then "The Building Possibilities Report for {address} is ready.", then the report opens by itself; slower; "Skip" from the start):
+//      each fact shows its loading verb at delay_ms and resolves at done_ms; the ready line at ready_ms after a one-step pause; the report
+//      opens at min_ms after the hold report_check_ready_hold_ms (admin data); the address is the lot's stored address, formatted here (FE-05);
+//      a lot without one, or a hold that leaves no room, skips the screen.
 // No DB, no network. The live read is run by the DB job.
 import { describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
@@ -35,11 +40,11 @@ const CITY: Json = {
 const LOT: Json = {
   lot_size_sqm: '246.40', neighbourhood_id: 144, is_in_ravine_protection_area: false, ravine_dataset_version_when_enriched: 'v1',
   is_heritage_designated: false, heritage_dataset_version_when_enriched: 'v1', has_resolution: true, lot_gate: null,
-  resolved_at: '2026-11-10T18:53:31Z', limits_evaluated: '163', types_evaluated: '5',
+  resolved_at: '2026-11-10T18:53:31Z', limits_evaluated: '163', types_evaluated: '5', address_number: '100', linear_name_full: 'Example Ave',
 };
 const fakeDb = (o: { vars?: Json; lot?: Json | null; city?: Json | null; decisions?: number } = {}) => {
   const calls: Array<{ sql: string; params: unknown[] | undefined }> = [];
-  const vars = o.vars ?? { report_check_min_ms: 6000, report_check_skip_after_ms: 2000 };
+  const vars = o.vars ?? { report_check_min_ms: 23000, report_check_skip_after_ms: 0, report_check_ready_hold_ms: 1500 };
   return {
     calls,
     query: async (sql: string, params?: unknown[]) => {
@@ -129,20 +134,26 @@ describe('P2 per lot', () => {
 });
 
 describe('P3 pace', () => {
-  it('the bounds equal the seed and the seed lists both keys in the "MaxBLD Report" admin group (D-2 a: 6000 and 2000)', () => {
+  it('the bounds equal the seed and the seed lists the three keys in the "MaxBLD Report" admin group (sequence ruling 2026-11-11: 23000, 0, 1500)', () => {
+    expect(Object.values(REPORT_CHECK_KEYS).sort()).toEqual(['report_check_min_ms', 'report_check_ready_hold_ms', 'report_check_skip_after_ms']);
     for (const k of Object.values(REPORT_CHECK_KEYS)) {
       expect(SEED[k].min).toBe(REPORT_CHECK_BOUNDS[k]?.min);
       expect(SEED[k].max).toBe(REPORT_CHECK_BOUNDS[k]?.max);
       expect(SEED[k].admin.group).toBe('MaxBLD Report');
     }
-    expect(SEED.report_check_min_ms.default).toBe(6000);
-    expect(SEED.report_check_skip_after_ms.default).toBe(2000);
+    expect(SEED.report_check_min_ms.default).toBe(23000); // operator 2026-11-11 D-6, verbatim "1 acutally think it needs longer" (about 23 s)
+    expect(SEED.report_check_min_ms.max).toBe(30000);
+    expect(SEED.report_check_skip_after_ms.default).toBe(0); // "Skip" from the start (WCAG 2.2.2)
+    expect(SEED.report_check_ready_hold_ms.default).toBe(1500);
   });
   for (const [why, vars] of [
-    ['a missing minimum', { report_check_skip_after_ms: 2000 }],
-    ['a minimum below its bound', { report_check_min_ms: 10, report_check_skip_after_ms: 0 }],
-    ['a non-integer skip', { report_check_min_ms: 6000, report_check_skip_after_ms: 1.5 }],
-    ['a skip above the minimum', { report_check_min_ms: 3000, report_check_skip_after_ms: 5000 }],
+    ['a missing minimum', { report_check_skip_after_ms: 0, report_check_ready_hold_ms: 1500 }],
+    ['a minimum below its bound', { report_check_min_ms: 10, report_check_skip_after_ms: 0, report_check_ready_hold_ms: 1500 }],
+    ['a non-integer skip', { report_check_min_ms: 23000, report_check_skip_after_ms: 1.5, report_check_ready_hold_ms: 1500 }],
+    ['a skip above the minimum', { report_check_min_ms: 3000, report_check_skip_after_ms: 5000, report_check_ready_hold_ms: 1500 }],
+    ['a missing hold', { report_check_min_ms: 23000, report_check_skip_after_ms: 0 }],
+    ['a hold below its bound', { report_check_min_ms: 23000, report_check_skip_after_ms: 0, report_check_ready_hold_ms: 10 }],
+    ['a hold not below the minimum', { report_check_min_ms: 3000, report_check_skip_after_ms: 0, report_check_ready_hold_ms: 3000 }],
   ] as Array<[string, Json]>) {
     it(`${why}: null (the screen is skipped, the report still opens), never a throw`, async () => {
       await expect(readWhatWeChecked(fakeDb({ vars }) as never, 'P1')).resolves.toBeNull();
@@ -156,12 +167,12 @@ describe('P3 pace', () => {
     const ds = [...(w?.groups.flatMap((g) => g.lines.map((l) => l.delay_ms)) ?? []), w?.dates?.delay_ms as number];
     expect(ds[0]).toBe(0);
     for (let i = 1; i < ds.length; i++) expect(ds[i]).toBeGreaterThan(ds[i - 1] as number);
-    expect(ds[ds.length - 1]).toBeLessThan(6000);
-    expect(w?.min_ms).toBe(6000);
-    expect(w?.skip_after_ms).toBe(2000);
+    expect(ds[ds.length - 1]).toBeLessThan(23000);
+    expect(w?.min_ms).toBe(23000);
+    expect(w?.skip_after_ms).toBe(0);
   });
   it('paced drops an empty group', () => {
-    expect(paced([{ key: 'citywide', lines: [] }, { key: 'lot', lines: [{ key: 'ravine_out' }] }], [], 6000, 2000).groups.map((g) => g.key)).toEqual(['lot']);
+    expect(paced([{ key: 'citywide', lines: [] }, { key: 'lot', lines: [{ key: 'ravine_out' }] }], [], { minMs: 23000, skipAfterMs: 0, readyHoldMs: 1500 }, '1 A St').groups.map((g) => g.key)).toEqual(['lot']);
   });
 });
 
@@ -209,5 +220,55 @@ describe('P6 OUTPUT panel folds', () => {
       const w = await readWhatWeChecked(fakeDb({ lot }) as never, 'P1');
       expect(w?.dates?.lines.map((d) => d.key)).not.toContain('bylaw');
     }
+  });
+});
+
+describe('P7 the processing sequence (operator 2026-11-11)', () => {
+  const PACE = { minMs: 23000, skipAfterMs: 0, readyHoldMs: 1500 };
+  it('one step s = floor((min - hold) / (facts + 1)): fact i shows its verb at i*s and resolves at (i+1)*s; the dates with the last fact; the ready line one step later', () => {
+    const lines = Array.from({ length: 10 }, (_, i) => ({ key: `k${i}` }));
+    const w = paced([{ key: 'citywide', lines: lines.slice(0, 5) }, { key: 'lot', lines: lines.slice(5) }], [{ key: 'bylaw', value: '2026-01-02' }], PACE, '100 Example Ave');
+    const s = Math.floor((23000 - 1500) / 11);
+    const all = w.groups.flatMap((g) => g.lines);
+    all.forEach((l, i) => { expect(l.delay_ms).toBe(i * s); expect(l.done_ms).toBe((i + 1) * s); });
+    expect(w.dates?.delay_ms).toBe(10 * s);
+    expect(w.ready_ms).toBe(11 * s);
+    expect(w.min_ms - w.ready_ms).toBeGreaterThanOrEqual(1500); // the hold before the report opens by itself
+    expect(w.skip_after_ms).toBe(0);
+    expect(w.address).toBe('100 Example Ave');
+  });
+  it('a step below 1 ms: null (never a tree the contract refuses; code-reviewer CR-5)', async () => {
+    const vars = { report_check_min_ms: 1000, report_check_skip_after_ms: 0, report_check_ready_hold_ms: 995 };
+    await expect(readWhatWeChecked(fakeDb({ vars }) as never, 'P1')).resolves.toBeNull();
+  });
+  it('skip 0 is a real value, not a missing one: the screen is shown with Skip from the start', async () => {
+    const w = await readWhatWeChecked(fakeDb() as never, 'P1');
+    expect(w).not.toBeNull();
+    expect(w?.skip_after_ms).toBe(0);
+  });
+  it('a full read: the address is the stored number and street, server-formatted; the ready line before the minimum', async () => {
+    const w = await readWhatWeChecked(fakeDb() as never, 'P1');
+    expect(w?.address).toBe('100 Example Ave');
+    expect(LOT_SQL).toMatch(/p\.address_number, p\.linear_name_full/);
+    expect(w?.ready_ms).toBeLessThan(w?.min_ms as number);
+    const last = Math.max(...(w?.groups.flatMap((g) => g.lines.map((l) => l.done_ms)) ?? []));
+    expect(w?.ready_ms).toBeGreaterThan(last);
+  });
+  for (const [why, lot] of [
+    ['no house number', { ...LOT, address_number: null }],
+    ['no street', { ...LOT, linear_name_full: '  ' }],
+    ['the stored literal None', { ...LOT, address_number: 'None', linear_name_full: 'None' }],
+  ] as Array<[string, Json]>) {
+    it(`${why}: null (the screen is skipped, never a sentence without an address)`, async () => {
+      await expect(readWhatWeChecked(fakeDb({ lot }) as never, 'P1')).resolves.toBeNull();
+    });
+  }
+  it('the producer and the contract agree on the new keys: the tree carries the ready line with the address and the view text', async () => {
+    const w = await readWhatWeChecked(fakeDb() as never, 'P1');
+    const tree = buildTree({ lifecycle: 'loading', what_we_checked: w }, reportCtx);
+    expect(() => assertTree(tree, reportCtx)).not.toThrow();
+    expect(tree.checked.ready.text).toBe('The Building Possibilities Report for 100 Example Ave is ready.');
+    expect(tree.checked.ready.at_ms).toBe(w?.ready_ms);
+    expect(tree.checked.groups[0].lines[1].verb).toBe('Pulling by-law results…');
   });
 });

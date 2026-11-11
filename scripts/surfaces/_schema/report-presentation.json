@@ -108,14 +108,36 @@
           "decisions": "{value} decisions nearby"
         }
       },
+      "verbs": {
+        "citywide": {
+          "lots": "Loading the lot…",
+          "regulations": "Pulling by-law results…",
+          "buildings": "Loading building outlines…",
+          "builds": "Loading permits and applications…",
+          "map_areas": "Loading zoning maps…"
+        },
+        "lot": {
+          "area": "Loading the lot size…",
+          "limits": "Matching by-law limits…",
+          "limits_gated": "Matching by-law limits…",
+          "limits_not_evaluated": "Matching by-law limits…",
+          "ravine_out": "Loading ravine areas…",
+          "ravine_in": "Loading ravine areas…",
+          "heritage_out": "Loading heritage records…",
+          "heritage_in": "Loading heritage records…",
+          "decisions": "Matching nearby applications…"
+        }
+      },
       "dates": {
         "bylaw": "By-law results dated {value}.",
         "zoning": "Zoning maps {value}.",
         "permits": "Permits to {value}.",
         "decisions": "Decisions to {value}."
       },
-      "skip": "Show report",
-      "summary": "Everything we checked is shown. Choose Show report to open your report."
+      "skip": "Skip",
+      "ready": "The Building Possibilities Report for {address} is ready.",
+      "open": "View report",
+      "summary": "Your report is ready."
     },
     "semi_needs_input": "This lot looks like half of a semi-detached house. Tell us about your house to see what you can add.",
     "semi_correction": "This isn't a semi — it's detached",
@@ -252,7 +274,7 @@
     "placement": "renovation section first, identity header"
   },
   "page": {
-    "page.title": "Build Possibilities",
+    "page.title": "The Building Possibilities Report",
     "spec.label": "By-law specifications",
     "tile.size.label": "Max Build Size",
     "tile.size.sub": "(by-law allows)",
@@ -304,7 +326,7 @@
     "lot.heritage": "Heritage",
     "lot.ravine": "Ravine protection area",
     "lot.corner": "Corner lot",
-    "legal.line": "Based on our reading of Toronto zoning by-laws. Not a City zoning review, legal advice or a permit decision. Confirm with the City before you buy, design or apply.",
+    "legal.line": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
     "footer.change": "By-laws and maps change and may not show recent amendments. For a formal answer, apply to Toronto Building for a Zoning Applicable Law Certificate.",
     "sheet.h": "Add your lot size",
     "sheet.p": "Use the lot area from your survey. It replaces the City lot record for this report, and every option is recalculated.",

@@ -11,15 +11,21 @@
 //   - lot: lot area; the by-law line (the evaluated limit count, "exception noted, not yet modelled" on an exception_not_authored lot, or
 //     "By-law limits not yet evaluated" on any other gate or no result: X-3 a, never "checked"); ravine and heritage only when that
 //     enrichment ran (X-2 a: "designated"); decided CoA applications in the lot's neighbourhood (MF-51 D-2 a), omitted with no neighbourhood.
-//   - pace: report_check_min_ms and report_check_skip_after_ms (admin logic_variables, D-2 a). A missing or out-of-bounds value, or a skip
+//   - pace: report_check_min_ms, report_check_skip_after_ms and report_check_ready_hold_ms (admin logic_variables; D-2 a, amended 2026-11-11). A missing or out-of-bounds value, or a skip
 //     delay above the minimum, returns null with a warning: the screen is skipped and the report still opens (never a 500). A DB error is
 //     caught here too (logError) and returns null: this screen is never a reason to fail a paid lookup (OUTPUT panel N-5, CR-2).
 //   - the by-law date is sent only beside a counted limits line: never beside "not yet evaluated" or "not yet modelled" (N-4); a lot
 //     area that rounds below 1 m² is omitted, never "Lot: 0 m²" (N-2).
+//   - the sequence (MF-62 follow-up, operator 2026-11-11: "after the each fact runs - we need to paude and then have somet the possibilities
+//     report for the address is ready and then transisiton.  Let's slow it down"): one step s = floor((min - hold) / (facts + 1)); fact i shows
+//     its loading verb at i*s (delay_ms) and resolves at (i+1)*s (done_ms); the dates line with the last fact; the ready line one step later
+//     (ready_ms, the pause = one step); the report opens at min_ms, at least the hold after the ready line. A step under 1 ms returns null.
+//   - the address of the ready line: the lot's stored number and street (parcels.address_number, linear_name_full), formatted here (FE-05);
+//     blank or the stored literal "None" returns null (the screen is skipped, never a sentence without its address).
 // The GET /api/parcels/lookup wiring and the app render land with MF-48 (X-4 a); `showsWhatWeChecked` holds the re-opened-lot rule for it.
 import universe from '../../../scripts/seeds/bylaw/universe.lock.json';
 import { logError, logWarn } from '@/lib/logger';
-import { readReportCheckPace, type Queryable } from './report-check-pace';
+import { readReportCheckPace, type Queryable, type ReportCheckPace } from './report-check-pace';
 
 export { REPORT_CHECK_BOUNDS, REPORT_CHECK_KEYS, readReportCheckPace } from './report-check-pace';
 
@@ -30,11 +36,13 @@ export const GATE_EXCEPTION_NOT_AUTHORED = 'exception_not_authored';
 /** Dates are shown as the calendar date in Toronto. */
 const DATE_ZONE = 'America/Toronto';
 
-export interface ProducedLine { key: string; value?: string; types?: string; delay_ms: number }
+export interface ProducedLine { key: string; value?: string; types?: string; delay_ms: number; done_ms: number }
 export interface WhatWeChecked {
   groups: Array<{ key: 'citywide' | 'lot'; lines: ProducedLine[] }>;
   dates?: { lines: Array<{ key: string; value: string }>; delay_ms: number };
   skip_after_ms: number;
+  ready_ms: number;
+  address: string;
   min_ms: number;
 }
 
@@ -56,6 +64,7 @@ interface LotRow {
   is_heritage_designated: boolean | null; heritage_dataset_version_when_enriched: string | null;
   has_resolution: boolean; lot_gate: string | null; resolved_at: Date | string | null; limits_evaluated: string | number | null;
   types_evaluated: string | number | null;
+  address_number: string | null; linear_name_full: string | null;
 }
 interface CitywideRow {
   parcels_total: unknown; building_footprints_total: unknown; permits_active_distinct: unknown; coa_total: unknown; map_areas_total: unknown;
@@ -63,7 +72,7 @@ interface CitywideRow {
 }
 
 // The lot's own rows by key: parcels by parcel_id, its bylaw_resolution_lots row (parcels.id), and its evaluated results (status not not_evaluated).
-export const LOT_SQL = `SELECT p.lot_size_sqm, p.neighbourhood_id,
+export const LOT_SQL = `SELECT p.lot_size_sqm, p.neighbourhood_id, p.address_number, p.linear_name_full,
        p.is_in_ravine_protection_area, p.ravine_dataset_version_when_enriched,
        p.is_heritage_designated, p.heritage_dataset_version_when_enriched,
        (l.parcel_id IS NOT NULL) AS has_resolution, l.lot_gate, l.resolved_at,
@@ -111,23 +120,40 @@ export function lotLines(lot: LotRow, decisions: number | null): Array<{ key: st
   return out;
 }
 
-/** Spreads the lines and the dates line evenly over the minimum duration (the dates line last). Pure. */
+/** The stored address as shown ("100 Example Ave"), or null when either part is blank or the stored literal "None". */
+export function lotAddress(lot: Pick<LotRow, 'address_number' | 'linear_name_full'>): string | null {
+  const part = (v: string | null): string | null => {
+    const t = (v ?? '').trim();
+    return t === '' || t.toLowerCase() === 'none' ? null : t;
+  };
+  const n = part(lot.address_number);
+  const st = part(lot.linear_name_full);
+  return n && st ? `${n} ${st}` : null;
+}
+
+/** The step of the sequence; below 1 when the minimum leaves no room after the hold (the caller then skips the screen). Pure. */
+export const stepMs = (facts: number, pace: ReportCheckPace): number => Math.floor((pace.minMs - pace.readyHoldMs) / (facts + 1));
+
+/** The processing sequence: each fact shows its verb at i*s and resolves at (i+1)*s; the dates with the last fact; the ready line one step
+ * after the last fact (the pause); the report opens at the minimum. Pure. */
 export function paced(
   groups: Array<{ key: 'citywide' | 'lot'; lines: Array<{ key: string; value?: string; types?: string }> }>,
   dates: Array<{ key: string; value: string }>,
-  minMs: number,
-  skipAfterMs: number,
+  pace: ReportCheckPace,
+  address: string,
 ): WhatWeChecked {
   const kept = groups.filter((g) => g.lines.length > 0);
-  const count = kept.reduce((n, g) => n + g.lines.length, 0) + (dates.length ? 1 : 0);
+  const facts = kept.reduce((n, g) => n + g.lines.length, 0);
+  const s = stepMs(facts, pace);
   let i = 0;
-  const delay = (): number => Math.floor((i++ * minMs) / Math.max(count, 1));
   const out: WhatWeChecked = {
-    groups: kept.map((g) => ({ key: g.key, lines: g.lines.map((l) => ({ ...l, delay_ms: delay() })) })),
-    skip_after_ms: skipAfterMs,
-    min_ms: minMs,
+    groups: kept.map((g) => ({ key: g.key, lines: g.lines.map((l) => { const at = i++; return { ...l, delay_ms: at * s, done_ms: (at + 1) * s }; }) })),
+    skip_after_ms: pace.skipAfterMs,
+    ready_ms: (facts + 1) * s,
+    address,
+    min_ms: pace.minMs,
   };
-  if (dates.length) out.dates = { lines: dates, delay_ms: delay() };
+  if (dates.length) out.dates = { lines: dates, delay_ms: facts * s };
   return out;
 }
 
@@ -149,6 +175,11 @@ async function readOnce(db: Queryable, parcelId: string): Promise<WhatWeChecked 
   }
   const lot = (await db.query<LotRow>(LOT_SQL, [parcelId])).rows[0];
   if (!lot) return null;
+  const address = lotAddress(lot);
+  if (address === null) {
+    logWarn('[what-we-checked]', 'no stored address; screen skipped', { parcelId });
+    return null;
+  }
   const nbhd = lot.neighbourhood_id === null ? null : Number(lot.neighbourhood_id);
   const decisions = nbhd === null ? null : Number((await db.query<{ n: string | number }>(DECISIONS_SQL, [nbhd, DECIDED_COA_PATTERN])).rows[0]?.n ?? 0);
   const city = (await db.query<CitywideRow>(CITYWIDE_SQL)).rows[0];
@@ -158,8 +189,13 @@ async function readOnce(db: Queryable, parcelId: string): Promise<WhatWeChecked 
   if (city?.zoning_layer_version) dates.push({ key: 'zoning', value: fmtDate(city.zoning_layer_version) });
   if (city?.permits_last_seen_at) dates.push({ key: 'permits', value: fmtDate(city.permits_last_seen_at) });
   if (city?.coa_last_seen_at) dates.push({ key: 'decisions', value: fmtDate(city.coa_last_seen_at) });
-  return paced(
-    [{ key: 'citywide', lines: citywideLines(city, Number((universe as { rows: number }).rows)) }, { key: 'lot', lines }],
-    dates, pace.minMs, pace.skipAfterMs,
-  );
+  const groups: Array<{ key: 'citywide' | 'lot'; lines: Array<{ key: string; value?: string; types?: string }> }> = [
+    { key: 'citywide', lines: citywideLines(city, Number((universe as { rows: number }).rows)) }, { key: 'lot', lines },
+  ];
+  const facts = groups.reduce((n, g) => n + g.lines.length, 0);
+  if (stepMs(facts, pace) < 1) {
+    logWarn('[what-we-checked]', 'pace leaves no room for the facts; screen skipped', { facts, ...pace });
+    return null;
+  }
+  return paced(groups, dates, pace, address);
 }

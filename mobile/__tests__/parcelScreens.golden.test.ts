@@ -215,8 +215,9 @@ describe('shape lock (rows 19-20; RG-11, RG-17)', () => {
 // MF-58 · the legal line (operator ruling 2026-11-10, report panel item 16 "yes critical - we should also have a legal not on the landing and
 // search page"; wording ruling 2026-11-10 item 5 "all three accepted": "Search: under the address input, before results. Never only in a modal
 // or collapsible. Lawyer check before launch." (the lawyer check is owed before launch, recorded on the queue row; it does not block the build)).
-const LEGAL_TEXT =
-  'Based on our reading of Toronto zoning by-laws. Not a City zoning review, legal advice or a permit decision. Confirm with the City before you buy, design or apply.';
+// Dated 2026-11-11 (MF-62 follow-up; operator D-1 a, verbatim "3 y", on the Landing v9 R2 short disclaimer, verbatim "2. add not legal advice as
+// well"): the short line supersedes wording ruling 2026-11-10 item 5 here and on the report page; the lawyer check (MF-72) now covers the short line.
+const LEGAL_TEXT = 'This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.';
 
 describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 and 5)', () => {
   const column = (t: PropsNode): PropsNode => (t.children[0] as PropsNode).children[0] as PropsNode;
@@ -232,5 +233,14 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
     }
+  });
+});
+
+// MF-62 follow-up · the search placeholder (operator 2026-11-11, small pages v7.1 item 9, verbatim: "inside the search box - should be enter lot
+// address"; and 14:54 "app search placeholder is lot address?"). Supersedes "Search Toronto address..." (ruling 2026-11-09 item 1). Content only:
+// the MF-35 search binding reads the key; the generated slice carries it.
+describe('the search placeholder (small pages v7.1 item 9)', () => {
+  it('the content key search.input.placeholder holds the ruled text verbatim', () => {
+    expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter lot address');
   });
 });

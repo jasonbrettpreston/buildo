@@ -230,6 +230,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // MF-62 the report loading state pace (operator 2026-11-11 "Mf-62 - yes", D-2 a: minimum 6 s, skip after 2 s): admin group "MaxBLD Report", migration 306
   'report_check_min_ms',
   'report_check_skip_after_ms',
+  // MF-62 follow-up (operator 2026-11-11, the processing sequence: a pause, the ready line, then the report): the ready-line hold, migration 312
+  'report_check_ready_hold_ms',
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',

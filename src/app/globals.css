@@ -128,28 +128,57 @@
 }
 
 /* MF-62 (Spec 126 11a.7 dated note 2026-11-11, FE-35; operator "Mf-62 - yes", D-2 a): the report loading state "What we checked".
-   Each line fades in at the server delay --d (opacity only: the line stays in the accessibility tree); the skip link is revealed after --skip
-   by visibility (not focusable while unseen). Base styles are visible; the hidden start comes only from fill-mode backwards, so reduce motion
-   (WCAG 2.2 SC 2.2.2, prefers-reduced-motion) and print show every line and the skip at once. Locked by src/tests/surfaces/report-checked.logic.test.ts C5. */
+   Each line fades in at the server delay --d (opacity only: the line stays in the accessibility tree); a link is revealed by visibility (not
+   focusable while unseen). Base styles are visible; the hidden start comes only from fill-mode backwards, so reduce motion (WCAG 2.2 SC 2.2.2,
+   prefers-reduced-motion) and print show the end state at once. MF-62 follow-up (operator 2026-11-11, the processing sequence): the loading verb
+   gives way to its fact at the server time --done; the quiet "Skip" shows from --skip and leaves at --ready; the ready line and "View report"
+   show at --ready. Reduce motion and print: no verb, no Skip; every fact, the ready line and "View report". Locked by
+   src/tests/surfaces/report-checked.logic.test.ts C5. */
 @keyframes report-check-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+@keyframes report-check-out {
+  from { visibility: visible; opacity: 1; }
+  to { visibility: hidden; opacity: 0; }
 }
 @keyframes report-check-skip-in {
   from { visibility: hidden; opacity: 0; }
   to { visibility: visible; opacity: 1; }
 }
+@keyframes report-check-skip-out {
+  from { visibility: visible; opacity: 1; }
+  to { visibility: hidden; opacity: 0; }
+}
 .report-check-line {
   animation: report-check-in 400ms ease-out backwards;
   animation-delay: var(--d, 0ms);
 }
-.report-check-skip {
+.report-check-verb {
+  animation: report-check-out 200ms ease-in forwards;
+  animation-delay: var(--done, 0ms);
+}
+.report-check-fact {
+  animation: report-check-in 300ms ease-out backwards;
+  animation-delay: var(--done, 0ms);
+}
+.report-check-ready {
+  animation: report-check-in 400ms ease-out backwards;
+  animation-delay: var(--ready, 0ms);
+}
+.report-check-view {
   animation: report-check-skip-in 200ms ease-out backwards;
-  animation-delay: var(--skip, 0ms);
+  animation-delay: var(--ready, 0ms);
+}
+.report-check-skip {
+  animation: report-check-skip-in 200ms ease-out backwards, report-check-skip-out 200ms ease-in forwards;
+  animation-delay: var(--skip, 0ms), var(--ready, 0ms);
 }
 @media (prefers-reduced-motion: reduce) {
-  .report-check-line, .report-check-skip { animation: none; }
+  .report-check-line, .report-check-fact, .report-check-ready, .report-check-view { animation: none; }
+  .report-check-verb, .report-check-skip { display: none; }
 }
 @media print {
-  .report-check-line, .report-check-skip { animation: none; }
+  .report-check-line, .report-check-fact, .report-check-ready, .report-check-view { animation: none; }
+  .report-check-verb, .report-check-skip { display: none; }
 }

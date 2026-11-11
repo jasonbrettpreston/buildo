@@ -1285,7 +1285,8 @@ const GROUP_ORDER = [
     "label": "MaxBLD Report",
     "keys": [
       "report_check_min_ms",
-      "report_check_skip_after_ms"
+      "report_check_skip_after_ms",
+      "report_check_ready_hold_ms"
     ]
   }
 ];

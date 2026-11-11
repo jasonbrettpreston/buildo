@@ -1,0 +1,53 @@
+# MF-62 follow-up red run, 2026-11-11T20:13:40Z, base 719562ade, tests written before code (DB-free files only)
+ ✓ src/tests/migration-306-report-check.infra.test.ts (5 tests) 2ms
+   × migration 309: the processing-sequence settings (data, not code) > the seed holds the ruled sequence: 12000 (placeholder to confirm), skip from the start, a 1500 ms hold; all three in "MaxBLD Report" 2ms
+   × migration 309: the processing-sequence settings (data, not code) > the committed migration is clean 0ms
+   × migration 309: the processing-sequence settings (data, not code) > RED: an unguarded UPDATE (would clobber an operator-set value) 0ms
+   × migration 309: the processing-sequence settings (data, not code) > RED: a value that is not the seed default 0ms
+   × migration 309: the processing-sequence settings (data, not code) > RED: a description that drifts from the seed 0ms
+   × migration 309: the processing-sequence settings (data, not code) > RED: the hold inserted without ON CONFLICT DO NOTHING 0ms
+   × migration 309: the processing-sequence settings (data, not code) > RED: an uncommented DOWN line 0ms
+   × LOGIC_VAR_DEFAULTS — complete key set > contains all expected logic variable keys 4ms
+   × Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ config-loader > logic_variables.json contains all expected keys 1ms
+   × P3 pace > the bounds equal the seed and the seed lists the three keys in the "MaxBLD Report" admin group (sequence ruling 2026-11-11: 12000, 0, 1500) 3ms
+   × P3 pace > a missing hold: null (the screen is skipped, the report still opens), never a throw 2ms
+   × P3 pace > a hold below its bound: null (the screen is skipped, the report still opens), never a throw 1ms
+   × P3 pace > a hold not below the minimum: null (the screen is skipped, the report still opens), never a throw 0ms
+   × P7 the processing sequence (operator 2026-11-11) > one step s = floor((min - hold) / (facts + 1)): fact i shows its verb at i*s and resolves at (i+1)*s; the dates with the last fact; the ready line one step later 0ms
+   × P7 the processing sequence (operator 2026-11-11) > a step below 1 ms: null (never a tree the contract refuses; code-reviewer CR-5) 0ms
+   × P7 the processing sequence (operator 2026-11-11) > a full read: the address is the stored number and street, server-formatted; the ready line before the minimum 0ms
+   × P7 the processing sequence (operator 2026-11-11) > no house number: null (the screen is skipped, never a sentence without an address) 0ms
+   × P7 the processing sequence (operator 2026-11-11) > no street: null (the screen is skipped, never a sentence without an address) 0ms
+   × P7 the processing sequence (operator 2026-11-11) > the stored literal None: null (the screen is skipped, never a sentence without an address) 0ms
+   × P7 the processing sequence (operator 2026-11-11) > the producer and the contract agree on the new keys: the tree carries the ready line with the address and the view text 0ms
+   × C1 the contract (FE-35) > a loading response with what_we_checked builds one message node and a root-only checked object of content texts 4ms
+   × C1 the contract (FE-35) > assertTree: checked on a miss tree or a reading tree, checked beside a second node, and a text that is not a content template are refused 0ms
+   × C2 the claims lock (content and composed texts) > the committed content block is clean 2ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a measuring verb (nothing is measured while the screen runs) 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: an analysing verb 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a checking verb 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a verb with a digit 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a verb with a banned family 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a verb without its ellipsis 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a live claim after the allowed word 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a progress word after the allowed word 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a calculating verb 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a processing verb (held for the mock) 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a line without a verb 0ms
+   × C2 the claims lock (content and composed texts) > RED on a planted fault: a verb for no line 0ms
+   × C2 the claims lock (content and composed texts) > loading_checked: every composed text of the golden is clean, and planted faults in the golden are RED 0ms
+   × C2 the claims lock (content and composed texts) > loading_checked_gated: every composed text of the golden is clean, and planted faults in the golden are RED 0ms
+   × C2b the report name (R1) > the page title is "The Building Possibilities Report" and the old name is nowhere in the report content 0ms
+   × C3 the goldens > loading_checked carries the five citywide lines in order, the five lot lines, the dates and the skip 1ms
+   × C3 the goldens > N-4: the gated golden carries no by-law results date; planting one is RED 0ms
+   × C4 the web render > web: no title and no section labels (operator 2026-11-11), one role="log" region holding every line, a server delay per line, the skip link from its delay 25ms
+   × C4 the web render > web: each paced line is its loading verb (hidden from assistive tech) then its fact; the ready line and "View report" at the ready time; no timer, no auto-open (plan-panel RG-2) 3ms
+   × C4 the web render > admin: every fact and the ready line shown at once, no verb, no delay, no skip, no view 2ms
+   × C4 the web render > pdf: every fact and the ready line shown at once, no verb, no delay, no skip, no view 1ms
+   × C5 the stylesheet (globals.css) > the committed rules are complete 1ms
+ ✓ src/tests/surfaces/parity.golden.test.ts (22 tests) 309ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 45 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  4 failed | 2 passed (6)
+      Tests  45 failed | 147 passed (192)
+# mobile jest
+Tests:       1 failed, 19 passed, 20 total

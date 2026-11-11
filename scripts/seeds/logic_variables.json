@@ -10419,21 +10419,31 @@
     }
   },
   "report_check_min_ms": {
-    "default": 6000,
+    "default": 23000,
     "type": "number",
     "min": 1000,
-    "max": 20000,
-    "description": "MF-62 (Spec 126 section 11a.7 dated note 2026-11-11; Spec 135 FE-35; operator 2026-11-11 \"Mf-62 - yes\", D-2 a \"min 6 s + skip after 2 s, both admin logic_variables\"): the minimum time in milliseconds the report loading state \"What we checked\" stays before the report opens (reduce motion included). Edited in the Admin Control Panel. Inserted by migration 306. Read by the report producer through readReportCheckPace (src/lib/parcels/report-check-pace.ts: a missing or out-of-bounds value, or one below report_check_skip_after_ms, skips the screen and the report still opens).",
+    "max": 30000,
+    "description": "MF-62 (Spec 126 section 11a.7 dated notes 2026-11-11; Spec 135 FE-35; operator 2026-11-11, the processing sequence (\"after the each fact runs - we need to paude and then have somet the possibilities report for the address is ready and then transisiton.  Let's slow it down\")): the total time in milliseconds of the report processing screen: the facts, a pause, the ready line, then the report opens by itself (never under a screen reader or reduce motion; never on the web). About 23 s (operator 2026-11-11, verbatim: \"1 acutally think it needs longer\"). Bounds 1000-30000. Edited in the Admin Control Panel. Migration 306 inserted it (6000), migration 312 set it. Read by the report producer through readReportCheckPace (src/lib/parcels/report-check-pace.ts: a missing or out-of-bounds value, one below report_check_skip_after_ms or not above report_check_ready_hold_ms, skips the screen and the report still opens).",
     "admin": {
       "group": "MaxBLD Report"
     }
   },
   "report_check_skip_after_ms": {
-    "default": 2000,
+    "default": 0,
     "type": "number",
     "min": 0,
     "max": 10000,
-    "description": "MF-62 (Spec 126 section 11a.7 dated note 2026-11-11; Spec 135 FE-35; operator 2026-11-11 \"Mf-62 - yes\", D-2 a): the delay in milliseconds before the \"Show report\" link appears on the report loading state (WCAG 2.2 SC 2.2.2: the user can always leave). Never above report_check_min_ms. Edited in the Admin Control Panel. Inserted by migration 306. Read by the report producer through readReportCheckPace (src/lib/parcels/report-check-pace.ts).",
+    "description": "MF-62 (Spec 126 section 11a.7 dated notes 2026-11-11; Spec 135 FE-35; operator 2026-11-11, the processing sequence (\"after the each fact runs - we need to paude and then have somet the possibilities report for the address is ready and then transisiton.  Let's slow it down\")): the delay in milliseconds before the quiet \"Skip\" link shows on the report processing screen; 0 = from the start (WCAG 2.2.2: the user can always leave). Never above report_check_min_ms. Edited in the Admin Control Panel. Migration 306 inserted it (2000), migration 312 set it. Read by the report producer through readReportCheckPace (src/lib/parcels/report-check-pace.ts).",
+    "admin": {
+      "group": "MaxBLD Report"
+    }
+  },
+  "report_check_ready_hold_ms": {
+    "default": 1500,
+    "type": "number",
+    "min": 500,
+    "max": 5000,
+    "description": "MF-62 follow-up (Spec 126 section 11a.7 dated note 2026-11-11; Spec 135 FE-35; operator 2026-11-11, the processing sequence (\"after the each fact runs - we need to paude and then have somet the possibilities report for the address is ready and then transisiton.  Let's slow it down\")): how long in milliseconds the line \"The Building Possibilities Report for {address} is ready.\" holds before the report opens by itself; the facts and the pause share the rest of report_check_min_ms. Below report_check_min_ms. Edited in the Admin Control Panel. Inserted by migration 312. Read by the report producer through readReportCheckPace (src/lib/parcels/report-check-pace.ts).",
     "admin": {
       "group": "MaxBLD Report"
     }

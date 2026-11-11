@@ -2492,8 +2492,8 @@
       "resolve_errors": 0,
       "fingerprints": [
         "45854e0183317478",
-        "a8edd0068951fb27",
-        "ed863795f47b97ce"
+        "ed863795f47b97ce",
+        "fe3b95fa46a1844d"
       ],
       "reads": {
         "bylaw_resolution_lots": [
@@ -2522,10 +2522,12 @@
           "zoning_layer_version"
         ],
         "parcels": [
+          "address_number",
           "heritage_dataset_version_when_enriched",
           "id",
           "is_heritage_designated",
           "is_in_ravine_protection_area",
+          "linear_name_full",
           "lot_size_sqm",
           "neighbourhood_id",
           "parcel_id",

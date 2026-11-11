@@ -1,5 +1,5 @@
 {
-  "$comment": "MF-62 · authored INPUT of seed-report-v2.mjs: the labels of the report loading state \"What we checked\" (operator 2026-11-11: D-1 a \"What we checked\"; the five trust lines \"496,536 lots scanned\", \"4,356 by-law rules searched\", \"427,077 buildings measured\", \"194,110 builds examined\", \"27,759 map areas checked\" with the numbers removed, \"looks good we should be able to change these as we go\", \"id like to keep builds for now\"; D-4 a the five per-lot lines; X-2 a \"Heritage designated\" / \"Not heritage designated\"; X-3 a \"By-law limits not yet evaluated\"; mock small-pages-v4/what-we-checked.html). Labels only: every number comes from the server as a formatted value filling {value} (FE-05, FE-35); the claims lock src/tests/surfaces/report-checked.logic.test.ts reads the generated copy. Generated into report-presentation.json states.checked; never read from here at run time. N-1 (operator 2026-11-11, verbatim \"b just keep the bigger number for now and we can revisit\"): the limits line names the house types it counts across ({types} from data). Accessibility (WCAG 2.2 SC 2.2.1 / 4.1.3, audit 2026-11-11): `summary` is the one announcement the app makes (AccessibilityInfo.announceForAccessibility) when a screen reader or reduce motion is on; the report then does not open by itself. Operator 2026-11-11 (verbatim): \"it shouldn't say why we checked -- thts dumb - it doesnt need a title... it should be processing\": the screen carries no title and no section labels (the \"What we checked\" heading, \"Across Toronto\" and \"Your lot\" are removed); the ruled resolved lines stay. The animated sequence is a later follow-up once the operator approves its mock.",
+  "$comment": "MF-62 · authored INPUT of seed-report-v2.mjs: the labels of the report loading state \"What we checked\" (operator 2026-11-11: D-1 a \"What we checked\"; the five trust lines \"496,536 lots scanned\", \"4,356 by-law rules searched\", \"427,077 buildings measured\", \"194,110 builds examined\", \"27,759 map areas checked\" with the numbers removed, \"looks good we should be able to change these as we go\", \"id like to keep builds for now\"; D-4 a the five per-lot lines; X-2 a \"Heritage designated\" / \"Not heritage designated\"; X-3 a \"By-law limits not yet evaluated\"; mock small-pages-v4/what-we-checked.html). Labels only: every number comes from the server as a formatted value filling {value} (FE-05, FE-35); the claims lock src/tests/surfaces/report-checked.logic.test.ts reads the generated copy. Generated into report-presentation.json states.checked; never read from here at run time. N-1 (operator 2026-11-11, verbatim \"b just keep the bigger number for now and we can revisit\"): the limits line names the house types it counts across ({types} from data). Accessibility (WCAG 2.2 SC 2.2.1 / 4.1.3, audit 2026-11-11): `summary` is the one announcement the app makes (AccessibilityInfo.announceForAccessibility) when a screen reader or reduce motion is on; the report then does not open by itself. Operator 2026-11-11 (verbatim): \"it shouldn't say why we checked -- thts dumb - it doesnt need a title... it should be processing\": the screen carries no title and no section labels (the \"What we checked\" heading, \"Across Toronto\" and \"Your lot\" are removed); the ruled resolved lines stay. The animated sequence is a later follow-up once the operator approves its mock. MF-62 follow-up, operator 2026-11-11 (verbatim, \"Processing demo + choose-lot\"): \"the show report button shows before the animation is complete - also why do we need that button - after the each fact runs - we need to paude and then have somet the possibilities report for the address is ready and then transisiton.  Let's slow it down and make it more compelling.\" and (verbatim) \"1. I like pulling by-law results.  2. Just your report is ready is sufficent\"; Landing v9 R1 (verbatim \"1. y\"): the name \"The Building Possibilities Report\". So: `skip` is the quiet \"Skip\" from the start (WCAG 2.2.2); `ready` is the line after the last fact ({address} from data, server-formatted); `open` is the reduce-motion / screen-reader action \"View report\" (nothing opens by itself on that path); `summary` is the one announcement \"Your report is ready.\"; `verbs` holds one stored-data loading verb per line key (\"Loading / Pulling / Matching …\", the v7 demo words, \"Measuring\" replaced: nothing is measured while the screen runs). The claims lock allows a loading verb only here.",
   "checked": {
     "lines": {
       "citywide": {
@@ -21,13 +21,35 @@
         "decisions": "{value} decisions nearby"
       }
     },
+    "verbs": {
+      "citywide": {
+        "lots": "Loading the lot…",
+        "regulations": "Pulling by-law results…",
+        "buildings": "Loading building outlines…",
+        "builds": "Loading permits and applications…",
+        "map_areas": "Loading zoning maps…"
+      },
+      "lot": {
+        "area": "Loading the lot size…",
+        "limits": "Matching by-law limits…",
+        "limits_gated": "Matching by-law limits…",
+        "limits_not_evaluated": "Matching by-law limits…",
+        "ravine_out": "Loading ravine areas…",
+        "ravine_in": "Loading ravine areas…",
+        "heritage_out": "Loading heritage records…",
+        "heritage_in": "Loading heritage records…",
+        "decisions": "Matching nearby applications…"
+      }
+    },
     "dates": {
       "bylaw": "By-law results dated {value}.",
       "zoning": "Zoning maps {value}.",
       "permits": "Permits to {value}.",
       "decisions": "Decisions to {value}."
     },
-    "skip": "Show report",
-    "summary": "Everything we checked is shown. Choose Show report to open your report."
+    "skip": "Skip",
+    "ready": "The Building Possibilities Report for {address} is ready.",
+    "open": "View report",
+    "summary": "Your report is ready."
   }
 }

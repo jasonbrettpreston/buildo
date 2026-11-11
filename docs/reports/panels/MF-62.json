@@ -12,7 +12,8 @@
     "Operator 2026-11-11: \"b just keep the bigger number for now and we can revisit\" (N-1 b: \"{N} by-law checks across {M} house types\").",
     "Operator 2026-11-11: \"go OPERATOR-GO MF62-306.\" (the DB job: migration 306, refresh_snapshot captures, witness catalog, schema.ts, Rule 13 scorecards).",
     "Accessibility audit 2026-11-11 (WCAG 2.2 SC 2.2.1 / 4.1.3, relayed by the coordinator): no automatic opening under a screen reader or reduce motion; one summary announcement; the web keeps role=\"log\".",
-    "Operator 2026-11-11 (verbatim): \"it shouldn't say why we checked -- thts dumb - it doesnt need a title... it should be processing\" (no title, no section labels; the animated sequence follows its mock)."
+    "Operator 2026-11-11 (verbatim): \"it shouldn't say why we checked -- thts dumb - it doesnt need a title... it should be processing\" (no title, no section labels; the animated sequence follows its mock).",
+    "Operator 2026-11-11 (verbatim): \"the show report button shows before the animation is complete - also why do we need that button - after the each fact runs - we need to paude and then have somet the possibilities report for the address is ready and then transisiton.  Let's slow it down and make it more compelling.\"; \"1. I like pulling by-law results.  2. Just your report is ready is sufficent\"; \"3 y 4. keep what we have 2. y 1 acutally think it needs longer\" (follow-up prereg 3, round 157)."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-62/build-plan.md (sections 1, 3 folds, 4 STOP). PLAN panel ~/Buildo-scratch/mcfrontend/MF-62/panel-plan/: code-reviewer-grounded PASS-WITH-FOLDS (6), regression-guardian PASS-WITH-FOLDS (8; fold 1 route ordering, now recorded on MF-48), security/compliance (general-purpose) PASS-WITH-FOLDS (10). STOP X-1..X-4 answered by the operator (cards 2).",
   "seats": [
@@ -21,14 +22,18 @@
     "security and compliance, general-purpose (PLAN): PASS-WITH-FOLDS",
     "code-reviewer-grounded (OUTPUT): PASS-WITH-FOLDS (CR-1 dead lifecycleOfState export, CR-2 producer error contract, CR-3 SQL never executed live)",
     "regression-guardian (OUTPUT): PASS-WITH-FOLDS (RG-1 FE numbering gap, RG-2 lock untracked until commit, RG-3 duplicated prefix rule, RG-4 witness provenance)",
-    "security and compliance, general-purpose (OUTPUT): PASS-WITH-FOLDS (N-1..N-7)"
+    "security and compliance, general-purpose (OUTPUT): PASS-WITH-FOLDS (N-1..N-7)",
+    "follow-up 1111 PLAN: code-reviewer-grounded PASS-WITH-FIXES (folded); regression-guardian PASS-WITH-FIXES (folded: no web timer, verb exemption first word only, guarded 312 descriptions)",
+    "follow-up 1111 OUTPUT: code-reviewer-grounded PASS-WITH-FIXES (migration renumbered 312, JSDoc); regression-guardian PASS-WITH-FIXES (3 LOW; the no-timer source lock folded)"
   ],
   "output": "OUTPUT panel on the uncommitted build over 553ceefa2 (reports ~/Buildo-scratch/mcfrontend/MF-62/panel-out/). Folded: CR-1 / RG-3 statusProblems and the honest lock call the one lifecycleOfState (report-checks.mjs), unit-pinned with negative cases; CR-2 / N-5 readWhatWeChecked catches any DB error (logError) and returns null, tested; CR rename ProducedLine; N-2 an area rounding below 1 m2 is omitted, tested; N-3 the claims lock gains endorsement / guarantee, progress-verb, freshness and imagery families with one planted fault each, also over composed tree text; N-4 the by-law date is sent only beside a counted limits line (producer, gated goldens re-captured, lock with a planted fault); N-7 viewOf takes only a same-origin path as the skip href, tested; N-6 recorded as a known limit in the Spec 60 note. RG-4: the witness fixture was re-recorded by its own path (BUILDO_WITNESS_WRITE=1), additions only; its live captures are the DB job's. Not folded: N-1 (the limits count is per building type; the label is the ruled text, raised to the operator), N-7 two h1 on the admin preview (admin-only page), CR-3 (live SQL is the DB job's).",
   "verdict": "PASS-WITH-FOLDS: every OUTPUT fold applied; N-1 ruled (b) and applied; the accessibility audit rule applied. DB job MF62-306 done (captures, catalog, schema.ts, scorecards). Push waits on the operator (protected paths, owner y).",
   "blockers": [],
   "followups": [
     "MF-48: lookup wiring (whatWeChecked after the meter, re-parsed), the app render, the min-duration hold, focus to the report heading.",
-    "Lawyer check before launch: \"builds examined\", \"buildings measured\", \"by-law rules searched\" (with MF-58)."
+    "Lawyer check before launch: \"builds examined\", \"buildings measured\", \"by-law rules searched\" (with MF-58).",
+    "MF-48 app render of the processing sequence: verb until done_ms, ready line at ready.at_ms, opens at min_ms (23 s) except under a screen reader or reduce motion (everything at once + View report, one announcement summary).",
+    "Lawyer check (MF-72): the short disclaimer, the loading verbs (incl. \"Matching by-law limits\" on a not-evaluated lot), the ready line. DB job: migration 312 (operator go). The generic processing illustration waits on its mock."
   ],
   "evidence": "docs/reports/red-evidence/MF-62/build-red.txt (82 red before any code); targeted suites after the folds: 1048 passed, 4 failed (register-locks-resolve: the FE-35 lock is untracked until commit); handbook-rule-map green after the renumber (35 rules).",
   "notes": [
@@ -36,6 +41,7 @@
     "The pace reader report-check-pace.ts sits apart from the producer so the logic variables are read in the step commit (R-EO variable-effect gate).",
     "FE renumber (coordinator): the register row moved FE-38 -> FE-35 by the forward docs commit 846f63d64 (90f5e8d72 kept in history); prereg 2 at round 152 (777524107) supersedes prereg 1 (553ceefa2, kept). Both were committed from a throwaway worktree at 553ceefa2 (the disk-walking gates see the held build) and fast-forwarded with merge --ff-only; Spec 136 and surface-rule-map.json regenerate with the build commit (the generator requires the FE-35 lock file in the tree).",
     "Resume after the DB job: N-1 (b) applied as two closed placeholders {value} and {types} in one content template (types = distinct evaluated building types on the lot, from data; LOT_SQL types_evaluated) with a claims-lock rule and planted faults; the tree carries checked.summary (content states.checked.summary) for the app announcement; Spec 126 11a.7 and queue MF-62 / MF-48 dated notes. Commit A 620f18a09 (step, migration, captures, scorecards), commit B (report surface).",
-    "Restack onto 6b5ef8e22 (increment 4): generated conflicts resolved by their generators; the copy change (no title, no labels) and the regenerated outputs are a new commit with real hooks."
+    "Restack onto 6b5ef8e22 (increment 4): generated conflicts resolved by their generators; the copy change (no title, no labels) and the regenerated outputs are a new commit with real hooks.",
+    "Follow-up 1111 (plan ~/Buildo-scratch/mcfrontend/MF-62/followup-1111/plan.md): content verbs/ready/open/skip/summary; page.title The Building Possibilities Report; legal.line and search.legal the short disclaimer (supersedes the wording of ruling 2026-11-10 item 5); search placeholder Enter lot address; pace s = floor((min - hold)/(facts+1)), min 23000, skip 0, hold 1500 (migration 312); no web auto-open (D-5). Red docs/reports/red-evidence/MF-62/followup-red.txt, green followup-green.txt."
   ]
 }
