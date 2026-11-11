@@ -676,16 +676,21 @@
     },
     "src/app/api/admin/users/[uid]/subscription/retry-cancel/route.ts": {
       "class": "static",
-      "statements": 2,
+      "statements": 3,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
         "1d0823abcff5f709",
-        "487a40164f1ce045"
+        "487a40164f1ce045",
+        "b07e0e8525ab4cf4"
       ],
       "reads": {
+        "entitlements": [
+          "stripe_subscription_id",
+          "user_id"
+        ],
         "user_profiles": [
           "account_deleted_at",
           "stripe_cancel_failed_at",

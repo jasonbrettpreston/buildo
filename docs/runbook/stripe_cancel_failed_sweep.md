@@ -59,8 +59,12 @@ plus the directory `stripe_cancel_failed` filter.
    WHERE user_id = '<uid>' AND stripe_subscription_id IS NOT NULL;
    ```
 
-   Do not use the admin "Retry cancel" button for these rows: with no stored
-   customer it clears the marker without calling Stripe.
+   Cancel that subscription id in Stripe (`stripe subscriptions update <sub_id>
+   -d cancel_at_period_end=true`), then clear the marker by hand (step 3). The
+   admin "Retry cancel" button refuses these rows (409 `CONFLICT`, the message
+   names the subscription id) and keeps the marker; it cancels by customer and
+   has none to call. A marked row with no customer and no subscription id has
+   nothing billing; Retry cancel clears it (note `no_stripe_customer`).
 
 3. Clear the marker ONLY after confirming every live subscription is scheduled
    to cancel (or, for a reactivated row, immediately):

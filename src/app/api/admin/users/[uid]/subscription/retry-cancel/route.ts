@@ -10,7 +10,8 @@
 // (docs/runbook/stripe_cancel_failed_sweep.md).
 //
 // Auth: verifyAdminAuth FIRST line + attributable session admin (audited
-// mutation). Refuses when there is no outstanding cancel debt.
+// mutation). Refuses when there is no outstanding cancel debt, and (409)
+// when no customer is stored but an entitlements row holds a subscription id.
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -23,6 +24,7 @@ import { logError, logWarn } from '@/lib/logger';
 import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { cancelAllStripeSubscriptions, StripeNotConfiguredError } from '@/lib/stripe/client';
 import { RetryCancelSchema } from '@/lib/admin/subscription-ops-schemas';
+import { isUuid } from '@/lib/entitlements';
 
 const TAG = '[api/admin/users/uid/subscription/retry-cancel]';
 
@@ -118,7 +120,34 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
       return ok({ cleared: true, cancelled_count: 0 }, { note: 'stale_marker_account_reactivated' });
     }
     if (!profile.stripe_customer_id) {
-      // Marker set but no customer — nothing to cancel; clear the marker.
+      // Self-serve delete also sets the marker when an entitlements row holds a
+      // subscription id but no customer is stored (WF3 2026-11-11, account
+      // delete panel finding B; user-profile/delete/route.ts, same SELECT).
+      // This route cancels by customer, so it cannot cancel that subscription:
+      // refuse and keep the marker. Entitlements are UUID-keyed (isUuid gate as
+      // reconcile/route.ts); a non-uuid uid cannot hold one.
+      if (isUuid(targetUid)) {
+        const subs = await pool.query<{ stripe_subscription_id: string }>(
+          `SELECT stripe_subscription_id FROM entitlements
+           WHERE user_id = $1 AND stripe_subscription_id IS NOT NULL
+           LIMIT 1`,
+          [targetUid],
+        );
+        const orphanSubscriptionId = subs.rows[0]?.stripe_subscription_id;
+        if (orphanSubscriptionId) {
+          logWarn(TAG, 'retry-cancel refused: subscription with no stored customer', {
+            targetUid,
+            stripe_subscription_id: orphanSubscriptionId,
+          });
+          return err(
+            'CONFLICT',
+            `No Stripe customer is stored but subscription ${orphanSubscriptionId} is; cancel it at period end in Stripe first, then clear the marker (runbook stripe_cancel_failed_sweep.md steps 2-3). Marker retained`,
+            409,
+          );
+        }
+      }
+      // Marker set, no customer and no subscription id — nothing to cancel;
+      // clear the marker.
       await clearMarker('no_stripe_customer', 0);
       return ok({ cleared: true, cancelled_count: 0 }, { note: 'no_stripe_customer' });
     }

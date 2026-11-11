@@ -63,3 +63,25 @@ fallback (`?? created.id`) is retired, by D-4.
   checked against a live DB.
 - D. Before buyers ship, a one-time read-only check for legacy buyers whose Stripe
   customer was never stored.
+
+## Follow-up 2026-11-11: finding B closed (retry-cancel refuses an orphan subscription)
+
+Fix: `retry-cancel/route.ts`, with no stored customer and a uuid target, reads
+entitlements (the delete route's SELECT); a non-null `stripe_subscription_id`
+gives 409 `CONFLICT` naming the id, marker kept, no audit, no Stripe call. No
+subscription id: clears as before (`no_stripe_customer`). Runbook updated.
+Red -> green: `retry-red.json` (3 new cases red on the old code; a GET events
+case also fails there from the old code's unconsumed mock queue) ->
+`retry-green.json` (25/25); shuffled seeds 1-3, 4, 11 pass.
+
+OUTPUT review:
+- Regression Guardian: PASS-WITH-FOLDS. No undefended fence (reactivation gate,
+  502 marker-retained, atomic clear+audit all unchanged). LOW: admin UI
+  `SubscriptionOps.tsx:70` shows only "Retry failed" on 409, so the message
+  naming the subscription id is not shown; safe (marker kept). Not folded:
+  open item. LOW: the entitlements read is outside the clear transaction;
+  acknowledged, fail-safe.
+- Code Reviewer (grounded): PASS. Lint, ledger check and surface-registry check
+  clean. Nit: descriptor
+  `contract_admin_users_uid_subscription_retry_cancel.descriptor.json` does not
+  declare the 409 (it already omits 404/502); open item for the surface queue.

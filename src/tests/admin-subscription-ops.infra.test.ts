@@ -10,7 +10,8 @@
 //   - reconcile drift → UPDATE + audit; no-drift → no audit; concurrent-delete
 //     fence (rowCount 0 → 409)
 //   - retry-cancel: no-marker 400; success clears marker + audits; Stripe throw
-//     → 502 with marker RETAINED (no false success)
+//     → 502 with marker RETAINED (no false success); no stored customer but an
+//     entitlements subscription id → 409 with marker RETAINED
 //   - events: per-customer history, event_type surfaced as `type`
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -345,6 +346,59 @@ describe('POST retry-cancel', () => {
     expect(body.meta.note).toBe('stale_marker_account_reactivated');
     expect(mockSubsList).not.toHaveBeenCalled(); // the live subscription is untouched
     expect(mockSubsUpdate).not.toHaveBeenCalled();
+  });
+
+  // REGRESSION LOCK (WF3 account-delete follow-up, panel finding B): self-serve
+  // delete sets the marker when an entitlements row holds a
+  // stripe_subscription_id but no customer is stored
+  // (user-profile/delete/route.ts). With no customer this route has nothing to
+  // cancel, so clearing the marker would leave that subscription billing.
+  it('no stored customer but an entitlements row holds a subscription id → 409, marker RETAINED, no audit', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: false }] } as never) // isProfileAdmin (uuid target)
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: null, stripe_cancel_failed_at: '2026-11-11T00:00:00Z', account_deleted_at: '2026-11-11T00:00:00Z' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ stripe_subscription_id: 'sub_orphan' }] } as never); // entitlements
+    const res = await RETRY_POST(req({ body: { reason: 'operator retry' } }), ctx(TARGET));
+    const body = await res.json();
+    expect(res.status).toBe(409);
+    expect(body.error.code).toBe('CONFLICT');
+    expect(body.error.message).toContain('sub_orphan');
+    const subsSql = String(mockedQuery.mock.calls[2]![0]);
+    expect(subsSql).toMatch(/FROM entitlements[\s\S]*stripe_subscription_id IS NOT NULL/);
+    // no clear UPDATE, no audit, no Stripe call
+    expect(mockedQuery).toHaveBeenCalledTimes(3);
+    expect(mockedAudit).not.toHaveBeenCalled();
+    expect(mockSubsList).not.toHaveBeenCalled();
+  });
+
+  it('no stored customer and no subscription id → clears the marker (no_stripe_customer), no Stripe call', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ is_admin: false }] } as never) // isProfileAdmin (uuid target)
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: null, stripe_cancel_failed_at: '2026-11-11T00:00:00Z', account_deleted_at: '2026-11-11T00:00:00Z' }] } as never)
+      .mockResolvedValueOnce({ rows: [] } as never) // entitlements: no subscription id
+      .mockResolvedValueOnce({ rowCount: 1 } as never); // clear marker
+    const res = await RETRY_POST(req({ body: { reason: 'operator retry' } }), ctx(TARGET));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.data).toEqual({ cleared: true, cancelled_count: 0 });
+    expect(body.meta.note).toBe('no_stripe_customer');
+    expect(String(mockedQuery.mock.calls[3]![0])).toMatch(/stripe_cancel_failed_at = NULL/);
+    expect(mockedAudit).toHaveBeenCalledTimes(1);
+    expect(mockSubsList).not.toHaveBeenCalled();
+  });
+
+  it('non-uuid target with no stored customer → no entitlements read (UUID-keyed), clears the marker', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: null, stripe_cancel_failed_at: '2026-11-11T00:00:00Z', account_deleted_at: '2026-11-11T00:00:00Z' }] } as never)
+      .mockResolvedValueOnce({ rowCount: 1 } as never); // clear marker
+    const res = await RETRY_POST(req({ body: { reason: 'operator retry' } }), ctx('t1'));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.meta.note).toBe('no_stripe_customer');
+    expect(mockedQuery.mock.calls.every((c) => !/FROM entitlements/.test(String(c[0])))).toBe(true);
   });
 });
 
