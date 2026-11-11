@@ -1,0 +1,202 @@
+{
+ "$comment": "M-321 pre-registration, task MB-31, prereg 8 (Spec 124a R-MA; round 155, assigned by the orchestrator), committed alone directly under the MB-31 (e) build commit: the D8-SHELL runtime loader of compute_maxbld_scenarios (buildSourceSql, the lookups assembled from the runner's lookup rows, the seed files and the validated ctx.config, settings_sha, the ring walk), the R-EH (a) runner binds (batch_binds may name a declared config.logic_variables entry; the note recorded in c78c1f944, 2026-11-11-batch-be#CHAT-232.REH-BIND), migration 309 (the 287 draft: parcel_maxbld_scenarios with the D-1 a CHECK, parcel_maxbld_population, the frontage-street index), 310 (two houseplex settings and the bbox divisor) and 311 (the Fenside-Parkwoods cohort), all WRITTEN NOT APPLIED. The CoA scorer reads none of these files and no Layer 2 file moves: zero scorer moves on the 172, 4d and cumulative sets; totals and floors are prereg-MB-27-47's after-totals, unchanged. The named assertion moves are listed below (operator D-6).",
+ "schema": "coa-round-prereg-v1",
+ "round": 155,
+ "task": "MB-31",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-EH",
+  "M-377",
+  "M-384"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/mb35/build/plan.md and RETURN.md (decision list D-1..D-7); ~/Buildo-scratch/mcbylaws/inc3/build/CARD-d8-shell.md; ~/Buildo-scratch/mcbylaws/MB-31/plan.md sections 19.2, 21.2, 22",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "every floor line unchanged; the floors check OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; the Layer 2 table_version (4e7ea5d17e90) and every golden and oracle file",
+ "expected_repin": [],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/neighbour-facts.logic.test.ts",
+   "line": "B10 read 6",
+   "row": "read 6 contract: ring_lots (recursive SQL walk, bound depth $2, shared_len_m DESC) becomes ring_edges (the street-scoped abutment rows, no depth, no recursion); the frontage-street key and the not-same_frontage_street assertions carried; the tie-break carried onto ringLots",
+   "from": "WITH RECURSIVE, $2, shared_len_m DESC in SQL",
+   "to": "no recursion and no bind in SQL; ringLots sorts shared_len_m DESC then lot id",
+   "rule": "D-2 a (MB-31 plan 21.2 / 22)",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/neighbour-facts.logic.test.ts",
+   "line": "B10 allowlist",
+   "row": "every READ_SQL statement reads only allowlisted tables or its own CTEs",
+   "from": "each read standalone; ALLOWED without parcel_maxbld_population",
+   "to": "the reads and the batch statement that carries them read only ALLOWED + parcel_maxbld_population or the batch statement's CTEs",
+   "rule": "D-3 a; D-2 a",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/option-runs.logic.test.ts",
+   "line": "OR-1",
+   "row": "READ_SQL.options binding shape",
+   "from": "parcel_id = ANY($1::int[]) AND class = $2 AND structure = $3",
+   "to": "o.parcel_id = s.id (correlated to the batch subject), no bind",
+   "rule": "D-2 a / D-7 (one batch statement under R-EH (a))",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/output-panel-1102.logic.test.ts",
+   "line": "RV-3",
+   "row": "READ_SQL.abutters binding shape",
+   "from": "contains $1::int[], not $2",
+   "to": "contains a.parcel_id = s.id, no $n bind",
+   "rule": "D-2 a / D-7",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/output-panel-1102.logic.test.ts",
+   "line": "RV-6",
+   "row": "the buildSourceSql deviation",
+   "from": "deviations[0] cites 22.1",
+   "to": "no buildSourceSql deviation (descriptor deviations \"none\"); buildSourceSql is a function",
+   "rule": "D-7 (the runner binds landed)",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/step-closure.logic.test.ts",
+   "line": "EXPECTED_LOCAL",
+   "row": "R-KF closure of the step entry",
+   "from": "16 files",
+   "to": "23 files: + docs/reference/bylaw-layer2-input.json and the six seeds the loader requires (building-types, layer2-map, layer2-scope, switchboard, vocab, logic_variables)",
+   "rule": "D-6 (regression-guardian finding 2)",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/step-closure.logic.test.ts",
+   "line": "EXPECTED_TABLES",
+   "row": "R-KT declared reads",
+   "from": "8 tables",
+   "to": "9 tables: + parcel_maxbld_population",
+   "rule": "D-3 a",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/step-closure.logic.test.ts",
+   "line": "sqlText",
+   "row": "the SQL text the table check reads",
+   "from": "READ_SQL only",
+   "to": "READ_SQL + buildSourceSql count_sql and batch_sql",
+   "rule": "D-2 a / D-7",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/increment3-building-type.logic.test.ts",
+   "line": "materializeRows two types",
+   "row": "call site only",
+   "from": "S.materializeRows(rows, { lookups })",
+   "to": "S.materializeParcels(rows, lookups); assertions unchanged",
+   "rule": "D-6 (regression-guardian finding 1)",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/increment4-suite-gain.logic.test.ts",
+   "line": "gain wiring",
+   "row": "call site only",
+   "from": "S.materializeRows(rows, { lookups })",
+   "to": "S.materializeParcels(rows, lookups); assertions unchanged",
+   "rule": "D-6 (regression-guardian finding 1)",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/option-runs.logic.test.ts",
+   "line": "OR-2",
+   "row": "call site only",
+   "from": "S.materializeRows([src], { lookups })",
+   "to": "S.materializeParcels([src], lookups); assertions unchanged",
+   "rule": "D-6 (regression-guardian finding 1)",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/suite-unit-cap.logic.test.ts",
+   "line": "E7 count",
+   "row": "call site only",
+   "from": "S.materializeRows(rows, { lookups })",
+   "to": "S.materializeParcels(rows, lookups); assertions unchanged",
+   "rule": "D-6 (regression-guardian finding 1)",
+   "authority": "operator \"a yes\" 2026-11-11 on the MB-35 decision list (D-6: the named assertion moves; D-2 a; D-3 a; D-7), record ~/Buildo-scratch/mcbylaws/inc3/open-questions.md and ~/Buildo-scratch/mcbylaws/mb35/build/RETURN.md"
+  }
+ ],
+ "expected_value_changes": []
+}
