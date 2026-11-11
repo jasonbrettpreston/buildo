@@ -1,14 +1,16 @@
 'use strict';
 /**
- * compute_maxbld_scenarios — the pure compute (MATERIALIZER of parcel_maxbld_scenarios, migration 287; Layer 3).
+ * compute_maxbld_scenarios — the pure compute (MATERIALIZER of parcel_maxbld_scenarios, migration 309 (the 287 draft); Layer 3).
  *
  * SPEC LINK: docs/specs/01-pipeline/78_optimal_lot_configuration.md (step identity: the optimal-lot scenario rows)
  * SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-377, M-384, M-415 (the Layer 3 step; the reader discipline; the row seam)
- * MB-31 B10: compute_maxbld_scenarios, a MATERIALIZER of parcel_maxbld_scenarios (migration 287). Pure: the shell's runner reads, this module computes.
+ * MB-31 B10: compute_maxbld_scenarios, a MATERIALIZER of parcel_maxbld_scenarios (migration 309). Pure: the shell's runner reads, this module computes.
  *
- * The runner pages the population, reads the eight declared READ_SQL statements per page (which is why each
- * materialize bind array is not expressible yet: scripts/lib/step/index.js MATERIALIZE_BIND_NAMES = last_key,
- * batch_size, run_at; the ring depth, the radii and the population list are recorded as a gap, never inlined).
+ * The runner pages the population with ONE batch statement (buildSourceSql) that carries the eight declared READ_SQL reads per
+ * page lot. The runner binds its keyset values ($1, $2); the declared settings the reads need (the population ids, the radii, the bbox
+ * divisor) are validated ctx.config values written into the statement as checked literals ($3-$6 below; operator "option 2" 2026-11-11,
+ * STOP-11: the R-EH (a) runner bind waits the next fleet recapture night; the enrich-parcels / enrich-centreline precedent). The ring depth is applied here, in the walk (MB-31 plan section 22). The runtime loader
+ * (D8-SHELL) assembles the lookups once per run from the runner's lookup rows, the seed files and the validated ctx.config.
  * This module holds no query beyond the declared reads, no transaction, no clock, no literal tunable and no
  * status decision: rows.js owns the seam (M-415), catalogue.js the seed shas, layer2-cells.js the cells,
  * neighbour-facts.js the pooling facts. The zero-write guard is the RUNNER's guarded upsert (declared in the
@@ -20,81 +22,78 @@ const cat = require('./maxbld/catalogue.js');
 const cellsLib = require('./maxbld/layer2-cells.js');
 const factsLib = require('./maxbld/neighbour-facts.js');
 // MB-27 R2 (operator "Q-r2 a"): ROOF-5's word is Layer 2's own rule, recomputed on read through its withNotAbove, never re-derived here
-const { withNotAbove, traceResult, permissionDisclosuresOf } = require('../bylaw-materialize.js');
+const { withNotAbove, traceResult, permissionDisclosuresOf, makeEnv } = require('../bylaw-materialize.js');
 const { buildLotVector } = require('../bylaw-resolution.js');
 const disclosuresLib = require('./maxbld/disclosures.js');
 const DISCLOSURE_FAMILIES = require('./maxbld/disclosure-families.json');
 const { runRow, runAllRows } = rows;
+const lr = require('../bylaw-lot-row.js');
+// D8-SHELL: the seed files and the generated Layer 1 input, read once at load (the resolve-bylaws.js precedent; declared in staleness.fingerprint_inputs)
+const CATALOGUE = require('../../seeds/bylaw/layer3-catalogue.json');
+const SWITCHBOARD = require('../../seeds/bylaw/switchboard.json');
+const BUILDING_TYPES = require('../../seeds/bylaw/building-types.json');
+const VOCAB = require('../../seeds/bylaw/vocab.json');
+const SCOPE = require('../../seeds/bylaw/layer2-scope.json');
+const MAP = require('../../seeds/bylaw/layer2-map.json');
+const LV_SEED = require('../../seeds/logic_variables.json');
+const INPUT = require('../../../docs/reference/bylaw-layer2-input.json');
+/** The stored resolve_bylaws population (its zone list), read from the declared logic_variables lookup for the Layer 1 env only. */
+const LAYER2_ZONE_LIST = 'resolve_bylaws_population_zone_classes';
 
-/** The eight standalone parameterised reads (contract C5). Bind order: $1 = parcel ids (int[]), $2 = radius / depth (cells, options: $2 = class, $3 = structure). */
+/**
+ * The eight declared reads (contract C5), each a statement correlated to the subject lot `s` of ONE batch statement (buildSourceSql,
+ * the runner binds $1 = last_key and $2 = batch_size; $3 = the declared population ids, $4 / $5 = the street / zone radius in metres and
+ * $6 = the bbox degree divisor are placeholders that buildSourceSql replaces with the validated ctx.config values as checked literals
+ * (settingLiterals; operator "option 2" 2026-11-11).
+ * MB-31 plan section 22 (operator "a yes" 2026-11-11, D-2 a): reads 5 bind the radius (exact geography distance); read 6 returns the
+ * street-scoped abutment rows (both lots on the subject's primary_frontage_street_name), and the compute walks the ring (ringLots).
+ */
 const READ_SQL = Object.freeze({
   cells: `SELECT r.parcel_id, r.lot_gate, r.class, r.structure, r.target, r.status, r.value_kind, r.value, r.reason, r.winner_unit_id
   FROM bylaw_resolution_results r
- WHERE r.parcel_id = ANY($1::int[]) AND r.class = $2 AND r.structure = $3
- ORDER BY r.parcel_id, r.target`,
+ WHERE r.parcel_id = s.id`,
   // MB-27 R2 (M-400, M-465; plan-reader-and-mech.md 1.4 R2 (1)): the design-option slots and the threshold (option NULL), migration 295
   options: `SELECT o.parcel_id, o.lot_gate, o.class, o.structure, o.target, o.option, o.status, o.value_kind, o.value, o.reason, o.winner_unit_id
   FROM bylaw_resolution_option_results o
- WHERE o.parcel_id = ANY($1::int[]) AND o.class = $2 AND o.structure = $3
- ORDER BY o.parcel_id, o.target, o.option`,
+ WHERE o.parcel_id = s.id`,
   // Q-STOR a (migration 295): the lot stamps are stored as bytea; Layer 3 reads them as hex through the view bylaw_resolution_lot_stamps
   lots: `SELECT l.parcel_id, l.lot_gate, l.permitted, l.permitted_text_ids, l.table_version, l.evaluator_version
   FROM bylaw_resolution_lot_stamps l
- WHERE l.parcel_id = ANY($1::int[])`,
-  // MB-27 increment 3, DL-21 a (D-8 read wiring): the parcels columns resolve_bylaws reads (resolve-bylaws.js buildSourceSql), so buildLotVector can rebuild the lot vector
+ WHERE l.parcel_id = s.id`,
+  // MB-27 increment 3, DL-21 a (D-8 read wiring): the parcels columns resolve_bylaws reads (resolve-bylaws.js buildSourceSql), so buildLotVector can rebuild the lot vector; the geometry inputs come from the same row
   parcel: `SELECT p.id, p.parcel_id, p.zoning_class, p.zoning_zn_string, p.exception_number, p.zoning_overlays, p.on_policy_road, p.is_corner_lot,
        p.is_through_lot, p.abuts_laneway, p.frontage_m, p.depth_m, p.lot_size_sqm, p.zoning_is_ambiguous, p.in_sixplex_area, p.is_heritage_designated,
        ST_NPoints(p.geom)::int AS geom_npoints
   FROM parcels p
- WHERE p.id = ANY($1::int[])`,
-  geometry: `SELECT p.id, p.lot_size_sqm, p.frontage_m, p.depth_m, p.is_corner_lot, p.zoning_class, p.primary_frontage_street_name
-  FROM parcels p
- WHERE p.id = ANY($1::int[])`,
+ WHERE p.id = s.id`,
   abutters: `SELECT a.parcel_id, a.neighbour_id, a.shared_len_m::double precision AS shared_len_m, a.front_setback_est_m::double precision AS est, a.est_status, a.bldg_to_subject_m::double precision AS bldg_m, a.same_frontage_street AS same_street, a.neighbour_residential AS residential
   FROM parcel_abutments a
- WHERE a.parcel_id = ANY($1::int[])`,
-  street_pool: `SELECT p.id, a.front_setback_est_m AS est
+ WHERE a.parcel_id = s.id`,
+  // read 5, street: the same-frontage-street lots within the street radius, each with its one estimate as a neighbour; the subject's
+  // abutters excluded (E31-01); the gist prefilter widens metres into degrees by the divisor and the exact cut is the geography distance
+  street_pool: `SELECT q.id, (SELECT e.front_setback_est_m::double precision FROM parcel_abutments e WHERE e.neighbour_id = q.id AND e.est_status = 'estimated' ORDER BY e.parcel_id LIMIT 1) AS est
+  FROM parcels q
+ WHERE q.geom && ST_Expand(s.geom, $4::double precision / $6::double precision)
+   AND q.primary_frontage_street_name = s.primary_frontage_street_name
+   AND q.id <> s.id
+   AND ST_DWithin(q.geom::geography, s.geom::geography, $4::double precision)
+   AND NOT EXISTS (SELECT 1 FROM parcel_abutments x WHERE x.parcel_id = s.id AND x.neighbour_id = q.id)`,
+  // read 5, zone: the same-zone lots within the zone radius; the gist prefilter widens metres into degrees by the divisor
+  // (D-4: it over-covers while the divisor is at most a degree of longitude in metres), and the exact cut is the geography distance
+  zone_pool: `SELECT p.id, (SELECT e.front_setback_est_m::double precision FROM parcel_abutments e WHERE e.neighbour_id = p.id AND e.est_status = 'estimated' ORDER BY e.parcel_id LIMIT 1) AS est
   FROM parcels p
-  LEFT JOIN parcel_abutments a ON a.parcel_id = p.id
-  JOIN parcels s ON s.id = ANY($1::int[]) AND s.primary_frontage_street_name = p.primary_frontage_street_name
- WHERE ST_DWithin(p.geom, s.geom, $2::double precision)
-   AND p.id <> ALL($1::int[])
-   AND NOT EXISTS (SELECT 1 FROM parcel_abutments x WHERE x.parcel_id = s.id AND x.neighbour_id = p.id)
- ORDER BY p.id`,
-  zone_pool: `SELECT p.id, a.front_setback_est_m AS est
-  FROM parcels p
-  LEFT JOIN parcel_abutments a ON a.parcel_id = p.id
-  JOIN parcels s ON s.id = ANY($1::int[]) AND s.zoning_class = p.zoning_class
- WHERE ST_DWithin(p.geom, s.geom, $2::double precision)
-   AND p.id <> ALL($1::int[])
-   AND NOT EXISTS (SELECT 1 FROM parcel_abutments x WHERE x.parcel_id = s.id AND x.neighbour_id = p.id)
- ORDER BY p.id`,
-  ring_lots: `WITH RECURSIVE chain AS (
-  SELECT 0 AS level, s.id AS lot_id, NULL::double precision AS shared_len_m
-    FROM parcels s
-   WHERE s.id = ANY($1::int[])
-  UNION ALL
-  SELECT c.level + 1, nxt.lot_id, nxt.shared_len_m
-    FROM chain c
-    JOIN LATERAL (
-      SELECT a.neighbour_id AS lot_id, a.shared_len_m
-        FROM parcel_abutments a
-        JOIN parcels p ON p.id = a.neighbour_id
-        JOIN parcels subj ON subj.id = ANY($1::int[])
-       WHERE a.parcel_id = c.lot_id
-         AND p.primary_frontage_street_name = subj.primary_frontage_street_name
-         AND c.level < $2::int
-         AND NOT a.neighbour_id = ANY($1::int[])
-         AND NOT EXISTS (SELECT 1 FROM chain done WHERE done.lot_id = a.neighbour_id)
-         AND NOT EXISTS (SELECT 1 FROM parcel_abutments x WHERE x.parcel_id = ANY($1::int[]) AND x.neighbour_id = a.neighbour_id)
-       ORDER BY a.shared_len_m DESC, a.neighbour_id ASC
-       LIMIT 1) nxt ON true
-)
-SELECT c.level, c.lot_id, c.shared_len_m, a.front_setback_est_m AS est
-  FROM chain c
-  LEFT JOIN parcel_abutments a ON a.parcel_id = c.lot_id
- WHERE c.level > 0
- ORDER BY c.level, c.lot_id`,
+ WHERE p.geom && ST_Expand(s.geom, $5::double precision / $6::double precision)
+   AND p.zoning_class = s.zoning_class
+   AND p.id <> s.id
+   AND ST_DWithin(p.geom::geography, s.geom::geography, $5::double precision)
+   AND NOT EXISTS (SELECT 1 FROM parcel_abutments x WHERE x.parcel_id = s.id AND x.neighbour_id = p.id)`,
+  // read 6 (MB-31 plan 21.2 / 22): every parcel_abutments row whose lot and neighbour both have the subject's frontage street (plain
+  // equality: a null street matches nothing), each with the neighbour's one estimate; no depth here, the compute walks the ring
+  ring_edges: `SELECT q.id AS parcel_id, n.id AS neighbour_id, a.shared_len_m::double precision AS shared_len_m, (SELECT e.front_setback_est_m::double precision FROM parcel_abutments e WHERE e.neighbour_id = n.id AND e.est_status = 'estimated' ORDER BY e.parcel_id LIMIT 1) AS est
+  FROM parcels q
+  JOIN parcel_abutments a ON a.parcel_id = q.id
+  JOIN parcels n ON n.id = a.neighbour_id AND n.primary_frontage_street_name = s.primary_frontage_street_name
+ WHERE q.primary_frontage_street_name = s.primary_frontage_street_name`,
 });
 
 function toList(x) {
@@ -405,10 +404,10 @@ function oneParcel(source, lookups) {
         is_corner_lot: g.is_corner_lot,
       },
       flags: { corner_lot: g.is_corner_lot === true },
-      neighbours: factsLib.neighbourFacts(
-        { neighbours: toList(source.abutters), street: toList(source.street), zone: toList(source.zone), ring: toList(source.ring) },
-        decoded[bt.id].averaging_distance_m || { s: 'not_evaluated', kind: null, value: null, clause: null, reason: null },
-      ).facts,
+      // D8-SHELL (MB-31 (e)): the reader's INPUT, not its facts: rows.js runs neighbourFacts itself with the run's own averaging cell
+      // (rows.js cellsOfRun); handing it facts made every neighbour count read 0 on stored rows. bt_units is the building-types row's;
+      // own and user stay empty: no declared read carries them (the golden-25 inputs carry none either).
+      neighbours: { user: [], neighbours: toList(source.abutters), own: null, street: toList(source.street), zone: toList(source.zone), ring: toList(source.ring), bt_units: bt.units },
     };
     const rowsOfType = buildParcelRows(parcelInput, L.seeds, meta);
     perType[bt.id] = { input: parcelInput, rows: rowsOfType };
@@ -426,18 +425,216 @@ function oneParcel(source, lookups) {
  * @param {object[]} sourceRows
  * @param {{config?: object, lookups: object}} ctx
  */
-function materializeRows(sourceRows, ctx) {
-  const lookups = (ctx && ctx.lookups) || {};
+function materializeParcels(sources, lookups) {
   const e1 = [];
-  const matched = { parcels: 0, rows_emitted: 0, layer2_cell_unparseable: 0, status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0, units_floor_refusals: 0 };
-  for (const source of toList(sourceRows)) {
-    const one = oneParcel(source, lookups);
+  const matched = { parcels: 0, processed: 0, rows_emitted: 0, layer2_cell_unparseable: 0, status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0, units_floor_refusals: 0 };
+  for (const source of toList(sources)) {
+    const one = oneParcel(source, lookups || {});
     e1.push(...one.rows);
     matched.parcels += 1;
+    matched.processed += 1;
     matched.rows_emitted += one.rows.length;
     for (const k of ['layer2_cell_unparseable', 'status_outside_closed_set', 'numbers_without_trace', 'not_buildable_with_value', 'closure_violations', 'flags_missing', 'units_floor_refusals']) matched[k] += one.census[k];
   }
   return { rows: { e1 }, matched };
+}
+
+// ---- D8-SHELL: the runtime loader (MB-31 (e); operator "a yes" 2026-11-11; card ~/Buildo-scratch/mcbylaws/inc3/build/CARD-d8-shell.md) ----
+
+/** The order of each aggregated read inside the batch statement (json_agg keeps it; the compute never relies on row order). */
+const READ_ORDER = Object.freeze({
+  cells: 'x.class, x.structure, x.target',
+  options: 'x.class, x.structure, x.target, x.option',
+  abutters: 'x.neighbour_id',
+  street_pool: 'x.id',
+  zone_pool: 'x.id',
+  ring_edges: 'x.parcel_id, x.neighbour_id',
+});
+
+/** The declared config.logic_variables entries the batch statement carries as checked literals, in $3.. placeholder order. */
+const BATCH_CONFIG_BINDS = Object.freeze([
+  'compute_maxbld_scenarios_population_parcel_ids',
+  'fya_placeholder_street_radius_m',
+  'fya_placeholder_zone_radius_m',
+  'compute_maxbld_scenarios_bbox_degree_divisor',
+]);
+
+/**
+ * The settings of the batch statement as checked SQL literals (operator "option 2" 2026-11-11, STOP-11: no runner change now; the
+ * enrich-parcels.js bboxDivisor and enrich-centreline.js proximityM precedent of a validated ctx.config value rendered into the SQL).
+ * Each population id must be a non-negative integer (the setting is a list of decimal strings); every other value must be a finite
+ * number. Anything else throws before a statement is built, so only digits, a dot, a minus sign or an exponent reach the SQL text.
+ * @returns {Record<number, string>} placeholder number -> literal
+ */
+function settingLiterals(config) {
+  const c = config || {};
+  const ids = c[BATCH_CONFIG_BINDS[0]];
+  if (!Array.isArray(ids)) throw new Error(`compute_maxbld_scenarios: ${BATCH_CONFIG_BINDS[0]} is not a list`);
+  const ints = ids.map((x) => {
+    const t = typeof x === 'number' ? String(x) : x;
+    if (typeof t !== 'string' || !/^[0-9]+$/.test(t) || !Number.isSafeInteger(Number(t))) throw new Error(`compute_maxbld_scenarios: population id ${JSON.stringify(x)} is not an integer`);
+    return Number(t);
+  });
+  const out = { 3: `ARRAY[${ints.join(', ')}]::int[]` };
+  BATCH_CONFIG_BINDS.slice(1).forEach((name, i) => {
+    const v = c[name];
+    if (typeof v !== 'number' || !Number.isFinite(v)) throw new Error(`compute_maxbld_scenarios: ${name} ${JSON.stringify(v)} is not a finite number`);
+    out[i + 4] = `${String(v)}::double precision`;
+  });
+  return out;
+}
+
+/**
+ * R-EH (a) (the rows arm): the source statements. The population is the declared golden-25 setting plus the cohort table parcel_maxbld_population
+ * (D-3 a); one page of ids by keyset, then the eight reads per lot as JSON. The settings are written in as checked literals
+ * (settingLiterals); the runner binds only last_key and batch_size (count_binds none). `count_sql` counts the cohort table only
+ * (records_total is matched.processed, the parcels the compute received).
+ * @returns {{count_sql: string, count_binds: string[], batch_sql: string, batch_binds: string[]}}
+ */
+function buildSourceSql(_descriptor, config, _opts) {
+  const lit = settingLiterals(config);
+  // each placeholder ($3-$6, with its cast) becomes the checked literal in parentheses; the runner binds only $1 and $2
+  const render = (sql) => sql.replace(/\$([3-6])(::[a-z ]+(\[\])?)?/g, (_m, n) => `(${lit[n]})`);
+  const one = (k) => `(SELECT row_to_json(x) FROM (${READ_SQL[k]}) x)`;
+  const many = (k) => `(SELECT COALESCE(json_agg(x ORDER BY ${READ_ORDER[k]}), '[]'::json) FROM (${READ_SQL[k]}) x)`;
+  return {
+    count_sql: 'SELECT COUNT(*)::int AS cohort_lots FROM parcel_maxbld_population',
+    count_binds: [],
+    batch_sql: render(`WITH page AS (
+  SELECT pop.id
+    FROM (SELECT unnest($3::int[]) AS id UNION SELECT c.parcel_id AS id FROM parcel_maxbld_population c) pop
+   WHERE pop.id > $1
+   ORDER BY pop.id
+   LIMIT $2
+), subject AS (
+  SELECT page.id, p.geom, p.zoning_class, p.primary_frontage_street_name
+    FROM page
+    LEFT JOIN parcels p ON p.id = page.id
+)
+SELECT s.id,
+       ${one('parcel')} AS parcel,
+       ${one('lots')} AS lot,
+       ${many('cells')} AS cells,
+       ${many('options')} AS options,
+       ${many('abutters')} AS abutters,
+       ${many('street_pool')} AS street,
+       ${many('zone_pool')} AS zone,
+       ${many('ring_edges')} AS ring_edges
+  FROM subject s
+ ORDER BY s.id`),
+    batch_binds: ['last_key', 'batch_size'],
+  };
+}
+
+const hasOwn = (o, k) => o !== null && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
+
+/**
+ * MB-31 plan 19.2 steps 1-4 (L31-15), walked in the compute (21.2 / 22): from each start abutter (an abutment of the subject on its
+ * frontage street, level 1), step to the abutter of the current lot that is not the subject, not already in this chain and not a start
+ * abutter, the largest shared_len_m first and the lowest lot id on a tie; a step with no candidate ends the chain; levels 2..depth.
+ * The ring is the distinct lots reached (each once), with the lot's one estimate as a neighbour (null keeps its place, adds no fact).
+ * @param {number} subjectId @param {Array<{parcel_id:number, neighbour_id:number, shared_len_m:number, est:number|null}>} edges @param {number} depth
+ */
+function ringLots(subjectId, edges, depth) {
+  if (!Number.isInteger(depth)) throw new Error(`compute_maxbld_scenarios: the ring depth ${JSON.stringify(depth)} is not an integer (fya_placeholder_ring_depth)`);
+  const adj = new Map();
+  const estOf = new Map();
+  for (const e of toList(edges)) {
+    if (!e) continue;
+    if (!adj.has(e.parcel_id)) adj.set(e.parcel_id, []);
+    adj.get(e.parcel_id).push(e);
+    estOf.set(e.neighbour_id, typeof e.est === 'number' ? e.est : null);
+  }
+  const starts = [...new Set(toList(adj.get(subjectId)).map((e) => e.neighbour_id))].sort((a, b) => a - b);
+  const startSet = new Set(starts);
+  const ring = new Set();
+  for (const a of starts) {
+    const chain = new Set([subjectId, a]);
+    let cur = a;
+    for (let level = 2; level <= depth; level += 1) {
+      const next = toList(adj.get(cur))
+        .filter((e) => e.neighbour_id !== subjectId && !chain.has(e.neighbour_id) && !startSet.has(e.neighbour_id))
+        .sort((x, y) => (y.shared_len_m - x.shared_len_m) || (x.neighbour_id - y.neighbour_id))[0];
+      if (!next) break;
+      chain.add(next.neighbour_id);
+      ring.add(next.neighbour_id);
+      cur = next.neighbour_id;
+    }
+  }
+  return [...ring].sort((a, b) => a - b).map((id) => ({ id, est: estOf.has(id) ? estOf.get(id) : null }));
+}
+
+/**
+ * The lookups oneParcel reads, assembled ONCE per run from the runner's role:"lookup" rows and the validated ctx.config: the seed files
+ * (static requires, the resolve-bylaws precedent), every catalogue setting's value from ctx.config (a catalogue setting with no
+ * config value throws: a seed is bootstrap only, Spec 122 1.2a P4), settings_sha over exactly those values, the permission keys of the
+ * Layer 2 map, the stored text dictionary, and the Layer 1 env for the D-8 disclosure recompute (its zone list is the stored
+ * resolve_bylaws population setting, read from the declared logic_variables lookup; absent or not a list throws).
+ */
+let lookupsMemo = { raw: null, config: null, L: null };
+function lookupsFor(raw, config) {
+  if (lookupsMemo.raw === raw && lookupsMemo.config === config && lookupsMemo.L) return lookupsMemo.L;
+  const logicVariables = { ...LV_SEED };
+  for (const s of toList(CATALOGUE.settings)) {
+    if (!hasOwn(config, s.id)) throw new Error(`compute_maxbld_scenarios: catalogue setting ${s.id} has no validated ctx.config value (declare it in config.logic_variables)`);
+    logicVariables[s.id] = { ...(LV_SEED[s.id] || {}), value: config[s.id] };
+  }
+  const seeds = { catalogue: CATALOGUE, switchboard: SWITCHBOARD, buildingTypes: BUILDING_TYPES, logicVariables, vocab: VOCAB, layer2Classes: SCOPE.classes, layer2Options: SCOPE.options };
+  const textRows = toList(raw.bylaw_resolution_texts);
+  const texts = {};
+  for (const t of textRows) texts[String(t.text_key)] = t.text;
+  const zoneRow = toList(raw.logic_variables).find((r) => r && r.variable_key === LAYER2_ZONE_LIST);
+  const zoneList = zoneRow ? zoneRow.variable_value_json : undefined;
+  if (!Array.isArray(zoneList)) throw new Error(`compute_maxbld_scenarios: the logic_variables lookup has no list ${LAYER2_ZONE_LIST} (the Layer 1 env of the D-8 recompute needs the zone list Layer 2 ran with)`);
+  const L = {
+    seeds,
+    vocab: VOCAB,
+    layer2Classes: SCOPE.classes,
+    permissionKeys: Object.keys(MAP.permission_image),
+    texts,
+    dicts: lr.makeDecodeDicts({ units: toList(raw.bylaw_resolution_units), texts: textRows }),
+    layer1Env: makeEnv({ body: INPUT.body, map: MAP, scope: SCOPE, vocab: VOCAB, zoneList, versions: { table_version: INPUT.table_version, evaluator_version: INPUT.evaluator_version } }),
+    settings_sha: cat.sha256(cat.settingVals(CATALOGUE, logicVariables)),
+  };
+  lookupsMemo = { raw, config, L };
+  return L;
+}
+
+/** One batch row (buildSourceSql) -> the oneParcel source. A population id with no parcels row or no Layer 2 stamp halts the run (fail closed; never dropped). */
+function sourceOf(r, L, depth) {
+  if (!r || !r.parcel) throw new Error(`compute_maxbld_scenarios: population id ${r && r.id} matches no parcels row`);
+  if (!r.lot) throw new Error(`compute_maxbld_scenarios: population parcel ${r.id} has no Layer 2 stamp (bylaw_resolution_lot_stamps)`);
+  const p = r.parcel;
+  return {
+    parcel_id: r.id,
+    cells: toList(r.cells),
+    options: toList(r.options),
+    lot: r.lot,
+    parcel: p,
+    geometry: { frontage_m: p.frontage_m, depth_m: p.depth_m, lot_size_sqm: p.lot_size_sqm, is_corner_lot: p.is_corner_lot },
+    abutters: toList(r.abutters),
+    street: toList(r.street),
+    zone: toList(r.zone),
+    ring: ringLots(r.id, r.ring_edges, depth),
+    permitted_by_class: lr.decodePermitted({ lot: r.lot, classes: SCOPE.classes, map: MAP, dicts: L.dicts }),
+  };
+}
+
+/**
+ * The rows arm (R-EH (c)): one batch row per population parcel -> every parcel_maxbld_scenarios row of that parcel. The runner passes
+ * its raw lookups and the validated config; the loader assembles them (lookupsFor) and walks the ring to the configured depth. An empty
+ * page computes nothing and returns the census at 0 (R-JG).
+ * @param {object[]} sourceRows
+ * @param {{config?: object, lookups?: object}} ctx
+ */
+function materializeRows(sourceRows, ctx) {
+  const list = toList(sourceRows);
+  if (list.length === 0) return materializeParcels([], {});
+  const c = ctx || {};
+  const config = c.config || {};
+  const L = lookupsFor(c.lookups || {}, config);
+  const depth = Number(config.fya_placeholder_ring_depth);
+  return materializeParcels(list.map((r) => sourceOf(r, L, depth)), L);
 }
 
 /** The closed scenario status set of the seam (rows.js + the permission statuses). */
@@ -507,6 +704,11 @@ module.exports.gainRows = gainRows;
 module.exports.contentSha = contentSha;
 module.exports.censusOf = censusOf;
 module.exports.materializeRows = materializeRows;
+module.exports.materializeParcels = materializeParcels;
+module.exports.buildSourceSql = buildSourceSql;
+module.exports.settingLiterals = settingLiterals;
+module.exports.ringLots = ringLots;
+module.exports.lookupsFor = lookupsFor;
 module.exports.READ_SQL = READ_SQL;
 module.exports.CHECKS = CHECKS;
 /** Spec 122 §5.5 (1): the dispatch table under the name the conformance battery reads (descriptor order). */

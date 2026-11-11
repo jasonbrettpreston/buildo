@@ -10318,6 +10318,16 @@
       "group": "Source Ingestion"
     }
   },
+  "compute_maxbld_scenarios_bbox_degree_divisor": {
+    "default": 78000,
+    "type": "number",
+    "min": 1000,
+    "max": 80000,
+    "description": "MB-35 D-4 (operator \"a yes\", 2026-11-11; the link_massing_bbox_degree_divisor precedent, migration 263): the metres-to-degrees divisor that widens the zone-pool bounding-box prefilter of compute_maxbld_scenarios read 5 into degree space; the exact cut is the geography ST_DWithin that follows. Must stay at or below about 80,400 (a degree of longitude at Toronto's north edge, measured 2026-11-11), so the prefilter over-covers; bounds 1000..80000. Changes what the read costs, never what is accepted. Inserted by migration 310. CONSUMED by compute_maxbld_scenarios (buildSourceSql, read from ctx.config and written into the batch statement as a checked literal).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "compute_maxbld_scenarios_batch_size": {
     "default": 500,
     "type": "number",

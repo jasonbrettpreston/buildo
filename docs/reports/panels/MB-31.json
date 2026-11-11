@@ -1,46 +1,76 @@
 {
- "task": "MB-31",
- "item": "Layer 3 step compute_maxbld_scenarios (briefs B0, B1-B4, B6-B13, C2, lexicon move) plus the registration consequence (six pins, O-37), Spec 47 section A.5 row 135, and the finish of increment 1: B5 evaluator hook, C1 settings seeds (migration 294), the 25-lot input generator, the 25-case acceptance test and its fixtures",
- "class": "E",
- "stage": 8,
- "date": "2026-11-02",
- "head": "the code commit carrying this record, directly on prereg-MB-31-3 (d996999f), which sits directly on the merge e32addf6 of wf1/mb-rulings 3a31e2ef (MB-18 (k) and the McProof fixes)",
- "commits_reviewed": [
-  "build v5 (stage8-inc1 README; engine run ids there)",
-  "~/Buildo-scratch/mcbylaws/MB-31/inc1-plan.md (approved: CARD-mb31-inc1-plan.answered.md)"
- ],
- "cards": [
-  "CARD-mb31-start",
-  "CARD-mb31-reads-binding",
-  "CARD-mb31-registration",
-  "CARD-mb31-lexicon-pin",
-  "CARD-mb31-lexicon-closure",
-  "CARD-mb31-inc1-plan",
-  "CARD-mb31-inc1-blockers"
- ],
- "plan": "Stage 3 PLAN panel of the increment 1 finish plan (~/Buildo-scratch/mcbylaws/MB-31/inc1-plan.md sections 10 and 11): four DeepSeek lenses (rules, gate and landing, fixture and McProof, order and risk) plus a grounded check against the code, fold, and one fold validation (FIXED). Earlier plan panels: fold 1102 validated FIX then re-check 1 PASS.",
- "output": "OUTPUT: stage 8 panel REVISE then re-checks 1 and 2 PASS on v3 (earlier record kept in evidence), then the lexicon move and the increment 1 build. Real run of the 25 golden cases through buildParcelRows (mode A): 175 of 175 cells agree on value or refusal (25 permitted, 137 numbers inside the McProof tolerances, 13 refusals with the expected reason); flags differ in 21 cells (card CARD-mb31-inc1-flags). Red-first: docs/reports/red-evidence/bylaw/bylaw-mb31-inc1-red.txt (25 of 25 cases red on the base). Arm L 0 on evaluate.mjs, dsl.mjs, evaluate-l3.mjs. Dry run of both hooks recorded in the build README.",
- "seats": [
-  "ds-spec",
-  "ds-security",
-  "ds-idempotency",
-  "ds-error-paths",
-  "regression-guardian",
-  "grounded-reviewer",
-  "reality-check",
-  "compliance",
-  "ds-lens-rules",
-  "ds-lens-gate",
-  "ds-lens-fixture",
-  "ds-lens-order"
- ],
- "verdict": "PASS",
- "blockers": [],
- "followups": [
-  "read 6 ring_lots SQL does not parse (recursive CTE in subquery), planar ST_DWithin in degrees, onePerLot keying: on the reads 5-6 rebuild list",
-  "prereg-MB-31-1 rules[] lists ids that carry OWED in the Spec 133 register; the code commit cites none",
-  "table_version also goes stale under the disclosed 21.3 re-pin",
-  "runner batch_binds build before the real runs of reads 1-6"
- ],
- "evidence": "~/Buildo-scratch/mcbylaws/MB-31/output-panel-1102/adjudication.md and recheck-2.md; ~/Buildo-scratch/mcbylaws/MB-31/inc1-plan.md; ~/Buildo-scratch/mcbylaws/MB-31/build/stage8-inc1/README.md"
+  "task": "MB-31",
+  "item": "MB-31 (e) / MB-35: the D8-SHELL runtime loader of compute_maxbld_scenarios (buildSourceSql with the settings as checked literals, lookupsFor, sourceOf, ringLots, materializeRows -> materializeParcels), the neighbour-input fix, migrations 309, 310, 311 (written not applied); no runner change (operator \"option 2 a y b y\", STOP-11)",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-11",
+  "head": "the code commit carrying this record, on the deferral note commit, on prereg-MB-31-8, on the bind note commit, restacked on the origin tip after the increment-4 night",
+  "commits_reviewed": [
+    "uncommitted build on e22571f8f (diff ~/Buildo-scratch/mcbylaws/mb35/build/panel-output/build.diff)"
+  ],
+  "cards": [
+    "CARD-d8-shell",
+    "CARD-mb31-reads-binding",
+    "MB-35 decision list D-1..D-7 (operator \"a yes\" 2026-11-11)"
+  ],
+  "plan": "PLAN panel 2026-11-11 on ~/Buildo-scratch/mcbylaws/mb35/build/plan.md: regression-guardian REVISE (five callers, step-closure pins, B10 carry, CHECK reverse direction), pipeline-reality-check PASS-WITH-FOLDS (0.23 MiB per lot, cap about 1,900-2,300 lots, divisor max 80000, p.id as key, stale-stamp halt, pre-validate population), DeepSeek four lenses adjudicated (panel-plan/ds-*.md). Folds went into the decision list the operator ruled \"a yes\" (RETURN.md).",
+  "output": "OUTPUT panel 2026-11-11: code-reviewer-grounded REVISE (an unescaped apostrophe left neighbour-facts untransformed; RV-6 assumed an array) -> folded; regression-guardian REVISE (same two, plus a neighbour-count lock) -> folded (runtime-loader (b) asserts nbr_q_n 2 and bt_units 4 on 205238); observability-reviewer PASS-WITH-FOLDS (preflight SQL for population and stale stamps, loaded = computed SQL) -> folded into the night steps; pipeline-reality-check PASS-WITH-FOLDS (golden 25 from the real DB 150/150; Fenside 150 lots plausible, 153 rows a lot, about 400-450 MiB for the cohort; stale word confirmed until the inc-4 night) -> night preflight folded. After folds: 41 files, 724 tests green; typecheck 0. Delta 2026-11-11 (operator \"option 2 a y b y\"): the runner bind was reverted (scripts/lib/step byte-identical to the tip) and settingLiterals writes the validated settings into the batch statement; code-reviewer-grounded delta seat PASS (adversarial values throw, no non-numeric character reaches the SQL, only $1/$2 stay bound); its two LOW folds taken (edge-number and number-id renderings, the reads use only $4-$6). The houseplex coverage exemption recorded as intended (descriptor limitation); the 309 index kept.",
+  "seats": [
+    {
+      "seat": "code-reviewer-grounded",
+      "verdict": "REVISE -> folded",
+      "folds": [
+        "neighbour-facts.logic.test.ts title apostrophe fixed; file transforms",
+        "RV-6 asserts deviations === \"none\""
+      ]
+    },
+    {
+      "seat": "regression-guardian",
+      "verdict": "REVISE -> folded",
+      "folds": [
+        "the two test defects above",
+        "neighbour-input behaviour lock in runtime-loader (b)",
+        "stale header comment in neighbour-facts updated"
+      ]
+    },
+    {
+      "seat": "observability-reviewer",
+      "verdict": "PASS-WITH-FOLDS",
+      "folds": [
+        "night preflight: every population id has a parcels row, a stamp and the tree versions",
+        "night post: loaded = computed lots and rows, no stale word written"
+      ]
+    },
+    {
+      "seat": "pipeline-reality-check",
+      "verdict": "PASS-WITH-FOLDS",
+      "folds": [
+        "night: first page on a mixed-zone slice and measure relation size after it",
+        "night: stop if any stamp is not 4e7ea5d1"
+      ]
+    },
+    {
+      "seat": "code-reviewer-grounded (delta, option 2)",
+      "verdict": "PASS",
+      "folds": [
+        "edge-number renderings and a number id locked in runtime-loader (a)",
+        "the reads use only $4-$6 (locked)"
+      ]
+    }
+  ],
+  "verdict": "PASS after folds (no blocker left open)",
+  "blockers": [],
+  "followups": [
+    "a not_evaluated-share post check per building type (the golden page is 32.4 %, the suite type 46.5 %; the retired setting is not live) -- new check, needs a ruling",
+    "zone-aware plausibility post checks on Layer 3 values (footprint <= 0.65 lot, front <= depth, gfa <= footprint x storeys, unit caps)",
+    "a stale-lots counter before the full population; cohort_lots surfaced through finalizeMatched",
+    "two fingerprint inputs (disclosures.js, disclosure-families.json) still unadjudicated (tip-era)",
+    "the R-EH (a) runner bind (recorded note) lands with the next fleet recapture night (STOP-11 option 2)"
+  ],
+  "evidence": [
+    "~/Buildo-scratch/mcbylaws/mb35/build/panel-plan/",
+    "~/Buildo-scratch/mcbylaws/mb35/build/panel-output/",
+    "docs/reports/red-evidence/bylaw/mb31e-runtime-loader-red.txt",
+    "docs/reports/loop-records/1/round-69.json"
+  ]
 }

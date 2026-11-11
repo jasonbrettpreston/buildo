@@ -1,0 +1,21 @@
+== MB-31 (e) D8-SHELL runtime loader red: the lock run with the code of the parent c78c1f944 / e22571f8f (no buildSourceSql, no loader, no settingLiterals, no migration 309); green on the build commit (19 of 19). Operator "option 2" (2026-11-11, STOP-11): no runner change; the settings are checked literals in the batch statement.
+   × (a) buildSourceSql: one batch statement; the runner binds its keyset only, the settings are checked literals (operator "option 2", STOP-11) > binds only last_key and batch_size; count_binds none; every placeholder of the reads is rendered
+   × (a) buildSourceSql: one batch statement; the runner binds its keyset only, the settings are checked literals (operator "option 2", STOP-11) > the literals in the SQL equal the validated config values
+   × (a) buildSourceSql: one batch statement; the runner binds its keyset only, the settings are checked literals (operator "option 2", STOP-11) > a non-integer population id or a non-finite setting throws before any SQL is built
+   × (a) buildSourceSql: one batch statement; the runner binds its keyset only, the settings are checked literals (operator "option 2", STOP-11) > pages the population by its integer id (keyset > $1, ORDER BY, LIMIT $2) and returns that id as the source key
+   × (a) buildSourceSql: one batch statement; the runner binds its keyset only, the settings are checked literals (operator "option 2", STOP-11) > read 5 takes the radius in metres on geography; the gist prefilter widens it into degrees by the divisor
+   × (b) the golden 25 through the runtime loader reproduce the McProof key > every stated house value and status, with settings_sha set on every row
+   × (c) migration 309: the two CHECKs hold on every emitted row > the migration carries the CHECKs as the test reads them (D-1 a: only gain_reasons is computed with no value)
+   × (c) migration 309: the two CHECKs hold on every emitted row > every golden row passes both predicates
+   × (d) the ring walk (MB-31 plan 19.2 steps 1-4, in the compute) > levels 2..depth, start abutters never ring lots, a lot without an estimate keeps its place
+   × (d) the ring walk (MB-31 plan 19.2 steps 1-4, in the compute) > RG-5: the longest shared edge wins, the lowest lot id on a tie; RG-4: two chains reaching one lot count it once
+   × (d) the ring walk (MB-31 plan 19.2 steps 1-4, in the compute) > RG-8: the walk only follows the street-scoped rows it is given (read 6 holds no other street); no start abutter -> empty ring
+   × (d) the ring walk (MB-31 plan 19.2 steps 1-4, in the compute) > shuffled rows give the same ring; a non-integer depth throws
+   × (e) fail closed > a population id with no parcels row, or with no Layer 2 stamp, halts the run by name
+   × (e) fail closed > a catalogue setting with no validated config value, or no zone-list row, throws (a seed is never a runtime fallback)
+   × (e) fail closed > an empty page computes nothing and returns the census at 0 (R-JG)
+   × (f) settings_sha and (g) the processed count > settings_sha is the sha256 of the catalogue settings as read from ctx.config
+   × (f) settings_sha and (g) the processed count > moves with a catalogue setting, never with the batch size, the population, the divisor or the lookup row order
+   × (f) settings_sha and (g) the processed count > matched.processed (records_total) counts the parcels of the page
+Tests 18 failed on the parent code.
+Note: the edge-number / number-id / placeholder-set case of block (a) was added after this run (delta panel fold); it calls settingLiterals, which the parent does not have, so it is red there by construction (19 of 19 green on the build commit).

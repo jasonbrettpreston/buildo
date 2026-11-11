@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (1073) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 36 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (1074) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 36 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **1082** logic variables (1073 numeric, 6 JSONB, 3 string).
+Total: **1083** logic variables (1074 numeric, 6 JSONB, 3 string).
 
 ---
 
@@ -377,6 +377,7 @@ Total: **1082** logic variables (1073 numeric, 6 JSONB, 3 string).
 | `compute_coa_cost_estimates_model_range_pct` | numeric | 0.2 | 0 – 1 | — | seed | group: Cost Tuning | compute_coa_cost_estimates: the CoA cost model ±range for a model-priced estimate — the step-owned copy (Spec 124 R-DE (v); one consumer, so not a Q-C3 shared name), copied from model_range_pct by migration 275; model_range_pct retires at ③. CONSUMED by compute_coa_cost_estimates (materializeRows, via buildCoaConfig). |
 | `compute_maxbld_scenarios_basement_livable_share` | numeric | 1 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): livable share of the plate below grade. Default 1, bounds [0, 1]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
 | `compute_maxbld_scenarios_batch_size` | numeric | 500 | 50 – 5000 | — | seed | group: Source Ingestion | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): executed batch (R-DE (i)). Default 500, bounds [50, 5000]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). Inserted by migration 283; mirrored here because the descriptor declares it and the step library resolves a declared name through this seed (Spec 122 section 1.2a P4). |
+| `compute_maxbld_scenarios_bbox_degree_divisor` | numeric | 78000 | 1000 – 80000 | — | seed | group: Source Ingestion | MB-35 D-4 (operator "a yes", 2026-11-11; the link_massing_bbox_degree_divisor precedent, migration 263): the metres-to-degrees divisor that widens the zone-pool bounding-box prefilter of compute_maxbld_scenarios read 5 into degree space; the exact cut is the geography ST_DWithin that follows. Must stay at or below about 80,400 (a degree of longitude at Toronto's north edge, measured 2026-11-11), so the prefilter over-covers; bounds 1000..80000. Changes what the read costs, never what is accepted. Inserted by migration 310. CONSUMED by compute_maxbld_scenarios (buildSourceSql, read from ctx.config and written into the batch statement as a checked literal). |
 | `compute_maxbld_scenarios_circulation_share` | numeric | 0.1 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): stairs/halls per houseplex floor. Default 0.1, bounds [0, 0.3]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
 | `compute_maxbld_scenarios_coxwell_generous_reading` | numeric | 1 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): M-224 switch: 1 = the generous reading of 150.7.60.30(1)(C), 0 = the literal one. Default 1, bounds [0, 1]. Bound note: (integer). CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
 | `compute_maxbld_scenarios_depth_search_step_m` | numeric | 0.5 | — (migration-seeded) | — | migration 283 | — (governed by GROUPS only) | McDonald's Airtight V3 (Spec 124 R-DE (v); Spec 78 P5.9): rear-wall search step. Default 0.5, bounds [0.1, 2]. CONSUMED by compute_maxbld_scenarios (the P5.2-P5.14 compute modules, via ctx.config). |
@@ -1105,4 +1106,4 @@ Total: **1082** logic variables (1073 numeric, 6 JSONB, 3 string).
 
 ---
 
-*Generated from 1046 seed vars + 36 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*
+*Generated from 1047 seed vars + 36 migration-only vars + 54 consumer-mapped keys across 2 script dirs.*

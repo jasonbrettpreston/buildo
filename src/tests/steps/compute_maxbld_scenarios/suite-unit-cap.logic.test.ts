@@ -74,8 +74,8 @@ describe('E7 count (card lock item 2): the refusals are counted in the step reco
   });
   it('materializeRows carries the key in its matched census (0 on an empty lot)', () => {
     const s = seeds();
-    const out = S.materializeRows([{ parcel_id: 1, cells: [], options: [], lot: { lot_gate: null }, geometry: {}, abutters: [], street: [], zone: [], ring: [] }],
-      { lookups: { seeds: s, vocab: s.vocab, layer2Classes: [], permissionKeys: {}, texts: {} } });
+    const out = S.materializeParcels([{ parcel_id: 1, cells: [], options: [], lot: { lot_gate: null }, geometry: {}, abutters: [], street: [], zone: [], ring: [] }], // MB-31 (e): the assembled-lookups path is materializeParcels (materializeRows is the runtime loader)
+      { seeds: s, vocab: s.vocab, layer2Classes: [], permissionKeys: {}, texts: {} });
     expect(out.matched.units_floor_refusals).toBe(0);
   });
 });

@@ -4,10 +4,10 @@
 //   RV-1 `CAT.settingDecls` carries seed `default`, `min`, `max` for every catalogue setting.
 //   RV-2 `CM.censusOf(rows, U)` derives the closure / flags census from the emitted rows (never from a lookup object),
 //        `CM.materializeRows` seeds `closed` with `closure_violations` and `flags_missing` at 0.
-//   RV-3 `CM.READ_SQL.abutters` projects the fields the neighbour reader consumes, still binds only `$1`;
+//   RV-3 `CM.READ_SQL.abutters` projects the fields the neighbour reader consumes, correlated to the batch subject (MB-31 (e): no bind of its own);
 //        `NF.neighbourFacts` still reads the projected names onto its facts.
 //   RV-4 `CM.contentSha` hashes the row's increment and the building-types seed sha (content, not just status).
-//   RV-6 the descriptor's open deviation cites the plan section 23.1 and stops pointing back to stage 2.
+//   RV-6 the descriptor's buildSourceSql deviation is retired once the runner binds land (MB-31 (e); before: it cited 22.1).
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -90,7 +90,7 @@ describe('MB-31 OUTPUT panel 1102 fixes', () => {
     expect(out.matched.flags_missing).toBe(0);
   });
 
-  it('RV-3: the abutters read projects the neighbour fields and still binds only $1', () => {
+  it('RV-3: the abutters read projects the neighbour fields and is correlated to the batch subject (MB-31 (e)), with no bind of its own', () => {
     const CM = req(path.join(ROOT, CM_PATH)) as Json;
     const NF = req(path.join(ROOT, NF_PATH)) as Json;
     const sql: string = CM.READ_SQL.abutters;
@@ -98,8 +98,8 @@ describe('MB-31 OUTPUT panel 1102 fixes', () => {
     for (const needle of ['same_frontage_street', 'neighbour_residential', ' AS est', ' AS bldg_m', ' AS same_street', ' AS residential']) {
       expect(sql, needle).toContain(needle);
     }
-    expect(sql).toContain('$1::int[]');
-    expect(sql).not.toContain('$2');
+    expect(sql).toContain('a.parcel_id = s.id');
+    expect(sql).not.toMatch(/\$\d/);
 
     const out = NF.neighbourFacts(
       { neighbours: [{ neighbour_id: 7, est: 4.5, bldg_m: 10, est_status: 'estimated', same_street: true, residential: true }] },
@@ -120,11 +120,10 @@ describe('MB-31 OUTPUT panel 1102 fixes', () => {
     expect(CM.contentSha({ ...BASE_ROW })).toBe(base);
   });
 
-  it('RV-6: the descriptor deviation cites plan 23.1 and no longer points back to stage 2', () => {
+  // MB-31 (e) (operator "a yes" 2026-11-11, D-6 / D-7): the runner bind build of plan 22.1 landed, so the open buildSourceSql deviation retires
+  it('RV-6: the buildSourceSql deviation that waited plan 22.1 is retired once the runner binds land (MB-31 (e))', () => {
     const descriptor = JSON.parse(fs.readFileSync(DESCRIPTOR, 'utf8')) as Json;
-    const why = descriptor.deviations[0].why.text as string;
-    expect(why).toBeTypeOf('string');
-    expect(why).toContain('22.1');
-    expect(why).not.toContain('back to MB-31 stage 2');
+    expect(descriptor.deviations).toBe('none');
+    expect(typeof req(path.join(ROOT, CM_PATH)).buildSourceSql).toBe('function');
   });
 });

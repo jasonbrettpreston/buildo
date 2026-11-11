@@ -64,8 +64,8 @@ describe('the step: one row per (building_type, field), the house unchanged', ()
       s.buildingTypes.rows.push({ id: HP, class: HP, structure: 'principal', units: 4, increment: '3', switch: `building_type:${HP}`, rules: ['M-494'] });
       s.switchboard.rows.push({ id: `building_type:${HP}`, kind: 'building_type', state: 'on', ruling: 'M-494', reason: 'increment 3 building type' });
     }
-    const out = S.materializeRows([{ parcel_id: 1, cells: [], options: [], lot: { lot_gate: null }, geometry: {}, abutters: [], street: [], zone: [], ring: [] }],
-      { lookups: { seeds: s, vocab: s.vocab, layer2Classes: [], permissionKeys: {}, texts: {} } });
+    const out = S.materializeParcels([{ parcel_id: 1, cells: [], options: [], lot: { lot_gate: null }, geometry: {}, abutters: [], street: [], zone: [], ring: [] }], // MB-31 (e): the assembled-lookups path is materializeParcels (materializeRows is the runtime loader)
+      { seeds: s, vocab: s.vocab, layer2Classes: [], permissionKeys: {}, texts: {} });
     const keys = (out.rows.e1 as Json[]).map((r) => `${r.building_type}|${r.field_id}`);
     expect(keys.length).toBe(new Set(keys).size);
     expect((out.rows.e1 as Json[]).filter((r) => r.building_type === "detached_house")).toHaveLength(47); // not 2 x 47 (the per-type loop)

@@ -64,6 +64,10 @@
           "columns": ["parcel_id", "neighbour_id", "shared_len_m", "same_frontage_street", "neighbour_residential", "bldg_to_subject_m", "front_setback_est_m", "est_status"]
         },
         {
+          "table": "parcel_maxbld_population",
+          "columns": ["parcel_id"]
+        },
+        {
           "table": "logic_variables",
           "columns": ["variable_key", "variable_value", "variable_value_json"],
           "role": "lookup",
@@ -160,7 +164,14 @@
       "scripts/seeds/bylaw/layer3-catalogue.json",
       "scripts/lib/bylaw-materialize.js",
       "scripts/lib/bylaw-lot-row.js",
-      "scripts/lib/bylaw-resolution.js"
+      "scripts/lib/bylaw-resolution.js",
+      "scripts/seeds/bylaw/switchboard.json",
+      "scripts/seeds/bylaw/building-types.json",
+      "scripts/seeds/bylaw/vocab.json",
+      "scripts/seeds/bylaw/layer2-scope.json",
+      "scripts/seeds/bylaw/layer2-map.json",
+      "scripts/seeds/logic_variables.json",
+      "docs/reference/bylaw-layer2-input.json"
     ],
     "logic_version": "none",
     "on_fingerprint_change": "run",
@@ -203,7 +214,7 @@
       "table": "parcels",
       "key": "id",
       "why": {
-        "text": "The population is a list of parcels ids (the population_parcel_ids setting); every population parcel is pending and the full rescan sits behind the content_sha guard.",
+        "text": "The population is the declared golden-25 setting compute_maxbld_scenarios_population_parcel_ids (a validated ctx.config value written into the batch statement as checked literals; operator \"option 2\" 2026-11-11) plus the cohort table parcel_maxbld_population (migration 309; operator \"a yes\" 2026-11-11, D-3 a); every population parcel is pending and the full rescan sits behind the content_sha guard.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/compute-maxbld-scenarios.js"
@@ -266,20 +277,7 @@
       "consumers": []
     }
   ],
-  "deviations": [
-    {
-      "from": "buildSourceSql (MB-31 plan section 19.2: the ring depth bound as a parameter on the ring read)",
-      "why": {
-        "text": "Not built: the runner's materialize binds are a closed set (MATERIALIZE_BIND_NAMES = last_key, batch_size, run_at in scripts/lib/step/index.js), so the ring depth cannot be bound as a run-time parameter the way the plan section 19.2 requires; reads 5 and 6 and the population binds of every read WAIT the runner bind build named in MB-31 plan section 22.1 (operator answer (b) option 1); until it lands the ring read keeps its depth as a declared read parameter and this deviation stays open.",
-        "liveness": {
-          "kind": "file",
-          "ref": "scripts/lib/step/index.js"
-        }
-      },
-      "adjudicated_by": "MB-31 plan conflicts, item b (~/Buildo-scratch/mcbylaws/MB-31/build/plan-conflicts.md)",
-      "date": "2026-11-02"
-    }
-  ],
+  "deviations": "none",
   "limitations": [
     {
       "what": "MB-35: the T64-21 WARN list (0 < footprint <= 0.65 x lot area; 0 < front <= lot depth) lives in the compute's checks, not as a declared plausibility entry — no first run has measured it yet.",
@@ -297,7 +295,12 @@
       "check_id": "layer2_cell_unparseable"
     },
     {
-      "what": "MB-31: staleness.fingerprint_inputs does not list scripts/seeds/bylaw/switchboard.json and building-types.json, because gate P2-C3 admits only real imports of the step and the step's runtime seed loader is not built yet (it waits the runner batch binds). A change to either file still moves every row: switchboard_sha and building_types_sha are inside each row's content_sha.",
+      "what": "MB-35 (operator \"b y\" 2026-11-11, intended): the detached houseplex footprint may exceed the coverage overlay the detached house is held to (measured read-only on 150 Fenside-Parkwoods lots: 119 above 35 %, up to 45 %; the McProof key agrees, golden 205238 houseplex 228.31 m2 on 580 m2). The houseplex coverage exemption is ruled intended, not a defect.",
+      "measured": "2026-11-11 read-only sample, 150 lots",
+      "check_id": "none"
+    },
+    {
+"what": "MB-35 (operator \"a yes\" 2026-11-11): the rows arm runs no departed retraction for a guarded_upsert (scripts/lib/step/index.js materializeRowsArm plans targets A, F and G only), so a lot that leaves the population keeps its rows; the declared retraction is not executed. The MB-35 rollback drops the table.",
       "measured": "none",
       "check_id": "none"
     }
@@ -356,6 +359,7 @@
       { "name": "compute_maxbld_scenarios_roof_assembly_depth_4_m", "min": 0.3082, "max": 0.3082, "on_invalid": "fail" },
       { "name": "footprint_shape_factor", "min": 1, "max": 1, "on_invalid": "fail" },
       { "name": "compute_maxbld_scenarios_population_parcel_ids", "min": "none", "max": "none", "on_invalid": "fail", "list_of": ["6640","30065","30554","33830","119522","120669","122034","153191","159079","169742","170105","173273","205238","216666","258388","274216","283723","304365","313999","403569","410720","427312","428050","442123","461807"] },
+      { "name": "compute_maxbld_scenarios_bbox_degree_divisor", "min": 1000, "max": 80000, "on_invalid": "fail" },
       { "name": "compute_maxbld_scenarios_batch_size", "min": 50, "max": 5000, "on_invalid": "fail" }
     ],
     "validation": "strict",

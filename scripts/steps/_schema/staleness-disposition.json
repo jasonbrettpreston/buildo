@@ -366,6 +366,34 @@
     "scripts/seeds/bylaw/layer3-catalogue.json": {
       "disposition": "descriptive",
       "why": "measured 2026-11-02 (MB-31 increment 1 landing): the Layer 3 catalogue (rows, facts, settings) and its lexicon, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/seeds/bylaw/switchboard.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-11 (MB-31 (e) D8-SHELL landing): the switchboard (switch states of every formula, reading and building type), read once at load by the runtime loader (a real import of the step, the resolve-bylaws.js precedent). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard, and the seed shas (catalogue, switchboard, building types) and settings_sha sit inside each row's content_sha."
+    },
+    "scripts/seeds/bylaw/building-types.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-11 (MB-31 (e) D8-SHELL landing): the building types and the gain declaration, read once at load by the runtime loader (a real import of the step, the resolve-bylaws.js precedent). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard, and the seed shas (catalogue, switchboard, building types) and settings_sha sit inside each row's content_sha."
+    },
+    "scripts/seeds/bylaw/vocab.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-11 (MB-31 (e) D8-SHELL landing): the vocabulary (design options, Layer 3 status forms, Layer 1 zones), read once at load by the runtime loader (a real import of the step, the resolve-bylaws.js precedent). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard, and the seed shas (catalogue, switchboard, building types) and settings_sha sit inside each row's content_sha."
+    },
+    "scripts/seeds/bylaw/layer2-scope.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-11 (MB-31 (e) D8-SHELL landing): the Layer 2 scope (classes, options) the stored cells are keyed by, read once at load by the runtime loader (a real import of the step, the resolve-bylaws.js precedent). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard, and the seed shas (catalogue, switchboard, building types) and settings_sha sit inside each row's content_sha."
+    },
+    "scripts/seeds/bylaw/layer2-map.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-11 (MB-31 (e) D8-SHELL landing): the Layer 2 map (the permission image the stored words decode by), read once at load by the runtime loader (a real import of the step, the resolve-bylaws.js precedent). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard, and the seed shas (catalogue, switchboard, building types) and settings_sha sit inside each row's content_sha."
+    },
+    "scripts/seeds/logic_variables.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-11 (MB-31 (e) D8-SHELL landing): the seed entries (bounds, defaults) the catalogue settings overlay with the validated ctx.config values, read once at load by the runtime loader (a real import of the step, the resolve-bylaws.js precedent). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard, and the seed shas (catalogue, switchboard, building types) and settings_sha sit inside each row's content_sha."
+    },
+    "docs/reference/bylaw-layer2-input.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-11 (MB-31 (e) D8-SHELL landing): the generated Layer 1 input of the D-8 disclosure recompute (its versions decide the stale word), read once at load by the runtime loader (a real import of the step, the resolve-bylaws.js precedent). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard, and the seed shas (catalogue, switchboard, building types) and settings_sha sit inside each row's content_sha."
     }
   }
 }

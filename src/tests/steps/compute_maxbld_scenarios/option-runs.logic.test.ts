@@ -111,10 +111,12 @@ beforeAll(() => {
 });
 
 describe('OR-1: the option read is declared (R-KT)', () => {
-  it('READ_SQL.options reads bylaw_resolution_option_results per (parcels, class, structure), and the descriptor declares its columns', () => {
+  it('READ_SQL.options reads bylaw_resolution_option_results per batch subject (MB-31 (e)), and the descriptor declares its columns', () => {
     const sql = String(S.READ_SQL.options);
     expect(sql).toMatch(/FROM\s+bylaw_resolution_option_results\b/);
-    expect(sql).toMatch(/parcel_id\s*=\s*ANY\(\$1::int\[\]\)\s+AND\s+\w+\.class\s*=\s*\$2\s+AND\s+\w+\.structure\s*=\s*\$3/);
+    // MB-31 (e) (operator "a yes" 2026-11-11, D-6): the read is correlated to the batch subject; every class and structure is read and decodeOptionCells selects
+    expect(sql).toMatch(/\bo\.parcel_id\s*=\s*s\.id\b/);
+    expect(sql).not.toMatch(/\$\d/);
     const d = readJson('scripts/compute-maxbld-scenarios.descriptor.json');
     const t = (d.inputs.reads.tables as Json[]).find((x) => x.table === 'bylaw_resolution_option_results') as Json;
     expect(t, 'descriptor: the option view is a declared read').toBeDefined();
@@ -169,7 +171,7 @@ describe('OR-2: decodeOptionCells', () => {
     const bad = { ...lot.options[0], status: 'applies', value_kind: 'number', value: -5 };
     const lookups = { seeds: SEEDS, vocab: VOCAB, layer2Classes: SCOPE.classes, permissionKeys: { 0: 'permitted', 1: 'prohibited', 2: 'not_evaluated' }, texts: {} };
     const src = { parcel_id: lot.parcel_id, cells: lot.cells, options: [bad, ...lot.options.slice(1)], lot: { permitted: [0, 0, 0, 0, 0], permitted_text_ids: [null, null, null, null, null], lot_gate: null }, geometry: {} };
-    const r = S.materializeRows([src], { lookups });
+    const r = S.materializeParcels([src], lookups); // MB-31 (e): the assembled-lookups path (materializeRows is the runtime loader)
     expect(r.matched.layer2_cell_unparseable).toBe(1);
   });
 });

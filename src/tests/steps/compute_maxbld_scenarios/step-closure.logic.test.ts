@@ -22,6 +22,7 @@ const DESCRIPTOR = 'scripts/compute-maxbld-scenarios.descriptor.json';
 // MB-27 R2 (operator "Q-r2 a"; "a" on Q-R2A): the reader calls Layer 2's own withNotAbove (bylaw-materialize.js), so the walk reaches
 // that file and its Layer 2 dependencies; each is checked free of env, clock and io like the Layer 3 files.
 const EXPECTED_LOCAL = [
+  'docs/reference/bylaw-layer2-input.json', // MB-31 (e) D8-SHELL (operator "a yes" 2026-11-11, D-6): the runtime loader's Layer 1 env (generated data)
   'scripts/analysis/bylaw/cell-cache.mjs',
   'scripts/analysis/bylaw/dsl.mjs',
   'scripts/analysis/bylaw/evaluate-l3.mjs',
@@ -36,8 +37,14 @@ const EXPECTED_LOCAL = [
   'scripts/lib/compute/maxbld/layer2-cells.js',
   'scripts/lib/compute/maxbld/neighbour-facts.js',
   'scripts/lib/compute/maxbld/rows.js',
+  'scripts/seeds/bylaw/building-types.json', // MB-31 (e) D8-SHELL: the seeds the loader requires once (data)
   'scripts/seeds/bylaw/cell-key-whole.json', // read by cell-cache.mjs (MB-27 R2)
+  'scripts/seeds/bylaw/layer2-map.json', // MB-31 (e) D8-SHELL
+  'scripts/seeds/bylaw/layer2-scope.json', // MB-31 (e) D8-SHELL
   'scripts/seeds/bylaw/layer3-catalogue.json', // the Layer 3 words (lexicon) that dsl.mjs reads; MB-31 operator answer 2026-11-02 (eight files became nine)
+  'scripts/seeds/bylaw/switchboard.json', // MB-31 (e) D8-SHELL
+  'scripts/seeds/bylaw/vocab.json', // MB-31 (e) D8-SHELL
+  'scripts/seeds/logic_variables.json', // MB-31 (e) D8-SHELL: the seed entries the catalogue settings overlay with ctx.config
 ];
 const ALLOWED_BARE = ['crypto', 'node:crypto'];
 const LAYER2_EXISTING = ['scripts/analysis/bylaw/evaluate.mjs', 'scripts/analysis/bylaw/dsl.mjs'];
@@ -49,6 +56,7 @@ const EXPECTED_TABLES = [
   'bylaw_resolution_units',
   'logic_variables',
   'parcel_abutments',
+  'parcel_maxbld_population', // MB-31 (e) / MB-35 D-3 a (operator "a yes" 2026-11-11): the cohort part of the population (migration 309)
   'parcels',
 ];
 // MB-27 increment 3, DL-21 a (D-8 read wiring, the step-closure ALLOWED assertion): the buildLotVector columns join the parcels read
@@ -139,10 +147,12 @@ function sqlText(): string {
   const req = createRequire(import.meta.url);
   const mod = req(path.join(process.cwd(), ENTRY)) as Json;
   const sql = mod.READ_SQL as Json;
-  return Object.keys(sql)
-    .sort()
-    .map((k) => String(sql[k]))
-    .join('\n');
+  // MB-31 (e): the reads run inside the one batch statement (its CTEs page the population and scope the street lots)
+  // the settings are checked literals in the statement (operator "option 2"): render it with the seed defaults of the declared config
+  const lv = JSON.parse(read('scripts/seeds/logic_variables.json')) as Json;
+  const config = Object.fromEntries((descriptor().config.logic_variables as Json[]).map((d) => [d.name, lv[d.name].default]));
+  const plan = mod.buildSourceSql(descriptor(), config, { mode: 'incremental' }) as Json;
+  return [...Object.keys(sql).sort().map((k) => String(sql[k])), String(plan.count_sql), String(plan.batch_sql)].join('\n');
 }
 
 function tablesAfterFromJoin(sql: string): string[] {

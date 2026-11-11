@@ -3,8 +3,8 @@
 // MB-31 · E31-01 oracle-only brief B0b. TWO contracts, both red-first (modules C5 do not exist yet):
 //   B7  the neighbour-facts reader (`scripts/lib/compute/maxbld/neighbour-facts.js`) derives pooling facts from
 //       neighbour/street/zone/ring lots; it holds NO threshold, NO level, NO depth and never chooses a fact.
-//   B10 the declared reads of `scripts/lib/compute/compute-maxbld-scenarios.js`: read 6 (`ring_lots`) binds its
-//       depth as a parameter, compares `primary_frontage_street_name` and orders by `shared_len_m DESC`; read 5
+//   B10 the declared reads of `scripts/lib/compute/compute-maxbld-scenarios.js`: read 6 (`ring_edges` since MB-31 (e); was `ring_lots`
+//       with a bound depth) compares `primary_frontage_street_name`, and ringLots orders by `shared_len_m DESC`; read 5
 //       (`street_pool`, `zone_pool`) excludes every `parcel_abutments` neighbour; every FROM/JOIN names an
 //       allowlisted table (or a CTE defined in the same statement), and carries no spliced number literal.
 import { describe, expect, it, beforeAll } from 'vitest';
@@ -157,6 +157,7 @@ describe('MB-31 neighbour-facts reader (B7)', () => {
 
 describe('MB-31 declared read 6 and read 5 contract (B10)', () => {
   let READ_SQL: Json;
+  let BATCH_SQL: string;
   const ALLOWED = new Set([
     'bylaw_resolution_results',
     'bylaw_resolution_lot_stamps', // Q-STOR a: the lot stamps read as hex through the view (migration 295)
@@ -166,10 +167,15 @@ describe('MB-31 declared read 6 and read 5 contract (B10)', () => {
     'parcels',
     'parcel_abutments',
     'logic_variables',
+    'parcel_maxbld_population', // MB-31 (e) / MB-35 D-3 a (operator "a yes" 2026-11-11): the cohort part of the population (migration 309)
   ]);
   beforeAll(() => {
     const CM = req(path.join(ROOT, 'scripts/lib/compute/compute-maxbld-scenarios.js')) as Json;
     READ_SQL = CM.READ_SQL;
+    const LV = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/logic_variables.json'), 'utf8')) as Json;
+    const DESC = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/compute-maxbld-scenarios.descriptor.json'), 'utf8')) as Json;
+    const config = Object.fromEntries((DESC.config.logic_variables as Json[]).map((d) => [d.name, LV[d.name].default]));
+    BATCH_SQL = CM.buildSourceSql(DESC, config, { mode: 'incremental' }).batch_sql;
   });
 
   const cteNames = (sql: string): string[] => {
@@ -194,18 +200,24 @@ describe('MB-31 declared read 6 and read 5 contract (B10)', () => {
     return names;
   };
 
-  it('read 6 (ring_lots): recursive, parameterised depth, frontage-street key, shared_len_m DESC', () => {
-    const sql: string = READ_SQL.ring_lots;
+  // MB-31 (e) (operator "a yes" 2026-11-11, D-2 a; MB-31 plan 21.2 / 22): read 6 returns the street-scoped abutment rows and the compute
+  // walks the ring to the configured depth; the frontage-street key and the tie-break are carried (the tie-break now in ringLots).
+  it('read 6 (ring_edges): street-scoped abutment rows on the frontage-street key, no depth and no recursion in SQL; the walk sorts shared_len_m DESC then lot id', () => {
+    const sql: string = READ_SQL.ring_edges;
     expect(typeof sql).toBe('string');
+    expect(READ_SQL.ring_lots).toBeUndefined();
     expect(sql).toContain('primary_frontage_street_name');
+    expect(sql).toContain('parcel_abutments');
     expect(sql).not.toContain('same_frontage_street');
     expect(sql).not.toContain('street_name_normalized');
-    expect(sql).toMatch(/shared_len_m\s+DESC/i);
-    expect(sql).toContain('$2');
-    expect(sql).toContain('WITH RECURSIVE');
-    expect(/level\s*>\s*0|level\s*>\s*1/.test(sql)).toBe(true);
-    const stripped = sql.replace(/\$\d+/g, '');
-    expect(stripped).not.toMatch(/\b([3-9]|\d{2,})\b/);
+    expect(sql).not.toContain('WITH RECURSIVE');
+    expect(sql).not.toMatch(/\$\d/);
+    expect(sql).not.toMatch(/\b([2-9]|\d{2,})\b/);
+    const CM = req(path.join(ROOT, 'scripts/lib/compute/compute-maxbld-scenarios.js')) as Json;
+    const edge = (a: number, b: number, len: number, est: number | null = 1) => ({ parcel_id: a, neighbour_id: b, shared_len_m: len, est });
+    // subject 1, start abutter 2; from 2 the candidates 3 (10 m) and 4 (20 m): the longest edge wins; a tie goes to the lowest id
+    expect(CM.ringLots(1, [edge(1, 2, 5), edge(2, 1, 5), edge(2, 3, 10), edge(2, 4, 20)], 2)).toEqual([{ id: 4, est: 1 }]);
+    expect(CM.ringLots(1, [edge(1, 2, 5), edge(2, 4, 20), edge(2, 3, 20)], 2)).toEqual([{ id: 3, est: 1 }]);
   });
 
   it('read 5 (street_pool, zone_pool) exclude every parcel_abutments neighbour of the subject', () => {
@@ -217,12 +229,14 @@ describe('MB-31 declared read 6 and read 5 contract (B10)', () => {
     }
   });
 
-  it('every READ_SQL statement reads only allowlisted tables or its own CTEs', () => {
+  it('every READ_SQL statement, and the batch statement that carries them, reads only allowlisted tables or the CTEs of the batch statement', () => {
     const keys = Object.keys(READ_SQL);
     expect(keys.length).toBeGreaterThan(0);
+    const batchCtes = cteNames(BATCH_SQL);
+    for (const t of tableNames(BATCH_SQL)) expect(ALLOWED.has(t) || batchCtes.includes(t), `batch: table ${t}`).toBe(true);
     for (const key of keys) {
       const sql: string = READ_SQL[key];
-      const own = new Set(cteNames(sql));
+      const own = new Set([...cteNames(sql), ...batchCtes]);
       for (const t of tableNames(sql)) {
         expect(ALLOWED.has(t) || own.has(t), `${key}: table ${t} is allowlisted or a CTE of the same statement`).toBe(true);
       }

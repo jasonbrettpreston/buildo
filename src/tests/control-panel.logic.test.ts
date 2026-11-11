@@ -235,6 +235,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',
+  'compute_maxbld_scenarios_bbox_degree_divisor', // MB-31 (e) / MB-35 D-4 (operator "a yes" 2026-11-11): the zone-pool bbox divisor, migration 310
   'compute_maxbld_scenarios_batch_size',
   'fya_porch_allowance_m', // front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) note; Spec 131 LC-58)
   'abut_parcels_with_abutments_warn_pct', // H6 QA ruling 2026-10-16 item 2 — the abutment-share WARN floor

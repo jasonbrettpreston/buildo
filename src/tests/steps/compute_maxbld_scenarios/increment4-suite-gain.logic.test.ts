@@ -168,8 +168,8 @@ describe('LC-33: the gain is NULL when either row is not permitted or not comput
 describe('the step wiring: oneParcel takes the gain right after its per-type loop', () => {
   it('materializeRows emits the four gain rows of the suite once, after its own rows (and none for the base type)', () => {
     const s = seeds();
-    const out = S.materializeRows([{ parcel_id: 1, cells: [], options: [], lot: { lot_gate: null }, geometry: {}, abutters: [], street: [], zone: [], ring: [] }],
-      { lookups: { seeds: s, vocab: s.vocab, layer2Classes: [], permissionKeys: {}, texts: {} } });
+    const out = S.materializeParcels([{ parcel_id: 1, cells: [], options: [], lot: { lot_gate: null }, geometry: {}, abutters: [], street: [], zone: [], ring: [] }], // MB-31 (e): the assembled-lookups path is materializeParcels (materializeRows is the runtime loader)
+      { seeds: s, vocab: s.vocab, layer2Classes: [], permissionKeys: {}, texts: {} });
     const rows = out.rows.e1 as Json[];
     const gainIds = [...FIELDS, 'gain_reasons'];
     expect(rows.filter((r) => gainIds.includes(r.field_id)).map((r) => r.building_type)).toEqual([SUITE, SUITE, SUITE, SUITE]);
