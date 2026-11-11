@@ -6,7 +6,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(4);
+select plan(6);
 
 -- ── §11 guard: every public table has RLS enabled ─────────────────────────
 -- Definitional, not enumerated: any future table that lands without
@@ -37,6 +37,8 @@ select lives_ok(
 -- which is the §4 property this suite locks.
 grant select on permits to authenticated;
 grant insert on logic_variables to authenticated;
+-- MF-19 (migration 305; Spec 114 §2 dated note 2026-11-11): parcel_user_inputs is Class B (RLS on, no policy).
+grant select on parcel_user_inputs to authenticated;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000aa', true);
@@ -54,7 +56,18 @@ select throws_ok(
   NULL,
   'negative: authenticated INSERT into a Class B table is rejected'
 );
+select results_eq(
+  $$select count(*) from parcel_user_inputs$$,
+  ARRAY[0::bigint],
+  'negative: authenticated reads zero rows from parcel_user_inputs (MF-19, Class B)'
+);
 reset role;
+
+-- MF-19: parcel_user_inputs carries no policy (Class B: RLS on, zero policies; the server owner connection is the only path).
+select is_empty(
+  $$select policyname::text from pg_policies where tablename = 'parcel_user_inputs'$$,
+  'parcel_user_inputs has no RLS policy (MF-19, Class B)'
+);
 
 select * from finish();
 rollback;

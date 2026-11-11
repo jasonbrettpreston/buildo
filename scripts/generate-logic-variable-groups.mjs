@@ -1296,6 +1296,15 @@ const GROUP_ORDER = [
       "parcel_map_neighbour_radius_m",
       "parcel_map_neighbour_limit"
     ]
+  },
+  {
+    "label": "MaxBLD Lot Size",
+    "keys": [
+      "user_lot_size_min_sqm",
+      "user_lot_size_max_sqm",
+      "user_lot_size_city_ratio_max",
+      "user_lot_size_entries_per_day"
+    ]
   }
 ];
 

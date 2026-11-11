@@ -235,6 +235,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // MF-53 the choose-your-lot map neighbours (DECISIONS-v3 item 2, operator 2026-11-11 "b"): admin group "Parcel Lookup", migration 307
   'parcel_map_neighbour_radius_m',
   'parcel_map_neighbour_limit',
+  // MF-19 Add lot size (operator 2026-11-11 D-1..D-8 "all as recommmended"): the switch (hidden internal, off) and the four
+  // "MaxBLD Lot Size" settings (D-2 range, D-3 City ratio, D-4 entries a day), migration 305
+  'user_lot_size_entry_enabled',
+  'user_lot_size_min_sqm',
+  'user_lot_size_max_sqm',
+  'user_lot_size_city_ratio_max',
+  'user_lot_size_entries_per_day',
   'footprint_shape_factor',
   'fya_placeholder_ring_depth',
   'fya_placeholder_ring_min_n',
