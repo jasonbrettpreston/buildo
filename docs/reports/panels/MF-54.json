@@ -4,17 +4,22 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-10",
-  "head": "b87a669a3",
+  "head": "c9781b636",
   "cards": [
     "Operator 2026-11-10: \"MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter\", answer c (record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator answers 2026-11-10: MF-40 OUTPUT panel questions\"; MF-40 panel record, security and compliance M2)."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-54/plan.md (S row, smallest panel per Spec 08: no PLAN seat; the queue row's Done-condition is the plan's checklist). Docs c1976a155 (Spec 126 section 11b.2 note, Spec 128 ASK-24, system map regenerated), prereg 1 b87a669a3 at round 136.",
-  "output": "OUTPUT panel PENDING: code-reviewer-grounded and regression-guardian on the MF-54 commits (docs, prereg, code). Red docs/reports/red-evidence/MF-54/error-class-409-red.txt (4 red, 2 green on the unchanged tree), green error-class-409-green.txt.",
-  "seats": [],
-  "verdict": "PENDING: OUTPUT panel not yet run.",
+  "output": "OUTPUT panel on c1976a155 (docs), b87a669a3 (prereg 1), c9781b636 (code): reports ~/Buildo-scratch/mcfrontend/MF-54/panel-out/code-reviewer.md (code-reviewer-grounded, PASS, 0 HIGH, 0 MEDIUM, 2 LOW) and ~/Buildo-scratch/mcfrontend/MF-54/panel-out/regression-guardian.md (regression-guardian, PASS, 0 HIGH, 0 MEDIUM, 2 LOW). Folds in the commit after c9781b636: code LOW-1 (this record head and verdict), code LOW-2 (the offer 409 row also names the create race on the same offer_id, offers/route.ts:137). Red docs/reports/red-evidence/MF-54/error-class-409-red.txt (4 red, 2 green on the parent), green error-class-409-green.txt.",
+  "seats": [
+    "code-reviewer-grounded (OUTPUT): PASS (LOW-1 panel record head stale; LOW-2 the offer 409 row omits the unique-violation create race mapped to STALE_OFFER at offers/route.ts:137); generator and surface-validate --check run; plants on a copy: 409 removed makes the base and 409 cases red, 418 added makes the unknown-class case red; numeric 409 stays invalid",
+    "regression-guardian (OUTPUT): PASS (LOW-1 admin_user_detail and census/admin-existing.json still say 409 has no member, a recorded follow-up; LOW-2 the removed 400 text claimed the 409 was also in notes, already untrue); each altered line fenced (ASK-20 precedent, MF-40 stopgap b435f9eb1 knowingly retired); no reader of the old 400 text or of an 8-member list; no lock loosened; targeted vitest green"
+  ],
+  "verdict": "PASS: both OUTPUT seats PASS, no HIGH or MEDIUM; code LOW-1 and LOW-2 folded. Owed before push: the operator-scheduled full suite on the tip, McBylaws owner sign-off (gate-adjacent schema change) and owner y on the protected paths (docs/reports/panels/MF-54.json, the prereg).",
   "blockers": [],
   "followups": [
-    "Not in scope (minimal row): the scope C/D descriptors whose limitations say 409 is not representable (contract_admin_users, contract_user_profile, contract_admin_users_uid_subscription_reconcile, contract_admin_pipelines_slug, admin_user_detail) keep that text; they convert on touch."
+    "Not in scope (minimal row): the scope C/D descriptors whose limitations say 409 is not representable (contract_admin_users, contract_user_profile, contract_admin_users_uid_subscription_reconcile, contract_admin_pipelines_slug, admin_user_detail) keep that text; they convert on touch.",
+    "regression-guardian optional strengthening, not folded (minimal row): a tree-wide assertion that no 400 class row mentions 409 would stop a third contract from repeating the stopgap.",
+    "regression-guardian LOW-2: noted only; the removed text was already inaccurate about notes."
   ],
   "evidence": "docs/reports/red-evidence/MF-54/",
   "notes": [

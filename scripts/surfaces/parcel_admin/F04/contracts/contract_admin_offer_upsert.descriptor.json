@@ -259,7 +259,7 @@
       },
       {
         "class": "409",
-        "ui": "STALE_OFFER: the offer changed since the page read it (a stale or missing updated_at); the form shows its error state from content and the list must be reloaded."
+        "ui": "STALE_OFFER: the offer changed since the page read it (a stale or missing updated_at, or a create that lost a race on the same offer_id); the form shows its error state from content and the list must be reloaded."
       },
       {
         "class": "500",
