@@ -24,10 +24,10 @@
 | RF-7 | every declared CoA twin resolves to a produced field | FAIL | menu:max_build ↔ menu:coa_build; menu:solar_max ↔ menu:solar_coa |
 | RF-8 | the S-001 descriptor field_whitelist names every area column the consumer assembler sends | FAIL | parcel.areas.cur_floor_gfa_sqm; parcel.areas.max_newbuild_coa_gfa_sqm; parcel.areas.realized_fsi_p90 |
 | RF-9 | the declared inputs are closed both ways (real targets and logic variables; every key reaches a chain; no banned ref mapped; every scope param exists) | PASS | — |
-| RF-10 | no rendered field reaches a vocab.banned_code_refs input | FAIL | S-001 parcel.areas.envelope_constrained ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.envelope_constraint_reason ← parcels.bylaw_standard_setback_m (STAND_SET) |
+| RF-10 | no rendered field reaches a vocab.banned_code_refs input | PASS | — |
 | RF-11 | the generator raised no findings (unmapped render paths, unresolved refs, witness render failures, missing seed rows) | PASS | — |
 
-**Rendered fields:** 14 (empirical_ref 10 · formula 2 · input 1 · none 1) · **payload-only:** 33 · **constants on chains:** 31 named, 35 logic variables, 12 inline literals, 36 DB rows.
+**Rendered fields:** 12 (empirical_ref 10 · input 1 · none 1) · **payload-only:** 34 · **constants on chains:** 31 named, 35 logic variables, 12 inline literals, 36 DB rows.
 
 ## 1. Rendered calculated fields
 
@@ -36,18 +36,16 @@
 | # | Label | Payload → column | Render site | Format | Step (producer) | Kind | Variants | Layer-2 targets | Ev |
 |---|---|---|---|---|---|---|---|---|---|
 | D1 | Lot size | `parcel.areas.lot_size_sqm` → `lot_size_sqm` | [parcelId].tsx:128 | formatSqm | parcels (loader) | input | aor | none (no_mapped_input) | R |
-| D2 | envelope_constrained | `parcel.areas.envelope_constrained` → `envelope_constrained` | [parcelId].tsx:135 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| D3 | Envelope constrained | `parcel.areas.envelope_constraint_reason` → `envelope_constraint_reason` | [parcelId].tsx:137 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| D4 | Comparable builds | `parcel.neighbourhood.compStats.compCount` → `comp_count` | [parcelId].tsx:164, [parcelId].tsx:173 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D5 | headline | `parcel.neighbourhood.summary.headline` → `nearby_builds_summary→headline` | [parcelId].tsx:169, [parcelId].tsx:170 | — | enrich_parcels (optconfig) | empirical_ref | aor, fallback | none (empirical) | R |
-| D6 | Typical FSI (p50) | `parcel.neighbourhood.compStats.compFsiP50` → `comp_fsi_p50` | [parcelId].tsx:174 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D7 | Dominant build | `parcel.neighbourhood.compStats.compDominantBuild` → `comp_dominant_build` | [parcelId].tsx:175 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D8 | address | `parcel.neighbourhood.comparableBuilds[].address` → `comparable_builds→address` | [parcelId].tsx:187, [parcelId].tsx:196 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D9 | FSI | `parcel.neighbourhood.comparableBuilds[].permit_fsi` → `comparable_builds→permit_fsi` | [parcelId].tsx:190 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D10 | structure_family | `parcel.neighbourhood.comparableBuilds[].structure_family` → `comparable_builds→structure_family` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D11 | work_type | `parcel.neighbourhood.comparableBuilds[].work_type` → `comparable_builds→work_type` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D12 | permit_gfa_sqm | `parcel.neighbourhood.comparableBuilds[].permit_gfa_sqm` → `comparable_builds→permit_gfa_sqm` | [parcelId].tsx:198 | formatSqft | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D13 | coa_decision | `parcel.neighbourhood.comparableBuilds[].coa_decision` → `comparable_builds→coa_decision` | [parcelId].tsx:199 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D2 | Comparable builds | `parcel.neighbourhood.compStats.compCount` → `comp_count` | [parcelId].tsx:164, [parcelId].tsx:173 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D3 | headline | `parcel.neighbourhood.summary.headline` → `nearby_builds_summary→headline` | [parcelId].tsx:169, [parcelId].tsx:170 | — | enrich_parcels (optconfig) | empirical_ref | aor, fallback | none (empirical) | R |
+| D4 | Typical FSI (p50) | `parcel.neighbourhood.compStats.compFsiP50` → `comp_fsi_p50` | [parcelId].tsx:174 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D5 | Dominant build | `parcel.neighbourhood.compStats.compDominantBuild` → `comp_dominant_build` | [parcelId].tsx:175 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D6 | address | `parcel.neighbourhood.comparableBuilds[].address` → `comparable_builds→address` | [parcelId].tsx:187, [parcelId].tsx:196 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D7 | FSI | `parcel.neighbourhood.comparableBuilds[].permit_fsi` → `comparable_builds→permit_fsi` | [parcelId].tsx:190 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D8 | structure_family | `parcel.neighbourhood.comparableBuilds[].structure_family` → `comparable_builds→structure_family` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D9 | work_type | `parcel.neighbourhood.comparableBuilds[].work_type` → `comparable_builds→work_type` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D10 | permit_gfa_sqm | `parcel.neighbourhood.comparableBuilds[].permit_gfa_sqm` → `comparable_builds→permit_gfa_sqm` | [parcelId].tsx:198 | formatSqft | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D11 | coa_decision | `parcel.neighbourhood.comparableBuilds[].coa_decision` → `comparable_builds→coa_decision` | [parcelId].tsx:199 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
 
 ### S-072 `mobile_tracked_lots` (LIST — contract `status: new`)
 
@@ -63,109 +61,6 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 
 - column `lot_size_sqm` · step parcels · producer loader · kind input · evidence R
 - base inputs: —
-
-### S-001 `parcel.areas.envelope_constrained`
-
-- column `envelope_constrained` · step enrich_parcels · producer maxbuild · kind formula · evidence R
-- witness: buildMaxBuildSql not witnessed (static-render fingerprint not in the recorded trace)
-- upstream produced columns: `bylaw_standard_setback_m`, `depth_m`, `frontage_m`, `geom`, `is_corner_lot`, `is_heritage_designated`, `is_in_ravine_protection_area`, `is_through_lot`, `lot_size_sqm`, `zoning_class`
-- base inputs: `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.zoning_class`
-- other inputs: LV `max_build_lot_max_sqm`, LV `max_build_lot_min_sqm`, LV `max_build_min_dimension_m`
-- named constants: `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
-- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`
-- chain:
-  - `buildMaxBuildSql:select.envelope_constrained` enrich-parcels.js:815 — `COALESCE(emit AND (heritage OR is_in_ravine_protection_area OR width_m IS NULL OR length_m IS NULL OR (buffer_area IS NULL AND box_area IS NULL)), false) AS envelope_constrained`
-  - `buildMaxBuildSql:box.emit` enrich-parcels.js:648 — `COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit`
-  - `buildMaxBuildSql:tier.lot_size_confidence` enrich-parcels.js:630 — `CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…`
-  - `buildMaxBuildSql:lot.best_area` enrich-parcels.js:625 — `COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM`
-  - `buildMaxBuildSql:scope.(filter)` enrich-parcels.js:585 — `selection constants: ${scopeWhere}, ${incremental}`
-  - `buildMaxBuildSql:sb.geom_area` enrich-parcels.js:606 — `ST_Area(s.geom::geography)::numeric AS geom_area`
-  - `buildMaxBuildSql:sb.fxd_area` enrich-parcels.js:607 — `(s.frontage_m * s.depth_m)::numeric AS fxd_area`
-  - `buildMaxBuildSql:lot.pair_lg` enrich-parcels.js:619 — `(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg`
-  - `buildMaxBuildSql:lot.pair_lf` enrich-parcels.js:621 — `(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf`
-  - `buildMaxBuildSql:lot.pair_gf` enrich-parcels.js:623 — `(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf`
-  - `buildMaxBuildSql:scope.is_heritage_designated` enrich-parcels.js:571 — `COALESCE(p.is_heritage_designated, false) AS is_heritage_designated`
-  - `buildMaxBuildSql:scope.is_in_ravine_protection_area` enrich-parcels.js:570 — `COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area`
-  - `buildMaxBuildSql:geo.width_m` enrich-parcels.js:668 — `CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m`
-  - `buildMaxBuildSql:box.width_raw` enrich-parcels.js:654 — `GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…`
-  - `buildMaxBuildSql:scope.is_corner_lot` enrich-parcels.js:569 — `COALESCE(p.is_corner_lot, false) AS is_corner_lot`
-  - `buildMaxBuildSql:sb.side_count` enrich-parcels.js:613 — `${mb.buildSideCountCase('s.zoning_class')} AS side_count`
-  - `buildMaxBuildSql:sb.side_setback` enrich-parcels.js:610 — `${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback`
-  - `buildMaxBuildSql:sb.flankage_setback` enrich-parcels.js:612 — `${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback`
-  - `buildMaxBuildSql:geo.length_m` enrich-parcels.js:669 — `CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m`
-  - `buildMaxBuildSql:box.length_raw` enrich-parcels.js:657 — `GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM`
-  - `buildMaxBuildSql:scope.is_through_lot` enrich-parcels.js:569 — `COALESCE(p.is_through_lot, false) AS is_through_lot`
-  - `buildMaxBuildSql:sb.front_setback` enrich-parcels.js:609 — `COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback`
-  - `buildMaxBuildSql:sb.rear_setback` enrich-parcels.js:611 — `${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback`
-  - `buildMaxBuildSql:geo.buffer_area` enrich-parcels.js:676 — `CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…`
-  - `buildMaxBuildSql:box.ravine_red` enrich-parcels.js:649 — `CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red`
-  - `buildMaxBuildSql:geo.box_area` enrich-parcels.js:670 — `CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area`
-  - `buildMaxBuildSql:lotMinNum` enrich-parcels.js:545 — `N(lotMinSqm, mb.LOT_MIN_SQM)`
-  - `buildMaxBuildSql:lotMaxNum` enrich-parcels.js:546 — `N(lotMaxSqm, mb.LOT_MAX_SQM)`
-  - `buildMaxBuildSql:incremental` enrich-parcels.js:537 — `full ? 'TRUE' : '(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})'`
-  - `buildMassingScopeWhere:buildMassingScopeWhere()` enrich-parcels.js:524 — — [called from scripts/lib/compute/enrich-parcels.js:539]
-  - `buildMaxBuildSql:tol` enrich-parcels.js:540 — `mb`
-  - `buildMaxBuildSql:minDimNum` enrich-parcels.js:562 — `N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)`
-  - `buildMaxBuildSql:RAVINE_SETBACK_M` enrich-parcels.js:540 — `mb`
-  - `buildSideCountCase:buildSideCountCase()` max-build.js:174 — — [called from scripts/lib/compute/enrich-parcels.js:613]
-  - `buildSideCountCase:whens` max-build.js:175 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}') .join('\n')`
-  - `<module>:SETBACK_PREFIXES` max-build.js:138 — `Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)`
-  - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
-  - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
-
-### S-001 `parcel.areas.envelope_constraint_reason`
-
-- column `envelope_constraint_reason` · step enrich_parcels · producer maxbuild · kind formula · evidence R
-- witness: buildMaxBuildSql not witnessed (static-render fingerprint not in the recorded trace)
-- upstream produced columns: `bylaw_standard_setback_m`, `depth_m`, `frontage_m`, `geom`, `is_corner_lot`, `is_heritage_designated`, `is_in_ravine_protection_area`, `is_through_lot`, `lot_size_sqm`, `zoning_class`, `zoning_is_ambiguous`
-- base inputs: `building_footprints.footprint_area_sqm`, `parcel_buildings.is_primary`, `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.zoning_class`, `parcels.zoning_is_ambiguous`
-- other inputs: LV `max_build_lot_max_sqm`, LV `max_build_lot_min_sqm`, LV `max_build_min_dimension_m`, LV `mislink_footprint_lot_tol`
-- named constants: `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
-- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`
-- chain:
-  - `buildMaxBuildSql:select.envelope_constraint_reason` enrich-parcels.js:817 — `CASE WHEN NOT emit AND lot_size_sqm < ${lotMinNum} THEN 'lot_too_small' WHEN NOT emit AND lot_size_sqm > ${lotMaxNum} THEN 'lot_too_large' WHEN NOT emit THEN 'low_lot_confidence' WHEN heritage_no_massing THEN (CASE WHEN…`
-  - `buildMaxBuildSql:box.emit` enrich-parcels.js:648 — `COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit`
-  - `buildMaxBuildSql:tier.lot_size_confidence` enrich-parcels.js:630 — `CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…`
-  - `buildMaxBuildSql:lot.best_area` enrich-parcels.js:625 — `COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM`
-  - `buildMaxBuildSql:scope.(filter)` enrich-parcels.js:585 — `selection constants: ${scopeWhere}, ${incremental}`
-  - `buildMaxBuildSql:sb.geom_area` enrich-parcels.js:606 — `ST_Area(s.geom::geography)::numeric AS geom_area`
-  - `buildMaxBuildSql:sb.fxd_area` enrich-parcels.js:607 — `(s.frontage_m * s.depth_m)::numeric AS fxd_area`
-  - `buildMaxBuildSql:lot.pair_lg` enrich-parcels.js:619 — `(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg`
-  - `buildMaxBuildSql:lot.pair_lf` enrich-parcels.js:621 — `(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf`
-  - `buildMaxBuildSql:lot.pair_gf` enrich-parcels.js:623 — `(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf`
-  - `buildMaxBuildSql:env.heritage_no_massing` enrich-parcels.js:712 — `(is_heritage_designated AND (existing_footprint_sqm IS NULL OR existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum}))) AS heritage_no_massing`
-  - `buildMaxBuildSql:scope.is_heritage_designated` enrich-parcels.js:571 — `COALESCE(p.is_heritage_designated, false) AS is_heritage_designated`
-  - `buildMaxBuildSql:massing.existing_footprint_sqm` enrich-parcels.js:599 — `SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm`
-  - `buildMaxBuildSql:env.heritage_footprint_mislink` enrich-parcels.js:714 — `(is_heritage_designated AND existing_footprint_sqm IS NOT NULL AND existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum})) AS heritage_footprint_mislink`
-  - `buildMaxBuildSql:scope.is_in_ravine_protection_area` enrich-parcels.js:570 — `COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area`
-  - `buildMaxBuildSql:geo.width_m` enrich-parcels.js:668 — `CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m`
-  - `buildMaxBuildSql:box.width_raw` enrich-parcels.js:654 — `GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…`
-  - `buildMaxBuildSql:scope.is_corner_lot` enrich-parcels.js:569 — `COALESCE(p.is_corner_lot, false) AS is_corner_lot`
-  - `buildMaxBuildSql:sb.side_count` enrich-parcels.js:613 — `${mb.buildSideCountCase('s.zoning_class')} AS side_count`
-  - `buildMaxBuildSql:sb.side_setback` enrich-parcels.js:610 — `${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback`
-  - `buildMaxBuildSql:sb.flankage_setback` enrich-parcels.js:612 — `${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback`
-  - `buildMaxBuildSql:geo.length_m` enrich-parcels.js:669 — `CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m`
-  - `buildMaxBuildSql:box.length_raw` enrich-parcels.js:657 — `GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM`
-  - `buildMaxBuildSql:scope.is_through_lot` enrich-parcels.js:569 — `COALESCE(p.is_through_lot, false) AS is_through_lot`
-  - `buildMaxBuildSql:sb.front_setback` enrich-parcels.js:609 — `COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback`
-  - `buildMaxBuildSql:sb.rear_setback` enrich-parcels.js:611 — `${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback`
-  - `buildMaxBuildSql:geo.buffer_area` enrich-parcels.js:676 — `CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…`
-  - `buildMaxBuildSql:box.ravine_red` enrich-parcels.js:649 — `CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red`
-  - `buildMaxBuildSql:geo.box_area` enrich-parcels.js:670 — `CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area`
-  - `buildMaxBuildSql:scope.zoning_is_ambiguous` enrich-parcels.js:568 — `COALESCE(p.zoning_is_ambiguous, false) AS zoning_is_ambiguous`
-  - `buildMaxBuildSql:lotMinNum` enrich-parcels.js:545 — `N(lotMinSqm, mb.LOT_MIN_SQM)`
-  - `buildMaxBuildSql:lotMaxNum` enrich-parcels.js:546 — `N(lotMaxSqm, mb.LOT_MAX_SQM)`
-  - `buildMaxBuildSql:incremental` enrich-parcels.js:537 — `full ? 'TRUE' : '(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})'`
-  - `buildMassingScopeWhere:buildMassingScopeWhere()` enrich-parcels.js:524 — — [called from scripts/lib/compute/enrich-parcels.js:539]
-  - `buildMaxBuildSql:tol` enrich-parcels.js:540 — `mb`
-  - `buildMaxBuildSql:mislinkTolNum` enrich-parcels.js:561 — `N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT)`
-  - `buildMaxBuildSql:minDimNum` enrich-parcels.js:562 — `N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)`
-  - `buildMaxBuildSql:RAVINE_SETBACK_M` enrich-parcels.js:540 — `mb`
-  - `buildSideCountCase:buildSideCountCase()` max-build.js:174 — — [called from scripts/lib/compute/enrich-parcels.js:613]
-  - `buildSideCountCase:whens` max-build.js:175 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}') .join('\n')`
-  - `<module>:SETBACK_PREFIXES` max-build.js:138 — `Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)`
-  - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
-  - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
 
 ### S-001 `parcel.neighbourhood.compStats.compCount`
 
@@ -394,6 +289,109 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
   - `buildExistingStructureSql:scope.(filter)` enrich-parcels.js:978 — `selection constants: ${scopeWhere}, ${incremental}`
   - `buildExistingStructureSql:mislinkTol` enrich-parcels.js:970 — `Number(reno.mislinkTol ?? mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT)`
   - `buildExistingStructureSql:incremental` enrich-parcels.js:963 — `full ? 'TRUE' : '(p.imagery_roof_footprint_sqm IS NULL OR EXISTS (SELECT 1 FROM parcel_max_build z WHERE z.parcel_id = p.parcel_id))'`
+
+### S-001 `parcel.areas.envelope_constrained` (payload only)
+
+- column `envelope_constrained` · step enrich_parcels · producer maxbuild · kind formula · evidence R
+- witness: buildMaxBuildSql not witnessed (static-render fingerprint not in the recorded trace)
+- upstream produced columns: `bylaw_standard_setback_m`, `depth_m`, `frontage_m`, `geom`, `is_corner_lot`, `is_heritage_designated`, `is_in_ravine_protection_area`, `is_through_lot`, `lot_size_sqm`, `zoning_class`
+- base inputs: `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.zoning_class`
+- other inputs: LV `max_build_lot_max_sqm`, LV `max_build_lot_min_sqm`, LV `max_build_min_dimension_m`
+- named constants: `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
+- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`
+- chain:
+  - `buildMaxBuildSql:select.envelope_constrained` enrich-parcels.js:815 — `COALESCE(emit AND (heritage OR is_in_ravine_protection_area OR width_m IS NULL OR length_m IS NULL OR (buffer_area IS NULL AND box_area IS NULL)), false) AS envelope_constrained`
+  - `buildMaxBuildSql:box.emit` enrich-parcels.js:648 — `COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit`
+  - `buildMaxBuildSql:tier.lot_size_confidence` enrich-parcels.js:630 — `CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…`
+  - `buildMaxBuildSql:lot.best_area` enrich-parcels.js:625 — `COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM`
+  - `buildMaxBuildSql:scope.(filter)` enrich-parcels.js:585 — `selection constants: ${scopeWhere}, ${incremental}`
+  - `buildMaxBuildSql:sb.geom_area` enrich-parcels.js:606 — `ST_Area(s.geom::geography)::numeric AS geom_area`
+  - `buildMaxBuildSql:sb.fxd_area` enrich-parcels.js:607 — `(s.frontage_m * s.depth_m)::numeric AS fxd_area`
+  - `buildMaxBuildSql:lot.pair_lg` enrich-parcels.js:619 — `(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg`
+  - `buildMaxBuildSql:lot.pair_lf` enrich-parcels.js:621 — `(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf`
+  - `buildMaxBuildSql:lot.pair_gf` enrich-parcels.js:623 — `(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf`
+  - `buildMaxBuildSql:scope.is_heritage_designated` enrich-parcels.js:571 — `COALESCE(p.is_heritage_designated, false) AS is_heritage_designated`
+  - `buildMaxBuildSql:scope.is_in_ravine_protection_area` enrich-parcels.js:570 — `COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area`
+  - `buildMaxBuildSql:geo.width_m` enrich-parcels.js:668 — `CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m`
+  - `buildMaxBuildSql:box.width_raw` enrich-parcels.js:654 — `GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…`
+  - `buildMaxBuildSql:scope.is_corner_lot` enrich-parcels.js:569 — `COALESCE(p.is_corner_lot, false) AS is_corner_lot`
+  - `buildMaxBuildSql:sb.side_count` enrich-parcels.js:613 — `${mb.buildSideCountCase('s.zoning_class')} AS side_count`
+  - `buildMaxBuildSql:sb.side_setback` enrich-parcels.js:610 — `${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback`
+  - `buildMaxBuildSql:sb.flankage_setback` enrich-parcels.js:612 — `${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback`
+  - `buildMaxBuildSql:geo.length_m` enrich-parcels.js:669 — `CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m`
+  - `buildMaxBuildSql:box.length_raw` enrich-parcels.js:657 — `GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM`
+  - `buildMaxBuildSql:scope.is_through_lot` enrich-parcels.js:569 — `COALESCE(p.is_through_lot, false) AS is_through_lot`
+  - `buildMaxBuildSql:sb.front_setback` enrich-parcels.js:609 — `COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback`
+  - `buildMaxBuildSql:sb.rear_setback` enrich-parcels.js:611 — `${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback`
+  - `buildMaxBuildSql:geo.buffer_area` enrich-parcels.js:676 — `CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…`
+  - `buildMaxBuildSql:box.ravine_red` enrich-parcels.js:649 — `CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red`
+  - `buildMaxBuildSql:geo.box_area` enrich-parcels.js:670 — `CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area`
+  - `buildMaxBuildSql:lotMinNum` enrich-parcels.js:545 — `N(lotMinSqm, mb.LOT_MIN_SQM)`
+  - `buildMaxBuildSql:lotMaxNum` enrich-parcels.js:546 — `N(lotMaxSqm, mb.LOT_MAX_SQM)`
+  - `buildMaxBuildSql:incremental` enrich-parcels.js:537 — `full ? 'TRUE' : '(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})'`
+  - `buildMassingScopeWhere:buildMassingScopeWhere()` enrich-parcels.js:524 — — [called from scripts/lib/compute/enrich-parcels.js:539]
+  - `buildMaxBuildSql:tol` enrich-parcels.js:540 — `mb`
+  - `buildMaxBuildSql:minDimNum` enrich-parcels.js:562 — `N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)`
+  - `buildMaxBuildSql:RAVINE_SETBACK_M` enrich-parcels.js:540 — `mb`
+  - `buildSideCountCase:buildSideCountCase()` max-build.js:174 — — [called from scripts/lib/compute/enrich-parcels.js:613]
+  - `buildSideCountCase:whens` max-build.js:175 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}') .join('\n')`
+  - `<module>:SETBACK_PREFIXES` max-build.js:138 — `Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)`
+  - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
+  - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
+
+### S-001 `parcel.areas.envelope_constraint_reason` (payload only)
+
+- column `envelope_constraint_reason` · step enrich_parcels · producer maxbuild · kind formula · evidence R
+- witness: buildMaxBuildSql not witnessed (static-render fingerprint not in the recorded trace)
+- upstream produced columns: `bylaw_standard_setback_m`, `depth_m`, `frontage_m`, `geom`, `is_corner_lot`, `is_heritage_designated`, `is_in_ravine_protection_area`, `is_through_lot`, `lot_size_sqm`, `zoning_class`, `zoning_is_ambiguous`
+- base inputs: `building_footprints.footprint_area_sqm`, `parcel_buildings.is_primary`, `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.zoning_class`, `parcels.zoning_is_ambiguous`
+- other inputs: LV `max_build_lot_max_sqm`, LV `max_build_lot_min_sqm`, LV `max_build_min_dimension_m`, LV `mislink_footprint_lot_tol`
+- named constants: `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
+- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`
+- chain:
+  - `buildMaxBuildSql:select.envelope_constraint_reason` enrich-parcels.js:817 — `CASE WHEN NOT emit AND lot_size_sqm < ${lotMinNum} THEN 'lot_too_small' WHEN NOT emit AND lot_size_sqm > ${lotMaxNum} THEN 'lot_too_large' WHEN NOT emit THEN 'low_lot_confidence' WHEN heritage_no_massing THEN (CASE WHEN…`
+  - `buildMaxBuildSql:box.emit` enrich-parcels.js:648 — `COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit`
+  - `buildMaxBuildSql:tier.lot_size_confidence` enrich-parcels.js:630 — `CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…`
+  - `buildMaxBuildSql:lot.best_area` enrich-parcels.js:625 — `COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM`
+  - `buildMaxBuildSql:scope.(filter)` enrich-parcels.js:585 — `selection constants: ${scopeWhere}, ${incremental}`
+  - `buildMaxBuildSql:sb.geom_area` enrich-parcels.js:606 — `ST_Area(s.geom::geography)::numeric AS geom_area`
+  - `buildMaxBuildSql:sb.fxd_area` enrich-parcels.js:607 — `(s.frontage_m * s.depth_m)::numeric AS fxd_area`
+  - `buildMaxBuildSql:lot.pair_lg` enrich-parcels.js:619 — `(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg`
+  - `buildMaxBuildSql:lot.pair_lf` enrich-parcels.js:621 — `(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf`
+  - `buildMaxBuildSql:lot.pair_gf` enrich-parcels.js:623 — `(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf`
+  - `buildMaxBuildSql:env.heritage_no_massing` enrich-parcels.js:712 — `(is_heritage_designated AND (existing_footprint_sqm IS NULL OR existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum}))) AS heritage_no_massing`
+  - `buildMaxBuildSql:scope.is_heritage_designated` enrich-parcels.js:571 — `COALESCE(p.is_heritage_designated, false) AS is_heritage_designated`
+  - `buildMaxBuildSql:massing.existing_footprint_sqm` enrich-parcels.js:599 — `SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm`
+  - `buildMaxBuildSql:env.heritage_footprint_mislink` enrich-parcels.js:714 — `(is_heritage_designated AND existing_footprint_sqm IS NOT NULL AND existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum})) AS heritage_footprint_mislink`
+  - `buildMaxBuildSql:scope.is_in_ravine_protection_area` enrich-parcels.js:570 — `COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area`
+  - `buildMaxBuildSql:geo.width_m` enrich-parcels.js:668 — `CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m`
+  - `buildMaxBuildSql:box.width_raw` enrich-parcels.js:654 — `GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…`
+  - `buildMaxBuildSql:scope.is_corner_lot` enrich-parcels.js:569 — `COALESCE(p.is_corner_lot, false) AS is_corner_lot`
+  - `buildMaxBuildSql:sb.side_count` enrich-parcels.js:613 — `${mb.buildSideCountCase('s.zoning_class')} AS side_count`
+  - `buildMaxBuildSql:sb.side_setback` enrich-parcels.js:610 — `${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback`
+  - `buildMaxBuildSql:sb.flankage_setback` enrich-parcels.js:612 — `${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback`
+  - `buildMaxBuildSql:geo.length_m` enrich-parcels.js:669 — `CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m`
+  - `buildMaxBuildSql:box.length_raw` enrich-parcels.js:657 — `GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM`
+  - `buildMaxBuildSql:scope.is_through_lot` enrich-parcels.js:569 — `COALESCE(p.is_through_lot, false) AS is_through_lot`
+  - `buildMaxBuildSql:sb.front_setback` enrich-parcels.js:609 — `COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback`
+  - `buildMaxBuildSql:sb.rear_setback` enrich-parcels.js:611 — `${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback`
+  - `buildMaxBuildSql:geo.buffer_area` enrich-parcels.js:676 — `CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…`
+  - `buildMaxBuildSql:box.ravine_red` enrich-parcels.js:649 — `CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red`
+  - `buildMaxBuildSql:geo.box_area` enrich-parcels.js:670 — `CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area`
+  - `buildMaxBuildSql:scope.zoning_is_ambiguous` enrich-parcels.js:568 — `COALESCE(p.zoning_is_ambiguous, false) AS zoning_is_ambiguous`
+  - `buildMaxBuildSql:lotMinNum` enrich-parcels.js:545 — `N(lotMinSqm, mb.LOT_MIN_SQM)`
+  - `buildMaxBuildSql:lotMaxNum` enrich-parcels.js:546 — `N(lotMaxSqm, mb.LOT_MAX_SQM)`
+  - `buildMaxBuildSql:incremental` enrich-parcels.js:537 — `full ? 'TRUE' : '(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})'`
+  - `buildMassingScopeWhere:buildMassingScopeWhere()` enrich-parcels.js:524 — — [called from scripts/lib/compute/enrich-parcels.js:539]
+  - `buildMaxBuildSql:tol` enrich-parcels.js:540 — `mb`
+  - `buildMaxBuildSql:mislinkTolNum` enrich-parcels.js:561 — `N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT)`
+  - `buildMaxBuildSql:minDimNum` enrich-parcels.js:562 — `N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)`
+  - `buildMaxBuildSql:RAVINE_SETBACK_M` enrich-parcels.js:540 — `mb`
+  - `buildSideCountCase:buildSideCountCase()` max-build.js:174 — — [called from scripts/lib/compute/enrich-parcels.js:613]
+  - `buildSideCountCase:whens` max-build.js:175 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}') .join('\n')`
+  - `<module>:SETBACK_PREFIXES` max-build.js:138 — `Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)`
+  - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
+  - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
 
 ### S-001 `parcel.areas.lot_size_sqft` (payload only)
 
@@ -1175,18 +1173,6 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
   - `buildComparableBuildsUpdateSql:topN` enrich-parcels.js:1218 — `comp`
   - `buildComparableBuildsUpdateSql:knnOverfetch` enrich-parcels.js:1218 — `comp`
 
-### S-001 `parcel.neighbourhood.compStats.neighbourhoodCostPremium` (payload only)
-
-- column `neighbourhood_cost_premium` · step enrich_parcels · producer maxbuild · kind empirical_ref · evidence R
-- witness: buildMaxBuildSql not witnessed (static-render fingerprint not in the recorded trace)
-- base inputs: `neighbourhoods.avg_household_income`
-- named constants: `cost-model-shared.js#DEFAULT_PREMIUM_TIERS` (14 leafs: 0/1/1.15/1.35/1.6/1.85/…; H:modelling_assumption; OUT)
-- chain:
-  - `buildMaxBuildSql:select.neighbourhood_cost_premium` enrich-parcels.js:788 — `round((${mb.buildPremiumCase('nbhd_income')})::numeric, 2) AS neighbourhood_cost_premium`
-  - `buildPremiumCase:buildPremiumCase()` max-build.js:217 — — [called from scripts/lib/compute/enrich-parcels.js:788]
-  - `buildPremiumCase:whens` max-build.js:218 — `tiers.map((t) => { const hi = (t.max === null \|\| t.max === undefined) ? '' : ' AND ${incomeCol} < ${t.max}'; return ' WHEN ${incomeCol} >= ${t.min}${hi} THEN ${Number(t.multiplier).toFixed(2)}'; }).j…`
-  - `<anon>:hi` max-build.js:219 — `(t.max === null \|\| t.max === undefined) ? '' : ' AND ${incomeCol} < ${t.max}'`
-
 ### S-001 `parcel.neighbourhood.compStats.neighbourhoodId` (payload only)
 
 - column `neighbourhood_id` · step enrich_parcels · producer maxbuild · kind empirical_ref · evidence R
@@ -1322,7 +1308,7 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 | `scripts/lib/max-build.js#SETBACK_DEFAULTS.*.rear` | 121 | 13 | 3, 7.5 | unmapped | H:proxy_for_unmodelled_rule | — | yes | 20 |
 | `scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side` | 121 | 13 | 0, 0.9, 1.2, 1.5 | unmapped | H:proxy_for_unmodelled_rule | — | yes | 18 |
 | `scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side_count` | 121 | 13 | 0, 1, 2 | unmapped | H:proxy_for_unmodelled_rule | — | yes | 18 |
-| `src/features/leads/lib/cost-model-shared.js#DEFAULT_PREMIUM_TIERS` | 141 | 14 | 0, 1, 1.15, 1.35, 1.6, 1.85, 60000, 100000, 150000, 200000 | unmapped | H:modelling_assumption | — | **OUT** | 13 |
+| `src/features/leads/lib/cost-model-shared.js#DEFAULT_PREMIUM_TIERS` | 141 | 14 | 0, 1, 1.15, 1.35, 1.6, 1.85, 60000, 100000, 150000, 200000 | unmapped | H:modelling_assumption | — | **OUT** | 12 |
 
 ### 3.2 Logic variables (admin-tunable; the JS fallback constant and its proposed class)
 
@@ -1428,6 +1414,8 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 |---|---|---|---|---|---|
 | `parcel.areas.coa_fsi` → `coa_fsi` | compute_parcel_cost_estimates | formula | — | none (coa_variance (reaches the declared CoA twin coa_fsi, opt_coa_gfa_sqm; a variance is not a by-law target)) | W |
 | `parcel.areas.cur_floor_gfa_sqm` → `cur_floor_gfa_sqm` | enrich_parcels | empirical_ref | — | none (empirical) | W |
+| `parcel.areas.envelope_constrained` → `envelope_constrained` | enrich_parcels | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
+| `parcel.areas.envelope_constraint_reason` → `envelope_constraint_reason` | enrich_parcels | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
 | `parcel.areas.lot_size_sqft` → `lot_size_sqft` | parcels | input | — | none (no_mapped_input) | R |
 | `parcel.areas.max_build_fsi` → `max_build_fsi` | compute_parcel_cost_estimates | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
 | `parcel.areas.max_build_stories` → `max_build_stories` | enrich_parcels | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:height_m, principal:height_storeys, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
@@ -1452,7 +1440,6 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 | `parcel.costMenu.scalars.cost_laneway_suite_total` → `cost_laneway_suite_total` | compute_parcel_cost_estimates | cost_ref | `parcel.costMenu.menu.laneway_suite.total` | principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, suite:gfa_m2, suite:height_storeys, suite:lane_setback_m, suite:rear_soft_landscaping_pct, suite:required_lot_area_m2, suite:separation_m | W |
 | `parcel.costMenu.scalars.cost_solar_total` → `cost_solar_total` | compute_parcel_cost_estimates | cost_ref | `parcel.costMenu.menu.solar_max.total` | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
 | `parcel.neighbourhood.compStats.compBuildRatioP50` → `comp_build_ratio_p50` | enrich_parcels | empirical_ref | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| `parcel.neighbourhood.compStats.neighbourhoodCostPremium` → `neighbourhood_cost_premium` | enrich_parcels | empirical_ref | — | none (empirical) | R |
 | `parcel.neighbourhood.compStats.neighbourhoodId` → `neighbourhood_id` | enrich_parcels | empirical_ref | — | none (empirical) | R |
 | `parcel.neighbourhood.comparableBuilds[].build_ratio` → `comparable_builds` | enrich_parcels | empirical_ref | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
 | `parcel.neighbourhood.comparableBuilds[].distance_m` → `comparable_builds` | enrich_parcels | empirical_ref | — | none (empirical) | R |
@@ -1496,7 +1483,7 @@ none
 - `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `cc5686e6c200d816`
 - `migrations/205_archetype_cost_rates.sql` sha256 `9d8da50c991f1258`
 - `migrations/248_parcel_cost_lines.sql` sha256 `9f3caeb84373ef43`
-- `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `38662f55a98bb9bd`
+- `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `d6335fe8ba42beb9`
 - `mobile/src/components/parcel/TrackedLotRow.tsx` sha256 `2e08a00a8c69d7c7`
 - `mobile/src/lib/parcelCostFormat.ts` sha256 `f5d64ed403231148`
 - `mobile/src/lib/trackedLots.ts` sha256 `3e7974f73db4e058`
@@ -1516,4 +1503,4 @@ none
 - `src/features/leads/lib/archetype-cost-map.js` sha256 `c600874d4fcbba5c`
 - `src/features/leads/lib/cost-model-shared.js` sha256 `59bd9ff428c0980c`
 - `src/lib/admin/parcel-lookup.ts` sha256 `a8061a12d30d073f`
-- `src/lib/parcels/consumer-lookup.ts` sha256 `9c2e789478167140`
+- `src/lib/parcels/consumer-lookup.ts` sha256 `dfb7bbe2c677e286`

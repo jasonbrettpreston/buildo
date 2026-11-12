@@ -132,11 +132,11 @@ export default function ParcelDetailScreen() {
             {/* W-0 (a): Max build FSI (legacy max_build_fsi) hidden until MB-38; ~/Buildo-scratch/mcbylaws/inc5/WALKTHROUGH-20261112.md */}
             {/* EI-D1: CoA FSI (legacy coa_fsi) hidden; the lookup no longer sends any of these (Spec 100 §3.2 dated note 2026-11-12) */}
           </View>
-          {areas.envelope_constrained ? (
-            <Text className="text-zinc-500 text-xs">
-              Envelope constrained{areas.envelope_constraint_reason ? `: ${areas.envelope_constraint_reason}` : ''}
-            </Text>
-          ) : null}
+          {/* Operator 2026-11-12, verbatim "1 b 2 a" (item 2 (a); Spec 100 §3.2 dated note 2026-11-12): the "Envelope
+              constrained" note (legacy envelope_constrained / envelope_constraint_reason) is not shown; the lookup sends
+              both as null, with max_buildable_footprint_sqm and compStats.neighbourhoodCostPremium. Hidden until MB-43
+              deletes the legacy envelope (Spec 69a M-367 dated note 2026-11-12); line count kept (comment-for-line).
+              Spec 135 FE-38. */}
         </View>
 
         {/* 2. Cost menu */}

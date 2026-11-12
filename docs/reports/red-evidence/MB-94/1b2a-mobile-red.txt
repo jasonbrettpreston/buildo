@@ -1,0 +1,4 @@
+Operator "1 b 2 a" item 2 (a) mobile lock, red against f0e9730ff (screen unchanged), mobile jest, 2026-11-12:
+  ● W-0 (a) + EI-D1: the mobile parcel page hides the legacy sizes and costs › operator "1 b 2 a" item 2 (a): the "Envelope constrained" note does not render, even with both fields present
+    > 95 |     expect(screen.queryByText(/Envelope constrained|setback-zq7/)).toBeNull();
+Tests:       1 failed, 5 passed, 6 total

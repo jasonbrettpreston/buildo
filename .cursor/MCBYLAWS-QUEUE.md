@@ -659,6 +659,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Not here: engine values on the hand-coded mobile screen (they reach the declared report at MF-48 Stage B); the customer surface before MB-38's shadow (M-71); deleting the legacy code (MB-43).
 - Cards: `mcbylaws/sources/cards/CARD-COA-TIER-PLACEMENT.answered.md` (EI-D4) and `mcbylaws/sources/cards/CARD-COST-PREMIUM.answered.md` (EI-D3).
 - Serves: accurate, understandable, observable.
+- Dated note 2026-11-12 (M-246, prior text kept; MB-94 · engine-inputs lane; operator, verbatim: "1 b 2 a" (2026-11-12 ~10:46); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, the "1 b 2 a" entry under "Lot views v9 (2026-11-12)"): part (a) widens. (1 b) A lookup with no evaluated option is not counted against the monthly allowance. (2 a) `max_buildable_footprint_sqm`, `envelope_constrained`, `envelope_constraint_reason` and `compStats.neighbourhoodCostPremium` are withheld too, and the "Envelope constrained" note is hidden. Spec 100 §3.2 dated note; Spec 135 FE-38 dated note.
 
 **MB-28 Proof set and the oracles — WAITS MB-27, MB-35, OPERATOR (O-15)** (O, A) · absorbs v2 MB-29
 - Rules: M-362 (69a:498); M-357 (133:806); Spec 78 §6.9 oracle row (78:582, the list of oracle kinds).

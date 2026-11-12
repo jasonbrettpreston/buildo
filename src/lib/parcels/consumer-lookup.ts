@@ -53,7 +53,20 @@ export const CONSUMER_WITHHELD_LEGACY_COLS: ReadonlySet<string> = new Set([
   'max_buildable_gfa_sqm',
   'max_build_stories', 'max_build_fsi', 'coa_fsi',
   'max_newbuild_coa_gfa_sqm',
+  // Operator 2026-11-12, verbatim "1 b 2 a" (item 2 (a); Spec 100 §3.2 dated note): the legacy envelope fields join the list.
+  'max_buildable_footprint_sqm', 'envelope_constrained', 'envelope_constraint_reason',
 ]);
+
+/**
+ * MF-45 meter rule, operator 2026-11-12, verbatim "1 b 2 a" (item 1 (b); Spec 100 §3.2 dated note): a lookup counts against the
+ * monthly allowance only when at least one option has an evaluated value: a cost-menu line carrying a number. Today the legacy menu
+ * is withheld (EI-D1), so no lookup counts; the engine's scenario lines (status computed, a total) count once they are sent (MB-94).
+ */
+export function hasEvaluatedOption(parcel: ConsumerParcel): boolean {
+  return Object.values(parcel.costMenu.menu ?? {}).some(
+    (l) => typeof l === 'object' && l !== null && (typeof l.total === 'number' || typeof l.per_sqm === 'number'),
+  );
+}
 
 // The comparable_builds JSONB fields the consumer exposes (explicit pick — no passthrough).
 const CONSUMER_COMPARABLE_FIELDS = [
@@ -155,7 +168,7 @@ export function assembleConsumerPayload(
           compBuildRatioP50: num(row.comp_build_ratio_p50),
           compFsiP50: num(row.comp_fsi_p50),
           neighbourhoodId: num(row.neighbourhood_id),
-          neighbourhoodCostPremium: num(row.neighbourhood_cost_premium),
+          neighbourhoodCostPremium: null, // withheld: the census-income premium (EI-D3; operator "1 b 2 a", item 2 (a))
         },
         coaProjects: validCoa,
         comparableBuilds,

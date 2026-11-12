@@ -50,8 +50,8 @@ const mockData = {
       max_build_stories: 3,
       max_build_fsi: 3.17, // formatFsi -> "3.17"
       coa_fsi: 0.61,
-      envelope_constrained: false,
-      envelope_constraint_reason: null,
+      envelope_constrained: 'true', // the lookup sends booleans as strings; operator "1 b 2 a" item 2 (a) hides the note
+      envelope_constraint_reason: 'setback-zq7',
     },
     neighbourhood: { summary: null, compStats: { compCount: null }, comparableBuilds: [], coaProjects: [] },
   },
@@ -89,6 +89,10 @@ describe('W-0 (a) + EI-D1: the mobile parcel page hides the legacy sizes and cos
     }
     expect(screen.queryByText(/2,503,805|3,111,111|\$0/)).toBeNull();
     expect(screen.queryByTestId('parcel-cost-max_build')).toBeNull();
+  });
+  it('operator "1 b 2 a" item 2 (a): the "Envelope constrained" note does not render, even with both fields present', () => {
+    render(<Screen />);
+    expect(screen.queryByText(/Envelope constrained|setback-zq7/)).toBeNull();
   });
   it.each([250, null])('O-7 label lock: no max_build card and no "maximum envelope" / "as-of-right" text (opt_aor_gfa_sqm %p)', (v) => {
     mockData.parcel.areas.opt_aor_gfa_sqm = v;

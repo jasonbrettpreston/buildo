@@ -42,7 +42,7 @@ import {
 import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus, openReport } from '@/lib/entitlements';
 import { logInfo, logWarn } from '@/lib/logger';
 import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
-import { assembleConsumerPayload, assembleLotMap } from '@/lib/parcels/consumer-lookup';
+import { assembleConsumerPayload, assembleLotMap, hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
 import { resolveLotMap } from '@/lib/parcels/lot-map';
 import {
   ConsumerParcelLookupQuerySchema,
@@ -136,10 +136,13 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
     // Meter (MF-45): only a hit (a report shown) on the parcel_tool path counts. Candidates, a miss or a
     // dangling id show no report and count nothing. Under the row lock the status is re-tested.
-    let meter: 'counted' | 'already_counted' | 'limit_reached' | 'not_entitled' | 'none' | 'unmetered' =
+    // Operator 2026-11-12, verbatim "1 b 2 a" (item 1 (b); Spec 100 §3.2 dated note): a hit with no evaluated option is served and
+    // NOT counted (meter not_evaluated), so a report whose sizes and costs read "Not yet evaluated" costs the user nothing.
+    let meter: 'counted' | 'already_counted' | 'limit_reached' | 'not_entitled' | 'none' | 'unmetered' | 'not_evaluated' =
       access === 'parcel_tool' ? 'none' : 'unmetered';
     let refusal: ReturnType<typeof reportLimitReached> | ReturnType<typeof forbiddenSubscription> | null = null;
-    if (access === 'parcel_tool' && body.parcel && parcelRef !== null) {
+    if (access === 'parcel_tool' && body.parcel && parcelRef !== null && !hasEvaluatedOption(body.parcel)) meter = 'not_evaluated';
+    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null) {
       const ref = parcelRef;
       const m = await withTransaction((client) => openReport(client, ctx.uid, ref));
       meter = m.kind;

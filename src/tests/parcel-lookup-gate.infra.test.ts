@@ -93,8 +93,21 @@ function meter(o: { status?: string | null; used?: number; already?: boolean; pl
 const inserts = () => txQuery.mock.calls.filter((c) => /INSERT INTO usage_events/.test(String(c[0])));
 const meterCalls = () => txQuery.mock.calls.length;
 
+// Dated 2026-11-12 (operator, verbatim "1 b 2 a", item 1 (b); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, the
+// "1 b 2 a" ruling under "Lot views v9"; Spec 100 §3.2 dated note): a lookup that returns no evaluated option is NOT counted.
+// The real assembler sends no evaluated option today (EI-D1: the legacy menu is null), so the metering cases below run on a
+// payload with one evaluated option line (EVALUATED), and the "1 b" block at the end runs the real assembler. Prior text: every
+// hit was metered on the real assembler output.
+const EVALUATED = { _schema_version: 1, 'scenario:detached_house/gfa_max_m2': { total: 1500000, per_sqm: 4844, area: 309.7 } };
+const realAssemble = vi.mocked(assembleConsumerPayload).getMockImplementation()!;
+const withEvaluatedOption = (...a: Parameters<typeof assembleConsumerPayload>) => {
+  const r = realAssemble(...a);
+  return { ...r, payload: { ...r.payload, costMenu: { menu: EVALUATED, scalars: null } } };
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(assembleConsumerPayload).mockImplementation(withEvaluatedOption);
   poolQuery.mockReset();
   txQuery.mockReset();
   vi.mocked(fetchParcelById).mockResolvedValue({ ...ROW });
@@ -261,6 +274,33 @@ describe('T10 fail closed: the payload is never served unmetered', () => {
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
     expect(JSON.stringify(r.body)).not.toContain('lot_size');
+  });
+});
+
+describe('operator "1 b": a lookup with no evaluated option is served and NOT counted', () => {
+  beforeEach(() => { ctx(null); parcelTool('active'); vi.mocked(assembleConsumerPayload).mockImplementation(realAssemble); });
+  it('a hit on the real assembler (no evaluated option) -> 200 with the payload, no meter read, no insert, log meter not_evaluated', async () => {
+    const r = await call();
+    expect(r.status).toBe(200);
+    expect(r.body.data?.parcel).not.toBeNull();
+    expect(meterCalls()).toBe(0);
+    const log = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
+    expect(log?.[2]).toMatchObject({ access: 'parcel_tool', meter: 'not_evaluated', outcome: 'hit' });
+  });
+  it('at used = limit, a lookup with no evaluated option is still served (it costs nothing)', async () => {
+    meter({ used: 3, already: false });
+    const r = await call();
+    expect(r.status).toBe(200);
+    expect(inserts()).toHaveLength(0);
+  });
+  it('a menu line with no number (a not_evaluated scenario line) is not an evaluated option', async () => {
+    vi.mocked(assembleConsumerPayload).mockImplementation((...a) => {
+      const r = realAssemble(...a);
+      return { ...r, payload: { ...r.payload, costMenu: { menu: { _schema_version: 1, 'scenario:detached_house/gfa_max_m2': { total: null } }, scalars: null } } };
+    });
+    const r = await call();
+    expect(r.status).toBe(200);
+    expect(meterCalls()).toBe(0);
   });
 });
 

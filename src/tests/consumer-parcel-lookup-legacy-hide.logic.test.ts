@@ -15,8 +15,12 @@ import { assembleConsumerPayload, CONSUMER_WITHHELD_LEGACY_COLS } from '@/lib/pa
 import { ConsumerParcelLookupResponseSchema } from '@/app/api/parcels/lookup/types';
 import type { ParcelRow } from '@/lib/admin/parcel-lookup';
 
-// The withheld headline columns (Spec 100 §3.2 dated note 2026-11-12), each with a value found nowhere else in the row.
-const WITHHELD_HEADLINES: Record<string, number> = {
+// The withheld headline columns (Spec 100 §3.2 dated notes 2026-11-12), each with a value found nowhere else in the row.
+// Dated 2026-11-12 (operator "1 b 2 a", item 2 (a)): the three envelope fields join the set (prior text: the nine size headlines only).
+const WITHHELD_HEADLINES: Record<string, number | string | boolean> = {
+  max_buildable_footprint_sqm: 211.37,
+  envelope_constrained: true,
+  envelope_constraint_reason: 'setback-zq7',
   opt_aor_gfa_sqm: 382.91,
   opt_aor_storeys: 3.71,
   opt_coa_gfa_sqm: 455.17,
@@ -42,6 +46,7 @@ const row = {
   cost_coa_total: 3111111,
   cost_kitchen_per_sqm: 7771,
   neighbourhood_id: 42,
+  neighbourhood_cost_premium: 1.8537, // item 2 (a): compStats.neighbourhoodCostPremium is withheld too
   comp_count: 12,
 } as unknown as ParcelRow;
 
@@ -59,7 +64,9 @@ describe('FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size
   });
 
   it('no distinctive legacy value appears anywhere in the serialized payload', () => {
-    for (const v of [...Object.values(WITHHELD_HEADLINES), 2503805, 3111111, 7771, 6539, 6835]) {
+    expect(payload.neighbourhood.compStats.neighbourhoodCostPremium).toBeNull();
+    const distinctive = Object.values(WITHHELD_HEADLINES).filter((v) => typeof v !== 'boolean');
+    for (const v of [...distinctive, 2503805, 3111111, 7771, 6539, 6835, 1.8537]) {
       expect(flat).not.toContain(String(v));
     }
   });

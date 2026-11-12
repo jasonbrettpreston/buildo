@@ -164,7 +164,9 @@ describe('report-field inventory on the real tree', () => {
   it('the known open findings stay visible (report-only gates fail for the reasons the hand edition found)', () => {
     expect(r.model.gates.find((g: Json) => g.id === 'RF-5').failing).toContain('parcel.areas.realized_fsi_p90');
     expect(r.model.gates.find((g: Json) => g.id === 'RF-2').failing).toContain('S-072 lots[].newNearbyCoaRuling');
-    expect(r.model.gates.find((g: Json) => g.id === 'RF-10').state).toBe('FAIL');
+    // Dated 2026-11-12 (operator "1 b 2 a", item 2 (a)): RF-10 now PASSES, because the last rendered fields that reached a banned
+    // code ref (envelope_constrained / envelope_constraint_reason) are no longer rendered. Prior text: RF-10 state FAIL.
+    expect(r.model.gates.find((g: Json) => g.id === 'RF-10').state).toBe('PASS');
     // EI-D1 (dated 2026-11-12): exactly these, nothing else.
     expect(r.model.gates.find((g: Json) => g.id === 'RF-4').failing).toEqual(['S-072 lots[].maxBuildGfaSqm', 'S-072 lots[].maxCoaBuildGfaSqm']);
     expect(r.model.gates.find((g: Json) => g.id === 'RF-7').failing).toEqual(['menu:max_build ↔ menu:coa_build', 'menu:solar_max ↔ menu:solar_coa']);

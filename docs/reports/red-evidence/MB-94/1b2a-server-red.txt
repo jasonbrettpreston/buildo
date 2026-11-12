@@ -1,0 +1,13 @@
+Operator "1 b 2 a" server locks, red against f0e9730ff (consumer-lookup.ts and route.ts unchanged), vitest, 2026-11-12:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts > FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size value > every withheld headline is sent as null, and the withheld list is exactly the ruled set
+AssertionError: expected [ 'coa_fsi', 'max_build_fsi', …(7) ] to deeply equal [ 'coa_fsi', …(11) ]
+ FAIL  src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts > FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size value > no distinctive legacy value appears anywhere in the serialized payload
+AssertionError: expected 1.8537 to be null
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > operator "1 b": a lookup with no evaluated option is served and NOT counted > a hit on the real assembler (no evaluated option) -> 200 with the payload, no meter read, no insert, log meter not_evaluated
+AssertionError: expected 4 to be +0 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > operator "1 b": a lookup with no evaluated option is served and NOT counted > at used = limit, a lookup with no evaluated option is still served (it costs nothing)
+AssertionError: expected 403 to be 200 // Object.is equality
+ FAIL  src/tests/parcel-lookup-gate.infra.test.ts > operator "1 b": a lookup with no evaluated option is served and NOT counted > a menu line with no number (a not_evaluated scenario line) is not an evaluated option
+AssertionError: expected 4 to be +0 // Object.is equality
+      Tests  5 failed | 41 passed (46)
