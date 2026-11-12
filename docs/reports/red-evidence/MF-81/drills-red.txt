@@ -34,3 +34,12 @@ Red: the drill logic stubbed out: the five verdicts (slowVerdict, downVerdict, s
       Tests  28 failed | 8 passed (36)
 
 Green with the code restored: 36 of 36 (src/tests/mctest: 6 files, 97 tests).
+
+OUTPUT panel fold (2026-11-12): the 4 new canaries run against the pre-fold lib.cjs and relay.mjs (commit f085e925b) fail; all 39 pass with the fold.
+
+   × DB down > passes a fail-closed answer that recovers, naming a 401 as the outage shown as signed out 2ms
+   × DB down > after sign-in, wants a server error: a 401 there never reached the lookup 1ms
+   × the drill relay (MF81-4 a) > cuts every connection at the first matching query, then refuses until pass 0ms
+   × the drill relay (MF81-4 a) > keeps the reply order on one connection across a switch from slow to pass 303ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 35 passed (39)

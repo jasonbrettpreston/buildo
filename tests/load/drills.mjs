@@ -7,7 +7,8 @@
 // (127.0.0.1:55328 → the test-stack Postgres), so DB slow and DB down need no DB write and no container change; sign-in keeps working.
 // Each drill uses its own catalogue persona and lots from the L-RANDOM sample; the verdicts are the pure functions in lib.cjs.
 //   F-DB-SLOW          drill_session: a new lot with every DB reply delayed 3 s (FAIL only on a hang, an unsanitised body, a meter on a failure)
-//   F-DB-DOWN          drill_session: a new lot with the DB refused; fails closed, not metered, answers again once the DB is back
+//   F-DB-DOWN          drill_session: (1) the whole DB refused: fails closed, not metered, answers again once the DB is back;
+//                      (2) the DB cut at the lookup's first parcels query, after sign-in: a sanitised server error, not metered
 //   F-SESSION-EXPIRED  drill_session: signed out, the old token gets 401 and nothing is metered (web part WAITS on MF-46)
 //   F-CAP-REACHED      drill_cap: real lots up to the limit, then 403 REPORT_LIMIT_REACHED with the reset date; a counted lot reopens
 //   F-RATE-LIMITED     drill_rate: one lot reopened until a 429 with Retry-After; never a 5xx; reopens never metered
@@ -65,9 +66,16 @@ const lookup = (lot, token) =>
     `/api/parcels/lookup?parcelId=${encodeURIComponent(lot.parcelId)}`,
     token,
   );
-const usage = async (token) =>
-  (await call("/api/parcels/entitlement", token)).body?.data ?? null;
+/** reportsUsed / reportsLimit now; a failed read throws, so a meter check never compares two missing values. */
+async function usage(token) {
+  const d = (await call("/api/parcels/entitlement", token)).body?.data;
+  if (!d || typeof d.reportsUsed !== "number")
+    throw new Error("usage_read_failed");
+  return d;
+}
+const used = async (token) => (await usage(token)).reportsUsed;
 const hasData = (r) => r.body?.data != null;
+const ok2xx = (r) => r.status >= 200 && r.status < 300;
 
 async function tokenOf(cat, id) {
   const p = cat.personas.find((x) => x.id === id);
@@ -77,33 +85,62 @@ async function tokenOf(cat, id) {
   return r.token;
 }
 
-/** F-DB-SLOW, F-DB-DOWN, F-SESSION-EXPIRED on drill_session (lots[0..3]). */
+/**
+ * A failure attempt on a lot that is known to count: the attempt runs under the fault; if it fails, the lot is opened again with the
+ * fault cleared. A lot that counts then (+1) proves the failed attempt was not metered; a lot that never counts (no evaluated option)
+ * makes the meter check vacuous, so the next lot is tried. Returns { r, metered } or null when no counting lot was found.
+ */
+async function onCountingLot(token, candidates, attempt, clear) {
+  for (const lot of candidates) {
+    const before = await used(token);
+    const r = await attempt(lot);
+    clear();
+    if (ok2xx(r)) return { r, metered: false };
+    await sleep(PACE_MS);
+    const afterFail = await used(token);
+    if (afterFail > before) return { r, metered: true };
+    await lookup(lot, token);
+    await sleep(PACE_MS);
+    if ((await used(token)) > afterFail) return { r, metered: false };
+  }
+  return null;
+}
+
+/** F-DB-SLOW, F-DB-DOWN, F-SESSION-EXPIRED on drill_session (lots[0..13]). */
 async function sessionDrills(cat, lots, relay, only, out) {
   let token = await tokenOf(cat, "drill_session");
   const u0 = await usage(token);
-  if (!u0 || u0.reportsUsed + 4 > u0.reportsLimit)
+  if (u0.reportsUsed + 14 > u0.reportsLimit)
     return out.skip(
       ["F-DB-SLOW", "F-DB-DOWN", "F-SESSION-EXPIRED"],
       "drill_session",
       "drill_session is near its limit; re-run the seed (D-12 a)",
     );
+  const none =
+    "inconclusive: no counting lot among the tries (each lot had no evaluated option)";
   if (only("F-DB-SLOW")) {
-    const before = (await usage(token)).reportsUsed;
-    relay.setMode("slow");
-    const r = await lookup(lots[0], token);
-    relay.setMode("pass");
-    const after = (await usage(token))?.reportsUsed;
-    const ok = r.status >= 200 && r.status < 300;
-    out.drill(
-      "F-DB-SLOW",
-      "drill_session",
-      slowVerdict({ ...r, metered: !ok && after !== before }),
+    const got = await onCountingLot(
+      token,
+      lots.slice(0, 4),
+      (lot) => {
+        relay.setMode("slow");
+        return lookup(lot, token);
+      },
+      () => relay.setMode("pass"),
     );
+    if (got)
+      out.drill(
+        "F-DB-SLOW",
+        "drill_session",
+        slowVerdict({ ...got.r, metered: got.metered }),
+      );
+    else out.skip(["F-DB-SLOW"], "drill_session", none);
   }
   if (only("F-DB-DOWN")) {
-    const before = (await usage(token)).reportsUsed;
+    // Case 1, the whole DB down: the sign-in profile read fails first, so the route answers as for a signed-out user; recorded.
+    const before = await used(token);
     relay.setMode("down");
-    const r = await lookup(lots[1], token);
+    const whole = await lookup(lots[4], token);
     relay.setMode("pass");
     let recovered = false;
     for (let i = 0; i < 15 && !recovered; i += 1) {
@@ -111,16 +148,41 @@ async function sessionDrills(cat, lots, relay, only, out) {
         (await call("/api/parcels/entitlement", token)).status === 200;
       if (!recovered) await sleep(2000);
     }
-    const after = (await usage(token))?.reportsUsed;
     out.drill(
       "F-DB-DOWN",
       "drill_session",
-      downVerdict({ ...r, recovered, metered: after !== before }),
+      downVerdict({
+        ...whole,
+        recovered,
+        metered: (await used(token)) !== before,
+      }),
+      "LOCAL whole-DB",
     );
+    // Case 2, the DB lost after sign-in: the relay cuts every connection at the lookup's first parcels query; a server error is wanted.
+    const got = await onCountingLot(
+      token,
+      lots.slice(5, 9),
+      (lot) => {
+        relay.cutOn(/FROM\s+parcels\b/);
+        return lookup(lot, token);
+      },
+      () => relay.setMode("pass"),
+    );
+    if (got)
+      out.drill(
+        "F-DB-DOWN",
+        "drill_session",
+        downVerdict(
+          { ...got.r, recovered: true, metered: got.metered },
+          { afterSignIn: true },
+        ),
+        "LOCAL after-sign-in",
+      );
+    else out.skip(["F-DB-DOWN"], "drill_session", none);
   }
   if (only("F-SESSION-EXPIRED")) {
-    await lookup(lots[2], token);
-    const before = (await usage(token)).reportsUsed;
+    await lookup(lots[10], token); // a lot opened while signed in, so the session is in real use when it is signed out
+    const before = await used(token);
     const logout = await fetch(
       `${process.env.MCTEST_SUPABASE_URL}/auth/v1/logout?scope=global`,
       {
@@ -132,17 +194,16 @@ async function sessionDrills(cat, lots, relay, only, out) {
       },
     );
     if (!logout.ok) throw new Error(`sign_out_${logout.status}`);
-    const l = await lookup(lots[3], token);
+    const l = await lookup(lots[11], token);
     const e = await call("/api/parcels/entitlement", token);
     token = await tokenOf(cat, "drill_session");
-    const after = (await usage(token))?.reportsUsed;
     out.drill(
       "F-SESSION-EXPIRED",
       "drill_session",
       sessionVerdict({
         lookupStatus: l.status,
         entitlementStatus: e.status,
-        metered: after !== before,
+        metered: (await used(token)) !== before,
       }),
       "LOCAL auth-roundtrip: the test stack checks the session on every call; production read paths serve a signed-out token until it expires (Spec 13 §3.2)",
     );
@@ -154,48 +215,54 @@ async function sessionDrills(cat, lots, relay, only, out) {
   }
 }
 
-/** F-CAP-REACHED on drill_cap (lots[10..]): open real lots up to the limit, then a new lot, then reopen the first counted one. */
+/** F-CAP-REACHED on drill_cap (lots[30..]): open real lots up to the limit, then new lots until one is refused, then the first counted lot again. */
 async function capDrill(cat, lots, out) {
   const token = await tokenOf(cat, "drill_cap");
   const u0 = await usage(token);
-  if (!u0 || u0.reportsUsed !== 0)
+  if (u0.reportsUsed !== 0)
     return out.skip(
       ["F-CAP-REACHED"],
       "drill_cap",
       "drill_cap has used reports; re-run the seed (D-12 a)",
     );
   const limit = u0.reportsLimit;
-  let used = 0;
+  let now = 0;
   let firstCounted = null;
-  let i = 10;
-  for (; used < limit && i < lots.length; i += 1) {
+  let i = 30;
+  for (; now < limit && i < lots.length; i += 1) {
     await lookup(lots[i], token);
     await sleep(PACE_MS);
-    const now = (await usage(token)).reportsUsed;
-    if (now > used && !firstCounted) firstCounted = lots[i];
-    used = now;
+    const n = await used(token);
+    if (n > now && !firstCounted) firstCounted = lots[i];
+    now = n;
   }
-  let refusal = { status: 0, body: null };
+  let refusal = null;
   let metered = false;
-  for (let k = 0; k < 10 && i < lots.length; k += 1, i += 1) {
+  // A lot that would not count is served at the cap (EI-D1 "1 b"); keep going until a counting lot is refused.
+  for (; now >= limit && i < lots.length; i += 1) {
     const r = await lookup(lots[i], token);
     await sleep(PACE_MS);
     if (r.status === 403) {
       refusal = r;
+      i += 1;
       break;
     }
-    if ((await usage(token)).reportsUsed > limit) metered = true; // a served lot past the cap must not count
+    if ((await used(token)) > limit) metered = true;
   }
-  const reopen = firstCounted
-    ? await lookup(firstCounted, token)
-    : { status: 0, body: null };
-  if ((await usage(token)).reportsUsed > limit) metered = true;
+  if (now < limit || !refusal)
+    return out.skip(
+      ["F-CAP-REACHED"],
+      "drill_cap",
+      `inconclusive: the sample ran out (${now} of ${limit} counted${refusal ? "" : ", no counting lot left to refuse"})`,
+    );
+  const reopen = await lookup(firstCounted, token);
+  if ((await used(token)) > limit) metered = true;
   out.drill(
     "F-CAP-REACHED",
     "drill_cap",
     capVerdict({
       limit,
-      usedAtCap: used,
+      usedAtCap: now,
       refusal: {
         status: refusal.status,
         code: refusal.body?.error?.code,
@@ -208,26 +275,44 @@ async function capDrill(cat, lots, out) {
   );
 }
 
-/** F-RATE-LIMITED on drill_rate (lots[5]): open once, then reopen without pause until a 429 (at most 61 calls). */
+/** F-RATE-LIMITED on drill_rate (lots[12..16]): a lot whose first open counts, then reopened without pause until a 429 (at most 61 calls). */
 async function rateDrill(cat, lots, out) {
   const token = await tokenOf(cat, "drill_rate");
-  await lookup(lots[5], token);
-  const before = (await usage(token))?.reportsUsed;
+  let lot = null;
+  for (const l of lots.slice(12, 17)) {
+    const before = await used(token);
+    await lookup(l, token);
+    if ((await used(token)) > before) {
+      lot = l;
+      break;
+    }
+    await sleep(PACE_MS);
+  }
+  if (!lot)
+    return out.skip(
+      ["F-RATE-LIMITED"],
+      "drill_rate",
+      "inconclusive: no counting lot among the tries; a reopen check would be vacuous",
+    );
+  const before = await used(token);
   const statuses = [];
   let retryAfter = null;
   for (let k = 0; k < 61; k += 1) {
-    const r = await lookup(lots[5], token);
+    const r = await lookup(lot, token);
     statuses.push(r.status);
     if (r.status === 429) {
       retryAfter = r.retryAfter;
       break;
     }
   }
-  const after = (await usage(token))?.reportsUsed;
   out.drill(
     "F-RATE-LIMITED",
     "drill_rate",
-    rateVerdict({ statuses, retryAfter, metered: after !== before }),
+    rateVerdict({
+      statuses,
+      retryAfter,
+      metered: (await used(token)) !== before,
+    }),
   );
 }
 
@@ -283,18 +368,16 @@ async function main() {
         replay: replay(id),
       }),
     skip: (ids, persona, why) =>
-      ids
-        .filter(only)
-        .forEach((id) =>
-          line({
-            row: `failure_drills/${id}`,
-            owner: owner(id),
-            kase: persona,
-            status: "SKIP",
-            detail: why,
-            label: "LOCAL",
-          }),
-        ),
+      ids.filter(only).forEach((id) =>
+        line({
+          row: `failure_drills/${id}`,
+          owner: owner(id),
+          kase: persona,
+          status: "SKIP",
+          detail: why,
+          label: "LOCAL",
+        }),
+      ),
     waits: (id, kase, why) =>
       line({
         row: `failure_drills/${id}`,
@@ -321,7 +404,7 @@ async function main() {
     const lots = await sampleLots(
       cat,
       `${new Date().toISOString().slice(0, 10)}-drills`,
-      120,
+      200,
     );
     if (["F-DB-SLOW", "F-DB-DOWN", "F-SESSION-EXPIRED"].some(only))
       await sessionDrills(cat, lots, relay, only, out);

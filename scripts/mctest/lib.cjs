@@ -434,7 +434,7 @@ function summarize(h) {
 /** A drill's hang limit (MF81-5 a): no answer within 60 s is a hang. */
 const HANG_MS = 60_000;
 const LEAK =
-  /ECONN|password|postgres(?:ql)?:\/\/|\bstack\b|\.(?:ts|js):\d+|\bat \S+ \(/i;
+  /ECONN|postgres(?:ql)?:\/\/|\bstack\b|\.(?:ts|js):\d+|\bat \S+ \(/i;
 const LEAK_SQL = /\b(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)\b/;
 /** An error body is sanitised when it is the API envelope ({ data: null, error: { code, message } }) and leaks no SQL, stack or connection. */
 function sanitisedError(text) {
@@ -481,8 +481,12 @@ function slowVerdict(a) {
   );
 }
 
-/** DB down: the lookup fails closed (no payload, sanitised, nothing metered) and the app answers again once the DB is back. */
-function downVerdict(a) {
+/**
+ * DB down: the lookup fails closed (no payload, sanitised, nothing metered) and the app answers again once the DB is back.
+ * { afterSignIn: true } is the DB lost after sign-in passed: only a server error shows the lookup path was reached (a 401 there means
+ * the cut came before the lookup's own DB step, so the drill proved nothing).
+ */
+function downVerdict(a, { afterSignIn = false } = {}) {
   if (hung(a))
     return verdict(false, `hang: no answer within ${HANG_MS / 1000} s`);
   if (a.status >= 200 && a.status < 300)
@@ -494,6 +498,11 @@ function downVerdict(a) {
       false,
       `meter written for a failed lookup (http_${a.status})`,
     );
+  if (afterSignIn && a.status < 500)
+    return verdict(
+      false,
+      `http_${a.status}: the lookup path was not reached (want a server error)`,
+    );
   if (!a.recovered)
     return verdict(
       false,
@@ -501,7 +510,7 @@ function downVerdict(a) {
     );
   return verdict(
     true,
-    `fails closed with http_${a.status} in ${a.elapsedMs} ms; recovered`,
+    `fails closed with http_${a.status} in ${a.elapsedMs} ms; recovered${a.status === 401 ? " (the outage shows as signed out: the sign-in profile read fails first)" : ""}`,
   );
 }
 

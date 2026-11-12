@@ -95,8 +95,18 @@ describe("DB down", () => {
     metered: false,
     recovered: true,
   };
-  it("passes a fail-closed answer that recovers", () => {
-    expect(downVerdict(ok).status).toBe("PASS");
+  it("passes a fail-closed answer that recovers, naming a 401 as the outage shown as signed out", () => {
+    const v = downVerdict(ok);
+    expect(v.status).toBe("PASS");
+    expect(v.detail).toMatch(/shows as signed out/);
+  });
+  it("after sign-in, wants a server error: a 401 there never reached the lookup", () => {
+    expect(
+      downVerdict({ ...ok, status: 500 }, { afterSignIn: true }).status,
+    ).toBe("PASS");
+    const v = downVerdict(ok, { afterSignIn: true });
+    expect(v.status).toBe("FAIL");
+    expect(v.detail).toMatch(/lookup path was not reached/);
   });
   it.each([
     ["a served lookup", { ...ok, status: 200 }, /served/],
@@ -241,6 +251,70 @@ describe("the drill relay (MF81-4 a)", () => {
       expect((await roundTrip(relay.port)).reply).toBe("");
       relay.setMode("pass");
       expect((await roundTrip(relay.port)).reply).toBe("ping");
+    } finally {
+      await relay.close();
+      s.close();
+    }
+  });
+  it("cuts every connection at the first matching query, then refuses until pass", async () => {
+    const s = await echo();
+    const relay = await startRelay({
+      listenPort: 0,
+      target: {
+        host: "127.0.0.1",
+        port: (s.address() as net.AddressInfo).port,
+      },
+    });
+    try {
+      relay.cutOn(/FROM\s+parcels\b/);
+      expect((await roundTrip(relay.port)).reply).toBe("ping");
+      const hit = await new Promise<string>((r) => {
+        const c = net.connect(relay.port, "127.0.0.1", () =>
+          c.write("SELECT 1 FROM parcels"),
+        );
+        let reply = "";
+        c.on("data", (d) => (reply += d.toString()));
+        c.on("error", () => undefined);
+        c.on("close", () => r(reply));
+      });
+      expect(hit).toBe("");
+      expect((await roundTrip(relay.port)).reply).toBe("");
+      relay.setMode("pass");
+      expect((await roundTrip(relay.port)).reply).toBe("ping");
+    } finally {
+      await relay.close();
+      s.close();
+    }
+  });
+  it("keeps the reply order on one connection across a switch from slow to pass", async () => {
+    const s = await echo();
+    const relay = await startRelay({
+      listenPort: 0,
+      target: {
+        host: "127.0.0.1",
+        port: (s.address() as net.AddressInfo).port,
+      },
+      delayMs: 300,
+    });
+    try {
+      relay.setMode("slow");
+      const got = await new Promise<string>((r) => {
+        const c = net.connect(relay.port, "127.0.0.1", () => {
+          c.write("a");
+          setTimeout(() => {
+            relay.setMode("pass");
+            c.write("b");
+          }, 50);
+        });
+        let reply = "";
+        c.on("data", (d) => {
+          reply += d.toString();
+          if (reply.length >= 2) c.end();
+        });
+        c.on("error", () => undefined);
+        c.on("close", () => r(reply));
+      });
+      expect(got).toBe("ab");
     } finally {
       await relay.close();
       s.close();

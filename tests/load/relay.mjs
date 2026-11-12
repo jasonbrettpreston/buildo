@@ -2,35 +2,56 @@
 //
 // MF-81 · the drill relay: a TCP relay between the drill's own app and the test-stack Postgres, so DB slow and DB down need no DB write
 // and no container change. Modes: "pass" forwards; "slow" delays every database reply by delayMs; "down" closes every open connection
-// and drops new ones. It listens on loopback only and ends when closed.
+// and drops new ones; cutOn(re) forwards until a query matching re is sent, then goes "down" (the DB lost after sign-in passed).
+// Replies on one connection always keep their order, across mode switches. It listens on loopback only and ends when closed.
 import net from "node:net";
 
 /**
  * @param {{ listenPort: number, target: { host: string, port: number }, delayMs?: number }} o
- * @returns {Promise<{ setMode: (m: "pass" | "slow" | "down") => void, close: () => Promise<void>, port: number }>}
+ * @returns {Promise<{ setMode: (m: "pass" | "slow" | "down") => void, cutOn: (re: RegExp) => void, close: () => Promise<void>, port: number }>}
  */
 export function startRelay({ listenPort, target, delayMs = 3000 }) {
   let mode = "pass";
+  let cut = null;
   const open = new Set();
+  const destroyAll = () => {
+    for (const p of open) p.end();
+  };
   const server = net.createServer((client) => {
     if (mode === "down") return client.destroy();
     const upstream = net.connect(target.port, target.host);
-    const pair = { client, upstream };
-    open.add(pair);
-    const end = () => {
-      client.destroy();
-      upstream.destroy();
-      open.delete(pair);
+    const timers = new Set();
+    let due = 0; // when this connection's last reply is written: a later reply is never written before it
+    const pair = {
+      end: () => {
+        for (const t of timers) clearTimeout(t);
+        timers.clear();
+        client.destroy();
+        upstream.destroy();
+        open.delete(pair);
+      },
     };
-    client.on("error", end).on("close", end);
-    upstream.on("error", end).on("close", end);
-    client.on("data", (chunk) => upstream.write(chunk));
-    // One fixed delay per reply keeps the order (timers with the same delay fire in order).
-    upstream.on("data", (chunk) =>
-      mode === "slow"
-        ? setTimeout(() => client.destroyed || client.write(chunk), delayMs)
-        : client.write(chunk),
-    );
+    open.add(pair);
+    client.on("error", pair.end).on("close", pair.end);
+    upstream.on("error", pair.end).on("close", pair.end);
+    client.on("data", (chunk) => {
+      if (cut && cut.test(chunk.toString("latin1"))) {
+        mode = "down";
+        cut = null;
+        return destroyAll();
+      }
+      upstream.write(chunk);
+    });
+    upstream.on("data", (chunk) => {
+      const now = Date.now();
+      due = Math.max(now + (mode === "slow" ? delayMs : 0), due);
+      if (due <= now) return client.write(chunk);
+      const t = setTimeout(() => {
+        timers.delete(t);
+        if (!client.destroyed) client.write(chunk);
+      }, due - now);
+      timers.add(t);
+    });
   });
   return new Promise((resolve, reject) => {
     server.once("error", reject);
@@ -39,18 +60,16 @@ export function startRelay({ listenPort, target, delayMs = 3000 }) {
         port: /** @type {net.AddressInfo} */ (server.address()).port,
         setMode(m) {
           mode = m;
-          if (m === "down")
-            for (const { client, upstream } of open) {
-              client.destroy();
-              upstream.destroy();
-            }
+          cut = null;
+          if (m === "down") destroyAll();
+        },
+        cutOn(re) {
+          mode = "pass";
+          cut = re;
         },
         close: () =>
           new Promise((r) => {
-            for (const { client, upstream } of open) {
-              client.destroy();
-              upstream.destroy();
-            }
+            destroyAll();
             server.close(() => r());
           }),
       }),
