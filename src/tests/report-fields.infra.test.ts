@@ -152,6 +152,19 @@ describe('report-field inventory on the real tree', () => {
     for (const line of rf9) expect(line).toMatch(/: matches no chain input \(dead declaration\)$/);
   });
 
+  // OUTPUT panel fold (regression guardian item 3, dated 2026-11-12): RF-8 compared the S-001 descriptor whitelist with the areas the consumer
+  // assembler sends; with S-001 retired it compares nothing. The lookup still sends those areas (as null where EI-D1 withholds them), so the
+  // descriptor-versus-code drift check is kept here directly: the drift is exactly the three RF-8 named before the retirement, and any new one fails.
+  it('the lookup areas the assembler sends vs the mobile_parcel_detail descriptor whitelist: exactly the three known drift columns', () => {
+    const desc = JSON.parse(read('scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json')) as Json;
+    const dw = new Set((desc.inputs as Json).field_whitelist as string[]);
+    const src = read('src/lib/parcels/consumer-lookup.ts');
+    const block = src.slice(src.indexOf('CONSUMER_HEADLINE_COLS = ['), src.indexOf('] as const;', src.indexOf('CONSUMER_HEADLINE_COLS = [')));
+    const cols = [...block.matchAll(/'([a-z_0-9]+)'/g)].map((m) => m[1]!);
+    expect(cols.length).toBeGreaterThan(10);
+    expect(cols.map((c) => `parcel.areas.${c}`).filter((k) => !dw.has(k)).sort()).toEqual(['parcel.areas.cur_floor_gfa_sqm', 'parcel.areas.max_newbuild_coa_gfa_sqm', 'parcel.areas.realized_fsi_p90']);
+  });
+
   it('the known open findings stay visible (report-only gates fail for the reasons the hand edition found)', () => {
     // Dated 2026-11-12 (MF-48 Stage B, S-001 retired): RF-5's one finding (parcel.areas.realized_fsi_p90) was an S-001 payload row, so RF-5 now
     // PASSES; RF-8 (the S-001 descriptor whitelist) has nothing to compare and PASSES. Prior text: RF-5 failing contains parcel.areas.realized_fsi_p90.

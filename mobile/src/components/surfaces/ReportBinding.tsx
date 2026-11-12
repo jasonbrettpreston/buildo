@@ -335,7 +335,7 @@ export const SCREEN_CONTENT_KEYS = ['retry.text', 'back.text'];
  * also from the persisted cache while a refetch fails (offline); a settled lookup with no page (every lot until MB-44, a miss, a dangling id) is
  * the miss text; an error with nothing cached is the error text and Retry; anything else is loading. */
 export function reportScreenState(q: { data: { page?: PageView | null } | undefined; isError: boolean }): { view: PageView | null; lifecycle: LifecycleState } {
-  if (q.data?.page) return { view: q.data.page, lifecycle: 'loading' };
+  if (q.data?.page) return { view: q.data.page, lifecycle: 'loading' }; // the host ignores lifecycle when a view is given
   if (q.data) return { view: null, lifecycle: 'miss' };
   return { view: null, lifecycle: q.isError ? 'error' : 'loading' };
 }

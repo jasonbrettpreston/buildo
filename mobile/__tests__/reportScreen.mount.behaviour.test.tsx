@@ -46,7 +46,8 @@ const LEGACY_PARCEL = {
   neighbourhood: { summary: null, compStats: { compCount: null }, comparableBuilds: [], coaProjects: [] },
 };
 const hit = (page: Json | null) => ({ match: { parcelId: 'PIN-777', matchType: 'direct', address: '26 Hurlingham Cres' }, candidates: [], warnings: [], parcel: LEGACY_PARCEL, resolution: 'unique', map: null, page });
-const LEGACY = /Max build FSI|Max buildable GFA|As-of-right GFA|Max build storeys|CoA FSI|What it costs|Envelope constrained|setback-zq7|maximum envelope|3\.17|10,753|2,503,805|\$0|Nearby examples|Committee of Adjustment/;
+// OUTPUT panel fold (regression guardian item 1): case-insensitive, with the old O-7 lock's bare "as-of-right".
+const LEGACY = /Max build FSI|Max buildable GFA|As-of-right|Max build storeys|CoA FSI|What it costs|Envelope constrained|setback-zq7|maximum envelope|3\.17|10,753|2,503,805|\$0|Nearby examples|Committee of Adjustment/i;
 
 beforeEach(() => {
   mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true; mockIds.length = 0;

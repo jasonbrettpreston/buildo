@@ -17,7 +17,7 @@ import { ReportPageViewSchema, type ReportPageView } from '@/app/api/parcels/loo
 type Json = Record<string, unknown>;
 
 /** The page view target the app renders (report-layout.json targets). */
-export const MOBILE_TARGET = 'mobile';
+const MOBILE_TARGET = 'mobile';
 
 /** The customer page producer. Null for every lot until MB-44 (no customer report data exists yet). `parcelRef` is parcels.parcel_id. */
 export async function readCustomerPageResponse(parcelRef: string): Promise<Json | null> {

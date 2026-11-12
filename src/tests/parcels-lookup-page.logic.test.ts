@@ -39,7 +39,8 @@ vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), lo
 
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
-import { readCustomerPageResponse } from '@/lib/parcels/report-page';
+import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
+import { CONSUMER_WITHHELD_LEGACY_COLS } from '@/lib/parcels/consumer-lookup';
 import { ConsumerParcelLookupResponseSchema, ReportPageViewSchema } from '@/app/api/parcels/lookup/types';
 import { GET } from '@/app/api/parcels/lookup/route';
 
@@ -141,6 +142,38 @@ describe('T-B3 (4) fail closed', () => {
     const r = await call();
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
+  });
+});
+
+// OUTPUT panel fold (regression guardian item 1): the EI-D1 / W-0 hide was a screen lock (parcelDetailW0Hide, retired with the old screen). The
+// screen now draws only the page, so the fence moves to the page producer path: a producer response that carries any legacy column the lookup
+// withholds (CONSUMER_WITHHELD_LEGACY_COLS) is refused by MF-57's core (not a key of the page table), and the route answers 500, never a page.
+describe('T-B3 (6) EI-D1 at the producer: a legacy value can never ride the page', () => {
+  it.each([...CONSUMER_WITHHELD_LEGACY_COLS])('a producer response carrying %s is refused (500, no payload)', async (col) => {
+    expect(() => mobilePageView({ ...GOLDEN.response_fixture, values: { ...(GOLDEN.response_fixture.values as Json), [col]: '3.17' } })).toThrow(/not a key of the page table/);
+    vi.mocked(readCustomerPageResponse).mockResolvedValueOnce({ ...GOLDEN.response_fixture, values: { ...(GOLDEN.response_fixture.values as Json), [col]: '3.17' } });
+    const r = await call();
+    expect([r.status, r.body.data]).toEqual([500, null]);
+  });
+});
+
+// OUTPUT panel fold (regression guardian item 2): the meter still keys on the legacy payload ("1 b": hasEvaluatedOption), so today a served page
+// is NOT what counts. Pinned as it is, with its owner: when MB-44 (or the MB-94 part (f) tester feed, which is unmetered by EI-D2) serves real pages
+// to customers, the MB-94 part (c) / MB-44 change must make a hit whose page carries an evaluated option count (MF-45 "a report shown counts"),
+// and flip this pin (Spec 100 §3.2 dated note 2026-11-12, MF-48 Stage B).
+describe('T-B3 (7) the meter is unchanged by a page today (owner MB-94 c / MB-44)', () => {
+  it('a parcel_tool hit with a served page and no evaluated legacy option is served and not counted', async () => {
+    poolQuery.mockImplementation(async (text: string) => {
+      if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) return { rows: [{ status: 'active', trial_started_at: null }], rowCount: 1 };
+      throw new Error(`unexpected pool query: ${text}`);
+    });
+    vi.mocked(readCustomerPageResponse).mockResolvedValueOnce(GOLDEN.response_fixture);
+    const r = await call();
+    expect(r.status).toBe(200);
+    expect(r.body.data?.page).toEqual(GOLDEN.view);
+    expect(txQuery).not.toHaveBeenCalled();
+    const log = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup')?.[2] as Json;
+    expect([log.access, log.meter, log.page]).toEqual(['parcel_tool', 'not_evaluated', true]);
   });
 });
 

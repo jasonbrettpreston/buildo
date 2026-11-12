@@ -11,7 +11,7 @@
 import React, { useCallback } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
-import { REPORT_SLICE, reportScreenState, type PageView } from '@/components/surfaces/ReportBinding';
+import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
 import { useParcelLookup } from '@/hooks/useParcelLookup';
 import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
 
@@ -19,7 +19,7 @@ export default function ParcelReportScreen() {
   const router = useRouter();
   const { parcelId } = useLocalSearchParams<{ parcelId: string }>();
   const { data, isError, refetch } = useParcelLookup(parcelId);
-  const { view, lifecycle } = reportScreenState({ data: data ? { page: (data.page ?? null) as PageView | null } : undefined, isError });
+  const { view, lifecycle } = reportScreenState({ data: data ? { page: data.page ?? null } : undefined, isError });
   const onRetry = useCallback(() => void refetch(), [refetch]);
   const onBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
   return <ReportPageHost view={view} lifecycle={lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} />;

@@ -334,7 +334,8 @@ function shownFields(payload) {
 }
 
 /** A shown text that is blank or a dead wire. The null dash is an honest "no value" (FE-06, report-presentation null_value), not empty. */
-const DEAD_TEXT = /^\s*$|\b(NaN|undefined|null|\[object Object\])\b/;
+// OUTPUT panel fold (code reviewer F2): blank, a whole-text undefined or null, or NaN / [object Object] anywhere; prose such as "Not null" passes.
+const DEAD_TEXT = /^\s*$|^\s*(undefined|null)\s*$|\bNaN\b|\[object Object\]/;
 
 /** The shown fields whose text on the served page is empty (blank or a dead wire), as "<section id>.<field>"; [] when every one has text. */
 function emptyShown(payload) {
@@ -343,7 +344,7 @@ function emptyShown(payload) {
   const out = [];
   for (const sec of page.sections)
     for (const p of sec.parts || [])
-      if (p.kind === "value" && (typeof p.text !== "string" || DEAD_TEXT.test(p.text))) out.push(`${sec.id}.${p.field}`);
+      if (p.kind === "value" && typeof p.field === "string" && (typeof p.text !== "string" || DEAD_TEXT.test(p.text))) out.push(`${sec.id}.${p.field}`);
   return out;
 }
 

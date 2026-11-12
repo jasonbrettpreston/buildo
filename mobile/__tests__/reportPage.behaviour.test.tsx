@@ -16,7 +16,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { ReportPageHost, REPORT_UI } from '@/components/surfaces/ReportPageHost';
 import { SurfaceRenderer, type ReportActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
-import { LIFECYCLE_CONTENT_KEYS, REPORT_UI_CLOSED, type LifecycleState, type PageView } from '@/components/surfaces/ReportBinding';
+import { LIFECYCLE_CONTENT_KEYS, REPORT_SLICE, REPORT_UI_CLOSED, SCREEN_CONTENT_KEYS, type LifecycleState, type PageView } from '@/components/surfaces/ReportBinding';
 
 // The published mock has no __esModule flag, so its `default` is spread under one for the default import.
 jest.mock('@gorhom/bottom-sheet', () => ({ __esModule: true, ...jest.requireActual('@gorhom/bottom-sheet/mock') }));
@@ -149,6 +149,10 @@ describe('MF-48 lifecycle states and the action table', () => {
     expect(screen.getByText(lifecycle[s] as string)).toBeTruthy();
     expect(screen.queryByText('—')).toBeNull();
     expect(screen.queryByTestId('report-spinner') !== null).toBe(s === 'loading');
+  });
+  it('MF-48 Stage B: the generated slice holds exactly the lifecycle and screen content keys the host renders (REPORT_SLICE)', () => {
+    expect(Object.keys(REPORT_SLICE.content).sort()).toEqual([...LIFECYCLE_CONTENT_KEYS, ...SCREEN_CONTENT_KEYS].sort());
+    for (const k of Object.keys(CONTENT)) expect([k, (REPORT_SLICE.content as Record<string, string>)[k]]).toEqual([k, CONTENT[k]]);
   });
   it('T-B7 (MF-48 Stage B, B-4 b): only the error state has Retry, its text the approved "Try again", and a press calls onRetry once; Back is drawn in every state and calls onBack', () => {
     for (const s of ['loading', 'miss', 'error'] as LifecycleState[]) {

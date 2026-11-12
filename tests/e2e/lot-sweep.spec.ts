@@ -125,8 +125,11 @@ test.describe("L3a lot sweep", () => {
               // MF-48 Stage B: the fields the screen shows are the served page's value parts; no page (every lot until MB-44) is not_evaluated:no_page.
               const shown = shownFields(data);
               const empty = emptyShown(data);
+              // OUTPUT panel fold (code reviewer F1): a page with no value part shows no field either; never a vacuous pass.
               if (shown === null)
                 note(`${lc.id}|no_empty_shown_field`, "not_evaluated", `${where}: not_evaluated:no_page`, true);
+              else if (shown.size === 0)
+                note(`${lc.id}|no_empty_shown_field`, "not_evaluated", `${where}: not_evaluated:no_value_parts`, true);
               else
                 note(
                   `${lc.id}|no_empty_shown_field`,

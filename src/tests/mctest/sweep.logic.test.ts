@@ -106,5 +106,13 @@ describe("shown fields (the served report page)", () => {
     parts[2].p.text = "—";
     expect(emptyShown({ page: v })).toEqual([`${parts[0].id}.${parts[0].p.field}`, `${parts[1].id}.${parts[1].p.field}`]);
     expect(emptyShown({ page: null })).toEqual([]);
+    // OUTPUT panel folds (code reviewer F1, F2): prose that contains "null" is not a dead wire; a page with no value part shows no field (the
+    // sweep records not_evaluated:no_value_parts, never a pass); a part without a string field is not a shown field.
+    const prose = JSON.parse(JSON.stringify(VIEW));
+    const p0 = prose.sections.flatMap((s: { parts: { kind: string; text: string }[] }) => s.parts).find((p: { kind: string }) => p.kind === "value");
+    p0.text = "Not null on this lot";
+    expect(emptyShown({ page: prose })).toEqual([]);
+    expect([...(shownFields({ page: { sections: [] } }) as Set<string>)]).toEqual([]);
+    expect(emptyShown({ page: { sections: [{ id: "a", parts: [{ kind: "value", field: 7, text: "" }] }] } })).toEqual([]);
   });
 });
