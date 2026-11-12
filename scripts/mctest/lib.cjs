@@ -375,8 +375,9 @@ function loadTarget(url) {
   return { ok: true };
 }
 
-/** Inherited variables that could point the app at another DB, sign-in service or limiter store: blanked, then set to the stack. */
-const APP_BLANKED = /^(POSTGRES|DATABASE|ALT_DATABASE|SUPABASE|UPSTASH|PG)/;
+/** Inherited variables that could point the app at another DB, sign-in service, limiter store or error reporter: blanked, then the stack set. */
+const APP_BLANKED =
+  /^(POSTGRES|DATABASE|ALT_DATABASE|SUPABASE|UPSTASH|PG|KV_|REDIS|SENTRY|NEXT_PUBLIC_SENTRY)/;
 /**
  * The environment of the app the stress runner builds and starts: the test stack only (D-1 a); throws "refused: ..." otherwise.
  * @param {Record<string, string | undefined>} env

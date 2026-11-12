@@ -72,6 +72,8 @@ describe("the app's environment (D-1 a)", () => {
       SUPABASE_SECRET_KEY: "s",
       UPSTASH_REDIS_REST_URL: "https://x.upstash.io",
       UPSTASH_REDIS_REST_TOKEN: "t",
+      KV_REST_API_URL: "https://kv.example",
+      SENTRY_DSN: "https://sentry.example",
       PATH: "/bin",
     });
     expect(env.DATABASE_URL).toBe(TEST.MCTEST_DATABASE_URL);
@@ -85,6 +87,8 @@ describe("the app's environment (D-1 a)", () => {
       "SUPABASE_SECRET_KEY",
       "UPSTASH_REDIS_REST_URL",
       "UPSTASH_REDIS_REST_TOKEN",
+      "KV_REST_API_URL",
+      "SENTRY_DSN",
     ])
       expect(env[k]).toBe("");
     expect(env.DEV_MODE).toBe("false");

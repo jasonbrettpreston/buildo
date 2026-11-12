@@ -5,7 +5,8 @@
 // Stress on a production build against the TEST STACK only, every number labelled LOCAL. Plain Node: built-in fetch and the Node
 // timing histogram (D-6 load a, no new package). Refuses before any connection unless the test-stack guard passes and the target is a
 // loopback app (never production, Vercel or a remote host). --plan prints the plan after the guard and stops (no connection).
-//   1. next build + next start on 127.0.0.1:3110 with the test stack only (appEnv), unless --target names a running local app;
+//   1. next build + next start on 127.0.0.1:3110 with the test stack only (appEnv; refused if the port already answers), unless
+//      --target names a running local app (the runner cannot prove such an app uses the test stack: the operator's word only);
 //   2. 20 lots per load user from the catalogue's L-RANDOM SQL (read-only session, logged seed): user n always gets the same 20,
 //      so it never passes its allowance (D-12 a) and a repeat is an uncounted reopen;
 //   3. the stress-pool users sign in through the test stack's own sign-in service, paced under its per-address limit (D-3 a);
@@ -39,6 +40,7 @@ const LOTS_PER_USER = 20; // the plan and trial allowance (D-12 a); never more l
 const SIGNIN_PER_5MIN = 110; // under the test stack's 150 token requests per 5 minutes per address (plan MF81-2 a)
 const POOL_MAX = 20; // the app's default pool (src/lib/db/client.ts PG_POOL_MAX)
 const REQUEST_TIMEOUT_MS = 30_000;
+const TOKEN_LIFE_MS = 3_600_000; // the test stack's jwt_expiry (3600 s, ~/Buildo-teststack/supabase/config.toml)
 const LABEL =
   "LOCAL: production build on this Mac against the test stack; the load generator shares the Mac with Postgres; " +
   "in-memory rate limiter (not production's Upstash); auth-roundtrip (the test stack's tokens are checked by its sign-in service " +
@@ -66,6 +68,10 @@ async function main() {
   const profiles = cat.stress_profiles.filter(
     (p) => !wanted || wanted.includes(p.id),
   );
+  const unknown = (wanted ?? []).filter(
+    (id) => !cat.stress_profiles.some((p) => p.id === id),
+  );
+  if (unknown.length) return refuse(`unknown profile ${unknown.join(", ")}`);
   if (!profiles.length) return refuse("no stress profile selected");
   const emails = personaEmails(
     cat.personas.find((p) => p.id === "stress_pool"),
@@ -113,11 +119,33 @@ async function main() {
   }).stdout.trim();
 
   let app = null;
+  const stop = () => {
+    try {
+      if (app) process.kill(-app.pid, "SIGTERM");
+    } catch {
+      // the app's process group is already gone
+    }
+    app = null;
+  };
+  // The app runs in its own process group: a Ctrl-C or SIGTERM to the runner stops it too.
+  for (const sig of ["SIGINT", "SIGTERM"])
+    process.once(sig, () => {
+      stop();
+      process.kill(process.pid, sig);
+    });
   try {
     if (!arg("target")) app = await startApp();
     const lots = await sampleLots(cat, seed, users * LOTS_PER_USER);
+    const signedInAt = Date.now();
     const tokens = await signInAll(emails.slice(0, users));
     for (const p of profiles) {
+      // A token older than its life would turn the run into 401s, a harness fault, not an app result.
+      const ageMs = Date.now() - signedInAt;
+      const runMs = (p.warmup_s + p.hold_s + 10) * 1000;
+      if (ageMs + runMs > TOKEN_LIFE_MS)
+        throw new Error(
+          `tokens_too_old_for_${p.id}: signed in ${Math.round(ageMs / 60000)} min ago, the test stack's tokens last ${TOKEN_LIFE_MS / 60000} min`,
+        );
       const out = await runProfile(p, { target, lots, tokens, seed });
       const file = path.join(runDir, `stress-${p.id}.json`);
       fs.writeFileSync(
@@ -150,13 +178,21 @@ async function main() {
     });
     throw err;
   } finally {
-    if (app) process.kill(-app.pid, "SIGTERM");
+    stop();
   }
 }
 
 /** next build, then next start on loopback with the test stack only; ready when the anonymous entitlement call answers 401. */
 async function startApp() {
   const env = appEnv(process.env);
+  const busy = await fetch(`http://127.0.0.1:${PORT}/`).then(
+    () => true,
+    () => false,
+  );
+  if (busy)
+    throw new Error(
+      `port_${PORT}_in_use: another app answers there; the load would not reach the test-stack build`,
+    );
   const build = spawnSync("npx", ["next", "build"], {
     cwd: ROOT,
     env,
@@ -181,6 +217,8 @@ async function startApp() {
       (r) => r.status,
       () => 0,
     );
+    if (app.exitCode !== null)
+      throw new Error(`next_start_exit_${app.exitCode}`);
     if (s === 401) return app;
     await new Promise((r) => setTimeout(r, 1000));
   }
@@ -252,6 +290,15 @@ async function signInAll(emails) {
   return tokens;
 }
 
+/** The envelope's error code, or undefined for a body that is not JSON (a 403 stays a 403, never a network error). */
+function errorCode(text) {
+  try {
+    return JSON.parse(text)?.error?.code;
+  } catch {
+    return undefined;
+  }
+}
+
 /** A small seeded PRNG (mulberry32), so a run's request mix replays from its seed. */
 function rng(text) {
   let a = 0;
@@ -280,6 +327,10 @@ async function runProfile(p, { target, lots, tokens, seed }) {
     connectionString: process.env.MCTEST_DATABASE_URL,
     application_name: "mctest-load-sampler",
   });
+  let dbErrors = 0;
+  db.on("error", () => {
+    dbErrors += 1;
+  });
   await db.connect();
   await db.query("SET default_transaction_read_only = on");
   const dbMax = {};
@@ -290,8 +341,11 @@ async function runProfile(p, { target, lots, tokens, seed }) {
       .query(
         "SELECT coalesce(nullif(application_name, ''), '(unnamed: the app pool)') AS app, count(*)::int AS n FROM pg_stat_activity WHERE backend_type = 'client backend' AND application_name <> 'mctest-load-sampler' GROUP BY 1",
       )
-      .catch(() => null);
-    if (!r) return;
+      .catch(() => {
+        dbErrors += 1;
+        return null;
+      });
+    if (!r || Date.now() < holdFrom) return; // the hold window only, like the latencies
     dbSamples += 1;
     for (const { app, n: c } of r.rows)
       dbMax[app] = Math.max(dbMax[app] ?? 0, c);
@@ -317,7 +371,7 @@ async function runProfile(p, { target, lots, tokens, seed }) {
       });
       status = res.status;
       const text = await res.text();
-      if (status === 403) code = JSON.parse(text)?.error?.code;
+      if (status === 403) code = errorCode(text);
     } catch {
       status = 0; // a timeout or a dropped connection: the network class
     }
@@ -364,6 +418,7 @@ async function runProfile(p, { target, lots, tokens, seed }) {
     error_rate: errorRate(classes),
     rps: hist.overall.count / p.hold_s,
     db: {
+      sample_errors: dbErrors,
       samples: dbSamples,
       max_by_app: dbMax,
       seconds_app_pool_at_max: secondsAtPoolMax,
