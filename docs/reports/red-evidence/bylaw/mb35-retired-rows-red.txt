@@ -1,0 +1,4 @@
+== MB-35 attempt 4 b5 STOP fix red: the lock run on 57a8995d3 without migration 313 (283 and 286 insert the 22 retired names and nothing deletes them); green with 313 (3 of 3).
+   × MB-35 b5 STOP: retired compute_maxbld_scenarios variables do not linger > replaying the migrations leaves no retired name in logic_variables, and the live batch size stays
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 2 passed (3)
