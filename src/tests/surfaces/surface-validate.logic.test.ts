@@ -78,9 +78,10 @@ describe('FE-13 surface-validate gate: real tree', () => {
     // MF-38 (FE-13 dated note 2026-11-11): amended deliberately again, still an exact toBe: two image states join (14 -> 16 states; owed unchanged, RG-4).
     // MF-44 (FE-13 dated note 2026-11-11): amended deliberately again, still an exact toBe: the 10 web goldens of mobile_parcel_search join (44 -> 54).
     // MF-62 (FE-35; Spec 126 11a.7 dated note 2026-11-11): amended deliberately again, still an exact toBe: two loading states join (16 -> 18 states; owed unchanged). MF-53: + the map page (8 surfaces, 65 goldens, 176 strings).
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 27 in scope: converted 10, pending 4, parked 9, report 4) · S-screen ok (10 surfaces, 77 goldens) · S-sbind ok (10 surfaces, 205 strings)\n'); // MF-19: +2 FORM surfaces (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+    // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 31 in scope: converted 14, pending 4, parked 9, report 4) · S-screen ok (14 surfaces, 82 goldens) · S-sbind ok (14 surfaces, 323 strings)\n'); // MF-19: +2 FORM surfaces (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
-    expect(r.stdout).toContain('S-desc ok (examined 27 in scope:');
+    expect(r.stdout).toContain('S-desc ok (examined 31 in scope:');
   });
 
   it('MF-42: a missing screen-checks.mjs gives three unavailable lines, the REPORT arms still report, exit 1 (no stack)', () => {

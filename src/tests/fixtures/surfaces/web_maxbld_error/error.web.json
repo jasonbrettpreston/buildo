@@ -1,0 +1,173 @@
+{
+  "surface": "web_maxbld_error",
+  "state": "error",
+  "target": "web",
+  "covers": [
+    "error"
+  ],
+  "props": {
+    "component": "Stack",
+    "props": {
+      "key": "page",
+      "testID": "static-page",
+      "component": "main",
+      "className": "min-h-screen w-full bg-zinc-950"
+    },
+    "children": [
+      {
+        "component": "Stack",
+        "props": {
+          "key": "column",
+          "className": "mx-auto w-full max-w-2xl gap-8 px-4 pt-10 pb-16"
+        },
+        "children": [
+          {
+            "component": "Stack",
+            "props": {
+              "key": "error",
+              "testID": "static-error",
+              "component": "section",
+              "className": "gap-4"
+            },
+            "children": [
+              {
+                "component": "Title",
+                "props": {
+                  "key": "error-0",
+                  "testID": "static-title",
+                  "className": "text-3xl font-bold tracking-tight text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "error.title"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "error-1",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "error.body"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "error-2",
+                  "testID": "static-retry",
+                  "size": "lg",
+                  "variant": "filled",
+                  "color": "yellow",
+                  "className": "mt-2 self-start rounded-xl",
+                  "onClick": {
+                    "action": "retry"
+                  }
+                },
+                "children": [
+                  {
+                    "content": "error.retry"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Stack",
+            "props": {
+              "key": "footer",
+              "testID": "static-footer",
+              "component": "footer",
+              "className": "gap-3 border-t border-zinc-800 pt-6"
+            },
+            "children": [
+              {
+                "component": "Group",
+                "props": {
+                  "key": "footer-links",
+                  "className": "gap-2"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-0",
+                      "testID": "static-link-/terms",
+                      "href": "/terms",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.terms"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-1",
+                      "testID": "static-link-/privacy",
+                      "href": "/privacy",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.privacy"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-2",
+                      "testID": "static-link-/help",
+                      "href": "/help",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.help"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "footer-legal-0",
+                  "testID": "static-legal",
+                  "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+                },
+                "children": [
+                  {
+                    "content": "footer.legal"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json": "ed8cf2be13ed4e45",
+      "scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.descriptor.json": "59f3a37797a7a0ef"
+    }
+  }
+}

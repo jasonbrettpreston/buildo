@@ -1,0 +1,24 @@
+MF-46 stage C red evidence: the three new or extended locks of the plain pages run against stubs (plan v1 fold 12: types plus functions returning wrong values, so each test fails on its assertion, not on an import). Run 2026-11-12 (UTC) on wf1/mf46c-1111 over 372594b8b with the stage C tree, then each stubbed file restored and its sha1 re-checked.
+Stubs: (1) src/lib/auth/host-policy.ts without the /help, /terms, /privacy rows; (2) src/components/surfaces/web/StaticBinding.tsx with staticWebTree returning an empty Stack (no checks) and StaticBinding rendering nothing; (3) the four content files with the unfolded legal-v1 draft: the long legal line in the footer (before ruling L-R3), "One plan" with a price placeholder in Terms, an analytics row with a placeholder in Privacy (before plan v3 fold 22).
+Files: src/tests/surfaces/static-page.logic.test.ts (new), src/tests/surfaces/static-web-binding.ui.test.tsx (new, FE-33 render smoke), src/tests/host-policy.logic.test.ts (cases added). T1 (the contract over the committed table), T2 (totality) and T5 (no gate import) read files the stubs do not touch and stay green; their own RED plants are in-memory and are part of the green run.
+Result: 17 of 119 failing (below); with the stubs removed: 119 of 119 passing.
+   × host-policy: the plain pages (MF-46 stage C) > /help is a public row rewritten to /parcel-tool%s 4ms
+   × host-policy: the plain pages (MF-46 stage C) > /terms is a public row rewritten to /parcel-tool%s 0ms
+   × host-policy: the plain pages (MF-46 stage C) > /privacy is a public row rewritten to /parcel-tool%s 0ms
+   × host-policy: the plain pages (MF-46 stage C) > maxbld.ca /help signed out is served (a rewrite to the internal page, not a login redirect) 0ms
+   × host-policy: the plain pages (MF-46 stage C) > maxbld.ca /terms signed out is served (a rewrite to the internal page, not a login redirect) 0ms
+   × host-policy: the plain pages (MF-46 stage C) > maxbld.ca /privacy signed out is served (a rewrite to the internal page, not a login redirect) 0ms
+   × T3 one footer, one legal line > every page carries the same footer section; the texts are equal across the content files and equal the ruled short line 3ms
+   × T3 one footer, one legal line > RED: one changed character of the legal line in one file fails 0ms
+   × T4 every link is a public host-table route with a page behind it > each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D 0ms
+   × T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling > the real content: no finding 1ms
+   × T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling > RED: an unfilled placeholder, an email address, an analytics line and "One plan" are each caught; a dropped plan name is caught 0ms
+   × (a) every STATIC web golden renders > 5 goldens (help, terms, privacy static; the error page error and miss): equal to a fresh tree, rendered, every string present, no raw ref, no console error 5ms
+   × (a) every STATIC web golden renders > a page has one h1 (the title) and its section headings are h2 4ms
+   × (b) the one action > Try again runs the mount retry; without a retry the button is disabled 17ms
+   × (c) RED: planted defects throw > an unknown component and an unknown action throw at render 0ms
+   × (c) RED: planted defects throw > a missing content key and a number as a content value throw at render (FE-05: a number is never shown) 1ms
+   × (c) RED: planted defects throw > a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree 0ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  3 failed (3)
+      Tests  17 failed | 102 passed (119)

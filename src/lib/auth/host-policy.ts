@@ -34,6 +34,9 @@ export const MAXBLD_ROUTES: readonly MaxbldRoute[] = [
   // W4-W6 search and report (MF-44): the web paths are the app's route name.
   { path: '/parcel-tool', match: 'prefix', routeClass: 'authenticated' },
   // MF-46 stage B adds the MaxBLD sign-in, sign-up, reset, set-new-password, terms, Help, Terms and Privacy rows with their pages.
+  { path: '/help', match: 'exact', routeClass: 'public', internal: '/parcel-tool/help' },
+  { path: '/terms', match: 'exact', routeClass: 'public', internal: '/parcel-tool/terms' },
+  { path: '/privacy', match: 'exact', routeClass: 'public', internal: '/parcel-tool/privacy' },
   // The shared OAuth and email-link code exchange (public: it is how a visitor becomes signed in).
   { path: '/auth/callback', match: 'exact', routeClass: 'public' },
   // The routes the MaxBLD pages call.

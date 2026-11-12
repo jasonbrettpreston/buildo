@@ -12,6 +12,7 @@ import path from 'node:path';
 import { formTree, type FormState } from '../../components/surfaces/web/FormBinding';
 import { listTree, type ListState } from '../../components/surfaces/web/ListBinding';
 import { searchWebTree, type WebSituation } from '../../components/surfaces/web/SearchBinding';
+import { staticWebTree, type StaticPage } from '../../components/surfaces/web/StaticBinding';
 import { fingerprintFiles, GOLDEN_ROOT, MANIFEST, resolveSchemaRef } from '../../../scripts/surfaces/screen-checks.mjs';
 import { sha16 } from '../../../scripts/surfaces/report-checks.mjs';
 
@@ -65,10 +66,22 @@ export const situationOf = (root: string, d: Json, state: string): string => {
   return name;
 };
 
+/**
+ * MF-46 stage C (dated 2026-11-11; Spec 126 §11b.5, the first web STATIC consumer): a STATIC golden is the binding's tree of the surface's page for
+ * that state in the static page table (scripts/surfaces/_schema/static-page.json, read under `root`). A surface or state the table lacks throws.
+ */
+export const STATIC_PAGES = 'scripts/surfaces/_schema/static-page.json';
+export const staticPageOf = (root: string, id: string, state: string): StaticPage => {
+  const page = (rj(root, STATIC_PAGES).pages as Json)[id]?.[state];
+  if (!page) throw new Error(`surface-goldens: no static page for ${id} ${state}`);
+  return page as StaticPage;
+};
+
 /** The props tree of one surface in one state on one target. */
 export const treeOf = (root: string, d: Json, state: string, target = 'web'): Json => {
   if (target !== 'web') throw new Error(`surface-goldens: no ${target} binding for ${d.identity.id}`);
   if (d.identity.archetype === 'LIST') return listTree(d as Parameters<typeof listTree>[0], state as ListState);
+  if (d.identity.archetype === 'STATIC') return staticWebTree(staticPageOf(root, d.identity.id, state));
   if (d.identity.archetype === 'SEARCH') return searchWebTree(rj(root, SITUATIONS)[situationOf(root, d, state)] as WebSituation);
   if (d.identity.archetype !== 'FORM') throw new Error(`surface-goldens: no web ${d.identity.archetype} binding for ${d.identity.id}`);
   const r = resolveSchemaRef(root, d.render.form.schema_ref);

@@ -1,0 +1,13 @@
+{
+  "task": "MF-46",
+  "item": "The MaxBLD web front door (maxbld.ca): the host fence, the MaxBLD auth pages, Help & Support, Terms, Privacy, the (maxbld) error page from content, the R-18 lock",
+  "class": "G",
+  "date": "2026-11-11",
+  "head": "372594b8b",
+  "cards": [
+    "Operator 2026-11-11 ~15:45, verbatim: \"1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y\" (record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md, \"Operator round\").",
+    "Operator 2026-11-11, verbatim: \"3 y\" (D-3 ruled) and \"include all the build scenarios\" (plan v3 §13a)."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 (§0-§3, §12 panel folds, §13, §13a, §13b) with plan.v1.md (§3, §12 folds) carried by reference; PLAN panel record ~/Buildo-scratch/mcfrontend/MF-46/panel-v2/record.md (code-reviewer-grounded, regression-guardian and a fresh compliance reviewer: PASS-WITH-FOLDS, every finding folded or sent to DECISIONS.md) and ~/Buildo-scratch/mcfrontend/MF-46/panel/record.md (v1). Prereg MF-46-1 ff5685866 (round 159) committed alone before the code.",
+  "output": "OUTPUT panel owed: runs over the whole MF-46 range before push (caller)"
+}

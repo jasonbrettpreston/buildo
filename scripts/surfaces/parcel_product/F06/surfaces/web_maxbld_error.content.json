@@ -1,0 +1,11 @@
+{
+  "error.body": "This page could not be shown. Try again, or come back later.",
+  "error.retry": "Try again",
+  "error.title": "Something went wrong",
+  "footer.help": "Help & Support",
+  "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+  "footer.privacy": "Privacy Policy",
+  "footer.terms": "Terms of Service",
+  "not_found.body": "There is no MaxBLD page at this address.",
+  "not_found.title": "Page not found"
+}

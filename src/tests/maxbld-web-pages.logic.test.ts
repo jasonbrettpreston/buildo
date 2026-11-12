@@ -149,8 +149,11 @@ describe('L the live switch and the fences', () => {
   ];
   // OUTPUT panel (regression 1): the binding and the pages' data module are scanned too, so a fetch added there cannot charge a report either.
   it('nothing under src/app/(maxbld)/parcel-tool, the web SEARCH binding or maxbld-web.ts meters, caches, fetches or reaches scope D (non-vacuous)', () => {
-    const all = [...files(DIR), path.join(ROOT, 'src/components/surfaces/web/SearchBinding.tsx'), path.join(ROOT, 'src/lib/surfaces/maxbld-web.ts')];
-    expect(all.length).toBe(8);
+    // MF-46 stage C (dated 2026-11-11; plan v3 §12 fold 12): the five plain-page files under parcel-tool/(static) join the walk, and the web STATIC
+    // binding, its data module and the page table (where every link of those pages is written) are scanned too (8 -> 16).
+    const all = [...files(DIR), path.join(ROOT, 'src/components/surfaces/web/SearchBinding.tsx'), path.join(ROOT, 'src/lib/surfaces/maxbld-web.ts'),
+      path.join(ROOT, 'src/components/surfaces/web/StaticBinding.tsx'), path.join(ROOT, 'src/lib/surfaces/maxbld-static.ts'), path.join(ROOT, 'scripts/surfaces/_schema/static-page.json')];
+    expect(all.length).toBe(16);
     for (const f of all) for (const [re, why] of BANNED) expect([path.relative(ROOT, f), why, re.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), why, false]);
   });
   it('RED: each banned form is caught in a planted text', () => {

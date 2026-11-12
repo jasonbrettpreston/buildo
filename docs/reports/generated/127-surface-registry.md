@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **86 surfaces, 71 contracts and 6 jobs** in it today.
+There are **91 surfaces, 71 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 86 |
+| SURFACE | 91 |
 | CONTRACT | 71 |
 | JOB | 6 |
-| **Total** | **163** |
+| **Total** | **168** |
 
 ### 2.1 By archetype
 
@@ -227,25 +227,25 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `SEARCH` | SURFACE | 3 | 2 | 1 | 6 |
 | `SHELL` | SURFACE | 6 | 0 | 0 | 6 |
 | `SLOT` | SURFACE | 1 | 0 | 0 | 1 |
-| `STATIC` | SURFACE | 6 | 0 | 0 | 6 |
+| `STATIC` | SURFACE | 6 | 1 | 4 | 11 |
 | `WEBHOOK` | CONTRACT | 1 | 0 | 0 | 1 |
 | `WIZARD_STEP` | SURFACE | 9 | 0 | 0 | 9 |
 
 ### 2.2 Research progress
 
-**24 of 163 rows fully researched · 139 still open · 440 unresearched fields in total.**
+**29 of 168 rows fully researched · 139 still open · 440 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
 | `mobile-product.json` | 40 | 10 | 30 | 63 |
-| `web-product.json` | 14 | 4 | 10 | 89 |
+| `web-product.json` | 19 | 9 | 10 | 89 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 17 | 9 | 8 | 15 |
 | `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **163** | **24** | **139** | **440** |
+| **total** | **168** | **29** | **139** | **440** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -265,8 +265,8 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | Status | Count | Meaning |
 |---|---:|---|
 | exists | 128 | the code is in the tree today |
-| new | 25 | specified, not built |
-| generated | 10 | will be rendered from descriptors, not hand-written |
+| new | 26 | specified, not built |
+| generated | 14 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 13 | 9 (69%) | 10 | yes |
+| **A** | `parcel_product` | 17 | 13 (76%) | 10 | yes |
 | **B** | `parcel_admin` | 26 | 9 (35%) | 20 | yes |
-| **C** | `platform_shared` | 78 | 6 (8%) | 43 | yes |
+| **C** | `platform_shared` | 79 | 7 (9%) | 43 | yes |
 | **D** | `estate_other` | 46 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
-| | **total** | **163** | **24** | | |
+| | **total** | **168** | **29** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -320,7 +320,7 @@ The path from a customer tapping a screen to the pipeline step that built what t
 
 One line per entry in scopes A, B and C, organised **scope → type → build order**. `build_order` is derived, not chosen: scope rank × 1000 + feature rank × 10 + kind rank, where the kind rank puts **tables before contracts before surfaces before admin** — it answers *"what must exist before this can be built"*. Follow an id to its detail in §3.
 
-**§A `parcel_product` (13)**
+**§A `parcel_product` (17)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -333,6 +333,10 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-001`](#s-001) | surface | `mobile_parcel_detail` **(pilot)** | `REPORT` | `F02` parcel-report | 1023 | 100% | [detail](#s-001) |
 | [`S-003`](#s-003) | surface | `overlay_sponsor_slot` | `SLOT` | `F04` sponsor-placements | 1043 | 100% | [detail](#s-003) |
 | [`S-005`](#s-005) | surface | `web_landing` | `STATIC` | `F06` web-front-door | 1063 | 91% | [detail](#s-005) |
+| [`S-088`](#s-088) | surface | `web_help` | `STATIC` | `F06` web-front-door | 1064 | 100% | [detail](#s-088) |
+| [`S-091`](#s-091) | surface | `web_maxbld_error` | `STATIC` | `F06` web-front-door | 1064 | 100% | [detail](#s-091) |
+| [`S-090`](#s-090) | surface | `web_privacy` | `STATIC` | `F06` web-front-door | 1064 | 100% | [detail](#s-090) |
+| [`S-089`](#s-089) | surface | `web_terms` | `STATIC` | `F06` web-front-door | 1064 | 100% | [detail](#s-089) |
 | [`C-062`](#c-062) | contract | `contract_parcels_tracked` | `MUTATION` | `F17` tracked-lots | 1172 | 100% | [detail](#c-062) |
 | [`S-072`](#s-072) | surface | `mobile_tracked_lots` | `LIST` | `F17` tracked-lots | 1173 | 100% | [detail](#s-072) |
 | [`S-086`](#s-086) | surface | `report_lot_size_entry` | `FORM` | `F02` parcel-report | 2047 | 100% | [detail](#s-086) |
@@ -369,7 +373,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-014`](#s-014) | surface | `admin_role_matrix` | `REPORT` | `F09` surface-registry-drift | 2093 | 100% | [detail](#s-014) |
 | [`S-016`](#s-016) | surface | `admin_surface_registry` | `LIST` | `F09` surface-registry-drift | 2093 | 97% | [detail](#s-016) |
 
-**§C `platform_shared` (78)**
+**§C `platform_shared` (79)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -416,6 +420,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-078`](#s-078) | surface | `binding_web_list` | `LIST` | `F14` navigation-shells | 3144 | 100% | [detail](#s-078) |
 | [`S-085`](#s-085) | surface | `binding_mobile_report` | `REPORT` | `F14` navigation-shells | 3145 | 100% | [detail](#s-085) |
 | [`S-082`](#s-082) | surface | `binding_web_search` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-082) |
+| [`S-087`](#s-087) | surface | `binding_web_static` | `STATIC` | `F14` navigation-shells | 3145 | 100% | [detail](#s-087) |
 | [`S-079`](#s-079) | surface | `shared_mobile_surface_binding` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-079) |
 | [`S-083`](#s-083) | surface | `binding_mobile_list` | `LIST` | `F14` navigation-shells | 3146 | 100% | [detail](#s-083) |
 | [`C-027`](#c-027) | contract | `contract_products` | `QUERY` | `F15` user-profile-settings | 3152 | 88% | [detail](#c-027) |
@@ -518,7 +523,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
-| **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) | 0 | 0 | 1 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) · [`S-088`](#s-088) · [`S-089`](#s-089) · [`S-090`](#s-090) · [`S-091`](#s-091) | 0 | 0 | 5 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F07** app-outputs-materialisation | `parcel_admin` | [`S-010`](#s-010) · [`S-015`](#s-015) | 0 | 4 | 2 descriptor(s), and would orphan 1 table(s): `app_outputs` |
 | **F08** admin-parcel-operations | `parcel_admin` | [`S-084`](#s-084) · [`C-071`](#c-071) · [`C-002`](#c-002) · [`S-012`](#s-012) · [`S-074`](#s-074) · [`S-075`](#s-075) · [`S-076`](#s-076) · [`C-063`](#c-063) · [`C-064`](#c-064) · [`C-065`](#c-065) | 5 | 7 | 10 descriptor(s), 5 contract(s), and would orphan 1 table(s): `media_assets` |
 | **F09** surface-registry-drift | `parcel_admin` | [`S-007`](#s-007) · [`S-008`](#s-008) · [`S-011`](#s-011) · [`S-014`](#s-014) · [`S-016`](#s-016) | 0 | 5 | 5 descriptor(s), and would orphan 4 table(s): `contract_descriptors` · `surface_descriptors` · `pg_policies` · `archetype_registry` |
@@ -526,7 +531,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F11** onboarding | `platform_shared` | [`C-026`](#c-026) · [`S-028`](#s-028) · [`S-029`](#s-029) · [`S-030`](#s-030) · [`S-031`](#s-031) · [`S-032`](#s-032) · [`S-033`](#s-033) · [`S-034`](#s-034) · [`S-035`](#s-035) · [`S-048`](#s-048) | 1 | 2 | 10 descriptor(s), 1 contract(s), and would orphan 1 table(s): `trade_suppliers` |
 | **F12** subscription-billing | `platform_shared` | [`C-020`](#c-020) · [`C-021`](#c-021) · [`C-022`](#c-022) · [`C-030`](#c-030) · [`C-031`](#c-031) · [`C-032`](#c-032) · [`C-038`](#c-038) · [`S-043`](#s-043) · [`S-044`](#s-044) · [`S-051`](#s-051) · [`S-052`](#s-052) · [`S-053`](#s-053) | 7 | 8 | 12 descriptor(s), 7 contract(s), and would orphan 1 table(s): `subscribe_nonces` |
 | **F13** notifications | `platform_shared` | [`C-006`](#c-006) · [`C-007`](#c-007) · [`C-023`](#c-023) · [`C-024`](#c-024) · [`C-025`](#c-025) · [`S-041`](#s-041) · [`S-022`](#s-022) | 5 | 6 | 7 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
-| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) · [`S-085`](#s-085) · [`S-082`](#s-082) · [`S-083`](#s-083) | 0 | 3 | 10 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) · [`S-085`](#s-085) · [`S-082`](#s-082) · [`S-087`](#s-087) · [`S-083`](#s-083) | 0 | 3 | 11 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F15** user-profile-settings | `platform_shared` | [`C-027`](#c-027) · [`C-034`](#c-034) · [`C-035`](#c-035) · [`C-036`](#c-036) · [`C-037`](#c-037) · [`S-036`](#s-036) | 5 | 3 | 6 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
 | **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 11 table(s): `trade_configurations` · `trade_sqft_rates` · `data_quality_snapshots` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
 | **F17** tracked-lots | `parcel_product` | [`C-062`](#c-062) · [`S-072`](#s-072) | 1 | 3 | 2 descriptor(s), 1 contract(s), and would orphan 1 table(s): `user_tracked_lots` |
@@ -589,7 +594,7 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 
 The estate shares one repository; it does not share one programme. Sections A–C are what **Spec 126 governs**. Section D is the other product — inventoried so a shared contract or an orphan is visible, and deliberately rendered in one line each rather than in full (Spec 126 §2; the fence is Spec 128 R-03).
 
-### §A `parcel_product` — the MaxBLD parcel cost tool (13)
+### §A `parcel_product` — the MaxBLD parcel cost tool (17)
 
 **This is the programme.** The surfaces, contracts and jobs a customer of the parcel tool touches, plus the five business requirements that hang off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; batched first by Spec 127 §4.4.
 
@@ -1285,6 +1290,294 @@ _No table is reached by this entry — every value it shows arrives through a co
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`UNRESEARCHED`](../../../UNRESEARCHED) · files: `src/app/page.tsx`
 
 > ⚠️ No governing feature spec found: the file appears in no row of docs/specs/00-architecture/00_system_map.md and carries no SPEC LINK header. Spec 126 (02-web-admin/126_maxbld_surface_standard.md) only references 'marketing/landing' generically at line 97 and line 667 as a future conversion target, which is not a governing spec. Copy still says 'Buildo', not the Spec 117 'MaxBLD' rename that src/app/layout.tsx and the login page already use. Single unconditional render - no loading/empty/error branches exist, hence states=['static'] rather than an empty array. MEASURED 2026-09-15: no SPEC LINK header on src/app/page.tsx and no System Map row names it, so identity.spec is UNRESEARCHED rather than a guess at the nearest dashboard spec. a11y.labels is `partial`: the two header anchors and the hero button carry visible text but the page has no landmark labelling and the SVG-free chips are decorative spans. a11y.touch_target_min_px stays UNRESEARCHED — the vocabulary admits only UNRESEARCHED or an integer >= 44, and the measured "Get Started" target is 36px, which the menu cannot express (Spec 128 §4 escalation).
+
+<a id="s-088"></a>
+
+###### `S-088` `web_help`
+
+**Programme.** `S-088` · scope `parcel_product` · feature `F06` · build order 1064 · batch `B2` · review `unreviewed` — The MaxBLD web front door (Spec 126 §11b.7 W9; business requirement 5): a plain page of maxbld.ca.
+
+**What it is.** The MaxBLD Help & Support page on maxbld.ca: what support covers. The mail link to the one admin-set support inbox lands with that setting (Spec 126 §11b.7 dated note 2026-11-11 item 3); until then no address is shown.
+
+**What it reads and writes.** This surface reaches **no API contract at all**: every word is a content key of its own content file, laid out by its page in the static page table.
+
+**Under Spec 126.** **CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component.
+
+**kind** SURFACE · **archetype** `STATIC` · **platforms** `web` · **status** generated · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **anon** (Public on maxbld.ca: the public row /help → /parcel-tool/help; the page gates nothing (it never calls requireParcelToolPage).)
+
+**Calls.** —
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `static`
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` · `scripts/surfaces/_schema/static-page.json` |
+| `contracts` | `none — the mount imports only the binding and src/lib/surfaces/maxbld-static.ts` |
+| `tables` | `none` |
+| `gate` | `src/lib/auth/host-policy.ts — the public row /help → /parcel-tool/help` |
+| `states` | `scripts/surfaces/_schema/static-page.json — pages.web_help` |
+| `emits` | `none` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Help & Support` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `none` | It reads no contract: the page and its strings are committed files. — `scripts/surfaces/_schema/static-page.json` |
+| 3 | `outputs` | `none` | It writes nothing. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
+| 4 | `state` | `none` | No store and no local state. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 5 | `staleness` | `static` | Its content changes only when its content file is redeployed. — `scripts/surfaces/_schema/static-page.json` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | No fetch: a render error is caught by the plain pages' error boundary (web_maxbld_error). — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 13 | `emits` | `none` | It calls no captureEvent and writes no ledger row. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
+| 14 | `offers` | `none` | It renders no sponsored placement. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
+| 15 | `metering` | `none` | No usage_events write and no quota. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
+| 16 | `config` | `none` | No tunable. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
+| 17 | `sharing` | `none` | It renders no contract. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx`
+
+> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y").
+
+<a id="s-091"></a>
+
+###### `S-091` `web_maxbld_error`
+
+**Programme.** `S-091` · scope `parcel_product` · feature `F06` · build order 1064 · batch `B2` · review `unreviewed` — The MaxBLD web front door (Spec 126 §11b.7 W9; business requirement 5): a plain page of maxbld.ca.
+
+**What it is.** The error and not-found pages of the MaxBLD plain pages, from content: the error boundary (Try again resets it) and the not-found boundary of src/app/(maxbld)/parcel-tool/(static)/.
+
+**What it reads and writes.** This surface reaches **no API contract at all**: every word is a content key of its own content file, laid out by its page in the static page table.
+
+**Under Spec 126.** **CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component.
+
+**kind** SURFACE · **archetype** `STATIC` · **platforms** `web` · **status** generated · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **anon** (Public on maxbld.ca: the public rows /help, /terms, /privacy (their error and not-found boundaries); the page gates nothing (it never calls requireParcelToolPage).)
+
+**Calls.** —
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `error` · `miss`
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/(maxbld)/parcel-tool/(static)/error.tsx` · `scripts/surfaces/_schema/static-page.json` |
+| `contracts` | `none — the mount imports only the binding and src/lib/surfaces/maxbld-static.ts` |
+| `tables` | `none` |
+| `gate` | `src/lib/auth/host-policy.ts — the public rows /help, /terms, /privacy (their error and not-found boundaries)` |
+| `states` | `scripts/surfaces/_schema/static-page.json — pages.web_maxbld_error` |
+| `emits` | `none` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — the (maxbld) error page from content` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `none` | It reads no contract: the page and its strings are committed files. — `scripts/surfaces/_schema/static-page.json` |
+| 3 | `outputs` | `none` | It writes nothing. — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 4 | `state` | `none` | No store and no local state. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 5 | `staleness` | `static` | Its content changes only when its content file is redeployed. — `scripts/surfaces/_schema/static-page.json` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | No fetch: a render error is caught by the plain pages' error boundary (web_maxbld_error). — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 13 | `emits` | `none` | It calls no captureEvent and writes no ledger row. — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 14 | `offers` | `none` | It renders no sponsored placement. — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 15 | `metering` | `none` | No usage_events write and no quota. — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 16 | `config` | `none` | No tunable. — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 17 | `sharing` | `none` | It renders no contract. — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/error.tsx`
+
+> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y").
+
+<a id="s-090"></a>
+
+###### `S-090` `web_privacy`
+
+**Programme.** `S-090` · scope `parcel_product` · feature `F06` · build order 1064 · batch `B2` · review `unreviewed` — The MaxBLD web front door (Spec 126 §11b.7 W9; business requirement 5): a plain page of maxbld.ca.
+
+**What it is.** The MaxBLD Privacy Policy on maxbld.ca, from content (drafted by the orchestrator and validated by an agent; lawyer check before launch, MF-72).
+
+**What it reads and writes.** This surface reaches **no API contract at all**: every word is a content key of its own content file, laid out by its page in the static page table.
+
+**Under Spec 126.** **CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component.
+
+**kind** SURFACE · **archetype** `STATIC` · **platforms** `web` · **status** generated · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **anon** (Public on maxbld.ca: the public row /privacy → /parcel-tool/privacy; the page gates nothing (it never calls requireParcelToolPage).)
+
+**Calls.** —
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `static`
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx` · `scripts/surfaces/_schema/static-page.json` |
+| `contracts` | `none — the mount imports only the binding and src/lib/surfaces/maxbld-static.ts` |
+| `tables` | `none` |
+| `gate` | `src/lib/auth/host-policy.ts — the public row /privacy → /parcel-tool/privacy` |
+| `states` | `scripts/surfaces/_schema/static-page.json — pages.web_privacy` |
+| `emits` | `none` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Privacy` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `none` | It reads no contract: the page and its strings are committed files. — `scripts/surfaces/_schema/static-page.json` |
+| 3 | `outputs` | `none` | It writes nothing. — `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx` |
+| 4 | `state` | `none` | No store and no local state. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 5 | `staleness` | `static` | Its content changes only when its content file is redeployed. — `scripts/surfaces/_schema/static-page.json` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | No fetch: a render error is caught by the plain pages' error boundary (web_maxbld_error). — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 13 | `emits` | `none` | It calls no captureEvent and writes no ledger row. — `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx` |
+| 14 | `offers` | `none` | It renders no sponsored placement. — `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx` |
+| 15 | `metering` | `none` | No usage_events write and no quota. — `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx` |
+| 16 | `config` | `none` | No tunable. — `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx` |
+| 17 | `sharing` | `none` | It renders no contract. — `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/privacy/page.tsx`
+
+> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y").
+
+<a id="s-089"></a>
+
+###### `S-089` `web_terms`
+
+**Programme.** `S-089` · scope `parcel_product` · feature `F06` · build order 1064 · batch `B2` · review `unreviewed` — The MaxBLD web front door (Spec 126 §11b.7 W9; business requirement 5): a plain page of maxbld.ca.
+
+**What it is.** The MaxBLD Terms of Service on maxbld.ca, from content (drafted by the orchestrator and validated by an agent; lawyer check before launch, MF-72).
+
+**What it reads and writes.** This surface reaches **no API contract at all**: every word is a content key of its own content file, laid out by its page in the static page table.
+
+**Under Spec 126.** **CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component.
+
+**kind** SURFACE · **archetype** `STATIC` · **platforms** `web` · **status** generated · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **anon** (Public on maxbld.ca: the public row /terms → /parcel-tool/terms; the page gates nothing (it never calls requireParcelToolPage).)
+
+**Calls.** —
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `static`
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx` · `scripts/surfaces/_schema/static-page.json` |
+| `contracts` | `none — the mount imports only the binding and src/lib/surfaces/maxbld-static.ts` |
+| `tables` | `none` |
+| `gate` | `src/lib/auth/host-policy.ts — the public row /terms → /parcel-tool/terms` |
+| `states` | `scripts/surfaces/_schema/static-page.json — pages.web_terms` |
+| `emits` | `none` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Terms` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `none` | It reads no contract: the page and its strings are committed files. — `scripts/surfaces/_schema/static-page.json` |
+| 3 | `outputs` | `none` | It writes nothing. — `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx` |
+| 4 | `state` | `none` | No store and no local state. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 5 | `staleness` | `static` | Its content changes only when its content file is redeployed. — `scripts/surfaces/_schema/static-page.json` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | No fetch: a render error is caught by the plain pages' error boundary (web_maxbld_error). — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 13 | `emits` | `none` | It calls no captureEvent and writes no ledger row. — `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx` |
+| 14 | `offers` | `none` | It renders no sponsored placement. — `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx` |
+| 15 | `metering` | `none` | No usage_events write and no quota. — `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx` |
+| 16 | `config` | `none` | No tunable. — `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx` |
+| 17 | `sharing` | `none` | It renders no contract. — `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx`
+
+> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y").
 
 <a id="c-062"></a>
 
@@ -3458,7 +3751,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ Report §1.1 row 17 and §5 — the RECOMMENDED PILOT surface, to land at /admin/surfaces. Its other inputs are the SURFACE + CONTRACT + JOB descriptor files, which are not DB tables and do not exist in the tree yet (VERIFIED: no surfaces/, contracts/ or jobs/ directory at the repo root). Measured defect it makes visible: the census headline finding, /api/leads/view — a live metered route with zero production callers — would have been a red row on day one instead of months of silence. Per AQ9 the usage column renders 'not_yet_metered' until usage_events exists, never a zero. DESIGNED, NOT MEASURED — every category on this row is a design choice grounded in a spec §, not an observation of code. THREE DECISIONS THIS ROW COULD NOT TAKE: (1) `status` — the task asked for `status: "designed"`, which is not in the closed set {exists, new, generated} (surface.schema.json properties.status; generate-surface-registry.mjs:182 refuses anything else). Per the research brief §4 rule 1 a value the menu lacks is an escalation, never a per-row invention, so the row keeps `new` ("Specified, not built. Nothing is measured.") and the gap is filed here. (2) `inputs.contract_ref` is EMPTY although the surface calls a designed contract: generate-surface-registry.mjs:195 refuses a contract_ref entry that is neither a census contract path nor a census id, so the designed `GET /api/admin/surfaces` is recorded in evidence.contracts instead. A designed surface therefore renders as a zero-out-degree node in the very fan-out graph this estate is building. (3) `identity.route` is set only because Spec 126 §2.2.2 fixes /admin/surfaces by name.
 
-### §C `platform_shared` — shared by both products, owned by neither (78)
+### §C `platform_shared` — shared by both products, owned by neither (79)
 
 Auth, the user profile, the subscription and Stripe hand-off, entitlements, notifications, and the navigation shells. Changing one of these changes **both** products, which is exactly why it is its own scope rather than being filed under whichever product noticed it first.
 
@@ -6610,6 +6903,76 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ MF-44 (operator "01-a 0-2 b as long as they are complaint"; Spec 126 §11b.5). Archetype SEARCH: the entry carries the archetype of the module it owns (MF-35 OUTPUT fold MEDIUM 3); the SEARCH-gated fields describe the consuming surface, not this binding, and are answered none with a why.
 
+<a id="s-087"></a>
+
+###### `S-087` `binding_web_static`
+
+**Programme.** `S-087` · scope `platform_shared` · feature `F14` · build order 3145 · batch `B2` · review `unreviewed` — Shared rendering infrastructure: the binding every converted web STATIC surface renders through.
+
+**What it is.** The one web STATIC binding: StaticBinding.tsx maps one page of the static page table (closed section kinds prose and footer, scripts/surfaces/_schema/static-page.schema.json) to a props tree (content refs only) and renders it with the mapped Mantine parts (bindings.json mapping.web.STATIC). It holds no display text of its own.
+
+**What it reads and writes.** It reads nothing itself: the mount file passes the page, the content strings and the one action (an error boundary's reset).
+
+**Under Spec 126.** **PROMOTED BINDING ENTRY** (P42-D9 a; Spec 126 §11b.5, the first web consumer of STATIC; MF-46 plan v3 §3.2 and §12 fold 13): a platform_shared census entry that owns the binding module, so R-13 totality holds while the converted surfaces own no component.
+
+**kind** SURFACE · **archetype** `STATIC` · **platforms** `web` · **status** new · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **anon** (Its consumers are the public MaxBLD plain pages (Help & Support, Terms, Privacy) and their error and not-found boundaries; each consumer declares its own guard.) · role **shared**
+
+**Calls.** —
+
+**Components owned.** `src/components/surfaces/web/StaticBinding.tsx`
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-46/plan.md` |
+| `contracts` | — |
+| `tables` | — |
+| `gate` | — |
+| `states` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states` |
+| `emits` | — |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.5 — per-archetype infrastructure on first use (MF-46, the first web STATIC consumer)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `props` | The page, the content and the action arrive as props from the mount file. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 3 | `outputs` | `none` | A binding writes nothing. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 4 | `state` | `none` | No store and no local state. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 5 | `staleness` | `none` | It renders what it is given. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `none` | Errors belong to the consuming surface; the binding throws on an unknown kind, role, component, content key or action so a gap is loud. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 13 | `emits` | `none` | Rendering emits nothing. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 14 | `offers` | `none` | It renders no sponsored placement. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 15 | `metering` | `none` | Rendering is not a metered product action. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 16 | `config` | `none` | No tunable. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 17 | `sharing` | `shared` | Every converted web STATIC surface (the MaxBLD plain pages first; the landing, MF-76, later). — `scripts/surfaces/_schema/bindings.json — modules` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/components/surfaces/web/StaticBinding.tsx`
+
+> ⚠️ MF-46 stage C (operator D-2 (a), 2026-11-11 "1 y 2 y ..."; Spec 126 §11b.5). Archetype STATIC: the entry carries the archetype of the module it owns.
+
 <a id="s-079"></a>
 
 ###### `S-079` `shared_mobile_surface_binding`
@@ -9392,7 +9755,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 14 of 72 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 14 of 73 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -9432,4 +9795,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 163 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 168 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

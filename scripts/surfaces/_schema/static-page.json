@@ -1,0 +1,596 @@
+{
+  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts.",
+  "pages": {
+    "web_help": {
+      "static": {
+        "sections": [
+          {
+            "kind": "prose",
+            "id": "help",
+            "parts": [
+              {
+                "role": "title",
+                "content": "help.title"
+              },
+              {
+                "role": "paragraph",
+                "content": "help.intro"
+              }
+            ]
+          },
+          {
+            "kind": "footer",
+            "id": "footer",
+            "parts": [
+              {
+                "role": "link",
+                "content": "footer.terms",
+                "href": "/terms"
+              },
+              {
+                "role": "link",
+                "content": "footer.privacy",
+                "href": "/privacy"
+              },
+              {
+                "role": "link",
+                "content": "footer.help",
+                "href": "/help"
+              },
+              {
+                "role": "legal",
+                "content": "footer.legal"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "web_terms": {
+      "static": {
+        "sections": [
+          {
+            "kind": "prose",
+            "id": "terms",
+            "parts": [
+              {
+                "role": "title",
+                "content": "terms.title"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.intro"
+              },
+              {
+                "role": "heading",
+                "content": "terms.s1.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s1.what"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.what.1"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.what.2"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.what.3"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.what.4"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s1.basis"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s1.not"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.not.1"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.not.2"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.not.3"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.not.4"
+              },
+              {
+                "role": "item",
+                "content": "terms.s1.not.5"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s1.lot_size"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s1.changes"
+              },
+              {
+                "role": "heading",
+                "content": "terms.s2.h"
+              },
+              {
+                "role": "item",
+                "content": "terms.s2.1"
+              },
+              {
+                "role": "item",
+                "content": "terms.s2.2"
+              },
+              {
+                "role": "item",
+                "content": "terms.s2.3"
+              },
+              {
+                "role": "item",
+                "content": "terms.s2.4"
+              },
+              {
+                "role": "item",
+                "content": "terms.s2.5"
+              },
+              {
+                "role": "heading",
+                "content": "terms.s3.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s3.plans"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s3.trial"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.trial.1"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.trial.2"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.trial.3"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.trial.4"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s3.reports"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.reports.1"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.reports.2"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.reports.3"
+              },
+              {
+                "role": "item",
+                "content": "terms.s3.reports.4"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s3.payments"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s3.manage"
+              },
+              {
+                "role": "heading",
+                "content": "terms.s4.h"
+              },
+              {
+                "role": "item",
+                "content": "terms.s4.1"
+              },
+              {
+                "role": "item",
+                "content": "terms.s4.2"
+              },
+              {
+                "role": "item",
+                "content": "terms.s4.3"
+              },
+              {
+                "role": "item",
+                "content": "terms.s4.4"
+              },
+              {
+                "role": "heading",
+                "content": "terms.s5.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s5.intro"
+              },
+              {
+                "role": "item",
+                "content": "terms.s5.1"
+              },
+              {
+                "role": "item",
+                "content": "terms.s5.2"
+              },
+              {
+                "role": "item",
+                "content": "terms.s5.3"
+              },
+              {
+                "role": "item",
+                "content": "terms.s5.4"
+              },
+              {
+                "role": "item",
+                "content": "terms.s5.5"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s5.suspend"
+              },
+              {
+                "role": "heading",
+                "content": "terms.s6.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "terms.s6.1"
+              }
+            ]
+          },
+          {
+            "kind": "footer",
+            "id": "footer",
+            "parts": [
+              {
+                "role": "link",
+                "content": "footer.terms",
+                "href": "/terms"
+              },
+              {
+                "role": "link",
+                "content": "footer.privacy",
+                "href": "/privacy"
+              },
+              {
+                "role": "link",
+                "content": "footer.help",
+                "href": "/help"
+              },
+              {
+                "role": "legal",
+                "content": "footer.legal"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "web_privacy": {
+      "static": {
+        "sections": [
+          {
+            "kind": "prose",
+            "id": "privacy",
+            "parts": [
+              {
+                "role": "title",
+                "content": "privacy.title"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.intro"
+              },
+              {
+                "role": "heading",
+                "content": "privacy.s1.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.account"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s1.account.1"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s1.account.2"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s1.account.3"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.reports"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.tracked"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.lot_size"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.alerts"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.why"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.who"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s1.who.1"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s1.who.2"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s1.who.3"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s1.who.4"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.who.care"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.keep"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s1.security"
+              },
+              {
+                "role": "heading",
+                "content": "privacy.s2.h"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s2.1"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s2.2"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s2.3"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s2.4"
+              },
+              {
+                "role": "heading",
+                "content": "privacy.s3.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s3.intro"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s3.1"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s3.2"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s3.3"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s3.4"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s3.5"
+              },
+              {
+                "role": "heading",
+                "content": "privacy.s4.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s4.intro"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s4.1"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s4.2"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s4.3"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s4.4"
+              },
+              {
+                "role": "item",
+                "content": "privacy.s4.5"
+              },
+              {
+                "role": "heading",
+                "content": "privacy.s5.h"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s5.1"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s5.2"
+              },
+              {
+                "role": "paragraph",
+                "content": "privacy.s5.changes"
+              }
+            ]
+          },
+          {
+            "kind": "footer",
+            "id": "footer",
+            "parts": [
+              {
+                "role": "link",
+                "content": "footer.terms",
+                "href": "/terms"
+              },
+              {
+                "role": "link",
+                "content": "footer.privacy",
+                "href": "/privacy"
+              },
+              {
+                "role": "link",
+                "content": "footer.help",
+                "href": "/help"
+              },
+              {
+                "role": "legal",
+                "content": "footer.legal"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "web_maxbld_error": {
+      "error": {
+        "sections": [
+          {
+            "kind": "prose",
+            "id": "error",
+            "parts": [
+              {
+                "role": "title",
+                "content": "error.title"
+              },
+              {
+                "role": "paragraph",
+                "content": "error.body"
+              },
+              {
+                "role": "retry",
+                "content": "error.retry"
+              }
+            ]
+          },
+          {
+            "kind": "footer",
+            "id": "footer",
+            "parts": [
+              {
+                "role": "link",
+                "content": "footer.terms",
+                "href": "/terms"
+              },
+              {
+                "role": "link",
+                "content": "footer.privacy",
+                "href": "/privacy"
+              },
+              {
+                "role": "link",
+                "content": "footer.help",
+                "href": "/help"
+              },
+              {
+                "role": "legal",
+                "content": "footer.legal"
+              }
+            ]
+          }
+        ]
+      },
+      "miss": {
+        "sections": [
+          {
+            "kind": "prose",
+            "id": "not_found",
+            "parts": [
+              {
+                "role": "title",
+                "content": "not_found.title"
+              },
+              {
+                "role": "paragraph",
+                "content": "not_found.body"
+              }
+            ]
+          },
+          {
+            "kind": "footer",
+            "id": "footer",
+            "parts": [
+              {
+                "role": "link",
+                "content": "footer.terms",
+                "href": "/terms"
+              },
+              {
+                "role": "link",
+                "content": "footer.privacy",
+                "href": "/privacy"
+              },
+              {
+                "role": "link",
+                "content": "footer.help",
+                "href": "/help"
+              },
+              {
+                "role": "legal",
+                "content": "footer.legal"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

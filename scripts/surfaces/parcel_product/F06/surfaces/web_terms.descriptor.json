@@ -1,0 +1,228 @@
+{
+  "kind": "SURFACE",
+  "status": "generated",
+  "docs": {
+    "purpose": "The MaxBLD Terms of Service on maxbld.ca, from content (drafted by the orchestrator and validated by an agent; lawyer check before launch, MF-72).",
+    "data_story": "This surface reaches **no API contract at all**: every word is a content key of its own content file, laid out by its page in the static page table.",
+    "under_126": "**CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component."
+  },
+  "evidence": {
+    "files": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx",
+      "scripts/surfaces/_schema/static-page.json"
+    ],
+    "contracts": [
+      "none — the mount imports only the binding and src/lib/surfaces/maxbld-static.ts"
+    ],
+    "tables": [
+      "none"
+    ],
+    "gate": [
+      "src/lib/auth/host-policy.ts — the public row /terms → /parcel-tool/terms"
+    ],
+    "states": [
+      "scripts/surfaces/_schema/static-page.json — pages.web_terms"
+    ],
+    "emits": [
+      "none"
+    ]
+  },
+  "identity": {
+    "id": "web_terms",
+    "route": "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx",
+    "archetype": "STATIC",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Terms"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "Nothing consumes it: a leaf page from content.",
+      "evidence": [
+        "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+      ]
+    },
+    "ref": "S-089"
+  },
+  "inputs": {
+    "answer": "none",
+    "why": "It reads no contract: the page and its strings are committed files.",
+    "evidence": [
+      "scripts/surfaces/_schema/static-page.json"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": [],
+    "tables": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing.",
+    "evidence": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store and no local state.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "static",
+    "why": "Its content changes only when its content file is redeployed.",
+    "evidence": [
+      "scripts/surfaces/_schema/static-page.json"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "Public on maxbld.ca: the public row /terms → /parcel-tool/terms; the page gates nothing (it never calls requireParcelToolPage).",
+      "evidence": [
+        "src/lib/auth/host-policy.ts — the public row /terms → /parcel-tool/terms",
+        "src/tests/host-policy.logic.test.ts — the plain pages are served signed out"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "web_terms_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 128 R-18: guards.session anon equals the host table's class for the page (the public row /terms → /parcel-tool/terms, public); the page calls no contract. Checked by src/tests/surfaces/auth-class-parity.infra.test.ts."
+    },
+    {
+      "id": "web_terms_footer_parity",
+      "kind": "render_target_parity",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "why": "The footer (Terms, Privacy, Help & Support and the short legal line, ruling L-R3) is the same on every MaxBLD plain page and the legal line equals the search page's search.legal; pinned by src/tests/surfaces/static-page.logic.test.ts."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "static"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "No fetch: a render error is caught by the plain pages' error boundary (web_maxbld_error).",
+    "evidence": [
+      "src/app/(maxbld)/parcel-tool/(static)/error.tsx"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "It calls no captureEvent and writes no ledger row.",
+    "evidence": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement.",
+    "evidence": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "No usage_events write and no quota.",
+    "evidence": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable.",
+    "evidence": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "none",
+    "why": "It renders no contract.",
+    "evidence": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+    ],
+    "surfaces": []
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [],
+  "interpretation": "none",
+  "notes": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\").",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/app/(maxbld)/parcel-tool/(static)/terms/page.tsx"
+    ],
+    "measured_states": [
+      "static"
+    ]
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "The MaxBLD web front door (Spec 126 §11b.7 W9; business requirement 5): a plain page of maxbld.ca.",
+    "feature": "F06",
+    "build_order": 1064,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

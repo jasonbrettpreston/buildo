@@ -1,0 +1,59 @@
+MF-46 stage C: the R-18 lock src/tests/surfaces/auth-class-parity.infra.test.ts (plan v1 §3.3 and fold 9; DECISIONS-v1 D-4 (a)) on the stage C tree over 372594b8b, run 2026-11-12 (UTC). NOT committed as a test: the real-tree case cannot be green without changing descriptors, so per the lane brief the exact mismatches are reported instead of weakening the check. The other three cases (the plain pages on the host table; RED on a fixture copy of the live /builders + /api/builders pair moved into scope A; RED on web_help declared authenticated) pass.
+Rules: P-1 a scope A-C descriptor declares a checks[] entry of kind auth_class_parity at severity FAIL; P-2 guards.session is a class (anon=public, authenticated and entitled=authenticated, admin=admin); P-3 a page or route has the class its request path gets (a MaxBLD internal page: its host-table row; else classifyRoute); P-4 every referenced contract resolves and has the same class (R-18: "must match").
+Counts: examined 117 scope A-C descriptors (scope D not scheduled: 46). 48 findings: 42 P-1 (SURFACE descriptors with no auth_class_parity entry; every scope A-C CONTRACT declares it), 1 P-2, 5 P-4, 0 P-3. The five stage C descriptors (binding_web_static, web_help, web_terms, web_privacy, web_maxbld_error) declare the check and pass.
+Note on P-4: four of the five are a public surface calling an authenticated contract (stricter data than page; only strict equality fails them); admin_data_quality (an admin page reading the public /api/quality) is the /builders class of mismatch (data weaker than the page).
+Findings (exact):
+R-18 P-1 SURFACE admin_export_audit: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_advertiser_entry: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_offers: declares no auth_class_parity check
+R-18 P-2 SURFACE advertiser_self_metrics: guards.session is "UNRESEARCHED", not a class
+R-18 P-1 SURFACE admin_ledger_visualiser: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_run_ledger: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_media: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_media_delete: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_media_upload: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_parcel_cost: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_orphan_panel: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_parcel_account: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_parcel_disambiguation_map: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_parcel_search: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_parcel_detail: declares no auth_class_parity check
+R-18 P-1 SURFACE overlay_sponsor_slot: declares no auth_class_parity check
+R-18 P-1 SURFACE web_landing: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_tracked_lots: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_auth_confirm: declares no auth_class_parity check
+R-18 P-1 SURFACE overlay_error_boundary: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_onboarding_address: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_onboarding_complete: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_onboarding_first_permit: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_onboarding_path: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_onboarding_profession: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_onboarding_supplier: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_onboarding_terms: declares no auth_class_parity check
+R-18 P-1 SURFACE overlay_paywall: declares no auth_class_parity check
+R-18 P-1 SURFACE web_subscribe: declares no auth_class_parity check
+R-18 P-4 SURFACE web_subscribe_success: guards.session anon (public) but contract contract_user_profile (/api/user-profile) is authenticated (authenticated)
+R-18 P-1 SURFACE admin_notifications: declares no auth_class_parity check
+R-18 P-1 SURFACE overlay_notification_permission_modal: declares no auth_class_parity check
+R-18 P-1 SURFACE binding_mobile_report: declares no auth_class_parity check
+R-18 P-1 SURFACE binding_web_form: declares no auth_class_parity check
+R-18 P-1 SURFACE binding_web_list: declares no auth_class_parity check
+R-18 P-1 SURFACE binding_web_search: declares no auth_class_parity check
+R-18 P-1 SURFACE overlay_offline_banner: declares no auth_class_parity check
+R-18 P-1 SURFACE shared_mobile_surface_binding: declares no auth_class_parity check
+R-18 P-4 SURFACE shell_app_root: guards.session anon (public) but contract contract_user_profile (/api/user-profile) is authenticated (authenticated)
+R-18 P-4 SURFACE shell_app_root: guards.session anon (public) but contract contract_user_profile_reactivate (/api/user-profile/reactivate) is authenticated (authenticated)
+R-18 P-4 SURFACE shell_app_root: guards.session anon (public) but contract contract_notifications_register (/api/notifications/register) is authenticated (authenticated)
+R-18 P-1 SURFACE shell_web_root: declares no auth_class_parity check
+R-18 P-1 SURFACE mobile_settings: declares no auth_class_parity check
+R-18 P-4 SURFACE admin_data_quality: guards.session admin (admin) but contract contract_quality (/api/quality) is anon (public)
+R-18 P-1 SURFACE admin_home: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_pipeline_step_output: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_user_detail: declares no auth_class_parity check
+R-18 P-1 SURFACE admin_users: declares no auth_class_parity check
+Test output:
+R-18: examined 117, scope D not scheduled: 46
+   × R-18 auth class parity (scopes A-C; scope D counted) > the real tree: every scope A-C descriptor declares the check and its class matches its path and its contracts 5ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+     89|     console.log(`R-18: examined ${r.examined}, scope D not scheduled: …
+      Tests  1 failed | 3 passed (4)

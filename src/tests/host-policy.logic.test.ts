@@ -210,3 +210,24 @@ describe('auth/callback on maxbld.ca', () => {
     expect(await location('code=abc&redirect=/parcel-tool/123')).toBe('https://maxbld.ca/parcel-tool/123');
   });
 });
+
+// MF-46 stage C (added 2026-11-11; plan v3 §12 folds 16 and 22; v1 §3.2): the MaxBLD plain pages Help & Support, Terms and Privacy. Each is a public
+// row rewritten to its internal page under the prefix; signed out it is served, never sent to /login; on every other host the internal page is refused.
+describe('host-policy: the plain pages (MF-46 stage C)', () => {
+  const PLAIN = ['/help', '/terms', '/privacy'];
+  const req = (host: string, p: string): NextRequest => new NextRequest(`https://${host}${p}`, { headers: { host } });
+  it.each(PLAIN)('%s is a public row rewritten to its internal page under /parcel-tool', (p) => {
+    expect(resolveHost('maxbld.ca', p)).toEqual({ kind: 'maxbld', route: { path: p, match: 'exact', routeClass: 'public', internal: `/parcel-tool${p}` }, internal: `/parcel-tool${p}` });
+    expect(resolveHost('maxbld.ca', `${p}/x`).kind).toBe('refuse');
+  });
+  it.each(PLAIN)('maxbld.ca %s signed out is served (a rewrite to the internal page, not a login redirect)', async (p) => {
+    const res = await middleware(req('maxbld.ca', p));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('location')).toBeNull();
+    expect(new URL(res.headers.get('x-middleware-rewrite') ?? 'https://x.invalid/').pathname).toBe(`/parcel-tool${p}`);
+  });
+  it.each(PLAIN)('buildo.com refuses the internal page of %s, and does not serve it as a MaxBLD page', async (p) => {
+    expect((await middleware(req('buildo.com', `/parcel-tool${p}`))).status).toBe(404);
+    expect(resolveHost('buildo.com', p)).toEqual({ kind: 'buildo' });
+  });
+});

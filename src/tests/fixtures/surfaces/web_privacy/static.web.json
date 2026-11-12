@@ -1,0 +1,696 @@
+{
+  "surface": "web_privacy",
+  "state": "static",
+  "target": "web",
+  "covers": [
+    "static"
+  ],
+  "props": {
+    "component": "Stack",
+    "props": {
+      "key": "page",
+      "testID": "static-page",
+      "component": "main",
+      "className": "min-h-screen w-full bg-zinc-950"
+    },
+    "children": [
+      {
+        "component": "Stack",
+        "props": {
+          "key": "column",
+          "className": "mx-auto w-full max-w-2xl gap-8 px-4 pt-10 pb-16"
+        },
+        "children": [
+          {
+            "component": "Stack",
+            "props": {
+              "key": "privacy",
+              "testID": "static-privacy",
+              "component": "section",
+              "className": "gap-4"
+            },
+            "children": [
+              {
+                "component": "Title",
+                "props": {
+                  "key": "privacy-0",
+                  "testID": "static-title",
+                  "className": "text-3xl font-bold tracking-tight text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "privacy.title"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-1",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.intro"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-2",
+                  "component": "h2",
+                  "className": "mt-4 text-xl font-semibold text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.h"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-3",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.account"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "privacy-4-list",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-4",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s1.account.1"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-5",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s1.account.2"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-6",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s1.account.3"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-7",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.reports"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-8",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.tracked"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-9",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.lot_size"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-10",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.alerts"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-11",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.why"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-12",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.who"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "privacy-13-list",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-13",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s1.who.1"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-14",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s1.who.2"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-15",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s1.who.3"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-16",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s1.who.4"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-17",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.who.care"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-18",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.keep"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-19",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s1.security"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-20",
+                  "component": "h2",
+                  "className": "mt-4 text-xl font-semibold text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s2.h"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "privacy-21-list",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-21",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s2.1"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-22",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s2.2"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-23",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s2.3"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-24",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s2.4"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-25",
+                  "component": "h2",
+                  "className": "mt-4 text-xl font-semibold text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s3.h"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-26",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s3.intro"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "privacy-27-list",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-27",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s3.1"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-28",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s3.2"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-29",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s3.3"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-30",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s3.4"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-31",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s3.5"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-32",
+                  "component": "h2",
+                  "className": "mt-4 text-xl font-semibold text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s4.h"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-33",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s4.intro"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "privacy-34-list",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-34",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s4.1"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-35",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s4.2"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-36",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s4.3"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-37",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s4.4"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "privacy-38",
+                      "className": "text-base leading-7 text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "privacy.s4.5"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-39",
+                  "component": "h2",
+                  "className": "mt-4 text-xl font-semibold text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s5.h"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-40",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s5.1"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-41",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s5.2"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "privacy-42",
+                  "className": "text-base leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "privacy.s5.changes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Stack",
+            "props": {
+              "key": "footer",
+              "testID": "static-footer",
+              "component": "footer",
+              "className": "gap-3 border-t border-zinc-800 pt-6"
+            },
+            "children": [
+              {
+                "component": "Group",
+                "props": {
+                  "key": "footer-links",
+                  "className": "gap-2"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-0",
+                      "testID": "static-link-/terms",
+                      "href": "/terms",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.terms"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-1",
+                      "testID": "static-link-/privacy",
+                      "href": "/privacy",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.privacy"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-2",
+                      "testID": "static-link-/help",
+                      "href": "/help",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.help"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "footer-legal-0",
+                  "testID": "static-legal",
+                  "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+                },
+                "children": [
+                  {
+                    "content": "footer.legal"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json": "017acce37a4284c7",
+      "scripts/surfaces/parcel_product/F06/surfaces/web_privacy.descriptor.json": "d1cc839064aa9de8"
+    }
+  }
+}

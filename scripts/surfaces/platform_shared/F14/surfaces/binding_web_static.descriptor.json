@@ -1,0 +1,217 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "The one web STATIC binding: StaticBinding.tsx maps one page of the static page table (closed section kinds prose and footer, scripts/surfaces/_schema/static-page.schema.json) to a props tree (content refs only) and renders it with the mapped Mantine parts (bindings.json mapping.web.STATIC). It holds no display text of its own.",
+    "data_story": "It reads nothing itself: the mount file passes the page, the content strings and the one action (an error boundary's reset).",
+    "under_126": "**PROMOTED BINDING ENTRY** (P42-D9 a; Spec 126 §11b.5, the first web consumer of STATIC; MF-46 plan v3 §3.2 and §12 fold 13): a platform_shared census entry that owns the binding module, so R-13 totality holds while the converted surfaces own no component."
+  },
+  "evidence": {
+    "files": [
+      "~/Buildo-scratch/mcfrontend/MF-46/plan.md"
+    ],
+    "contracts": [],
+    "tables": [],
+    "gate": [],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1 — the archetype states"
+    ],
+    "emits": []
+  },
+  "identity": {
+    "id": "binding_web_static",
+    "archetype": "STATIC",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/surfaces/web/StaticBinding.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.5 — per-archetype infrastructure on first use (MF-46, the first web STATIC consumer)"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "A binding module has no wire contract of its own: its input is the static page table, whose shape is static-page.schema.json, and its output is library parts. A change shows up as a golden or render-smoke failure of a consumer.",
+      "evidence": [
+        "src/tests/surfaces/admin-media.golden.test.ts — T7: the consumer web goldens equal a fresh build",
+        "src/tests/surfaces/static-web-binding.ui.test.tsx — the web render smoke of every STATIC golden"
+      ]
+    },
+    "ref": "S-087"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "The page, the content and the action arrive as props from the mount file.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "A binding writes nothing.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a"
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store and no local state.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders what it is given.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "anon",
+      "why": "Its consumers are the public MaxBLD plain pages (Help & Support, Terms, Privacy) and their error and not-found boundaries; each consumer declares its own guard.",
+      "evidence": [
+        "src/lib/auth/host-policy.ts — the public /help, /terms, /privacy rows"
+      ]
+    },
+    "rls_class": {
+      "answer": "none",
+      "why": "It reaches no table.",
+      "evidence": [
+        "src/components/surfaces/web/StaticBinding.tsx"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "binding_web_static_components_owned",
+      "kind": "components_owned",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The module is listed in bindings.json modules and owned by this entry (FE-31 C-3); a module nobody owns is a hand-built component."
+    },
+    {
+      "id": "binding_web_static_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 128 R-18: guards.session anon equals the class of every consumer page (public host-table rows on maxbld.ca); the binding calls no contract. Checked by src/tests/surfaces/auth-class-parity.infra.test.ts."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "static",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "Errors belong to the consuming surface; the binding throws on an unknown kind, role, component, content key or action so a gap is loud.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Rendering emits nothing.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders no sponsored placement.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Rendering is not a metered product action.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable.",
+    "evidence": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ]
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Every converted web STATIC surface (the MaxBLD plain pages first; the landing, MF-76, later).",
+    "evidence": [
+      "scripts/surfaces/_schema/bindings.json — modules"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "Only the page, content and action passed in."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [],
+  "interpretation": "none",
+  "notes": "MF-46 stage C (operator D-2 (a), 2026-11-11 \"1 y 2 y ...\"; Spec 126 §11b.5). Archetype STATIC: the entry carries the archetype of the module it owns.",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/components/surfaces/web/StaticBinding.tsx"
+    ],
+    "role": "shared",
+    "generated": "binding",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "B2",
+    "why": "Shared rendering infrastructure: the binding every converted web STATIC surface renders through.",
+    "feature": "F14",
+    "build_order": 3145,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

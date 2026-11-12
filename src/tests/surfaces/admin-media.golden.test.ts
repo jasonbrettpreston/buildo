@@ -33,7 +33,8 @@ describe('T7 (a) the committed goldens equal a fresh build', () => {
   // re-measured on the MF-44 tip); red evidence docs/reports/red-evidence/MF-19/count-locks-red.txt.
   it('56 goldens, byte for byte', () => {
     const fresh = buildGoldens(ROOT);
-    expect(fresh.size).toBe(56);
+    // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join. 56 -> 61 goldens.
+    expect(fresh.size).toBe(61);
     for (const [p, text] of fresh) expect([p, fs.readFileSync(path.join(ROOT, p), 'utf8') === text]).toEqual([p, true]);
   });
   it('RED: a hand edit of one golden differs from the fresh build', () => {
@@ -62,7 +63,9 @@ describe('T7 (b) coverage', () => {
   it('each golden covers its state, every state of the three surfaces has one', () => {
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted too; its mobile goldens are built and checked by mobile jest
     // (mobile/__tests__/parcelScreens.golden.test.ts), so this web coverage case reads the web surfaces only.
-    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'admin_lot_size_revert', 'report_lot_size_entry']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
+    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'admin_lot_size_revert', 'report_lot_size_entry',
+      // MF-46 stage C (dated 2026-11-11): the MaxBLD plain pages and their error page, the first web STATIC surfaces.
+      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
     for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {
