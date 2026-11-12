@@ -310,8 +310,8 @@ const ALLOW: Allow[] = [
   { file: LOGIN_FORM, rule: 'NAV-1', component: 'button', handler: "setMode('login')", count: 1, kind: 'exception', audit: 30,
     why: 'owed: MF-46 (W2: <Link href="/login"> once /signup exists)' },
   // --- Disclosure: state that is not navigation (details, How?, sheets). ---
-  { file: 'src/components/report/ReportPageToggles.tsx', rule: 'NAV-2', component: 'div', handler: 'onClick', count: 1, kind: 'disclosure', audit: 43,
-    why: 'event delegation to the real <button data-toggle> children (See details, Hide, How?, the Add lot size sheet); the wrapper is not itself interactive (MF-57, MF-19)' },
+  { file: 'src/components/report/ReportPageToggles.tsx', rule: 'NAV-2', component: 'div', handler: 'onClick+onKeyDown', count: 1, kind: 'disclosure', audit: 43,
+    why: 'event delegation to the real <button data-toggle> children (See details, Hide, How?, the Add lot size sheet); the wrapper is not itself interactive (MF-57, MF-19). Dated note 2026-11-11 (MF-19 restack onto 07ecb3a4e): the key reads onClick+onKeyDown, because the MF-19 accessibility fold A12 delegates Escape in the open sheet from the same wrapper; the same one wrapper, count 1' },
   { file: SIGN_IN, rule: 'NAV-1', component: 'Pressable#phone-button', handler: "setMode('phone-input')", count: 1, kind: 'disclosure', audit: 17,
     why: 'opens the phone bottom sheet (a sheet is a self-contained task, ios.md:14), gated off by PHONE_AUTH_ENABLED' },
   { file: SIGN_IN, rule: 'NAV-1', component: 'Pressable#send-code-button', handler: "setMode('phone-otp')", count: 1, kind: 'disclosure', audit: 17,
