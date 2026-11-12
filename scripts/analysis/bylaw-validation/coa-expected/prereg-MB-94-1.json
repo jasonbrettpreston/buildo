@@ -1,0 +1,86 @@
+{
+ "$comment": "Pre-registration, task MB-94 (part (b)) with the MB-86 suite-house cost line (one cost step), prereg 1. Committed ALONE directly before the code commit (Spec 88: the L-1 area_confidence fix, the EI-D3 cost basis without the income premium, the house_with_secondary_suite scenario line `scenario:house_with_secondary_suite/gfa_max_m2` on FB, and migration 317 as a FILE: one parcel_cost_lines row, an operator DB job). Zero scorer moves: the code commit moves no file under scripts/seeds/bylaw, scripts/analysis/bylaw or docs/reference/bylaw-layer2-input.json, so no evaluator_version or table_version move (Layer 2 table_version d312906ff10e unchanged). Expected cost-step moves (cost key src/tests/fixtures/cost/golden-25-cost-key.json, premium 1.00 in the key so no existing key line moves): the 25 golden lots gain one suite line each, all `not_evaluated:no_area_row` in the fixture (no stored suite rows in the 25-lot fixture; real suite numbers follow the MB-35 night and a cost run, then the read-only check on the 25 returns mismatches = 0); 125 key lines, 53 unpriced. A scenario line's area_confidence is its base_confidence only (L-1); a scenario line carries no neighbourhood premium (rate_inputs.premium = 1). The 13 legacy lines, areaConfidenceFor and l3_envelope_exceeds_old_coa are unchanged (option A). Totals and floors copied from prereg-MF-81-1.json (the newest prereg on origin 076c3ad7c). Round 174, claimed in the ID ledger (~/Buildo-scratch/ids/round-174). Migration 317 claimed in ~/Buildo-scratch/ids/mig-317. Owed after the commit: golden-fingerprint and gate-C re-capture and step-conformance scorecards, one operator capture job after migration 317 is applied (stacked with 298).",
+ "schema": "coa-round-prereg-v1",
+ "round": 174,
+ "task": "MB-94",
+ "rules": [
+  "M-67",
+  "M-71"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md v2 (4b, 6 M-3, 8 R-4 and R-7, 10 steps 2, 3 and 6, D-3 a); operator 2026-11-12, verbatim: \"D all as recommended - please ensure this is addedd to the McFrontend decisions\"",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "every floor line unchanged; the floors check OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; the Layer 2 table_version (d312906ff10e) and every golden and oracle file"
+}
