@@ -1,29 +1,52 @@
 {
   "task": "MB-83",
-  "item": "decision batch 2026-11-06-batch-bc (CHAT-230, the ONE increment-3 batch of decision list DL-1 a): 43 decisions as seven new Spec 69a rows (M-494..M-500), dated notes on M-160, M-182, M-190, M-201, M-205, M-344, M-386, M-397, M-416, M-435, M-482 and M-492, the LC-18 dated note in Spec 131 and six closed flag words (DL-16 a); one named re-pin RP-INC3R (table_version bd533bfd5489 to a659c942d67e, G-STOR re-bound); two named test changes (decision-log 801 to 844; mcbylaws-conflicts pinned list gains M-160, M-499, M-500, operator B-4)",
+  "item": "decision batch 2026-11-12-batch-bf (CHAT-233, the MCINC amendment, operator \"1 and 2\"): the McIncrement recipe steps 7 and 8 (rehearse every DB job before the go; one ID ledger) as two new Spec 69a rows with their text home Spec 08 §11.8 (a dated note, prior text kept); enforcement in scratch tooling only (rehearsal-gate.zsh, ids/check.mjs); one re-pin of table_version only (4e7ea5d17e90 to d312906ff10e, G-STOR re-bound); one named test change (decision-log 858 to 860)",
   "class": "R",
   "stage": 8,
-  "date": "2026-11-06",
-  "head": "0d609cd04",
+  "date": "2026-11-12",
+  "head": "6d6cdac9c",
   "commits_reviewed": [
-    "0d609cd04",
-    "the staged batch commit (with the loop record round-49)"
+    "6d6cdac9c (re-cut of b69b81d9f on 69a7dd5cd; the seat read b69b81d9f and the staged batch on f662f2913; the re-cuts change only the tip, the prereg wording of the latest committed round, and the commit field of expected-172/4d)",
+    "the staged batch commit (with the loop record round-73)"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc3/open-questions.md (2026-11-06 ruling; B-4)",
-    "~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md (DL-1..DL-22)",
-    "~/Buildo-scratch/p2close/CARD-x287E-parking-portion.md",
-    "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (LQ-1, LQ-2, D-8)"
+    "~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md (Amendment 2026-11-12: MCINC-7 and MCINC-8)"
   ],
-  "plan": "drafts ~/Buildo-scratch/mcbylaws/inc3/R-batch/ (build-r.mjs, extra.mjs, rows3.mjs, run-r.sh)",
-  "output": "Stage 8 OUTPUT panel, one independent read-only seat on the re-cut: ~/Buildo-scratch/mcbylaws/inc3/R-batch/second-seat-batch-bc.md. VERDICT: PASS WITH FINDINGS; no blocker. The author judgement calls (a) to (d) and the M-435 call (e) are each COMPLIANT. Finding fixed before the commit: the precedent wording of 8f5aaeb48 is not cited (M-457 and M-481 are the row precedents). The six flag words, the lock paths and the M-201 case tokens were added after the seat read and are named in the commit message.",
+  "plan": "drafts ~/Buildo-scratch/mcbylaws/inc2/mcinc7/ (build-bf.mjs, regen.sh, mk-prereg.mjs, batch-bf-f662f2913.patch, batch-bf-660158167.patch)",
+  "output": "Stage 8 OUTPUT panel, one independent read-only seat (sonnet): ~/Buildo-scratch/mcbylaws/inc2/mcinc7/panel/seat-report.md. VERDICT: PASS WITH FINDINGS; no BLOCKER or MAJOR. Items 1-6: rule text byte-identical across Spec 08, the rows, the batch and the test; conflict checks honest; the re-pin moves only table_version and the expected files commit field; the prereg zero moves, round 169 claimed; hygiene clean. MINOR (a) fixed before the commit: the Spec 08 edit had rewritten 26 LF lines to CRLF; the file was rebuilt from HEAD with the four added lines only (numstat 4/0). MINOR (b) kept: Spec 08 items 7 and 8 carry the detail the lane brief named (test-stack path, ports, env path, JOB_TARGET, the two hook commands, the ID kinds), wider than the card short form; the card says the spec text is written by this lane.",
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "the Layer 2 and Layer 3 builds of increment 3 (MB-27, MB-27.L2, MB-64) and the typed night go OPERATOR-GO MB27-INC3-NIGHT-1, not given"
+    "the loop record is round-73 by loop-gate (max+1 of the tree on f662f2913); the MB-35 lane holds round-73 in the ID ledger, so whichever branch lands second re-cuts on the new tip"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/inc3/R-batch/ (second-seat-batch-bc.md, batch-bc.tip-f323a6dfe.patch); split re-cut seat ~/Buildo-scratch/mcbylaws/inc3/R-landing/second-seat-split-recut.md",
+  "evidence": "~/Buildo-scratch/mcbylaws/inc2/mcinc7/ (panel/seat-report.md, panel/review.patch); proofs ~/Buildo-scratch/rarms/night-tools/proofs/rehearsal-gate/red-green.txt and ~/Buildo-scratch/ids/proofs/",
   "previous": [
+    {
+      "task": "MB-83",
+      "item": "decision batch 2026-11-06-batch-bc (CHAT-230, the ONE increment-3 batch of decision list DL-1 a): 43 decisions as seven new Spec 69a rows (M-494..M-500), dated notes on M-160, M-182, M-190, M-201, M-205, M-344, M-386, M-397, M-416, M-435, M-482 and M-492, the LC-18 dated note in Spec 131 and six closed flag words (DL-16 a); one named re-pin RP-INC3R (table_version bd533bfd5489 to a659c942d67e, G-STOR re-bound); two named test changes (decision-log 801 to 844; mcbylaws-conflicts pinned list gains M-160, M-499, M-500, operator B-4)",
+      "class": "R",
+      "stage": 8,
+      "date": "2026-11-06",
+      "head": "0d609cd04",
+      "commits_reviewed": [
+        "0d609cd04",
+        "the staged batch commit (with the loop record round-49)"
+      ],
+      "cards": [
+        "~/Buildo-scratch/mcbylaws/inc3/open-questions.md (2026-11-06 ruling; B-4)",
+        "~/Buildo-scratch/mcbylaws/inc3/impact/DECISIONS-ONE-LIST.md (DL-1..DL-22)",
+        "~/Buildo-scratch/p2close/CARD-x287E-parking-portion.md",
+        "~/Buildo-scratch/mcbylaws/inc2/open-questions.md (LQ-1, LQ-2, D-8)"
+      ],
+      "plan": "drafts ~/Buildo-scratch/mcbylaws/inc3/R-batch/ (build-r.mjs, extra.mjs, rows3.mjs, run-r.sh)",
+      "output": "Stage 8 OUTPUT panel, one independent read-only seat on the re-cut: ~/Buildo-scratch/mcbylaws/inc3/R-batch/second-seat-batch-bc.md. VERDICT: PASS WITH FINDINGS; no blocker. The author judgement calls (a) to (d) and the M-435 call (e) are each COMPLIANT. Finding fixed before the commit: the precedent wording of 8f5aaeb48 is not cited (M-457 and M-481 are the row precedents). The six flag words, the lock paths and the M-201 case tokens were added after the seat read and are named in the commit message.",
+      "verdict": "PASS",
+      "blockers": [],
+      "followups": [
+        "the Layer 2 and Layer 3 builds of increment 3 (MB-27, MB-27.L2, MB-64) and the typed night go OPERATOR-GO MB27-INC3-NIGHT-1, not given"
+      ],
+      "evidence": "~/Buildo-scratch/mcbylaws/inc3/R-batch/ (second-seat-batch-bc.md, batch-bc.tip-f323a6dfe.patch); split re-cut seat ~/Buildo-scratch/mcbylaws/inc3/R-landing/second-seat-split-recut.md"
+    },
     {
       "task": "MB-83",
       "item": "decision batch 2026-11-06-batch-bb (CHAT-229, operator MCINC): the McIncrement recipe, six new Spec 69a rows with their text home Spec 08 §11.8 (MCINC-1..MCINC-6, step 1 pointing at §11.7) and a dated note on queue row 3; enforcement (a) now, (b) OWED to card DR-5; with the one named re-pin RP-MCINC (version and hash fields only)",

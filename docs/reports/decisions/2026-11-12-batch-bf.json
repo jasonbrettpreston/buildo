@@ -1,0 +1,36 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-11-12-batch-bf/2026-11-12-batch-bf.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-11-12-batch-bf",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "1 and 2",
+    "record": "operator chat 2026-11-12",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-11-12-batch-bf/2026-11-12-batch-bf.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {},
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-233.MCINC-7",
+      "question": "McIncrement: rehearse every DB job before the go (text in Spec 08 §11.8): M-514",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: Rehearse every DB job before the go. The job runs end to end first on the local test stack (`~/Buildo-teststack`, project `buildo-mctest`, ports 55320-55329, env `~/Buildo-scratch/mctest/teststack.env`, whose values are never printed). The target is a setting of the job (`JOB_TARGET=teststack`), never an edited copy of its blocks. Then the real commit hooks run on the rehearsal captures: `node scripts/analysis/step-validate.mjs --staged` and `node scripts/analysis/mcbylaws/gate.mjs --ci --base <origin tip>`. OPERATOR-GO is asked only after both pass. Enforcement: the rehearsal gate `~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh`, sourced in each job's first block, refuses the dev target (127.0.0.1:54322) unless the job's `REHEARSAL.pass` names the job's current BLOCKS.sha256 digest and records hooks rc=0 from a test-stack run.",
+      "decision": "approve",
+      "decided_at": "2026-11-12",
+      "operator_quote": "1 and 2"
+    },
+    {
+      "id": "CHAT-233.MCINC-8",
+      "question": "McIncrement: one ID ledger (text in Spec 08 §11.8): M-515",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: One ID ledger. Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere: `mkdir ~/Buildo-scratch/ids/<kind>-<n>` (atomic) with an `owner` file naming the lane and branch. If mkdir fails, the number is taken: take the next one. The orchestrator runs the ledger check `node ~/Buildo-scratch/ids/check.mjs <worktree>` before every push command; a failure means no push command.",
+      "decision": "approve",
+      "decided_at": "2026-11-12",
+      "operator_quote": "1 and 2"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "source": "operator chat 2026-11-12",
+  "decided_at": "2026-11-12",
+  "operator_quote": "1 and 2",
+  "context": "Recorded by lane R-doc (MCINC amendment, card MCINC ~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md): decision batch 2026-11-12-batch-bf, the McIncrement recipe gains steps 7 and 8 as two new Spec 69a rows (M-514, M-515) with their text home Spec 08 §11.8 (dated note 2026-11-12). The operator's two lines, verbatim: \"1 and 2\" and \"the rules need to be written into the recipe and followed - not just memory\". Record ~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md, \"Amendment 2026-11-12: MCINC-7 and MCINC-8\".",
+  "decisions": [
+    {
+      "id": "CHAT-233.MCINC-7",
+      "subject": "McIncrement: rehearse every DB job before the go (text in Spec 08 §11.8): M-514",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: Rehearse every DB job before the go. The job runs end to end first on the local test stack (`~/Buildo-teststack`, project `buildo-mctest`, ports 55320-55329, env `~/Buildo-scratch/mctest/teststack.env`, whose values are never printed). The target is a setting of the job (`JOB_TARGET=teststack`), never an edited copy of its blocks. Then the real commit hooks run on the rehearsal captures: `node scripts/analysis/step-validate.mjs --staged` and `node scripts/analysis/mcbylaws/gate.mjs --ci --base <origin tip>`. OPERATOR-GO is asked only after both pass. Enforcement: the rehearsal gate `~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh`, sourced in each job's first block, refuses the dev target (127.0.0.1:54322) unless the job's `REHEARSAL.pass` names the job's current BLOCKS.sha256 digest and records hooks rc=0 from a test-stack run.",
+      "quote_ref": "q_mcinc7"
+    },
+    {
+      "id": "CHAT-233.MCINC-8",
+      "subject": "McIncrement: one ID ledger (text in Spec 08 §11.8): M-515",
+      "decision": "approve",
+      "recommendation": "CARD MCINC (~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md). Rule text: One ID ledger. Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere: `mkdir ~/Buildo-scratch/ids/<kind>-<n>` (atomic) with an `owner` file naming the lane and branch. If mkdir fails, the number is taken: take the next one. The orchestrator runs the ledger check `node ~/Buildo-scratch/ids/check.mjs <worktree>` before every push command; a failure means no push command.",
+      "quote_ref": "q_mcinc7"
+    }
+  ],
+  "q_mcinc7": "1 and 2",
+  "q_recipe": "the rules need to be written into the recipe and followed - not just memory"
+}

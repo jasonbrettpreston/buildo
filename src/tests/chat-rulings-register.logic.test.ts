@@ -1788,3 +1788,18 @@ describe('CHAT-232 (batch 2026-11-11-batch-be): 1 ruling recorded; the bind lock
     expect(row, 'R-EH lock').toContain('`src/tests/materialize-rows.logic.test.ts`');
   });
 });
+
+describe("CHAT-233 (batch 2026-11-12-batch-bf): 2 rulings recorded in 2 new rows (the McIncrement recipe steps 7 and 8, Spec 08 §11.8)", () => {
+  it("M-514 carries 2026-11-12-batch-bf#CHAT-233.MCINC-7 and its Rule text", () => {
+    expect(M, "CHAT-233.MCINC-7").toContain("2026-11-12-batch-bf#CHAT-233.MCINC-7");
+    expect(M, "CHAT-233.MCINC-7 rule text").toContain("Rehearse every DB job before the go. The job runs end to end first on the local test stack (`~/Buildo-teststack`, project `buildo-mctest`, ports 55320-55329, env `~/Buildo-scratch/mctest/teststack.env`, whose values are never printed). The target is a setting of the job (`JOB_TARGET=teststack`), never an edited copy of its blocks. Then the real commit hooks run on the rehearsal captures: `node scripts/analysis/step-validate.mjs --staged` and `node scripts/analysis/mcbylaws/gate.mjs --ci --base <origin tip>`. OPERATOR-GO is asked only after both pass. Enforcement: the rehearsal gate `~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh`, sourced in each job's first block, refuses the dev target (127.0.0.1:54322) unless the job's `REHEARSAL.pass` names the job's current BLOCKS.sha256 digest and records hooks rc=0 from a test-stack run.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-514** |")) as string;
+    expect(row, "M-514 row").toContain("2026-11-12-batch-bf#CHAT-233.MCINC-7");
+  });
+  it("M-515 carries 2026-11-12-batch-bf#CHAT-233.MCINC-8 and its Rule text", () => {
+    expect(M, "CHAT-233.MCINC-8").toContain("2026-11-12-batch-bf#CHAT-233.MCINC-8");
+    expect(M, "CHAT-233.MCINC-8 rule text").toContain("One ID ledger. Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere: `mkdir ~/Buildo-scratch/ids/<kind>-<n>` (atomic) with an `owner` file naming the lane and branch. If mkdir fails, the number is taken: take the next one. The orchestrator runs the ledger check `node ~/Buildo-scratch/ids/check.mjs <worktree>` before every push command; a failure means no push command.");
+    const row = M.split('\n').find((l) => l.startsWith("| **M-515** |")) as string;
+    expect(row, "M-515 row").toContain("2026-11-12-batch-bf#CHAT-233.MCINC-8");
+  });
+});

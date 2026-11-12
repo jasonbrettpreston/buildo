@@ -2096,6 +2096,14 @@
       "section": "fam-general"
     },
     {
+      "id": "m.514",
+      "section": "fam-general"
+    },
+    {
+      "id": "m.515",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.15",
       "section": "fam-general"
     },
@@ -7585,6 +7593,28 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-513**"
+      }
+    },
+    {
+      "id": "M-514",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.514",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-514**"
+      }
+    },
+    {
+      "id": "M-515",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.515",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-515**"
       }
     },
     {
