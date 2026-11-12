@@ -322,7 +322,7 @@ describe('src-sql-ledger — committed ledger (live)', () => {
     expect(r.fresh).toBe(true);
   });
 
-  it('live: every column the ledger reads/writes on a catalogued table exists in the catalog; only the matview and the unapplied migration-305 table are skipped', async () => {
+  it('live: every column the ledger reads/writes on a catalogued table exists in the catalog; only the matview is skipped', async () => {
     const r = await ssl.checkSrcSqlLedger(REPO_ROOT);
     expect(r.membership.missing).toEqual([]);
     // MF-37 (2026-11-10): media_assets (migration 300) is in the recaptured witness catalog (the operator applied 300/301; the catalog is a
@@ -336,7 +336,9 @@ describe('src-sql-ledger — committed ledger (live)', () => {
     // MB-93 (2026-11-11, operator "D-1 b and D-2 to D-8 a"): src/lib/admin/report-preview-live/stored-page.ts reads parcel_maxbld_scenarios, which
     // does not exist until MB-35 applies migration 287; the producer guards the read with to_regclass. It leaves this list when MB-35's catalog
     // recapture lands (the MF-37 / MF-40 / MF-45 precedent: the catalog is a DB snapshot, never hand-edited).
-    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats', 'parcel_maxbld_scenarios', 'parcel_user_inputs']);
+    // MB-35 (2026-11-12): the capture commit lands the witness catalog recaptured on the dev DB (MB35-RECAP, migrations 305 and 309 applied), so
+    // parcel_user_inputs and parcel_maxbld_scenarios are catalogued and the matview is again the only uncatalogued name (the precedent above).
+    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats']);
   });
 
   it('exit criterion: every SQL-bearing src/ file is classified', async () => {

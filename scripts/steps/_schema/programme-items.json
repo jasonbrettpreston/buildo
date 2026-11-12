@@ -1655,7 +1655,6 @@
           "compute_build_norms",
           "compute_coa_cost_estimates",
           "compute_cost_estimates",
-          "compute_maxbld_scenarios",
           "compute_opportunity_scores",
           "compute_phase_calibration",
           "compute_storey_norms",
