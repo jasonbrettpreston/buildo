@@ -3,11 +3,12 @@
   "item": "The MaxBLD web front door (maxbld.ca): the host fence, the MaxBLD auth pages, Help & Support, Terms, Privacy, the (maxbld) error page from content, the R-18 lock",
   "class": "G",
   "date": "2026-11-11",
-  "head": "372594b8b",
+  "head": "290430ba7",
   "cards": [
     "Operator 2026-11-11 ~15:45, verbatim: \"1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y\" (record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md, \"Operator round\").",
     "Operator 2026-11-11, verbatim: \"3 y\" (D-3 ruled) and \"include all the build scenarios\" (plan v3 §13a)."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 (§0-§3, §12 panel folds, §13, §13a, §13b) with plan.v1.md (§3, §12 folds) carried by reference; PLAN panel record ~/Buildo-scratch/mcfrontend/MF-46/panel-v2/record.md (code-reviewer-grounded, regression-guardian and a fresh compliance reviewer: PASS-WITH-FOLDS, every finding folded or sent to DECISIONS.md) and ~/Buildo-scratch/mcfrontend/MF-46/panel/record.md (v1). Prereg MF-46-1 ff5685866 (round 159) committed alone before the code.",
-  "output": "OUTPUT panel owed: runs over the whole MF-46 range before push (caller)"
+  "output": "OUTPUT panel (Spec 08 §11.5-FE lean pair + the Security seat the queue requires) over 07ecb3a4e..fdf54c4a7: code-reviewer-grounded PASS-WITH-FOLDS (2 M, 4 L; tsc and eslint clean, 163 targeted tests green, surface-validate --check clean), regression-guardian PASS-WITH-FOLDS (no silent retirement; 405 targeted tests green; F1-F4), security seat PASS-WITH-FOLDS (no exploitable hole; F1 allow-list glob M, F2 proxy Host M deployment-dependent, F3-F5 L, F6-F8 info). Reports ~/Buildo-scratch/mcfrontend/MF-46/panel-out/{code-reviewer,regression-guardian,security}.md. Folded in 290430ba7 (allow-list **, recovery window, prefix spellings refused on other hosts, rewrite query/cookie and dev-cookie cases, terms-read logging, dead export removed, LoginForm scanned); launch items in the queue MF-46 note of this date (security F2 probe behind the real proxy, F4 server-action totality, secure_password_change). Owed and NOT claimed: the R-18 lock (48 descriptor mismatches, needs a ruling), the Help & Support contact link (setting + prefill design parked at ~/Buildo-scratch/mcfrontend/MF-46/build/help-contact/), the mobile \"Report incorrect address match\" and MF-53 links (wait on the contact link). Full suite on the tip: run by the caller under SUITE.lock before ready.",
+  "stage": 8
 }
