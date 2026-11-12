@@ -40,7 +40,10 @@ describe('ruling Q6: the report-field witness uses recorded sql-witness traces o
     const fps = new Set<string>();
     for (const list of Object.values(DECL.witness_traces) as string[][]) for (const rel of list) for (const s of JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8')).statements) fps.add(s.fingerprint);
     const ws = (JSON.parse(built.json).fields as Json[]).flatMap((f) => f.witness || []);
-    expect(ws.length).toBeGreaterThan(0);
+    // Dated 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74, operator "S1 a"; Spec 69a M-69 dated note; full-suite fold): every
+    // witnessed chain was an S-001 field, and S-001 is retired from report-fields.decl.json, so no field carries a witness until a declared surface
+    // renders a SQL chain again; the per-entry rule below still holds for any entry that appears. Prior text: expect(ws.length) > 0.
+    expect(ws).toEqual([]);
     for (const w of ws) expect({ b: w.builder, w: w.witnessed }).toEqual({ b: w.builder, w: Boolean(w.fingerprint) && fps.has(w.fingerprint) });
     expect(ws.filter((w) => /render failed/.test(String(w.reason)))).toEqual([]);
   });
