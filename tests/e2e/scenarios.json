@@ -193,6 +193,45 @@
       "owner": "MF-30"
     },
     {
+      "id": "drill_cap",
+      "email": "mctest-drill-cap@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "reports_used": 0
+      },
+      "limit_key": "parcel_tool_report_limit_plan",
+      "use": "F-CAP-REACHED: opens real lots up to its limit (MF81-7 a)",
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "drill_rate",
+      "email": "mctest-drill-rate@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "reports_used": 0
+      },
+      "limit_key": "parcel_tool_report_limit_plan",
+      "use": "F-RATE-LIMITED: reopens one lot until a 429 (MF81-7 a)",
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "drill_session",
+      "email": "mctest-drill-session@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "reports_used": 0
+      },
+      "limit_key": "parcel_tool_report_limit_plan",
+      "use": "F-DB-SLOW, F-DB-DOWN, then F-SESSION-EXPIRED signs it out (MF81-7 a)",
+      "status": "active",
+      "owner": "MF-46"
+    },
+    {
       "id": "sweep_pool",
       "count": 50,
       "email_pattern": "mctest-sweep-{n}@mctest.test",
