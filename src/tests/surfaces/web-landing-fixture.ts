@@ -17,7 +17,7 @@ export const FIXTURE_LIMITS = { parcel_tool_report_limit_trial: 20, parcel_tool_
 export const FIXTURE_PACE = { [REPORT_CHECK_KEYS.minMs]: 23000, [REPORT_CHECK_KEYS.skipAfterMs]: 0, [REPORT_CHECK_KEYS.readyHoldMs]: 1500 };
 
 /** A Queryable over the fixture; `calls` records each SQL text (the read count of T14). */
-export function fixtureDb(mode: FixtureMode): Queryable & { calls: string[] } {
+export function fixtureDb(mode: FixtureMode, opts: { pace?: Record<string, number | undefined>; paceThrows?: boolean } = {}): Queryable & { calls: string[] } {
   const calls: string[] = [];
   const query = async (sql: string, params?: unknown[]): Promise<{ rows: unknown[] }> => {
     calls.push(sql);
@@ -28,7 +28,10 @@ export function fixtureDb(mode: FixtureMode): Queryable & { calls: string[] } {
     }
     if (/FROM logic_variables/.test(sql)) {
       const keys = (params?.[0] ?? []) as string[];
-      const all: Record<string, number> = { ...FIXTURE_LIMITS, ...FIXTURE_PACE };
+      if (opts.paceThrows && keys.includes(REPORT_CHECK_KEYS.minMs)) throw new Error('fixture: the pace read failed');
+      const pace = { ...FIXTURE_PACE, ...(opts.pace ?? {}) };
+      const all: Record<string, number> = { ...FIXTURE_LIMITS };
+      for (const [k, v] of Object.entries(pace)) if (v !== undefined) all[k] = v;
       return { rows: keys.filter((k) => k in all).map((k) => ({ variable_key: k, variable_value: String(all[k]) })) };
     }
     throw new Error(`fixture: unexpected query ${sql.slice(0, 40)}`);

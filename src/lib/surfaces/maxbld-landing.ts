@@ -102,6 +102,8 @@ export async function readDemo(db: Queryable, lines: Lines): Promise<ReportView 
   try {
     const pace = await readReportCheckPace(asPace(db));
     if ('bad' in pace) { logWarn(TAG, 'pace settings unusable; the demo is left out', { keys: pace.bad }); return undefined; }
+    // MF-76 OUTPUT compliance F3 (a) (WCAG 2.2.2): the landing plays its demo only while Skip shows from the first paint.
+    if (pace.skipAfterMs > 0) { logWarn(TAG, 'Skip does not show from the start; the demo is left out', { skipAfterMs: pace.skipAfterMs }); return undefined; }
     if (stepMs(lines.length, pace) < 1) { logWarn(TAG, 'pace leaves no room for the facts; the demo is left out', { facts: lines.length }); return undefined; }
     const what = paced([{ key: 'citywide', lines }], [], pace, sample.address);
     const tree = buildTree({ lifecycle: 'loading', what_we_checked: what }, reportCtx);

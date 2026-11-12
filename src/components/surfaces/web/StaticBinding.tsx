@@ -156,7 +156,7 @@ const proseNode = (s: StaticSection): StaticNode => {
     if (p.role === 'title') kids.push(node('Title', { key, testID: 'static-title', className: L.title }, [txt(p)]));
     else if (p.role === 'heading') kids.push(node('Text', { key, component: 'h2', className: L.heading }, [txt(p)]));
     else if (p.role === 'paragraph') kids.push(node('Text', { key, className: L.paragraph }, [txt(p)]));
-    else kids.push(node('Button', { key, testID: 'static-retry', size: 'lg', variant: 'filled', color: 'yellow', className: L.retry, onClick: { action: 'retry' } }, [txt(p)]));
+    else kids.push(node('Button', { key, testID: 'static-retry', size: 'lg', variant: 'filled', color: 'amber', className: L.retry, onClick: { action: 'retry' } }, [txt(p)]));
   });
   return node('Stack', { key: s.id, testID: `static-${s.id}`, component: 'section', className: L.prose }, kids);
 };
@@ -191,7 +191,7 @@ const heroNode = (s: StaticSection): StaticNode => {
       if (title === null) fail(`${s.id}: an accent follows the title`);
       (title as StaticNode).children.push(node('Text', { key, component: 'span', className: L.accent }, [txt(p)]));
     } else if (p.role === 'sub') copy.push(textNode(p, { key, className: L.sub }));
-    else if (p.role === 'cta') copy.push(linkNode(p, key, 'filled', 'yellow', L.cta));
+    else if (p.role === 'cta') copy.push(linkNode(p, key, 'filled', 'amber', L.cta));
     else if (p.role === 'term') {
       if (terms === null) { terms = node('List', { key: `${key}-terms`, testID: 'landing-terms', className: L.terms }); copy.push(terms); }
       (terms as StaticNode).children.push(node('ListItem', { key, className: L.term }, [textNode(p, { key: `${key}-t`, component: 'span' })]));
@@ -295,7 +295,7 @@ const plansNode = (s: StaticSection): StaticNode => {
     else if (p.role === 'tax') b.children.push(textNode(p, { key, testID: 'landing-tax', className: L.tax }));
     else if (p.role === 'tick') b.children.push(textNode(p, { key, className: L.itemText }));
     else if (p.role === 'note') b.children.push(textNode(p, { key, className: L.note }));
-    else b.children.push(linkNode(p, key, 'light', 'yellow', L.boxLink));
+    else b.children.push(linkNode(p, key, 'light', 'amber', L.boxLink));
   });
   order('');
   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'section', className: L.section }, [...head, boxes, ...foot]);

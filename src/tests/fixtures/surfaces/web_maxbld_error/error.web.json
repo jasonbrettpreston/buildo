@@ -62,7 +62,7 @@
                   "testID": "static-retry",
                   "size": "lg",
                   "variant": "filled",
-                  "color": "yellow",
+                  "color": "amber",
                   "className": "mt-2 self-start rounded-xl",
                   "onClick": {
                     "action": "retry"

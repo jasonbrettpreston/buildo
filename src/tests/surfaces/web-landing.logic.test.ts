@@ -33,6 +33,7 @@ import { matchMaxbldRoute } from '@/lib/auth/host-policy';
 import * as logger from '@/lib/logger';
 import { staticWebTree, type StaticPage } from '@/components/surfaces/web/StaticBinding';
 import { citywideLines } from '@/lib/parcels/what-we-checked';
+import { REPORT_CHECK_KEYS } from '@/lib/parcels/report-check-pace';
 import { citywideTexts, fileValues, LANDING_READS, landingMetadata, readCitywide, readLanding, scenarioList } from '@/lib/surfaces/maxbld-landing';
 import { captureLandingSample, LANDING_SAMPLE } from '../../../scripts/surfaces/report-page-capture';
 import { FIXTURE_LIMITS, FIXTURE_ROW, fixtureDb } from './web-landing-fixture';
@@ -128,6 +129,14 @@ describe('T2 the claims lock', () => {
     const l = await readLanding(fixtureDb('ok'));
     const words = Object.fromEntries(Object.entries(l.values).map(([k, v]) => [k, v.replace(/[\d,]+/g, '{value}')]));
     expect(claimsProblems(words)).toEqual([]);
+  });
+  it('MF-76 OUTPUT compliance F12: the sample report texts carry no banned claim word (the report keeps its ruled confidence words)', () => {
+    const sample = fs.readFileSync(path.join(ROOT, 'scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json'), 'utf8');
+    const texts = [...sample.matchAll(/"text": "((?:[^"\\]|\\.)*)"/g)].map((m) => m[1] as string);
+    expect(texts.length).toBeGreaterThan(20);
+    const banned = /\b(AI|satellite|aerial|every scenario|updated|latest|guarantee|guaranteed|more accurate than|ChatGPT|LLM)\b/i;
+    expect(texts.filter((t) => banned.test(t))).toEqual([]);
+    expect(banned.test('AI estimate')).toBe(true);
   });
   it('RED: "AI-powered", a typed 34, "Processing 1 of 5", a changed disclaimer losing its exemption', () => {
     expect(claimsProblems({
@@ -335,7 +344,8 @@ export const revealProblems = (css: string): string[] => {
   if (!/animation:[^;]*report-check-in[^;]*backwards/.test(base) || !/animation-delay:\s*var\(--reveal/.test(base)) out.push('sample: fades in at the server minimum --reveal, fill backwards');
   if (/infinite/.test(all)) out.push('no infinite animation');
   if (/display:\s*none|visibility:\s*hidden/.test(all)) out.push('opacity only (the sample stays in the accessibility tree)');
-  if (!/animation:\s*none/.test(block(all, /\.landing-sample:target\s*\{/))) out.push('Skip (#sample) shows it at once');
+  // MF-76 OUTPUT compliance F2 (WCAG 2.4.7, 2.4.11): one rule for :target and :focus-within, so a focused sample is never invisible.
+  if (!/animation:\s*none/.test(block(all, /\.landing-sample:target,\s*\.landing-sample:focus-within\s*\{/))) out.push('Skip (#sample) and a focus inside show it at once');
   if (!/\.landing-sample\s*\{\s*animation:\s*none/.test(block(all, /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/))) out.push('reduce motion shows it at once');
   return out;
 };
@@ -346,7 +356,8 @@ describe('T9 the reveal and reduced motion', () => {
   });
   it('RED: an infinite pulse, a display none, no reduce-motion rule', () => {
     expect(revealProblems(CSS.replace('animation: report-check-in 400ms ease-out backwards;\n  animation-delay: var(--reveal', 'animation: report-check-in 400ms ease-out backwards infinite;\n  animation-delay: var(--reveal'))).toEqual(['no infinite animation']);
-    expect(revealProblems(CSS.replace('.landing-sample:target {\n  animation: none;', '.landing-sample:target {\n  display: none;'))).toEqual(['opacity only (the sample stays in the accessibility tree)', 'Skip (#sample) shows it at once']);
+    expect(revealProblems(CSS.replace('.landing-sample:focus-within {\n  animation: none;', '.landing-sample:focus-within {\n  display: none;'))).toEqual(['opacity only (the sample stays in the accessibility tree)', 'Skip (#sample) and a focus inside show it at once']);
+    expect(revealProblems(CSS.replace('.landing-sample:target,\n.landing-sample:focus-within {', '.landing-sample:target {'))).toEqual(['Skip (#sample) and a focus inside show it at once']);
     expect(revealProblems(CSS.replace('@media (prefers-reduced-motion: reduce) {\n  .landing-sample { animation: none; }\n}', ''))).toEqual(['reduce motion shows it at once']);
   });
 });
@@ -362,6 +373,26 @@ describe('T10 the route', () => {
     expect(/require-parcel-tool-page/.test("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';")).toBe(true); // the scan is live
     expect(text).toMatch(/export const dynamic = 'force-dynamic';/);
     expect(landingMetadata()).toEqual({ title: 'MaxBLD Lot Intelligence', description: `Costed MaxBLD scenarios for the specific lot you enter: ${fileValues().scenario_list}.` });
+  });
+});
+
+describe('T14b the demo failure branches (OUTPUT code reviewer 1; compliance F3 a)', () => {
+  const demoOut = async (db: ReturnType<typeof fixtureDb>): Promise<{ demo: boolean; state: string; warns: number; errors: unknown[] }> => {
+    const warn = vi.spyOn(logger, 'logWarn').mockImplementation(() => undefined);
+    const err = vi.spyOn(logger, 'logError').mockImplementation(() => undefined);
+    const l = await readLanding(db);
+    return { demo: l.report.demo !== undefined, state: l.state, warns: warn.mock.calls.length, errors: err.mock.calls.map((c) => (c[2] as Json).read) };
+  };
+  it('a missing pace setting, a pace that leaves no room, a Skip delay above 0 and a throwing pace read each leave the demo out, page static, logged once', async () => {
+    expect(await demoOut(fixtureDb('ok', { pace: { [REPORT_CHECK_KEYS.minMs]: undefined } }))).toEqual({ demo: false, state: 'static', warns: 1, errors: [] });
+    vi.restoreAllMocks();
+    expect(await demoOut(fixtureDb('ok', { pace: { [REPORT_CHECK_KEYS.minMs]: 1501, [REPORT_CHECK_KEYS.readyHoldMs]: 1500 } }))).toEqual({ demo: false, state: 'static', warns: 1, errors: [] });
+    vi.restoreAllMocks();
+    expect(await demoOut(fixtureDb('ok', { pace: { [REPORT_CHECK_KEYS.skipAfterMs]: 5000 } }))).toEqual({ demo: false, state: 'static', warns: 1, errors: [] });
+    vi.restoreAllMocks();
+    expect(await demoOut(fixtureDb('ok', { paceThrows: true }))).toEqual({ demo: false, state: 'static', warns: 0, errors: ['demo'] });
+    vi.restoreAllMocks();
+    expect(await demoOut(fixtureDb('ok'))).toEqual({ demo: true, state: 'static', warns: 0, errors: [] });
   });
 });
 

@@ -1290,7 +1290,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` · `src/lib/surfaces/maxbld-landing.ts`
 
-> ⚠️ MF-76 (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §3, §12, §13a, §13b; operator D-1 (a), D-2 (a), D-3 (a) "3 y", D-5 (a), D-6 (a) and "include all the build scenarios" (2026-11-11); plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3). The former web_landing entry (src/app/page.tsx, the Buildo lead-gen page) is web_buildo_landing (S-091, scope D), plan v3 §12 fold 15.
+> ⚠️ MF-76 (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §3, §12, §13a, §13b; operator D-1 (a), D-2 (a), D-3 (a) "3 y", D-5 (a), D-6 (a) and "include all the build scenarios" (2026-11-11); plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3). The former web_landing entry (src/app/page.tsx, the Buildo lead-gen page) is web_buildo_landing (S-092 (restack 2026-11-11: S-091 became web_maxbld_error after the MF-46 census renumber), scope D), plan v3 §12 fold 15.
 
 <a id="s-088"></a>
 

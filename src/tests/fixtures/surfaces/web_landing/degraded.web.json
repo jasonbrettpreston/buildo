@@ -210,7 +210,7 @@
                           "href": "/signup",
                           "size": "lg",
                           "variant": "filled",
-                          "color": "yellow",
+                          "color": "amber",
                           "className": "self-start rounded-xl"
                         },
                         "children": [
@@ -924,7 +924,7 @@
                           "href": "/signup",
                           "size": "lg",
                           "variant": "light",
-                          "color": "yellow",
+                          "color": "amber",
                           "className": "mt-auto rounded-xl"
                         },
                         "children": [
@@ -979,7 +979,7 @@
                           "href": "/signup?plan=basic",
                           "size": "lg",
                           "variant": "light",
-                          "color": "yellow",
+                          "color": "amber",
                           "className": "mt-auto rounded-xl"
                         },
                         "children": [
@@ -1019,7 +1019,7 @@
                           "href": "/signup?plan=pro",
                           "size": "lg",
                           "variant": "light",
-                          "color": "yellow",
+                          "color": "amber",
                           "className": "mt-auto rounded-xl"
                         },
                         "children": [
@@ -1071,7 +1071,7 @@
                           "href": "/help#topic=enterprise",
                           "size": "lg",
                           "variant": "light",
-                          "color": "yellow",
+                          "color": "amber",
                           "className": "mt-auto rounded-xl"
                         },
                         "children": [
@@ -1189,7 +1189,7 @@
   "fingerprint": {
     "files": {
       "scripts/surfaces/parcel_product/F06/surfaces/web_landing.content.json": "1f304a5bbcd254ed",
-      "scripts/surfaces/parcel_product/F06/surfaces/web_landing.descriptor.json": "3bd14a66c00f507f"
+      "scripts/surfaces/parcel_product/F06/surfaces/web_landing.descriptor.json": "a9d0bb0bccc802bc"
     }
   }
 }

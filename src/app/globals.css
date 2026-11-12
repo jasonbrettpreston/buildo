@@ -192,8 +192,9 @@
   animation: report-check-in 400ms ease-out backwards;
   animation-delay: var(--reveal, 0ms);
 }
-.landing-sample:target {
-  animation: none;
+.landing-sample:target,
+.landing-sample:focus-within {
+  animation: none; /* MF-76 OUTPUT compliance F2 (WCAG 2.4.7, 2.4.11): a focused sample is shown at once */
 }
 @media (prefers-reduced-motion: reduce) {
   .landing-sample { animation: none; }
