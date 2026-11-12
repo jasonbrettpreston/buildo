@@ -1,0 +1,7 @@
+== MB-35 post-night D-54 (option A) red: the lock run on f662f2913 (the step reads the zone list from a logic_variables lookup that the witness resolver counts as runner-owned; no config entry, no shared-list consumer); green on the D-54 build commit.
+   × D-54: the zone list is a declared shared config entry, never a logic_variables lookup > the descriptor declares no logic_variables read (flips at the D-54 build commit) 2ms
+   × D-54: the zone list is a declared shared config entry, never a logic_variables lookup > the descriptor declares the zone list with the same closed list_of and bounds as resolve_bylaws (flips at the D-54 build commit) 1ms
+   × D-54: the zone list is a declared shared config entry, never a logic_variables lookup > the closed shared list names both consumers, and the vocabulary gate passes the entry (flips at the D-54 build commit) 16ms
+   × D-54: the zone list is a declared shared config entry, never a logic_variables lookup > the loader takes the zone list from the validated config: no lookup row needed, a missing or non-list value throws by name (flips at the D-54 build commit) 28ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed (4)
