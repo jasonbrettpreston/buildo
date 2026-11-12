@@ -1,0 +1,106 @@
+{
+ "$comment": "M-321 pre-registration, task MB-83, prereg 8 (R-MA; round 169, claimed in the ID ledger before use; the latest committed round is 165, prereg-MF-48-2.json), the loop round that lands decision batch 2026-11-12-batch-bf (CHAT-233): the McIncrement recipe gains steps 7 and 8 (MCINC-7 rehearse every DB job before the go, MCINC-8 one ID ledger) as two new Spec 69a rows with their text home Spec 08 §11.8 (a dated note, M-246, prior text kept), operator 2026-11-12, verbatim: \"1 and 2\" and \"the rules need to be written into the recipe and followed - not just memory\". Named re-pin (version and hash fields only): the two rows add two rules to Spec 133 and its rule map (543 to 545), hashed into the Layer 2 table_version (4e7ea5d17e90 to d312906ff10e; body_sha256 and evaluator_version unchanged). Measured on the tip 69a7dd5cd: coa-scorecard --pin gives totals equal on the 172 and 4d sets before and after. It touches no evaluator, no scorer and no oracle row. Expected: 0 scorer rows move on the 172, 4d and cumulative sets, every class and City figure unchanged, the floors file unchanged and the floors check OK. One existing test assertion changes, named below: the decision-log decisions count 858 to 860.",
+ "schema": "coa-round-prereg-v1",
+ "round": 169,
+ "task": "MB-83",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "R-IL"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md (\"Amendment 2026-11-12: MCINC-7 and MCINC-8\"); drafts ~/Buildo-scratch/mcbylaws/inc2/mcinc7/ (build-bf.mjs, regen.sh, batch-bf-69a7dd5cd.patch)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "every floor line unchanged; the floors check OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; the Layer 2 table_version (4e7ea5d17e90) and every golden and oracle file",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version 4e7ea5d17e90 -> d312906ff10e (the two rows move Spec 133 and the rule map)",
+  "docs/reference/maxbld-amendment-index.json layer2_table_version 4e7ea5d17e90 -> d312906ff10e",
+  "expected-172.json and expected-4d.json commit (4e3c1d96 -> 69a7dd5c) and inputs.table_version 4e7ea5d17e90 -> d312906ff10e through coa-scorecard.mjs --pin, totals equal",
+  "docs/reports/storage-gates/MB-27L2-G-STOR.json table_version 4e7ea5d17e90 -> d312906ff10e, the G-STOR re-bind (RP-SW2 a)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/decision-log.logic.test.ts",
+   "line": 471,
+   "row": "r.decisions",
+   "from": 858,
+   "to": 860,
+   "rule": "Queue Process 1 (.cursor/MCBYLAWS-QUEUE.md:104)",
+   "authority": "the batch 2026-11-12-batch-bf decisions CHAT-233.MCINC-7 and CHAT-233.MCINC-8 (2 new decisions; operator 2026-11-12 \"1 and 2\", ~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md); any other change to this assertion stops"
+  }
+ ],
+ "expected_value_changes": []
+}
