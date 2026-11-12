@@ -1,0 +1,8 @@
+MF-79 persona seed red evidence (2026-11-12): src/tests/mctest/seed.logic.test.ts run against scripts/mctest/seed-personas.mjs with its two refusals (the testStack guard and the --go check) removed. The four refusal cases fail; the two pure cases pass. Then green with the guard restored (6 of 6). Note: in the guard-less red run the script reached its connect step, so the dev-DB case made one connection attempt to 127.0.0.1:54322 with the dummy password "x"; it was refused at authentication, nothing was read or written. A later red run of a DB guard stubs the connection instead.
+
+   × persona seed guard (D-1 a) > refuses the dev DB 54322 before any connection 247ms
+   × persona seed guard (D-1 a) > refuses the dev sign-in 54321 before any connection 91ms
+   × persona seed guard (D-1 a) > refuses no stack at all before any connection 73ms
+   × persona seed guard (D-1 a) > refuses a test-stack run without --go 74ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 2 passed (6)
