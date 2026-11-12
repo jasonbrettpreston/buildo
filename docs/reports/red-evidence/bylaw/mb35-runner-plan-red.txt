@@ -1,0 +1,5 @@
+== MB-35 b4 STOP fix red: the lock run on 34520a43b (descriptor retract "departed" on the composite key); green on the fix commit. The runner's buildWritePlan refused the real descriptor at the MB35-COHORT night b4 (no write was made; r-restore PASS).
+   × MB-35 b4 STOP: the real descriptor through the runner (no DB) > the runner builds the write plan of parcel_maxbld_scenarios (no retraction on its composite key)
+   × MB-35 b4 STOP: the real descriptor through the runner (no DB) > one rows-arm run: the batch binds only the keyset, the rows go to one guarded upsert, nothing is deleted
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed (2)

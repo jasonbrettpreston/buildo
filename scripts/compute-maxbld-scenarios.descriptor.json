@@ -123,22 +123,21 @@
           "idempotent_rerun": "zero_writes",
           "txn_scope": "batch",
           "why": {
-            "text": "E31-13: content_sha is the digest of the row's whole content (value, reason, trace, settings_sha and the other hashes; computed_at excluded), so a re-run of an unchanged parcel rewrites nothing and a moved Layer 2 cell rewrites only the rows whose content moved. E31-14: a parcel still in the population keeps its rows under the guard; a parcel that left a NON-EMPTY population list loses its rows (building_type detached_house only), bounded by this scope; an empty population list or unmatched ids HALT the run instead of retracting. Retraction (retract_when: always): E31-14: a row set is EITHER upserted OR retracted, never both. The departure DELETE keys on one column (parcel_id) and fires only for parcels that LEFT a NON-EMPTY population list, its rows cast to detached_house only; every parcel still in the list is re-asserted by the guarded upsert, so no row this run derives can be deleted. An empty population list, or population ids matching no parcel, HALT the run instead of retracting (the empty-set guard). E31-14: a row set is EITHER upserted OR retracted, never both. The departure DELETE keys on one column (parcel_id) and fires only for parcels that LEFT a NON-EMPTY population list, its rows cast to detached_house only; every parcel still in the list is re-asserted by the guarded upsert, so no row this run derives can be deleted. An empty population list, or population ids matching no parcel, HALT the run instead of retracting (the empty-set guard).",
+            "text": "E31-13: content_sha is the digest of the row's whole content (value, reason, trace, settings_sha and the other hashes; computed_at excluded), so a re-run of an unchanged parcel rewrites nothing and a moved Layer 2 cell rewrites only the rows whose content moved. No retraction (retract none, MB-35 b4 STOP 2026-11-11): a parcel that leaves the population keeps its rows (descriptor limitation); the runner refuses a departure DELETE on this composite key (scripts/lib/step/write.js buildWritePlan) and no runner change is made (operator \"option 2\").",
             "liveness": {
               "kind": "file",
               "ref": "scripts/lib/compute/compute-maxbld-scenarios.js"
             }
           }
         },
-        "retract": "departed",
-        "retract_when": "always"
+        "retract": "none"
       }
     ],
     "invalidates": [],
     "write_inventory": {
       "statements": 1,
       "why": {
-        "text": "Per batch, one transaction: one guarded upsert into parcel_maxbld_scenarios; the retraction rides the declared retract scope.",
+        "text": "Per batch, one transaction: one guarded upsert into parcel_maxbld_scenarios. No retraction (retract none, MB-35 b4 STOP 2026-11-11): the runner refuses a departure DELETE on this composite key (scripts/lib/step/write.js buildWritePlan), and no runner change is made (operator \"option 2\").",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/step/index.js"
@@ -300,14 +299,14 @@
       "check_id": "none"
     },
     {
-"what": "MB-35 (operator \"a yes\" 2026-11-11): the rows arm runs no departed retraction for a guarded_upsert (scripts/lib/step/index.js materializeRowsArm plans targets A, F and G only), so a lot that leaves the population keeps its rows; the declared retraction is not executed. The MB-35 rollback drops the table.",
+"what": "MB-35 (operator \"a yes\" 2026-11-11; b4 STOP fix 2026-11-11): the step declares no retraction (retract none): a lot that leaves the population keeps its rows. A departure DELETE on the composite key (parcel_id, building_type, field_id) is refused by the runner (scripts/lib/step/write.js buildWritePlan) and the rows arm plans targets A, F and G only; no runner change is made (operator \"option 2\"). The MB-35 rollback drops the table.",
       "measured": "none",
       "check_id": "none"
     }
   ],
   "interpretation": { "file": "compute-maxbld-scenarios.notes.json" },
   "recovery": {
-    "reset": "DELETE FROM parcel_maxbld_scenarios WHERE building_type = 'detached_house'; the next run re-derives every row (an operator action, MB-35 only, after a dump; scoped like the retraction).",
+    "reset": "DELETE FROM parcel_maxbld_scenarios WHERE building_type = 'detached_house'; the next run re-derives every row (an operator action, MB-35 only, after a dump).",
     "resume": "none",
     "force": "none",
     "rollback": "none",
@@ -315,7 +314,7 @@
     "cascades": "derived",
     "interrupted": "none",
     "interrupted_why": {
-      "text": "No destructive target beyond the declared retraction: each batch commits atomically, and the guarded upsert on content_sha means a re-run rewrites nothing (a killed batch simply stays pending).",
+      "text": "No destructive target (retract none): each batch commits atomically, and the guarded upsert on content_sha means a re-run rewrites nothing (a killed batch simply stays pending).",
       "liveness": {
         "kind": "file",
         "ref": "scripts/lib/step/index.js"
@@ -323,7 +322,7 @@
     },
     "before_image": "none",
     "before_image_why": {
-      "text": "No before-image: there is no destructive write beyond the declared retraction, and the guarded upsert overwrites only rows whose content_sha moved.",
+      "text": "No before-image: there is no destructive write (retract none), and the guarded upsert overwrites only rows whose content_sha moved.",
       "liveness": {
         "kind": "table",
         "ref": "parcel_maxbld_scenarios"
