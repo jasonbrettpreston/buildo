@@ -1,0 +1,35 @@
+{
+ "$comment": "MF-76 · the launch build scenario types the landing counts and lists (operator 2026-11-11, verbatim: \"you keep getting hung up on this... there will be more than 3 when we complete the increments we are building this for a future launch date - include all the build scenarios\"; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md §13a). One entry per type, each naming its row of the .cursor/MCBYLAWS-QUEUE.md increments table. The count on the page is the number of entries (FE-05: never typed). The \"each type live\" check is the launch list (plan §7 item 1), not build logic. Dated note 2026-11-11 (MF-76 build): `label` is the type as the hero list names it, in the operator's wording (\"detached houses, houseplexes, secondary suites, garden and laneway suites, and renovations\"; landing v9 rulings), kept in this one file so the hero list and the count come from the same declaration (plan section 13a test); the two detached house types share one label and the list names each label once, in file order, joined on the server (English list format). `increment` is a row number of the increments table, or a range a-b of rows.",
+ "scenarios": [
+  {
+   "key": "detached_house_pitched",
+   "label": "detached houses",
+   "increment": "1-2"
+  },
+  {
+   "key": "detached_house_flat",
+   "label": "detached houses",
+   "increment": "1-2"
+  },
+  {
+   "key": "houseplex",
+   "label": "houseplexes",
+   "increment": "3"
+  },
+  {
+   "key": "secondary_suite",
+   "label": "secondary suites",
+   "increment": "4"
+  },
+  {
+   "key": "garden_laneway_suite",
+   "label": "garden and laneway suites",
+   "increment": "5"
+  },
+  {
+   "key": "renovations",
+   "label": "renovations",
+   "increment": "6"
+  }
+ ]
+}

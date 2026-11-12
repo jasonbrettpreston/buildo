@@ -231,7 +231,9 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // MF-19 (dated 2026-11-11; operator D-1..D-8 "all as recommmended"): admin_lot_size_revert and report_lot_size_entry new and converted (+2 in scope,
     // +2 converted); 12 web goldens and 29 content strings join; red evidence docs/reports/red-evidence/MF-19/count-locks-red.txt.
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
-    expect(d.note).toBe('S-desc ok (examined 31 in scope: converted 14, pending 4, parked 9, report 4)'); // MF-53: the map page converted
+    // MF-76 (dated 2026-11-11; operator D-1 (a); plan v3 §12 folds 14, 15): web_landing converted from pending (converted 11 -> 12, pending 5 -> 4;
+    // 29 in scope: the old Buildo page moved to its own scope-D descriptor); its 2 web goldens (59 -> 61) and 54 content strings (273 -> 327) join.
+    expect(d.note).toBe('S-desc ok (examined 31 in scope: converted 15, pending 3, parked 9, report 4)'); // MF-53: the map page converted
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
     // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
     // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
@@ -239,7 +241,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // join (44 -> 54); no content key is added (the web reads the same 23 strings).
     // MF-53 (dated 2026-11-11): + the map page (11 mobile goldens, 21 strings).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (14 surfaces, 82 goldens)' }, { findings: [], note: 'S-sbind ok (14 surfaces, 323 strings)' }]); // MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (15 surfaces, 84 goldens)' }, { findings: [], note: 'S-sbind ok (15 surfaces, 377 strings)' }]); // MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -369,7 +372,8 @@ describe('C-3 bindings.json integrity', () => {
     // MF-44 (dated 2026-11-11; Spec 126 §11b.5): + the web SEARCH module, its promoted entry binding_web_search and the four web search mounts.
     // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([9, 7, 23]); // MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
+    // MF-76 (dated 2026-11-11; plan v3 §12 fold 13): + the landing mount (19 -> 20 mounts).
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([9, 7, 24]); // MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -477,7 +481,8 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     const all = walkD(path.join(REPO, 'scripts/surfaces'));
     // MF-48 (dated 2026-11-11; D-2 a): +1 promoted binding entry (binding_mobile_report).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
-    expect(all.length).toBe(168); // MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    // MF-76 (dated 2026-11-11; plan v3 §12 fold 15): +1 SURFACE (web_buildo_landing, scope D: the old src/app/page.tsx knowledge; web_landing is repointed).
+    expect(all.length).toBe(169); // MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
@@ -514,7 +519,13 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
 // ---- C-8 / C-9 / C-11 (MF-37; MF-42 size ruling and batch C-1, C-11: the web closed mapping, the web 44 px case and the theme check) -------------
 
 /** C-8: every JSX element a web binding module renders is a library component listed in bindings.json mapping.web for its archetypes. */
-export const mappingProblems = (text: string, file: string, allowed: string[], libs: string[] = B.libraries.web): string[] => {
+// Dated 2026-11-11 (MF-76; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 fold 12; Spec 126 §11b.1 "REPORT keeps the landed renderer", FE-07):
+// the ONE named exception of C-8: the web STATIC binding embeds the shared REPORT renderers (the loading state, its picture, the v21 page) by exact
+// name AND exact module, never re-drawn and never a mapping.web entry. Any other name, a look-alike module or another archetype still fails (RED below).
+export const SHARED_REPORT_RENDERERS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  STATIC: { ReportView: '@/components/report/ReportView', Picture: '@/components/report/ReportView', ReportPage: '@/components/report/ReportPage' },
+};
+export const mappingProblems = (text: string, file: string, allowed: string[], libs: string[] = B.libraries.web, shared: Readonly<Record<string, string>> = {}): string[] => {
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const imported = new Map<string, string>(); // local name -> imported name, for every named or default import
   const fromSpec = new Map<string, string>(); // local name -> its module specifier (a JSX tag must come from a UI library: code-reviewer OUTPUT F2)
@@ -545,6 +556,7 @@ export const mappingProblems = (text: string, file: string, allowed: string[], l
   const visit = (n: ts.Node): void => {
     if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) {
       const name = tagOf(n.tagName);
+      if (ts.isIdentifier(n.tagName) && Object.hasOwn(shared, name) && fromSpec.get(n.tagName.text) === shared[name]) { ts.forEachChild(n, visit); return; }
       if (name.startsWith('local:')) out.push(`C-8 ${file}:${at(n)}: hand-built component ${name.slice(6)}`);
       else if (/^[a-z]/.test(name)) out.push(`C-8 ${file}:${at(n)}: intrinsic element <${name}>`);
       else if (!allowed.includes(name)) out.push(`C-8 ${file}:${at(n)}: ${name} is not in mapping.web`);
@@ -561,13 +573,26 @@ export const mappingProblems = (text: string, file: string, allowed: string[], l
   return out;
 };
 const allowedFor = (m: Json): string[] => [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping?.web?.[a] ?? []))];
+const sharedFor = (m: Json): Record<string, string> => Object.assign({}, ...m.archetypes.map((a: string) => SHARED_REPORT_RENDERERS[a] ?? {}));
 
 describe('C-8 the web closed mapping (every JSX element of a web binding module is a listed library component)', () => {
   it('the real tree: each web module renders only mapping.web names for its archetypes', () => {
     const mods = B.modules.filter((m: Json) => m.platform === 'web');
     console.log(`C-8: ${mods.length} web modules`);
     expect(mods.length).toBeGreaterThan(0);
-    for (const m of mods) expect([m.path, mappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowedFor(m))]).toEqual([m.path, []]);
+    for (const m of mods) expect([m.path, mappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowedFor(m), B.libraries.web, sharedFor(m))]).toEqual([m.path, []]);
+  });
+  it('RED (MF-76): the shared REPORT exception is exact: a look-alike module, another report component, or no exception (another archetype) fails', () => {
+    const st = SHARED_REPORT_RENDERERS.STATIC as Record<string, string>;
+    const ok = ["import { ReportView, Picture } from '@/components/report/ReportView';", "import { ReportPage } from '@/components/report/ReportPage';", 'export const P = () => <><ReportView /><Picture /><ReportPage /></>;', ''].join('\n');
+    expect(mappingProblems(ok, 'ok.tsx', [], B.libraries.web, st)).toEqual([]);
+    expect(mappingProblems("import { ReportView } from '@/components/report/ReportViewX';\nexport const P = () => <ReportView />;\n", 'a.tsx', [], B.libraries.web, st))
+      .toEqual(['C-8 a.tsx:2: ReportView is not in mapping.web']);
+    expect(mappingProblems("import { ReportPageToggles } from '@/components/report/ReportPageToggles';\nexport const P = () => <ReportPageToggles />;\n", 'b.tsx', [], B.libraries.web, st))
+      .toEqual(['C-8 b.tsx:2: ReportPageToggles is not in mapping.web']);
+    expect(mappingProblems("import { ReportPage } from '@/components/report/ReportPage';\nexport const P = () => <ReportPage />;\n", 'c.tsx', ['Stack'], B.libraries.web))
+      .toEqual(['C-8 c.tsx:2: ReportPage is not in mapping.web']);
+    expect(Object.keys(SHARED_REPORT_RENDERERS)).toEqual(['STATIC']);
   });
   it('RED: a mapped name imported from a hand-built file (code-reviewer OUTPUT F2)', () => {
     const src = "import { Button } from './handbuilt';\nexport const P = () => <Button />;\n";

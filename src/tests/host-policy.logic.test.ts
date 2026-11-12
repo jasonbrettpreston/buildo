@@ -36,8 +36,10 @@ import { safeRedirectPath } from '@/lib/auth/safe-redirect';
 import { middleware } from '@/middleware';
 
 // The scope-D paths of the programme card (:51, :137) plus the scope B/C paths that are not MaxBLD rows. Each is refused on maxbld.ca.
+// Dated 2026-11-11 (MF-76; plan v3 §3.1, §12 fold 11; operator D-1 (a)): '/' left this list: on maxbld.ca it is the landing row (public, rewritten to
+// /parcel-tool/home), pinned in the MF-76 block below. On every other host '/' is still the Buildo page (the OTHER_HOSTS case keeps it).
 const NOT_MAXBLD = [
-  '/', '/dashboard', '/dashboard/leads', '/permits/x', '/builders', '/builders/1', '/api/permits', '/api/permits/1', '/api/builders',
+  '/dashboard', '/dashboard/leads', '/permits/x', '/builders', '/builders/1', '/api/permits', '/api/permits/1', '/api/builders',
   '/api/coa', '/api/trades', '/api/quality', '/api/leads', '/api/products', '/admin', '/admin/media', '/api/admin/stats', '/subscribe',
   '/subscribe/success', '/api/subscribe/exchange', '/api/webhooks/stripe', '/api/user-profile', '/api/sync', '/api/auth/x',
   '/parcel-toolx', '/api/parcels', '/api/parcels/lookupx', '/robots.txtx', '/zzz',
@@ -278,5 +280,34 @@ describe('host-policy: the plain pages (MF-46 stage C)', () => {
   it.each(PLAIN)('buildo.com refuses the internal page of %s, and does not serve it as a MaxBLD page', async (p) => {
     expect((await middleware(req('buildo.com', `/parcel-tool${p}`))).status).toBe(404);
     expect(resolveHost('buildo.com', p)).toEqual({ kind: 'buildo' });
+  });
+});
+
+// MF-76 (added 2026-11-11; plan v3 §3.1, §12 fold 11; operator D-1 (a) "1 y ..."): the MaxBLD landing. maxbld.ca / is a public row rewritten to the
+// internal page /parcel-tool/home; signed out it is served, never sent to /login; a near miss is refused; buildo.com / is the Buildo page unchanged and
+// buildo.com refuses the internal page.
+describe('host-policy: the landing (MF-76)', () => {
+  const req = (host: string, p: string): NextRequest => new NextRequest(`https://${host}${p}`, { headers: { host } });
+  it('/ on maxbld.ca is the public landing row, rewritten to /parcel-tool/home; near misses are refused', () => {
+    expect(resolveHost('maxbld.ca', '/')).toEqual({ kind: 'maxbld', route: { path: '/', match: 'exact', routeClass: 'public', internal: '/parcel-tool/home' }, internal: '/parcel-tool/home' });
+    for (const p of ['/home', '/index', '/x', '/parcel-toolx']) expect([p, resolveHost('maxbld.ca', p).kind]).toEqual([p, 'refuse']);
+  });
+  it('maxbld.ca / signed out is served (a rewrite to the landing page, not a login redirect), the query kept', async () => {
+    const res = await middleware(req('maxbld.ca', '/?utm=x'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('location')).toBeNull();
+    const rw = new URL(res.headers.get('x-middleware-rewrite') ?? 'https://x.invalid/');
+    expect([rw.pathname, rw.search]).toEqual(['/parcel-tool/home', '?utm=x']);
+  });
+  it('buildo.com / is the Buildo page (no rewrite) and buildo.com refuses /parcel-tool/home', async () => {
+    expect(resolveHost('buildo.com', '/')).toEqual({ kind: 'buildo' });
+    const res = await middleware(req('buildo.com', '/'));
+    expect(res.headers.get('x-middleware-rewrite')).toBeNull();
+    expect((await middleware(req('buildo.com', '/parcel-tool/home'))).status).toBe(404);
+  });
+  it('RED on a mutated copy: a landing row marked authenticated sends a signed-out visitor to /login', async () => {
+    const mutated: MaxbldRoute[] = MAXBLD_ROUTES.map((r) => (r.path === '/' ? { ...r, routeClass: 'authenticated' } : r));
+    expect(resolveHost('maxbld.ca', '/', mutated)).toMatchObject({ kind: 'maxbld', route: { routeClass: 'authenticated' } });
+    expect(MAXBLD_ROUTES.find((r) => r.path === '/')?.routeClass).toBe('public');
   });
 });

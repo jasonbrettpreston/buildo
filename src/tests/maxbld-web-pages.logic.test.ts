@@ -162,7 +162,9 @@ describe('L the live switch and the fences', () => {
     [/features\/leads|\/dashboard|\/permits\/|\/builders/, 'scope D (Spec 128 R-03)'],
     // Dated 2026-11-11 (MF-46; Spec 126 §11b.1 "Auth ... existing, not converted"; §11b.3 `web_login` shared): the one named exception is the
     // shared sign-in screen, by exact module name; any other component outside the binding modules still fails (planted case below).
-    [/@\/components\/(?!surfaces\/|auth\/LoginForm['"])/, 'a component outside the binding modules (plan v2 P16; OUTPUT security F7)'],
+    // Dated 2026-11-11 (MF-76; plan v3 §12 fold 12; Spec 126 §11b.1 "REPORT keeps the landed renderer", FE-07): the second named exception is the
+    // shared REPORT renderers the web STATIC binding embeds (the loading state and the v21 page), by exact module name; planted cases below.
+    [/@\/components\/(?!surfaces\/|auth\/LoginForm['"]|report\/Report(?:View|Page)['"])/, 'a component outside the binding modules (plan v2 P16; OUTPUT security F7)'],
   ];
   // OUTPUT panel (regression 1): the binding and the pages' data module are scanned too, so a fetch added there cannot charge a report either.
   it('nothing under src/app/(maxbld)/parcel-tool, the web SEARCH binding or maxbld-web.ts meters, caches, fetches or reaches scope D (non-vacuous)', () => {
@@ -174,7 +176,11 @@ describe('L the live switch and the fences', () => {
     // MF-46 (dated 2026-11-11, plan v1 fold 4): 23 -> 24, the refused-page target (static)/refused/page.tsx.
     // MF-46 OUTPUT panel (regression F2, dated 2026-11-11): the shared LoginForm the mounts may import is scanned too, 24 -> 25.
     all.push(path.join(ROOT, 'src/components/auth/LoginForm.tsx'));
-    expect(all.length).toBe(25);
+    // MF-76 (dated 2026-11-11; plan v3 §12 fold 12): 23 -> 25, the landing mount (parcel-tool/(static)/home/page.tsx, found by the walk) and its
+    // server module src/lib/surfaces/maxbld-landing.ts (added to the list: its reads are a stored row and settings, never a lookup or a meter).
+    all.push(path.join(ROOT, 'src/lib/surfaces/maxbld-landing.ts'));
+    // MF-76 restacked onto MF-46 (dated 2026-11-11): 25 -> 27, the landing mount (found by the walk) and maxbld-landing.ts.
+    expect(all.length).toBe(27);
     for (const f of all) for (const [re, why] of BANNED) expect([path.relative(ROOT, f), why, re.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), why, false]);
   });
   it('RED: each banned form is caught in a planted text', () => {
@@ -183,6 +189,9 @@ describe('L the live switch and the fences', () => {
     // MF-46: the named exception is exact: another auth component, or a LoginForm look-alike path, is still caught.
     const comp = (BANNED[4] as [RegExp, string])[0];
     expect([comp.test("import { X } from '@/components/auth/Other';"), comp.test("import { X } from '@/components/auth/LoginFormX';"), comp.test("import { LoginForm } from '@/components/auth/LoginForm';")]).toEqual([true, true, false]);
+    // MF-76: the report exception is exact too: another report module, or a look-alike, is still caught.
+    expect([comp.test("import { ReportView } from '@/components/report/ReportView';"), comp.test("import { ReportPage } from '@/components/report/ReportPage';"),
+      comp.test("import { T } from '@/components/report/ReportPageToggles';"), comp.test("import { X } from '@/components/report/ReportViewX';"), comp.test("import { X } from '@/components/report/Other';")]).toEqual([false, false, true, true, true]);
   });
   // OUTPUT panel (regression 2): each provider layout carries its own forced scheme: the web pages dark, the admin pages light (MF-37 batch C-2).
   it('the parcel-tool layout forces dark; the admin layout still forces light', () => {

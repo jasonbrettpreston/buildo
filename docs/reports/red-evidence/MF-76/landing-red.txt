@@ -1,0 +1,47 @@
+MF-76 red evidence (2026-11-11): the landing locks run against STUBS before the real code was put back (no DB; targeted vitest, 4 forks).
+Stubs: src/lib/surfaces/maxbld-landing.ts with typed values (scenarios '6', cost_sources '34', allowances '20'), the en-CA list without the operator's comma and with two labels, a citywide reader with no catch that keeps a partial row (one line), no processing demo; src/lib/auth/host-policy.ts without the '/' landing row; src/app/globals.css without the sample reveal block.
+Files: src/tests/surfaces/web-landing.logic.test.ts, src/tests/surfaces/web-landing.ui.test.tsx, src/tests/host-policy.logic.test.ts. Result: 20 of 148 failing (every failure is a lock firing on a stub; the rest pass on the committed content and contract).
+
+   × host-policy: the landing (MF-76) > / on maxbld.ca is the public landing row, rewritten to /parcel-tool/home; near misses are refused 3ms
+     → expected { kind: 'refuse' } to deeply equal { kind: 'maxbld', …(2) }
+   × host-policy: the landing (MF-76) > maxbld.ca / signed out is served (a rewrite to the landing page, not a login redirect), the query kept 0ms
+     → expected 404 to be 200 // Object.is equality
+   × host-policy: the landing (MF-76) > RED on a mutated copy: a landing row marked authenticated sends a signed-out visitor to /login 1ms
+     → expected { kind: 'refuse' } to match object { kind: 'maxbld', …(1) }
+   × T3 one source per number > the citywide figures are MF-62 templates filled from the stored row, equal to the demo lines; the rules count is universe.lock.json 7ms
+     → expected {} to deeply equal { …(5) }
+   × T3 one source per number > a missing row, a zero value or a partial row leaves the WHOLE group out (and the demo); RED: a partial row never renders 4 lines 1ms
+     → expected [ 'zero', 'static', …(2) ] to deeply equal [ 'zero', 'degraded', [], undefined ]
+   × T3 one source per number > the scenario count and the hero list come from one declaration; every entry names an existing increments-table row 1ms
+     → expected 'detached houses and houseplexes' to be 'detached houses, houseplexes, seconda…' // Object.is equality
+   × T3 one source per number > the allowances are the settings (migration 303 keys), server-formatted 0ms
+     → expected [ '20', '20' ] to deeply equal [ '20', '25' ]
+   × T5 every control is a real link > every href is a public host-table row with a page behind it, an anchor that exists, or a declared plan key 1ms
+     → expected [ …(3) ] to deeply equal []
+   × T5 every control is a real link > RED: /contact, a plan that is not declared, an anchor that does not exist 0ms
+     → expected [ …(5) ] to deeply equal [ …(3) ]
+   × T9 the reveal and reduced motion > the sample block: opacity only, one run, at once on :target and under reduce motion 0ms
+     → expected [ …(3) ] to deeply equal []
+   × T9 the reveal and reduced motion > RED: an infinite pulse, a display none, no reduce-motion rule 0ms
+     → expected [ …(3) ] to deeply equal [ 'no infinite animation' ]
+   × T10 the route > the landing is a static segment under (static) (it wins over [parcelId]), public, no gate, read per request; its metadata is from content 0ms
+     → expected null to deeply equal { path: '/', match: 'exact', …(2) }
+   × T14 a reader that throws > the page still builds (degraded, no allowance parts), one logError per failed read, never a throw 0ms
+     → fixture: the database is unreachable
+   × T15 no cookie for a signed-out GET / on maxbld.ca > the real middleware (session refresh included, no session) sets no cookie and rewrites to the landing 33ms
+     → expected '/' to be '/parcel-tool/home' // Object.is equality
+   × (a) the two goldens render (FE-33) > static: every string present (templates filled), no raw ref, one h1, h2 per section, h3 per item and box 59ms
+     → StaticBinding: no demo view (the server leaves this part out)
+   × (b) controls, the demo and the sample region > every control outside the shared report page is a link; Skip and View report lead to /#sample from the first paint; no aria-live on the landing 3ms
+     → StaticBinding: no demo view (the server leaves this part out)
+   × (b) controls, the demo and the sample region > the sample region is a named, keyboard-reachable section#sample that fades in at the server minimum; its caption follows 2ms
+     → StaticBinding: no demo view (the server leaves this part out)
+   × (c) plans without prices; pictures only when the server sends one > four boxes, no price, no "/ month", the declared plan links 3ms
+     → StaticBinding: no demo view (the server leaves this part out)
+   × (c) plans without prices; pictures only when the server sends one > the step picture and the scene are the report Picture when an image is sent, and absent from the page when not 2ms
+     → StaticBinding: no demo view (the server leaves this part out)
+   × (d) RED: planted faults throw (the server leaves a failed part out; the binding never skips one) > a missing value, a number as a value, a demo without its view, a template without its value 6ms
+     → expected [Function] to throw error including 'no server value "scenarios"' but got 'StaticBinding: no demo view (the serv…'
+⎯⎯⎯⎯⎯⎯ Failed Tests 20 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  3 failed (3)
+      Tests  20 failed | 128 passed (148)

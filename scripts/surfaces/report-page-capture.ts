@@ -7,7 +7,7 @@
 // REPORT dir and converted surfaces there); src/tests/surfaces/report-page.logic.test.ts holds the capture and parity proof meanwhile.
 // MF-19 (2026-11-11; D-5, D-6): three more page states per target beside v21 (entry_off: the switch off, no box or sheet; entered: the
 // after-entry line; entered_used: the line with its recalculated sentence), each from its own authored response_fixture.
-//   npx tsx scripts/surfaces/report-page-capture.ts            rewrite the page goldens
+//   npx tsx scripts/surfaces/report-page-capture.ts            rewrite the page goldens (MF-76: and the landing sample tree)
 //   npx tsx scripts/surfaces/report-page-capture.ts --check    exit 1 if any page golden would change (writes nothing)
 // MF-48 (Stage A; Spec 126 11b.2 dated note 2026-11-11, D-4 a): the same run also writes the mobile page VIEWS of the mobile props goldens
 // (props/<state>.mobile.json): each view is pageViewOf(buildPage(response), {target: 'mobile'}) through this core, never a second resolver. The
@@ -45,6 +45,25 @@ export const capturePages = (root: string): Map<string, string> => {
   return out;
 };
 
+// MF-76 (dated 2026-11-11; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.4 and section 13b, operator D-3 (a) "3 y"): the landing's
+// sample report is ONE committed synthetic page tree beside the web_landing descriptor, rebuilt here by the same buildPage as the v21 goldens (never
+// hand-edited, FE-02). Its response fixture is the v21 synthetic response; `address` is the made-up address the landing's processing demo names
+// (the page contract has no address field yet: the report's own address part stays pending). Before launch it is regenerated from one typical real
+// lot with only the address changed (launch gate 4).
+export const LANDING_SAMPLE = 'scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json';
+export const captureLandingSample = (root: string): string => {
+  const files: Record<string, string> = {};
+  for (const p of PAGE_FP_FILES) files[p] = sha16(path.join(root, p));
+  const g = readJson(path.join(root, LANDING_SAMPLE)) as Json;
+  const next = {
+    harness: g.harness, spec: g.spec, surface: g.surface, address: g.address,
+    response_fixture: g.response_fixture,
+    rendered_tree: buildPage(g.response_fixture, reportCtx),
+    fingerprint: { response_fixture: sha16Text(g.response_fixture), files },
+  };
+  return `${JSON.stringify(next, null, 2)}\n`;
+};
+
 // MF-48 · the mobile props goldens: one per page variant (built from the v21 mobile response by buildPage, never by hand) and one per lifecycle state.
 export const MOBILE_PROPS_DIR = `${PAGE_GOLDEN_DIR}/props`;
 const AD_PREFIX = 'ad_';
@@ -80,13 +99,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const check = process.argv.includes('--check');
   const all = new Map([...capturePages(root), ...captureMobileViews(root)]); // MF-48: + the mobile views (props/)
   const stale = [...all].filter(([f, t]) => !fs.existsSync(path.join(root, PAGE_GOLDEN_DIR, f)) || fs.readFileSync(path.join(root, PAGE_GOLDEN_DIR, f), 'utf8') !== t).map(([f]) => f);
+  const sample = captureLandingSample(root); // MF-76: the landing sample tree, the same run
+  if (fs.readFileSync(path.join(root, LANDING_SAMPLE), 'utf8') !== sample) stale.push(LANDING_SAMPLE);
   if (check) {
     for (const f of stale) console.error(`PAGE-GOLDEN ${f}: stale (run without --check)`);
     process.exitCode = stale.length ? 1 : 0;
-    if (!stale.length) console.log(`page goldens current (${all.size})`);
+    if (!stale.length) console.log(`page goldens current (${all.size} and the landing sample)`);
   } else {
     fs.mkdirSync(path.join(root, MOBILE_PROPS_DIR), { recursive: true }); // OUTPUT fold CR LOW-2: --check writes nothing
     for (const [f, t] of all) fs.writeFileSync(path.join(root, PAGE_GOLDEN_DIR, f), t);
+    fs.writeFileSync(path.join(root, LANDING_SAMPLE), sample); // MF-76
     console.log(`page goldens written (${all.size}; ${stale.length} changed)`);
   }
 }

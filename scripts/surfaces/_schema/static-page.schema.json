@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "static-page.schema.json",
   "title": "MaxBLD static page (archetype STATIC, web)",
-  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table).",
+  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table). Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a) and D-2 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\", then \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2, section 12 fold 18, sections 13a and 13b): the landing kinds join the closed list: hero (nav and wordmark links, the tagline, the title and its accent, the sub line, the main link, the trial terms, the short legal line, the processing demo, the sample report region with its caption, and the process scene slot), figures (a heading, figures and the citywide group of the report loading state), items (a heading, a lede, then items: label, title, text and the one report picture) and plans (a heading, then boxes: name, price, per, tax, tick, note, link; a section foot). A part may name `value`, a declared server read of its surface: its content is then a template with exactly one {value} slot, filled on the server with a server-formatted string (FE-05; the FE-35 pattern; Spec 128 section 4 escalation of this date: a STATIC page may read declared stored values on the server). A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1)). Four roles carry no content key: checked (the citywide lines, MF-62 content, one home), demo (the shared loading state), picture (the report picture) and scene (a media-library image slot, nothing until an asset is set). A link may carry one query parameter and one fragment (/signup?plan=basic, /help#topic=enterprise, /#pricing); the host table still decides where it leads. Still content keys only, never a number.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -53,6 +53,18 @@
         },
         {
           "$ref": "#/$defs/footer"
+        },
+        {
+          "$ref": "#/$defs/hero"
+        },
+        {
+          "$ref": "#/$defs/figures"
+        },
+        {
+          "$ref": "#/$defs/items"
+        },
+        {
+          "$ref": "#/$defs/plans"
         }
       ]
     },
@@ -133,8 +145,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "role",
-        "content"
+        "role"
       ],
       "properties": {
         "role": {
@@ -146,36 +157,299 @@
         },
         "href": {
           "type": "string",
-          "pattern": "^/(?![/\\\\])[a-z0-9/_-]*$"
+          "pattern": "^/(?![/\\\\])[a-z0-9/_-]*(\\?[a-z0-9_]+=[a-z0-9_]+)?(#[a-z0-9_=-]+)?$"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "group": {
+          "const": "citywide"
         }
       },
-      "if": {
-        "type": "object",
-        "properties": {
-          "role": {
-            "const": "link"
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "enum": [
+                  "link",
+                  "nav",
+                  "wordmark",
+                  "cta"
+                ]
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "href": true
+            },
+            "required": [
+              "href"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "not": {
+              "type": "object",
+              "properties": {
+                "href": true
+              },
+              "required": [
+                "href"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "enum": [
+                  "checked",
+                  "demo",
+                  "picture",
+                  "scene"
+                ]
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "not": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "content": true
+                  },
+                  "required": [
+                    "content"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": true
+                  },
+                  "required": [
+                    "value"
+                  ]
+                }
+              ]
+            }
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "content": true
+            },
+            "required": [
+              "content"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "enum": [
+                  "checked"
+                ]
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "group": true
+            },
+            "required": [
+              "group"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "not": {
+              "type": "object",
+              "properties": {
+                "group": true
+              },
+              "required": [
+                "group"
+              ]
+            }
           }
         }
-      },
-      "then": {
-        "type": "object",
-        "properties": {
-          "href": true
+      ]
+    },
+    "hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "parts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "hero"
         },
-        "required": [
-          "href"
-        ]
-      },
-      "else": {
-        "type": "object",
-        "not": {
-          "type": "object",
-          "properties": {
-            "href": true
-          },
-          "required": [
-            "href"
-          ]
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/part",
+            "properties": {
+              "role": {
+                "enum": [
+                  "nav",
+                  "wordmark",
+                  "tagline",
+                  "title",
+                  "accent",
+                  "sub",
+                  "cta",
+                  "term",
+                  "legal",
+                  "demo",
+                  "sample",
+                  "caption",
+                  "scene"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "figures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "parts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "figures"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/part",
+            "properties": {
+              "role": {
+                "enum": [
+                  "heading",
+                  "figure",
+                  "checked"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "parts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "items"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/part",
+            "properties": {
+              "role": {
+                "enum": [
+                  "heading",
+                  "lede",
+                  "label",
+                  "title",
+                  "text",
+                  "picture"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "plans": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "parts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "plans"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/part",
+            "properties": {
+              "role": {
+                "enum": [
+                  "heading",
+                  "intro",
+                  "name",
+                  "price",
+                  "per",
+                  "tax",
+                  "tick",
+                  "note",
+                  "link",
+                  "foot"
+                ]
+              }
+            }
+          }
         }
       }
     }

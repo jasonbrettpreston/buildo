@@ -23,7 +23,9 @@ import { STATIC_CONTENT, staticPage } from '../../lib/surfaces/maxbld-static';
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
 const ROOT = process.cwd();
 const GROOT = path.join(ROOT, 'src/tests/fixtures/surfaces');
-const IDS = Object.keys(STATIC_CONTENT);
+// MF-76 (dated 2026-11-11): the landing's goldens need its server values and report views; they are rendered by src/tests/surfaces/web-landing.ui.test.tsx
+// (the same render smoke, FE-33, with a fixture of the declared reads), so this file keeps the plain pages.
+const IDS = Object.keys(STATIC_CONTENT).filter((id) => id !== 'web_landing');
 const GOLDENS: Json[] = IDS.flatMap((id) => fs.readdirSync(path.join(GROOT, id)).filter((f) => f.endsWith('.web.json')).sort()
   .map((f) => JSON.parse(fs.readFileSync(path.join(GROOT, id, f), 'utf8')) as Json));
 const provided = (el: ReactElement): ReactElement => h(AdminMantineProvider, { scheme: 'dark', children: el });
@@ -113,7 +115,8 @@ describe('(c) RED: planted defects throw', () => {
   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
     expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
-    expect(plant((p) => { p.sections[0].kind = 'hero'; })).toThrow('unknown section kind "hero"');
+    // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
     expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
     expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
     expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');

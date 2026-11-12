@@ -182,3 +182,22 @@
   .report-check-line, .report-check-fact, .report-check-ready, .report-check-view { animation: none; }
   .report-check-verb, .report-check-skip { display: none; }
 }
+
+/* MF-76 (Spec 126 11b.3 dated note 2026-11-11; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.3, section 12 fold 9): the landing's
+   sample region fades in when the processing demo ends, at the server's minimum --reveal (set only when the demo is shown). Opacity only, never
+   display: the sample stays in the accessibility tree and keyboard-reachable; one run, never infinite. The hidden start comes only from fill-mode
+   backwards, so the Skip link (#sample, :target), reduce motion (WCAG 2.2 SC 2.2.2) and print show it at once. scroll-margin keeps an anchored
+   section clear of the top (WCAG 2.4.11). Locked by src/tests/surfaces/web-landing.logic.test.ts T9. */
+.landing-sample {
+  animation: report-check-in 400ms ease-out backwards;
+  animation-delay: var(--reveal, 0ms);
+}
+.landing-sample:target {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-sample { animation: none; }
+}
+@media print {
+  .landing-sample { animation: none; }
+}

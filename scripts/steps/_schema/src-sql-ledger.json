@@ -2658,7 +2658,7 @@
     },
     "src/lib/parcels/what-we-checked.ts": {
       "class": "static",
-      "statements": 3,
+      "statements": 4,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,

@@ -544,15 +544,18 @@ It is 1 of 9 entr(ies) in feature `F04`. Removing it deletes 1 owned component(s
 
 Registry detail: [`S-005`](../../../docs/reports/generated/127-surface-registry.md#s-005) `web_landing`.
 
-`SURFACE` · `STATIC` · scope `parcel_product` · feature `F06` web-front-door · build order 1063 · batch UNRESEARCHED · **review: `unreviewed`**
+`SURFACE` · `STATIC` · scope `parcel_product` · feature `F06` web-front-door · build order 1063 · batch B2 · **review: `unreviewed`**
 
 **1. What does it do, and for whom?**
 
-The public front door of the product. A visitor who has never signed in lands here and reads the pitch: the service watches Toronto building permits every day and matches them to a trade so contractors hear about jobs early. It shows three explainer cards, a list of the twenty trade categories covered, and buttons that send the visitor to sign in or straight to the live permit feed. Nothing on the page is personalised and it fetches no data.
+The MaxBLD landing on maxbld.ca /: the pitch to real estate agents (Spec 126 §11b.7 item 7), the build scenarios the report covers, the trust figures from data, the four plan boxes, the processing demo and a sample report on a made-up address. Every word is content; every number is read on the server.
 
 **2. Which tables and columns, produced by which step?**
 
-_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `data_quality_snapshots` | `parcels_total` · `building_footprints_total` · `permits_active_distinct` · `coa_total` · `map_areas_total` · `snapshot_date` | `id` · `snapshot_date` · `total_permits` · `active_permits` · `permits_with_trades` · `trade_matches_total` · `trade_avg_confidence` · `trade_tier1_count` · `trade_tier2_count` · `trade_tier3_count` · `permits_with_builder` · `builders_total` · `builders_enriched` · `builders_with_phone` · `builders_with_email` · `builders_with_website` · `builders_with_google` · `builders_with_wsib` · `permits_with_parcel` · `parcel_exact_matches` · `parcel_name_matches` · `parcel_avg_confidence` · `permits_with_neighbourhood` · `permits_geocoded` · `coa_total` · `coa_linked` · `coa_avg_confidence` · `coa_high_confidence` · `coa_low_confidence` · `permits_updated_24h` · `permits_updated_7d` · `permits_updated_30d` · `last_sync_at` · `last_sync_status` · `created_at` · `parcel_spatial_matches` · `permits_with_scope` · `scope_project_type_breakdown` · `building_footprints_total` · `parcels_with_buildings` · `permits_with_scope_tags` · `scope_tags_top` · `permits_with_detailed_tags` · `trade_residential_classified` · `trade_residential_total` · `trade_commercial_classified` · `trade_commercial_total` · `null_description_count` · `null_builder_name_count` · `null_est_const_cost_count` · `null_street_num_count` · `null_street_name_count` · `null_geo_id_count` · `violation_cost_out_of_range` · `violation_future_issued_date` · `violation_missing_status` · `violations_total` · `schema_column_counts` · `sla_permits_ingestion_hours` · `inspections_total` · `inspections_permits_scraped` · `inspections_outstanding_count` · `inspections_passed_count` · `inspections_not_passed_count` · `cost_estimates_total` · `cost_estimates_from_permit` · `cost_estimates_from_model` · `cost_estimates_null_cost` · `timing_calibration_total` · `timing_calibration_avg_sample` · `timing_calibration_freshness_hours` · `cost_estimates_liar_gate_overrides` · `cost_estimates_zero_total_bypass` · `parcels_total` · `permits_active_distinct` · `map_areas_total` · `zoning_layer_version` · `permits_last_seen_at` · `coa_last_seen_at` | `refresh_snapshot` | `permits[27], coa[11], sources[24], deep_scrapes[3]` | `docs/specs/01-pipeline/60_shared_steps.md` |
+| reads | `logic_variables` | `variable_key` · `variable_value` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `none` | `n/a` | `docs/specs/00-architecture/02_logic_variables.md` |
 
 **3. Which contracts, and who calls them?**
 
@@ -560,7 +563,7 @@ It reaches no contract — every value is local, a prop, or device state.
 
 **4. What gate, role or entitlement stands in front of it?**
 
-session `anon` — PUBLIC_PATHS lists `/` explicitly and the middleware lock pins classifyRoute('/') === 'public'. · RLS class `none` · entitlement `none`
+session `anon` — Public on maxbld.ca: the public row / → /parcel-tool/home; the page gates nothing (it never calls requireParcelToolPage) and sets no cookie for a signed-out visitor. · RLS class `none` · entitlement `none`
 
 **5. What archetype, and why that one?**
 
@@ -568,15 +571,15 @@ session `anon` — PUBLIC_PATHS lists `/` explicitly and the middleware lock pin
 
 **6. Is any behaviour here lead-gen leakage?**
 
-- ⚠️ The MaxBLD web front door currently MARKETS LEAD GENERATION. Under OD5 the parcel product is its own product, so a scope-A surface selling the lead-gen app is a product-boundary leak, not just stale copy. Recorded as measured; the rewrite is a content change outside this pass. → owning product `lead_gen`, proposed `needs-ruling`. Evidence: `src/app/page.tsx`
+Swept; none found.
 
 **7. Does it match its owning spec section?**
 
-Spec: **UNRESEARCHED** — no SPEC LINK header and no System Map row, so there is nothing to check it against · anchors: 
+Spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · anchors: `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3 web_landing (dated note 2026-11-11, MF-76) and §11b.7 W1` · `docs/specs/02-web-admin/128_surface_standard_policy.md §4 (dated note 2026-11-11: STATIC server reads)`
 
 **8. What is still unresearched?**
 
-**3 field(s).** They are the literal `UNRESEARCHED` in the descriptor; §2.2 of the registry groups them by reason.
+Nothing — every field is answered with a why and a citation.
 
 **9. What would removing it delete?**
 

@@ -42,12 +42,14 @@ const pagesOf = (): Array<[string, string, Json]> => Object.entries(TABLE.pages 
 describe('T1 the page table against the contract', () => {
   it('validates (examined pages printed)', () => {
     expect([validate(TABLE), validate.errors ?? null]).toEqual([true, null]);
-    expect(pagesOf().length).toBe(5);
+    // MF-76 (dated 2026-11-11): + web_landing static and degraded (5 -> 7).
+    expect(pagesOf().length).toBe(7);
   });
   it('RED: each planted defect is refused', () => {
     const plants: Array<[string, (t: Json) => void]> = [
       ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'hero'; }],
+      // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
       ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
       ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
       ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
@@ -92,7 +94,9 @@ describe('T3 one footer, one legal line', () => {
 
 describe('T4 every link is a public host-table route with a page behind it', () => {
   it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
-    const hrefs = [...new Set(pagesOf().flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+    // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+    // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
     expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
     for (const h of hrefs) {
       const row = matchMaxbldRoute(h);
@@ -107,7 +111,8 @@ describe('T5 the plain pages are public (no gate)', () => {
   it('no mount under (static) imports the parcel-tool page gate', () => {
     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
-    expect(files.sort()).toEqual(['error.tsx', 'help/page.tsx', 'not-found.tsx', 'privacy/page.tsx', 'refused/page.tsx', 'terms/page.tsx']);
+    // MF-76 (dated 2026-11-11): + the landing mount home/page.tsx (public, no gate; its errors reach error.tsx).
+    expect(files.sort()).toEqual(['error.tsx', 'help/page.tsx', 'home/page.tsx', 'not-found.tsx', 'privacy/page.tsx', 'refused/page.tsx', 'terms/page.tsx']);
     for (const f of files) expect([f, gateImports(fs.readFileSync(path.join(ROOT, MOUNTS, f), 'utf8'))]).toEqual([f, []]);
   });
   it('RED: a planted gate import is caught', () => {

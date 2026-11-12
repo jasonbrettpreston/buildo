@@ -66,7 +66,7 @@ interface LotRow {
   types_evaluated: string | number | null;
   address_number: string | null; linear_name_full: string | null;
 }
-interface CitywideRow {
+export interface CitywideRow {
   parcels_total: unknown; building_footprints_total: unknown; permits_active_distinct: unknown; coa_total: unknown; map_areas_total: unknown;
   zoning_layer_version: Date | string | null; permits_last_seen_at: Date | string | null; coa_last_seen_at: Date | string | null;
 }
@@ -89,6 +89,12 @@ export const CITYWIDE_SQL = `SELECT parcels_total, building_footprints_total, pe
  WHERE parcels_total IS NOT NULL
  ORDER BY snapshot_date DESC
  LIMIT 1`;
+
+/** The newest stored, dated citywide row, or undefined. MF-76 (dated 2026-11-11): the landing reads the same row through this one SQL home
+ * (src/lib/surfaces/maxbld-landing.ts); the lookup path below is unchanged. */
+export async function readCitywideRow(db: Queryable): Promise<CitywideRow | undefined> {
+  return (await db.query<CitywideRow>(CITYWIDE_SQL)).rows[0];
+}
 
 /** The citywide lines (operator order), or [] when the stored row or any value is missing. */
 export function citywideLines(row: CitywideRow | undefined, regulations: number): Array<{ key: string; value: string }> {

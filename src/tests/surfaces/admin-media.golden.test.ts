@@ -34,7 +34,8 @@ describe('T7 (a) the committed goldens equal a fresh build', () => {
   it('56 goldens, byte for byte', () => {
     const fresh = buildGoldens(ROOT);
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join. 56 -> 61 goldens.
-    expect(fresh.size).toBe(61);
+    // MF-76 (dated 2026-11-11; plan v3 §12 fold 14): the landing's 2 web goldens (static, degraded) join (49 -> 51).
+    expect(fresh.size).toBe(63); // MF-76: + the landing's 2 web goldens
     for (const [p, text] of fresh) expect([p, fs.readFileSync(path.join(ROOT, p), 'utf8') === text]).toEqual([p, true]);
   });
   it('RED: a hand edit of one golden differs from the fresh build', () => {
@@ -65,7 +66,8 @@ describe('T7 (b) coverage', () => {
     // (mobile/__tests__/parcelScreens.golden.test.ts), so this web coverage case reads the web surfaces only.
     expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'admin_lot_size_revert', 'report_lot_size_entry',
       // MF-46 stage C (dated 2026-11-11): the MaxBLD plain pages and their error page, the first web STATIC surfaces.
-      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
+      // MF-76 (dated 2026-11-11): the MaxBLD landing.
+      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
     for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {

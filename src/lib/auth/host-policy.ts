@@ -46,6 +46,8 @@ export const MAXBLD_ROUTES: readonly MaxbldRoute[] = [
   { path: '/set-password', match: 'exact', routeClass: 'authenticated', internal: '/parcel-tool/set-password' },
   // The terms record once after the first MaxBLD sign-in (D-2 b).
   { path: '/terms-accept', match: 'exact', routeClass: 'authenticated', internal: '/parcel-tool/terms-accept' },
+  // W1 the landing (MF-76, dated 2026-11-11; plan v3 §3.1, §12 fold 11): maxbld.ca / is the landing page, public, rewritten to its internal page.
+  { path: '/', match: 'exact', routeClass: 'public', internal: '/parcel-tool/home' },
   { path: '/help', match: 'exact', routeClass: 'public', internal: '/parcel-tool/help' },
   { path: '/terms', match: 'exact', routeClass: 'public', internal: '/parcel-tool/terms' },
   { path: '/privacy', match: 'exact', routeClass: 'public', internal: '/parcel-tool/privacy' },

@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **91 surfaces, 71 contracts and 6 jobs** in it today.
+There are **92 surfaces, 71 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 91 |
+| SURFACE | 92 |
 | CONTRACT | 71 |
 | JOB | 6 |
-| **Total** | **168** |
+| **Total** | **169** |
 
 ### 2.1 By archetype
 
@@ -227,25 +227,25 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `SEARCH` | SURFACE | 3 | 2 | 1 | 6 |
 | `SHELL` | SURFACE | 6 | 0 | 0 | 6 |
 | `SLOT` | SURFACE | 1 | 0 | 0 | 1 |
-| `STATIC` | SURFACE | 6 | 1 | 4 | 11 |
+| `STATIC` | SURFACE | 6 | 1 | 5 | 12 |
 | `WEBHOOK` | CONTRACT | 1 | 0 | 0 | 1 |
 | `WIZARD_STEP` | SURFACE | 9 | 0 | 0 | 9 |
 
 ### 2.2 Research progress
 
-**29 of 168 rows fully researched · 139 still open · 440 unresearched fields in total.**
+**30 of 169 rows fully researched · 139 still open · 439 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
 | `mobile-product.json` | 40 | 10 | 30 | 63 |
-| `web-product.json` | 19 | 9 | 10 | 89 |
+| `web-product.json` | 20 | 10 | 10 | 88 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 17 | 9 | 8 | 15 |
 | `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **168** | **29** | **139** | **440** |
+| **total** | **169** | **30** | **139** | **439** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -257,8 +257,8 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | **vocabulary escalation** | 113 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
 | **archetype profile field, newly required** | 52 | ASK-22 made the archetype profiles REAL, so these fields became required AFTER the research pass ran. The field must now be present; it may hold the sentinel. Each is a short, well-defined lookup — the pagination idiom, the poll interval, the debounce, the resume key. |
 | **measurement not yet made** | 23 | An ordinary lookup nobody has done yet — read the query, name the columns, cite the line. |
-| **other** | 170 | Fields at paths this grouping does not name: see the per-row badges. |
-| | **440** | |
+| **other** | 169 | Fields at paths this grouping does not name: see the per-row badges. |
+| | **439** | |
 
 ### 2.3 By status
 
@@ -266,7 +266,7 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 |---|---:|---|
 | exists | 128 | the code is in the tree today |
 | new | 26 | specified, not built |
-| generated | 14 | will be rendered from descriptors, not hand-written |
+| generated | 15 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 17 | 13 (76%) | 10 | yes |
+| **A** | `parcel_product` | 17 | 14 (82%) | 11 | yes |
 | **B** | `parcel_admin` | 26 | 9 (35%) | 20 | yes |
 | **C** | `platform_shared` | 79 | 7 (9%) | 43 | yes |
-| **D** | `estate_other` | 46 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
-| | **total** | **168** | **29** | | |
+| **D** | `estate_other` | 47 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
+| | **total** | **169** | **30** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -332,7 +332,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`C-069`](#c-069) | contract | `contract_parcels_entitlement` | `QUERY` | `F02` parcel-report | 1023 | 97% | [detail](#c-069) |
 | [`S-001`](#s-001) | surface | `mobile_parcel_detail` **(pilot)** | `REPORT` | `F02` parcel-report | 1023 | 100% | [detail](#s-001) |
 | [`S-003`](#s-003) | surface | `overlay_sponsor_slot` | `SLOT` | `F04` sponsor-placements | 1043 | 100% | [detail](#s-003) |
-| [`S-005`](#s-005) | surface | `web_landing` | `STATIC` | `F06` web-front-door | 1063 | 91% | [detail](#s-005) |
+| [`S-005`](#s-005) | surface | `web_landing` | `STATIC` | `F06` web-front-door | 1063 | 100% | [detail](#s-005) |
 | [`S-088`](#s-088) | surface | `web_help` | `STATIC` | `F06` web-front-door | 1064 | 100% | [detail](#s-088) |
 | [`S-091`](#s-091) | surface | `web_maxbld_error` | `STATIC` | `F06` web-front-door | 1064 | 100% | [detail](#s-091) |
 | [`S-090`](#s-090) | surface | `web_privacy` | `STATIC` | `F06` web-front-door | 1064 | 100% | [detail](#s-090) |
@@ -457,7 +457,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-026`](#s-026) | surface | `admin_users` | `LIST` | `F16` platform-admin | 3163 | 88% | [detail](#s-026) |
 | [`S-050`](#s-050) | surface | `web_login` | `GATE` | `F16` platform-admin | 3163 | 91% | [detail](#s-050) |
 
-**§D `estate_other` (46) — appendix, not governed.** Listed with ids so a shared contract or an orphan can be cited; not batched.
+**§D `estate_other` (47) — appendix, not governed.** Listed with ids so a shared contract or an orphan can be cited; not batched.
 
 <details><summary>expand the appendix</summary>
 
@@ -501,6 +501,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | <a id="s-066"></a>`S-066` | surface | `overlay_search_permits_sheet` | `SEARCH` | `F92` permits-builders-entities |
 | <a id="s-067"></a>`S-067` | surface | `web_builder_detail` | `DETAIL` | `F92` permits-builders-entities |
 | <a id="s-068"></a>`S-068` | surface | `web_builders_list` | `LIST` | `F92` permits-builders-entities |
+| <a id="s-092"></a>`S-092` | surface | `web_buildo_landing` | `STATIC` | `F92` permits-builders-entities |
 | <a id="s-069"></a>`S-069` | surface | `web_dashboard` | `DASHBOARD` | `F92` permits-builders-entities |
 | <a id="s-070"></a>`S-070` | surface | `web_permit_detail` | `DETAIL` | `F92` permits-builders-entities |
 | <a id="j-001"></a>`J-001` | job | `job_lead_views_retention_purge` | `SCHEDULED` | `F93` scheduled-jobs |
@@ -523,7 +524,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
-| **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) · [`S-088`](#s-088) · [`S-089`](#s-089) · [`S-090`](#s-090) · [`S-091`](#s-091) | 0 | 0 | 5 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F06** web-front-door | `parcel_product` | [`S-005`](#s-005) · [`S-088`](#s-088) · [`S-089`](#s-089) · [`S-090`](#s-090) · [`S-091`](#s-091) | 0 | 2 | 5 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F07** app-outputs-materialisation | `parcel_admin` | [`S-010`](#s-010) · [`S-015`](#s-015) | 0 | 4 | 2 descriptor(s), and would orphan 1 table(s): `app_outputs` |
 | **F08** admin-parcel-operations | `parcel_admin` | [`S-084`](#s-084) · [`C-071`](#c-071) · [`C-002`](#c-002) · [`S-012`](#s-012) · [`S-074`](#s-074) · [`S-075`](#s-075) · [`S-076`](#s-076) · [`C-063`](#c-063) · [`C-064`](#c-064) · [`C-065`](#c-065) | 5 | 7 | 10 descriptor(s), 5 contract(s), and would orphan 1 table(s): `media_assets` |
 | **F09** surface-registry-drift | `parcel_admin` | [`S-007`](#s-007) · [`S-008`](#s-008) · [`S-011`](#s-011) · [`S-014`](#s-014) · [`S-016`](#s-016) | 0 | 5 | 5 descriptor(s), and would orphan 4 table(s): `contract_descriptors` · `surface_descriptors` · `pg_policies` · `archetype_registry` |
@@ -533,11 +534,11 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | **F13** notifications | `platform_shared` | [`C-006`](#c-006) · [`C-007`](#c-007) · [`C-023`](#c-023) · [`C-024`](#c-024) · [`C-025`](#c-025) · [`S-041`](#s-041) · [`S-022`](#s-022) | 5 | 6 | 7 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
 | **F14** navigation-shells | `platform_shared` | [`S-042`](#s-042) · [`S-045`](#s-045) · [`S-046`](#s-046) · [`S-049`](#s-049) · [`S-077`](#s-077) · [`S-078`](#s-078) · [`S-079`](#s-079) · [`S-085`](#s-085) · [`S-082`](#s-082) · [`S-087`](#s-087) · [`S-083`](#s-083) | 0 | 3 | 11 descriptor(s), and would orphan no table — every table it touches is shared |
 | **F15** user-profile-settings | `platform_shared` | [`C-027`](#c-027) · [`C-034`](#c-034) · [`C-035`](#c-035) · [`C-036`](#c-036) · [`C-037`](#c-037) · [`S-036`](#s-036) | 5 | 3 | 6 descriptor(s), 5 contract(s), and would orphan no table — every table it touches is shared |
-| **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 11 table(s): `trade_configurations` · `trade_sqft_rates` · `data_quality_snapshots` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
+| **F16** platform-admin | `platform_shared` | [`C-003`](#c-003) · [`C-004`](#c-004) · [`C-005`](#c-005) · [`C-008`](#c-008) · [`C-009`](#c-009) · [`C-010`](#c-010) · [`C-011`](#c-011) · [`C-012`](#c-012) · [`C-013`](#c-013) · [`C-014`](#c-014) · [`C-015`](#c-015) · [`C-016`](#c-016) · [`C-017`](#c-017) · [`C-018`](#c-018) · [`C-019`](#c-019) · [`C-028`](#c-028) · [`C-029`](#c-029) · [`C-033`](#c-033) · [`S-050`](#s-050) · [`S-018`](#s-018) · [`S-019`](#s-019) · [`S-020`](#s-020) · [`S-021`](#s-021) · [`S-023`](#s-023) · [`S-024`](#s-024) · [`S-025`](#s-025) · [`S-026`](#s-026) | 18 | 41 | 27 descriptor(s), 18 contract(s), and would orphan 10 table(s): `trade_configurations` · `trade_sqft_rates` · `pipeline_schedules` · `pg_stat_user_tables` · `information_schema.columns` · `pg_class` · `(dynamic) manifest.scripts[slug].telemetry_tables[0]` · `<dynamic: manifest telemetry_tables[0] allow-list>` · `pg_namespace` · `permit_type_classifications` |
 | **F17** tracked-lots | `parcel_product` | [`C-062`](#c-062) · [`S-072`](#s-072) | 1 | 3 | 2 descriptor(s), 1 contract(s), and would orphan 1 table(s): `user_tracked_lots` |
 | **F90** lead-generation | `estate_other` | [`C-040`](#c-040) · [`C-041`](#c-041) · [`C-042`](#c-042) · [`C-043`](#c-043) · [`C-046`](#c-046) · [`C-052`](#c-052) · [`C-053`](#c-053) · [`C-056`](#c-056) · [`C-057`](#c-057) · [`C-058`](#c-058) · [`S-061`](#s-061) · [`S-062`](#s-062) · [`S-065`](#s-065) · [`S-055`](#s-055) · [`S-057`](#s-057) | 10 | 31 | 15 descriptor(s), 10 contract(s), and would orphan 3 table(s): `pg_extension` · `supplier_trades` · `suppliers` |
 | **F91** flight-center | `estate_other` | [`C-054`](#c-054) · [`C-055`](#c-055) · [`S-059`](#s-059) · [`S-060`](#s-060) · [`S-054`](#s-054) · [`S-056`](#s-056) | 2 | 24 | 6 descriptor(s), 2 contract(s), and would orphan no table — every table it touches is shared |
-| **F92** permits-builders-entities | `estate_other` | [`C-039`](#c-039) · [`C-044`](#c-044) · [`C-045`](#c-045) · [`C-047`](#c-047) · [`C-048`](#c-048) · [`C-049`](#c-049) · [`C-050`](#c-050) · [`C-051`](#c-051) · [`C-059`](#c-059) · [`C-060`](#c-060) · [`C-061`](#c-061) · [`S-063`](#s-063) · [`S-064`](#s-064) · [`S-066`](#s-066) · [`S-067`](#s-067) · [`S-068`](#s-068) · [`S-069`](#s-069) · [`S-070`](#s-070) · [`S-058`](#s-058) | 11 | 20 | 19 descriptor(s), 11 contract(s), and would orphan 1 table(s): `entity_contacts` |
+| **F92** permits-builders-entities | `estate_other` | [`C-039`](#c-039) · [`C-044`](#c-044) · [`C-045`](#c-045) · [`C-047`](#c-047) · [`C-048`](#c-048) · [`C-049`](#c-049) · [`C-050`](#c-050) · [`C-051`](#c-051) · [`C-059`](#c-059) · [`C-060`](#c-060) · [`C-061`](#c-061) · [`S-063`](#s-063) · [`S-064`](#s-064) · [`S-066`](#s-066) · [`S-067`](#s-067) · [`S-068`](#s-068) · [`S-092`](#s-092) · [`S-069`](#s-069) · [`S-070`](#s-070) · [`S-058`](#s-058) | 11 | 20 | 20 descriptor(s), 11 contract(s), and would orphan 1 table(s): `entity_contacts` |
 | **F93** scheduled-jobs | `estate_other` | [`J-001`](#j-001) · [`J-002`](#j-002) · [`J-003`](#j-003) · [`J-004`](#j-004) · [`J-005`](#j-005) · [`J-006`](#j-006) | 0 | 10 | 6 descriptor(s), and would orphan 3 table(s): `auth.users` · `permit_scrape_outcomes` · `permit_scrape_outcome_rollup` |
 
 The emitted descriptor tree mirrors this exactly — `scripts/surfaces/<scope>/<feature>/<kind>/<id>.descriptor.json` — so removing a feature is removing a directory, and the `--check` arm reports precisely what went with it.
@@ -550,7 +551,6 @@ The misclassification sweep re-checked every scope A/B/C row against Spec 100 §
 |---|---|---|---|---|
 | [`S-001`](#s-001) `mobile_parcel_detail` | Gated by the GLOBAL `subscription_status`, which is the lead-gen subscription, rather than by a parcel-tool entitlement. A user paying for lead generation gets the parcel product free; a user who wanted only the parcel product cannot buy it. | `lead_gen` | `move-to-owner` | `src/app/api/parcels/lookup/route.ts:46-59` · `migrations/228_entitlements.sql:32-33` |
 | [`S-043`](#s-043) `overlay_paywall` | Renders trial copy from `user_profiles.lead_views_count` — a lead-gen counter — on a paywall that also stands in front of the parcel product. The counter is structurally 0 (its only writer has no caller), so every trial user sees the zero-state copy regardless of which product they came from. | `lead_gen` | `needs-ruling` | `mobile/src/components/paywall/PaywallScreen.tsx:153` · `src/app/api/leads/view/route.ts:100-114` · `src/features/leads/api/useLeadView.ts:77` |
-| [`S-005`](#s-005) `web_landing` | The MaxBLD web front door currently MARKETS LEAD GENERATION. Under OD5 the parcel product is its own product, so a scope-A surface selling the lead-gen app is a product-boundary leak, not just stale copy. Recorded as measured; the rewrite is a content change outside this pass. | `lead_gen` | `needs-ruling` | `src/app/page.tsx` |
 | [`C-001`](#c-001) `contract_parcels_lookup` | Its entitlement check reads `entitlements` joined on `product = 'lead_gen'`, because `chk_entitlements_product` admits only `lead_gen` and `flight_center`. The parcel product has no key of its own in the live database — Spec 128 R-01 rules that it should, and the CHECK widening has not landed. | `lead_gen` | `move-to-owner` | `migrations/228_entitlements.sql:32-33` · `src/lib/entitlements/index.ts:39` · `src/lib/entitlements/index.ts:42-43` |
 | [`C-001`](#c-001) `contract_parcels_lookup` | The parcel contract is built out of LEAD-GEN-NAMESPACED shared helpers: its response envelope and every error mapping come from `src/features/leads/api/envelope.ts` and `src/features/leads/api/error-mapping.ts`. Nothing is wrong with the behaviour — they are generic helpers — but a scope-A contract importing from `src/features/leads/**` means the parcel product cannot be extracted without dragging the lead-gen feature directory with it. The fix is a move to a shared module, not a rewrite. | `lead_gen` | `move-to-owner` | `src/app/api/parcels/lookup/route.ts:23 — import { ok } from '@/features/leads/api/envelope'` · `src/app/api/parcels/lookup/route.ts:24-30 — the error-mapping imports` |
 
@@ -1221,19 +1221,17 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 ###### `S-005` `web_landing`
 
-**Programme.** `S-005` · scope `parcel_product` · feature `F06` · build order 1063 · batch **UNRESEARCHED** · review `unreviewed` — Business requirement 5, the MaxBLD web front door on Vercel. It markets lead-gen today and is the surface the consumer web projection replaces — it is parcel-product scope by destination, not by current content.
+**Programme.** `S-005` · scope `parcel_product` · feature `F06` · build order 1063 · batch `B2` · review `unreviewed` — The MaxBLD web front door (Spec 126 §11b.7 W1; business requirement 5): the landing of maxbld.ca.
 
-**⚠️ Cross-product leakage (1).** The MaxBLD web front door currently MARKETS LEAD GENERATION. Under OD5 the parcel product is its own product, so a scope-A surface selling the lead-gen app is a product-boundary leak, not just stale copy. Recorded as measured; the rewrite is a content change outside this pass. → `needs-ruling` (`src/app/page.tsx`)
+**What it is.** The MaxBLD landing on maxbld.ca /: the pitch to real estate agents (Spec 126 §11b.7 item 7), the build scenarios the report covers, the trust figures from data, the four plan boxes, the processing demo and a sample report on a made-up address. Every word is content; every number is read on the server.
 
-**What it is.** The public front door of the product. A visitor who has never signed in lands here and reads the pitch: the service watches Toronto building permits every day and matches them to a trade so contractors hear about jobs early. It shows three explainer cards, a list of the twenty trade categories covered, and buttons that send the visitor to sign in or straight to the live permit feed. Nothing on the page is personalised and it fetches no data.
+**What it reads and writes.** The page and its strings are committed files (the static page table and web_landing.content.json). Its values are declared server reads (Spec 128 §4 dated note 2026-11-11, FE-37): the stored citywide row of data_quality_snapshots (MF-62 producer and templates), the two allowances in logic_variables, the report pace settings, and three committed declarations (the scenarios, the cost sources, the synthetic sample tree). The plan prices and the trial length come from MF-47 when it lands; until then they are not shown.
 
-**What it reads and writes.** This surface reaches **no API contract at all** — every value it shows is local, passed in as a prop, or read from the device.
+**Under Spec 126.** **CONVERTED** (MF-76): descriptor + content + the one web STATIC binding with the landing kinds (Spec 126 §11b.1); the two report regions are the shared REPORT renderers (ReportView, ReportPage), never re-drawn. It owns no component.
 
-**Under Spec 126.** **RE-PROJECT** — it writes nothing and holds no Layer-3 store, so the move is short — the server already assembles the payload and only the rendering is client-side. It renders through the STATIC renderer (content source and SEO, or a declared redirect alone), reading no contract. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down.
+**kind** SURFACE · **archetype** `STATIC` · **platforms** `web` · **status** generated · **shard** `web-product` · **researched** ✅ every field
 
-**kind** SURFACE · **archetype** `STATIC` · **platforms** `web` · **status** exists · **lines** 116 · **shard** `web-product` · **unresearched fields: 3**
-
-**Gate.** auth class **anon** (PUBLIC_PATHS lists `/` explicitly and the middleware lock pins classifyRoute('/') === 'public'.) · session **public** (classifyRoute('/') falls past the static-file, /_next/, /api/auth/, exact-public-API, /api/admin/, /admin, authenticated-API and PUBLIC_PREFIXES arms (none match a bare '/'), then matches the PUBLIC_PATHS exact list which contains '/' -> 'public'.)
+**Gate.** auth class **anon** (Public on maxbld.ca: the public row / → /parcel-tool/home; the page gates nothing (it never calls requireParcelToolPage) and sets no cookie for a signed-out visitor.)
 
 **Calls.** —
 
@@ -1241,45 +1239,48 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Emits.** —
 
-**Render states seen in code.** `static`
+**Render states seen in code.** `static` · `degraded`
 
 **Data lineage.**
 
-_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `data_quality_snapshots` | `parcels_total` · `building_footprints_total` · `permits_active_distinct` · `coa_total` · `map_areas_total` · `snapshot_date` | `id` · `snapshot_date` · `total_permits` · `active_permits` · `permits_with_trades` · `trade_matches_total` · `trade_avg_confidence` · `trade_tier1_count` · `trade_tier2_count` · `trade_tier3_count` · `permits_with_builder` · `builders_total` · `builders_enriched` · `builders_with_phone` · `builders_with_email` · `builders_with_website` · `builders_with_google` · `builders_with_wsib` · `permits_with_parcel` · `parcel_exact_matches` · `parcel_name_matches` · `parcel_avg_confidence` · `permits_with_neighbourhood` · `permits_geocoded` · `coa_total` · `coa_linked` · `coa_avg_confidence` · `coa_high_confidence` · `coa_low_confidence` · `permits_updated_24h` · `permits_updated_7d` · `permits_updated_30d` · `last_sync_at` · `last_sync_status` · `created_at` · `parcel_spatial_matches` · `permits_with_scope` · `scope_project_type_breakdown` · `building_footprints_total` · `parcels_with_buildings` · `permits_with_scope_tags` · `scope_tags_top` · `permits_with_detailed_tags` · `trade_residential_classified` · `trade_residential_total` · `trade_commercial_classified` · `trade_commercial_total` · `null_description_count` · `null_builder_name_count` · `null_est_const_cost_count` · `null_street_num_count` · `null_street_name_count` · `null_geo_id_count` · `violation_cost_out_of_range` · `violation_future_issued_date` · `violation_missing_status` · `violations_total` · `schema_column_counts` · `sla_permits_ingestion_hours` · `inspections_total` · `inspections_permits_scraped` · `inspections_outstanding_count` · `inspections_passed_count` · `inspections_not_passed_count` · `cost_estimates_total` · `cost_estimates_from_permit` · `cost_estimates_from_model` · `cost_estimates_null_cost` · `timing_calibration_total` · `timing_calibration_avg_sample` · `timing_calibration_freshness_hours` · `cost_estimates_liar_gate_overrides` · `cost_estimates_zero_total_bypass` · `parcels_total` · `permits_active_distinct` · `map_areas_total` · `zoning_layer_version` · `permits_last_seen_at` · `coa_last_seen_at` | `refresh_snapshot` | `permits[27], coa[11], sources[24], deep_scrapes[3]` | `docs/specs/01-pipeline/60_shared_steps.md` |
+| reads | `logic_variables` | `variable_key` · `variable_value` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `none` | `n/a` | `docs/specs/00-architecture/02_logic_variables.md` |
 
 **Evidence.**
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `src/app/page.tsx:1` |
-| `contracts` | `none — no /api/ string and no hook import in src/app/page.tsx` |
-| `tables` | `none — no SQL, no db client import` |
-| `gate` | `src/lib/auth/route-guard.ts:44` · `src/tests/middleware.logic.test.ts:30` |
-| `states` | `src/app/page.tsx:8-105 — one unconditional return, no conditional branch` |
-| `emits` | `none — no captureEvent import in src/app/page.tsx` |
-| `spec_refs` | — |
+| `files` | `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` · `src/lib/surfaces/maxbld-landing.ts` · `scripts/surfaces/_schema/static-page.json` |
+| `contracts` | `none — the page calls no API route; its reads run on the server in src/lib/surfaces/maxbld-landing.ts` |
+| `tables` | `data_quality_snapshots — the newest stored citywide row (MF-62 CITYWIDE_SQL)` · `logic_variables — parcel_tool_report_limit_trial, parcel_tool_report_limit_plan, report_check_min_ms, report_check_skip_after_ms, report_check_ready_hold_ms` |
+| `gate` | `src/lib/auth/host-policy.ts — the public row / → /parcel-tool/home` |
+| `states` | `scripts/surfaces/_schema/static-page.json — pages.web_landing (static, degraded)` |
+| `emits` | `none` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3 web_landing (dated note 2026-11-11, MF-76) and §11b.7 W1` · `docs/specs/02-web-admin/128_surface_standard_policy.md §4 (dated note 2026-11-11: STATIC server reads)` |
 
 <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
 
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `none` | Every string on the page is a literal in the file: the 20-trade list, the three feature cards and the "237,000+" headline are all hardcoded. No fetch, no /api/ string, no props. — `src/app/page.tsx:36-38,56-67,79-84` |
-| 3 | `outputs` | `none` | It writes nothing anywhere — the only handler is router.push('/dashboard'). — `src/app/page.tsx:40-45` |
-| 4 | `state` | `none` | It declares no useState and owns no Field Ownership Matrix field; the only hook is useRouter. — `src/app/page.tsx:5-6` |
-| 5 | `staleness` | `static` | Its content changes only when this file is redeployed — including the "237,000+" and "20 trades" figures, which are typed into the JSX and not read from anywhere. — `src/app/page.tsx:36-38,76` |
+| 2 | `inputs` | `app_outputs` | Server reads only, no API contract (Spec 128 §4 dated note 2026-11-11, FE-37): the stored citywide row written by the refresh_snapshot step (MF-62), plus the settings declared under config; every value is formatted on the server. — `src/lib/surfaces/maxbld-landing.ts` |
+| 3 | `outputs` | `none` | It writes nothing. — `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` |
+| 4 | `state` | `none` | No store and no local state. — `src/components/surfaces/web/StaticBinding.tsx` |
+| 5 | `staleness` | `live` | Rendered per request (force-dynamic): the stored counts and the allowances are read on every request; time-based caching waits on a landing setting (plan v3 §12 fold 17). — `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` |
 | 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 12 | `errors` | `none` | No fetch, no throw path and no error boundary under src/app/ outside admin — no error state is reachable. — `src/app/page.tsx:1-116` |
-| 13 | `emits` | `none` | It calls no captureEvent and writes no ledger row; nothing about a landing-page visit is currently countable beyond PostHog's own autocapture. — `src/app/page.tsx:1-116` |
-| 14 | `offers` | `none` | It renders no sponsored placement; every card and chip is a literal in the file. — `src/app/page.tsx:56-91` |
-| 15 | `metering` | `none` | No usage_events write and no quota. — `src/app/page.tsx:1-116` |
-| 16 | `config` | `none` | No tunable at all — the 20 trade names and the permit count are literals, not logic variables. — `src/app/page.tsx:36-38,79-84` |
-| 17 | `sharing` | `none` | It renders no contract. — `src/app/page.tsx:1-116` |
+| 12 | `errors` | `boundary` | A read that throws is caught on the server and its part left out (the degraded state for the citywide row); a defect in a committed file reaches the plain pages' error boundary (web_maxbld_error). — `src/lib/surfaces/maxbld-landing.ts`, `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 13 | `emits` | `none` | It calls no captureEvent and writes no ledger row. — `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` |
+| 14 | `offers` | `none` | It renders no sponsored placement. — `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` |
+| 15 | `metering` | `none` | No usage_events write and no quota. — `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` |
+| 16 | `config` | `logic_variables` | It reads the two allowances and the report pace (each validated against its seed bounds; a bad value leaves its part out). — `src/lib/surfaces/maxbld-landing.ts` |
+| 17 | `sharing` | `none` | It renders no contract. — `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -1287,9 +1288,9 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 </details>
 
-**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`UNRESEARCHED`](../../../UNRESEARCHED) · files: `src/app/page.tsx`
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx` · `src/lib/surfaces/maxbld-landing.ts`
 
-> ⚠️ No governing feature spec found: the file appears in no row of docs/specs/00-architecture/00_system_map.md and carries no SPEC LINK header. Spec 126 (02-web-admin/126_maxbld_surface_standard.md) only references 'marketing/landing' generically at line 97 and line 667 as a future conversion target, which is not a governing spec. Copy still says 'Buildo', not the Spec 117 'MaxBLD' rename that src/app/layout.tsx and the login page already use. Single unconditional render - no loading/empty/error branches exist, hence states=['static'] rather than an empty array. MEASURED 2026-09-15: no SPEC LINK header on src/app/page.tsx and no System Map row names it, so identity.spec is UNRESEARCHED rather than a guess at the nearest dashboard spec. a11y.labels is `partial`: the two header anchors and the hero button carry visible text but the page has no landmark labelling and the SVG-free chips are decorative spans. a11y.touch_target_min_px stays UNRESEARCHED — the vocabulary admits only UNRESEARCHED or an integer >= 44, and the measured "Get Started" target is 36px, which the menu cannot express (Spec 128 §4 escalation).
+> ⚠️ MF-76 (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §3, §12, §13a, §13b; operator D-1 (a), D-2 (a), D-3 (a) "3 y", D-5 (a), D-6 (a) and "include all the build scenarios" (2026-11-11); plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3). The former web_landing entry (src/app/page.tsx, the Buildo lead-gen page) is web_buildo_landing (S-091, scope D), plan v3 §12 fold 15.
 
 <a id="s-088"></a>
 
@@ -9602,7 +9603,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ Empty calls[] is measured, not unlooked: LoginForm reaches the server through Next.js Server Actions (signInAction / signUpAction / mfaChallengeAction / mfaVerifyAction in src/lib/supabase/actions.ts) and the Supabase browser SDK's signInWithOAuth - no /api/* path is fetched anywhere in either file. The 'Continue as Dev' button renders only when NEXT_PUBLIC_DEV_MODE=true; the middleware's real bypass reads the server-only DEV_MODE AND NODE_ENV!=='production' (route-guard.ts isDevMode), so the button is cosmetic. Redirect target is guarded by safeRedirectPath (rejects absolute, protocol-relative and backslash forms). MEASURED 2026-09-15: the page holds TWO independently-gated views (credential form and TOTP challenge) but they are one component and one route, so R-13 keeps them one surface rather than promoting the challenge. guards.flag records NEXT_PUBLIC_DEV_MODE because it is what THIS page reads (login/page.tsx:7); the security-bearing flag is the server-only DEV_MODE + NODE_ENV pair in route-guard.ts:32-34 — the two are deliberately different vars and the disagreement is the point, not a defect. a11y.touch_target_min_px stays UNRESEARCHED: the submit buttons measure px-4 py-2.5 on text-sm = 40px, which the vocabulary (UNRESEARCHED or an integer >= 44) cannot express.
 
-### §D `estate_other` — the OTHER product — inventory and seam only (46)
+### §D `estate_other` — the OTHER product — inventory and seam only (47)
 
 **Not governed by this programme.** Lead generation, the flight center, the lead feed, permit and job detail, builders and entities. Spec 100 §1 fences the parcel tool off from these (*"not coupled to the Lead Feed, Flight Center, or LeadDetail"*), and Spec 128 **R-03** keeps that fence. They appear here for one reason: so a contract shared with scope C, or a contract with no caller at all, is **visible** rather than hidden. They convert under the same standard in a later programme.
 
@@ -9652,6 +9653,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | `overlay_search_permits_sheet` | SURFACE · `SEARCH` | A panel that slides up from the saved-jobs board when the user taps the search button. | Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme. |
 | `web_builder_detail` | SURFACE · `DETAIL` | Everything known about one construction company. | Builder/entity data for the lead-gen product. Inventoried only. |
 | `web_builders_list` | SURFACE · `LIST` | A searchable directory of the construction companies found in the permit data. | Builder/entity data for the lead-gen product. Inventoried only. |
+| `web_buildo_landing` | SURFACE · `STATIC` | The public front door of the product. | The Buildo lead-generation home page (src/app/page.tsx), the other product: outside the MaxBLD programme (OD5; operator 2026-11-11 "buildo doesnt exist - focus on MaxBLD"). Inventoried only; its former parcel-product leakage note is answered by the MaxBLD landing taking the id web_landing (MF-76). |
 | `web_dashboard` | SURFACE · `DASHBOARD` | The main signed-in screen for browsing permit leads. | A lead-gen surface. Inventoried only. |
 | `web_permit_detail` | SURFACE · `DETAIL` | The full record for a single building permit. | Permit data for the lead-gen product. Inventoried only; it converts under the same standard in a later programme. |
 
@@ -9676,7 +9678,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `building_footprints` | `id` · `source_id` · `geometry` · `footprint_area_sqm` · `footprint_area_sqft` · `max_height_m` · `min_height_m` · `elev_z` · `estimated_stories` · `centroid_lat` · `centroid_lng` · `created_at` · `geom` | `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_stats` · `contract_permits_id` · `contract_quality_refresh` | — |
 | `coa_applications` | `id` · `application_number` · `address` · `street_num` · `street_name` · `ward` · `status` · `decision` · `decision_date` · `hearing_date` · `description` · `applicant` · `linked_permit_num` · `linked_confidence` · `data_hash` · `first_seen_at` · `last_seen_at` · `sub_type` · `street_name_normalized` · `lifecycle_phase` · `lifecycle_classified_at` · `lifecycle_stalled` · `lead_id` · `coa_type_class` · `project_type` · `scope_tags` · `scope_classified_at` · `scope_source` · `structure_type` · `neighbourhood_id` · `latitude` · `longitude` · `modeled_gfa_sqm` · `estimated_cost` · `cost_source` · `cost_classified_at` · `lifecycle_seq` · `lifecycle_group` · `lifecycle_block` · `lifecycle_stage` · `bid_value` · `parcel_linked_at` · `trade_classified_at` · `matched_status` · `matched_rule` · `unmapped_status` · `unmapped_decision` · `zoning_class` · `bylaw_max_coverage_pct` · `bylaw_max_fsi` · `bylaw_max_height_m` · `exception_number` · `variance_context` · `zoning_parcel_count` · `zoning_dominant_parcel_id` · `zoning_dominant_parcel_method` · `zoning_enriched_at` · `is_in_ravine_protection_area` · `ravine_distance_m` · `is_heritage_designated` · `heritage_designation_type` · `heritage_designation_date` · `is_corner_lot` · `is_through_lot` · `primary_frontage_street_name` · `lot_size_sqm` · `frontage_m` · `depth_m` · `lot_size_confidence` · `lot_size_basis` · `max_build_setback_basis` · `max_buildable_footprint_sqm` · `max_build_width_m` · `max_build_length_m` · `max_build_height_m` · `max_build_stories` · `max_build_basis` · `max_buildable_gfa_sqm` · `max_buildable_gfa_basis` · `max_build_confidence` · `max_garden_suite_gfa_sqm` · `garden_suite_fits` · `envelope_constrained` · `envelope_constraint_reason` · `imagery_roof_footprint_sqm` · `existing_stories` · `existing_height_m` · `imagery_roof_gfa_sqm` · `existing_width_m` · `existing_length_m` · `existing_structure_confidence` · `existing_other_structures_count` · `existing_other_structures_sqm` · `existing_greenspace_sqm` · `max_newbuild_coa_gfa_sqm` · `cur_basement_gfa_sqm` · `cur_storey_gfa_sqm` · `cur_interior_reno_gfa_sqm` · `cur_est_kitchen_gfa_sqm` · `cur_est_bath_gfa_sqm` · `max_build_stories_basis` · `abuts_laneway` · `max_garage_gfa_sqm` · `garage_capacity_cars` · `garage_constraint_reason` · `garage_permission` · `max_laneway_suite_gfa_sqm` · `max_rear_suite_gfa_sqm` · `rear_suite_type` · `rear_suite_permission` · `cur_floor_gfa_sqm` · `cur_pot_2story_gfa_sqm` · `cur_pot_3story_gfa_sqm` · `cur_gfa_range_basis` · `existing_data_quality_flag` · `max_build_stories_aggressive` · `market_exceeds_bylaw` · `neighbourhood_cost_premium` · `opt_aor_storeys` · `opt_aor_gfa_sqm` · `opt_aor_units` · `opt_coa_storeys` · `opt_coa_gfa_sqm` · `opt_suite_type` · `opt_suite_fits_full` · `opt_binding_constraint` · `opt_config_confidence` · `comp_count` · `comp_dominant_build` · `comp_build_ratio_p50` · `comp_fsi_p50` · `cost_fb_total` · `cost_coa_total` · `cost_solar_total` · `cost_garden_suite_total` · `cost_laneway_suite_total` · `cost_garage_total` · `cost_gut_total` · `cost_addition_total` · `cost_kitchen_per_sqm` · `cost_bath_per_sqm` · `cost_basement_per_sqm` · `cost_basement_underpin_per_sqm` · `max_build_fsi` · `coa_fsi` · `realized_fsi_p90` · `zoning_designation` | `mobile_lead_detail` · `mobile_parcel_detail` · `web_dashboard` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `admin_parcel_cost` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_leads_watchlist` · `contract_admin_leads_watchlist_search` · `contract_admin_parcels_lookup` · `contract_admin_stats` · `contract_coa` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_parcels_lookup` · `contract_parcels_tracked` · `contract_permits` · `contract_permits_id` · `contract_quality_refresh` | — |
 | `cost_estimates` | `permit_num` · `revision_num` · `estimated_cost` · `cost_source` · `cost_tier` · `cost_range_low` · `cost_range_high` · `premium_factor` · `complexity_score` · `model_version` · `computed_at` · `trade_contract_values` · `is_geometric_override` · `modeled_gfa_sqm` · `effective_area_sqm` · `lead_id` | `mobile_lead_detail` · `mobile_lead_feed` · `mobile_map` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_leads_detail_id` · `contract_leads_feed` | — |
-| `data_quality_snapshots` | `id` · `snapshot_date` · `total_permits` · `active_permits` · `permits_with_trades` · `trade_matches_total` · `trade_avg_confidence` · `trade_tier1_count` · `trade_tier2_count` · `trade_tier3_count` · `permits_with_builder` · `builders_total` · `builders_enriched` · `builders_with_phone` · `builders_with_email` · `builders_with_website` · `builders_with_google` · `builders_with_wsib` · `permits_with_parcel` · `parcel_exact_matches` · `parcel_name_matches` · `parcel_avg_confidence` · `permits_with_neighbourhood` · `permits_geocoded` · `coa_total` · `coa_linked` · `coa_avg_confidence` · `coa_high_confidence` · `coa_low_confidence` · `permits_updated_24h` · `permits_updated_7d` · `permits_updated_30d` · `last_sync_at` · `last_sync_status` · `created_at` · `parcel_spatial_matches` · `permits_with_scope` · `scope_project_type_breakdown` · `building_footprints_total` · `parcels_with_buildings` · `permits_with_scope_tags` · `scope_tags_top` · `permits_with_detailed_tags` · `trade_residential_classified` · `trade_residential_total` · `trade_commercial_classified` · `trade_commercial_total` · `null_description_count` · `null_builder_name_count` · `null_est_const_cost_count` · `null_street_num_count` · `null_street_name_count` · `null_geo_id_count` · `violation_cost_out_of_range` · `violation_future_issued_date` · `violation_missing_status` · `violations_total` · `schema_column_counts` · `sla_permits_ingestion_hours` · `inspections_total` · `inspections_permits_scraped` · `inspections_outstanding_count` · `inspections_passed_count` · `inspections_not_passed_count` · `cost_estimates_total` · `cost_estimates_from_permit` · `cost_estimates_from_model` · `cost_estimates_null_cost` · `timing_calibration_total` · `timing_calibration_avg_sample` · `timing_calibration_freshness_hours` · `cost_estimates_liar_gate_overrides` · `cost_estimates_zero_total_bypass` · `parcels_total` · `permits_active_distinct` · `map_areas_total` · `zoning_layer_version` · `permits_last_seen_at` · `coa_last_seen_at` | `admin_data_quality` · `contract_quality` | `contract_quality_refresh` |
+| `data_quality_snapshots` | `id` · `snapshot_date` · `total_permits` · `active_permits` · `permits_with_trades` · `trade_matches_total` · `trade_avg_confidence` · `trade_tier1_count` · `trade_tier2_count` · `trade_tier3_count` · `permits_with_builder` · `builders_total` · `builders_enriched` · `builders_with_phone` · `builders_with_email` · `builders_with_website` · `builders_with_google` · `builders_with_wsib` · `permits_with_parcel` · `parcel_exact_matches` · `parcel_name_matches` · `parcel_avg_confidence` · `permits_with_neighbourhood` · `permits_geocoded` · `coa_total` · `coa_linked` · `coa_avg_confidence` · `coa_high_confidence` · `coa_low_confidence` · `permits_updated_24h` · `permits_updated_7d` · `permits_updated_30d` · `last_sync_at` · `last_sync_status` · `created_at` · `parcel_spatial_matches` · `permits_with_scope` · `scope_project_type_breakdown` · `building_footprints_total` · `parcels_with_buildings` · `permits_with_scope_tags` · `scope_tags_top` · `permits_with_detailed_tags` · `trade_residential_classified` · `trade_residential_total` · `trade_commercial_classified` · `trade_commercial_total` · `null_description_count` · `null_builder_name_count` · `null_est_const_cost_count` · `null_street_num_count` · `null_street_name_count` · `null_geo_id_count` · `violation_cost_out_of_range` · `violation_future_issued_date` · `violation_missing_status` · `violations_total` · `schema_column_counts` · `sla_permits_ingestion_hours` · `inspections_total` · `inspections_permits_scraped` · `inspections_outstanding_count` · `inspections_passed_count` · `inspections_not_passed_count` · `cost_estimates_total` · `cost_estimates_from_permit` · `cost_estimates_from_model` · `cost_estimates_null_cost` · `timing_calibration_total` · `timing_calibration_avg_sample` · `timing_calibration_freshness_hours` · `cost_estimates_liar_gate_overrides` · `cost_estimates_zero_total_bypass` · `parcels_total` · `permits_active_distinct` · `map_areas_total` · `zoning_layer_version` · `permits_last_seen_at` · `coa_last_seen_at` | `web_landing` · `admin_data_quality` · `contract_quality` | `contract_quality_refresh` |
 | `device_tokens` | `id` · `user_id` · `push_token` · `platform` · `created_at` · `updated_at` | `admin_notifications` · `admin_user_detail` · `contract_admin_notifications` · `contract_admin_notifications_test_send` | `overlay_notification_permission_modal` · `shell_app_root` · `contract_notifications_register` |
 | `entities` | `id` · `legal_name` · `trade_name` · `name_normalized` · `entity_type` · `primary_phone` · `primary_email` · `website` · `linkedin_url` · `google_place_id` · `google_rating` · `google_review_count` · `is_wsib_registered` · `permit_count` · `first_seen_at` · `last_seen_at` · `last_enriched_at` · `photo_url` · `photo_validated_at` | `mobile_lead_feed` · `web_builder_detail` · `web_builders_list` · `web_dashboard` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `contract_admin_builders` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_builders` · `contract_builders_id` · `contract_entities` · `contract_entities_id` · `contract_leads_feed` · `contract_permits_id` · `contract_quality_refresh` | `contract_admin_builders` |
 | `entitlements` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` | `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_reconcile` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` |
@@ -9686,7 +9688,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `lead_view_events` | `user_id` · `permit_num` · `revision_num` · `viewed_at` | `admin_user_detail` · `contract_admin_users_uid` | `contract_leads_view` |
 | `lead_views` | `id` · `user_id` · `lead_key` · `lead_type` · `permit_num` · `revision_num` · `entity_id` · `trade_slug` · `viewed_at` · `saved` · `saved_at` | `mobile_flight_board` · `mobile_flight_job_detail` · `mobile_lead_detail` · `mobile_lead_feed` · `mobile_map` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `admin_lead_feed_inspector` · `admin_user_detail` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_admin_users_uid` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_view` · `job_lead_views_retention_purge` | `mobile_flight_board` · `mobile_lead_detail` · `mobile_lead_feed` · `overlay_search_permits_sheet` · `contract_leads_save` · `contract_leads_view` · `job_lead_views_retention_purge` |
 | `lifecycle_status_history` | `id` · `lead_id` · `from_status` · `to_status` · `from_seq` · `to_seq` · `from_phase` · `to_phase` · `decision` · `decision_date` · `transitioned_at` · `detected_by` · `permit_type` · `project_type` · `coa_type_class` · `neighbourhood_id` · `event_date` | `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` | — |
-| `logic_variables` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `web_subscribe` · `admin_control_panel` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `contract_admin_control_panel_configs` · `contract_admin_leads_inspect_id` · `contract_admin_notifications` · `contract_admin_users_uid_subscription_reconcile` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_quality` · `contract_subscribe_exchange` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_lead_views_retention_purge` | `admin_control_panel` · `contract_admin_control_panel_configs` |
+| `logic_variables` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `web_landing` · `web_subscribe` · `admin_control_panel` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `contract_admin_control_panel_configs` · `contract_admin_leads_inspect_id` · `contract_admin_notifications` · `contract_admin_users_uid_subscription_reconcile` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_quality` · `contract_subscribe_exchange` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_lead_views_retention_purge` | `admin_control_panel` · `contract_admin_control_panel_configs` |
 | `neighbourhoods` | `id` · `neighbourhood_id` · `name` · `geometry` · `avg_household_income` · `median_household_income` · `avg_individual_income` · `low_income_pct` · `tenure_owner_pct` · `tenure_renter_pct` · `period_of_construction` · `couples_pct` · `lone_parent_pct` · `married_pct` · `university_degree_pct` · `immigrant_pct` · `visible_minority_pct` · `english_knowledge_pct` · `top_mother_tongue` · `census_year` · `created_at` · `geom` | `mobile_lead_detail` · `mobile_lead_feed` · `mobile_map` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `admin_market_metrics` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_market_metrics` · `contract_admin_stats` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_permits_id` | — |
 | `notification_dispatches` | `id` · `user_id` · `lead_id` · `type` · `toronto_date` · `push_token` · `expo_ticket_id` · `status` · `detail` · `dispatched_at` · `receipt_checked_at` | `admin_notifications` · `admin_user_detail` · `contract_admin_notifications` | — |
 | `notifications` | `id` · `user_id` · `type` · `title` · `body` · `permit_num` · `trade_slug` · `channel` · `is_read` · `is_sent` · `sent_at` · `created_at` · `lead_id` | `admin_data_quality` · `admin_notifications` · `contract_admin_notifications` · `contract_admin_stats` · `contract_notifications` | `contract_notifications` |
@@ -9795,4 +9797,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 168 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 169 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

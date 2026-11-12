@@ -1,0 +1,213 @@
+{
+ "$comment": "MF-76 · McFrontend queue · lane E (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 fold 6; operator D-5 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\"). The cost sources the landing counts: the named sources of docs/specs/01-pipeline/88_parcel_cost_model.md section 3, table column \"Primary sources (2025–26)\", each with the rate rows (the table's Line column) that cite it. The page shows the number of entries, counted on the server (FE-05: never typed). Pinned equal to the names parsed from that table by src/tests/surfaces/web-landing.logic.test.ts; a new source in Spec 88 fails the test until it is added here.",
+ "sources": [
+  {
+   "name": "Xavieras",
+   "lines": [
+    "Max build (FB)"
+   ]
+  },
+  {
+   "name": "Woodcastle",
+   "lines": [
+    "Max build (FB)"
+   ]
+  },
+  {
+   "name": "Stonebrooke",
+   "lines": [
+    "Max build (FB)"
+   ]
+  },
+  {
+   "name": "Village Park",
+   "lines": [
+    "Max build (FB)"
+   ]
+  },
+  {
+   "name": "GreenBuildingCanada",
+   "lines": [
+    "Solar — max & CoA (SOLAR)"
+   ]
+  },
+  {
+   "name": "Solar-X",
+   "lines": [
+    "Solar — max & CoA (SOLAR)"
+   ]
+  },
+  {
+   "name": "Xolar",
+   "lines": [
+    "Solar — max & CoA (SOLAR)"
+   ]
+  },
+  {
+   "name": "DavidReno",
+   "lines": [
+    "Garden suite (LANE_GARDEN)"
+   ]
+  },
+  {
+   "name": "BVM",
+   "lines": [
+    "Garden suite (LANE_GARDEN)"
+   ]
+  },
+  {
+   "name": "Oriel",
+   "lines": [
+    "Garden suite (LANE_GARDEN)"
+   ]
+  },
+  {
+   "name": "TGC",
+   "lines": [
+    "Garden suite (LANE_GARDEN)",
+    "Garage (GAR)",
+    "Addition (ADD)"
+   ]
+  },
+  {
+   "name": "Maserat",
+   "lines": [
+    "Laneway suite (LANE_LANEWAY)"
+   ]
+  },
+  {
+   "name": "Heracon",
+   "lines": [
+    "Laneway suite (LANE_LANEWAY)"
+   ]
+  },
+  {
+   "name": "Elevate",
+   "lines": [
+    "Laneway suite (LANE_LANEWAY)"
+   ]
+  },
+  {
+   "name": "905reno",
+   "lines": [
+    "Kitchen (KIT)"
+   ]
+  },
+  {
+   "name": "Rocpal",
+   "lines": [
+    "Kitchen (KIT)",
+    "Gut (INT)"
+   ]
+  },
+  {
+   "name": "Sosna",
+   "lines": [
+    "Kitchen (KIT)"
+   ]
+  },
+  {
+   "name": "KarReno",
+   "lines": [
+    "Kitchen (KIT)"
+   ]
+  },
+  {
+   "name": "EasyRenovation",
+   "lines": [
+    "Bath (BTH)"
+   ]
+  },
+  {
+   "name": "HomeStars",
+   "lines": [
+    "Bath (BTH)",
+    "Garage (GAR)"
+   ]
+  },
+  {
+   "name": "Dupont",
+   "lines": [
+    "Bath (BTH)"
+   ]
+  },
+  {
+   "name": "PAB",
+   "lines": [
+    "Bath (BTH)"
+   ]
+  },
+  {
+   "name": "Trusscore",
+   "lines": [
+    "Garage (GAR)"
+   ]
+  },
+  {
+   "name": "StrongBasements",
+   "lines": [
+    "Basement underpinning (BAS-UNDERPIN)"
+   ]
+  },
+  {
+   "name": "NuSite",
+   "lines": [
+    "Basement underpinning (BAS-UNDERPIN)"
+   ]
+  },
+  {
+   "name": "DRV",
+   "lines": [
+    "Basement underpinning (BAS-UNDERPIN)"
+   ]
+  },
+  {
+   "name": "CSG",
+   "lines": [
+    "Basement underpinning (BAS-UNDERPIN)"
+   ]
+  },
+  {
+   "name": "TrueForm",
+   "lines": [
+    "Basement reno (BAS)"
+   ]
+  },
+  {
+   "name": "Harmony",
+   "lines": [
+    "Basement reno (BAS)"
+   ]
+  },
+  {
+   "name": "MagicWindow",
+   "lines": [
+    "Basement reno (BAS)"
+   ]
+  },
+  {
+   "name": "Lifetime",
+   "lines": [
+    "Basement reno (BAS)"
+   ]
+  },
+  {
+   "name": "Habitual",
+   "lines": [
+    "Gut (INT)"
+   ]
+  },
+  {
+   "name": "TorontoToday",
+   "lines": [
+    "Gut (INT)"
+   ]
+  },
+  {
+   "name": "Lighthaus",
+   "lines": [
+    "Gut (INT)"
+   ]
+  }
+ ]
+}

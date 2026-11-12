@@ -79,7 +79,9 @@ describe('FE-13 surface-validate gate: real tree', () => {
     // MF-44 (FE-13 dated note 2026-11-11): amended deliberately again, still an exact toBe: the 10 web goldens of mobile_parcel_search join (44 -> 54).
     // MF-62 (FE-35; Spec 126 11a.7 dated note 2026-11-11): amended deliberately again, still an exact toBe: two loading states join (16 -> 18 states; owed unchanged). MF-53: + the map page (8 surfaces, 65 goldens, 176 strings).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 31 in scope: converted 14, pending 4, parked 9, report 4) · S-screen ok (14 surfaces, 82 goldens) · S-sbind ok (14 surfaces, 323 strings)\n'); // MF-19: +2 FORM surfaces (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+    // MF-76 (FE-13; dated 2026-11-11): amended deliberately again, still an exact toBe: the MaxBLD landing (web_landing) is converted: 12 converted,
+    // 4 pending, 61 goldens, 327 strings.
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 31 in scope: converted 15, pending 3, parked 9, report 4) · S-screen ok (15 surfaces, 84 goldens) · S-sbind ok (15 surfaces, 377 strings)\n'); // MF-19: +2 FORM surfaces (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
     expect(r.stdout).toContain('S-desc ok (examined 31 in scope:');
   });

@@ -10,6 +10,7 @@ import help from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_help
 import terms from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json';
 import privacy from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json';
 import maxbldError from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json';
+import landing from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_landing.content.json';
 import type { StaticPage } from '@/components/surfaces/web/StaticBinding';
 
 /** The STATIC web surfaces and their content files (one per surface, beside its descriptor). */
@@ -18,6 +19,7 @@ export const STATIC_CONTENT: Readonly<Record<string, Record<string, string>>> = 
   web_terms: terms,
   web_privacy: privacy,
   web_maxbld_error: maxbldError,
+  web_landing: landing, // MF-76 (dated 2026-11-11): the landing; its page is filled on the server (maxbld-landing.ts)
 };
 
 const PAGES = pages.pages as Record<string, Record<string, StaticPage>>;

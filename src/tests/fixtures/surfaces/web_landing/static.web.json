@@ -1,0 +1,1271 @@
+{
+  "surface": "web_landing",
+  "state": "static",
+  "target": "web",
+  "covers": [
+    "static"
+  ],
+  "props": {
+    "component": "Stack",
+    "props": {
+      "key": "page",
+      "testID": "static-page",
+      "component": "main",
+      "className": "min-h-screen w-full bg-zinc-950"
+    },
+    "children": [
+      {
+        "component": "Stack",
+        "props": {
+          "key": "column",
+          "className": "mx-auto w-full max-w-6xl gap-16 px-4 pt-4 pb-16"
+        },
+        "children": [
+          {
+            "component": "Stack",
+            "props": {
+              "key": "hero",
+              "testID": "static-hero",
+              "id": "hero",
+              "component": "header",
+              "className": "gap-10"
+            },
+            "children": [
+              {
+                "component": "Group",
+                "props": {
+                  "key": "hero-nav",
+                  "component": "nav",
+                  "className": "justify-between gap-2"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "hero-0",
+                      "testID": "static-link-/",
+                      "href": "/",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-lg font-extrabold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "content": "nav.home"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Group",
+                    "props": {
+                      "key": "hero-links",
+                      "className": "gap-1"
+                    },
+                    "children": [
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "hero-1",
+                          "testID": "static-link-/#how",
+                          "href": "/#how",
+                          "size": "lg",
+                          "variant": "subtle",
+                          "color": "gray",
+                          "className": "rounded-xl text-zinc-300"
+                        },
+                        "children": [
+                          {
+                            "content": "nav.how"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "hero-2",
+                          "testID": "static-link-/#pricing",
+                          "href": "/#pricing",
+                          "size": "lg",
+                          "variant": "subtle",
+                          "color": "gray",
+                          "className": "rounded-xl text-zinc-300"
+                        },
+                        "children": [
+                          {
+                            "content": "nav.pricing"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "hero-3",
+                          "testID": "static-link-/login",
+                          "href": "/login",
+                          "size": "lg",
+                          "variant": "subtle",
+                          "color": "gray",
+                          "className": "rounded-xl text-zinc-300"
+                        },
+                        "children": [
+                          {
+                            "content": "nav.sign_in"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "hero-4",
+                          "testID": "static-link-/signup",
+                          "href": "/signup",
+                          "size": "lg",
+                          "variant": "subtle",
+                          "color": "gray",
+                          "className": "rounded-xl text-zinc-300"
+                        },
+                        "children": [
+                          {
+                            "content": "nav.trial"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Group",
+                "props": {
+                  "key": "hero-grid",
+                  "className": "grid gap-10 md:grid-cols-2 md:items-start"
+                },
+                "children": [
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "hero-copy",
+                      "className": "gap-5"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "hero-5",
+                          "className": "text-sm font-semibold uppercase tracking-[.12em] text-amber-400"
+                        },
+                        "children": [
+                          {
+                            "content": "hero.tagline"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Title",
+                        "props": {
+                          "key": "hero-6",
+                          "testID": "static-title",
+                          "className": "text-4xl font-extrabold tracking-tight text-zinc-100 md:text-5xl"
+                        },
+                        "children": [
+                          {
+                            "content": "hero.title"
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "hero-7",
+                              "component": "span",
+                              "className": "text-amber-400"
+                            },
+                            "children": [
+                              {
+                                "content": "hero.accent"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "hero-8",
+                          "className": "text-lg leading-7 text-zinc-300",
+                          "value": {
+                            "derived": "scenario_list"
+                          }
+                        },
+                        "children": [
+                          {
+                            "content": "hero.sub"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "hero-9",
+                          "testID": "static-link-/signup",
+                          "href": "/signup",
+                          "size": "lg",
+                          "variant": "filled",
+                          "color": "yellow",
+                          "className": "self-start rounded-xl"
+                        },
+                        "children": [
+                          {
+                            "content": "hero.cta"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "List",
+                        "props": {
+                          "key": "hero-10-terms",
+                          "testID": "landing-terms",
+                          "className": "text-sm leading-6 text-zinc-300"
+                        },
+                        "children": [
+                          {
+                            "component": "ListItem",
+                            "props": {
+                              "key": "hero-10",
+                              "className": "text-sm leading-6 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "hero-10-t",
+                                  "component": "span",
+                                  "value": {
+                                    "derived": "trial_reports"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "content": "hero.term.reports"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "component": "ListItem",
+                            "props": {
+                              "key": "hero-11",
+                              "className": "text-sm leading-6 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "hero-11-t",
+                                  "component": "span"
+                                },
+                                "children": [
+                                  {
+                                    "content": "hero.term.card"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "component": "ListItem",
+                            "props": {
+                              "key": "hero-12",
+                              "className": "text-sm leading-6 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "hero-12-t",
+                                  "component": "span"
+                                },
+                                "children": [
+                                  {
+                                    "content": "hero.term.cancel"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "hero-13",
+                          "testID": "static-legal",
+                          "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "content": "footer.legal"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "hero-media",
+                      "className": "gap-3"
+                    },
+                    "children": [
+                      {
+                        "component": "Picture",
+                        "props": {
+                          "key": "hero-14",
+                          "testID": "landing-scene",
+                          "image": {
+                            "derived": "scene"
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "ReportView",
+                        "props": {
+                          "key": "hero-15",
+                          "testID": "landing-demo",
+                          "view": {
+                            "derived": "demo"
+                          }
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Stack",
+                        "props": {
+                          "key": "hero-16",
+                          "id": "sample",
+                          "testID": "landing-sample",
+                          "component": "section",
+                          "tabIndex": 0,
+                          "label": {
+                            "content": "sample.region"
+                          },
+                          "className": "landing-sample max-h-[640px] overflow-y-auto rounded-[20px] border border-zinc-800 bg-report-page focus-visible:outline-2 focus-visible:outline-amber-400"
+                        },
+                        "children": [
+                          {
+                            "component": "ReportPage",
+                            "props": {
+                              "key": "hero-16-page",
+                              "view": {
+                                "derived": "sample"
+                              }
+                            },
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "hero-17",
+                          "testID": "landing-caption",
+                          "className": "text-[13px] leading-[18px] text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "content": "sample.caption"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Stack",
+            "props": {
+              "key": "uses",
+              "testID": "static-uses",
+              "id": "uses",
+              "component": "section",
+              "className": "gap-6 scroll-mt-20"
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "key": "uses-0",
+                  "component": "h2",
+                  "className": "text-3xl font-bold tracking-tight text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "uses.heading"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "uses-1",
+                  "className": "text-lg leading-7 text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "uses.lede"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "uses-list",
+                  "testID": "landing-uses-items",
+                  "className": "grid gap-6 md:grid-cols-3"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "uses-2-li"
+                    },
+                    "children": [
+                      {
+                        "component": "Stack",
+                        "props": {
+                          "key": "uses-2-item",
+                          "className": "gap-2"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-2",
+                              "className": "text-sm font-semibold uppercase tracking-[.08em] text-zinc-400"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.1.label"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-3",
+                              "component": "h3",
+                              "className": "text-xl font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.1.title"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-4",
+                              "className": "text-base leading-7 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.1.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "uses-5-li"
+                    },
+                    "children": [
+                      {
+                        "component": "Stack",
+                        "props": {
+                          "key": "uses-5-item",
+                          "className": "gap-2"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-5",
+                              "className": "text-sm font-semibold uppercase tracking-[.08em] text-zinc-400"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.2.label"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-6",
+                              "component": "h3",
+                              "className": "text-xl font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.2.title"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-7",
+                              "className": "text-base leading-7 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.2.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "uses-8-li"
+                    },
+                    "children": [
+                      {
+                        "component": "Stack",
+                        "props": {
+                          "key": "uses-8-item",
+                          "className": "gap-2"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-8",
+                              "className": "text-sm font-semibold uppercase tracking-[.08em] text-zinc-400"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.3.label"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-9",
+                              "component": "h3",
+                              "className": "text-xl font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.3.title"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "uses-10",
+                              "className": "text-base leading-7 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "content": "uses.3.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Stack",
+            "props": {
+              "key": "trust",
+              "testID": "static-trust",
+              "id": "trust",
+              "component": "section",
+              "className": "gap-6 scroll-mt-20"
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "key": "trust-0",
+                  "component": "h2",
+                  "className": "text-3xl font-bold tracking-tight text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "figures.heading"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "trust-list",
+                  "testID": "landing-figures",
+                  "className": "grid gap-4 text-zinc-100 md:grid-cols-2"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "trust-1",
+                      "className": "text-xl font-semibold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "trust-1-t",
+                          "component": "span",
+                          "value": {
+                            "derived": "cost_sources"
+                          }
+                        },
+                        "children": [
+                          {
+                            "content": "figures.cost_sources"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "trust-2",
+                      "className": "text-xl font-semibold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "trust-2-t",
+                          "component": "span",
+                          "value": {
+                            "derived": "scenarios"
+                          }
+                        },
+                        "children": [
+                          {
+                            "content": "figures.scenarios"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "trust-3-lots",
+                      "testID": "landing-checked-lots",
+                      "className": "text-xl font-semibold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "derived": "checked.citywide.lots"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "trust-3-regulations",
+                      "testID": "landing-checked-regulations",
+                      "className": "text-xl font-semibold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "derived": "checked.citywide.regulations"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "trust-3-buildings",
+                      "testID": "landing-checked-buildings",
+                      "className": "text-xl font-semibold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "derived": "checked.citywide.buildings"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "trust-3-builds",
+                      "testID": "landing-checked-builds",
+                      "className": "text-xl font-semibold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "derived": "checked.citywide.builds"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "trust-3-map_areas",
+                      "testID": "landing-checked-map_areas",
+                      "className": "text-xl font-semibold text-zinc-100"
+                    },
+                    "children": [
+                      {
+                        "derived": "checked.citywide.map_areas"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Stack",
+            "props": {
+              "key": "how",
+              "testID": "static-how",
+              "id": "how",
+              "component": "section",
+              "className": "gap-6 scroll-mt-20"
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "key": "how-0",
+                  "component": "h2",
+                  "className": "text-3xl font-bold tracking-tight text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "how.heading"
+                  }
+                ]
+              },
+              {
+                "component": "List",
+                "props": {
+                  "key": "how-list",
+                  "testID": "landing-how-items",
+                  "className": "grid gap-6 md:grid-cols-3"
+                },
+                "children": [
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "how-1-li"
+                    },
+                    "children": [
+                      {
+                        "component": "Stack",
+                        "props": {
+                          "key": "how-1-item",
+                          "className": "gap-2"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "how-1",
+                              "component": "h3",
+                              "className": "text-xl font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "content": "how.1.title"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "how-2",
+                              "className": "text-base leading-7 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "content": "how.1.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "how-3-li"
+                    },
+                    "children": [
+                      {
+                        "component": "Stack",
+                        "props": {
+                          "key": "how-3-item",
+                          "className": "gap-2"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "how-3",
+                              "component": "h3",
+                              "className": "text-xl font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "content": "how.2.title"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "how-4",
+                              "className": "text-base leading-7 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "content": "how.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Picture",
+                            "props": {
+                              "key": "how-5",
+                              "testID": "landing-picture",
+                              "image": {
+                                "derived": "picture"
+                              }
+                            },
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "ListItem",
+                    "props": {
+                      "key": "how-6-li"
+                    },
+                    "children": [
+                      {
+                        "component": "Stack",
+                        "props": {
+                          "key": "how-6-item",
+                          "className": "gap-2"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "how-6",
+                              "component": "h3",
+                              "className": "text-xl font-semibold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "content": "how.3.title"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "how-7",
+                              "className": "text-base leading-7 text-zinc-300"
+                            },
+                            "children": [
+                              {
+                                "content": "how.3.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Stack",
+            "props": {
+              "key": "pricing",
+              "testID": "static-pricing",
+              "id": "pricing",
+              "component": "section",
+              "className": "gap-6 scroll-mt-20"
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "key": "pricing-0",
+                  "component": "h2",
+                  "className": "text-3xl font-bold tracking-tight text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "plans.heading"
+                  }
+                ]
+              },
+              {
+                "component": "Group",
+                "props": {
+                  "key": "pricing-boxes",
+                  "testID": "landing-plans",
+                  "className": "grid gap-4 md:grid-cols-4"
+                },
+                "children": [
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "pricing-1-box",
+                      "testID": "landing-plan-pricing-1",
+                      "className": "gap-3 rounded-[20px] border border-zinc-800 bg-zinc-900 p-5"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-1",
+                          "component": "h3",
+                          "className": "text-xl font-semibold text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.trial.name"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-2",
+                          "className": "text-sm text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.trial.note"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-3",
+                          "className": "text-base leading-7 text-zinc-300",
+                          "value": {
+                            "derived": "trial_reports"
+                          }
+                        },
+                        "children": [
+                          {
+                            "content": "plans.trial.tick"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "pricing-4",
+                          "testID": "static-link-/signup",
+                          "href": "/signup",
+                          "size": "lg",
+                          "variant": "light",
+                          "color": "yellow",
+                          "className": "mt-auto rounded-xl"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.trial.link"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "pricing-5-box",
+                      "testID": "landing-plan-pricing-5",
+                      "className": "gap-3 rounded-[20px] border border-zinc-800 bg-zinc-900 p-5"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-5",
+                          "component": "h3",
+                          "className": "text-xl font-semibold text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.basic.name"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-6",
+                          "className": "text-base leading-7 text-zinc-300",
+                          "value": {
+                            "derived": "plan_reports"
+                          }
+                        },
+                        "children": [
+                          {
+                            "content": "plans.basic.tick"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "pricing-7",
+                          "testID": "static-link-/signup?plan=basic",
+                          "href": "/signup?plan=basic",
+                          "size": "lg",
+                          "variant": "light",
+                          "color": "yellow",
+                          "className": "mt-auto rounded-xl"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.basic.link"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "pricing-8-box",
+                      "testID": "landing-plan-pricing-8",
+                      "className": "gap-3 rounded-[20px] border border-zinc-800 bg-zinc-900 p-5"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-8",
+                          "component": "h3",
+                          "className": "text-xl font-semibold text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.pro.name"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "pricing-9",
+                          "testID": "static-link-/signup?plan=pro",
+                          "href": "/signup?plan=pro",
+                          "size": "lg",
+                          "variant": "light",
+                          "color": "yellow",
+                          "className": "mt-auto rounded-xl"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.pro.link"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "pricing-10-box",
+                      "testID": "landing-plan-pricing-10",
+                      "className": "gap-3 rounded-[20px] border border-zinc-800 bg-zinc-900 p-5"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-10",
+                          "component": "h3",
+                          "className": "text-xl font-semibold text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.enterprise.name"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "pricing-11",
+                          "className": "text-sm text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.enterprise.note"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "pricing-12",
+                          "testID": "static-link-/help#topic=enterprise",
+                          "href": "/help#topic=enterprise",
+                          "size": "lg",
+                          "variant": "light",
+                          "color": "yellow",
+                          "className": "mt-auto rounded-xl"
+                        },
+                        "children": [
+                          {
+                            "content": "plans.enterprise.link"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "pricing-13",
+                  "className": "text-base text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "plans.foot"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Stack",
+            "props": {
+              "key": "footer",
+              "testID": "static-footer",
+              "component": "footer",
+              "className": "gap-3 border-t border-zinc-800 pt-6"
+            },
+            "children": [
+              {
+                "component": "Group",
+                "props": {
+                  "key": "footer-links",
+                  "className": "gap-2"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-0",
+                      "testID": "static-link-/terms",
+                      "href": "/terms",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.terms"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-1",
+                      "testID": "static-link-/privacy",
+                      "href": "/privacy",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.privacy"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "footer-2",
+                      "testID": "static-link-/help",
+                      "href": "/help",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "rounded-xl text-zinc-300"
+                    },
+                    "children": [
+                      {
+                        "content": "footer.help"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "footer-legal-0",
+                  "testID": "static-legal",
+                  "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+                },
+                "children": [
+                  {
+                    "content": "footer.legal"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F06/surfaces/web_landing.content.json": "1f304a5bbcd254ed",
+      "scripts/surfaces/parcel_product/F06/surfaces/web_landing.descriptor.json": "3bd14a66c00f507f"
+    }
+  }
+}
