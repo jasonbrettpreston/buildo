@@ -113,7 +113,7 @@
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
+| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/parcels/report-page.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
 | 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | `src/lib/leads/flight-board-temporal.ts`, `src/app/api/leads/flight-board/route.ts`, `src/app/api/leads/flight-board/detail/[id]/types.ts`, `src/app/api/leads/flight-board/detail/[id]/route.ts`, `src/app/api/leads/save/route.ts`, `src/app/api/leads/feed/route.ts`, `src/lib/leads/parse-lead-id.ts` | `src/tests/flight-board.infra.test.ts`, `src/tests/flight-board-detail.infra.test.ts`, `src/tests/flight-board-temporal.logic.test.ts`, `src/tests/db/flight-board-roundtrip.db.test.ts` | Done |
 | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | `src/app/api/parcels/lookup/types.ts` | — | Done |
 | 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/app/api/leads/detail/[id]/types.ts` | `src/tests/db/realtor-gating.db.test.ts` | ACTIVE (Mobile Pivot) |
@@ -150,7 +150,7 @@
 | 99 | `docs/reference/bylaw-provisions.md` | By-law provisions — Toronto Zoning By-law 569-2013 (generated — do not edit) | — | — | Done |
 | 99 | `docs/reference/data-lineage-map.md` | Data-Lineage Map | — | — | Done |
 | 99 | `docs/reference/logic-variables-registry.md` | Logic-Variables Registry | `src/lib/admin/control-panel.ts` | — | Done |
-| 99 | `docs/reference/maxbld-report-field-inventory.md` | MaxBLD report-field inventory (generated — do not edit) | `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/consumer-lookup.ts` | `src/tests/report-fields.infra.test.ts` | Done |
+| 99 | `docs/reference/maxbld-report-field-inventory.md` | MaxBLD report-field inventory (generated — do not edit) | — | `src/tests/report-fields.infra.test.ts` | Done |
 | 99 | `docs/reference/maxbld-report-v2-schema.md` | MaxBLD lot report v2 — schema (generated — do not edit) | — | — | Done |
 
 ---
