@@ -1,0 +1,8 @@
+MF-79 seed fix red evidence (2026-11-12): src/tests/mctest/seed.logic.test.ts, the two profiles-row canaries, run against setProfile extracted unchanged (UPDATE profiles SET is_admin ... WHERE id = $1, no row check). A stub connection answers every statement; no DB was touched. Both fail; the other 6 pass.
+
+   × the profiles row (MF-79 fix: the test stack has no sign-up trigger rows) > creates the row when it is missing, as the on_auth_user_created trigger of migration 226 does, and sets is_admin 2ms
+   × the profiles row (MF-79 fix: the test stack has no sign-up trigger rows) > fails the user's transaction when no row is written 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 6 passed (8)
+
+Green with the upsert and the row check: 8 of 8 (src/tests/mctest: 6 files, 102 tests).

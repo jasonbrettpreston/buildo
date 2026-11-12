@@ -5,7 +5,7 @@
 // Seeds the catalogue's personas on the TEST STACK ONLY: refuses unless testStack() passes (never 54321/54322, never a remote host)
 // and unless --go is given. Per persona email (and each pool user from email_pattern x count):
 //   - the account through the test stack's own sign-in service (sign-up; an existing account signs in), so sign-in itself is exercised;
-//   - profiles.is_admin (the admin persona only), a user_profiles row (the lookup route reads it);
+//   - a profiles row with is_admin (true for the admin persona only; created when missing), a user_profiles row (the lookup route reads it);
 //   - its entitlement rows replaced by the catalogue's one row (no lead_gen row unless the persona is lead_gen_only: the transitional
 //     unmetered path would hide the meter), and its parcel_tool usage reset then re-written inside the current period (D-12 a:
 //     reports_used n, "=limit" or "=limit+3" read from the limit setting, never typed).
@@ -39,6 +39,19 @@ export function usedCount(reportsUsed, limit) {
       `reports_used ${JSON.stringify(reportsUsed)} is not a number, "=limit" or "=limit+N"`,
     );
   return limit + Number(m[1] ?? 0);
+}
+
+/**
+ * The user's profiles row with its admin flag. The row is created when missing, as the on_auth_user_created trigger of migration 226
+ * does on dev and production (the test stack's copy has no such rows). No row written fails the user's transaction (the caller rolls
+ * it back), never a silent non-admin.
+ */
+export async function setProfile(db, uid, isAdmin) {
+  const r = await db.query(
+    "INSERT INTO profiles (id, is_admin) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET is_admin = EXCLUDED.is_admin",
+    [uid, isAdmin],
+  );
+  if (r.rowCount !== 1) throw new Error("profiles row not written");
 }
 
 async function account(email) {
@@ -103,10 +116,7 @@ async function main() {
       for (const email of personaEmails(p)) {
         const uid = await account(email);
         await db.query("BEGIN");
-        await db.query("UPDATE profiles SET is_admin = $2 WHERE id = $1", [
-          uid,
-          p.role === "admin",
-        ]);
+        await setProfile(db, uid, p.role === "admin");
         await db.query(
           "INSERT INTO user_profiles (user_id, trade_slug) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING",
           [uid, TRADE],

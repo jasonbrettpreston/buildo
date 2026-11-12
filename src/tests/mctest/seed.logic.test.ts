@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { ROOT } from "../../../scripts/mctest/lib.cjs";
 import {
   personaEmails,
+  setProfile,
   usedCount,
 } from "../../../scripts/mctest/seed-personas.mjs";
 
@@ -80,5 +81,31 @@ describe("persona rows to seeded users (D-12 a)", () => {
     expect(usedCount("=limit", 20)).toBe(20);
     expect(usedCount("=limit+3", 20)).toBe(23);
     expect(() => usedCount("lots", 20)).toThrow(/not a number/);
+  });
+});
+
+describe("the profiles row (MF-79 fix: the test stack has no sign-up trigger rows)", () => {
+  /** A stub connection: records each statement and answers with the given rowCount (no DB is touched). */
+  const stub = (rowCount: number) => {
+    const sql: string[] = [];
+    return {
+      sql,
+      query: async (text: string) => {
+        sql.push(text);
+        return { rowCount, rows: [] };
+      },
+    };
+  };
+  it("creates the row when it is missing, as the on_auth_user_created trigger of migration 226 does, and sets is_admin", async () => {
+    const db = stub(1);
+    await setProfile(db, "u1", true);
+    expect(db.sql.join(" ")).toMatch(
+      /INSERT INTO profiles \(id, is_admin\)[\s\S]*ON CONFLICT \(id\) DO UPDATE SET is_admin/,
+    );
+  });
+  it("fails the user's transaction when no row is written", async () => {
+    await expect(setProfile(stub(0), "u1", true)).rejects.toThrow(
+      /profiles row not written/,
+    );
   });
 });
