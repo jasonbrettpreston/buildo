@@ -4193,7 +4193,7 @@
           "docs/specs/02-web-admin/127_surface_conversion_procedure.md §4.3 — the golden PAIR pins the shape"
         ]
       },
-      "ref": "S-083"
+      "ref": "S-086"
     },
     "inputs": {
       "answer": "contract",
@@ -4465,7 +4465,7 @@
       }
     ],
     "interpretation": "none",
-    "notes": "MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record \"sq ft first\"). The bounds are the server's (plan fold F2): the form checks the type only.",
+    "notes": "MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record \"sq ft first\"). The bounds are the server's (plan fold F2): the form checks the type only. Dated note 2026-11-11 (MF-19 restack onto MF-53; orchestrator id assignment): the census ref is S-086. MF-53 lands first and keeps S-083 (binding_mobile_list); S-084 stays admin_lot_size_revert (MF-19); S-085 is MF-48's binding_mobile_report on origin; so report_lot_size_entry takes the next free id (it read S-083 before this note).",
     "x-draft": {
       "shard": "web-product",
       "files": [],

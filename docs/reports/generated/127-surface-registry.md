@@ -335,7 +335,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-005`](#s-005) | surface | `web_landing` | `STATIC` | `F06` web-front-door | 1063 | 91% | [detail](#s-005) |
 | [`C-062`](#c-062) | contract | `contract_parcels_tracked` | `MUTATION` | `F17` tracked-lots | 1172 | 100% | [detail](#c-062) |
 | [`S-072`](#s-072) | surface | `mobile_tracked_lots` | `LIST` | `F17` tracked-lots | 1173 | 100% | [detail](#s-072) |
-| [`S-083`](#s-083) | surface | `report_lot_size_entry` | `FORM` | `F02` parcel-report | 2047 | 100% | [detail](#s-083) |
+| [`S-086`](#s-086) | surface | `report_lot_size_entry` | `FORM` | `F02` parcel-report | 2047 | 100% | [detail](#s-086) |
 | [`C-070`](#c-070) | contract | `contract_parcels_lot_size_entry` | `MUTATION` | `F02` parcel-report | 2049 | 97% | [detail](#c-070) |
 
 **§B `parcel_admin` (26)**
@@ -514,7 +514,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |
 |---|---|---|---:|---:|---|
 | **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
-| **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-083`](#s-083) · [`C-070`](#c-070) | 3 | 9 | 5 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
+| **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-086`](#s-086) · [`C-070`](#c-070) | 3 | 9 | 5 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
@@ -1441,11 +1441,11 @@ DATA. The contract C-062 and the `user_tracked_lots` table are DESIGNED, not bui
 
 THE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA BUILD = `parcels.max_newbuild_coa_gfa_sqm` (real). New Nearby CoA Ruling = NO COLUMN EXISTS; derivable from decided `coa_applications` in the parcel’s neighbourhood, declared nullable, rendered "—" while null. See `limitations` and the blocking check.
 
-<a id="s-083"></a>
+<a id="s-086"></a>
 
-###### `S-083` `report_lot_size_entry`
+###### `S-086` `report_lot_size_entry`
 
-**Programme.** `S-083` · scope `parcel_product` · feature `F02` · build order 2047 · batch `B2` · review `unreviewed` — The user lot-size input of the report (MF-19).
+**Programme.** `S-086` · scope `parcel_product` · feature `F02` · build order 2047 · batch `B2` · review `unreviewed` — The user lot-size input of the report (MF-19).
 
 **What it is.** The Add lot size form of the report sheet: one number and its unit (sq ft or m²), entered once per lot (D-1 a). Declared now; it is mounted in the report sheet when the entry switch flips (the sheet is hidden while off, D-6).
 
@@ -1509,7 +1509,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
 
-> ⚠️ MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record "sq ft first"). The bounds are the server's (plan fold F2): the form checks the type only.
+> ⚠️ MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record "sq ft first"). The bounds are the server's (plan fold F2): the form checks the type only. Dated note 2026-11-11 (MF-19 restack onto MF-53; orchestrator id assignment): the census ref is S-086. MF-53 lands first and keeps S-083 (binding_mobile_list); S-084 stays admin_lot_size_revert (MF-19); S-085 is MF-48's binding_mobile_report on origin; so report_lot_size_entry takes the next free id (it read S-083 before this note).
 
 <a id="c-070"></a>
 

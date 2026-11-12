@@ -35,7 +35,7 @@ Every card answers the **same nine questions** from the descriptor, with the evi
 | 19 | [`S-081`](#card-s-081) | [`admin_offers`](#card-s-081) | `parcel_admin` | `F04` | 2044 | `unreviewed` |
 | 20 | [`S-080`](#card-s-080) | [`admin_advertiser_entry`](#card-s-080) | `parcel_admin` | `F04` | 2045 | `unreviewed` |
 | 21 | [`S-084`](#card-s-084) | [`admin_lot_size_revert`](#card-s-084) | `parcel_admin` | `F08` | 2046 | `unreviewed` |
-| 22 | [`S-083`](#card-s-083) | [`report_lot_size_entry`](#card-s-083) | `parcel_product` | `F02` | 2047 | `unreviewed` |
+| 22 | [`S-086`](#card-s-086) | [`report_lot_size_entry`](#card-s-086) | `parcel_product` | `F02` | 2047 | `unreviewed` |
 | 23 | [`C-071`](#card-c-071) | [`contract_admin_lot_size_revert`](#card-c-071) | `parcel_admin` | `F08` | 2048 | `unreviewed` |
 | 24 | [`C-070`](#card-c-070) | [`contract_parcels_lot_size_entry`](#card-c-070) | `parcel_product` | `F02` | 2049 | `unreviewed` |
 | 25 | [`S-010`](#card-s-010) | [`admin_ledger_visualiser`](#card-s-010) | `parcel_admin` | `F07` | 2073 | `unreviewed` |
@@ -1163,11 +1163,11 @@ It is 1 of 10 entr(ies) in feature `F08`. It owns no component. Every table it t
 
 ---
 
-<a id="card-s-083"></a>
+<a id="card-s-086"></a>
 
-## Card 22 — `S-083` `report_lot_size_entry`
+## Card 22 — `S-086` `report_lot_size_entry`
 
-Registry detail: [`S-083`](../../../docs/reports/generated/127-surface-registry.md#s-083) `report_lot_size_entry`.
+Registry detail: [`S-086`](../../../docs/reports/generated/127-surface-registry.md#s-086) `report_lot_size_entry`.
 
 `SURFACE` · `FORM` · scope `parcel_product` · feature `F02` parcel-report · build order 2047 · batch B2 · **review: `unreviewed`**
 
