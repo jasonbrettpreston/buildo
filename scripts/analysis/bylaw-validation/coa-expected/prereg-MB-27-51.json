@@ -1,0 +1,208 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 51 (R-MA; round 175, claimed in the ID ledger before use; it supersedes prereg 50 (round 173, kept in history), whose oracle entry named a ruling_ref that is not a token of the M-481 row; round 172 is lane B5A's increment-5 Layer 1/2 prereg, prereg-MB-27-49.json, not committed at writing), committed alone directly before the MB-27 increment 5 C2b build commit (lane B5B-1): the fitted house on the row alone (FIT-a; FD-1..FD-6 (a) with conditions C1-C21; AR-7 (b)). Layer 3 only: six catalogue rows on the flat card (storeys_fit, footprint_fit_m2, depth_fit_m, upper_storey_depth_fit_m, height_fit_m on the three types; units_fit on the houseplex), tagged flat_or_shallow_roof and reading gfa_flat_m2 (C7); asserted bounds that refuse, never clip (C4 fitted_storeys_above_max, C15 fitted_height_above_max); the shape word fitted_shape_chosen cited to 800.50(820) (C4); the storey-rule reading row reading:fitted_house_storey_rule, confidence medium, declared on storeys_fit as its `reading` (C16, M-481); a declared audit_counts list counted by the step and emitted in records_meta (C4, C6, C15). No Layer 1 or Layer 2 input moves, so no CoA scorer row moves: every total equals the before total. The one oracle line that moves is the reading count in bylaw-switchboard-confidence (listed below line for line). The 3.0 m minimum checks of C3 wait for lane B5A's migration 316 (compute_maxbld_scenarios_plate_min_dimension_m) and are not in this round.",
+ "schema": "coa-round-prereg-v1",
+ "round": 175,
+ "task": "MB-27",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "M-481",
+  "M-460",
+  "M-404",
+  "M-425"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc5/BUILD-PLAN.md section 1 C2 (Layer 3: the fitted rows); ~/Buildo-scratch/mcbylaws/inc5/BUILD-COORD.md (lane B5B-1)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "every floor line unchanged; the floors check OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; every golden-25 expected line (the fitted rows are new rows; no existing row value moves); body_sha256 and evaluator_version of the Layer 1 input",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version d312906ff10e -> 208e404aa6a5 (filesHash over scripts/seeds/bylaw moves with the catalogue and switchboard; body_sha256 and evaluator_version unchanged); maxbld-amendment-index.json layer2_table_version (generate-amendment-index --write); expected-172.json and expected-4d.json commit and inputs.table_version through coa-scorecard.mjs --pin (totals equal); the G-STOR re-bind (MB-27L2-G-STOR.json table_version)",
+  "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts PINNED_SHA catalogue and switchboard (hash fields only)",
+  "scripts/surfaces/_schema/report-v2-seed/catalogue-fields.json and report-v2.decl.json (seed-report-v2.mjs --write: six new catalogue fields)",
+  "docs/reference/maxbld-report-v2-schema.md, .schema.json, .types.ts (report-schema.mjs --write)",
+  "the 72 report goldens and 17 page goldens: the report-v2.decl.json fingerprint line only (report-capture.ts, report-page-capture.ts)"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/switchboard.logic.test.ts",
+   "line": 41,
+   "row": "switchboard rows",
+   "from": 76,
+   "to": 83,
+   "rule": "+1 reading:fitted_house_storey_rule (C16), +6 formula switches of the fitted rows",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": "PINNED_SHA",
+   "row": "catalogue and switchboard sha pins",
+   "from": "previous hashes",
+   "to": "new hashes",
+   "rule": "hash fields only",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": "B8",
+   "row": "catalogue rows",
+   "from": 55,
+   "to": 61,
+   "rule": "+6 increment-5 rows; their building_type and increment in the loop",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/layer3-catalogue.logic.test.ts",
+   "line": "validateCatalogue",
+   "row": "known increments",
+   "from": "[1,2,3,4]",
+   "to": "[1,2,3,4,5]",
+   "rule": "the increment-5 rows",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/increment2-revisions.logic.test.ts",
+   "line": "R1-1",
+   "row": "flat-run rows",
+   "from": "[setback_plate_m2, gfa_flat_m2]",
+   "to": "+ the six fitted rows",
+   "rule": "C7",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/increment3-building-type.logic.test.ts",
+   "line": 71,
+   "row": "detached_house rows per parcel",
+   "from": 47,
+   "to": 52,
+   "rule": "+5 fitted rows on the house",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/increment3-building-type.logic.test.ts",
+   "line": 75,
+   "row": "detached_house rows per parcel",
+   "from": 47,
+   "to": 52,
+   "rule": "+5 fitted rows on the house",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/determinism.logic.test.ts",
+   "line": 76,
+   "row": "rows per parcel",
+   "from": 149,
+   "to": 165,
+   "rule": "+16 fitted rows",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/runner-plan.logic.test.ts",
+   "line": "116, 143, 144",
+   "row": "rows of two golden parcels",
+   "from": "2 * 153",
+   "to": "2 * 169",
+   "rule": "+16 fitted rows per parcel",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts",
+   "line": 161,
+   "row": "rows of the golden 25",
+   "from": "25 * 153",
+   "to": "25 * 169",
+   "rule": "+16 fitted rows per parcel",
+   "authority": "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md FD-1..FD-6 (a) with ~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md C1-C21 (operator, WALK2-20261112.md FIT-a and the FD-1..FD-6 review result); ~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7 (b); McProof key v2.1 (operator \"approve the key\", WALK2 item 13); any other change to this assertion stops"
+  }
+ ],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "case": "bylaw-switchboard-confidence D5: reading:fitted_house_storey_rule (FD-4 a, medium; C16) joins the reading rows; it cites no confidence-register line; readings + 9",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": "expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 8); // +1 increment-4 reading (D-1 b); was + 7",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+   "case": "bylaw-switchboard-confidence D5: reading:fitted_house_storey_rule (FD-4 a, medium; C16) joins the reading rows; it cites no confidence-register line; readings + 9",
+   "ruling": "M-481",
+   "ruling_ref": "CHAT-225.Q-CONF",
+   "old": null,
+   "new": "expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 9); // MB-27 increment 5 (lane B5B-1, FD-4 a): +1 reading:fitted_house_storey_rule (medium; it cites no confidence-register line); was + 8 // +1 increment-4 reading (D-1 b); was + 7"
+  }
+ ]
+}
