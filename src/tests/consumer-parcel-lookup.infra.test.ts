@@ -132,7 +132,7 @@ describe('WHITELIST — the assembler never leaks a diagnostic column or `groups
     const t3Cols = Object.values(T3_GROUPS).flat();
     const leaked = t3Cols.filter((c) => {
       // max_build_stories/max_build_fsi/coa_fsi/realized_fsi_p90/envelope_* are consciously
-      // promoted to the consumer headline whitelist — not leaks.
+      // promoted to the consumer headline whitelist — not leaks. (EI-D1, 2026-11-12: the legacy ones are sent as null.)
       if ((CONSUMER_HEADLINE_COLS as readonly string[]).includes(c)) return false;
       if (COMPARABLE_FIELD_NAMES.has(c)) return false;
       return flat.includes(`"${c}"`);
@@ -161,11 +161,14 @@ describe('WHITELIST — the assembler never leaks a diagnostic column or `groups
     expect(cb[0]!.structure_family).toBe('detached');
   });
 
-  it('absent ≠ fits:false — the garden_suite line keeps fits:false; kitchen has no fits key', () => {
+  // Dated 2026-11-12 (EI-D1, operator "D all as recommended - please ensure this is addedd to the McFrontend decisions";
+  // Spec 135 FE-38; Spec 100 §3.2 dated note 2026-11-12, which suspends §2 item 3 with the cost menu): the "absent ≠
+  // fits:false" case is retired. Its prior text asserted that menu.garden_suite.fits === false and that menu.kitchen has
+  // no fits key. The lookup now sends the legacy menu as null, so there is no line to carry either state; the lock is
+  // src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts. The engine cost lines come back on the declared report (MB-94).
+  it('EI-D1: the legacy cost menu is not sent (the fits:false case is retired with it)', () => {
     const { payload } = assembleConsumerPayload(row, []);
-    const menu = payload.costMenu.menu as Record<string, Record<string, unknown>>;
-    expect(menu.garden_suite!.fits).toBe(false);
-    expect(menu.kitchen).not.toHaveProperty('fits');
+    expect(payload.costMenu.menu).toBeNull();
   });
 
   it('the full response is .strict() — a `groups` leak fails the boundary parse', () => {

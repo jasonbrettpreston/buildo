@@ -110,8 +110,8 @@ export default function ParcelDetailScreen() {
   }
 
   const { parcel } = data;
-  const { areas, costMenu, neighbourhood } = parcel;
-  const menu = costMenu.menu;
+  const { areas, neighbourhood } = parcel;
+  // EI-D1 (Spec 135 FE-38): costMenu is not read; the lookup sends it as null (Spec 100 §3.2 dated note 2026-11-12).
   const comps = neighbourhood.comparableBuilds ?? [];
   const coa = neighbourhood.coaProjects;
 
@@ -127,10 +127,10 @@ export default function ParcelDetailScreen() {
           <View className="flex-row flex-wrap">
             <Headline label="Lot size" value={formatSqm(areas.lot_size_sqm)} />
             {/* W-0 (a), operator 2026-11-12 "sounds good accepted..": Max buildable GFA (legacy max_buildable_gfa_sqm) hidden until MB-38 */}
-            <Headline label="As-of-right GFA" value={formatSqft(areas.opt_aor_gfa_sqm)} />
-            <Headline label="Max build storeys" value={areas.max_build_stories != null ? String(areas.max_build_stories) : null} />
+            {/* EI-D1, operator 2026-11-12 "D all as recommended" (Spec 135 FE-38): As-of-right GFA (legacy opt_aor_gfa_sqm) hidden until MB-43 */}
+            {/* EI-D1: Max build storeys (legacy max_build_stories) hidden; Spec 69a M-367 dated note 2026-11-12 */}
             {/* W-0 (a): Max build FSI (legacy max_build_fsi) hidden until MB-38; ~/Buildo-scratch/mcbylaws/inc5/WALKTHROUGH-20261112.md */}
-            <Headline label="CoA FSI" value={formatFsi(areas.coa_fsi)} />
+            {/* EI-D1: CoA FSI (legacy coa_fsi) hidden; the lookup no longer sends any of these (Spec 100 §3.2 dated note 2026-11-12) */}
           </View>
           {areas.envelope_constrained ? (
             <Text className="text-zinc-500 text-xs">
@@ -144,20 +144,20 @@ export default function ParcelDetailScreen() {
           <Text className="font-mono text-xs text-zinc-400 uppercase tracking-widest mb-3">
             What it costs
           </Text>
-          {menu == null ? (
-            <Text testID="parcel-cost-none" className="text-zinc-500 text-sm">
-              Cost menu not yet computed for this parcel.
-            </Text>
-          ) : (
-            COST_LINE_ORDER.map((id) => (
-              <CostCard
-                key={id}
-                id={id}
-                line={getCostLine(menu, id)}
-                basisLabel={id === 'max_build' ? maxBuildBasisLabel(areas) : undefined}
-              />
-            ))
-          )}
+          {/* EI-D1, operator 2026-11-12, "D all as recommended - please ensure this is addedd to the McFrontend decisions"
+              (Spec 135 FE-38; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Engine inputs" rulings; plan
+              ~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md v2 §4e): the 13 legacy cost lines are not shown. They price the
+              legacy Phase 1 sizes, wrong by -47 % to +75 % on the golden 25, and the lookup no longer sends them (Spec 100
+              §3.2 dated note 2026-11-12). The slot stays and reads the not_evaluated status (Spec 126 §11a.3, FE-06):
+              never a number, never $0. Spec 69a M-367 dated note 2026-11-12: hidden until MB-43 deletes them; MB-94 binds
+              the engine cost on the declared report (MF-48 Stage B). A stopgap: MB-37 is not discharged. */}
+          <Text testID="parcel-cost-none" className="text-zinc-500 text-sm">
+            Not yet evaluated
+          </Text>
+          {/* The CostCard renderer above is unused from here on; it is deleted with the legacy menu (MB-43 / MF-48 */}
+          {/* Stage B). It is kept for now so the line references in the mobile_parcel_detail descriptor and the */}
+          {/* surface census (S-001) stay exact (the W-0 comment-for-line layout; those files are McFrontend paths). */}
+          {/* EI-D1 end. */}
         </View>
 
         {/* 3. Neighbours summary */}

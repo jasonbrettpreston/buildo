@@ -1,0 +1,8 @@
+FE-38 server lock, red against 4d9de5e7b (src/lib/parcels/consumer-lookup.ts unchanged), vitest, 2026-11-12:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts > FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size value > the cost menu and the cost scalars are null (the key shape is kept for installed apps)
+AssertionError: expected { …(2) } to deeply equal { menu: null, scalars: null }
+ FAIL  src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts > FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size value > every withheld headline is sent as null, and the withheld list is exactly the ruled set
+ FAIL  src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts > FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size value > no distinctive legacy value appears anywhere in the serialized payload
+AssertionError: expected '{"costMenu":{"menu":{"_schema_version…' not to contain '382.91'
+      Tests  3 failed | 1 passed (4)

@@ -9,6 +9,15 @@
 // Lock: the real screen, rendered with both values present and distinctive, shows neither label nor value; the
 // neighbouring headlines still render (the hide is these two only). MB-38 removes this lock when it binds the
 // engine's values.
+//
+// Dated 2026-11-12 (EI-D1, operator "D all as recommended - please ensure this is addedd to the McFrontend decisions"; Spec 135
+// FE-38; Spec 69a M-367 dated note 2026-11-12 (R-1), which covers this reversal; record
+// ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Engine inputs ... rulings 2026-11-12"; plan
+// ~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md v2 §4e, F-3/F-5): case 2 is REVERSED. Before: "the other lot headlines still
+// render", asserting getByText("As-of-right GFA"), getByText("Max build storeys"), getByText("CoA FSI") and getByText("0.61").
+// After: those three legacy headlines and their values do not render either; only "Lot size" stays. Cases 3-4 add the
+// cost section (the 13 legacy lines are not shown; the slot reads "Not yet evaluated", FE-06) and the O-7 label lock
+// (no max_build card, no "maximum envelope" or "as-of-right" text, with opt_aor_gfa_sqm present and with it null).
 require('react-native-css-interop/test');
 import * as React from 'react';
 import { render, screen } from '@testing-library/react-native';
@@ -29,10 +38,14 @@ const mockData = {
   candidates: [],
   warnings: [],
   parcel: {
-    costMenu: { menu: null, scalars: {} },
+    // A distinctive legacy menu: even if a server still sent one, no line may render (EI-D1).
+    costMenu: {
+      menu: { _schema_version: 1, max_build: { total: 2503805, per_sqm: 6539, area: 382.9 }, coa_build: { total: 3111111 }, kitchen: { per_sqm: 777 } },
+      scalars: { cost_fb_total: 2503805 },
+    },
     areas: {
       lot_size_sqm: 400,
-      opt_aor_gfa_sqm: 250,
+      opt_aor_gfa_sqm: 250 as number | null, // formatSqft -> "2,691 sq ft"
       max_buildable_gfa_sqm: 999, // formatSqft -> "10,753 sq ft"
       max_build_stories: 3,
       max_build_fsi: 3.17, // formatFsi -> "3.17"
@@ -50,7 +63,7 @@ jest.mock('@/hooks/useParcelLookup', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;
 
-describe('W-0 (a): the mobile parcel page hides the legacy Max build FSI and Max buildable GFA', () => {
+describe('W-0 (a) + EI-D1: the mobile parcel page hides the legacy sizes and costs', () => {
   it('neither label nor value renders, with both values present', () => {
     render(<Screen />);
     expect(screen.queryByText('Max build FSI')).toBeNull();
@@ -58,12 +71,30 @@ describe('W-0 (a): the mobile parcel page hides the legacy Max build FSI and Max
     expect(screen.queryByText('3.17')).toBeNull();
     expect(screen.queryByText('10,753 sq ft')).toBeNull();
   });
-  it('the other lot headlines still render (only these two are hidden)', () => {
+  it('EI-D1 (reversed): the legacy As-of-right GFA, Max build storeys and CoA FSI do not render; Lot size still does', () => {
     render(<Screen />);
     expect(screen.getByText('Lot size')).toBeTruthy();
-    expect(screen.getByText('As-of-right GFA')).toBeTruthy();
-    expect(screen.getByText('Max build storeys')).toBeTruthy();
-    expect(screen.getByText('CoA FSI')).toBeTruthy();
-    expect(screen.getByText('0.61')).toBeTruthy();
+    expect(screen.queryByText('As-of-right GFA')).toBeNull();
+    expect(screen.queryByText('Max build storeys')).toBeNull();
+    expect(screen.queryByText('CoA FSI')).toBeNull();
+    expect(screen.queryByText('0.61')).toBeNull();
+    expect(screen.queryByText('2,691 sq ft')).toBeNull();
+  });
+  it('EI-D1: no legacy cost line renders, even when a menu is present; the slot reads "Not yet evaluated"', () => {
+    render(<Screen />);
+    expect(screen.getByText('What it costs')).toBeTruthy();
+    expect(screen.getByTestId('parcel-cost-none')).toHaveTextContent('Not yet evaluated');
+    for (const label of ['New build (max)', 'New build (Committee of Adjustment)', 'Kitchen (per m²)']) {
+      expect(screen.queryByText(label)).toBeNull();
+    }
+    expect(screen.queryByText(/2,503,805|3,111,111|\$0/)).toBeNull();
+    expect(screen.queryByTestId('parcel-cost-max_build')).toBeNull();
+  });
+  it.each([250, null])('O-7 label lock: no max_build card and no "maximum envelope" / "as-of-right" text (opt_aor_gfa_sqm %p)', (v) => {
+    mockData.parcel.areas.opt_aor_gfa_sqm = v;
+    render(<Screen />);
+    expect(screen.queryByTestId('parcel-cost-max_build')).toBeNull();
+    expect(screen.queryByText(/maximum envelope|as-of-right/i)).toBeNull();
+    mockData.parcel.areas.opt_aor_gfa_sqm = 250;
   });
 });

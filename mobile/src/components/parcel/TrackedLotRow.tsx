@@ -15,7 +15,7 @@ import { Gavel, Trash2, ChevronRight } from 'lucide-react-native';
 import {
   coaRulingIsPositive,
   coaRulingLabel,
-  formatGfa,
+  // formatGfa: unused since EI-D1 (Spec 135 FE-38); both legacy figures read "Not yet evaluated" (Spec 126 §11a.3, FE-06).
   type TrackedLot,
 } from '@/lib/trackedLots';
 import { TRACKED_LOTS_HEX as C } from '@/constants/parcelSearch';
@@ -62,7 +62,7 @@ export function TrackedLotRow({
         </Text>
 
         <Text style={{ color: '#a1a1aa', fontSize: 12, marginTop: 6, fontVariant: ['tabular-nums'] }}>
-          Max Build: {formatGfa(lot.maxBuildGfaSqm)}
+          Max Build: Not yet evaluated{/* EI-D1, operator 2026-11-12: legacy max_buildable_gfa_sqm hidden (M-367 dated note) */}
         </Text>
 
         <Text
@@ -74,7 +74,7 @@ export function TrackedLotRow({
             fontVariant: ['tabular-nums'],
           }}
         >
-          MAX COA BUILD: {formatGfa(lot.maxCoaBuildGfaSqm)}
+          MAX COA BUILD: Not yet evaluated{/* EI-D1: legacy max_newbuild_coa_gfa_sqm hidden until MB-43 */}
         </Text>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>

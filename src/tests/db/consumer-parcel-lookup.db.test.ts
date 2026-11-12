@@ -51,7 +51,8 @@ describe.skipIf(!dbAvailable())('Spec 100 consumer parcel-lookup — live DB', (
     const { payload, warnings } = assembleConsumerPayload(row!, []);
     expect(() => ConsumerParcelSchema.parse(payload)).not.toThrow();
     expect(warnings).toHaveLength(0);
-    expect(payload.costMenu.menu).not.toBeNull();
+    // Dated 2026-11-12 (EI-D1, Spec 135 FE-38): the legacy menu is no longer sent (prior text: .not.toBeNull()).
+    expect(payload.costMenu.menu).toBeNull();
     expect(payload.neighbourhood.comparableBuilds![0]!.permit_fsi).toBe(0.95);
 
     const flat = JSON.stringify(payload);
@@ -115,7 +116,9 @@ describe.skipIf(!dbAvailable())('Spec 100 consumer parcel-lookup — live DB', (
     expect(coa).toEqual([]);
   });
 
-  it('drifted parcel_cost_menu → degrades to null + warning (tier-stratified, no throw)', async () => {
+  // Dated 2026-11-12 (EI-D1, Spec 135 FE-38): the menu is never parsed now, so a drifted menu is no longer a warning; it is
+  // still null and the payload still parses (prior text asserted a "cost menu" warning).
+  it('drifted parcel_cost_menu → null, no warning, no throw (EI-D1: the legacy menu is not sent)', async () => {
     await pool.query(
       `INSERT INTO parcels (parcel_id, feature_type, geometry, geom, parcel_cost_menu)
        VALUES ('CLKP-TEST-DR','TEST',$1::jsonb, ST_SetSRID(ST_GeomFromGeoJSON($1::text),4326), $2::jsonb)`,
@@ -124,7 +127,7 @@ describe.skipIf(!dbAvailable())('Spec 100 consumer parcel-lookup — live DB', (
     const row = await fetchParcelById('CLKP-TEST-DR');
     const { payload, warnings } = assembleConsumerPayload(row!, []);
     expect(payload.costMenu.menu).toBeNull();
-    expect(warnings.some((w) => w.includes('cost menu'))).toBe(true);
+    expect(warnings.some((w) => w.includes('cost menu'))).toBe(false);
     expect(() => ConsumerParcelSchema.parse(payload)).not.toThrow();
   });
 });

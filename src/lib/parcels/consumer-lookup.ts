@@ -11,12 +11,8 @@
 // READ-ONLY: no writes, no derivation — the pick-by-name assembler is the whitelist (Spec 100 §3.2).
 
 import { logWarn } from '@/lib/logger';
+import type { ParcelRow } from '@/lib/admin/parcel-lookup';
 import {
-  T1_COST_SCALAR_COLS,
-  type ParcelRow,
-} from '@/lib/admin/parcel-lookup';
-import {
-  CostMenuSchema,
   NearbyBuildsSummarySchema,
   CoaProjectSchema,
   ConsumerComparableBuildSchema,
@@ -46,6 +42,19 @@ export const CONSUMER_HEADLINE_COLS = [
   'envelope_constrained', 'envelope_constraint_reason',
 ] as const;
 
+// EI-D1 (operator 2026-11-12, "D all as recommended - please ensure this is addedd to the McFrontend decisions"; Spec 135
+// FE-38; Spec 100 §3.2 dated note 2026-11-12; Spec 69a M-367 dated note, R-1): the legacy size headlines are WITHHELD — sent
+// as null, never as a value. They are legacy Phase 1 sizes, wrong by -47 % to +75 % on the golden 25. The keys stay in the
+// whitelist above, so every installed app and every declaration that names them still parses, and shows its null branch.
+// Data, not code: one list. Lock: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts. Hidden until MB-43.
+export const CONSUMER_WITHHELD_LEGACY_COLS: ReadonlySet<string> = new Set([
+  'opt_aor_gfa_sqm', 'opt_aor_storeys',
+  'opt_coa_gfa_sqm', 'opt_coa_storeys',
+  'max_buildable_gfa_sqm',
+  'max_build_stories', 'max_build_fsi', 'coa_fsi',
+  'max_newbuild_coa_gfa_sqm',
+]);
+
 // The comparable_builds JSONB fields the consumer exposes (explicit pick — no passthrough).
 const CONSUMER_COMPARABLE_FIELDS = [
   'address', 'lot_sqm', 'frontage_m', 'distance_m', 'work_type', 'permit_gfa_sqm',
@@ -74,24 +83,16 @@ export function assembleConsumerPayload(
   const warnings: string[] = [];
   const parcelId = String(row.parcel_id ?? '');
 
-  // ── Tier 1 — cost menu (deep-validated; drift degrades to null). ───────────
-  let menu: ConsumerParcel['costMenu']['menu'] = null;
-  if (row.parcel_cost_menu != null) {
-    const parsed = CostMenuSchema.safeParse(row.parcel_cost_menu);
-    if (parsed.success) menu = parsed.data;
-    else {
-      warnings.push('cost menu unavailable (data shape drift — logged)');
-      logWarn(TAG, 'jsonb-drift', { field: 'parcel_cost_menu', parcelId });
-    }
-  }
-  const scalars: Record<string, number | null> = {};
-  for (const c of T1_COST_SCALAR_COLS) scalars[c] = num(row[c]);
+  // ── Tier 1 — cost menu and cost scalars: NOT SENT (EI-D1, Spec 135 FE-38; Spec 100 §3.2 dated note 2026-11-12). ──
+  // The 13 legacy Spec 88 lines and the 12 scalars price the legacy sizes. Both are sent as null (the key shape is kept, so
+  // every installed app parses and shows its existing "not yet computed" branch) until MB-94 binds the engine cost on the
+  // declared report. Hidden until MB-43 deletes them (Spec 69a M-367 dated note 2026-11-12).
 
   // Tier 1 headline areas — whitelist only; non-numeric strings (ranges/reasons) preserved verbatim.
   const areas: Record<string, number | string | null> = {};
   for (const c of CONSUMER_HEADLINE_COLS) {
     const v = row[c];
-    if (v == null) { areas[c] = null; continue; }
+    if (v == null || CONSUMER_WITHHELD_LEGACY_COLS.has(c)) { areas[c] = null; continue; }
     if (typeof v === 'boolean') { areas[c] = String(v); continue; }
     if (typeof v === 'string') { areas[c] = Number.isNaN(Number(v)) ? v : num(v); continue; }
     areas[c] = num(v);
@@ -144,7 +145,7 @@ export function assembleConsumerPayload(
 
   return {
     payload: {
-      costMenu: { menu, scalars },
+      costMenu: { menu: null, scalars: null },
       areas,
       neighbourhood: {
         summary,

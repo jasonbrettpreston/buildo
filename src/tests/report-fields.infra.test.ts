@@ -71,7 +71,14 @@ describe('report-field inventory on the real tree', () => {
     }
   });
 
-  it('code → inventory: every COST_LINE_ORDER id is a cost-menu row', () => {
+  // Dated 2026-11-12 (EI-D1, operator 2026-11-12, "D all as recommended - please ensure this is addedd to the McFrontend decisions"; Spec 135 FE-38; Spec 69a M-367 dated note 2026-11-12): the detail screen no longer renders a cost card, so the 13 legacy lines are no longer
+  // inventory rows. Prior text: every COST_LINE_ORDER id is a cost-menu row (kept below for a screen that renders <CostCard>).
+  it('code → inventory: every COST_LINE_ORDER id is a cost-menu row while the screen renders <CostCard>; none after EI-D1', () => {
+    const usesCard = /<CostCard\b/.test(read(r.decl.surfaces[0].screen));
+    if (!usesCard) {
+      expect(r.model.fields.filter((f: Json) => f.line_id)).toEqual([]);
+      return;
+    }
     const src = read('mobile/src/lib/parcelCostFormat.ts');
     const block = src.slice(src.indexOf('COST_LINE_ORDER = ['), src.indexOf(']', src.indexOf('COST_LINE_ORDER = [')));
     const ids = [...block.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]!);
@@ -84,9 +91,12 @@ describe('report-field inventory on the real tree', () => {
     const src = read('mobile/src/lib/trackedLots.ts');
     const pairs = [...src.matchAll(/\/\*\*\s*parcels\.([a-z_0-9]+)\s*\*\/\s*\n\s*([A-Za-z]+):/g)].map((m) => ({ column: m[1]!, prop: m[2]! }));
     expect(pairs.length).toBeGreaterThan(0);
+    // Dated 2026-11-12 (EI-D1, operator 2026-11-12, "D all as recommended - please ensure this is addedd to the McFrontend decisions"; Spec 135 FE-38; Spec 69a M-367 dated note 2026-11-12): the two legacy columns are hidden on the row ("Not yet evaluated"), so they are not
+    // rendered rows; they stay visible as RF-4 findings (the C-039 contract still whitelists them). Prior text: found: true for every pair.
+    const HIDDEN = new Set(['max_buildable_gfa_sqm', 'max_newbuild_coa_gfa_sqm']);
     for (const { column, prop } of pairs) {
       const found = r.model.fields.some((f: Json) => f.surface === 'S-072' && f.payload === `lots[].${prop}` && f.column === column);
-      expect({ column, prop, found }).toEqual({ column, prop, found: true });
+      expect({ column, prop, found }).toEqual({ column, prop, found: !HIDDEN.has(column) });
     }
     const derived = r.model.fields.some((f: Json) => f.surface === 'S-072' && f.payload === 'lots[].newNearbyCoaRuling');
     expect(derived).toBe(true);
@@ -139,8 +149,11 @@ describe('report-field inventory on the real tree', () => {
     }
   });
 
-  it('structural gates pass (RF-1 chain, RF-3 constants, RF-4 whitelist, RF-7 twins, RF-9 declared inputs)', () => {
-    for (const id of ['RF-1', 'RF-3', 'RF-4', 'RF-7', 'RF-9']) {
+  // Dated 2026-11-12 (EI-D1, operator 2026-11-12, "D all as recommended - please ensure this is addedd to the McFrontend decisions"; Spec 135 FE-38; Spec 69a M-367 dated note 2026-11-12): RF-4 and RF-7 leave the PASS list (prior text: RF-1, RF-3, RF-4, RF-7, RF-9) and are pinned
+  // below to fail for exactly the EI-D1 reasons: the tracked-lots legacy pair is whitelisted but not rendered, and the legacy
+  // cost-menu twins are no longer rendered or sent. MB-43 / MF-48 Stage B retire them from the declarations.
+  it('structural gates pass (RF-1 chain, RF-3 constants, RF-9 declared inputs)', () => {
+    for (const id of ['RF-1', 'RF-3', 'RF-9']) {
       expect(r.model.gates.find((g: Json) => g.id === id)).toMatchObject({ id, state: 'PASS' });
     }
   });
@@ -149,5 +162,8 @@ describe('report-field inventory on the real tree', () => {
     expect(r.model.gates.find((g: Json) => g.id === 'RF-5').failing).toContain('parcel.areas.realized_fsi_p90');
     expect(r.model.gates.find((g: Json) => g.id === 'RF-2').failing).toContain('S-072 lots[].newNearbyCoaRuling');
     expect(r.model.gates.find((g: Json) => g.id === 'RF-10').state).toBe('FAIL');
+    // EI-D1 (dated 2026-11-12): exactly these, nothing else.
+    expect(r.model.gates.find((g: Json) => g.id === 'RF-4').failing).toEqual(['S-072 lots[].maxBuildGfaSqm', 'S-072 lots[].maxCoaBuildGfaSqm']);
+    expect(r.model.gates.find((g: Json) => g.id === 'RF-7').failing).toEqual(['menu:max_build ↔ menu:coa_build', 'menu:solar_max ↔ menu:solar_coa']);
   });
 });

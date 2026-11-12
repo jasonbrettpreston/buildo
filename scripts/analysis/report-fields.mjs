@@ -515,7 +515,8 @@ export async function buildInventory({ root }) {
     visit(helperFile.sf);
     return reads;
   })();
-  for (const id of order.value) {
+  // EI-D1 (Spec 135 FE-38, 2026-11-12): a screen with no cost card renders no cost line; the 13 lines are then not listed as rendered.
+  for (const id of cardLine == null ? [] : order.value) {
     const part = perSqm.ids.includes(id) ? 'per_sqm' : 'total';
     const row = costP.catalogueRows.find((r) => r[catKey] === id);
     if (!row) { finding('cost_line_not_in_catalogue', id); continue; }

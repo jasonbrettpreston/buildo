@@ -1,0 +1,12 @@
+EI-D1 mobile locks, red against origin 8b651c128 (screens unchanged), mobile jest, 2026-11-12:
+  ● EI-D1: the tracked-lots row hides the legacy Max Build and MAX COA BUILD › both slots read "Not yet evaluated" and neither legacy value renders
+    > 29 |     expect(screen.getByText('Max Build: Not yet evaluated')).toBeTruthy();
+  ● W-0 (a) + EI-D1: the mobile parcel page hides the legacy sizes and costs › EI-D1 (reversed): the legacy As-of-right GFA, Max build storeys and CoA FSI do not render; Lot size still does
+    > 77 |     expect(screen.queryByText('As-of-right GFA')).toBeNull();
+  ● W-0 (a) + EI-D1: the mobile parcel page hides the legacy sizes and costs › EI-D1: no legacy cost line renders, even when a menu is present; the slot reads "Not yet evaluated"
+    > 86 |     expect(screen.getByTestId('parcel-cost-none')).toHaveTextContent('Not yet evaluated');
+  ● W-0 (a) + EI-D1: the mobile parcel page hides the legacy sizes and costs › O-7 label lock: no max_build card and no "maximum envelope" / "as-of-right" text (opt_aor_gfa_sqm 250)
+    > 96 |     expect(screen.queryByTestId('parcel-cost-max_build')).toBeNull();
+  ● W-0 (a) + EI-D1: the mobile parcel page hides the legacy sizes and costs › O-7 label lock: no max_build card and no "maximum envelope" / "as-of-right" text (opt_aor_gfa_sqm null)
+    > 96 |     expect(screen.queryByTestId('parcel-cost-max_build')).toBeNull();
+Tests:       5 failed, 1 passed, 6 total
