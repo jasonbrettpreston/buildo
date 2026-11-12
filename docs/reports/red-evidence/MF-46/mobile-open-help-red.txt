@@ -1,0 +1,2 @@
+MF-46 follow-up red evidence (OUTPUT regression F1): the two new mobile cases against the parent commit's renderer (57a8995d3: no open_help case, no report link in the ambiguous tree).
+Tests:       2 failed, 18 skipped, 20 total

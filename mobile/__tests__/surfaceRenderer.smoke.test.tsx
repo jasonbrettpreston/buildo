@@ -24,6 +24,8 @@ jest.mock('react-native-safe-area-context', () => {
 const S = situations as unknown as Record<string, SearchSituation>;
 const actions = (): jest.Mocked<SurfaceActions> => ({
   change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), open_account: jest.fn(), back: jest.fn(),
+  // MF-46 follow-up (dated 2026-11-12): the search host passes open_help ("Report incorrect address match" on the address list).
+  open_help: jest.fn(),
 });
 const show = (k: string, a = actions()) => {
   const s = S[k] as SearchSituation;
@@ -31,6 +33,18 @@ const show = (k: string, a = actions()) => {
   return a;
 };
 const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error'];
+
+describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F1)', () => {
+  it('the address list carries the report link; a press calls open_help with the topic and the typed address', () => {
+    const a = show('ambiguous');
+    fireEvent.press(screen.getByTestId('parcel-search-report'));
+    expect(a.open_help).toHaveBeenCalledWith('address_match', (S.ambiguous as SearchSituation).input);
+  });
+  it('RED: a host that does not pass open_help cannot render the address list (the unknown-action fence)', () => {
+    const { open_help: _unused, ...rest } = actions();
+    expect(() => show('ambiguous', rest as jest.Mocked<SurfaceActions>)).toThrow('SurfaceRenderer: unknown action "open_help"');
+  });
+});
 
 describe('mobile render smoke (FE-33 mobile case)', () => {
   it.each(GOLDEN_SITUATIONS)('%s renders non-empty with the header, the field and the account button', (k) => {
