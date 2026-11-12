@@ -1639,7 +1639,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231…
 
 - **m.513** CITE-4 stage-6 prereg rules[] checklist. Text home: Queue Process 2 (dated note).
-  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231… · +8 dated notes
+  Status: RULED 2026-11-06 · Enforced by: Added check: none (text only; infra frozen); record: chat-rulings-register.logic.test.ts › "CHAT-231… · +12 dated notes
 
 - **lc.15** The step is born V3, with McBylaws Airtight inputs.
   Status: RULED · OWED · Enforced by: Spec 78 P5.11 V3 plan: step-validate V3, admin-step-registration.logic, step-validate-net-new.logic

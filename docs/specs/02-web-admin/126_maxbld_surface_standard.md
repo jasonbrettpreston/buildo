@@ -806,6 +806,7 @@ Disclosure codes are a closed list generated from the catalogue/content (a decla
 Rule: an `at_least` value renders "at least" beside the number on every target.
 
 > Dated note 2026-11-08 (McFrontend MF-12; prior text kept, M-246; operator answer MF-12 L-1, verbatim "L-1C" (2026-11-08), recorded in ~/Buildo-scratch/mcfrontend/phase1/open-questions.md; register row Spec 135 FE-28, panel `docs/reports/panels/MF-12.json`): the closed status list gains one value, `none` = no reading on this node (the Spec 122 §1.2 per-field idiom that 126:295 inherits: omission is a build failure, `none` is valid per field). It is escalated through Spec 128 §4 (126:295: a surface that needs a value the menu lacks escalates, it does not add one) and follows the 126:743 pattern (MF-10 D-5 b). `none` is valid only on a node of a lifecycle tree, never on a reading node. The lock is `src/tests/surfaces/report-honest.logic.test.ts` (FE-06).
+> Dated note 2026-11-12 (M-246, prior text kept; MB-94 part (c) · McBylaws queue · engine-inputs lane; Spec 135 FE-39 (EI-D2, EI-D8); plan §8 R-2; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §4.0, §4a): the closed list gains one `not_evaluated` reason, `not_in_engine_population`, which displays as "Not yet evaluated". It is the state of every option on a lot that has no stored Layer 3 rows, i.e. one outside the golden 25 and the MB-35 cohort until MB-38 fills all lots. It refines MB-93's existing `not_stored/no_rows` state. The status words are unchanged (a reason, not a new status), and `coa_required:<clause>` is still added only at the increment that lands that route (EI-D4: "Can you build bigger?" reads `not_evaluated:coa_factor_unfitted:<form>` until the M-65 u fit at MB-38/MB-44). An empty field is never shown as 0 or $0. Lock owed with FE-39: `src/tests/surfaces/engine-inputs-bind.logic.test.ts`.
 
 ### 11a.4 Per-reading confidence and provenance
 
@@ -1132,6 +1133,21 @@ Reading (record, same section): A = the report detail is the expanded card; B = 
 > 9. **"Did the neighbours build bigger?" (item 3).** The summary answer and the cards use the same per-scenario set: detached, houseplex (2 Unit / 3+ Unit) and rear suite allocated by the stored CoA classification (`coa_applications.structure_type`, `rear_suite_type`), and the house with a secondary suite, found by a classification rule on the description in the existing `scope_tags` pattern, moved out of the detached set. Something is always shown: the server widens the search distance per scenario until the minimum sample is met (the houseplex and the suite reach farther) and the distance is shown. Server counts only (FE-05); queued as MF-71 (b7cdf1e3c).
 > 10. **Lot-level notes (item 4, "yes").** Exception, ravine and heritage notes are shown once, under About this lot; each card's note count covers its card notes only.
 > 11. **Wording set (item 5, "yes").** The unruled wording of brief v4 item 5 is confirmed as drawn; the How? steps keep the lawyer check (MF-58, MF-72). The picture caption is "Illustrative — not this lot" (MF-38, "y to all as built").
+> Dated note 2026-11-12 (M-246, prior text kept, items 1-11 unchanged; MB-94 parts (d)-(e) · McBylaws queue · engine-inputs lane; Spec 135 FE-39 (EI-D5, EI-D7); plan §8 R-5; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §3.4, §4c, §4d, §6 M-5/M-6, §11 D-5, D-7):
+>
+> 12. **Neighbour reach is a fixed admin setting per scenario (applies item 9).** New `logic_variables` keys, admin group "MaxBLD Report", seeded by one settings migration (an operator DB job):
+>     - `nearby_coa_reach_m_detached` 400;
+>     - `nearby_coa_reach_m_secondary_suite` 400;
+>     - `nearby_coa_reach_m_rear_suite` (garden / laneway suite) 750;
+>     - `nearby_coa_reach_m_houseplex` 1000;
+>     - `nearby_coa_since_date` NULL (all years).
+>
+>     The defaults come from the measured CoA density (plan §3.4: within 25 m, 92-100 % of lots have no decided neighbour application). Item 9's "the server widens the search distance until the minimum sample is met" is replaced by the fixed reach as ruled (propose-minimum-first). The expanding ring stays a later option if testing shows too many empty answers. The reach, and any date window, is always printed. "Decided" is keyed on the classified decision text only (approved: `approv|conditional|condition|modified`; refused: `refus`), never on `decision_date`. Counts are server counts (FE-05).
+> 13. **Copy (EI-D7).**
+>     - Neighbours: "At least {approved} nearby applications to build bigger were approved within {reach} m, some with conditions. {refused} were refused."
+>     - Zero case: "We found no decided {family} applications within {reach} m in the City records we could classify."
+>     - "Can you build bigger?" (once filled): "Possibly. Similar homes nearby were approved by the Committee of Adjustment for up to about {size}. Approval is not guaranteed." It shows only after the M-70 fit passes a stated accuracy bar.
+>     - The cost-scope line ("Building only. Excludes land, permits and design.") stays in See details (the 2026-11-11 report-face ruling) and goes to the lawyer list (MF-72).
 
 ## 12. Phases
 
