@@ -64,6 +64,14 @@ describe('FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size
     }
   });
 
+  // Output panel fold (code reviewer, 2026-11-12): a string value in a withheld column (the old string branch) is also null.
+  it('a string value in a withheld column is sent as null, not passed through', () => {
+    const { payload: p } = assembleConsumerPayload({ ...row, opt_aor_gfa_sqm: '300-400', coa_fsi: 'n/a' } as unknown as ParcelRow, []);
+    expect(p.areas.opt_aor_gfa_sqm).toBeNull();
+    expect(p.areas.coa_fsi).toBeNull();
+    expect(JSON.stringify(p)).not.toMatch(/300-400|"n\/a"/);
+  });
+
   it('the lot facts stay, and the response still passes the strict boundary parse', () => {
     expect(payload.areas.lot_size_sqm).toBe(400);
     expect(payload.areas.lot_size_sqft).toBe(4305);

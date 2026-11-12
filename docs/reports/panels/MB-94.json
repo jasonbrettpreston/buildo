@@ -1,0 +1,30 @@
+{
+  "task": "MB-94",
+  "item": "Part (a), EI-D1: the live app neither receives nor shows the legacy costs and legacy size headlines (server first: /api/parcels/lookup sends the cost menu, the 12 cost scalars and nine legacy headlines as null; the mobile parcel screen and the tracked-lots row show \"Not yet evaluated\"; the W-0 lock reversed). Code commit 696449b83 (McFrontend-Task MF-48, prereg MF-48-2 b93047a54, round 165); docs fb8f94f2c (Spec 135 FE-38 RULED, FE-39 OWED).",
+  "class": "G",
+  "stage": 9,
+  "date": "2026-11-12",
+  "head": "696449b83",
+  "cards": [
+    "Operator 2026-11-12, verbatim: \"D all as recommended - please ensure this is addedd to the McFrontend decisions\" (~/Buildo-scratch/mcfrontend/phase1/open-questions.md, EI-D1..EI-D8); mcbylaws/sources/cards/CARD-COA-TIER-PLACEMENT.answered.md; mcbylaws/sources/cards/CARD-COST-PREMIUM.answered.md"
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md v2 (reality check PASS-WITH-FINDINGS; regression guardian 1 BLOCK + 7 FIX folded; compliance lens PASS-WITH-FOLDS; §9), ruled by the operator 2026-11-12 (D all as recommended).",
+  "output": "OUTPUT panel on 696449b83 (orchestrator request 2026-11-12; Spec 08 small panel): code-reviewer-grounded PASS-WITH-FOLDS (0 blockers; FIX-1 four new no-unused-vars warnings from keeping CostCard unused; NIT-2 stale TrackedLotRow header; NIT-3 no string-value case in the server lock; NIT-4 cosmetic inline JSX comments). regression-guardian PASS-WITH-FOLDS (0 blockers; every retirement covered by the ruling and the dated notes; F1 the MF-45 meter still counts a hit whose sizes and costs read \"Not yet evaluated\"; F2 compStats.neighbourhoodCostPremium still sent, rendered nowhere; NIT-1 dead imports until MB-43; NIT-2 the usesCard pin was passive; NIT-3 \"NOT SENT\" vs \"sent as null\" wording). Tests run by the seats: 40/40 vitest, 6/6 mobile jest.",
+  "seats": [
+    "code-reviewer-grounded (OUTPUT): PASS-WITH-FOLDS",
+    "regression-guardian (OUTPUT): PASS-WITH-FOLDS"
+  ],
+  "verdict": "PASS-WITH-FOLDS: no blocker; folds applied in the fold commit before push.",
+  "blockers": [],
+  "followups": [
+    "Operator: pause the MF-45 report meter while sizes and costs read \"Not yet evaluated\"? Kept unchanged and recorded in the Spec 100 §3.2 dated note (RG F1); the route tests parcel-lookup-gate.infra T8 pin today's behaviour.",
+    "Operator: compStats.neighbourhoodCostPremium (the EI-D3 income premium) is still sent, rendered nowhere on mobile; held with max_buildable_footprint_sqm, envelope_constrained, envelope_constraint_reason for the separate ruling (RG F2).",
+    "MB-43 / MF-48 Stage B: delete CostCard, its unused imports (eslint-disable-line markers) and parcelCostFormat helpers with their tests (RG NIT-1).",
+    "CR NIT-4 (inline JSX comments after literal text in TrackedLotRow) not folded: cosmetic, keeps the line count."
+  ],
+  "evidence": "docs/reports/red-evidence/MB-94/ (ei-d1-server-red.txt, ei-d1-mobile-red.txt)",
+  "notes": [
+    "Folds: CR FIX-1 eslint-disable-line on the four existing lines (231 lines kept); CR NIT-2 TrackedLotRow header corrected in place; CR NIT-3 a string-value case in src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts; RG NIT-2 report-fields.infra asserts usesCard === false; RG NIT-3 the consumer-lookup tier-1 comment reads SENT AS NULL; RG F1 and F2 recorded in the Spec 100 §3.2 dated note and flagged to the operator.",
+    "Push order (orchestrator): the MB-35 retired-rows fix f662f2913 pushes first; this branch is then rebased onto it and the full suite re-run under SUITE.lock."
+  ]
+}

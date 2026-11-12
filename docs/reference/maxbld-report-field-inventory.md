@@ -1496,8 +1496,8 @@ none
 - `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `cc5686e6c200d816`
 - `migrations/205_archetype_cost_rates.sql` sha256 `9d8da50c991f1258`
 - `migrations/248_parcel_cost_lines.sql` sha256 `9f3caeb84373ef43`
-- `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `986704c5b2bcece3`
-- `mobile/src/components/parcel/TrackedLotRow.tsx` sha256 `a97acf5b3a522b2a`
+- `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `38662f55a98bb9bd`
+- `mobile/src/components/parcel/TrackedLotRow.tsx` sha256 `2e08a00a8c69d7c7`
 - `mobile/src/lib/parcelCostFormat.ts` sha256 `f5d64ed403231148`
 - `mobile/src/lib/trackedLots.ts` sha256 `3e7974f73db4e058`
 - `scripts/lib/build-norms.js` sha256 `79277fd3c64dd57b`
@@ -1516,4 +1516,4 @@ none
 - `src/features/leads/lib/archetype-cost-map.js` sha256 `c600874d4fcbba5c`
 - `src/features/leads/lib/cost-model-shared.js` sha256 `59bd9ff428c0980c`
 - `src/lib/admin/parcel-lookup.ts` sha256 `a8061a12d30d073f`
-- `src/lib/parcels/consumer-lookup.ts` sha256 `6cc6fdc5ab64d29b`
+- `src/lib/parcels/consumer-lookup.ts` sha256 `9c2e789478167140`

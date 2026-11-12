@@ -83,7 +83,7 @@ export function assembleConsumerPayload(
   const warnings: string[] = [];
   const parcelId = String(row.parcel_id ?? '');
 
-  // ── Tier 1 — cost menu and cost scalars: NOT SENT (EI-D1, Spec 135 FE-38; Spec 100 §3.2 dated note 2026-11-12). ──
+  // ── Tier 1 — cost menu and cost scalars: SENT AS NULL (EI-D1, Spec 135 FE-38; Spec 100 §3.2 dated note 2026-11-12). ──
   // The 13 legacy Spec 88 lines and the 12 scalars price the legacy sizes. Both are sent as null (the key shape is kept, so
   // every installed app parses and shows its existing "not yet computed" branch) until MB-94 binds the engine cost on the
   // declared report. Hidden until MB-43 deletes them (Spec 69a M-367 dated note 2026-11-12).

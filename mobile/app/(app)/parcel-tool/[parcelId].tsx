@@ -11,11 +11,11 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useParcelLookup } from '@/hooks/useParcelLookup';
 import { SponsorSlot } from '@/components/parcel/SponsorSlot';
 import {
-  COST_LINE_ORDER,
+  COST_LINE_ORDER, // eslint-disable-line @typescript-eslint/no-unused-vars -- EI-D1: unused until MB-43 / MF-48 Stage B (line refs kept)
   COST_LINE_LABELS,
-  getCostLine,
+  getCostLine, // eslint-disable-line @typescript-eslint/no-unused-vars -- EI-D1: unused until MB-43 / MF-48 Stage B (line refs kept)
   costLineState,
-  maxBuildBasisLabel,
+  maxBuildBasisLabel, // eslint-disable-line @typescript-eslint/no-unused-vars -- EI-D1: unused until MB-43 / MF-48 Stage B (line refs kept)
   formatCurrency,
   formatFsi,
   formatSqft,
@@ -32,7 +32,7 @@ function Headline({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-function CostCard({ id, line, basisLabel }: { id: string; line: ParcelCostLine | null; basisLabel?: string }) {
+function CostCard({ id, line, basisLabel }: { id: string; line: ParcelCostLine | null; basisLabel?: string }) { // eslint-disable-line @typescript-eslint/no-unused-vars -- EI-D1: unused until MB-43 / MF-48 Stage B (line refs kept)
   const state = costLineState(line);
   const label = COST_LINE_LABELS[id as keyof typeof COST_LINE_LABELS] ?? id;
   const isPerSqm = id === 'kitchen' || id === 'bath' || id === 'basement' || id === 'basement_underpin';

@@ -5726,11 +5726,11 @@
     },
     {
       "path": "mobile/app/(app)/parcel-tool/[parcelId].tsx",
-      "sha256": "986704c5b2bcece3"
+      "sha256": "38662f55a98bb9bd"
     },
     {
       "path": "mobile/src/components/parcel/TrackedLotRow.tsx",
-      "sha256": "a97acf5b3a522b2a"
+      "sha256": "2e08a00a8c69d7c7"
     },
     {
       "path": "mobile/src/lib/parcelCostFormat.ts",
@@ -5806,7 +5806,7 @@
     },
     {
       "path": "src/lib/parcels/consumer-lookup.ts",
-      "sha256": "6cc6fdc5ab64d29b"
+      "sha256": "9c2e789478167140"
     }
   ],
   "logic_variables": [

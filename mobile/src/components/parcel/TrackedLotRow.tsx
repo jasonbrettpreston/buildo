@@ -4,11 +4,11 @@
 //
 // One tracked lot. Owned by S-072 and rendered nowhere else (R-13).
 //
-// The three figures it shows are NOT equivalent in how much we know about them:
-//   Max Build      — parcels.max_buildable_gfa_sqm      (real column)
-//   MAX COA BUILD  — parcels.max_newbuild_coa_gfa_sqm   (real column)
+// The three figures it showed are NOT equivalent in how much we know about them (since EI-D1, 2026-11-12, Spec 135 FE-38:
+//   Max Build      — parcels.max_buildable_gfa_sqm      (legacy; the slot reads "Not yet evaluated")
+//   MAX COA BUILD  — parcels.max_newbuild_coa_gfa_sqm   (legacy; the slot reads "Not yet evaluated"))
 //   New Nearby CoA Ruling — DERIVED, and nothing computes it yet. `null` renders "—", never "NO".
-// `formatGfa` and `coaRulingLabel` are what enforce that; see mobile/src/lib/trackedLots.ts.
+// `coaRulingLabel` enforces that; see mobile/src/lib/trackedLots.ts (`formatGfa` is no longer used here).
 import React, { useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Gavel, Trash2, ChevronRight } from 'lucide-react-native';

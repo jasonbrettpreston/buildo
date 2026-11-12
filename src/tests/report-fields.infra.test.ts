@@ -75,6 +75,9 @@ describe('report-field inventory on the real tree', () => {
   // inventory rows. Prior text: every COST_LINE_ORDER id is a cost-menu row (kept below for a screen that renders <CostCard>).
   it('code → inventory: every COST_LINE_ORDER id is a cost-menu row while the screen renders <CostCard>; none after EI-D1', () => {
     const usesCard = /<CostCard\b/.test(read(r.decl.surfaces[0].screen));
+    // Output panel fold (regression guardian NIT-2, 2026-11-12): the pin is active, not passive. Re-mounting <CostCard> is
+    // a deliberate change that must flip this line (the engine cost reaches the declared report, not this screen).
+    expect(usesCard).toBe(false);
     if (!usesCard) {
       expect(r.model.fields.filter((f: Json) => f.line_id)).toEqual([]);
       return;
