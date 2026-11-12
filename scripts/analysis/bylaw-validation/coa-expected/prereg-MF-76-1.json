@@ -1,0 +1,90 @@
+{
+ "$comment": "Pre-registration, task MF-76 (the MaxBLD landing v9 on maxbld.ca, split from MF-46 by D-1 (a): web_landing from the static page contract with the landing kinds hero, figures, items and plans, the trust counts from the stored MF-62 row through its producer and labels, the build scenarios from one declaration, the cost sources from one committed named list, the plans without prices until the MF-47 Stripe reader lands, the processing sequence through the shared loading state and the sample through the shared report page), prereg 1, committed ALONE directly before the MF-76 code commits. rules[]: FE-05 (no typed number; every value server-formatted), FE-13 (surface-validate), FE-31 and FE-33 (the STATIC binding: conformance and render smoke), FE-35 (the loading state and its content templates, reused), FE-36 (the navigation lock: every landing control a real link), each RULED; their locks are extended in the code commits with red evidence under docs/reports/red-evidence/MF-76/. The new FE row for the STATIC server reads (Spec 128 section 4 escalation, D-2 a) is assigned in the MF-76 docs commit and is not in rules[] here (it does not exist yet). Zero scorer moves (no file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes); totals and floors copied from prereg-MF-46-1.json (the newest prereg on the tip ca369e139). In-file round 160 (assigned by the orchestrator: MF-46-1 159, MF-76-1 160; the round field is only checked as an integer). Plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 (sections 2-4, 7, 12, 13, 13a, 13b); record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md.",
+ "schema": "coa-round-prereg-v1",
+ "round": 160,
+ "task": "MF-76",
+ "rules": [
+  "FE-05",
+  "FE-13",
+  "FE-31",
+  "FE-33",
+  "FE-35",
+  "FE-36"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcfrontend/MF-46/plan.md (v3, sections 2-4, 7, 12, 13, 13a, 13b); ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md (Operator round 2026-11-11 ~15:45 and the rulings after it)",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "no floor line falls; the floors file is unchanged from prereg-MF-46-1.json (round 159) and the floors check stays OK",
+ "expected_unchanged": "every other row of the 172, 4d and cumulative sets: class and City figure"
+}
