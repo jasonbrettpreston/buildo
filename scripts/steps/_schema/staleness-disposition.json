@@ -351,6 +351,14 @@
       "disposition": "descriptive",
       "why": "measured 2026-11-02 (MB-31 increment 1 landing): the decoder of the stored Layer 2 cells, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
     },
+    "scripts/lib/compute/maxbld/disclosures.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-12 (MB-35 post-night, adjudicated when step-validate --step named it unadjudicated): the pure disclosure-to-word carriage of the Layer 3 rows, a real import of the step (MB-27 D-8, 171dcd317). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
+    "scripts/lib/compute/maxbld/disclosure-families.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-11-12 (MB-35 post-night, adjudicated when step-validate --step named it unadjudicated): the closed disclosure-family map (data) the carriage reads, a real import of the step (MB-27 D-8, 171dcd317). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
+    },
     "scripts/analysis/bylaw/evaluate.mjs": {
       "disposition": "descriptive",
       "why": "measured 2026-11-02 (MB-31 increment 1 landing): the shared evaluator, entered through the layer l3 hook, a real import of the step. 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step re-derives every row behind the content_sha IS DISTINCT FROM guard (staleness.mode_select none, trigger none), so a change here is picked up by the next run without a fingerprint, and the row stays descriptive."
