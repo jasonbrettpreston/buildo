@@ -1,0 +1,7 @@
+MF-46 refused-page rewrite red evidence: src/tests/host-policy.logic.test.ts against the committed middleware (ca369e139, empty 404 for every refused maxbld.ca path) with the new MAXBLD_REFUSED_PAGE constant and page in place. Run 2026-11-12T00:43Z.
+   × middleware: the fence runs first > maxbld.ca /dashboard is never a redirect (a 404 through the MaxBLD not-found page, case below) 3ms
+   × middleware: the fence runs first > a refused maxbld.ca PAGE path is rewritten to the MaxBLD not-found page (still no redirect; the page calls notFound) 1ms
+   × middleware: the fence runs first > dev mode never skips the fence 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  3 failed | 110 passed (113)

@@ -12,7 +12,7 @@ import {
   extractBearerToken,
 } from '@/lib/auth/route-guard';
 import { updateSession } from '@/lib/supabase/middleware';
-import { resolveHost, type MaxbldRoute } from '@/lib/auth/host-policy';
+import { MAXBLD_HOST, MAXBLD_REFUSED_PAGE, normalizeHost, resolveHost, type MaxbldRoute } from '@/lib/auth/host-policy';
 
 /**
  * Next.js middleware runs in the **edge runtime**. Auth verification splits
@@ -41,8 +41,9 @@ import { resolveHost, type MaxbldRoute } from '@/lib/auth/host-policy';
  * runs the Buildo routing below, unchanged.
  */
 export async function middleware(request: NextRequest) {
-  const decision = resolveHost(request.headers.get('host'), request.nextUrl.pathname);
-  if (decision.kind === 'refuse') return refused();
+  const host = request.headers.get('host');
+  const decision = resolveHost(host, request.nextUrl.pathname);
+  if (decision.kind === 'refuse') return normalizeHost(host) === MAXBLD_HOST ? refusedOnMaxbld(request) : refused();
   if (decision.kind === 'maxbld') return maxbldRoute(request, decision.route, decision.internal);
   return routeByClass(request, classifyRoute(request.nextUrl.pathname));
 }
@@ -50,6 +51,19 @@ export async function middleware(request: NextRequest) {
 /** A refused path: an empty 404 (no body, no redirect target). */
 function refused(): NextResponse {
   return new NextResponse(null, { status: 404 });
+}
+
+/**
+ * A refused path on maxbld.ca: an API path stays an empty 404; a page path is rewritten to the internal page that calls notFound(), so the
+ * status is still 404 and the visitor reads the MaxBLD not-found text (plan v1 fold 4). Never a redirect; no session work.
+ */
+function refusedOnMaxbld(request: NextRequest): NextResponse {
+  const { pathname } = request.nextUrl;
+  if (pathname === '/api' || pathname.startsWith('/api/')) return refused();
+  const url = request.nextUrl.clone();
+  url.pathname = MAXBLD_REFUSED_PAGE;
+  url.search = '';
+  return NextResponse.rewrite(url);
 }
 
 /**

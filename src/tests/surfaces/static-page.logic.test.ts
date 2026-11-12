@@ -106,7 +106,8 @@ describe('T5 the plain pages are public (no gate)', () => {
   const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
   it('no mount under (static) imports the parcel-tool page gate', () => {
     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
-    expect(files.sort()).toEqual(['error.tsx', 'help/page.tsx', 'not-found.tsx', 'privacy/page.tsx', 'terms/page.tsx']);
+    // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+    expect(files.sort()).toEqual(['error.tsx', 'help/page.tsx', 'not-found.tsx', 'privacy/page.tsx', 'refused/page.tsx', 'terms/page.tsx']);
     for (const f of files) expect([f, gateImports(fs.readFileSync(path.join(ROOT, MOUNTS, f), 'utf8'))]).toEqual([f, []]);
   });
   it('RED: a planted gate import is caught', () => {

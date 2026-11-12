@@ -26,6 +26,9 @@ export const MAXBLD_HOST = 'maxbld.ca';
 /** The one MaxBLD origin: the sign-up and reset email links are built from it, never from the Host header (plan v1 fold 6). */
 export const MAXBLD_ORIGIN = `https://${MAXBLD_HOST}`;
 
+/** The internal page a refused maxbld.ca page path is rewritten to (it calls notFound(): a 404 with the MaxBLD text). */
+export const MAXBLD_REFUSED_PAGE = '/parcel-tool/refused';
+
 /** The one internal prefix of the MaxBLD web pages (MF-44 note: `parcel-tool`, the app's route name). Refused on every other host. */
 export const MAXBLD_INTERNAL_PREFIX = '/parcel-tool';
 

@@ -20,6 +20,7 @@ import {
   MAXBLD_ROUTES,
   MAXBLD_INTERNAL_PREFIX,
   MAXBLD_POST_LOGIN,
+  MAXBLD_REFUSED_PAGE,
   matchMaxbldRoute,
   normalizeHost,
   resolveHost,
@@ -124,10 +125,27 @@ describe('middleware: the fence runs first', () => {
     return new NextRequest(`https://${host}${path}`, { headers });
   };
 
-  it('maxbld.ca /dashboard is a 404, not a redirect', async () => {
+  it('maxbld.ca /dashboard is never a redirect (a 404 through the MaxBLD not-found page, case below)', async () => {
     const res = await middleware(req('maxbld.ca', '/dashboard'));
-    expect(res.status).toBe(404);
+    expect(res.status).toBeLessThan(300);
     expect(res.headers.get('location')).toBeNull();
+  });
+
+  it('a refused maxbld.ca PAGE path is rewritten to the MaxBLD not-found page (still no redirect; the page calls notFound)', async () => {
+    for (const p of ['/dashboard', '/zzz', '/builders/1?x=1']) {
+      const res = await middleware(req('maxbld.ca', p));
+      expect(res.headers.get('location')).toBeNull();
+      const rw = new URL(res.headers.get('x-middleware-rewrite') ?? 'https://none.invalid/');
+      expect([p, rw.host, rw.pathname, rw.search]).toEqual([p, 'maxbld.ca', MAXBLD_REFUSED_PAGE, '']);
+    }
+    const fs = await import('node:fs');
+    const src = fs.readFileSync('src/app/(maxbld)/parcel-tool/(static)/refused/page.tsx', 'utf8');
+    expect(src).toMatch(/notFound\(\)/);
+  });
+
+  it('a refused path on another host stays an empty 404 (the internal prefix on buildo.com)', async () => {
+    const res = await middleware(req('buildo.com', '/parcel-tool/refused'));
+    expect([res.status, res.headers.get('x-middleware-rewrite')]).toEqual([404, null]);
   });
 
   it('maxbld.ca /api/permits is a 404 with no body', async () => {
@@ -139,7 +157,9 @@ describe('middleware: the fence runs first', () => {
   it('dev mode never skips the fence', async () => {
     process.env.DEV_MODE = 'true';
     const res = await middleware(req('maxbld.ca', '/dashboard'));
-    expect(res.status).toBe(404);
+    expect(new URL(res.headers.get('x-middleware-rewrite') ?? 'https://none.invalid/').pathname).toBe(MAXBLD_REFUSED_PAGE);
+    const api = await middleware(req('maxbld.ca', '/api/permits'));
+    expect(api.status).toBe(404);
   });
 
   it('maxbld.ca /parcel-tool signed out goes to /login on maxbld.ca with the visitor path', async () => {
