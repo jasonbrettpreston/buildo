@@ -1,0 +1,36 @@
+MF-81 failure-drill canaries red evidence (2026-11-12): src/tests/mctest/drills.logic.test.ts (36 tests).
+
+Red: the drill logic stubbed out: the five verdicts (slowVerdict, downVerdict, sessionVerdict, capVerdict, rateVerdict) always PASS; sanitisedError always true; the relay ignores its mode; the drill runner's test-stack refusal removed. The runner cases ran in --plan mode, which stops before any connection, so no DB or sign-in service was contacted. 28 of 36 fail. The 8 that still pass assert the PASS side of a verdict, relayUrl, or the catalogue rows, none of which the stubs remove.
+
+   × sanitised error bodies > refuses SQL 2ms
+   × sanitised error bodies > refuses a stack 0ms
+   × sanitised error bodies > refuses a connection string 0ms
+   × sanitised error bodies > refuses not JSON 0ms
+   × sanitised error bodies > refuses a payload with the error 0ms
+   × DB slow (MF81-5 a) > fails a hang 0ms
+   × DB slow (MF81-5 a) > fails an unsanitised body 0ms
+   × DB slow (MF81-5 a) > fails a meter on a failure 0ms
+   × DB down > fails a served lookup 0ms
+   × DB down > fails a meter 0ms
+   × DB down > fails no recovery 0ms
+   × DB down > fails a hang 0ms
+   × signed-out session (MF81-6 a) > passes 401 on both calls with nothing metered, fails a live token or a meter 0ms
+   × cap reached > fails the limit not reached 0ms
+   × cap reached > fails no reset date 0ms
+   × cap reached > fails a payload with the refusal 0ms
+   × cap reached > fails another 403 0ms
+   × cap reached > fails a counted lot refused 0ms
+   × cap reached > fails a meter past the limit 0ms
+   × rate limited > passes a 429 with Retry-After after the allowed calls 1ms
+   × rate limited > fails no 429 0ms
+   × rate limited > fails a 5xx 0ms
+   × rate limited > fails no Retry-After 0ms
+   × rate limited > fails a metered reopen 0ms
+   × the drill relay (MF81-4 a) > forwards in pass, delays in slow, refuses in down 5ms
+   × the drill runner (D-1 a) > refuses the dev DB 54322 36ms
+   × the drill runner (D-1 a) > refuses the dev sign-in 54321 35ms
+   × the drill runner (D-1 a) > refuses no stack at all 34ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 28 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  28 failed | 8 passed (36)
+
+Green with the code restored: 36 of 36 (src/tests/mctest: 6 files, 97 tests).

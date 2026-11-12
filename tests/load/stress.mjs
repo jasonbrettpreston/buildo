@@ -14,9 +14,7 @@
 //      the mix; only the hold window is measured; DB connections from pg_stat_activity every second on a separate read-only
 //      connection;
 //   5. one JSON per profile and one result line in ~/Buildo-scratch/mctest/runs/<stamp>/ (outside the repo).
-import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { createHistogram } from "node:perf_hooks";
 import pg from "pg";
@@ -26,14 +24,13 @@ import {
   loadTarget,
   pickKind,
   readCatalogue,
-  result,
-  ROOT,
   statusClass,
   summarize,
   testStack,
   userLots,
 } from "../../scripts/mctest/lib.cjs";
 import { personaEmails } from "../../scripts/mctest/seed-personas.mjs";
+import { runFiles, sampleLots, signInAll, startApp } from "./stack.mjs";
 
 const PORT = 3110;
 const LOTS_PER_USER = 20; // the plan and trial allowance (D-12 a); never more lots than this per user
@@ -99,45 +96,14 @@ async function main() {
     return;
   }
 
-  const stamp = new Date()
-    .toISOString()
-    .replace(/[-:]/g, "")
-    .replace("T", "-")
-    .slice(0, 15);
-  const runDir =
-    process.env.MCTEST_RUN_DIR ??
-    path.join(os.homedir(), "Buildo-scratch/mctest/runs", stamp);
-  fs.mkdirSync(runDir, { recursive: true });
-  const line = (r) =>
-    fs.appendFileSync(
-      path.join(runDir, "results.jsonl"),
-      `${JSON.stringify(result(r))}\n`,
-    );
-  const sha = spawnSync("git", ["rev-parse", "--short", "HEAD"], {
-    cwd: ROOT,
-    encoding: "utf8",
-  }).stdout.trim();
+  const { line, sha } = runFiles();
 
-  let app = null;
-  const stop = () => {
-    try {
-      if (app) process.kill(-app.pid, "SIGTERM");
-    } catch {
-      // the app's process group is already gone
-    }
-    app = null;
-  };
-  // The app runs in its own process group: a Ctrl-C or SIGTERM to the runner stops it too.
-  for (const sig of ["SIGINT", "SIGTERM"])
-    process.once(sig, () => {
-      stop();
-      process.kill(process.pid, sig);
-    });
+  let stop = () => {};
   try {
-    if (!arg("target")) app = await startApp();
+    if (!arg("target")) stop = await startApp(PORT, appEnv(process.env));
     const lots = await sampleLots(cat, seed, users * LOTS_PER_USER);
     const signedInAt = Date.now();
-    const tokens = await signInAll(emails.slice(0, users));
+    const tokens = await signInAll(emails.slice(0, users), SIGNIN_PER_5MIN);
     for (const p of profiles) {
       // A token older than its life would turn the run into 401s, a harness fault, not an app result.
       const ageMs = Date.now() - signedInAt;
@@ -180,114 +146,6 @@ async function main() {
   } finally {
     stop();
   }
-}
-
-/** next build, then next start on loopback with the test stack only; ready when the anonymous entitlement call answers 401. */
-async function startApp() {
-  const env = appEnv(process.env);
-  const busy = await fetch(`http://127.0.0.1:${PORT}/`).then(
-    () => true,
-    () => false,
-  );
-  if (busy)
-    throw new Error(
-      `port_${PORT}_in_use: another app answers there; the load would not reach the test-stack build`,
-    );
-  const build = spawnSync("npx", ["next", "build"], {
-    cwd: ROOT,
-    env,
-    stdio: "inherit",
-  });
-  if (build.status !== 0) throw new Error(`next_build_exit_${build.status}`);
-  const app = spawn(
-    "npx",
-    ["next", "start", "-p", String(PORT), "-H", "127.0.0.1"],
-    {
-      cwd: ROOT,
-      env,
-      stdio: "inherit",
-      detached: true, // its own process group, so the finally block stops next and its children
-    },
-  );
-  const deadline = Date.now() + 120_000;
-  while (Date.now() < deadline) {
-    const s = await fetch(
-      `http://127.0.0.1:${PORT}/api/parcels/entitlement`,
-    ).then(
-      (r) => r.status,
-      () => 0,
-    );
-    if (app.exitCode !== null)
-      throw new Error(`next_start_exit_${app.exitCode}`);
-    if (s === 401) return app;
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  process.kill(-app.pid, "SIGTERM");
-  throw new Error("app_not_ready_in_120s");
-}
-
-/** The catalogue's L-RANDOM lots, read in a read-only session on the test stack. */
-async function sampleLots(cat, seed, count) {
-  const sql = cat.lot_cases.find((l) => l.id === "L-RANDOM").sql;
-  const db = new pg.Client({
-    connectionString: process.env.MCTEST_DATABASE_URL,
-    application_name: "mctest-load-sample",
-  });
-  await db.connect();
-  try {
-    await db.query("SET default_transaction_read_only = on");
-    const rows = (await db.query(sql, [seed, count])).rows;
-    if (!rows.length) throw new Error("sample_empty");
-    return rows.map((r) => ({
-      parcelId: String(r.parcel_id),
-      address: String(r.address_full),
-    }));
-  } finally {
-    await db.end();
-  }
-}
-
-/** Sign-in through the test stack's own sign-in service, paced; a 429 from it waits a minute and retries (counted). */
-async function signInAll(emails) {
-  const gap = 300_000 / SIGNIN_PER_5MIN;
-  const tokens = [];
-  let throttled = 0;
-  for (const email of emails) {
-    const t0 = Date.now();
-    for (let attempt = 0; ; attempt += 1) {
-      const res = await fetch(
-        `${process.env.MCTEST_SUPABASE_URL}/auth/v1/token?grant_type=password`,
-        {
-          method: "POST",
-          headers: {
-            apikey: String(process.env.MCTEST_SUPABASE_ANON_KEY),
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password: process.env.MCTEST_PASSWORD,
-          }),
-        },
-      );
-      if (res.ok) {
-        tokens.push((await res.json()).access_token);
-        break;
-      }
-      if (res.status !== 429 || attempt >= 3)
-        throw new Error(
-          `sign_in_${res.status} after ${tokens.length} users (${throttled} throttled)`,
-        );
-      throttled += 1;
-      await new Promise((r) => setTimeout(r, 60_000));
-    }
-    await new Promise((r) =>
-      setTimeout(r, Math.max(0, gap - (Date.now() - t0))),
-    );
-  }
-  console.log(
-    `[mctest load] ${tokens.length} users signed in (${throttled} sign-in 429s)`,
-  );
-  return tokens;
 }
 
 /** The envelope's error code, or undefined for a body that is not JSON (a 403 stays a 403, never a network error). */

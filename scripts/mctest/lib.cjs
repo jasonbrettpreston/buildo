@@ -429,7 +429,160 @@ function summarize(h) {
   };
 }
 
+// ── MF-81 · failure drills (PLAN Layer 5; plan MF81-4..7 a, operator "MF81 all a") ───────────────────────────────────
+
+/** A drill's hang limit (MF81-5 a): no answer within 60 s is a hang. */
+const HANG_MS = 60_000;
+const LEAK =
+  /ECONN|password|postgres(?:ql)?:\/\/|\bstack\b|\.(?:ts|js):\d+|\bat \S+ \(/i;
+const LEAK_SQL = /\b(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)\b/;
+/** An error body is sanitised when it is the API envelope ({ data: null, error: { code, message } }) and leaks no SQL, stack or connection. */
+function sanitisedError(text) {
+  let b;
+  try {
+    b = JSON.parse(text);
+  } catch {
+    return false;
+  }
+  const e = b?.error;
+  if (
+    !b ||
+    b.data !== null ||
+    !e ||
+    typeof e.code !== "string" ||
+    !/^[A-Z_]+$/.test(e.code) ||
+    typeof e.message !== "string"
+  )
+    return false;
+  return !LEAK.test(text) && !LEAK_SQL.test(text);
+}
+const verdict = (ok, detail) => ({ status: ok ? "PASS" : "FAIL", detail });
+const hung = (a) => a.status === 0 || a.elapsedMs >= HANG_MS;
+
+/**
+ * DB slow (MF81-5 a): measured, labelled LOCAL. FAIL only on a hang, an unsanitised error body, or a meter written for a failed
+ * lookup; a late 200 passes (the missing query time limit is carded to MF-45).
+ */
+function slowVerdict(a) {
+  if (hung(a))
+    return verdict(false, `hang: no answer within ${HANG_MS / 1000} s`);
+  if (a.status >= 200 && a.status < 300)
+    return verdict(true, `answered ${a.status} in ${a.elapsedMs} ms`);
+  if (!sanitisedError(a.text))
+    return verdict(false, `unsanitised error body (http_${a.status})`);
+  if (a.metered)
+    return verdict(
+      false,
+      `meter written for a failed lookup (http_${a.status})`,
+    );
+  return verdict(
+    true,
+    `answered ${a.status} in ${a.elapsedMs} ms, sanitised, not metered`,
+  );
+}
+
+/** DB down: the lookup fails closed (no payload, sanitised, nothing metered) and the app answers again once the DB is back. */
+function downVerdict(a) {
+  if (hung(a))
+    return verdict(false, `hang: no answer within ${HANG_MS / 1000} s`);
+  if (a.status >= 200 && a.status < 300)
+    return verdict(false, `served http_${a.status} with the DB down`);
+  if (!sanitisedError(a.text))
+    return verdict(false, `unsanitised error body (http_${a.status})`);
+  if (a.metered)
+    return verdict(
+      false,
+      `meter written for a failed lookup (http_${a.status})`,
+    );
+  if (!a.recovered)
+    return verdict(
+      false,
+      "the app did not answer again after the DB came back",
+    );
+  return verdict(
+    true,
+    `fails closed with http_${a.status} in ${a.elapsedMs} ms; recovered`,
+  );
+}
+
+/** Signed-out session (MF81-6 a): the old token gets 401 from the lookup and the entitlement, and nothing is metered. */
+function sessionVerdict(a) {
+  const ok =
+    a.lookupStatus === 401 && a.entitlementStatus === 401 && !a.metered;
+  return verdict(
+    ok,
+    `lookup http_${a.lookupStatus}, entitlement http_${a.entitlementStatus}${a.metered ? ", metered" : ""}`,
+  );
+}
+
+/**
+ * Cap reached: at the limit a new counting lot is refused with 403 REPORT_LIMIT_REACHED, no payload, the limit and the reset date;
+ * an already-counted lot still opens; nothing more is metered.
+ */
+function capVerdict(a) {
+  if (a.usedAtCap !== a.limit)
+    return verdict(
+      false,
+      `reached ${a.usedAtCap} of ${a.limit}, not the limit`,
+    );
+  const r = a.refusal;
+  const d = r.details ?? {};
+  if (!(
+    r.status === 403 &&
+    r.code === "REPORT_LIMIT_REACHED" &&
+    !r.hasData &&
+    d.reportsLimit === a.limit &&
+    typeof d.resetsOn === "string" &&
+    Number.isFinite(Date.parse(d.resetsOn))
+  ))
+    return verdict(
+      false,
+      `refusal http_${r.status} ${r.code ?? ""} (want 403 REPORT_LIMIT_REACHED, no payload, reportsLimit ${a.limit} and resetsOn)`,
+    );
+  if (!(a.reopen.status === 200 && a.reopen.hasData))
+    return verdict(
+      false,
+      `an already-counted lot did not open (http_${a.reopen.status})`,
+    );
+  if (a.metered) return verdict(false, "metered past the limit");
+  return verdict(
+    true,
+    `refused at ${a.limit} with resetsOn ${d.resetsOn}; counted lot reopens`,
+  );
+}
+
+/** Rate limit: repeated reopens of one lot reach a 429 with Retry-After, never a 5xx, and reopens are never metered. */
+function rateVerdict(a) {
+  const first = a.statuses.indexOf(429);
+  if (first < 0)
+    return verdict(false, `no 429 within ${a.statuses.length} calls`);
+  const bad = a.statuses.filter((s) => s === 0 || s >= 500).length;
+  if (bad) return verdict(false, `${bad} calls answered 5xx or not at all`);
+  if (!a.retryAfter) return verdict(false, "429 without Retry-After");
+  if (a.metered) return verdict(false, "a reopen was metered");
+  return verdict(
+    true,
+    `429 after ${first} allowed calls, Retry-After ${a.retryAfter}`,
+  );
+}
+
+/** The test-stack DB URL with its host and port swapped for the drill relay (same database and credentials). */
+function relayUrl(dbUrl, port) {
+  const u = new URL(dbUrl);
+  u.hostname = "127.0.0.1";
+  u.port = String(port);
+  return u.toString();
+}
+
 module.exports = {
+  HANG_MS,
+  sanitisedError,
+  slowVerdict,
+  downVerdict,
+  sessionVerdict,
+  capVerdict,
+  rateVerdict,
+  relayUrl,
   statusClass,
   errorRate,
   loadTarget,

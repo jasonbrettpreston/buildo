@@ -955,35 +955,48 @@
   "failure_drills": [
     {
       "id": "F-DB-SLOW",
-      "inject": "test stack only: statement_timeout lowered for the app role, or a held pg_sleep lock on parcels",
-      "expect": "sanitised 5xx within the route timeout; nothing metered; error logged",
-      "status": "waits",
+      "inject": "test stack only: the drill relay (127.0.0.1:55328) delays every DB reply 3 s for the drill app on 3111 (MF81-4 a)",
+      "expect": "measured LOCAL; FAIL only on a hang (no answer in 60 s), an unsanitised error body, or a meter written for a failed lookup (MF81-5 a)",
+      "status": "active",
       "owner": "MF-45",
-      "waits_on": "MF-81 (the runner)"
+      "persona": "drill_session",
+      "runner": "tests/load/drills.mjs"
     },
     {
       "id": "F-DB-DOWN",
-      "inject": "stop the test-stack Postgres container",
-      "expect": "lookup fails closed: no report, no meter; page shows its error state",
-      "status": "waits",
+      "inject": "test stack only: the drill relay closes and refuses every DB connection (MF81-4 a)",
+      "expect": "lookup fails closed: non-2xx, sanitised, no payload, nothing metered; the app answers again once the DB is back",
+      "status": "active",
       "owner": "MF-45",
-      "waits_on": "MF-81 (the runner)"
+      "persona": "drill_session",
+      "runner": "tests/load/drills.mjs"
     },
     {
       "id": "F-SESSION-EXPIRED",
-      "inject": "revoke the persona's session in the test-stack auth mid-journey",
-      "expect": "401; web returns to sign-in; no stale report shown",
-      "status": "waits",
+      "inject": "sign the persona out (all its sessions) through the test stack sign-in service, then call with the old token (MF81-6 a)",
+      "expect": "lookup and entitlement 401; nothing metered; LOCAL auth-roundtrip (production read paths serve until expiry, Spec 13 3.2); the web part waits on MF-46",
+      "status": "active",
       "owner": "MF-46",
-      "waits_on": "MF-81 (the runner)"
+      "persona": "drill_session",
+      "runner": "tests/load/drills.mjs"
     },
     {
       "id": "F-CAP-REACHED",
-      "inject": "persona at_limit opens a new lot",
-      "expect": "403 REPORT_LIMIT_REACHED with the reset date; already-counted lot still opens",
-      "status": "waits",
+      "inject": "drill_cap opens real lots up to its limit, then a new lot, then reopens its first counted lot (MF81-7 a)",
+      "expect": "403 REPORT_LIMIT_REACHED with no payload, reportsLimit and resetsOn; the already-counted lot still opens; nothing metered past the limit",
+      "status": "active",
       "owner": "MF-45",
-      "waits_on": "MF-81 (the runner)"
+      "persona": "drill_cap",
+      "runner": "tests/load/drills.mjs"
+    },
+    {
+      "id": "F-RATE-LIMITED",
+      "inject": "drill_rate opens one lot, then reopens it without pause (at most 61 calls)",
+      "expect": "a 429 with Retry-After, its own class; never a 5xx; reopens never metered",
+      "persona": "drill_rate",
+      "runner": "tests/load/drills.mjs",
+      "status": "active",
+      "owner": "MF-45"
     },
     {
       "id": "F-OFFLINE-MID-REPORT",
