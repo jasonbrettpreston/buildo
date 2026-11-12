@@ -1,0 +1,91 @@
+{
+  "$comment": "Pre-registration, task MF-48, prereg 3 (prereg 1 round 145 and prereg 2 round 165 kept in history): MF-48 Stage B with MF-74, committed alone directly before the Stage B code commit. The lot route mounts the REPORT host over the nullable `page` the lookup now carries (built on the server by MF-57 core; null for every lot until MB-44), Retry and Back, the generated content slice, SponsorSlot deleted, S-001 retired from report-fields.decl.json (the M-69 takeover) and the MF-80 L3a shown fields read from the served page. Operator 2026-11-12, verbatim: \"Ball y\" (B-1..B-7) and \"S1 a\" (record ~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md; plan ~/Buildo-scratch/mcfrontend/MF-48/plan-stageB.md). Zero scorer moves: no Layer 2/3 file, catalogue, seed or scorer changes; totals and floors copied from prereg-MB-83-8.json (round 169, the newest on the tip). Rules include Spec 69a M-69 (the S-001 takeover in report-fields.decl.json). Round 171, claimed in ~/Buildo-scratch/ids/round-171.",
+  "schema": "coa-round-prereg-v1",
+  "round": 171,
+  "task": "MF-48",
+  "rules": [
+    "FE-05",
+    "FE-06",
+    "FE-31",
+    "FE-32",
+    "FE-36",
+    "FE-38",
+    "M-69"
+  ],
+  "plan_ref": "~/Buildo-scratch/mcfrontend/MF-48/plan-stageB.md; ~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md (Ball y, S1 a); ~/Buildo-scratch/mcfrontend/MF-48/stageB-build-stop.md",
+  "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+  "expected_moves": [],
+  "expected_totals": {
+    "ANSWERED": 7,
+    "MATCH": 406,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 4
+  },
+  "expected_before_totals": {
+    "ANSWERED": 7,
+    "MATCH": 406,
+    "DIFFER": 31,
+    "NOT MODELLED": 94,
+    "NO ANSWER": 39,
+    "OWED": 68,
+    "DATA": 24,
+    "NOT SCORABLE": 25,
+    "BY-LAW CHANGED": 4
+  },
+  "expected_figure_changes": [],
+  "expected_moves_4d": [],
+  "expected_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 282,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 4
+  },
+  "expected_before_totals_4d": {
+    "ANSWERED": 2,
+    "MATCH": 282,
+    "DIFFER": 24,
+    "NOT MODELLED": 73,
+    "NO ANSWER": 27,
+    "OWED": 50,
+    "DATA": 22,
+    "NOT SCORABLE": 12,
+    "BY-LAW CHANGED": 4
+  },
+  "expected_figure_changes_4d": [],
+  "expected_moves_cumulative": [],
+  "expected_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 458,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 4
+  },
+  "expected_before_totals_cumulative": {
+    "ANSWERED": 9,
+    "MATCH": 458,
+    "DIFFER": 35,
+    "NOT MODELLED": 129,
+    "NO ANSWER": 55,
+    "OWED": 73,
+    "DATA": 24,
+    "NOT SCORABLE": 34,
+    "BY-LAW CHANGED": 4
+  },
+  "expected_figure_changes_cumulative": [],
+  "expected_floors": "every floor line unchanged; the floors check OK",
+  "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; the Layer 2 table_version (4e7ea5d17e90) and every golden and oracle file"
+}
