@@ -177,11 +177,11 @@ describe('(b) the golden 25 through the runtime loader reproduce the McProof key
       }
     }
     expect(compared).toBe(150);
-    // the reader gets its INPUT (abutters, street, ring, bt_units), not facts: 82 Kelsonia Ave (205238) reads its two qualifying abutters
+    // the reader gets its INPUT (abutters, street, ring, bt_units), not facts: 82 Kelsonia Ave (205238) reads its two qualifying abutters (trace is JSON text at the write boundary, MB-35 attempt 3)
     const front = rows.find((r) => r.parcel_id === 205238 && r.building_type === 'detached_house' && r.field_id === 'front_setback_used_m') as Json;
-    expect((front.trace as Json[]).find((t) => t.kind === 'fact' && t.id === 'nbr_q_n')).toMatchObject({ value: 2 });
+    expect((JSON.parse(front.trace) as Json[]).find((t) => t.kind === 'fact' && t.id === 'nbr_q_n')).toMatchObject({ value: 2 });
     const units = rows.find((r) => r.parcel_id === 205238 && r.building_type === 'detached_houseplex' && r.field_id === 'units_max') as Json;
-    expect((units.trace as Json[]).find((t) => t.kind === 'fact' && t.id === 'bt_units')).toMatchObject({ value: 4 });
+    expect((JSON.parse(units.trace) as Json[]).find((t) => t.kind === 'fact' && t.id === 'bt_units')).toMatchObject({ value: 4 });
     expect(rows.every((r) => /^[0-9a-f]{64}$/.test(r.settings_sha))).toBe(true);
   });
 });

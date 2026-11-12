@@ -1,0 +1,4 @@
+== MB-35 attempt 3 b4 STOP fix red: the lock run on 00dddc547 (materializeRows hands trace and switches to the runner as JS arrays; node-pg's prepareValue renders them as Postgres array literals, not JSON); green on the fix commit.
+   × MB-35 b4 STOP: the real descriptor through the runner (no DB) > every jsonb column of migration 309 reaches pg as JSON text (node-pg prepareValue), equal to the computed content
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 2 passed (3)

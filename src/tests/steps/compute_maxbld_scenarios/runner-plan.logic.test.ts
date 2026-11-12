@@ -103,6 +103,32 @@ describe('MB-35 b4 STOP: the real descriptor through the runner (no DB)', () => 
     expect(() => writeLib.buildWritePlan(w, D)).not.toThrow();
   });
 
+  // MB-35 attempt 3 b4 STOP (2026-11-12): "invalid input syntax for type json" in executeUpsertBatch: node-pg sends a JS array as a
+  // Postgres array literal ('{...}'), never JSON. Every jsonb column of migration 309 must reach the runner as JSON text (the
+  // resolve-bylaws.js jsonText precedent). Checked with node-pg's own encoder (pg/lib/utils prepareValue), so the lock is pg-faithful.
+  it('every jsonb column of migration 309 reaches pg as JSON text (node-pg prepareValue), equal to the computed content', () => {
+    const migration = fs.readFileSync(path.join(ROOT, 'migrations/309_parcel_maxbld_scenarios.sql'), 'utf8');
+    const block = migration.slice(migration.indexOf('CREATE TABLE IF NOT EXISTS parcel_maxbld_scenarios'), migration.indexOf('CREATE INDEX'));
+    const jsonbCols = [...block.matchAll(/^\s+([a-z_]+)\s+JSONB\b/gim)].map((m) => m[1] as string);
+    expect(jsonbCols).toEqual(['trace', 'switches']);
+    const prepareValue = (req(path.join(ROOT, 'node_modules/pg/lib/utils.js')) as Json).prepareValue as (v: unknown) => unknown;
+    const src = goldenSource();
+    const rows = S.materializeRows(src.rows, { config: seedConfig(), lookups: src.lookups }).rows.e1 as Json[];
+    expect(rows.length).toBe(2 * 153);
+    const bad: string[] = [];
+    for (const r of rows) {
+      for (const c of jsonbCols) {
+        const wire = prepareValue(r[c]);
+        let ok = typeof wire === 'string';
+        if (ok) { try { ok = Array.isArray(JSON.parse(wire as string)); } catch { ok = false; } }
+        if (!ok) bad.push(`${r.parcel_id}/${r.building_type}/${r.field_id}.${c}: ${String(wire).slice(0, 40)}`);
+      }
+    }
+    expect(bad.slice(0, 5)).toEqual([]);
+    // the text column flags stays a JS array (node-pg's array literal is right for TEXT[])
+    expect(rows.every((r) => Array.isArray(r.flags))).toBe(true);
+  });
+
   it('one rows-arm run: the batch binds only the keyset, the rows go to one guarded upsert, nothing is deleted', async () => {
     const config = seedConfig();
     const plan = S.buildSourceSql(D, config, { mode: 'incremental' }) as Json;

@@ -526,6 +526,9 @@ SELECT s.id,
   };
 }
 
+/** A jsonb column is bound as its JSON text (the resolve-bylaws.js jsonText precedent): node-pg sends a JS array as a Postgres array literal. */
+const jsonText = (v) => (v === null || v === undefined ? null : JSON.stringify(v));
+
 const hasOwn = (o, k) => o !== null && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
 
 /**
@@ -634,7 +637,11 @@ function materializeRows(sourceRows, ctx) {
   const config = c.config || {};
   const L = lookupsFor(c.lookups || {}, config);
   const depth = Number(config.fya_placeholder_ring_depth);
-  return materializeParcels(list.map((r) => sourceOf(r, L, depth)), L);
+  const out = materializeParcels(list.map((r) => sourceOf(r, L, depth)), L);
+  // the write boundary: the jsonb columns (trace, switches; migration 309) go to the runner as JSON text, because node-pg would bind a
+  // JS array as a Postgres array literal (MB-35 attempt 3 b4 STOP, "invalid input syntax for type json"); the resolve-bylaws.js jsonText
+  // precedent. content_sha was taken over the structures above, so the stored text and the hash describe the same content.
+  return { ...out, rows: { e1: out.rows.e1.map((r) => ({ ...r, trace: jsonText(r.trace), switches: jsonText(r.switches) })) } };
 }
 
 /** The closed scenario status set of the seam (rows.js + the permission statuses). */
