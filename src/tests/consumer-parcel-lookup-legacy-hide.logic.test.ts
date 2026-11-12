@@ -84,7 +84,7 @@ describe('FE-38 (EI-D1): the consumer lookup sends no legacy cost or legacy size
     expect(payload.areas.lot_size_sqft).toBe(4305);
     const res = ConsumerParcelLookupResponseSchema.safeParse({
       match: { parcelId: 'EI-D1-LOCK', matchType: 'exact', address: '26 Hurlingham Cres' },
-      candidates: [], warnings: [], parcel: payload, resolution: 'unique', map: null,
+      candidates: [], warnings: [], parcel: payload, resolution: 'unique', map: null, page: null, // MF-48 Stage B: the page key
     });
     expect(res.success).toBe(true);
   });

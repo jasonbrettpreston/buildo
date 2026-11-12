@@ -466,12 +466,17 @@ export async function buildInventory({ root }) {
   };
 
   const sites = (file, lines) => [...new Set(lines)].sort((a, z) => a - z).map((l) => `${file}:${l}`);
-  // S-001
-  const s1 = decl.surfaces.find((s) => s.ref === 'S-001');
-  if (!s1) throw new ReportFieldsError('decl.surfaces has no S-001');
+  // S-001. Dated 2026-11-12 (MF-48 Stage B with MF-74; operator "Q1 a Q2 i" 2026-11-11 and "S1 a" 2026-11-12; Spec 69a M-69 dated note): the
+  // hand-built lot screen is retired and S-001 is no longer declared: the lot report renders the declared v21 page (report-v2.decl.json, MF-57's
+  // core), whose fields are the takeover denominator. When the decl names no S-001 the S-001 arm is skipped whole (no rendered or payload-only
+  // rows, RF-8 has nothing to compare); a declared S-001 still runs the arm below unchanged.
+  const s1 = decl.surfaces.find((s) => s.ref === 'S-001') ?? null;
+  const payloadOnly = [];
+  let cmap = new Map();
+  if (s1) {
   const screen = files.get(s1.screen);
   if (!screen) throw new ReportFieldsError(`screen ${s1.screen} missing`);
-  const cmap = consumerMap(files, s1.consumer.file, s1.consumer.fn, s1.consumer.headline, s1.consumer.scalars_file, s1.consumer.scalars, s1.consumer.comparable);
+  cmap = consumerMap(files, s1.consumer.file, s1.consumer.fn, s1.consumer.headline, s1.consumer.scalars_file, s1.consumer.scalars, s1.consumer.comparable);
   const normPath = (p) => p.replace(/\.\[\]/g, '[]');
   const ARRAY_PROPS = new Set(['length', 'map', 'filter', 'slice', 'reduce', 'forEach', 'find', 'findIndex', 'some', 'every', 'includes', 'indexOf', 'join', 'concat', 'at', 'flat', 'flatMap', 'sort', 'keys', 'values', 'entries']);
   const rendered = renderedPaths(screen, new Map([[s1.hook_result, { path: [] }]]), { skipComponents: new Set(s1.skip_components) })
@@ -527,7 +532,6 @@ export async function buildInventory({ root }) {
   }
   // payload-only (code whitelist ∖ rendered)
   const renderedPathsSet = new Set(fields.filter((f) => f.surface === 'S-001').map((f) => f.payload));
-  const payloadOnly = [];
   for (const [pth, c] of [...cmap.entries()].sort((a, z) => cmp(a[0], z[0]))) {
     if (c.json && !pth.includes('[]')) continue; // json roots (menu, summary) are covered by their rendered keys
     if (renderedPathsSet.has(pth)) continue;
@@ -536,6 +540,8 @@ export async function buildInventory({ root }) {
     const ch = scalarLine ? chainOf('parcel_cost_menu', { line: scalarLine.id, part: scalarLine.scalarKind }) : chainOf(c.column, { focusKey: c.key || null });
     payloadOnly.push(fieldRow({ surface: 'S-001', section: 'payload_only', payload: pth, column: c.column, json_key: c.key || null, line_id: scalarLine ? scalarLine.id : undefined, label: null, label_how: 'not rendered', formatter: null, render_sites: [], whitelist: c.whitelist, rendered: false, duplicate_of: scalarLine ? `parcel.costMenu.menu.${scalarLine.id}.${scalarLine.scalarKind}` : null, chain: ch }));
   }
+
+  } // MF-48 Stage B: end of the S-001 arm
 
   // S-072
   const s2 = decl.surfaces.find((s) => s.ref === 'S-072');
@@ -647,7 +653,7 @@ export async function buildInventory({ root }) {
   });
   gate('RF-7', 'every declared CoA twin resolves to a produced field', twins.filter((t) => t.aor_where === 'missing' || t.coa_where === 'missing').map((t) => `${t.aor} ↔ ${t.coa}`));
   // descriptor whitelist vs code whitelist (S-001)
-  const desc = readJson(s1.descriptor);
+  const desc = s1 ? readJson(s1.descriptor) : {};
   const dw = new Set((desc.inputs && desc.inputs.field_whitelist) || []);
   const codeAreas = [...cmap.keys()].filter((k) => k.startsWith('parcel.areas.'));
   const descDrift = codeAreas.filter((k) => !dw.has(k));
@@ -704,7 +710,7 @@ export async function buildInventory({ root }) {
     gates,
     fields: fields.map(strip),
     payload_only: payloadOnly.map(strip),
-    raw_rendered: uniqSorted(rawRendered.map((r) => `${r.path} @ ${s1.screen}:${r.line}`)),
+    raw_rendered: uniqSorted(rawRendered.map((r) => `${r.path} @ ${s1 ? s1.screen : ''}:${r.line}`)),
     twins,
     constants: [...constTable.values()].sort((a, z) => cmp(a.ref, z.ref)),
     logic_variables: [...lvTable.values()].sort((a, z) => cmp(a.key, z.key)),
@@ -772,7 +778,8 @@ function renderMarkdown(m, decl) {
   L.push(`**Rendered fields:** ${m.fields.length} (${Object.keys(kinds).sort().map((k) => `${k} ${kinds[k]}`).join(' · ')}) · **payload-only:** ${m.payload_only.length} · **constants on chains:** ${m.constants.length} named, ${m.logic_variables.length} logic variables, ${m.inline_literals.length} inline literals, ${m.db_constants.length} DB rows.`);
   L.push('');
   L.push('## 1. Rendered calculated fields');
-  for (const surf of ['S-001', 'S-072']) {
+  // MF-48 Stage B (dated 2026-11-12): only the surfaces the decl still names get a section (S-001 is retired, MF-74 Q2 i).
+  for (const surf of ['S-001', 'S-072'].filter((x) => decl.surfaces.some((d) => d.ref === x))) {
     const rows = m.fields.filter((f) => f.surface === surf);
     L.push('');
     L.push(`### ${surf} ${surf === 'S-001' ? '`mobile_parcel_detail` (REPORT)' : '`mobile_tracked_lots` (LIST — contract `status: new`)'}`);

@@ -220,7 +220,7 @@
     "files": {
       "scripts/surfaces/_schema/placements-contract.json": "d1ce8b1484e5ce54",
       "scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.content.json": "34d51be48a17377d",
-      "scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.descriptor.json": "d1b4616dcf0cf8cf"
+      "scripts/surfaces/parcel_admin/F04/surfaces/admin_placements.descriptor.json": "ffccfbab144c8ce9"
     }
   }
 }

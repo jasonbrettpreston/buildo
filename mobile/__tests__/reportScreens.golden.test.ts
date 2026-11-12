@@ -11,7 +11,7 @@
 // throws on an unknown section kind, an unplaced part, an ad section without its ad. Each rule has a planted case.
 import fs from 'node:fs';
 import path from 'node:path';
-import { lifecycleProps, reportProps, REPORT_UI_CLOSED, UNSHOWN, type LifecycleState, type PageView, type PropsNode, type ReportUi } from '@/components/surfaces/ReportBinding';
+import { backProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, UNSHOWN, type LifecycleState, type PageView, type PropsNode, type ReportUi } from '@/components/surfaces/ReportBinding';
 import { resolveValue, type SurfaceActions } from '@/components/surfaces/SurfaceRenderer';
 import { REPORT_PENDING } from '@/constants/reportPage';
 
@@ -177,7 +177,9 @@ describe('MF-48 mobile REPORT props goldens', () => {
     expect(() => resolveValue({ part: 'title.0.title' }, { ...c, data: { contract: {}, derived: {} } })).toThrow('unresolved ref');
   });
   it('T4: the REPORT layout rules hold on every golden tree and every UI state', () => {
-    expect(bindings.mapping.mobile.REPORT).toEqual(['ScrollView', 'View', 'Text', 'Button', 'Input', 'ActivityIndicator']);
+    // MF-48 Stage B (dated 2026-11-12): + SafeAreaView, the Back bar's top safe area (the SEARCH and LIST form, edges {top: additive}).
+    expect(bindings.mapping.mobile.REPORT).toEqual(['ScrollView', 'View', 'Text', 'Button', 'Input', 'ActivityIndicator', 'SafeAreaView']);
+    expect(['back', reportLayoutProblems(backProps()), textProblems(backProps(), 'back')]).toEqual(['back', [], []]);
     for (const n of Object.keys(goldens)) {
       const p = goldens[n]!.props as Json;
       for (const t of 'page' in p ? both(p as { page: PropsNode; sheet: PropsNode | null }) : [p as unknown as PropsNode]) expect([n, reportLayoutProblems(t)]).toEqual([n, []]);
@@ -248,7 +250,8 @@ describe('MF-48 mobile REPORT props goldens', () => {
   it('T9: the lifecycle trees show their approved content key, never a blank or the dash; loading has the spinner', () => {
     for (const n of LIFE_STATES) {
       const t = lifecycleProps(n as LifecycleState);
-      expect(refs(t, 'content')).toEqual([`states.lifecycle.${n}`]);
+      // MF-48 Stage B (B-4 b): the error state also carries Retry, its text the content key retry.text ("Try again").
+      expect(refs(t, 'content')).toEqual([`states.lifecycle.${n}`, ...(n === 'error' ? ['retry.text'] : [])]);
       expect(nodes(t).some((x) => x.component === 'ActivityIndicator')).toBe(n === 'loading');
     }
   });

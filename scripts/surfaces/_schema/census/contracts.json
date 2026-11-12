@@ -22000,7 +22000,7 @@
     "status": "exists",
     "docs": {
       "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
-      "data_story": "It reads 7 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `usage_events` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered.",
+      "data_story": "It reads 7 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `usage_events` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). It reads no table today and changes no meter.",
       "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
     },
     "evidence": {
@@ -22125,7 +22125,33 @@
         "frontage",
         "zoning",
         "centroid",
-        "outline"
+        "outline",
+        "page",
+        "target",
+        "layout",
+        "columns",
+        "details",
+        "meta",
+        "page_break",
+        "sections",
+        "kind",
+        "id",
+        "brief",
+        "scenario",
+        "ad",
+        "parts",
+        "role",
+        "text",
+        "field",
+        "content",
+        "pending",
+        "key",
+        "rule",
+        "slot",
+        "source",
+        "label",
+        "value",
+        "disclosure"
       ],
       "tables": [
         {

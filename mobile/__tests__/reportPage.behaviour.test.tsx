@@ -26,11 +26,16 @@ const REPO = path.resolve(__dirname, '..', '..');
 const rj = (p: string): Json => JSON.parse(fs.readFileSync(path.join(REPO, p), 'utf8'));
 const view = (state: string): PageView => rj(`src/tests/fixtures/report-page/props/${state}.mobile.json`).view as PageView;
 const lifecycle = ((rj('scripts/surfaces/_schema/report-presentation.json').states as Json).lifecycle) as Record<string, string>;
-const CONTENT: Record<string, string> = Object.fromEntries(LIFECYCLE_CONTENT_KEYS.map((k) => [k, lifecycle[k.split('.')[2] as string] as string]));
+const CONTENT: Record<string, string> = {
+  ...Object.fromEntries(LIFECYCLE_CONTENT_KEYS.map((k) => [k, lifecycle[k.split('.')[2] as string] as string])),
+  // MF-48 Stage B: the screen's own content file (Retry, Back), the source the generated slice copies.
+  ...(rj('scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json') as Record<string, string>),
+};
+const NOOP = (): void => undefined;
 // 2026-11-11 MF-62 follow-up: the legal line is the operator-ruled short disclaimer (open-questions.md; pre-approved decision D-45), read from the
 // report presentation page texts the captured page views carry (`page["legal.line"]`), instead of the old by-law sentence.
 const LEGAL_LINE = ((rj('scripts/surfaces/_schema/report-presentation.json').page as Json)['legal.line']) as string;
-const show = (state: string) => render(<ReportPageHost view={view(state)} lifecycle="loading" content={CONTENT} />);
+const show = (state: string) => render(<ReportPageHost view={view(state)} lifecycle="loading" content={CONTENT} onRetry={NOOP} onBack={NOOP} />);
 const sheetIndex = (): unknown => screen.UNSAFE_getByType(BottomSheet).props.index;
 const label = (id: string): string => within(screen.getByTestId(id)).getAllByText(/.+/).map((t) => String(t.props.children)).join('|');
 
@@ -140,25 +145,42 @@ describe('MF-48 behaviour (parity with the web ReportPageToggles)', () => {
 
 describe('MF-48 lifecycle states and the action table', () => {
   it.each(['loading', 'miss', 'error'])('%s shows its approved text (never a blank or the dash)', (s) => {
-    render(<ReportPageHost view={null} lifecycle={s as LifecycleState} content={CONTENT} />);
+    render(<ReportPageHost view={null} lifecycle={s as LifecycleState} content={CONTENT} onRetry={NOOP} onBack={NOOP} />);
     expect(screen.getByText(lifecycle[s] as string)).toBeTruthy();
     expect(screen.queryByText('—')).toBeNull();
     expect(screen.queryByTestId('report-spinner') !== null).toBe(s === 'loading');
   });
+  it('T-B7 (MF-48 Stage B, B-4 b): only the error state has Retry, its text the approved "Try again", and a press calls onRetry once; Back is drawn in every state and calls onBack', () => {
+    for (const s of ['loading', 'miss', 'error'] as LifecycleState[]) {
+      const onRetry = jest.fn();
+      const onBack = jest.fn();
+      render(<ReportPageHost view={null} lifecycle={s} content={CONTENT} onRetry={onRetry} onBack={onBack} />);
+      expect([s, screen.queryByTestId('report-retry') !== null]).toEqual([s, s === 'error']);
+      if (s === 'error') {
+        expect(label('report-retry')).toBe('Try again');
+        fireEvent.press(screen.getByTestId('report-retry'));
+        expect(onRetry).toHaveBeenCalledTimes(1);
+      }
+      expect(label('report-back')).toBe('Back');
+      fireEvent.press(screen.getByTestId('report-back'));
+      expect([onBack.mock.calls.length, onRetry.mock.calls.length]).toEqual([1, s === 'error' ? 1 : 0]);
+      screen.unmount();
+    }
+  });
   it('each REPORT action calls its callback with exactly its arguments; an unknown panel and an unknown action throw', () => {
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    const a: jest.Mocked<ReportActions> = { toggle_panel: jest.fn(), toggle_how: jest.fn(), open_sheet: jest.fn(), close_sheet: jest.fn() };
+    const a: jest.Mocked<ReportActions> = { toggle_panel: jest.fn(), toggle_how: jest.fn(), open_sheet: jest.fn(), close_sheet: jest.fn(), retry: jest.fn(), back: jest.fn() };
     const data = { contract: {}, derived: {} };
     const btn = (onPress: Json, id: string): SurfaceTree => ({ component: 'Button', props: { key: id, testID: id, onPress }, children: [] });
     const tree: SurfaceTree = { component: 'View', props: {}, children: [
-      btn({ action: 'toggle_panel', option: 'o2', panel: 'cost' }, 'a'), btn({ action: 'toggle_how', option: 'o3' }, 'b'), btn({ action: 'open_sheet' }, 'c'), btn({ action: 'close_sheet' }, 'd'),
+      btn({ action: 'toggle_panel', option: 'o2', panel: 'cost' }, 'a'), btn({ action: 'toggle_how', option: 'o3' }, 'b'), btn({ action: 'open_sheet' }, 'c'), btn({ action: 'close_sheet' }, 'd'), btn({ action: 'retry' }, 'e'), btn({ action: 'back' }, 'f'),
     ] };
     render(<SurfaceRenderer tree={tree} content={{}} data={data} actions={a} />);
-    for (const id of ['a', 'b', 'c', 'd']) fireEvent.press(screen.getByTestId(id));
-    expect([a.toggle_panel.mock.calls, a.toggle_how.mock.calls, a.open_sheet.mock.calls, a.close_sheet.mock.calls]).toEqual([[['o2', 'cost']], [['o3']], [[]], [[]]]);
+    for (const id of ['a', 'b', 'c', 'd', 'e', 'f']) fireEvent.press(screen.getByTestId(id));
+    expect([a.toggle_panel.mock.calls, a.toggle_how.mock.calls, a.open_sheet.mock.calls, a.close_sheet.mock.calls, a.retry.mock.calls, a.back.mock.calls]).toEqual([[['o2', 'cost']], [['o3']], [[]], [[]], [[]], [[]]]);
     screen.unmount();
     const r = (t: SurfaceTree) => () => render(<SurfaceRenderer tree={t} content={{}} data={data} actions={a} />);
     expect(r(btn({ action: 'toggle_panel', option: 'o1', panel: 'notes' }, 'x'))).toThrow('unknown panel "notes"');
-    expect(r(btn({ action: 'retry' }, 'y'))).toThrow('unknown action "retry"');
+    expect(r(btn({ action: 'select', parcelId: 'P' }, 'y'))).toThrow('unknown action "select"'); // MF-48 Stage B: retry and back are REPORT actions now
   });
 });

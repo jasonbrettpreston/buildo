@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 export const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
+const PRESENTATION = 'scripts/surfaces/_schema/report-presentation.json'; // MF-48 Stage B: the REPORT lifecycle texts
 const GOLDEN_ROOT = 'src/tests/fixtures/surfaces';
 export const SLICE_DIR = 'mobile/src/generated/surfaces';
 export const GOLDEN_COPY_DIR = 'mobile/__tests__/fixtures/surfaces';
@@ -54,6 +55,18 @@ export function buildOutputs(root = REPO) {
     const goldens = Object.fromEntries(names.map((f) => [f.slice(0, -'.mobile.json'.length), rj(root, `${GOLDEN_ROOT}/${id}/${f}`)]));
     out.set(`${GOLDEN_COPY_DIR}/${id}.goldens.json`, text({ $comment: `${COMMENT} (input_sha ${sha(goldens)})`, surface: id, goldens }));
   }
+  // MF-48 Stage B (Spec 126 §11a.7 dated note 2026-11-12): a REPORT surface on mobile (the manifest's `report` list) gets a slice too: the approved
+  // lifecycle texts of report-presentation.json (`states.lifecycle.<state>`, one home, never copied by hand) and its own content file (Retry, Back).
+  // No goldens copy: its props goldens are read from the repo path by the mobile golden test (MF-48 Stage A, plan v2 L-5).
+  for (const id of rj(root, MANIFEST).report ?? []) {
+    const file = descriptorFile(root, id);
+    if (!(rj(root, file).identity?.platforms ?? []).includes('mobile')) continue;
+    const life = rj(root, PRESENTATION).states.lifecycle;
+    const own = rj(root, path.posix.join(path.posix.dirname(file), `${id}.content.json`));
+    const content = { ...Object.fromEntries(Object.entries(life).map(([k, v]) => [`states.lifecycle.${k}`, v])), ...own };
+    const slice = { surface: id, config: {}, content };
+    out.set(`${SLICE_DIR}/${id}.json`, text({ $comment: `${COMMENT} (input_sha ${sha(slice)})`, ...slice }));
+  }
   return out;
 }
 
@@ -87,7 +100,7 @@ function main(argv) {
   const lines = checkOutputs(REPO, outputs);
   for (const l of lines) console.error(l);
   const goldens = [...outputs.entries()].filter(([k]) => k.endsWith('.goldens.json')).reduce((n, [, t]) => n + Object.keys(JSON.parse(t).goldens).length, 0);
-  console.log(lines.length === 0 ? `surfaces ok (${outputs.size / 2} surfaces, ${goldens} goldens)` : `surfaces FAIL (${lines.length} problems)`);
+  console.log(lines.length === 0 ? `surfaces ok (${[...outputs.keys()].filter((k) => k.startsWith(`${SLICE_DIR}/`)).length} surfaces, ${goldens} goldens)` : `surfaces FAIL (${lines.length} problems)`);
   if (lines.length) process.exitCode = 1;
 }
 

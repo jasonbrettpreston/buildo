@@ -8,11 +8,11 @@
   },
   "evidence": {
     "files": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
     ],
     "contracts": [
       "mobile/src/hooks/useParcelLookup.ts:75-83",
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:75"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:75 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
     ],
     "tables": [
       "src/lib/admin/parcel-lookup.ts:222-226",
@@ -24,11 +24,11 @@
       "src/app/api/parcels/lookup/route.ts:71-76"
     ],
     "states": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:88-110",
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:147-160"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:88-110 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:147-160 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
     ],
     "emits": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231 — no track() call in the file"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231 — no track() call in the file [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
     ]
   },
   "identity": {
@@ -67,7 +67,7 @@
     "why": "One GET /api/parcels/lookup?parcelId= supplies the entire report — envelope headlines, the cost menu, the neighbourhood picture and the CoA list; nothing is computed on the device beyond unit formatting.",
     "evidence": [
       "mobile/src/hooks/useParcelLookup.ts:75-83",
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:112-116"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:112-116 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
     ],
     "contract_ref": [
       "/api/parcels/lookup"
@@ -155,10 +155,10 @@
   },
   "outputs": {
     "answer": "none",
-    "why": "REPORT: read-only by construction. The screen has no mutation, no store write and no device write — the SponsorSlot it reserves returns null rather than recording an impression.",
+    "why": "REPORT: read-only by construction. The screen has no mutation, no store write and no device write — the SponsorSlot it reserves returns null rather than recording an impression. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:72-231",
-      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:72-231 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]"
     ],
     "contract_ref": [],
     "tables": []
@@ -167,8 +167,8 @@
     "answer": "none",
     "why": "Explicitly stateless — the file header declares \"Read-only; NO Layer-3 store\", and the only hook is useParcelLookup.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:5",
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:72-75"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:5 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:72-75 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
     ],
     "fields": []
   },
@@ -261,7 +261,7 @@
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "The reserved SponsorSlot returns null in v1, so there is nothing to disclose today; the check is declared now so the first sponsor render cannot ship without the advertising label."
+      "why": "The reserved SponsorSlot returns null in v1, so there is nothing to disclose today; the check is declared now so the first sponsor render cannot ship without the advertising label. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]"
     },
     {
       "id": "parceldetail_a11y_label",
@@ -323,7 +323,7 @@
     "answer": "inline",
     "why": "One inline block covers both failures, with copy that distinguishes them: \"Could not load this parcel\" on isError, \"No parcel found.\" when the lookup returned a clean miss.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:99-110"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:99-110 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
     ],
     "classes": [
       {
@@ -355,7 +355,7 @@
     "answer": "none",
     "why": "Nothing about opening a parcel report is countable: no PostHog event, no ledger row, and no usage_events table exists to receive one — which for the pilot REPORT of Spec 126 §11 is the gap the standard exists to close.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
       "docs/specs/02-web-admin/126_maxbld_surface_standard.md §7"
     ],
     "analytics": [],
@@ -366,8 +366,8 @@
     "answer": "slots",
     "why": "The layout claims a named sponsor region (Spec 100 §8) even though v1 renders null — the position is reserved so the first sponsor ships into a declared slot rather than a new one.",
     "evidence": [
-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:227",
-      "mobile/src/components/parcel/SponsorSlot.tsx:10-20"
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx:227 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
+      "mobile/src/components/parcel/SponsorSlot.tsx:10-20 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]"
     ],
     "placement": "detail_footer",
     "inventory_source": "none yet — no placements table exists; the slot is flag-gated off (EXPO_PUBLIC_PARCEL_SPONSORS)",
@@ -445,7 +445,7 @@
     }
   ],
   "interpretation": "none",
-  "notes": "inputs.tables[parcels].columns is \"all\" deliberately: the projection reads the whole row minus geometry/geom, which is itself the finding — the whitelist is enforced at serialisation, not at the query. This is the Spec 126 §11 pilot REPORT, so its plausibility[] entries are written as real SQL rather than \"none\". SponsorSlot is NOT claimed here — it is its own census row (overlay_sponsor_slot), so this surface owns no component files.",
+  "notes": "inputs.tables[parcels].columns is \"all\" deliberately: the projection reads the whole row minus geometry/geom, which is itself the finding — the whitelist is enforced at serialisation, not at the query. This is the Spec 126 §11 pilot REPORT, so its plausibility[] entries are written as real SQL rather than \"none\". SponsorSlot is NOT claimed here — it is its own census row (overlay_sponsor_slot), so this surface owns no component files. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] Dated note 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74; operator, verbatim: \"Ball y\" and \"S1 a\"): the route mobile/app/(app)/parcel-tool/[parcelId].tsx is now the mount of the REPORT binding (owner binding_mobile_report, S-085): the lookup query, Retry and Back, and ReportPageHost over the page view the server builds with MF-57's core and sends as the nullable `page` of contract_parcels_lookup (null for every lot until MB-44, so the approved miss text shows). The hand-built screen, SponsorSlot and the phone formatting it used on screen are retired (parcelCostFormat.ts stays: the report generators cite it); S-001 is retired from report-fields.decl.json (M-69 dated note). Line cites above that name the old screen carry their own dated note.",
   "x-draft": {
     "shard": "mobile-product",
     "files": [
@@ -493,7 +493,7 @@
         "measured": "Spec 100 §1 states it explicitly: \"It derives nothing new.\" The surface writes nothing, saves nothing and has no Layer-3 store.",
         "evidence": [
           "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:14",
-          "mobile/app/(app)/parcel-tool/[parcelId].tsx:5"
+          "mobile/app/(app)/parcel-tool/[parcelId].tsx:5 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
         ],
         "spec_says": "By design, and the design is what makes it the lowest-risk pilot. The question is whether the shipped product should stay that way once the standard is proven."
       }

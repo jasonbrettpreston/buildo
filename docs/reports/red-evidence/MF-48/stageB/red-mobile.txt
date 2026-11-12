@@ -1,0 +1,21 @@
+FAIL __tests__/reportPage.behaviour.test.tsx
+  ● MF-48 lifecycle states and the action table › T-B7 (MF-48 Stage B, B-4 b): only the error state has Retry, its text the approved "Try again", and a press calls onRetry once; Back is drawn in every state and calls onBack
+FAIL __tests__/reportScreens.golden.test.ts
+  ● MF-48 mobile REPORT props goldens › T1: reportProps(view) and lifecycleProps(state) equal the committed props exactly
+  ● MF-48 mobile REPORT props goldens › T4: the REPORT layout rules hold on every golden tree and every UI state
+  ● MF-48 mobile REPORT props goldens › T9: the lifecycle trees show their approved content key, never a blank or the dash; loading has the spinner
+FAIL __tests__/reportScreen.mount.behaviour.test.tsx
+  ● T-B1 the lot route mounts the REPORT host on the lookup query › a served page: the v21 page renders (the golden view), the lookup is keyed on the route parcelId, no legacy text
+  ● T-B1 the lot route mounts the REPORT host on the lookup query › page null (every lot until MB-44): the approved miss text, no page, no legacy text
+  ● T-B1 the lot route mounts the REPORT host on the lookup query › an older server (no page key): the approved miss text, no page, no legacy text
+  ● T-B1 the lot route mounts the REPORT host on the lookup query › a miss: the approved miss text, no page, no legacy text
+  ● T-B1 the lot route mounts the REPORT host on the lookup query › pending with nothing cached: the loading text and spinner (a gate state, not data)
+  ● T-B1 the lot route mounts the REPORT host on the lookup query › an error with nothing cached: the error text and Retry ("Try again"); a press refetches once
+  ● T-B1 the lot route mounts the REPORT host on the lookup query › offline: an error with a cached page still shows the page, never the error
+  ● T-B2 Back is a route (FE-36; NAV-AUDIT #3, the MF-53 rule) › with history: router.back(); the control is a labelled button
+  ● T-B2 Back is a route (FE-36; NAV-AUDIT #3, the MF-53 rule) › a cold open (no history): replaces with the Lookup route
+FAIL __tests__/useParcelLookup.test.ts
+  ● MF-48 Stage B the page key at the Zod boundary › a page view, page null and no page key all parse; the view keeps its sections and parts
+  ● MF-48 Stage B the page key at the Zod boundary › RED (planted): a part without text, an unknown part kind and sections that are not a list are schema drift
+Test Suites: 4 failed, 4 total
+Tests:       15 failed, 35 passed, 50 total

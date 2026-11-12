@@ -61,33 +61,16 @@ describe('report-field inventory on the real tree', () => {
     expect(r.json.includes('\r')).toBe(false);
   }, 120_000);
 
-  it('code → inventory: every <Headline label="…"> the detail screen renders is an inventory row', () => {
-    const screen = read(r.decl.surfaces[0].screen);
-    const labels = [...screen.matchAll(/<Headline\s+label="([^"]+)"/g)].map((m) => m[1]!);
-    expect(labels.length).toBeGreaterThan(0);
-    for (const label of labels) {
-      const found = r.model.fields.some((f: Json) => f.surface === 'S-001' && f.label === label);
-      expect({ label, found }).toEqual({ label, found: true });
-    }
-  });
-
-  // Dated 2026-11-12 (EI-D1, operator 2026-11-12, "D all as recommended - please ensure this is addedd to the McFrontend decisions"; Spec 135 FE-38; Spec 69a M-367 dated note 2026-11-12): the detail screen no longer renders a cost card, so the 13 legacy lines are no longer
-  // inventory rows. Prior text: every COST_LINE_ORDER id is a cost-menu row (kept below for a screen that renders <CostCard>).
-  it('code → inventory: every COST_LINE_ORDER id is a cost-menu row while the screen renders <CostCard>; none after EI-D1', () => {
-    const usesCard = /<CostCard\b/.test(read(r.decl.surfaces[0].screen));
-    // Output panel fold (regression guardian NIT-2, 2026-11-12): the pin is active, not passive. Re-mounting <CostCard> is
-    // a deliberate change that must flip this line (the engine cost reaches the declared report, not this screen).
-    expect(usesCard).toBe(false);
-    if (!usesCard) {
-      expect(r.model.fields.filter((f: Json) => f.line_id)).toEqual([]);
-      return;
-    }
-    const src = read('mobile/src/lib/parcelCostFormat.ts');
-    const block = src.slice(src.indexOf('COST_LINE_ORDER = ['), src.indexOf(']', src.indexOf('COST_LINE_ORDER = [')));
-    const ids = [...block.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]!);
-    expect(ids.length).toBeGreaterThan(0);
-    const rows = r.model.fields.filter((f: Json) => f.line_id).map((f: Json) => f.line_id);
-    expect(rows.slice().sort()).toEqual(ids.slice().sort());
+  // Dated 2026-11-12 (MF-48 Stage B with MF-74; operator, verbatim: "Q1 a Q2 i" (2026-11-11) and "S1 a" (2026-11-12); Spec 69a M-69 dated note of
+  // this date): S-001 is RETIRED from report-fields.decl.json (the hand-built lot screen is replaced by the declared v21 REPORT page, whose fields are
+  // the M-69 denominator through report-v2.decl.json). Two S-001 tests are retired with it. Prior text: "code → inventory: every <Headline label>
+  // the detail screen renders is an inventory row" (every Headline label of [parcelId].tsx was an S-001 row) and "every COST_LINE_ORDER id is a
+  // cost-menu row while the screen renders <CostCard>; none after EI-D1" (an active no-CostCard pin). Their replacement pins the retirement itself:
+  it('MF-48 Stage B: S-001 is retired: the decl names no S-001, the inventory has no S-001 row, and the lot route renders no Headline or CostCard', () => {
+    expect(r.decl.surfaces.map((x: Json) => x.ref)).toEqual(['S-072']);
+    expect([...r.model.fields, ...r.model.payload_only].filter((f: Json) => f.surface === 'S-001')).toEqual([]);
+    expect(r.model.fields.filter((f: Json) => f.line_id)).toEqual([]);
+    expect(read('mobile/app/(app)/parcel-tool/[parcelId].tsx')).not.toMatch(/<Headline\b|<CostCard\b/);
   });
 
   it('code → inventory: every TrackedLot property documented as a parcels column, and the DERIVED one, is a tracked-lots row', () => {
@@ -145,7 +128,9 @@ describe('report-field inventory on the real tree', () => {
   });
 
   it('inventory → code: every named constant resolves to code-link leaves', () => {
-    expect(r.model.constants.length).toBeGreaterThan(0);
+    // Dated 2026-11-12 (MF-48 Stage B, S-001 retired; operator "S1 a"): every chain with a constant was an S-001 field, so the list is empty until a
+    // declared surface renders a chain again; each constant that IS listed must still resolve. Prior text: expect(constants.length) > 0.
+    expect(r.model.constants).toEqual([]);
     for (const c of r.model.constants) {
       const ok = c.leaves > 0 && fs.existsSync(path.join(ROOT, String(c.ref).split('#')[0]!));
       expect({ ref: c.ref, leaves: c.leaves, ok }).toEqual({ ref: c.ref, leaves: c.leaves, ok: true });
@@ -155,14 +140,22 @@ describe('report-field inventory on the real tree', () => {
   // Dated 2026-11-12 (EI-D1, operator 2026-11-12, "D all as recommended - please ensure this is addedd to the McFrontend decisions"; Spec 135 FE-38; Spec 69a M-367 dated note 2026-11-12): RF-4 and RF-7 leave the PASS list (prior text: RF-1, RF-3, RF-4, RF-7, RF-9) and are pinned
   // below to fail for exactly the EI-D1 reasons: the tracked-lots legacy pair is whitelisted but not rendered, and the legacy
   // cost-menu twins are no longer rendered or sent. MB-43 / MF-48 Stage B retire them from the declarations.
-  it('structural gates pass (RF-1 chain, RF-3 constants, RF-9 declared inputs)', () => {
-    for (const id of ['RF-1', 'RF-3', 'RF-9']) {
+  // Dated 2026-11-12 (MF-48 Stage B, S-001 retired; operator "S1 a"; Spec 69a M-69 dated note): RF-9 leaves the PASS list. Its `layer2` keys were
+  // reached only by the S-001 chains, so each is now a dead declaration; the finding stays visible (report-only) and is owed to MB-43 (retire the
+  // old calc), which retires the legacy declarations with the legacy fields. Prior text: RF-1, RF-3 and RF-9 PASS.
+  it('structural gates pass (RF-1 chain, RF-3 constants); RF-9 lists only dead layer2 declarations (S-001 retired, owed MB-43)', () => {
+    for (const id of ['RF-1', 'RF-3']) {
       expect(r.model.gates.find((g: Json) => g.id === id)).toMatchObject({ id, state: 'PASS' });
     }
+    const rf9 = r.model.gates.find((g: Json) => g.id === 'RF-9').failing as string[];
+    expect(rf9.length).toBe(Object.keys(r.decl.layer2).length);
+    for (const line of rf9) expect(line).toMatch(/: matches no chain input \(dead declaration\)$/);
   });
 
   it('the known open findings stay visible (report-only gates fail for the reasons the hand edition found)', () => {
-    expect(r.model.gates.find((g: Json) => g.id === 'RF-5').failing).toContain('parcel.areas.realized_fsi_p90');
+    // Dated 2026-11-12 (MF-48 Stage B, S-001 retired): RF-5's one finding (parcel.areas.realized_fsi_p90) was an S-001 payload row, so RF-5 now
+    // PASSES; RF-8 (the S-001 descriptor whitelist) has nothing to compare and PASSES. Prior text: RF-5 failing contains parcel.areas.realized_fsi_p90.
+    expect([r.model.gates.find((g: Json) => g.id === 'RF-5').state, r.model.gates.find((g: Json) => g.id === 'RF-8').state]).toEqual(['PASS', 'PASS']);
     expect(r.model.gates.find((g: Json) => g.id === 'RF-2').failing).toContain('S-072 lots[].newNearbyCoaRuling');
     // Dated 2026-11-12 (operator "1 b 2 a", item 2 (a)): RF-10 now PASSES, because the last rendered fields that reached a banned
     // code ref (envelope_constrained / envelope_constraint_reason) are no longer rendered. Prior text: RF-10 state FAIL.

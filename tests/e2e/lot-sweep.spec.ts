@@ -3,7 +3,9 @@
 //
 // MF-80 · layer 3, L3a: lots reached the way a user reaches them, by address search, on the test stack only. Per lot: the search lands on
 // the sampled lot, the payload parses, no field the screen shows is empty, and every catalogue bound holds. Which fields the screen shows
-// is read from the generated report-field inventory; a bound on a payload-only field is a data finding, labelled so. A lot with no limit
+// is read from the served report page (dated 2026-11-12, MF-48 Stage B, operator "S1 a": the value parts of the lookup's `page`; a lot whose page
+// is null records not_evaluated:no_page, never a pass; prior text: "from the generated report-field inventory"); a bound is on the lookup payload,
+// which the screen no longer shows, so it is a data finding, labelled so. A lot with no limit
 // value is not_evaluated, never a pass. Opening a lot is metered: the sweep spreads lots over the seeded sweep pool under each user's
 // allowance and the 30-a-minute lookup limit; it never bypasses either. S-STORAGE reads table sizes only.
 import fs from "node:fs";
@@ -35,13 +37,6 @@ type Bound = {
   source: string;
 };
 const ROOT = path.resolve(__dirname, "../..");
-const inventory = JSON.parse(
-  fs.readFileSync(
-    path.join(ROOT, "docs/reference/maxbld-report-field-inventory.json"),
-    "utf8",
-  ),
-);
-const shown: Set<string> = shownFields(inventory);
 const lotCases = (cat.lot_cases as Lot[]).filter((l) => l.status === "active");
 const bounds = (cat.bounds as Bound[]).filter((b) => b.status === "active");
 const PACE_MS = 2_100; // under 30 lookups a minute per user (the route's limit), so the run measures the app, not the limiter
@@ -76,6 +71,7 @@ test.describe("L3a lot sweep", () => {
       key: string,
       result: "pass" | "fail" | "not_evaluated",
       example: string,
+      keep = result === "fail", // MF-48 Stage B: a closed not_evaluated reason (no_page) is kept as an example too
     ) => {
       const t = tally.get(key) ?? {
         pass: 0,
@@ -84,7 +80,7 @@ test.describe("L3a lot sweep", () => {
         examples: [],
       };
       t[result] += 1;
-      if (result === "fail" && t.examples.length < 10) t.examples.push(example);
+      if (keep && t.examples.length < 10) t.examples.push(example);
       tally.set(key, t);
     };
 
@@ -126,12 +122,17 @@ test.describe("L3a lot sweep", () => {
                 data.match?.parcelId === row.parcel_id ? "pass" : "fail",
                 `${where}: got ${data.match?.parcelId}`,
               );
-              const empty = emptyShown(data, shown);
-              note(
-                `${lc.id}|no_empty_shown_field`,
-                empty.length ? "fail" : "pass",
-                `${where}: ${empty.join(", ")}`,
-              );
+              // MF-48 Stage B: the fields the screen shows are the served page's value parts; no page (every lot until MB-44) is not_evaluated:no_page.
+              const shown = shownFields(data);
+              const empty = emptyShown(data);
+              if (shown === null)
+                note(`${lc.id}|no_empty_shown_field`, "not_evaluated", `${where}: not_evaluated:no_page`, true);
+              else
+                note(
+                  `${lc.id}|no_empty_shown_field`,
+                  empty.length ? "fail" : "pass",
+                  `${where}: ${empty.join(", ")}`,
+                );
               for (const b of bounds) {
                 const r = evalBound(b, { parcel: data.parcel, db: row });
                 note(
@@ -153,11 +154,8 @@ test.describe("L3a lot sweep", () => {
         : [`lot_cases/${key.split("|")[0]}`, key.split("|")[1] ?? ""];
       const b = bounds.find((x) => `bounds/${x.id}` === key);
       const lc = lotCases.find((x) => row === `lot_cases/${x.id}`);
-      const label = b
-        ? shown.has(b.lhs)
-          ? "shown on screen"
-          : "payload-only: data finding"
-        : "";
+      // MF-48 Stage B: the screen shows the served page only, so a bound on the lookup payload is a data finding.
+      const label = b ? "payload-only: data finding" : "";
       const detail = `pass ${t.pass}, fail ${t.fail}, not_evaluated ${t.not_evaluated}${t.examples.length ? `; e.g. ${t.examples.join(" | ")}` : ""}`;
       record({
         row,

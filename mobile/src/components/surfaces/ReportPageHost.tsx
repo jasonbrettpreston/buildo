@@ -1,21 +1,23 @@
 // SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.4 dated note 2026-11-11 (MF-48 D-3 a: the existing @gorhom/bottom-sheet,
-//            held by the screen host), §11b.2 dated note 2026-11-11 (D-2 a: owner binding_mobile_report), docs/specs/03-mobile/99_mobile_state_architecture.md
-//            (ephemeral UI state stays local; never persisted), docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-31 (C-8m host list).
+//            held by the screen host), §11b.2 dated note 2026-11-11 (D-2 a: owner binding_mobile_report), §11a.7 dated note 2026-11-12 (Stage B),
+//            docs/specs/03-mobile/99_mobile_state_architecture.md (ephemeral UI state stays local; never persisted),
+//            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-31 (C-8m host list), FE-36 (navigation is a route).
 //
-// MF-48 · the mobile REPORT screen host (Stage A: mounted nowhere; Stage B mounts it on the parcel screen once MB-44 serves a page view). It holds
-// the screen-local UI state of the v21 page (which details panel is open per option, How? per option, the sheet) and the existing bottom sheet, and
-// renders the page and the sheet body through the ONE shared renderer. It holds no text, value or layout decision of its own: the trees come from
-// ReportBinding.tsx, the texts from the page view and the content strings the screen passes in. Every element comes through its COMPONENTS table
-// (bindings.json mapping.mobile.REPORT_HOST; FE-31 C-8m host list). The sheet is driven by its `index` prop (gorhom 5 snaps when it changes):
-// open = 0, closed = -1; a swipe down or a tap on the backdrop calls onClose. Panel state starts closed on every visit (web parity).
+// MF-48 · the mobile REPORT screen host. Stage B (operator 2026-11-12 "Ball y"): mounted by the lot route mobile/app/(app)/parcel-tool/[parcelId].tsx,
+// which passes the page view the server built (or null and a lifecycle state) and the two screen callbacks, Retry and Back. It holds the
+// screen-local UI state of the v21 page (which details panel is open per option, How? per option, the sheet) and the existing bottom sheet, and
+// renders the Back bar, the page and the sheet body through the ONE shared renderer. It holds no text, value or layout decision of its own: the
+// trees come from ReportBinding.tsx, the texts from the page view and the content strings the screen passes in. Every element comes through its
+// COMPONENTS table (bindings.json mapping.mobile.REPORT_HOST; FE-31 C-8m host list). The sheet is driven by its `index` prop (gorhom 5 snaps when it
+// changes): open = 0, closed = -1; a swipe down or a tap on the backdrop calls onClose. Panel state starts closed on every visit (web parity).
 // Nav-audit #62 (~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md; operator "yes" 2026-11-11): while the sheet is open, the Android Back
-// button closes it and is consumed (the React Native BackHandler, an existing core API); closed, Back is not intercepted. The host has no
-// navigation control of its own (Cancel only closes the sheet), so no router.back() is needed here.
+// button closes it and is consumed (the React Native BackHandler, an existing core API); closed, Back is not intercepted. The Back control is a
+// routing control the screen owns (onBack); Cancel only closes the sheet.
 import * as React from 'react';
 import { BackHandler, View } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { SurfaceRenderer, type ReportActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
-import { lifecycleProps, reportProps, REPORT_UI_CLOSED, type LifecycleState, type PageView, type ReportUi } from '@/components/surfaces/ReportBinding';
+import { backProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, type LifecycleState, type PageView, type ReportUi } from '@/components/surfaces/ReportBinding';
 import { REPORT_HEX as H, REPORT_PAGE_LAYOUT as L } from '@/constants/reportPage';
 
 const COMPONENTS = { View, SurfaceRenderer, BottomSheet, BottomSheetView, BottomSheetBackdrop };
@@ -27,7 +29,9 @@ export const REPORT_UI = {
   toggleHow: (u: ReportUi, option: string): ReportUi => ({ ...u, how: { ...u.how, [option]: u.how[option] !== true } }),
 };
 
-export function ReportPageHost({ view, lifecycle, content }: { view: PageView | null; lifecycle: LifecycleState; content: Record<string, string> }) {
+export function ReportPageHost({ view, lifecycle, content, onRetry, onBack }: {
+  view: PageView | null; lifecycle: LifecycleState; content: Record<string, string>; onRetry: () => void; onBack: () => void;
+}) {
   const [ui, setUi] = React.useState<ReportUi>(REPORT_UI_CLOSED);
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const Box = COMPONENTS['View'];
@@ -40,6 +44,8 @@ export function ReportPageHost({ view, lifecycle, content }: { view: PageView | 
     toggle_how: (option) => setUi((u) => REPORT_UI.toggleHow(u, option)),
     open_sheet: () => setSheetOpen(true),
     close_sheet: () => setSheetOpen(false),
+    retry: onRetry,
+    back: onBack,
   };
   React.useEffect(() => {
     if (!sheetOpen) return undefined;
@@ -47,11 +53,20 @@ export function ReportPageHost({ view, lifecycle, content }: { view: PageView | 
     return () => sub.remove();
   }, [sheetOpen]);
   const backdrop = React.useCallback((p: BottomSheetBackdropProps) => <Backdrop {...p} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />, [Backdrop]);
-  if (view === null) return <Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />;
+  const top = <Renderer tree={backProps() as SurfaceTree} content={content} data={NO_DATA} actions={actions} />;
+  if (view === null) {
+    return (
+      <Box className={L.host} testID="report-host">
+        {top}
+        <Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />
+      </Box>
+    );
+  }
   const trees = reportProps(view, ui);
   const data = { ...NO_DATA, page: view };
   return (
     <Box className={L.host} testID="report-host">
+      {top}
       <Renderer tree={trees.page as SurfaceTree} content={content} data={data} actions={actions} />
       {trees.sheet ? (
         <Sheet

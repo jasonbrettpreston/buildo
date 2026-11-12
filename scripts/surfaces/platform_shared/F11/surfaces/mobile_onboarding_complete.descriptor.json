@@ -254,9 +254,9 @@
   },
   "offers": {
     "answer": "none",
-    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1.",
+    "why": "No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]",
     "evidence": [
-      "mobile/src/components/parcel/SponsorSlot.tsx:16-20"
+      "mobile/src/components/parcel/SponsorSlot.tsx:16-20 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]"
     ]
   },
   "metering": {

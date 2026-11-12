@@ -20,7 +20,8 @@ const ROOT = process.cwd();
 const rj = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 const B = rj('scripts/surfaces/_schema/bindings.json');
 const LIFE = rj('scripts/surfaces/_schema/report-presentation.json').states.lifecycle as Record<string, string>;
-const CONTENT = Object.fromEntries(Object.entries(LIFE).map(([k, v]) => [`states.lifecycle.${k}`, v]));
+// MF-48 Stage B (dated 2026-11-12): + the screen's own content file (Retry, Back), the second input of the generated mobile slice.
+const CONTENT = { ...Object.fromEntries(Object.entries(LIFE).map(([k, v]) => [`states.lifecycle.${k}`, v])), ...rj('scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json') };
 const names = fs.readdirSync(path.join(ROOT, MOBILE_PROPS_DIR)).filter((f) => f.endsWith('.mobile.json')).sort();
 const golden = (f: string): Json => rj(`${MOBILE_PROPS_DIR}/${f}`);
 const sbind = (v: unknown, at: string): string[] => propsProblems(v, at, { kinds: B.ref_kinds, nonDisplay: B.non_display_keys, content: CONTENT, used: new Set(), contracts: new Map() });

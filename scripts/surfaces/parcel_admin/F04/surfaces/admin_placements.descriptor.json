@@ -9,7 +9,7 @@
   "evidence": {
     "files": [
       "~/Buildo-scratch/mcfrontend/MF-40/plan.md (section 12) and plan.delta-1.md (sections 5 and 8)",
-      "mobile/src/components/parcel/SponsorSlot.tsx — the SLOT this form configures, returning null on both branches"
+      "mobile/src/components/parcel/SponsorSlot.tsx — the SLOT this form configures, returning null on both branches [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]"
     ],
     "contracts": [
       "contract_admin_offer_upsert",
@@ -627,12 +627,12 @@
     },
     {
       "what": "The SLOT this form configures is dead in the product.",
-      "measured": "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 14 — SponsorSlot returns null on both branches. The file is mobile/src/components/parcel/SponsorSlot.tsx (21L); the report writes it path-less as SponsorSlot.tsx and there is no src/components/SponsorSlot.tsx, so the component this web form configures is a MOBILE one.",
+      "measured": "docs/reports/2026-09-15-spec126-admin-best-in-class.md §1.1 row 14 — SponsorSlot returns null on both branches. The file is mobile/src/components/parcel/SponsorSlot.tsx (21L); the report writes it path-less as SponsorSlot.tsx and there is no src/components/SponsorSlot.tsx, so the component this web form configures is a MOBILE one. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]",
       "check_id": "placements_disclosure_required"
     }
   ],
   "interpretation": "none",
-  "notes": "MF-40 (plan delta 1, option C; the four trims). The offer FORM of the admin placements page. No disclosure field (placements is seed-only); no active field (offers save inactive and toggle from the offers list, trim 4); no zone_class (serving row, trim 1); no image picker (ad contract v2, trim 2). building_type and design_option are static selects; which a placement accepts and the scenario_card pair are checked by the route (the media precedent: conditionals in the route). Measured defect it keeps visible: SponsorSlot returns null on both branches (mobile/src/components/parcel/SponsorSlot.tsx); the report ad slot replaces it when serving lands.",
+  "notes": "MF-40 (plan delta 1, option C; the four trims). The offer FORM of the admin placements page. No disclosure field (placements is seed-only); no active field (offers save inactive and toggle from the offers list, trim 4); no zone_class (serving row, trim 1); no image picker (ad contract v2, trim 2). building_type and design_option are static selects; which a placement accepts and the scenario_card pair are checked by the route (the media precedent: conditionals in the route). Measured defect it keeps visible: SponsorSlot returns null on both branches (mobile/src/components/parcel/SponsorSlot.tsx); the report ad slot replaces it when serving lands. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]",
   "x-draft": {
     "shard": "admin-new",
     "files": [],

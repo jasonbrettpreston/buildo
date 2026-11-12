@@ -392,6 +392,24 @@ export const ParcelLotMapSchema = z.object({
 export type ParcelLotMap = z.infer<typeof ParcelLotMapSchema>;
 export type LotOutline = z.infer<typeof LotOutlineSchema>;
 
+// MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12; operator 2026-11-12 "Ball y", B-3 a): the report page VIEW the server builds through MF-57's
+// core (the app never builds or rebuilds it). OPTIONAL and plain (not .strict()), the MF-53 form above, so an older server or a server-added field
+// never raises ParcelLookupSchemaError on an installed build; the binding (ReportBinding.tsx) throws on any part or section it does not place.
+const ReportPagePartSchema = z.object({ role: z.string(), brief: z.string(), kind: z.enum(['value', 'content', 'pending']), text: z.string() });
+export const ReportPageViewSchema = z.object({
+  target: z.string(),
+  layout: z.object({ details: z.string() }),
+  sections: z.array(
+    z.object({
+      kind: z.string(),
+      id: z.string(),
+      scenario: z.string().optional(),
+      ad: z.object({ field: z.string(), slot: z.string(), value: z.string(), disclosure: z.string() }).optional(),
+      parts: z.array(ReportPagePartSchema),
+    }),
+  ),
+});
+
 export const ConsumerParcelLookupResultSchema = z.object({
   match: ParcelMatchSchema.nullable(),
   candidates: z.array(ParcelCandidateSchema),
@@ -399,6 +417,7 @@ export const ConsumerParcelLookupResultSchema = z.object({
   parcel: ConsumerParcelSchema.nullable(),
   resolution: z.enum(['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']).optional(),
   map: ParcelLotMapSchema.nullable().optional(),
+  page: ReportPageViewSchema.nullable().optional(),
 });
 export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
 export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;

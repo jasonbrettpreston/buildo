@@ -14,6 +14,8 @@
 //   the billing month); a new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error
 //   is a 500, never an unmetered payload.
 // Rate: `parcels-search:${uid}` 60/min on the q path; `parcels-lookup:${uid}` 30/min on parcelId.
+// MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12, B-3 a): a hit also carries `page`, the mobile report page view built by MF-57's core from the
+//   lot's producer response (src/lib/parcels/report-page.ts); null for every lot until MB-44 serves one. The meter is unchanged by it.
 // Response: the WHITELIST (Spec 100 §3.2) — Tier 1 cost menu + headline areas, Tier 2 neighbourhood;
 // NO Tier-3 `groups` (the .strict() boundary parse rejects a leak).
 // Log hygiene: uid + outcome + parcelId + matchType + resolution + map counts + duration + access + meter — NEVER the raw q, the map address,
@@ -44,6 +46,7 @@ import { logInfo, logWarn } from '@/lib/logger';
 import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
 import { assembleConsumerPayload, assembleLotMap, hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
 import { resolveLotMap } from '@/lib/parcels/lot-map';
+import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
 import {
   ConsumerParcelLookupQuerySchema,
   ConsumerParcelLookupResponseSchema,
@@ -105,6 +108,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       parcel: null,
       resolution: resolved.resolution,
       map,
+      page: null,
     };
 
     // The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text.
@@ -113,12 +117,16 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       const row = await fetchParcelById(resolved.match.parcelId);
       if (!row) {
         // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
-        response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null };
+        response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null };
       } else {
         const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
         const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
         const { payload, warnings } = assembleConsumerPayload(row, coaProjects);
         parcelRef = String(row.parcel_id);
+        // MF-48 Stage B (B-3 a): the report page view from the lot's producer response, through MF-57's core; null while no producer has the lot
+        // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
+        const pageResponse = await readCustomerPageResponse(parcelRef);
+        const page = pageResponse === null ? null : mobilePageView(pageResponse);
         response = {
           match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
           candidates: [],
@@ -126,6 +134,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
           parcel: payload,
           resolution: 'unique',
           map: null,
+          page,
         };
       }
     }
@@ -164,6 +173,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       duration_ms,
       access,
       meter,
+      page: response.page !== null, // MF-48 Stage B: whether a report page was sent (never its content)
     });
     if (duration_ms > SLOW_QUERY_MS) {
       logWarn(TAG, 'slow_query', { duration_ms, outcome });

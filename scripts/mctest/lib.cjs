@@ -318,25 +318,33 @@ function evalBound(bound, ctx) {
   return { result: lhs <= limit + bound.tol ? "pass" : "fail", lhs, limit };
 }
 
-/** The payload paths the screen shows, from the generated report-field inventory (S-001 rendered), never a typed list. */
-function shownFields(inventory, surface = "S-001") {
-  return new Set(
-    inventory.fields
-      .filter((f) => f.surface === surface && f.rendered)
-      .map((f) => f.payload),
-  );
+/**
+ * MF-48 Stage B (operator 2026-11-12, verbatim "S1 a"; Spec 69a M-69 dated note): the screen shows the served report PAGE, so the fields it shows
+ * are the value parts of the lookup's `page` (MF-57's pageViewOf, built on the server): each part's declared `field`, read from the payload, never
+ * a typed list. A lookup with no page (page null: every lot until MB-44) shows no field: null here, which the sweep records as
+ * not_evaluated:no_page, never a pass. Prior text: the payload paths of the S-001 rows of the generated report-field inventory (S-001 retired).
+ */
+function shownFields(payload) {
+  const page = payload == null ? null : payload.page;
+  if (page == null || !Array.isArray(page.sections)) return null;
+  const out = new Set();
+  for (const sec of page.sections)
+    for (const p of sec.parts || []) if (p.kind === "value" && typeof p.field === "string") out.add(p.field);
+  return out;
 }
 
-/** Shown scalar fields that are empty on one payload (array fields are lists; an empty list is a state, not a blank). */
-function emptyShown(payload, shown) {
-  return [...shown]
-    .filter((f) => !f.includes("[]"))
-    .filter((f) => {
-      const v = getPath(payload, f);
-      return (
-        v === null || v === "" || (typeof v === "number" && !Number.isFinite(v))
-      );
-    });
+/** A shown text that is blank or a dead wire. The null dash is an honest "no value" (FE-06, report-presentation null_value), not empty. */
+const DEAD_TEXT = /^\s*$|\b(NaN|undefined|null|\[object Object\])\b/;
+
+/** The shown fields whose text on the served page is empty (blank or a dead wire), as "<section id>.<field>"; [] when every one has text. */
+function emptyShown(payload) {
+  const page = payload == null ? null : payload.page;
+  if (page == null || !Array.isArray(page.sections)) return [];
+  const out = [];
+  for (const sec of page.sections)
+    for (const p of sec.parts || [])
+      if (p.kind === "value" && (typeof p.text !== "string" || DEAD_TEXT.test(p.text))) out.push(`${sec.id}.${p.field}`);
+  return out;
 }
 
 // ── MF-81 · stress (PLAN Layer 4; D-2 a, D-6 load a) ───────────────────────────────────────────────────────────────

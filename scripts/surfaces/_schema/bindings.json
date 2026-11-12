@@ -57,7 +57,7 @@
     },
     "mobile": {
       "SEARCH": ["SafeAreaView", "ScrollView", "View", "Text", "Input", "Button", "Alert", "AlertDescription", "Icon", "ActivityIndicator"],
-      "REPORT": ["ScrollView", "View", "Text", "Button", "Input", "ActivityIndicator"],
+      "REPORT": ["ScrollView", "View", "Text", "Button", "Input", "ActivityIndicator", "SafeAreaView"],
       "LIST": ["SafeAreaView", "ScrollView", "View", "Text", "Button", "Alert", "AlertDescription", "Icon", "ActivityIndicator", "MapView", "Polygon", "Marker"],
       "REPORT_HOST": ["View", "SurfaceRenderer", "BottomSheet", "BottomSheetView", "BottomSheetBackdrop"]
     }

@@ -125,6 +125,38 @@ export type ConsumerLotMap = z.infer<typeof ConsumerLotMapSchema>;
 export const RESOLUTIONS = ['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match'] as const;
 export const MAP_RESOLUTIONS: readonly string[] = ['multi_parcel', 'unlinked'];
 
+// MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12; operator 2026-11-12 "Ball y", B-3 a): the mobile report page VIEW, built on the server by
+// MF-57's core (pageViewOf(buildPage(response), {target: 'mobile'}), src/lib/parcels/report-page.ts) from the lot's producer response; null while no
+// producer has the lot (every customer lot until MB-44). Every level is .strict(): the keys are the core's own projection (core.ts pageViewOf), so a
+// stray key fails the boundary parse. The texts are server-formatted page parts; the app looks them up by section id, part index and role.
+const PagePartSchema = z
+  .object({
+    role: z.string(),
+    brief: z.string(),
+    kind: z.enum(['value', 'content', 'pending']),
+    text: z.string(),
+    field: z.string().optional(),
+    content: z.string().optional(),
+    pending: z.string().optional(),
+    key: z.string().optional(),
+    rule: z.string().optional(),
+  })
+  .strict();
+const PageAdSchema = z
+  .object({ field: z.string(), slot: z.string(), source: z.string(), label: z.string(), value: z.string(), disclosure: z.string(), scenario: z.string().optional() })
+  .strict();
+const PageSectionSchema = z
+  .object({ kind: z.string(), id: z.string(), brief: z.string().optional(), scenario: z.string().optional(), ad: PageAdSchema.optional(), parts: z.array(PagePartSchema) })
+  .strict();
+export const ReportPageViewSchema = z
+  .object({
+    target: z.literal('mobile'),
+    layout: z.object({ columns: z.number(), details: z.string(), meta: z.string(), page_break: z.string() }).strict(),
+    sections: z.array(PageSectionSchema),
+  })
+  .strict();
+export type ReportPageView = z.infer<typeof ReportPageViewSchema>;
+
 export const ConsumerParcelLookupResponseSchema = z
   .object({
     match: ParcelMatchSchema.nullable(),
@@ -133,8 +165,10 @@ export const ConsumerParcelLookupResponseSchema = z
     parcel: ConsumerParcelSchema.nullable(),
     resolution: z.enum(RESOLUTIONS),
     map: ConsumerLotMapSchema.nullable(),
+    page: ReportPageViewSchema.nullable(), // MF-48 Stage B: a page only with a parcel (the refine below)
   })
   .strict()
+  .refine((r) => r.page === null || r.parcel !== null, { message: 'page is present only with a parcel (a hit)', path: ['page'] })
   .refine((r) => (r.map !== null) === MAP_RESOLUTIONS.includes(r.resolution), {
     message: 'map is present exactly when resolution is multi_parcel or unlinked',
     path: ['map'],

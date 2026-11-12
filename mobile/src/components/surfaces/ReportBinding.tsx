@@ -13,6 +13,10 @@
 // section kind throws, and so does any part of the view that is neither placed nor a declared unshown role (UNSHOWN). FE-05: no numeric literal but
 // 0 and 1, no arithmetic.
 import { REPORT_HEX as H, REPORT_PAGE_LAYOUT as L, REPORT_PENDING } from '@/constants/reportPage';
+import slice from '@/generated/surfaces/mobile_parcel_detail.json';
+
+/** MF-48 Stage B: the generated content slice of S-001 (emit-mobile-surfaces.mjs: the approved lifecycle texts and Retry, Back), the MF-35 form. */
+export const REPORT_SLICE = slice;
 
 export type PagePart = { role: string; brief: string; kind: 'value' | 'content' | 'pending'; text: string };
 export type PageAd = { field: string; slot: string; value: string; disclosure: string };
@@ -297,13 +301,41 @@ export function reportProps(view: PageView, ui: ReportUi = REPORT_UI_CLOSED): { 
   return { page, sheet: sheets[0] ? sheetBody(sheets[0]) : null };
 }
 
-/** A lifecycle state (no page view): the approved text, never a blank or the dash; loading adds a spinner. No new copy (D-6). */
+/** A lifecycle state (no page view): the approved text, never a blank or the dash; loading adds a spinner. No new copy (D-6).
+ * MF-48 Stage B (operator 2026-11-12 "Ball y", B-4 b; DECISIONS L-2): the error state adds Retry, its text the approved "Try again" (the label is the
+ * text, so no accessibilityLabel of its own). */
 export function lifecycleProps(state: LifecycleState): PropsNode {
   return node('View', { key: 'report-lifecycle', testID: `report-${state}`, className: L.lifecycle }, [
     ...(state === 'loading' ? [node('ActivityIndicator', { key: 'spinner', testID: 'report-spinner', size: 'small', color: H.amber })] : []),
     node('Text', { key: 'message', className: L.lifecycleText, accessibilityRole: 'text' }, [{ content: `states.lifecycle.${state}` }]),
+    ...(state === 'error'
+      ? [node('Button', { key: 'retry', testID: 'report-retry', className: L.retry, accessibilityRole: 'button', onPress: { action: 'retry' } }, [
+          node('Text', { key: 'retry-label', className: L.retryText }, [{ content: 'retry.text' }]),
+        ])]
+      : []),
+  ]);
+}
+
+/** MF-48 Stage B (nav-by-route audit #3, review F-11): the screen's one Back control, above the page and every lifecycle state, inside the top safe
+ * area. The screen decides where it goes (router.back() with history, else the Lookup route: the MF-53 rule). */
+export function backProps(): PropsNode {
+  return node('SafeAreaView', { key: 'report-top', className: L.top, edges: { top: 'additive' } }, [
+    node('Button', { key: 'back', testID: 'report-back', className: L.back, accessibilityRole: 'button', onPress: { action: 'back' } }, [
+      node('Text', { key: 'back-label', className: L.backText }, [{ content: 'back.text' }]),
+    ]),
   ]);
 }
 
 /** The lifecycle content keys the host needs (report-presentation.json states.lifecycle): the screen passes their texts in. */
 export const LIFECYCLE_CONTENT_KEYS = ['states.lifecycle.loading', 'states.lifecycle.miss', 'states.lifecycle.error'];
+/** MF-48 Stage B: the screen's own content keys (mobile_parcel_detail.content.json): Retry and Back. */
+export const SCREEN_CONTENT_KEYS = ['retry.text', 'back.text'];
+
+/** MF-48 Stage B (D-6; Spec 99 §6.5: loading is a gate state, not data): the lot route's lookup query to the host's input. A served page shows,
+ * also from the persisted cache while a refetch fails (offline); a settled lookup with no page (every lot until MB-44, a miss, a dangling id) is
+ * the miss text; an error with nothing cached is the error text and Retry; anything else is loading. */
+export function reportScreenState(q: { data: { page?: PageView | null } | undefined; isError: boolean }): { view: PageView | null; lifecycle: LifecycleState } {
+  if (q.data?.page) return { view: q.data.page, lifecycle: 'loading' };
+  if (q.data) return { view: null, lifecycle: 'miss' };
+  return { view: null, lifecycle: q.isError ? 'error' : 'loading' };
+}

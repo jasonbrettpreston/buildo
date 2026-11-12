@@ -1,5 +1,5 @@
 {
-  "$comment": "The ONLY hand-authored input of scripts/analysis/report-fields.mjs (generator-design.md §2 G5). Every entry is validated both ways by the generator: each surface/producer/file/function/const it names must exist in code, and each key of `layer2` must match at least one chain input and each target must be a vocab.json dsl_target. SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md (home — PROVISIONAL), docs/specs/01-pipeline/69_mcbylaw_policy.md M-69.",
+  "$comment": "The ONLY hand-authored input of scripts/analysis/report-fields.mjs (generator-design.md §2 G5). Every entry is validated both ways by the generator: each surface/producer/file/function/const it names must exist in code, and each key of `layer2` must match at least one chain input and each target must be a vocab.json dsl_target. SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md (home — PROVISIONAL), docs/specs/01-pipeline/69_mcbylaw_policy.md M-69. Dated note 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74; operator, verbatim: \"Q1 a Q2 i\" (2026-11-11) and \"S1 a\" (2026-11-12); Spec 69a M-69 dated note of this date): the S-001 entry (mobile_parcel_detail, the hand-built screen mobile/app/(app)/parcel-tool/[parcelId].tsx) is retired: the lot route mounts the declared v21 REPORT page (MF-48 Stage B), whose fields are the M-69 denominator through report-v2.decl.json; the generator skips the S-001 arm when no S-001 is declared. S-072 is kept.",
   "version": 1,
   "outputs": {
     "markdown": "docs/reference/maxbld-report-field-inventory.md",
@@ -8,34 +8,6 @@
   "max_call_depth": 4,
   "scope_params": ["scopeWhere", "full"],
   "surfaces": [
-    {
-      "ref": "S-001",
-      "id": "mobile_parcel_detail",
-      "descriptor": "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json",
-      "screen": "mobile/app/(app)/parcel-tool/[parcelId].tsx",
-      "hook_result": "data",
-      "skip_components": ["CostCard", "Headline"],
-      "raw_paths": ["match.", "parcel.neighbourhood.coaProjects"],
-      "import_alias": { "@/": "mobile/src/" },
-      "cost_menu": {
-        "producer": "cost",
-        "file": "mobile/src/lib/parcelCostFormat.ts",
-        "order": "COST_LINE_ORDER",
-        "labels": "COST_LINE_LABELS",
-        "per_sqm_var": "isPerSqm",
-        "card": "CostCard",
-        "basis_helper": "maxBuildBasisLabel",
-        "basis_line": "max_build"
-      },
-      "consumer": {
-        "file": "src/lib/parcels/consumer-lookup.ts",
-        "fn": "assembleConsumerPayload",
-        "headline": "CONSUMER_HEADLINE_COLS",
-        "scalars_file": "src/lib/admin/parcel-lookup.ts",
-        "scalars": "T1_COST_SCALAR_COLS",
-        "comparable": "CONSUMER_COMPARABLE_FIELDS"
-      }
-    },
     {
       "ref": "S-072",
       "id": "mobile_tracked_lots",

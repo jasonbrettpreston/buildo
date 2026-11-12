@@ -103,6 +103,37 @@ describe('fetchParcelLookup — Zod boundary', () => {
   });
 });
 
+// MF-48 Stage B · T-B4 (Spec 100 §3.2 dated note 2026-11-12): the boundary takes the report page view the server built (MF-57 pageViewOf), page null
+// and no page key (an older server); a malformed page is schema drift (ParcelLookupSchemaError, never retried), so the binding never sees it.
+describe('MF-48 Stage B the page key at the Zod boundary', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fsx = require('node:fs') as typeof import('node:fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const px = require('node:path') as typeof import('node:path');
+  const VIEW = JSON.parse(fsx.readFileSync(px.join(__dirname, '..', '..', 'src/tests/fixtures/report-page/props/page_v21.mobile.json'), 'utf8')).view;
+  it('a page view, page null and no page key all parse; the view keeps its sections and parts', async () => {
+    mockFetch.mockResolvedValueOnce({ data: { ...hitResponse, page: VIEW } });
+    const r = await fetchParcelLookup({ parcelId: 'X' });
+    expect(r.page?.sections.map((s) => s.id)).toEqual(VIEW.sections.map((s: { id: string }) => s.id));
+    expect(r.page?.sections[0]?.parts[0]).toEqual({ role: VIEW.sections[0].parts[0].role, brief: VIEW.sections[0].parts[0].brief, kind: VIEW.sections[0].parts[0].kind, text: VIEW.sections[0].parts[0].text });
+    mockFetch.mockResolvedValueOnce({ data: { ...hitResponse, page: null } });
+    expect((await fetchParcelLookup({ parcelId: 'X' })).page).toBeNull();
+    mockFetch.mockResolvedValueOnce({ data: hitResponse });
+    expect((await fetchParcelLookup({ parcelId: 'X' })).page).toBeUndefined();
+  });
+  it('RED (planted): a part without text, an unknown part kind and sections that are not a list are schema drift', async () => {
+    const bad = [
+      { ...VIEW, sections: [{ ...VIEW.sections[0], parts: [{ role: 'title', brief: 'A1', kind: 'value' }] }] },
+      { ...VIEW, sections: [{ ...VIEW.sections[0], parts: [{ ...VIEW.sections[0].parts[0], kind: 'raw' }] }] },
+      { ...VIEW, sections: {} },
+    ];
+    for (const page of bad) {
+      mockFetch.mockResolvedValueOnce({ data: { ...hitResponse, page } });
+      await expect(fetchParcelLookup({ parcelId: 'X' })).rejects.toBeInstanceOf(ParcelLookupSchemaError);
+    }
+  });
+});
+
 describe('CROSS-CONTRACT LOCK — search-emitted parcelId pipes into lookup (Spec 91 seam)', () => {
   beforeEach(() => mockFetch.mockReset());
 

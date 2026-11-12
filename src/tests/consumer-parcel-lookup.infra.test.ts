@@ -176,7 +176,7 @@ describe('WHITELIST — the assembler never leaks a diagnostic column or `groups
     // MF-53 (PLAN panel regression MEDIUM-4): `good` carries the two added keys, so the leak below fails for the right reason.
     const good = {
       match: { parcelId: 'WL-1', matchType: 'exact' as const, address: '5 Elm' },
-      candidates: [], warnings: [], parcel: payload, resolution: 'unique' as const, map: null,
+      candidates: [], warnings: [], parcel: payload, resolution: 'unique' as const, map: null, page: null, // MF-48 Stage B: the page key (null without a producer)
     };
     expect(() => ConsumerParcelLookupResponseSchema.parse(good)).not.toThrow();
     const leaked = { ...good, parcel: { ...payload, groups: { identity: { id: 1 } } } };
@@ -226,7 +226,7 @@ describe('MF-53 map whitelist — the lot statement projects exactly CONSUMER_MA
     expect(JSON.stringify(map)).not.toMatch(/"[a-z]+_[a-z_]+"/);
   });
   it('the response schema refuses a stray key in a map lot, a map on unique, and no map on a map outcome', () => {
-    const base = { match: null, candidates: [], warnings: [], parcel: null };
+    const base = { match: null, candidates: [], warnings: [], parcel: null, page: null }; // MF-48 Stage B: + page
     const map = { address: null, pin: null, fit: null, truncated: false, lots: [{ parcelId: 'P', area: null, frontage: null, zoning: null, centroid: null, outline: null }], neighbours: [] };
     expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'multi_parcel', map }).success).toBe(true);
     expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, resolution: 'multi_parcel', map: { ...map, lots: [{ ...map.lots[0], zoning_class: 'R' }] } }).success).toBe(false);

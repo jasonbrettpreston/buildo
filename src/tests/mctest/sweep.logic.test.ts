@@ -2,8 +2,9 @@
 //            walk-through rulings W-0 (a) and W-1 (a) (2026-11-12).
 //
 // MF-80 · the lot-sweep canaries, both ways: a planted mismatch (GFA above the zone FSI times the lot; a footprint above the lot) is caught,
-// a clean lot passes, a lot with no limit value is not_evaluated (never a pass); the shown fields come from the generated inventory, and
-// the W-0 hide moved max_build_fsi to payload-only (a bound on it is a data finding, not a screen failure).
+// a clean lot passes, a lot with no limit value is not_evaluated (never a pass); the shown fields come from the served report page (dated
+// 2026-11-12, MF-48 Stage B, operator "S1 a": the value parts of the lookup's `page`; page null is not_evaluated:no_page; prior text: "from the
+// generated inventory", whose S-001 rows are retired), and a bound on the lookup payload is a data finding, not a screen failure.
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -28,12 +29,13 @@ const bound = (id: string): Bound => {
   if (!b) throw new Error(id);
   return b;
 };
-const inventory = JSON.parse(
+// MF-48 Stage B: the committed v21 mobile page view (MF-57 core output, the props golden of MF-48 Stage A) as a served `page`.
+const VIEW = JSON.parse(
   fs.readFileSync(
-    path.join(ROOT, "docs/reference/maxbld-report-field-inventory.json"),
+    path.join(ROOT, "src/tests/fixtures/report-page/props/page_v21.mobile.json"),
     "utf8",
   ),
-);
+).view;
 // A lot shaped like golden A0175 (R d0.6, 255.42 m2): the engine's answer is GFA = 0.6 x lot.
 const clean = {
   parcel: {
@@ -84,29 +86,25 @@ describe("bounds (W-0 a, W-1 a)", () => {
   });
 });
 
-describe("shown fields (the generated inventory)", () => {
-  const shown: Set<string> = shownFields(inventory);
-  it("reads the screen fields from the inventory, with W-0 and EI-D1 applied", () => {
-    expect(shown.has("parcel.areas.lot_size_sqm")).toBe(true);
-    // EI-D1 (FE-38, 2026-11-12): the legacy size headlines are withheld, so a bound on them is a payload-only data finding (or not_evaluated).
-    expect(shown.has("parcel.areas.opt_aor_gfa_sqm")).toBe(false);
-    expect(shown.has("parcel.areas.max_build_fsi")).toBe(false);
+// Dated 2026-11-12 (MF-48 Stage B, operator "S1 a"): the two "shown fields (the generated inventory)" tests are replaced. Prior text: the inventory's
+// S-001 rows held parcel.areas.lot_size_sqm and not opt_aor_gfa_sqm / max_build_fsi; a null lot_size_sqm was flagged among the areas fields.
+describe("shown fields (the served report page)", () => {
+  it("reads the value parts of the served page: their declared fields, never a typed list; page null is no shown field (not_evaluated:no_page)", () => {
+    const shown = shownFields({ page: VIEW }) as Set<string>;
+    expect(shown.has("lot_size_sqm")).toBe(true);
+    expect(shown.has("gfa_max_m2")).toBe(true);
+    expect([...shown].some((f) => f.startsWith("parcel."))).toBe(false); // the lookup payload is not shown on the screen
+    expect(shownFields({ page: null })).toBeNull();
+    expect(shownFields({ parcel: {} })).toBeNull();
   });
-  it("flags an empty shown field and passes a full one", () => {
-    const full = {
-      parcel: {
-        areas: Object.fromEntries(
-          [...shown]
-            .filter((f) => f.startsWith("parcel.areas."))
-            .map((f) => [f.split(".")[2], 1]),
-        ),
-      },
-    };
-    const areasOnly = new Set(
-      [...shown].filter((f) => f.startsWith("parcel.areas.")),
-    );
-    expect(emptyShown(full, areasOnly)).toEqual([]);
-    (full.parcel.areas as Record<string, unknown>).lot_size_sqm = null;
-    expect(emptyShown(full, areasOnly)).toEqual(["parcel.areas.lot_size_sqm"]);
+  it("flags a blank or dead-wire value part and passes the served page (the null dash is honest, not empty)", () => {
+    expect(emptyShown({ page: VIEW })).toEqual([]);
+    const v = JSON.parse(JSON.stringify(VIEW));
+    const parts = v.sections.flatMap((s: { id: string; parts: { kind: string; field?: string; text: string }[] }) => s.parts.filter((p) => p.kind === "value").map((p) => ({ id: s.id, p })));
+    parts[0].p.text = "";
+    parts[1].p.text = "NaN sq ft";
+    parts[2].p.text = "—";
+    expect(emptyShown({ page: v })).toEqual([`${parts[0].id}.${parts[0].p.field}`, `${parts[1].id}.${parts[1].p.field}`]);
+    expect(emptyShown({ page: null })).toEqual([]);
   });
 });

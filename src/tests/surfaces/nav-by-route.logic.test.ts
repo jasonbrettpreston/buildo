@@ -290,15 +290,13 @@ const coverageProblems = (root: string, files: string[], dirs: string[] = DIRS):
 interface Allow { file: string; rule: string; component: string; handler: string; count: number; kind: 'exception' | 'disclosure' | 'flag' | 'ok'; audit: number; why: string }
 const SIGN_IN = 'mobile/app/(auth)/sign-in.tsx';
 const SIGN_UP = 'mobile/app/(auth)/sign-up.tsx';
-const DETAIL = 'mobile/app/(app)/parcel-tool/[parcelId].tsx';
 const LOGIN_FORM = 'src/components/auth/LoginForm.tsx';
 const WEB_SEARCH = 'src/components/surfaces/web/SearchBinding.tsx';
 const ALLOW: Allow[] = [
   // --- The six audited VIOLATIONS, named exceptions (operator 2026-11-11 "yes"). Audit #3 is one control that breaks two rules. ---
-  { file: DETAIL, rule: 'NAV-3', component: 'Pressable#parcel-detail-back', handler: 'router.back() (no role)', count: 1, kind: 'exception', audit: 3,
-    why: 'owed: MF-48 Stage B / MF-74 (the A4 report screen replaces this one; icon-only Back with no role or label)' },
-  { file: DETAIL, rule: 'NAV-5', component: 'Pressable#parcel-detail-back', handler: 'router.back()', count: 1, kind: 'exception', audit: 3,
-    why: 'owed: MF-48 Stage B / MF-74 (same control: no canGoBack fallback for a cold tracked-lot or share link)' },
+  // Dated 2026-11-12 (MF-48 Stage B with MF-74; operator "Ball y"): #3 is FIXED and its two entries leave the list (the list only shrinks). The
+  // lot route mobile/app/(app)/parcel-tool/[parcelId].tsx now mounts the REPORT host, whose Back is a labelled vendored Button (ReportBinding
+  // backProps, role button, content back.text) and goes back with history, else replaces with the Lookup route (the MF-53 rule). Five rows remain.
   { file: SIGN_IN, rule: 'NAV-1', component: 'Pressable#email-button', handler: "setMode('email')", count: 1, kind: 'exception', audit: 15,
     why: "owed: MF-49 (A1: the email form becomes a route param, as sign-up.tsx resolveSignUpMethod)" },
   { file: SIGN_IN, rule: 'NAV-1', component: 'Pressable', handler: "setMode('idle')", count: 1, kind: 'exception', audit: 16,
@@ -334,7 +332,8 @@ const ALLOW: Allow[] = [
 ];
 // The operator's ruling names exactly these six audited violations; this list may only shrink as MF-48/MF-74, MF-49 and MF-50 land
 // (#29 and #30 re-owned from MF-46 to MF-50, dated note above).
-const EXCEPTION_AUDIT_ROWS = [3, 15, 16, 22, 29, 30];
+// MF-48 Stage B (dated 2026-11-12): #3 fixed and removed; five rows remain.
+const EXCEPTION_AUDIT_ROWS = [15, 16, 22, 29, 30];
 
 const keyOf = (x: { file: string; rule: string; component: string; handler: string }): string => `${x.file} | ${x.rule} | ${x.component} | ${x.handler}`;
 
@@ -364,7 +363,7 @@ describe('NAV lock: the real tree', () => {
   it('every finding is explained by an allow-list entry, and every entry matches exactly its count (a stale entry fails)', () => {
     expect(judge(scanTree(ROOT).findings, ALLOW)).toEqual({ unexplained: [], miscounted: [] });
   });
-  it('the exceptions are exactly the six audited violations, each reason "owed: <row>"', () => {
+  it('the exceptions are exactly the remaining audited violations (#3 fixed by MF-48 Stage B), each reason "owed: <row>"', () => {
     const ex = ALLOW.filter((a) => a.kind === 'exception');
     expect([...new Set(ex.map((a) => a.audit))].sort((a, b) => a - b)).toEqual(EXCEPTION_AUDIT_ROWS);
     for (const a of ex) expect(a.why).toMatch(/^owed: MF-\d+/);

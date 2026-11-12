@@ -1,0 +1,11 @@
+MF-48 Stage B (with MF-74) red evidence, captured 2026-11-12 in a throwaway worktree detached at the old tip 59dc174d1 (removed after the run).
+Exception recorded: the tests were written after the code in this change (coordinator: "that is the exception, not the pattern"); each was then run
+against the old tip with only the new and edited test files copied in, plus the two non-code inputs the tests read (the new content file
+scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json and the restamped props golden error.mobile.json).
+
+red-mobile.txt  jest --verbose: 15 failed / 50 (T-B1 x7, T-B2 x2, T-B4 x2, T-B7, golden T1/T4/T9 with the Retry and SafeAreaView changes)
+red-root.txt    vitest: 12 failed / 61, and T-B3 (src/tests/parcels-lookup-page.logic.test.ts) fails to load (src/lib/parcels/report-page.ts absent);
+                L3a (sweep.logic shown fields x2: shownFields(payload) is page-based), the S-001 retirement (report-fields.infra x4),
+                and the nav lock with #3 removed (the old screen's Back still breaks NAV-3 and NAV-5).
+Green: the same files pass on wf1/mf48b-1112 (mobile jest 48 suites / 742 tests; vitest src/tests/surfaces, src/tests/mctest, report-fields,
+lookup and T-B3 files all pass).

@@ -25,6 +25,32 @@
             "content": "states.lifecycle.error"
           }
         ]
+      },
+      {
+        "component": "Button",
+        "props": {
+          "key": "retry",
+          "testID": "report-retry",
+          "className": "min-h-[44px] rounded-[12px] border border-report-line bg-transparent px-[18px] h-auto shadow-none opacity-100 active:bg-report-line",
+          "accessibilityRole": "button",
+          "onPress": {
+            "action": "retry"
+          }
+        },
+        "children": [
+          {
+            "component": "Text",
+            "props": {
+              "key": "retry-label",
+              "className": "text-[15px] leading-[20px] font-semibold text-report-ink"
+            },
+            "children": [
+              {
+                "content": "retry.text"
+              }
+            ]
+          }
+        ]
       }
     ]
   }

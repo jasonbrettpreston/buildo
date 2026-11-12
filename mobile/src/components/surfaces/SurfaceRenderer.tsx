@@ -49,6 +49,9 @@ export type ReportActions = {
   toggle_how: (option: string) => void;
   open_sheet: () => void;
   close_sheet: () => void;
+  /** MF-48 Stage B: the error state's Retry (refetch) and the screen's Back (the same action names and cases as SEARCH and LIST). */
+  retry: () => void;
+  back: () => void;
 };
 export type SurfaceTree = { component: string; props: Json; children: unknown[] };
 /** MF-48: the page view a `part` ref is looked up in (MF-57 pageViewOf; only what the lookup reads). */

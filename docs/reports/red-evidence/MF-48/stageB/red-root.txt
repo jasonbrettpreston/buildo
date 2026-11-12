@@ -1,0 +1,39 @@
+      Tests  12 failed | 49 passed (61)
+   × NAV lock RED: removing any exception entry fails the real tree > #15 NAV-1 setMode('email') 73ms
+   × NAV lock RED: removing any exception entry fails the real tree > #16 NAV-1 setMode('idle') 73ms
+   × NAV lock RED: removing any exception entry fails the real tree > #22 NAV-3 router.replace('/(auth)/sign-in') (no role) 74ms
+   × NAV lock RED: removing any exception entry fails the real tree > #29 NAV-1 setMode('signup') 75ms
+   × NAV lock RED: removing any exception entry fails the real tree > #30 NAV-1 setMode('login') 71ms
+   × NAV lock: the real tree > every finding is explained by an allow-list entry, and every entry matches exactly its count (a stale entry fails) 91ms
+   × report-field inventory on the real tree > inventory → code: every named constant resolves to code-link leaves 3ms
+   × report-field inventory on the real tree > MF-48 Stage B: S-001 is retired: the decl names no S-001, the inventory has no S-001 row, and the lot route renders no Headline or CostCard 2ms
+   × report-field inventory on the real tree > structural gates pass (RF-1 chain, RF-3 constants); RF-9 lists only dead layer2 declarations (S-001 retired, owed MB-43) 0ms
+   × report-field inventory on the real tree > the known open findings stay visible (report-only gates fail for the reasons the hand edition found) 0ms
+   × shown fields (the served report page) > flags a blank or dead-wire value part and passes the served page (the null dash is honest, not empty) 0ms
+   × shown fields (the served report page) > reads the value parts of the served page: their declared fields, never a typed list; page null is no shown field (not_evaluated:no_page) 2ms
+ FAIL  src/tests/mctest/sweep.logic.test.ts > shown fields (the served report page) > flags a blank or dead-wire value part and passes the served page (the null dash is honest, not empty)
+ FAIL  src/tests/mctest/sweep.logic.test.ts > shown fields (the served report page) > reads the value parts of the served page: their declared fields, never a typed list; page null is no shown field (not_evaluated:no_page)
+ FAIL  src/tests/parcels-lookup-page.logic.test.ts [ src/tests/parcels-lookup-page.logic.test.ts ]
+ FAIL  src/tests/report-fields.infra.test.ts > report-field inventory on the real tree > inventory → code: every named constant resolves to code-link leaves
+ FAIL  src/tests/report-fields.infra.test.ts > report-field inventory on the real tree > MF-48 Stage B: S-001 is retired: the decl names no S-001, the inventory has no S-001 row, and the lot route renders no Headline or CostCard
+ FAIL  src/tests/report-fields.infra.test.ts > report-field inventory on the real tree > structural gates pass (RF-1 chain, RF-3 constants); RF-9 lists only dead layer2 declarations (S-001 retired, owed MB-43)
+ FAIL  src/tests/report-fields.infra.test.ts > report-field inventory on the real tree > the known open findings stay visible (report-only gates fail for the reasons the hand edition found)
+ FAIL  src/tests/surfaces/nav-by-route.logic.test.ts > NAV lock RED: removing any exception entry fails the real tree > #15 NAV-1 setMode('email')
+ FAIL  src/tests/surfaces/nav-by-route.logic.test.ts > NAV lock RED: removing any exception entry fails the real tree > #16 NAV-1 setMode('idle')
+ FAIL  src/tests/surfaces/nav-by-route.logic.test.ts > NAV lock RED: removing any exception entry fails the real tree > #22 NAV-3 router.replace('/(auth)/sign-in') (no role)
+ FAIL  src/tests/surfaces/nav-by-route.logic.test.ts > NAV lock RED: removing any exception entry fails the real tree > #29 NAV-1 setMode('signup')
+ FAIL  src/tests/surfaces/nav-by-route.logic.test.ts > NAV lock RED: removing any exception entry fails the real tree > #30 NAV-1 setMode('login')
+ FAIL  src/tests/surfaces/nav-by-route.logic.test.ts > NAV lock: the real tree > every finding is explained by an allow-list entry, and every entry matches exactly its count (a stale entry fails)
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  4 failed (4)
+AssertionError: expected [ 'FAIL', 'FAIL' ] to deeply equal [ 'PASS', 'PASS' ]
+AssertionError: expected [ 'S-001', 'S-072' ] to deeply equal [ 'S-072' ]
+AssertionError: expected [ …(3) ] to have a length of 1 but got 3
+AssertionError: expected [ { …(10) }, { …(10) }, …(29) ] to deeply equal []
+AssertionError: expected { unexplained: [ …(2) ], …(1) } to deeply equal { unexplained: [], miscounted: [] }
+AssertionError: expected +0 to be 27 // Object.is equality
+Caused by: Error: Failed to load url @/lib/parcels/report-page (resolved id: Buildo-wt-mf48b-red/src/lib/parcels/report-page) in Buildo-wt-mf48b-red/src/tests/parcels-lookup-page.logic.test.ts. Does the file exist?
+Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
+TypeError: Cannot read properties of undefined (reading 'filter')
+TypeError: shown is not iterable

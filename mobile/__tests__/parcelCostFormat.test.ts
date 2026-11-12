@@ -12,7 +12,6 @@ import {
   formatSqm,
   COST_LINE_ORDER,
 } from '@/lib/parcelCostFormat';
-import { SponsorSlot } from '@/components/parcel/SponsorSlot';
 import type { ParcelCostMenu } from '@/lib/schemas';
 
 describe('envelope-fallback labeling (Spec 100 §2.4)', () => {
@@ -74,9 +73,7 @@ describe('formatters', () => {
   });
 });
 
-describe('SponsorSlot renders null while flag-off (Spec 100 §6.8)', () => {
-  it('returns null when EXPO_PUBLIC_PARCEL_SPONSORS is unset', () => {
-    delete process.env.EXPO_PUBLIC_PARCEL_SPONSORS;
-    expect(SponsorSlot({ placement: 'detail_footer' })).toBeNull();
-  });
-});
+// Dated 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74; operator "Ball y", B-6): SponsorSlot.tsx is deleted with the old lot screen,
+// so its test leaves. Prior text: describe('SponsorSlot renders null while flag-off (Spec 100 §6.8)') asserted SponsorSlot({placement:
+// 'detail_footer'}) is null with EXPO_PUBLIC_PARCEL_SPONSORS unset. The report's ads are the v21 page ad sections (MF-20; reportScreens.golden).
+

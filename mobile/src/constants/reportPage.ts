@@ -23,6 +23,12 @@ export const REPORT_PAGE_LAYOUT = {
   column: 'mx-auto w-full max-w-[430px] gap-[24px] px-[16px] pb-[56px] pt-[16px]',
   lifecycle: 'flex-1 items-center justify-center gap-[12px] bg-report-page px-[16px] py-[56px]',
   lifecycleText: 'text-center text-[16px] leading-[24px] font-normal text-report-muted',
+  // MF-48 Stage B (B-4 b; nav audit #3 / review F-11): the error state's Retry and the screen's Back, in the existing hide / cancel button styles
+  retry: 'min-h-[44px] rounded-[12px] border border-report-line bg-transparent px-[18px] h-auto shadow-none opacity-100 active:bg-report-line',
+  retryText: 'text-[15px] leading-[20px] font-semibold text-report-ink',
+  top: 'bg-report-page px-[8px]',
+  back: 'min-h-[44px] self-start rounded-[12px] bg-transparent px-[8px] h-auto shadow-none opacity-100 active:bg-report-line',
+  backText: 'text-[15px] leading-[20px] font-semibold text-report-ink',
   // page top
   title: 'text-[28px] leading-[34px] font-bold tracking-tight text-report-ink',
   address: 'text-[18px] leading-[24px] font-semibold text-report-ink -mt-[16px]',
