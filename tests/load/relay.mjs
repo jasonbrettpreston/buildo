@@ -7,10 +7,11 @@
 import net from "node:net";
 
 /**
- * @param {{ listenPort: number, target: { host: string, port: number }, delayMs?: number }} o
+ * @param {{ listenPort: number, target: { host: string, port: number }, delayMs?: number, onReply?: (chunk: Buffer) => void }} o
+ *   onReply: called with each database reply as it arrives, before it is scheduled (the canaries drive mode switches from it).
  * @returns {Promise<{ setMode: (m: "pass" | "slow" | "down") => void, cutOn: (re: RegExp) => void, close: () => Promise<void>, port: number }>}
  */
-export function startRelay({ listenPort, target, delayMs = 3000 }) {
+export function startRelay({ listenPort, target, delayMs = 3000, onReply }) {
   let mode = "pass";
   let cut = null;
   const open = new Set();
@@ -20,12 +21,27 @@ export function startRelay({ listenPort, target, delayMs = 3000 }) {
   const server = net.createServer((client) => {
     if (mode === "down") return client.destroy();
     const upstream = net.connect(target.port, target.host);
-    const timers = new Set();
-    let due = 0; // when this connection's last reply is written: a later reply is never written before it
+    // One FIFO queue of replies per connection: only the head is ever written, and only once its own time has come, so a later
+    // reply (even one sent in "pass") waits for every earlier one: order holds by construction, whatever the timing or load.
+    const queue = [];
+    let timer = null;
+    const pump = () => {
+      timer = null;
+      while (queue.length) {
+        const wait = queue[0].at - Date.now();
+        if (wait > 0) {
+          timer = setTimeout(pump, wait);
+          return;
+        }
+        const { chunk } = queue.shift();
+        if (!client.destroyed) client.write(chunk);
+      }
+    };
     const pair = {
       end: () => {
-        for (const t of timers) clearTimeout(t);
-        timers.clear();
+        if (timer) clearTimeout(timer);
+        timer = null;
+        queue.length = 0;
         client.destroy();
         upstream.destroy();
         open.delete(pair);
@@ -43,14 +59,9 @@ export function startRelay({ listenPort, target, delayMs = 3000 }) {
       upstream.write(chunk);
     });
     upstream.on("data", (chunk) => {
-      const now = Date.now();
-      due = Math.max(now + (mode === "slow" ? delayMs : 0), due);
-      if (due <= now) return client.write(chunk);
-      const t = setTimeout(() => {
-        timers.delete(t);
-        if (!client.destroyed) client.write(chunk);
-      }, due - now);
-      timers.add(t);
+      onReply?.(chunk);
+      queue.push({ chunk, at: Date.now() + (mode === "slow" ? delayMs : 0) });
+      if (!timer) pump();
     });
   });
   return new Promise((resolve, reject) => {

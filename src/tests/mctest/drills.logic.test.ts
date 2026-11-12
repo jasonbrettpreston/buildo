@@ -286,26 +286,39 @@ describe("the drill relay (MF81-4 a)", () => {
       s.close();
     }
   });
-  it("keeps the reply order on one connection across a switch from slow to pass", async () => {
+  it("keeps the reply order on one connection across a switch from slow to pass, even when the slow reply is overdue", async () => {
+    // Driven by the relay's own events, not wall-clock gaps: reply "a" arrives in slow mode (delayed 100 ms); from that event the mode
+    // switches to pass and "b" is sent. When reply "b" arrives, the handler blocks the event loop past a's due time, so a's timer has
+    // not run yet: the worst case under load (a's delay over, its write still pending). "b" must still be written after "a".
     const s = await echo();
+    let client: net.Socket | null = null;
+    const block = (ms: number) => {
+      const end = Date.now() + ms;
+      while (Date.now() < end) {
+        // a busy wait: the event loop cannot run a's timer meanwhile
+      }
+    };
     const relay = await startRelay({
       listenPort: 0,
       target: {
         host: "127.0.0.1",
         port: (s.address() as net.AddressInfo).port,
       },
-      delayMs: 300,
+      delayMs: 100,
+      onReply: (chunk) => {
+        if (chunk.toString() === "a")
+          setImmediate(() => {
+            relay.setMode("pass");
+            client?.write("b");
+          });
+        else block(300);
+      },
     });
     try {
       relay.setMode("slow");
       const got = await new Promise<string>((r) => {
-        const c = net.connect(relay.port, "127.0.0.1", () => {
-          c.write("a");
-          setTimeout(() => {
-            relay.setMode("pass");
-            c.write("b");
-          }, 50);
-        });
+        const c = net.connect(relay.port, "127.0.0.1", () => c.write("a"));
+        client = c;
         let reply = "";
         c.on("data", (d) => {
           reply += d.toString();

@@ -1,0 +1,13 @@
+MF-81 relay reply-order fix red evidence (2026-11-12): tests/load/relay.mjs; the canary 'keeps the reply order ... even when the slow reply is overdue' in src/tests/mctest/drills.logic.test.ts.
+
+1. The operator's pre-push suite failed the old wall-clock canary (expected 'ab', received 'ba') while another full suite loaded the Mac. Reproduced: the old canary run 50 times with 10 busy CPU processes:
+old relay under load: pass=42 fail=8
+     → expected 'ba' to be 'ab' // Object.is equality
+     → expected 'ba' to be 'ab' // Object.is equality
+     → expected 'ba' to be 'ab' // Object.is equality
+Cause: the old relay wrote a reply at once when its own due time had passed, while an earlier delayed reply's timer had not run yet.
+
+2. The new canary is driven by the relay's own events (onReply): reply a arrives in slow mode, the switch to pass and b follow from that event, and b's arrival blocks the event loop past a's due time. Against the relay with only the hook added (no queue): 10 of 10 runs fail (expected 'ba' to be 'ab').
+
+3. With one FIFO reply queue per connection: src/tests/mctest 6 files, 102 tests pass; the relay canaries run 50 times with 10 busy CPU processes:
+queue relay under load (all relay tests, 10 busy CPU processes): pass=50 fail=0
