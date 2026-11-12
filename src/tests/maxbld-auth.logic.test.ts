@@ -20,7 +20,8 @@ vi.mock('@/lib/db/client', () => ({ pool: pg }));
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logInfo: vi.fn(), logWarn: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
-import { RECOVERY_WINDOW_S, fromRecovery, maxbldAcceptTermsAction, maxbldResetAction, maxbldSetPasswordAction, maxbldSignUpAction } from '@/lib/supabase/maxbld-actions';
+import { maxbldAcceptTermsAction, maxbldResetAction, maxbldSetPasswordAction, maxbldSignUpAction } from '@/lib/supabase/maxbld-actions';
+import { RECOVERY_WINDOW_S, fromRecovery } from '@/lib/auth/maxbld-recovery';
 import { TERMS_READ_SQL, TERMS_WRITE_SQL, acceptTerms, termsAccepted } from '@/lib/auth/maxbld-terms';
 import { maxbldAfterSignIn } from '@/lib/auth/maxbld-after-sign-in';
 import { AUTH_TEXT } from '@/lib/surfaces/maxbld-auth';

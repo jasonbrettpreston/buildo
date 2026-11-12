@@ -24,7 +24,9 @@
 // the sample is ReportPage over the committed synthetic page tree, inside a keyboard-reachable named region that fades in by opacity when the demo
 // ends (#sample:target and reduce motion show it at once); the step picture and the process scene are the report Picture, drawn only when the server
 // sends an image.
-'use client';
+// Dated 2026-11-12 (MF-46 follow-up, McTest / next build): no 'use client' directive. The module has no hook and no state; the server mounts
+// call staticWebTree and render it, and a client boundary (error.tsx) imports it as a client module. With the directive, next build refused the
+// server call ("Attempted to call staticWebTree() from the server but staticWebTree is on the client").
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Button, Group, List, ListItem, Stack, Text, Title } from '@mantine/core';

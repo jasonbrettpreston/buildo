@@ -18,6 +18,7 @@ import { pool } from '@/lib/db/client';
 import { MAXBLD_ORIGIN } from '@/lib/auth/host-policy';
 import { acceptTerms } from '@/lib/auth/maxbld-terms';
 import { safeRedirectPath } from '@/lib/auth/safe-redirect';
+import { fromRecovery } from '@/lib/auth/maxbld-recovery';
 
 const TAG = '[auth/maxbld-actions]';
 
@@ -60,25 +61,6 @@ export async function maxbldResetAction(email: string): Promise<MaxbldActionResu
     logError(TAG, err, { stage: 'reset' });
   }
   return { code: 'sent' };
-}
-
-/**
- * How long after the recovery link a session may set a password: the configured link lifetime, supabase/config.toml `otp_expiry = 3600`
- * (OUTPUT security F3; plan v1 fold 6). A session started from a recovery link cannot change the password days later through this screen.
- */
-export const RECOVERY_WINDOW_S = 3600;
-
-/** True when the session came from a recovery link (GoTrue sets `amr` method `recovery`, models.Recovery) within the window. */
-export function fromRecovery(claims: Record<string, unknown> | undefined, nowS: number = Math.floor(Date.now() / 1000)): boolean {
-  const amr = claims?.amr;
-  return (
-    Array.isArray(amr) &&
-    amr.some((m) => {
-      if (typeof m !== 'object' || m === null) return false;
-      const { method, timestamp } = m as { method?: unknown; timestamp?: unknown };
-      return method === 'recovery' && typeof timestamp === 'number' && nowS - timestamp >= 0 && nowS - timestamp <= RECOVERY_WINDOW_S;
-    })
-  );
 }
 
 export async function maxbldSetPasswordAction(password: string): Promise<MaxbldActionResult> {

@@ -1,0 +1,11 @@
+MF-46 follow-up red evidence (McTest: a 'use server' module exporting a constant and a sync function): src/tests/use-server-exports.logic.test.ts against the committed maxbld-actions.ts (23ecdfa04). Run 2026-11-12T15:26Z.
+   × 'use server' modules export only async functions (and types) > every server-action module under src/ is clean 15ms
+     → expected [ …(2) ] to deeply equal []
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
++   "src/lib/supabase/maxbld-actions.ts: export const RECOVERY_WINDOW_S = 3600;",
++   "src/lib/supabase/maxbld-actions.ts: export function fromRecovery(claims: Record<string, unknown> | undefined, nowS: number = Math.floor(Date.now() / 1000)): boolean {",
+      Tests  1 failed | 1 passed (2)
+
+next build evidence:
+- before (23ecdfa04 + the use-server fix): Error: Attempted to call staticWebTree() from the server but staticWebTree is on the client. It's not possible to invoke a client function from the server, it c ... exit=1
+- after (StaticBinding without the client directive):  ✓ Compiled successfully in 7.0s ... the /parcel-tool routes listed, exit=0
