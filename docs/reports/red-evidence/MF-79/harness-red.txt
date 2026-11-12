@@ -1,0 +1,17 @@
+MF-79 red evidence (2026-11-12): src/tests/mctest/harness.logic.test.ts run against stubbed exports of scripts/mctest/lib.cjs (testStack always ok, brokenText always [], fingerprint per whole line, waitsResults []). 13 of 17 fail; then green with the real functions (17 of 17).
+
+   × test-stack guard (D-1 a) > refuses absent 2ms
+   × test-stack guard (D-1 a) > refuses the dev DB port 54322 0ms
+   × test-stack guard (D-1 a) > refuses the dev sign-in port 54321 0ms
+   × test-stack guard (D-1 a) > refuses a remote host 0ms
+   × test-stack guard (D-1 a) > refuses an unparsable URL 0ms
+   × broken text (D-8 a), the catalogue regex > catches "Lot size undefined" 0ms
+   × broken text (D-8 a), the catalogue regex > catches "FSI NaN" 0ms
+   × broken text (D-8 a), the catalogue regex > catches "Owner: null" 0ms
+   × broken text (D-8 a), the catalogue regex > catches "[object Object]" 0ms
+   × broken text (D-8 a), the catalogue regex > catches "Invalid Date" 0ms
+   × results and cards (PLAN §4, §6) > one fingerprint per row, case and error class 1ms
+   × results and cards (PLAN §4, §6) > a card names the owning task, the replay and the dates 2ms
+   × results and cards (PLAN §4, §6) > every waits row shows as WAITS with its reason, never PASS or FAIL 0ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  13 failed | 4 passed (17)

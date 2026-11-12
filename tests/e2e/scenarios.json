@@ -234,21 +234,21 @@
           "route": "/",
           "owner": "MF-76",
           "status": "waits",
-          "waits_on": "MF-79 (the runner); built on origin by MF-76 (maxbld.ca /)"
+          "waits_on": "MF-79 second pass (the signed-in browser journey; needs the test stack); built on origin by MF-76 (maxbld.ca /)"
         },
         {
           "step": "sign_up",
           "route": "/signup",
           "owner": "MF-46",
           "status": "waits",
-          "waits_on": "MF-79 (the runner); built on origin by MF-46 (maxbld.ca /signup)"
+          "waits_on": "MF-79 second pass (the signed-in browser journey; needs the test stack); built on origin by MF-46 (maxbld.ca /signup)"
         },
         {
           "step": "sign_in",
           "route": "/login",
           "owner": "MF-46",
           "status": "waits",
-          "waits_on": "MF-79 (the runner)"
+          "waits_on": "MF-79 second pass (the signed-in browser journey; needs the test stack)"
         },
         {
           "step": "checkout",
@@ -262,7 +262,7 @@
           "route": "/parcel-tool",
           "owner": "MF-44",
           "status": "waits",
-          "waits_on": "MF-79 (the runner)"
+          "waits_on": "MF-79 second pass (the signed-in browser journey; needs the test stack)"
         },
         {
           "step": "choose_lot",
@@ -328,42 +328,42 @@
           "step": "entitlement",
           "call": "GET /api/parcels/entitlement",
           "owner": "MF-45",
-          "status": "waits",
-          "waits_on": "MF-79 (the runner)"
+          "status": "active",
+          "runner": "tests/e2e/api-journeys.spec.ts"
         },
         {
           "step": "search",
           "call": "GET /api/parcels/lookup?q={address}",
           "owner": "MF-35",
-          "status": "waits",
-          "waits_on": "MF-79 (the runner)"
+          "status": "active",
+          "runner": "tests/e2e/api-journeys.spec.ts"
         },
         {
           "step": "open_lot",
           "call": "GET /api/parcels/lookup?parcelId={id}",
           "owner": "MF-45",
-          "status": "waits",
+          "status": "active",
           "expect_meter": "counted",
-          "waits_on": "MF-79 (the runner)"
+          "runner": "tests/e2e/api-journeys.spec.ts"
         },
         {
           "step": "reopen_lot",
           "call": "GET /api/parcels/lookup?parcelId={same id}",
           "owner": "MF-45",
-          "status": "waits",
+          "status": "active",
           "expect_meter": "already_counted",
-          "waits_on": "MF-79 (the runner)"
+          "runner": "tests/e2e/api-journeys.spec.ts"
         },
         {
           "step": "new_lot_at_cap",
           "call": "GET /api/parcels/lookup?parcelId={new id}",
           "owner": "MF-45",
-          "status": "waits",
+          "status": "active",
           "personas_only": [
             "at_limit",
             "over_cap"
           ],
-          "waits_on": "MF-79 (the runner)"
+          "runner": "tests/e2e/api-journeys.spec.ts"
         }
       ]
     },
@@ -379,8 +379,8 @@
           "route": "/parcel-tool/{any id}",
           "expect": "404 while MAXBLD_WEB_LIVE is false (read from src/lib/surfaces/maxbld-web.ts, never hard-coded); result labelled gate-only",
           "owner": "MF-44",
-          "status": "waits",
-          "waits_on": "MF-79 (the runner)"
+          "status": "active",
+          "runner": "tests/e2e/crawler.spec.ts"
         }
       ]
     },
@@ -455,8 +455,7 @@
   ],
   "crawler": {
     "id": "C-DEAD-WIRE",
-    "status": "waits",
-    "waits_on": "MF-79 (the runner)",
+    "status": "active",
     "owner": "MF-32",
     "maxbld_pages_source": "src/lib/auth/host-policy.ts MAXBLD_ROUTES (the maxbld.ca host table; API rows excluded)",
     "admin_pages": [
@@ -511,13 +510,13 @@
       ],
       "stack": "test"
     },
-    "owner_rule": "the surface's queue row in Spec 126 §11b.3 / §11b.7; else MF-32 (convert on touch)"
+    "owner_rule": "the surface's queue row in Spec 126 §11b.3 / §11b.7; else MF-32 (convert on touch)",
+    "runner": "tests/e2e/crawler.spec.ts"
   },
   "lot_cases": [
     {
       "id": "L-RANDOM",
       "count": 1000,
-      "where": "p.zoning_class IS NOT NULL",
       "how": "lookup ?q=<address_full>; assert it lands on the same parcel_id, then check the bounds and the shown fields",
       "expect": {
         "resolution": "unique",
@@ -527,7 +526,9 @@
       },
       "owner": "MF-44",
       "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "waits_on": "MF-80 (the runner)",
+      "sql": "SELECT parcel_id, address_full, zone_d, coverage_frac FROM (SELECT DISTINCT ON (p.parcel_id) p.parcel_id, ap.address_full, (regexp_match(p.zoning_zn_string, '[(; ]d([0-9.]+)'))[1]::numeric AS zone_d, p.bylaw_max_coverage_pct / 100.0 AS coverage_frac FROM parcels p JOIN parcel_address_points pap ON pap.parcel_id = p.id JOIN address_points ap ON ap.address_point_id = pap.address_point_id AND ap.retired_at IS NULL WHERE p.zoning_class IS NOT NULL ORDER BY p.parcel_id, ap.address_full) s ORDER BY md5(parcel_id || $1) LIMIT $2",
+      "sql_params": "$1 the night seed (logged), $2 count; read-only on the test stack"
     },
     {
       "id": "L-HERITAGE",
@@ -615,25 +616,25 @@
     {
       "id": "L-MULTI-LOT-ADDRESS",
       "count": 25,
-      "select": "multi_parcel_address",
       "expect": {
         "resolution": "multi_parcel",
         "map_lots_min": 2
       },
       "owner": "MF-53",
       "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "waits_on": "MF-80 (the runner)",
+      "sql": "SELECT ap.address_full FROM address_points ap JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id WHERE ap.retired_at IS NULL GROUP BY ap.address_full HAVING count(DISTINCT pap.parcel_id) >= 2 ORDER BY md5(ap.address_full || $1) LIMIT $2"
     },
     {
       "id": "L-UNLINKED",
       "count": 10,
-      "select": "unlinked_address",
       "expect": {
         "resolution": "unlinked"
       },
       "owner": "MF-53",
       "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "waits_on": "MF-80 (the runner)",
+      "sql": "SELECT ap.address_full FROM address_points ap WHERE ap.retired_at IS NULL AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id) ORDER BY md5(ap.address_full || $1) LIMIT $2"
     },
     {
       "id": "L-NO-LOT",

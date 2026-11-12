@@ -1,0 +1,14 @@
+{
+  "task": "MF-79",
+  "item": "McTest web harness: the Playwright runner (playwright/test), the test-stack guard, J-API, J-PIN, the dead-wire crawler, the results page, failure cards and the nightly runner",
+  "class": "G",
+  "date": "2026-11-12",
+  "head": "8b651c128",
+  "cards": [
+    "Operator 2026-11-11, verbatim: \"push complete. go OPERATOR-GO MB35-COHORT. 1 y\" (the McTest plan go).",
+    "Operator 2026-11-12, verbatim: \"All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable.  Ensure the least amount of code and use schema's\" (McTest D-1..D-14 all (a), with the McStorage alignment notes).",
+    "Operator 2026-11-12, verbatim: \"latency 1\" (S-DETAIL-LATENCY p95 at most 1 s, an admin setting)."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mctest/PLAN.md (sections 1-9), scenarios.yaml, DECISIONS.md (D-1..D-14 all (a)); PLAN panel record PLAN.md section 8 (regression-guardian 11 findings and a fresh general-purpose seat 12 findings, both BLOCK pairs folded); alignment ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md section 4. Rows first (MF-78..MF-82, FE-40), then the prereg prereg MF-79-1 (round 167) committed alone before the code.",
+  "output": "OUTPUT panel owed: runs over the whole McTest range (MF-78..MF-80) before push (caller)"
+}

@@ -51,7 +51,11 @@
     "test:db": "cross-env BUILDO_TEST_DB=1 vitest run .db.test.ts --no-file-parallelism",
     "test:property": "vitest run src/tests/property",
     "test:mutation": "stryker run",
-    "test:mutation:dry": "stryker run --dryRunOnly"
+    "test:mutation:dry": "stryker run --dryRunOnly",
+    "mctest:web": "playwright test",
+    "mctest:sweep": "node scripts/mctest/sweep.mjs",
+    "mctest:report": "node scripts/mctest/report.mjs",
+    "mctest:nightly": "node scripts/mctest/nightly.mjs"
   },
   "lint-staged": {
     "src/features/leads/**/*.{ts,tsx}": [
