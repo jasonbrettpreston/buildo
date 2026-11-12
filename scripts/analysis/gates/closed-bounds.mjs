@@ -120,6 +120,7 @@ export const SHARED_LOGIC_VARIABLES = Object.freeze({
   fya_est_min_m: Object.freeze({ owner: 'link_parcel_abutments neighbour front-setback estimate bounds (Spec 130); read as bounds_lv by the MB-31 front-setback chain', consumers: Object.freeze(['compute_maxbld_scenarios', 'link_parcel_abutments']) }),
   fya_est_max_m: Object.freeze({ owner: 'link_parcel_abutments neighbour front-setback estimate bounds (Spec 130); read as bounds_lv by the MB-31 front-setback chain', consumers: Object.freeze(['compute_maxbld_scenarios', 'link_parcel_abutments']) }),
   cost_escalation_index: Object.freeze({ owner: 'the cost model escalation index (scripts/lib/parcel-cost.js)', consumers: Object.freeze(['compute_coa_cost_estimates', 'compute_cost_estimates', 'compute_parcel_cost_estimates']) }),
+  resolve_bylaws_population_zone_classes: Object.freeze({ owner: 'resolve_bylaws Layer 2 population (Spec 134 §2); read by the MB-31 Layer 3 loader for the Layer 1 env of the D-8 recompute (MB-35 decision D-54)', consumers: Object.freeze(['compute_maxbld_scenarios', 'resolve_bylaws']) }),
 });
 
 /** The archetypes whose library loop is config-sized (runMaterializePhase / runBackfillFullRecompute). */

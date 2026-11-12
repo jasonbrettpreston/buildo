@@ -8,7 +8,7 @@
 //   (b) the golden 25 as the batch statement's rows (raw lookups + validated config) reproduce the McProof key, value for value.
 //   (c) every emitted row satisfies migration 309's two CHECKs (D-1 a: only the declared gain reasons field is computed with no value).
 //   (d) the ring walk of MB-31 plan 19.2 (RG-4, RG-5, RG-8, start abutters, null estimates, depth, row order).
-//   (e) fail closed: no parcels row, no stamp, a catalogue setting without a config value, no zone-list row.
+//   (e) fail closed: no parcels row, no stamp, a catalogue setting without a config value, no zone list in the config (D-54).
 //   (f) settings_sha is the catalogue settings as read, and only them; (g) matched.processed counts the parcels.
 import { beforeAll, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -84,7 +84,6 @@ function goldenBatch(): { rows: Json[]; raw: Json } {
   const raw = {
     bylaw_resolution_units: out.rows.units,
     bylaw_resolution_texts: out.rows.texts,
-    logic_variables: [{ variable_key: 'resolve_bylaws_population_zone_classes', variable_value: 0, variable_value_json: zoneList }],
   };
   return { rows, raw };
 }
@@ -243,10 +242,11 @@ describe('(e) fail closed', () => {
     expect(() => S.materializeRows([{ ...ROWS[0], parcel: null }], { config: CONFIG, lookups: RAW })).toThrow(/matches no parcels row/);
     expect(() => S.materializeRows([{ ...ROWS[0], lot: null }], { config: CONFIG, lookups: RAW })).toThrow(/has no Layer 2 stamp/);
   });
-  it('a catalogue setting with no validated config value, or no zone-list row, throws (a seed is never a runtime fallback)', () => {
+  it('a catalogue setting with no validated config value, or no zone list in the config, throws (a seed is never a runtime fallback)', () => {
     const { fya_porch_allowance_m: _gone, ...short } = CONFIG; // eslint-disable-line @typescript-eslint/no-unused-vars
     expect(() => S.materializeRows(ROWS.slice(0, 1), { config: short, lookups: RAW })).toThrow(/fya_porch_allowance_m has no validated ctx\.config value/);
-    expect(() => S.materializeRows(ROWS.slice(0, 1), { config: { ...CONFIG }, lookups: { ...RAW, logic_variables: [] } })).toThrow(/resolve_bylaws_population_zone_classes/);
+    const { resolve_bylaws_population_zone_classes: _zones, ...noZones } = CONFIG; // eslint-disable-line @typescript-eslint/no-unused-vars
+    expect(() => S.materializeRows(ROWS.slice(0, 1), { config: noZones, lookups: RAW })).toThrow(/resolve_bylaws_population_zone_classes/);
   });
   it('an empty page computes nothing and returns the census at 0 (R-JG)', () => {
     const out = S.materializeRows([], { config: CONFIG, lookups: {} }) as Json;
@@ -269,7 +269,7 @@ describe('(f) settings_sha and (g) the processed count', () => {
     const base = shaOf({ ...CONFIG });
     expect(shaOf({ ...CONFIG, fya_porch_allowance_m: CONFIG.fya_porch_allowance_m + 0.5 })).not.toBe(base);
     expect(shaOf({ ...CONFIG, compute_maxbld_scenarios_batch_size: 50, compute_maxbld_scenarios_population_parcel_ids: ['6640'], compute_maxbld_scenarios_bbox_degree_divisor: 70000 })).toBe(base);
-    expect(shaOf({ ...CONFIG }, { ...RAW, logic_variables: [{ variable_key: 'x', variable_value: 1, variable_value_json: null }, ...RAW.logic_variables] })).toBe(base);
+    expect(shaOf({ ...CONFIG }, { ...RAW, bylaw_resolution_texts: [...RAW.bylaw_resolution_texts].reverse() })).toBe(base);
   });
   it('matched.processed (records_total) counts the parcels of the page', () => {
     const out = S.materializeRows(ROWS.slice(0, 3), { config: CONFIG, lookups: RAW }) as Json;

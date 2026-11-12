@@ -60,7 +60,6 @@ function goldenSource(): { rows: Json[]; lookups: Record<string, Json[]> } {
   const lookups = {
     bylaw_resolution_units: out.rows.units as Json[],
     bylaw_resolution_texts: out.rows.texts as Json[],
-    logic_variables: [{ variable_key: 'resolve_bylaws_population_zone_classes', variable_value: 0, variable_value_json: zoneList }],
   };
   return { rows, lookups };
 }

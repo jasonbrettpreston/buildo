@@ -54,7 +54,6 @@ const EXPECTED_TABLES = [
   'bylaw_resolution_results',
   'bylaw_resolution_texts',
   'bylaw_resolution_units',
-  'logic_variables',
   'parcel_abutments',
   'parcel_maxbld_population', // MB-31 (e) / MB-35 D-3 a (operator "a yes" 2026-11-11): the cohort part of the population (migration 309)
   'parcels',

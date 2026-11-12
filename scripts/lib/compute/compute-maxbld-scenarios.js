@@ -37,7 +37,7 @@ const SCOPE = require('../../seeds/bylaw/layer2-scope.json');
 const MAP = require('../../seeds/bylaw/layer2-map.json');
 const LV_SEED = require('../../seeds/logic_variables.json');
 const INPUT = require('../../../docs/reference/bylaw-layer2-input.json');
-/** The stored resolve_bylaws population (its zone list), read from the declared logic_variables lookup for the Layer 1 env only. */
+/** The resolve_bylaws population (its zone list), the declared shared config entry (decision D-54, 2026-11-12), for the Layer 1 env only. */
 const LAYER2_ZONE_LIST = 'resolve_bylaws_population_zone_classes';
 
 /**
@@ -572,7 +572,8 @@ function ringLots(subjectId, edges, depth) {
  * (static requires, the resolve-bylaws precedent), every catalogue setting's value from ctx.config (a catalogue setting with no
  * config value throws: a seed is bootstrap only, Spec 122 1.2a P4), settings_sha over exactly those values, the permission keys of the
  * Layer 2 map, the stored text dictionary, and the Layer 1 env for the D-8 disclosure recompute (its zone list is the stored
- * resolve_bylaws population setting, read from the declared logic_variables lookup; absent or not a list throws).
+ * resolve_bylaws population setting, the validated ctx.config entry shared with resolve_bylaws (D-54: a logic_variables lookup could not
+ * be witnessed, #44); absent or not a list throws).
  */
 let lookupsMemo = { raw: null, config: null, L: null };
 function lookupsFor(raw, config) {
@@ -586,9 +587,8 @@ function lookupsFor(raw, config) {
   const textRows = toList(raw.bylaw_resolution_texts);
   const texts = {};
   for (const t of textRows) texts[String(t.text_key)] = t.text;
-  const zoneRow = toList(raw.logic_variables).find((r) => r && r.variable_key === LAYER2_ZONE_LIST);
-  const zoneList = zoneRow ? zoneRow.variable_value_json : undefined;
-  if (!Array.isArray(zoneList)) throw new Error(`compute_maxbld_scenarios: the logic_variables lookup has no list ${LAYER2_ZONE_LIST} (the Layer 1 env of the D-8 recompute needs the zone list Layer 2 ran with)`);
+  const zoneList = hasOwn(config, LAYER2_ZONE_LIST) ? config[LAYER2_ZONE_LIST] : undefined;
+  if (!Array.isArray(zoneList)) throw new Error(`compute_maxbld_scenarios: ${LAYER2_ZONE_LIST} has no validated ctx.config list (the Layer 1 env of the D-8 recompute needs the zone list Layer 2 ran with)`);
   const L = {
     seeds,
     vocab: VOCAB,

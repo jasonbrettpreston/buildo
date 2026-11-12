@@ -66,13 +66,6 @@
         {
           "table": "parcel_maxbld_population",
           "columns": ["parcel_id"]
-        },
-        {
-          "table": "logic_variables",
-          "columns": ["variable_key", "variable_value", "variable_value_json"],
-          "role": "lookup",
-          "unique_on": ["variable_key"],
-          "on_empty": "fail"
         }
       ],
       "externals": []
@@ -359,7 +352,8 @@
       { "name": "footprint_shape_factor", "min": 1, "max": 1, "on_invalid": "fail" },
       { "name": "compute_maxbld_scenarios_population_parcel_ids", "min": "none", "max": "none", "on_invalid": "fail", "list_of": ["6640","30065","30554","33830","119522","120669","122034","153191","159079","169742","170105","173273","205238","216666","258388","274216","283723","304365","313999","403569","410720","427312","428050","442123","461807"] },
       { "name": "compute_maxbld_scenarios_bbox_degree_divisor", "min": 1000, "max": 80000, "on_invalid": "fail" },
-      { "name": "compute_maxbld_scenarios_batch_size", "min": 50, "max": 5000, "on_invalid": "fail" }
+      { "name": "compute_maxbld_scenarios_batch_size", "min": 50, "max": 5000, "on_invalid": "fail" },
+      { "name": "resolve_bylaws_population_zone_classes", "min": "none", "max": "none", "on_invalid": "fail", "list_of": ["R", "RD", "RS", "RT", "RM"] }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

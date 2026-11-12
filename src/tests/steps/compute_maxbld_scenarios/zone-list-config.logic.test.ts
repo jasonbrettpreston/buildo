@@ -23,19 +23,19 @@ const RB = readJson('scripts/resolve-bylaws.descriptor.json');
 const entryOf = (d: Json): Json | undefined => (d.config.logic_variables as Json[]).find((v) => v.name === NAME);
 
 describe('D-54: the zone list is a declared shared config entry, never a logic_variables lookup', () => {
-  it.fails('the descriptor declares no logic_variables read (flips at the D-54 build commit)', () => {
+  it('the descriptor declares no logic_variables read (flips at the D-54 build commit)', () => {
     const tables = (D.inputs.reads.tables as Json[]).map((t) => String(t.table));
     expect(tables).not.toContain('logic_variables');
   });
 
-  it.fails('the descriptor declares the zone list with the same closed list_of and bounds as resolve_bylaws (flips at the D-54 build commit)', () => {
+  it('the descriptor declares the zone list with the same closed list_of and bounds as resolve_bylaws (flips at the D-54 build commit)', () => {
     const mine = entryOf(D);
     const theirs = entryOf(RB) as Json;
     expect(theirs).toBeTruthy();
     expect(mine).toEqual(theirs);
   });
 
-  it.fails('the closed shared list names both consumers, and the vocabulary gate passes the entry (flips at the D-54 build commit)', async () => {
+  it('the closed shared list names both consumers, and the vocabulary gate passes the entry (flips at the D-54 build commit)', async () => {
     const CB = (await import(path.join(ROOT, 'scripts/analysis/gates/closed-bounds.mjs'))) as Json;
     const shared = CB.SHARED_LOGIC_VARIABLES[NAME] as Json;
     expect(shared).toBeTruthy();
@@ -44,7 +44,7 @@ describe('D-54: the zone list is a declared shared config entry, never a logic_v
     expect(items).not.toContain(`vocab.config.logic_variables.${NAME}`);
   });
 
-  it.fails('the loader takes the zone list from the validated config: no lookup row needed, a missing or non-list value throws by name (flips at the D-54 build commit)', () => {
+  it('the loader takes the zone list from the validated config: no lookup row needed, a missing or non-list value throws by name (flips at the D-54 build commit)', () => {
     const S = req(path.join(ROOT, 'scripts/lib/compute/compute-maxbld-scenarios.js')) as Json;
     const lv = readJson('scripts/seeds/logic_variables.json');
     const config: Json = Object.fromEntries((D.config.logic_variables as Json[]).map((d) => [d.name, lv[d.name].default]));
