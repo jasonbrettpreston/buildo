@@ -3,12 +3,12 @@
   "item": "The MaxBLD landing v9 on maxbld.ca: web_landing from the static page contract (hero, figures, items, plans, footer), the trust counts from the stored MF-62 row, the build scenarios from one declaration, the cost sources from one committed list, the plans without prices until MF-47's Stripe reader lands, the processing demo through the shared loading state, the sample through the shared report page",
   "class": "G",
   "date": "2026-11-11",
-  "head": "789e17c20",
+  "head": "50b1b1cb1",
   "cards": [
     "Operator 2026-11-11, verbatim (landing v9 rulings): \"Wow this looks great! 1. y 2. add not legal advice as well. 3. keep it 4. I think we need subscription boxes ...\".",
     "Operator 2026-11-11 ~15:45, verbatim: \"1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y\" (record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md, \"Operator round\"): D-1 (a) the landing is its own row, MF-76.",
     "Operator 2026-11-11, verbatim: \"3 y\" (D-3 ruled: prices from Stripe; the sample drawn by the real report component) and \"you keep getting hung up on this... there will be more than 3 when we complete the increments we are building this for a future launch date - include all the build scenarios\" (plan v3 §13a)."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 (§2-§4, §7, §12 panel folds, §13, §13a, §13b); PLAN panel record ~/Buildo-scratch/mcfrontend/MF-46/panel-v2/record.md (code-reviewer-grounded, regression-guardian and a fresh compliance reviewer: PASS-WITH-FOLDS, every finding folded or sent to DECISIONS.md; compliance ~/Buildo-scratch/mcfrontend/MF-46/panel-v2/compliance.md). Prereg MF-76-1 789e17c20 (round 160) committed alone before the code.",
-  "output": "OUTPUT panel owed: runs over the whole MF-46/MF-76 range before push (caller)"
+  "output": "OUTPUT panel over 67c3ab115..c17da2b7b (restacked onto origin 34520a43b): code-reviewer-grounded PASS-WITH-FOLDS (1 M, 4 L; tsc, eslint, surface-validate clean; 225 targeted tests), regression-guardian PASS-WITH-FOLDS (no undefended fence, no lock loosened; 505 targeted tests; F1-F6 L/info), compliance PASS-WITH-FOLDS (F1 H contrast, F2/F3 M accessibility, F12 L folded; F6, F9-F11 launch gates; F4, F7, F8 need operator rulings). Reports ~/Buildo-scratch/mcfrontend/MF-76/panel-out/{code-reviewer,regression-guardian,compliance}.md. Folded in 50b1b1cb1. Full suite on the tip: run by the MF-46 lane under SUITE.lock before ready."
 }
