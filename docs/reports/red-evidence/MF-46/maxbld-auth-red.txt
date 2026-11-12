@@ -1,0 +1,20 @@
+MF-46 stage B red evidence: src/tests/maxbld-auth.logic.test.ts and src/tests/maxbld-web-pages.logic.test.ts against the base LoginForm and the base page gate (07ecb3a4e) with stub maxbld-actions, maxbld-terms and maxbld-after-sign-in (types plus wrong values; plan v1 fold 12). The one host-table link case also fails on the green tree until the Help, Terms and Privacy rows land (stage C). Run 2026-11-12T00:12Z.
+   × sign-up > the confirm link is built from the MaxBLD origin and opens the terms step; no account type is written 7ms
+   × sign-up > one outcome for every address: an error other than a weak password still reads "sent" 1ms
+   × sign-up > a weak password is the one distinct outcome 1ms
+   × reset and set a new password > reset always reads "sent" and links to the set-password page through the callback 0ms
+   × reset and set a new password > a normal sign-in session cannot set a password (RED: recovery only) 0ms
+   × reset and set a new password > a recovery session sets the password and goes to the search page 0ms
+   × the terms record (D-2 b) > writes only tos_accepted_at, server time, only while empty; never onboarding_complete 1ms
+   × the terms record (D-2 b) > read and write take the uid only 0ms
+   × the terms record (D-2 b) > the action needs the box ticked, a session, and keeps only a MaxBLD target 0ms
+   × the terms record (D-2 b) > after sign-in the terms step comes first, carrying a MaxBLD target only 0ms
+   × the shared LoginForm, MaxBLD variant > log in: email, password, Forgot password, Log in, then Google; Create account is a link; no persona, no Buildo copy 4ms
+   × the shared LoginForm, MaxBLD variant > sign up: name, email, password; Log in is a link; no account type 1ms
+   × the shared LoginForm, MaxBLD variant > reset and set: their own fields; no Google 1ms
+   × the shared LoginForm, MaxBLD variant > the only <button>s are the submit and Google (moves between routes are links) 1ms
+   × G the page gate > MF-46 D-2 b: an entitled user with no terms record goes to the terms step; a not-entitled user is never asked; a terms read error is thrown 7ms
+   ✓ S the search page > a plan holder gets the idle page, anyone else the unauthorized state 562ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  2 failed (2)
+      Tests  15 failed | 19 passed (34)

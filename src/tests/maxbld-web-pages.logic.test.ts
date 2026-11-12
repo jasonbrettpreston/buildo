@@ -36,8 +36,14 @@ const ROOT = process.cwd();
 const DIR = path.join(ROOT, 'src/app/(maxbld)/parcel-tool');
 const UID = '11111111-2222-4333-8444-555555555555';
 import type { Queryable } from '@/lib/entitlements';
-const db = (rows: Array<{ status: string }> | Error) => {
-  const query = vi.fn(async (..._a: unknown[]) => { if (rows instanceof Error) throw rows; return { rows }; });
+// Dated 2026-11-11 (MF-46, DECISIONS-v1 D-2 b "8. y"): the gate reads the terms record after the entitlement read; this helper answers
+// that read with an accepted row (or `terms`), so every entitlement assertion below is unchanged.
+const db = (rows: Array<{ status: string }> | Error, terms: Array<{ tos_accepted_at: string | null }> | Error = [{ tos_accepted_at: '2026-11-11T00:00:00Z' }]) => {
+  const query = vi.fn(async (...a: unknown[]) => {
+    const r = String(a[0]).includes('user_profiles') ? terms : rows;
+    if (r instanceof Error) throw r;
+    return { rows: r };
+  });
   return Object.assign({ query } as unknown as Queryable, { query });
 };
 
@@ -72,6 +78,15 @@ describe('G the page gate', () => {
     const d = db([]);
     await requireParcelToolPage(d);
     expect(d.query.mock.calls[0]).toEqual([expect.stringContaining('FROM entitlements'), [UID, 'parcel_tool']]);
+  });
+  it('MF-46 D-2 b: an entitled user with no terms record goes to the terms step; a not-entitled user is never asked; a terms read error is thrown', async () => {
+    await expect(requireParcelToolPage(db([{ status: 'active' }], []))).rejects.toThrow('NEXT_REDIRECT /terms-accept?redirect=/parcel-tool');
+    await expect(requireParcelToolPage(db([{ status: 'active' }], [{ tos_accepted_at: null }]))).rejects.toThrow('NEXT_REDIRECT /terms-accept?redirect=/parcel-tool');
+    const lapsed = db([{ status: 'expired' }], []);
+    await expect(requireParcelToolPage(lapsed)).resolves.toEqual({ uid: UID, entitled: false });
+    expect(lapsed.query).toHaveBeenCalledTimes(1);
+    await expect(requireParcelToolPage(db([{ status: 'active' }], new Error('pg down')))).rejects.toThrow('pg down');
+    expect(log.logError).toHaveBeenCalledWith('[auth/require-parcel-tool-page]', expect.any(Error), { stage: 'terms-lookup', uid: UID });
   });
   it('a database error is thrown (fail closed) and logged with the uid only', async () => {
     await expect(requireParcelToolPage(db(new Error('pg down')))).rejects.toThrow('pg down');
@@ -145,7 +160,9 @@ describe('L the live switch and the fences', () => {
     // A URL string of the lookup route (the report route imports only its query schema, `@/app/api/parcels/lookup/types`, to check the lot id).
     [/\bfetch\(|fetchWithAuth|['"`]\/api\/parcels\/lookup/, 'a lookup request (no report is charged while the switch is off)'],
     [/features\/leads|\/dashboard|\/permits\/|\/builders/, 'scope D (Spec 128 R-03)'],
-    [/@\/components\/(?!surfaces\/)/, 'a component outside the binding modules (plan v2 P16; OUTPUT security F7)'],
+    // Dated 2026-11-11 (MF-46; Spec 126 §11b.1 "Auth ... existing, not converted"; §11b.3 `web_login` shared): the one named exception is the
+    // shared sign-in screen, by exact module name; any other component outside the binding modules still fails (planted case below).
+    [/@\/components\/(?!surfaces\/|auth\/LoginForm['"])/, 'a component outside the binding modules (plan v2 P16; OUTPUT security F7)'],
   ];
   // OUTPUT panel (regression 1): the binding and the pages' data module are scanned too, so a fetch added there cannot charge a report either.
   it('nothing under src/app/(maxbld)/parcel-tool, the web SEARCH binding or maxbld-web.ts meters, caches, fetches or reaches scope D (non-vacuous)', () => {
@@ -153,12 +170,16 @@ describe('L the live switch and the fences', () => {
     // binding, its data module and the page table (where every link of those pages is written) are scanned too (8 -> 16).
     const all = [...files(DIR), path.join(ROOT, 'src/components/surfaces/web/SearchBinding.tsx'), path.join(ROOT, 'src/lib/surfaces/maxbld-web.ts'),
       path.join(ROOT, 'src/components/surfaces/web/StaticBinding.tsx'), path.join(ROOT, 'src/lib/surfaces/maxbld-static.ts'), path.join(ROOT, 'scripts/surfaces/_schema/static-page.json')];
-    expect(all.length).toBe(16);
+    // MF-46 stage B (dated 2026-11-11): 16 -> 23, the MaxBLD sign-in client mount, its four routes and the terms step page and client.
+    expect(all.length).toBe(23);
     for (const f of all) for (const [re, why] of BANNED) expect([path.relative(ROOT, f), why, re.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), why, false]);
   });
   it('RED: each banned form is caught in a planted text', () => {
     const planted = ["import { openReport } from '@/lib/entitlements';", "import { useQuery } from '@tanstack/react-query';", "const url = '/api/parcels/lookup?q=x';", "<a href='/dashboard'>", "import { Card } from '@/components/ui/Card';"];
     planted.forEach((t, i) => expect((BANNED[i] as [RegExp, string])[0].test(t)).toBe(true));
+    // MF-46: the named exception is exact: another auth component, or a LoginForm look-alike path, is still caught.
+    const comp = (BANNED[4] as [RegExp, string])[0];
+    expect([comp.test("import { X } from '@/components/auth/Other';"), comp.test("import { X } from '@/components/auth/LoginFormX';"), comp.test("import { LoginForm } from '@/components/auth/LoginForm';")]).toEqual([true, true, false]);
   });
   // OUTPUT panel (regression 2): each provider layout carries its own forced scheme: the web pages dark, the admin pages light (MF-37 batch C-2).
   it('the parcel-tool layout forces dark; the admin layout still forces light', () => {

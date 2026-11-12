@@ -166,7 +166,8 @@ site_url = "http://127.0.0.1:3000"
 # `com.buildo://` allowlisting was a CLOUD-dashboard checklist item, phase1_plan.md L501 —
 # never mirrored into this local file). New scheme covers both the OAuth deep link
 # (password reset / email-change, bare scheme) and the P2-D4 email-confirmation redirect.
-additional_redirect_urls = ["https://127.0.0.1:3000", "maxbld://", "maxbld://auth/confirm"]
+# MF-46 (plan v1 fold 6; DECISIONS-v2 N-1): one exact entry for the maxbld.ca code exchange (sign-up confirm, reset, Google); no www, no wildcard.
+additional_redirect_urls = ["https://127.0.0.1:3000", "maxbld://", "maxbld://auth/confirm", "https://maxbld.ca/auth/callback"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.

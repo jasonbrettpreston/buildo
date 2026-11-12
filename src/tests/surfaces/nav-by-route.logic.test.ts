@@ -306,9 +306,12 @@ const ALLOW: Allow[] = [
   { file: SIGN_UP, rule: 'NAV-3', component: 'Pressable', handler: "router.replace('/(auth)/sign-in') (no role)", count: 1, kind: 'exception', audit: 22,
     why: 'owed: MF-49 (A1: role and label; canGoBack ? back : replace)' },
   { file: LOGIN_FORM, rule: 'NAV-1', component: 'button', handler: "setMode('signup')", count: 1, kind: 'exception', audit: 29,
-    why: 'owed: MF-46 (W2: src/app/signup/page.tsx and a <Link href="/signup">)' },
+    // Dated 2026-11-11 (MF-46; operator, verbatim: "7 y - buildo doesnt exist - focus on MaxBLD"; queue MF-75 note of this date): #29 and #30
+    // are the Buildo screen; MF-46 builds the MaxBLD sign-in and sign-up as two routes (src/app/(maxbld)/parcel-tool/{login,signup}) and does
+    // not route the Buildo toggle, so both stay, owned by MF-50 (the Buildo retirement row). The rule text and counts are unchanged.
+    why: 'owed: MF-50 (Buildo screen; MaxBLD sign-in and sign-up are routes since MF-46: src/app/(maxbld)/parcel-tool/{login,signup})' },
   { file: LOGIN_FORM, rule: 'NAV-1', component: 'button', handler: "setMode('login')", count: 1, kind: 'exception', audit: 30,
-    why: 'owed: MF-46 (W2: <Link href="/login"> once /signup exists)' },
+    why: 'owed: MF-50 (Buildo screen; see #29)' },
   // --- Disclosure: state that is not navigation (details, How?, sheets). ---
   { file: 'src/components/report/ReportPageToggles.tsx', rule: 'NAV-2', component: 'div', handler: 'onClick+onKeyDown', count: 1, kind: 'disclosure', audit: 43,
     why: 'event delegation to the real <button data-toggle> children (See details, Hide, How?, the Add lot size sheet); the wrapper is not itself interactive (MF-57, MF-19). Dated note 2026-11-11 (MF-19 restack onto 07ecb3a4e): the key reads onClick+onKeyDown, because the MF-19 accessibility fold A12 delegates Escape in the open sheet from the same wrapper; the same one wrapper, count 1' },
@@ -329,7 +332,8 @@ const ALLOW: Allow[] = [
   { file: 'src/app/subscribe/page.tsx', rule: 'NAV-4', component: 'fn:SubscribeInner', handler: 'window.location.assign', count: 1, kind: 'ok', audit: 32,
     why: 'Stripe Checkout is another origin (https only); router.push cannot leave the app' },
 ];
-// The operator's ruling names exactly these six audited violations; this list may only shrink as MF-46, MF-48/MF-74 and MF-49 land.
+// The operator's ruling names exactly these six audited violations; this list may only shrink as MF-48/MF-74, MF-49 and MF-50 land
+// (#29 and #30 re-owned from MF-46 to MF-50, dated note above).
 const EXCEPTION_AUDIT_ROWS = [3, 15, 16, 22, 29, 30];
 
 const keyOf = (x: { file: string; rule: string; component: string; handler: string }): string => `${x.file} | ${x.rule} | ${x.component} | ${x.handler}`;

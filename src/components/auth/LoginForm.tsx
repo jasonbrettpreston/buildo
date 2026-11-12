@@ -28,16 +28,34 @@
 // to mint an aal2 session from a backup code, so a login-time backup-code
 // *session* fallback isn't a real Spec 13 path; a lost-authenticator admin
 // is pointed at that recovery mechanism instead of a fabricated code field.
+//
+// MF-46 (Spec 126 §11b.3 `web_login`; queue MF-46 dated note 2026-11-09, the login layout; DECISIONS D-7 "MaxBLD only"): an optional
+// `variant` renders the MaxBLD screen from content (src/lib/surfaces/maxbld-auth.ts) on the same state, the same signInAction and the
+// MaxBLD actions (src/lib/supabase/maxbld-actions.ts). Without it the Buildo screen below renders exactly as before. The MaxBLD screen
+// has one fixed mode per route (/login, /signup, /reset-password, /set-password): every move between them is a real link (Spec 126 §0b
+// item 11), the order is email, password, Forgot password, Log in, then Google, and no persona or account type is shown or written.
 import { useState } from 'react';
+import Link from 'next/link';
 import { signInAction, signUpAction, mfaChallengeAction, mfaVerifyAction } from '@/lib/supabase/actions';
+import { maxbldResetAction, maxbldSetPasswordAction, maxbldSignUpAction } from '@/lib/supabase/maxbld-actions';
+import type { AuthKey, AuthText } from '@/lib/surfaces/maxbld-auth';
 import { createClient } from '@/lib/supabase/browser';
 import type { AccountType } from '@/lib/auth/types';
 
-interface LoginFormProps {
-  onSuccess?: () => void;
+/** The MaxBLD screen: one mode per route, every string by content key, the path to open after sign-in. */
+export interface LoginVariant {
+  mode: 'login' | 'signup' | 'reset' | 'set';
+  text: AuthText;
+  /** Where a completed sign-in goes (the terms step first, then the MaxBLD target). */
+  afterSignIn: string;
 }
 
-export function LoginForm({ onSuccess }: LoginFormProps) {
+interface LoginFormProps {
+  onSuccess?: () => void;
+  variant?: LoginVariant;
+}
+
+export function LoginForm({ onSuccess, variant }: LoginFormProps) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -109,10 +127,166 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     }
   }
 
+  // MaxBLD screen state (unused by the Buildo screen).
+  const [confirm, setConfirm] = useState('');
+  const [outcome, setOutcome] = useState<'' | 'sent' | 'done' | 'expired'>('');
+
+  async function handleMaxbldSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!variant) return;
+    const t = variant.text;
+    setError('');
+    if (variant.mode === 'set' && password !== confirm) {
+      setError(t['set.mismatch']);
+      return;
+    }
+    setLoading(true);
+    try {
+      if (variant.mode === 'login') {
+        const result = await signInAction(email, password);
+        if (result.error) {
+          setError(/confirm/i.test(result.error) ? t['login.unconfirmed'] : t['login.error']);
+          return;
+        }
+        if (result.mfaRequired && result.factorId) {
+          setMfaFactorId(result.factorId);
+          return;
+        }
+        onSuccess?.();
+        return;
+      }
+      const result =
+        variant.mode === 'signup'
+          ? await maxbldSignUpAction(email, password, name)
+          : variant.mode === 'reset'
+          ? await maxbldResetAction(email)
+          : await maxbldSetPasswordAction(password);
+      if (result.code === 'short') setError(t['signup.short']);
+      else if (result.code === 'generic') setError(t['error.generic']);
+      else if (result.code === 'sent' || result.code === 'done' || result.code === 'expired') setOutcome(result.code);
+    } catch {
+      setError(t['error.generic']);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleMaxbldGoogle() {
+    if (!variant) return;
+    setError('');
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(variant.afterSignIn)}` },
+      });
+      if (oauthError) throw oauthError;
+    } catch {
+      setError(variant.text['error.generic']);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function cancelMfa() {
     setMfaFactorId(null);
     setMfaCode('');
     setMfaError('');
+  }
+
+  function renderMaxbld(v: LoginVariant) {
+    const t = v.text;
+    const field = 'w-full min-h-[48px] px-3 rounded-xl bg-zinc-950 border border-zinc-500 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500';
+    const label = 'block text-sm font-medium text-zinc-200 mb-2';
+    const primary = 'w-full min-h-[48px] rounded-xl bg-amber-500 text-zinc-950 font-bold hover:bg-amber-400 disabled:opacity-60';
+    const quiet = 'inline-flex min-h-[44px] items-center text-zinc-100 underline-offset-4 hover:underline';
+    const KEYS: Record<LoginVariant['mode'], { title: AuthKey; submit: AuthKey; busy: AuthKey }> = {
+      login: { title: 'login.title', submit: 'login.submit', busy: 'login.busy' },
+      signup: { title: 'signup.title', submit: 'signup.submit', busy: 'signup.busy' },
+      reset: { title: 'reset.title', submit: 'reset.submit', busy: 'reset.busy' },
+      set: { title: 'set.title', submit: 'set.submit', busy: 'set.busy' },
+    };
+    const k = KEYS[v.mode];
+    const status = (title: string, body: string, href: string, link: string) => (
+      <section aria-live="polite">
+        <h1 className="text-[22px]/[28px] font-bold text-zinc-100">{title}</h1>
+        <p className="mt-2 text-zinc-300">{body}</p>
+        <Link className={quiet} href={href}>{link}</Link>
+      </section>
+    );
+    let body;
+    if (outcome === 'sent' && v.mode === 'signup') body = status(t['signup.sent.title'], `${t['signup.sent.body']} ${t['signup.sent.spam']}`, '/login', t['back.login']);
+    else if (outcome === 'sent' && v.mode === 'reset') body = status(t['reset.sent.title'], t['reset.sent.body'], '/login', t['back.login']);
+    else if (outcome === 'done') body = status(t['set.done.title'], t['set.done.body'], '/parcel-tool', t['set.done.link']);
+    else if (outcome === 'expired') body = status(t['set.expired.title'], t['set.expired.body'], '/reset-password', t['set.expired.link']);
+    else
+      body = (
+        <>
+          <h1 className="text-[28px]/[34px] font-bold tracking-tight text-zinc-100">{t[k.title]}</h1>
+          {v.mode === 'signup' && <p className="mt-2 text-zinc-300">{t['signup.lead']}</p>}
+          {v.mode === 'reset' && <p className="mt-2 text-zinc-300">{t['reset.lead']}</p>}
+          <form onSubmit={handleMaxbldSubmit} className="mt-6 space-y-4" noValidate={false}>
+            {v.mode === 'signup' && (
+              <div>
+                <label htmlFor="mx-name" className={label}>{t['field.name']}</label>
+                <input id="mx-name" type="text" autoComplete="name" required value={name} onChange={(e) => setName(e.target.value)} className={field} />
+              </div>
+            )}
+            {v.mode !== 'set' && (
+              <div>
+                <label htmlFor="mx-email" className={label}>{t['field.email']}</label>
+                <input id="mx-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={field} />
+              </div>
+            )}
+            {v.mode !== 'reset' && (
+              <div>
+                <label htmlFor="mx-password" className={label}>{v.mode === 'set' ? t['set.field.password'] : t['field.password']}</label>
+                <input id="mx-password" type="password" autoComplete={v.mode === 'login' ? 'current-password' : 'new-password'} required value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
+              </div>
+            )}
+            {v.mode === 'set' && (
+              <div>
+                <label htmlFor="mx-confirm" className={label}>{t['set.field.confirm']}</label>
+                <input id="mx-confirm" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className={field} />
+              </div>
+            )}
+            {v.mode === 'login' && <Link className={quiet} href="/reset-password">{t['login.forgot']}</Link>}
+            {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+            <button type="submit" disabled={loading} className={primary}>
+              {loading ? t[k.busy] : t[k.submit]}
+            </button>
+          </form>
+          {(v.mode === 'login' || v.mode === 'signup') && (
+            <>
+              <p className="my-4 text-center text-sm text-zinc-400">{t['or']}</p>
+              <button type="button" onClick={handleMaxbldGoogle} disabled={loading} className="w-full min-h-[48px] rounded-xl border border-zinc-600 bg-zinc-800 text-zinc-100 font-semibold hover:bg-zinc-700 disabled:opacity-60">
+                {t['google']}
+              </button>
+            </>
+          )}
+          <p className="mt-6 text-sm text-zinc-300">
+            {v.mode === 'login' && (<>{t['login.create.prompt']} <Link className={quiet} href="/signup">{t['login.create.link']}</Link></>)}
+            {v.mode === 'signup' && (<>{t['signup.login.prompt']} <Link className={quiet} href="/login">{t['signup.login.link']}</Link></>)}
+            {v.mode === 'reset' && <Link className={quiet} href="/login">{t['back.login']}</Link>}
+          </p>
+        </>
+      );
+    return (
+      <div className="w-full max-w-[400px] mx-auto px-4 py-12 text-zinc-100">
+        <p className="text-[24px]/[28px] font-extrabold tracking-tight" aria-label={`${t['wordmark.max']}${t['wordmark.bld']}`}>
+          {t['wordmark.max']}<span className="text-amber-500">{t['wordmark.bld']}</span>
+        </p>
+        <p className="mb-8 text-sm text-zinc-400">{t['tagline']}</p>
+        {body}
+        <nav aria-label="Footer" className="mt-12 flex flex-wrap gap-x-4 text-sm text-zinc-400">
+          <Link className={quiet} href="/terms">{t['footer.terms']}</Link>
+          <Link className={quiet} href="/privacy">{t['footer.privacy']}</Link>
+          <Link className={quiet} href="/help">{t['footer.help']}</Link>
+          <span className="inline-flex min-h-[44px] items-center">{t['footer.copyright']}</span>
+        </nav>
+      </div>
+    );
   }
 
   async function handleGoogle() {
@@ -192,6 +366,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       </div>
     );
   }
+
+  if (variant) return renderMaxbld(variant);
 
   return (
     <div className="w-full max-w-sm mx-auto">

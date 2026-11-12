@@ -1991,6 +1991,30 @@
         ]
       }
     },
+    "src/lib/auth/maxbld-terms.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "1cfc72deed018dea",
+        "d3c4f24af149f8aa"
+      ],
+      "reads": {
+        "user_profiles": [
+          "tos_accepted_at",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "user_profiles": [
+          "tos_accepted_at",
+          "user_id"
+        ]
+      }
+    },
     "src/lib/auth/verify-admin.ts": {
       "class": "static",
       "statements": 2,

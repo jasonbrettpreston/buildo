@@ -23,6 +23,9 @@ export interface MaxbldRoute {
 /** The one MaxBLD host (apex only; www is redirected to the apex by the domain setting at launch, DECISIONS-v2 N-1). */
 export const MAXBLD_HOST = 'maxbld.ca';
 
+/** The one MaxBLD origin: the sign-up and reset email links are built from it, never from the Host header (plan v1 fold 6). */
+export const MAXBLD_ORIGIN = `https://${MAXBLD_HOST}`;
+
 /** The one internal prefix of the MaxBLD web pages (MF-44 note: `parcel-tool`, the app's route name). Refused on every other host. */
 export const MAXBLD_INTERNAL_PREFIX = '/parcel-tool';
 
@@ -33,7 +36,13 @@ export const MAXBLD_INTERNAL_PREFIX = '/parcel-tool';
 export const MAXBLD_ROUTES: readonly MaxbldRoute[] = [
   // W4-W6 search and report (MF-44): the web paths are the app's route name.
   { path: '/parcel-tool', match: 'prefix', routeClass: 'authenticated' },
-  // MF-46 stage B adds the MaxBLD sign-in, sign-up, reset, set-new-password, terms, Help, Terms and Privacy rows with their pages.
+  // W2 sign in, sign up, reset, set a new password (MF-46): the shared sign-in screen, MaxBLD variant.
+  { path: '/login', match: 'exact', routeClass: 'public', internal: '/parcel-tool/login' },
+  { path: '/signup', match: 'exact', routeClass: 'public', internal: '/parcel-tool/signup' },
+  { path: '/reset-password', match: 'exact', routeClass: 'public', internal: '/parcel-tool/reset-password' },
+  { path: '/set-password', match: 'exact', routeClass: 'authenticated', internal: '/parcel-tool/set-password' },
+  // The terms record once after the first MaxBLD sign-in (D-2 b).
+  { path: '/terms-accept', match: 'exact', routeClass: 'authenticated', internal: '/parcel-tool/terms-accept' },
   { path: '/help', match: 'exact', routeClass: 'public', internal: '/parcel-tool/help' },
   { path: '/terms', match: 'exact', routeClass: 'public', internal: '/parcel-tool/terms' },
   { path: '/privacy', match: 'exact', routeClass: 'public', internal: '/parcel-tool/privacy' },

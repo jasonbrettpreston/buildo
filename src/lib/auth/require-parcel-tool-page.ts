@@ -11,12 +11,15 @@
 //   2. plan: getEntitlementStatus(pool, uid, 'parcel_tool') with a status in ACTIVE_SUBSCRIPTION_STATUSES -> entitled. The lead_gen transitional
 //      path is the App A shelf only (MF-45 D-4 a), never the web.
 //   3. a DB error is thrown (fail closed): the segment's error.tsx shows the error state; nothing is rendered unchecked.
+//   4. MF-46 (DECISIONS-v1 D-2 b, RULED "8. y"): an entitled user with no recorded terms goes to the terms step once (/terms-accept), then
+//      back here; the read follows the entitlement read, so a not-entitled user is never asked and the entitlement read stays first.
 // One log line per outcome with the uid only (never a query, Spec 100 §2.8).
 import { redirect } from 'next/navigation';
 import { isDevMode } from '@/lib/auth/route-guard';
 import { pool } from '@/lib/db/client';
 import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus, isUuid, type Queryable } from '@/lib/entitlements';
 import { logError, logInfo } from '@/lib/logger';
+import { termsAccepted } from '@/lib/auth/maxbld-terms';
 import { createClient } from '@/lib/supabase/server';
 
 const TAG = '[auth/require-parcel-tool-page]';
@@ -57,5 +60,18 @@ export async function requireParcelToolPage(db: Queryable = pool): Promise<Parce
   }
   const entitled = status !== null && ACTIVE_SUBSCRIPTION_STATUSES.has(status);
   logInfo(TAG, entitled ? 'entitled' : 'not entitled', { uid, status });
+  if (entitled) {
+    let accepted: boolean;
+    try {
+      accepted = await termsAccepted(db, uid);
+    } catch (cause) {
+      logError(TAG, cause, { stage: 'terms-lookup', uid });
+      throw cause;
+    }
+    if (!accepted) {
+      logInfo(TAG, 'terms not recorded, sent to the terms step', { uid });
+      redirect('/terms-accept?redirect=/parcel-tool');
+    }
+  }
   return { uid, entitled };
 }
