@@ -1645,7 +1645,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-11-12 · Enforced by: the rehearsal gate ~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh (scratch tooling, sourced in each…
 
 - **m.515** McIncrement (MCINC-8): one ID ledger. Text home: Spec 08 §11.8.
-  Status: RULED 2026-11-12 · Enforced by: the ledger check ~/Buildo-scratch/ids/check.mjs (scratch tooling, node only): exit 1 when an MF, FE or MB…
+  Status: RULED 2026-11-12 · Enforced by: the ledger check ~/Buildo-scratch/ids/check.mjs (scratch tooling, node only): exit 1 when an MF, FE or MB… · +10 dated notes
 
 - **lc.15** The step is born V3, with McBylaws Airtight inputs.
   Status: RULED · OWED · Enforced by: Spec 78 P5.11 V3 plan: step-validate V3, admin-step-registration.logic, step-validate-net-new.logic
