@@ -115,7 +115,8 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', () 
     expect(formatPageRule('pct0', 3)).toBeNull();
   });
   it('the five page rules are exactly the rules the page table binds; the 15 flagged rules stay pending', () => {
-    const bound = new Set(pageBindings().map((b) => b.rule));
+    // D-46 (dated 2026-11-11): a user_input field is never formatted by the preview (never a value), so its rule (date_dmy on entered.date) is not a preview rule.
+    const bound = new Set(pageBindings().filter((b) => b.source.kind !== 'user_input').map((b) => b.rule));
     expect([...bound].sort()).toEqual([...PAGE_RULES].sort());
     for (const r of PAGE.fe05_flagged_rules as string[]) expect(bound.has(r)).toBe(false);
   });
@@ -415,5 +416,32 @@ describe('L1: the import fence (the producer stays admin-only and unmetered)', (
   });
   it('the fence is not vacuous: a planted import is caught', () => {
     expect(IMPORTS_PRODUCER.test("import { storedPageResponse } from '@/lib/admin/report-preview-live/stored-page';")).toBe(true);
+  });
+});
+
+// D-46 (orchestrator pre-approved 2026-11-11, option a; MB-93 restack onto MF-19): MF-19 declared the first page field with a `user_input:` source
+// (lot_size_entry <- user_input:lot_area, the Add lot size entry, switch off). The preview reads no user input: such a field is accepted and
+// projected as not evaluated (never a value; the lineage names it), and any OTHER unknown source kind is still refused. Red evidence
+// docs/reports/red-evidence/MB-93/user-input-red.txt (before the fix the module threw on load).
+describe('D-46: a user_input source is projected as not evaluated; any other unknown source kind is refused', () => {
+  const k = KEY[0] as Json;
+  const userInputs = pageBindings().filter((b) => b.source.kind === 'user_input');
+  it('the real page table binds the two MF-19 entry fields to user_input sources', () => {
+    expect(userInputs.map((b) => [b.field, b.key, b.source.kind])).toEqual([['lot_size_entry', 'entered.value', 'user_input'], ['lot_size_entered_at', 'entered.date', 'user_input']]);
+    expect(userInputs[0]?.source).toEqual({ kind: 'user_input', member: 'lot_area' });
+  });
+  it('no value is ever sent for a user_input field, even when a parcels column of that name exists; the lineage names it not evaluated', () => {
+    const lot = lotOf(k);
+    const { response, lineage } = projectStoredPage({ lot: { ...lot, columns: { ...lot.columns, lot_area: 500 } }, stamp: STAMP, rows: storedRowsOf(k), current: CURRENT_SEED_SHAS });
+    expect([response.values['entered.value'], response.values['entered.date']]).toEqual([undefined, undefined]);
+    expect(lineage.user_inputs_not_evaluated).toEqual(['lot_size_entered_at', 'lot_size_entry']);
+    expect(() => buildPage(response, reportCtx)).not.toThrow();
+  });
+  it('RED: an unknown source kind still throws (fail closed), and a user_input source with no member throws', () => {
+    const page = { sections: [{ id: 'x', kind: 'lot_size_entered', parts: [{ role: 'value', field: 'f', rule: 'area_sqft_m2_dot', key: 'x.value' }] }] };
+    const fields = (source: string) => [{ name: 'f', source, path: 'x' }];
+    expect(() => pageBindings(page, fields('mystery:lot_area'))).toThrow('MB-93: page field f has a source the preview cannot read: mystery:lot_area');
+    expect(() => pageBindings(page, fields('user_input:'))).toThrow('MB-93: page field f has a source the preview cannot read: user_input:');
+    expect(pageBindings(page, fields('user_input:lot_area')).map((b) => b.source)).toEqual([{ kind: 'user_input', member: 'lot_area' }]);
   });
 });

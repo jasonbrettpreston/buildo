@@ -1,0 +1,7 @@
+# D-46 red-first evidence (MB-93 restack onto MF-19, 2026-11-11): the new D-46 tests run BEFORE the fix in src/lib/admin/report-preview-live/project.ts.
+# Command: npx vitest run src/tests/admin-report-preview-live.logic.test.ts
+ FAIL  src/tests/admin-report-preview-live.logic.test.ts [ src/tests/admin-report-preview-live.logic.test.ts ]
+Error: MB-93: page field lot_size_entry has a source the preview cannot read: user_input:lot_area
+     95|       if (hits.length !== 1) throw new Error(`MB-93: page field ${p.fi…
+ Test Files  1 failed (1)
+      Tests  no tests

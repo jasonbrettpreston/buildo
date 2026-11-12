@@ -8,6 +8,8 @@
 // - Bindings are DATA: every value part of scripts/surfaces/_schema/report-page.json names a declared field of report-v2.decl.json, and the field's
 //   declared `source` says where it is stored: `catalogue:<field_id>` -> parcel_maxbld_scenarios (building type = the option section's scenario
 //   before "/", fold 9: no variant column, the variant is the field id), `parcels:<column>` -> the parcels row. A source of any other kind throws.
+//   D-46 (orchestrator pre-approved 2026-11-11, option a; dated note, prior text kept): `user_input:<member>` (MF-19's Add lot size entry) is
+//   accepted and projected as not evaluated: the preview reads no user input, so it never sends a value, and the lineage names the field.
 // - Option visibility (report-presentation.json states): the stored `permitted` row of the type; `hidden` statuses hide the card; `permitted`
 //   shows it; `not_evaluated`, `not_modelled` (D-4 a, preview only; customer wording via Spec 128 section 4), an unknown status, no row, the
 //   table absent or a gated lot (fold 6) show it as not evaluated. Option numbers are sent only for a permitted card of an ungated lot.
@@ -56,13 +58,15 @@ export interface Lineage {
   lot_size_implausible: boolean;
   options: Record<string, { building_type: string; stored_status: string | null; shown_as: 'shown' | 'hidden' | 'not_evaluated' }>;
   unbound_types: string[];
+  /** D-46: the page fields with a user_input source, projected as not evaluated (never a value). */
+  user_inputs_not_evaluated: string[];
   fields: LineageField[];
 }
 export interface PageResponse { page: string; values: Record<string, string>; hidden: string[]; not_evaluated: string[] }
 export interface ProjectInput { lot: LotFacts; stamp: LotStamp | null; rows: StoredRow[] | null; current: SeedShas }
 
 type Json = Record<string, unknown>;
-type Source = { kind: 'catalogue'; field_id: string } | { kind: 'parcels'; column: string };
+type Source = { kind: 'catalogue'; field_id: string } | { kind: 'parcels'; column: string } | { kind: 'user_input'; member: string };
 export interface Binding { section: string; building_type: string | null; key: string; unitPart: boolean; rule: string; field: string; source: Source }
 
 /** Plausible lot size bounds in m² (operator D-7 a, reality F-3: 4,297 lots under 50 m², 1,923 over 5,000 m²); outside them the banner flags it. */
@@ -83,19 +87,19 @@ const declFields = (): Json[] => {
   return out;
 };
 
-/** The bindings of every value part of the page table, from the page table and the declaration only. Throws on an unknown source. */
-export function pageBindings(): Binding[] {
-  const fields = declFields();
+/** The bindings of every value part of the page table, from the page table and the declaration only. Throws on an unknown source.
+ *  The arguments default to the committed tables; a test passes its own to prove the refusal (D-46). */
+export function pageBindings(page: unknown = reportPage, fields: Json[] = declFields()): Binding[] {
   const out: Binding[] = [];
-  for (const s of (reportPage as unknown as { sections: Json[] }).sections) {
+  for (const s of (page as { sections: Json[] }).sections) {
     for (const p of (Array.isArray(s.parts) ? s.parts : []) as Json[]) {
       if (typeof p.field !== 'string') continue;
       const hits = fields.filter((f) => f.name === p.field);
       const src = String(hits[0]?.source ?? '');
       if (hits.length !== 1) throw new Error(`MB-93: page field ${p.field} is not declared exactly once`);
       const [kind, name] = src.split(':');
-      if (!name || (kind !== 'catalogue' && kind !== 'parcels')) throw new Error(`MB-93: page field ${p.field} has a source the preview cannot read: ${src}`);
-      const source: Source = kind === 'catalogue' ? { kind, field_id: name } : { kind, column: name };
+      if (!name || (kind !== 'catalogue' && kind !== 'parcels' && kind !== 'user_input')) throw new Error(`MB-93: page field ${p.field} has a source the preview cannot read: ${src}`);
+      const source: Source = kind === 'catalogue' ? { kind, field_id: name } : kind === 'parcels' ? { kind, column: name } : { kind, member: name };
       const scenario = typeof s.scenario === 'string' ? s.scenario : null;
       out.push({
         section: String(s.id),
@@ -183,6 +187,7 @@ export function projectStoredPage(input: ProjectInput): { response: PageResponse
 
   const values: Record<string, string> = {};
   for (const b of BINDINGS) {
+    if (b.source.kind === 'user_input') continue; // D-46: never a value; named in lineage.user_inputs_not_evaluated
     let n: number | null = null;
     if (b.source.kind === 'parcels') n = num(lot.columns[b.source.column]);
     else if (b.building_type !== null && shownPermitted.has(b.section)) {
@@ -215,6 +220,7 @@ export function projectStoredPage(input: ProjectInput): { response: PageResponse
     lot_size_implausible: lotSize !== null && (lotSize < LOT_SIZE_PLAUSIBLE_M2.min || lotSize > LOT_SIZE_PLAUSIBLE_M2.max),
     options,
     unbound_types: distinct(stored.map((r) => (boundTypes.has(r.building_type) ? null : r.building_type))),
+    user_inputs_not_evaluated: distinct(BINDINGS.map((b) => (b.source.kind === 'user_input' ? b.field : null))),
     fields: stored
       .filter((r) => r.field_id === PERMITTED_FIELD || BOUND_FIELDS.has(r.field_id))
       .map((r) => ({
