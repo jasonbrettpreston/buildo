@@ -21,6 +21,7 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logError } from '@/lib/logger';
 import { safeRedirectPath } from '@/lib/auth/safe-redirect';
+import { MAXBLD_HOST, normalizeHost } from '@/lib/auth/host-policy';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -28,7 +29,9 @@ export async function GET(request: NextRequest) {
   // Only allow a same-origin relative redirect target — never forward an
   // absolute/external URL from a query param (open-redirect guard). The one
   // shared guard, the same as the login page.
-  const redirectTo = safeRedirectPath(searchParams.get('redirect'));
+  // MF-46: on maxbld.ca the guard's MaxBLD branch keeps only a host-table path and falls back to the search page, never /dashboard.
+  const maxbld = normalizeHost(request.headers.get('host')) === MAXBLD_HOST;
+  const redirectTo = safeRedirectPath(searchParams.get('redirect'), { maxbld });
 
   if (code) {
     try {

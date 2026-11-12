@@ -12,6 +12,7 @@ import {
   extractBearerToken,
 } from '@/lib/auth/route-guard';
 import { updateSession } from '@/lib/supabase/middleware';
+import { resolveHost, type MaxbldRoute } from '@/lib/auth/host-policy';
 
 /**
  * Next.js middleware runs in the **edge runtime**. Auth verification splits
@@ -33,9 +34,42 @@ import { updateSession } from '@/lib/supabase/middleware';
  * `getClaimsUid(request)`/`getVerifiedUid(request)` — they cannot rely on
  * middleware alone.
  */
+/**
+ * MF-46 (Spec 126 §11b.1 host allow-list; Spec 128 R-03): the host fence runs FIRST, before dev mode and before classification, so no
+ * mode skips it. maxbld.ca serves only its table rows (a row's class, never weaker than classifyRoute, then a rewrite to its internal
+ * page); every other path there is a 404, never a redirect. On every other host the MaxBLD internal prefix is a 404 and everything else
+ * runs the Buildo routing below, unchanged.
+ */
 export async function middleware(request: NextRequest) {
+  const decision = resolveHost(request.headers.get('host'), request.nextUrl.pathname);
+  if (decision.kind === 'refuse') return refused();
+  if (decision.kind === 'maxbld') return maxbldRoute(request, decision.route, decision.internal);
+  return routeByClass(request, classifyRoute(request.nextUrl.pathname));
+}
+
+/** A refused path: an empty 404 (no body, no redirect target). */
+function refused(): NextResponse {
+  return new NextResponse(null, { status: 404 });
+}
+
+/**
+ * A maxbld.ca row: the same auth branch as Buildo, on the row's class and the visitor's path (a signed-out visitor on an authenticated
+ * page goes to /login?redirect=<that path> on maxbld.ca). A pass on a row with an internal page becomes a rewrite to it, carrying the
+ * refreshed session cookies both ways and keeping the query string.
+ */
+async function maxbldRoute(request: NextRequest, route: MaxbldRoute, internal: string): Promise<NextResponse> {
+  const response = await routeByClass(request, route.routeClass);
+  if (internal === request.nextUrl.pathname || response.status >= 300) return response;
+  const url = request.nextUrl.clone();
+  url.pathname = internal;
+  const rewritten = NextResponse.rewrite(url, { request: { headers: request.headers } });
+  for (const c of response.cookies.getAll()) rewritten.cookies.set(c);
+  return rewritten;
+}
+
+/** The Buildo routing, unchanged: the class decides pass, 401 or the login redirect. */
+async function routeByClass(request: NextRequest, routeClass: ReturnType<typeof classifyRoute>): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
-  const routeClass = classifyRoute(pathname);
 
   // Public routes — pass through. Still runs the Supabase refresh pass (a
   // logged-in user browsing a public data route shouldn't silently go

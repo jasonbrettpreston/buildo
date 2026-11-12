@@ -1,0 +1,60 @@
+MF-46 red evidence: src/tests/host-policy.logic.test.ts against the base middleware, safe-redirect and callback (origin 07ecb3a4e) with a stub host-policy.ts (types plus functions returning wrong values; plan v1 fold 12). Run 2026-11-12T00:04Z.
+   × host-policy: hosts > maxbld.ca is the MaxBLD host 5ms
+   × host-policy: hosts > MAXBLD.CA is the MaxBLD host 0ms
+   × host-policy: hosts > maxbld.ca:443 is the MaxBLD host 0ms
+   × host-policy: hosts > maxbld.ca:80 is the MaxBLD host 0ms
+   × host-policy: hosts > maxbld.ca. is the MaxBLD host 0ms
+   × host-policy: maxbld.ca serves only its rows > / is refused on maxbld.ca 2ms
+   × host-policy: maxbld.ca serves only its rows > /dashboard is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /dashboard/leads is refused on maxbld.ca 47ms
+   × host-policy: maxbld.ca serves only its rows > /permits/x is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /builders is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /builders/1 is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/permits is refused on maxbld.ca 1ms
+   × host-policy: maxbld.ca serves only its rows > /api/permits/1 is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/builders is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/coa is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/trades is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/quality is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/leads is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/products is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /admin is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /admin/media is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/admin/stats is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /subscribe is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /subscribe/success is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/subscribe/exchange is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/webhooks/stripe is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/user-profile is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/sync is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/auth/x is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /parcel-toolx is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /api/parcels is refused on maxbld.ca 1ms
+   × host-policy: maxbld.ca serves only its rows > /api/parcels/lookupx is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /robots.txtx is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > /zzz is refused on maxbld.ca 0ms
+   × host-policy: maxbld.ca serves only its rows > no non-MaxBLD path is served by the real table 4ms
+   × host-policy: maxbld.ca serves only its rows > RED on a mutated copy: a table that adds /api/permits serves a scope-D path 1ms
+   × host-policy: maxbld.ca serves only its rows > RED on a mutated copy: a whole-prefix row for /dashboard serves it 12ms
+   × host-policy: maxbld.ca serves only its rows > a prefix row matches by whole segment, a trailing slash is ignored, case is not folded 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "buildo.com" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "x.vercel.app" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "localhost:3000" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "evilmaxbld.ca" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "evil.maxbld.ca" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "maxbld.ca.evil.com" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "www.maxbld.ca" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "[::1]:3000" refuses the internal prefix 0ms
+   × host-policy: every other host is Buildo, minus the internal prefix > "" refuses the internal prefix 0ms
+   × middleware: the fence runs first > maxbld.ca /dashboard is a 404, not a redirect 2ms
+   × middleware: the fence runs first > maxbld.ca /api/permits is a 404 with no body 0ms
+   × middleware: the fence runs first > dev mode never skips the fence 1ms
+   × middleware: the fence runs first > buildo.com /parcel-tool is a 404 4ms
+   × safeRedirectPath: the MaxBLD branch > "/permits/1" falls back to the MaxBLD search page 1ms
+   × safeRedirectPath: the MaxBLD branch > "/zzz" falls back to the MaxBLD search page 0ms
+   × safeRedirectPath: the MaxBLD branch > never /dashboard on MaxBLD, and the Buildo fallback is unchanged 0ms
+   × auth/callback on maxbld.ca > no redirect lands on the MaxBLD search page, never /dashboard 18ms
+   × auth/callback on maxbld.ca > a scope-D redirect lands on the MaxBLD search page 1ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 56 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  56 failed | 34 passed (90)

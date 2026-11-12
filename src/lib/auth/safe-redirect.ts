@@ -14,6 +14,12 @@
 // the same origin. A valid internal path is returned unchanged. A pathname
 // with an encoded backslash (`%5C`), an encoded `//` or a malformed percent
 // sequence also falls back, losing only the deep link (fails safe).
+//
+// MF-46 (Spec 126 §11b.3 `web_login`: on the MaxBLD host the post-login target is the MaxBLD search page, never `/dashboard`;
+// DECISIONS-v2 D-8): the MaxBLD branch. With `{ maxbld: true }` a target that passes every check above is kept only when its path is a
+// row of the maxbld.ca host table (src/lib/auth/host-policy.ts); anything else falls back to the MaxBLD search page. The Buildo
+// behaviour (no option) is unchanged.
+import { MAXBLD_POST_LOGIN, matchMaxbldRoute } from './host-policy';
 
 const FALLBACK = '/dashboard';
 const PROBE_ORIGIN = 'https://same-origin.invalid';
@@ -36,12 +42,14 @@ function decodeOnce(s: string): string | null {
   }
 }
 
-export function safeRedirectPath(raw: string | null | undefined): string {
-  if (!raw || !isLocalPath(raw)) return FALLBACK;
+export function safeRedirectPath(raw: string | null | undefined, opts: { maxbld?: boolean } = {}): string {
+  const fallback = opts.maxbld ? MAXBLD_POST_LOGIN : FALLBACK;
+  if (!raw || !isLocalPath(raw)) return fallback;
   const decoded = decodeOnce(raw);
-  if (decoded === null || !isLocalPath(decoded)) return FALLBACK;
+  if (decoded === null || !isLocalPath(decoded)) return fallback;
   // Backstop: unreachable while isLocalPath holds; kept so a future edit to
   // the string checks cannot reopen an off-site target.
-  if (new URL(raw, PROBE_ORIGIN).origin !== PROBE_ORIGIN) return FALLBACK;
+  if (new URL(raw, PROBE_ORIGIN).origin !== PROBE_ORIGIN) return fallback;
+  if (opts.maxbld && matchMaxbldRoute(new URL(raw, PROBE_ORIGIN).pathname) === null) return fallback;
   return raw;
 }
