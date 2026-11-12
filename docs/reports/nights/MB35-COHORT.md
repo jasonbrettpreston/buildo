@@ -99,5 +99,5 @@ Findings of the rerun:
    carries `phase2_disclosures_not_current`; the committed capture records that honestly (73,158 detached rows plus the 172,472 other
    rows rewritten by the first dev try). The Layer 2 re-stamp night clears it on the next Layer 3 run.
 6. The capture commit lands recapture.json (the bracket recipe), explained-diffs.json (no diffs, the first committed POST) and the census
-   line legacy "none" (R-DK); step-validate then scores compute_maxbld_scenarios 17/17 with #44 PASS; the one open item is the fleet
-   programme item EP-PIN-D17.
+   line legacy "none" (R-DK); with the registration pins that follow (EP-PIN-D17 blocks only steps whose legacy is not "none"),
+   step-validate prints compute_maxbld_scenarios 17/17, #44 PASS, `standard=V3`.
