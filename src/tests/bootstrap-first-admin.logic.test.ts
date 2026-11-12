@@ -85,8 +85,8 @@ describe('bootstrap-first-admin.js — resolveConfig', () => {
   it('returns the exact BOOTSTRAP_ADMIN_EMAIL value untouched', () => {
     const config = bootstrap.resolveConfig({
       ...baseEnv,
-      BOOTSTRAP_ADMIN_EMAIL: 'jasonbrettpreston@gmail.com',
+      BOOTSTRAP_ADMIN_EMAIL: 'admin@example.com',
     } as NodeJS.ProcessEnv);
-    expect(config.adminEmail).toBe('jasonbrettpreston@gmail.com');
+    expect(config.adminEmail).toBe('admin@example.com');
   });
 });

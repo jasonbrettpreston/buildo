@@ -36,7 +36,7 @@ vi.mock('@/lib/supabase/browser', () => ({
 import { LoginForm } from '@/components/auth/LoginForm';
 
 async function fillAndSubmitPassword() {
-  fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'jasonbrettpreston@gmail.com' } });
+  fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'admin@example.com' } });
   fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: 'MaxBLD-local-2026!' } });
   fireEvent.click(screen.getByRole('button', { name: /^Sign In$/i }));
 }
