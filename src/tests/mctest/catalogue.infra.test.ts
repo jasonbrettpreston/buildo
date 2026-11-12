@@ -26,6 +26,12 @@ const fileExists = (p: string) => fs.existsSync(path.join(ROOT, p));
 const check = (cat: Cat): string[] =>
   catalogueProblems(cat, { ownerIds, fileExists });
 const fresh = (): Cat => readCatalogue();
+// The first lot case with a status, so a plant stays valid as rows flip from waits to active.
+const firstWith = (c: Cat, status: string): Row => {
+  const r = c.lot_cases.find((l) => l.status === status);
+  if (!r) throw new Error(`no ${status} lot case`);
+  return r;
+};
 const at = <T>(a: T[], i: number): T => {
   const v = a[i];
   if (v === undefined) throw new Error(`no row ${i}`);
@@ -70,14 +76,16 @@ describe("McTest catalogue (FE-40)", () => {
     [
       "a waits row with no reason",
       (c) => {
-        delete at(c.lot_cases, 0).waits_on;
+        delete firstWith(c, "waits").waits_on;
       },
       /waits without waits_on/,
     ],
     [
       "an active row with no runner",
       (c) => {
-        at(c.lot_cases, 0).status = "active";
+        const r = firstWith(c, "waits");
+        r.status = "active";
+        delete r.runner;
       },
       /active without an existing runner/,
     ],

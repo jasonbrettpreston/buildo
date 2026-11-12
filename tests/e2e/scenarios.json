@@ -525,10 +525,10 @@
         "no_empty_shown_field": true
       },
       "owner": "MF-44",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)",
+      "status": "active",
       "sql": "SELECT parcel_id, address_full, zone_d, coverage_frac FROM (SELECT DISTINCT ON (p.parcel_id) p.parcel_id, ap.address_full, (regexp_match(p.zoning_zn_string, '[(; ]d([0-9.]+)'))[1]::numeric AS zone_d, p.bylaw_max_coverage_pct / 100.0 AS coverage_frac FROM parcels p JOIN parcel_address_points pap ON pap.parcel_id = p.id JOIN address_points ap ON ap.address_point_id = pap.address_point_id AND ap.retired_at IS NULL WHERE p.zoning_class IS NOT NULL ORDER BY p.parcel_id, ap.address_full) s ORDER BY md5(parcel_id || $1) LIMIT $2",
-      "sql_params": "$1 the night seed (logged), $2 count; read-only on the test stack"
+      "sql_params": "$1 the night seed (logged), $2 count; read-only on the test stack",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "L-HERITAGE",
@@ -621,9 +621,9 @@
         "map_lots_min": 2
       },
       "owner": "MF-53",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)",
-      "sql": "SELECT ap.address_full FROM address_points ap JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id WHERE ap.retired_at IS NULL GROUP BY ap.address_full HAVING count(DISTINCT pap.parcel_id) >= 2 ORDER BY md5(ap.address_full || $1) LIMIT $2"
+      "status": "active",
+      "sql": "SELECT ap.address_full FROM address_points ap JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id WHERE ap.retired_at IS NULL GROUP BY ap.address_full HAVING count(DISTINCT pap.parcel_id) >= 2 ORDER BY md5(ap.address_full || $1) LIMIT $2",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "L-UNLINKED",
@@ -632,9 +632,9 @@
         "resolution": "unlinked"
       },
       "owner": "MF-53",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)",
-      "sql": "SELECT ap.address_full FROM address_points ap WHERE ap.retired_at IS NULL AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id) ORDER BY md5(ap.address_full || $1) LIMIT $2"
+      "status": "active",
+      "sql": "SELECT ap.address_full FROM address_points ap WHERE ap.retired_at IS NULL AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id) ORDER BY md5(ap.address_full || $1) LIMIT $2",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "L-NO-LOT",
@@ -694,8 +694,8 @@
       "tol": 0.005,
       "owner": "MB-38",
       "source": "W-0 (a) 2026-11-12; D-11 a: the zone limit is the zone string d",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "status": "active",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "B-W1-GFA-FSI",
@@ -707,8 +707,8 @@
       "tol": 0.5,
       "owner": "MB-38",
       "source": "W-1 (a) 2026-11-12: GFA <= FSI x lot",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "status": "active",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "B-W1-GFA-STOREYS",
@@ -720,8 +720,8 @@
       "tol": 0.5,
       "owner": "MB-38",
       "source": "W-1 (a) 2026-11-12: GFA <= footprint x storeys (no cited attic or basement basis on the legacy fields)",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "status": "active",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "B-FOOTPRINT-LOT",
@@ -732,8 +732,8 @@
       "tol": 0.5,
       "owner": "MB-44",
       "source": "INV-LOT",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "status": "active",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "B-FOOTPRINT-COVERAGE",
@@ -745,8 +745,8 @@
       "tol": 0.5,
       "owner": "MB-44",
       "source": "INV-COVERAGE",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "status": "active",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "B-W1-FOOTPRINT-ENVELOPE",
@@ -794,8 +794,8 @@
       ],
       "expect": "Layer 2 <= stop_mib; Layer 2 + Layer 3 <= the budget setting; WARN at 0.60 of the budget (McStorage strategy ST-3)",
       "owner": "MB-27",
-      "status": "waits",
-      "waits_on": "MF-80 (the runner)"
+      "status": "active",
+      "runner": "tests/e2e/lot-sweep.spec.ts"
     },
     {
       "id": "S-DETAIL-LATENCY",

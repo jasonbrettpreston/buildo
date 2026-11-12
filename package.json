@@ -53,7 +53,7 @@
     "test:mutation": "stryker run",
     "test:mutation:dry": "stryker run --dryRunOnly",
     "mctest:web": "playwright test",
-    "mctest:sweep": "node scripts/mctest/sweep.mjs",
+    "mctest:sweep": "playwright test tests/e2e/lot-sweep.spec.ts",
     "mctest:report": "node scripts/mctest/report.mjs",
     "mctest:nightly": "node scripts/mctest/nightly.mjs"
   },

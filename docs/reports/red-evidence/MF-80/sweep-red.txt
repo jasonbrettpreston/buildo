@@ -1,0 +1,10 @@
+MF-80 red evidence (2026-11-12): src/tests/mctest/sweep.logic.test.ts run against stubbed exports of scripts/mctest/lib.cjs (evalBound always pass, shownFields empty, emptyShown []). The planted mismatches, the not_evaluated rule and the inventory reading fail; then green with the real functions.
+
+   × bounds (W-0 a, W-1 a) > the mock shape (FSI 0.87 under d0.6) fails GFA <= FSI x lot 2ms
+   × bounds (W-0 a, W-1 a) > the live W-0 class (0.99 in the payload on a d0.6 zone) fails the FSI bound 0ms
+   × bounds (W-0 a, W-1 a) > a footprint above the lot fails 0ms
+   × bounds (W-0 a, W-1 a) > no zone value or no coverage is not_evaluated, never a pass 0ms
+   × shown fields (the generated inventory) > reads the screen fields from the inventory, with W-0 applied 0ms
+   × shown fields (the generated inventory) > flags an empty shown field and passes a full one 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  6 failed | 1 passed (7)

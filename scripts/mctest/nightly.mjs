@@ -3,7 +3,7 @@
 // MF-79 · usage: node scripts/mctest/nightly.mjs   (npm run mctest:nightly; scheduled by the operator's launchd job)
 // One run folder ~/Buildo-scratch/mctest/runs/<YYYYMMDD-HHMM>/. It never waits on a lock and never takes one: a held
 // SUITE.lock, a running vitest or a running pipeline chain, or less than 60 GB free, records SKIP with the reason and stops.
-// Order: the web layers (crawler, journeys) → the lot sweep (test stack only) → the results page and cards.
+// Order: one Playwright run (crawler, journeys, then the lot sweep on the test stack only) → the results page and cards.
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -55,16 +55,15 @@ if (skip) {
     }),
   );
 } else {
+  // One Playwright run: the crawler, the journeys and the lot sweep (each signed-in run skips itself without the test stack).
   spawnSync("npx", ["playwright", "test"], { stdio: "inherit", env });
   const stack = testStack(process.env);
-  if (stack.ok)
-    spawnSync("node", ["scripts/mctest/sweep.mjs"], { stdio: "inherit", env });
-  else
+  if (!stack.ok)
     write(
       result({
-        row: "lot_cases/L-RANDOM",
-        owner: "MF-44",
-        kase: "sweep",
+        row: "nightly",
+        owner: "MF-79",
+        kase: "signed-in runs, the lot sweep, S-STORAGE",
         status: "SKIP",
         detail: stack.reason,
       }),

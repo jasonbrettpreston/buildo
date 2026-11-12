@@ -247,7 +247,56 @@ ${sorted.map(tr).join("\n")}
 `;
 }
 
+// ── MF-80 · the lot sweep ────────────────────────────────────────────────────────────────────────────────────────────
+
+/** A dotted path's value (`parcel.areas.x`, `db.zone_d`); a missing step is null. Numeric strings are numbers. */
+function getPath(obj, dotted) {
+  let v = obj;
+  for (const k of dotted.split(".")) v = v == null ? null : v[k];
+  if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v)))
+    return Number(v);
+  return v ?? null;
+}
+
+/**
+ * One bound of the catalogue: lhs <= product(rhs) + tol. A missing or non-numeric value is not_evaluated, never a pass
+ * (FE-06 honest display; McTest D-11 a).
+ */
+function evalBound(bound, ctx) {
+  const lhs = getPath(ctx, bound.lhs);
+  const rhs = bound.rhs.map((r) => getPath(ctx, r));
+  if (![lhs, ...rhs].every((v) => typeof v === "number" && Number.isFinite(v)))
+    return { result: "not_evaluated", lhs, rhs };
+  const limit = rhs.reduce((a, b) => a * b, 1);
+  return { result: lhs <= limit + bound.tol ? "pass" : "fail", lhs, limit };
+}
+
+/** The payload paths the screen shows, from the generated report-field inventory (S-001 rendered), never a typed list. */
+function shownFields(inventory, surface = "S-001") {
+  return new Set(
+    inventory.fields
+      .filter((f) => f.surface === surface && f.rendered)
+      .map((f) => f.payload),
+  );
+}
+
+/** Shown scalar fields that are empty on one payload (array fields are lists; an empty list is a state, not a blank). */
+function emptyShown(payload, shown) {
+  return [...shown]
+    .filter((f) => !f.includes("[]"))
+    .filter((f) => {
+      const v = getPath(payload, f);
+      return (
+        v === null || v === "" || (typeof v === "number" && !Number.isFinite(v))
+      );
+    });
+}
+
 module.exports = {
+  getPath,
+  evalBound,
+  shownFields,
+  emptyShown,
   ROOT,
   CATALOGUE,
   readCatalogue,
