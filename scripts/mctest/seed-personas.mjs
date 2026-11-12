@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/02-web-admin/34_web_admin_testing_protocol.md §3.1 (dated note 2026-11-12: seeded users on the separate test stack);
-//            McTest DECISIONS D-1 (a), D-3 (a), D-12 (a); FE-40 (owed; row text in Spec 126 §0b item 10).
+//            McTest DECISIONS D-1 (a), D-3 (a), D-12 (a); FE-40.
 //
 // MF-79 · usage: node scripts/mctest/seed-personas.mjs --go   (only on the operator's go)
 // Seeds the catalogue's personas on the TEST STACK ONLY: refuses unless testStack() passes (never 54321/54322, never a remote host)

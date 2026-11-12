@@ -7,6 +7,7 @@
 // The anonymous persona needs no database and runs always.
 import { expect, test, type APIRequestContext } from "playwright/test";
 import { ConsumerParcelLookupResponseSchema } from "../../src/app/api/parcels/lookup/types";
+import { hasEvaluatedOption } from "../../src/lib/parcels/consumer-lookup";
 import {
   cat,
   guarded,
@@ -50,6 +51,28 @@ async function call(
     code: body?.error?.code as string | undefined,
   };
 }
+
+/**
+ * The meter rule, read from the route's own helper (EI-D1 "1 b", 2026-11-12): only a payload with an evaluated option counts against the
+ * allowance; any other hit is served, uncounted, even at the cap. Never typed here.
+ */
+const counts = (data: unknown): boolean => {
+  const parsed = ConsumerParcelLookupResponseSchema.safeParse(data);
+  return (
+    parsed.success &&
+    parsed.data.parcel !== null &&
+    hasEvaluatedOption(parsed.data.parcel)
+  );
+};
+/** At the cap: a counting lot is refused with 403 REPORT_LIMIT_REACHED and no payload; a lot that would not count is served. */
+const capOk = (r: {
+  status: number;
+  code?: string | undefined;
+  body: { data?: unknown } | null;
+}): boolean =>
+  r.status === 403
+    ? r.code === "REPORT_LIMIT_REACHED" && !r.body?.data
+    : r.status === 200 && !counts(r.body?.data);
 
 /** What a persona's lookup answers: its `expect.lookup_api` (401, 403_<CODE>, 200), else the lot is shown (200). */
 function wanted(e: Record<string, string>): {
@@ -102,8 +125,14 @@ for (const id of J?.personas ?? []) {
         bearer,
       );
       const atCap = e.new_lot === "403_REPORT_LIMIT_REACHED";
-      if (want.status !== 200 || atCap) {
-        const s = atCap ? { status: 403, code: "REPORT_LIMIT_REACHED" } : want;
+      if (atCap) {
+        check(
+          "search",
+          capOk(search),
+          `http_${search.status} ${search.code ?? ""} (want 403 REPORT_LIMIT_REACHED, or 200 for a lot that does not count)`,
+        );
+      } else if (want.status !== 200) {
+        const s = want;
         check(
           "search",
           search.status === s.status && (!s.code || search.code === s.code),
@@ -121,7 +150,7 @@ for (const id of J?.personas ?? []) {
           `http_${search.status} ${parsed.success ? `lands_${lands}` : "schema_drift"}`,
         );
         const afterOpen = await usage();
-        const metered = e.meter !== "unmetered";
+        const metered = e.meter !== "unmetered" && counts(search.body?.data);
         check(
           "open_lot",
           afterOpen === (before ?? 0) + (metered ? 1 : 0),
@@ -147,9 +176,7 @@ for (const id of J?.personas ?? []) {
         );
         check(
           "new_lot_at_cap",
-          next.status === 403 &&
-            next.code === "REPORT_LIMIT_REACHED" &&
-            !next.body?.data,
+          capOk(next),
           `http_${next.status} ${next.code ?? ""}`,
         );
       }
