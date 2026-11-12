@@ -1,0 +1,4 @@
+MF-46 OUTPUT-fold red evidence: maxbld-auth.logic.test.ts with the exact allow-list entry of ca369e139 (security F1). Run 2026-11-12T00:55Z.
+   × reset and set a new password > OUTPUT security F1: every MaxBLD link the code builds matches the Supabase redirect allow-list (GoTrue globs the whole URL) 3ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 18 passed (19)

@@ -166,8 +166,10 @@ site_url = "http://127.0.0.1:3000"
 # `com.buildo://` allowlisting was a CLOUD-dashboard checklist item, phase1_plan.md L501 —
 # never mirrored into this local file). New scheme covers both the OAuth deep link
 # (password reset / email-change, bare scheme) and the P2-D4 email-confirmation redirect.
-# MF-46 (plan v1 fold 6; DECISIONS-v2 N-1): one exact entry for the maxbld.ca code exchange (sign-up confirm, reset, Google); no www, no wildcard.
-additional_redirect_urls = ["https://127.0.0.1:3000", "maxbld://", "maxbld://auth/confirm", "https://maxbld.ca/auth/callback"]
+# MF-46 (plan v1 fold 6; DECISIONS-v2 N-1; OUTPUT security F1): one entry for the maxbld.ca code exchange (sign-up confirm, reset, Google). GoTrue
+# glob-matches the whole URL including the query, and every MaxBLD link carries ?redirect=..., so the entry ends in ** after the fixed host and
+# path; no www, no other host, never *.vercel.app. Pinned by src/tests/maxbld-auth.logic.test.ts (every link the code builds matches).
+additional_redirect_urls = ["https://127.0.0.1:3000", "maxbld://", "maxbld://auth/confirm", "https://maxbld.ca/auth/callback**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.

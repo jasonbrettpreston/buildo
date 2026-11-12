@@ -20,7 +20,7 @@ vi.mock('@/lib/db/client', () => ({ pool: pg }));
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logInfo: vi.fn(), logWarn: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
-import { maxbldAcceptTermsAction, maxbldResetAction, maxbldSetPasswordAction, maxbldSignUpAction } from '@/lib/supabase/maxbld-actions';
+import { RECOVERY_WINDOW_S, fromRecovery, maxbldAcceptTermsAction, maxbldResetAction, maxbldSetPasswordAction, maxbldSignUpAction } from '@/lib/supabase/maxbld-actions';
 import { TERMS_READ_SQL, TERMS_WRITE_SQL, acceptTerms, termsAccepted } from '@/lib/auth/maxbld-terms';
 import { maxbldAfterSignIn } from '@/lib/auth/maxbld-after-sign-in';
 import { AUTH_TEXT } from '@/lib/surfaces/maxbld-auth';
@@ -59,6 +59,33 @@ describe('reset and set a new password', () => {
     expect(await maxbldResetAction('a@b.test')).toEqual({ code: 'sent' });
     expect(sb.resetPasswordForEmail.mock.calls[0]?.[1]).toEqual({ redirectTo: 'https://maxbld.ca/auth/callback?redirect=%2Fset-password' });
   });
+  it('OUTPUT security F3: the recovery entry must be within the link lifetime', () => {
+    const now = 1_000_000;
+    expect(fromRecovery({ amr: [{ method: 'recovery', timestamp: now - 10 }] }, now)).toBe(true);
+    expect(fromRecovery({ amr: [{ method: 'recovery', timestamp: now - RECOVERY_WINDOW_S - 1 }] }, now)).toBe(false);
+    expect(fromRecovery({ amr: [{ method: 'recovery' }] }, now)).toBe(false);
+    expect(fromRecovery({ amr: [{ method: 'recovery', timestamp: now + 60 }] }, now)).toBe(false);
+  });
+  it('OUTPUT security F1: every MaxBLD link the code builds matches the Supabase redirect allow-list (GoTrue globs the whole URL)', async () => {
+    const fsm = await import('node:fs');
+    const toml = fsm.readFileSync('supabase/config.toml', 'utf8');
+    const list = JSON.parse(/^additional_redirect_urls = (\[.*\])$/m.exec(toml)?.[1] ?? '[]') as string[];
+    const esc = (t: string): string => t.replace(/[.+?^{}()|[\]\\$]/g, (c) => `\\${c}`);
+    const glob = (g: string): RegExp => new RegExp(`^${g.split('**').map((part) => part.split('*').map(esc).join('[^/]*')).join('.*')}$`);
+    const ok = (u: string): boolean => list.some((g) => glob(g).test(u));
+    sb.signUp.mockResolvedValue({ error: null });
+    sb.resetPasswordForEmail.mockResolvedValue({ error: null });
+    await maxbldSignUpAction('a@b.test', 'secret12', '');
+    await maxbldResetAction('a@b.test');
+    const links = [
+      (sb.signUp.mock.calls[0]?.[0] as { options: { emailRedirectTo: string } }).options.emailRedirectTo,
+      (sb.resetPasswordForEmail.mock.calls[0]?.[1] as { redirectTo: string }).redirectTo,
+      `https://maxbld.ca/auth/callback?redirect=${encodeURIComponent('/terms-accept?redirect=%2Fparcel-tool')}`,
+    ];
+    for (const l of links) expect([l, ok(l)]).toEqual([l, true]);
+    expect(ok('https://evil.test/auth/callback?redirect=x')).toBe(false);
+    expect(ok('https://maxbld.ca.evil.test/auth/callback')).toBe(false);
+  });
   it('a normal sign-in session cannot set a password (RED: recovery only)', async () => {
     sb.getClaims.mockResolvedValue({ data: { claims: { sub: UID, amr: [{ method: 'password' }] } }, error: null });
     expect(await maxbldSetPasswordAction('newsecret')).toEqual({ code: 'expired' });
@@ -67,7 +94,7 @@ describe('reset and set a new password', () => {
     expect(await maxbldSetPasswordAction('newsecret')).toEqual({ code: 'expired' });
   });
   it('a recovery session sets the password and goes to the search page', async () => {
-    sb.getClaims.mockResolvedValue({ data: { claims: { sub: UID, amr: [{ method: 'recovery' }] } }, error: null });
+    sb.getClaims.mockResolvedValue({ data: { claims: { sub: UID, amr: [{ method: 'recovery', timestamp: Math.floor(Date.now() / 1000) - 5 }] } }, error: null });
     sb.updateUser.mockResolvedValue({ error: null });
     expect(await maxbldSetPasswordAction('newsecret')).toEqual({ code: 'done', next: '/parcel-tool' });
     expect(sb.updateUser).toHaveBeenCalledWith({ password: 'newsecret' });
@@ -145,7 +172,7 @@ describe('the shared LoginForm, MaxBLD variant', () => {
     const buttons = [...html('login').matchAll(/<button[^>]*>([^<]*)</g)].map((m) => m[1]);
     expect(buttons).toEqual([AUTH_TEXT['login.submit'], AUTH_TEXT.google]);
   });
-  it('the Buildo screen is unchanged without a variant (persona and the Buildo title still there)', () => {
+  it('without a variant the Buildo screen still renders its own copy (Buildo title, no MaxBLD strings); LoginForm.ui.test.tsx pins the rest', () => {
     const h = renderToStaticMarkup(createElement(LoginForm, {}));
     expect(h).toContain('Sign In to MaxBLD');
     expect(h).not.toContain(AUTH_TEXT['login.forgot']);

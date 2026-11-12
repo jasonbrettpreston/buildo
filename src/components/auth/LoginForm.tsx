@@ -226,7 +226,7 @@ export function LoginForm({ onSuccess, variant }: LoginFormProps) {
           <h1 className="text-[28px]/[34px] font-bold tracking-tight text-zinc-100">{t[k.title]}</h1>
           {v.mode === 'signup' && <p className="mt-2 text-zinc-300">{t['signup.lead']}</p>}
           {v.mode === 'reset' && <p className="mt-2 text-zinc-300">{t['reset.lead']}</p>}
-          <form onSubmit={handleMaxbldSubmit} className="mt-6 space-y-4" noValidate={false}>
+          <form onSubmit={handleMaxbldSubmit} className="mt-6 space-y-4">
             {v.mode === 'signup' && (
               <div>
                 <label htmlFor="mx-name" className={label}>{t['field.name']}</label>

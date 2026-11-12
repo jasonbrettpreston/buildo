@@ -56,11 +56,6 @@ export const MAXBLD_ROUTES: readonly MaxbldRoute[] = [
   { path: '/api/parcels/entitlement', match: 'exact', routeClass: 'authenticated' },
 ];
 
-/** The public internal paths of the MaxBLD rows (route-guard lists them as public by exact match; buildo.com refuses them by prefix). */
-export const MAXBLD_PUBLIC_INTERNAL_PATHS: readonly string[] = MAXBLD_ROUTES.filter(
-  (r) => r.routeClass === 'public' && r.internal !== undefined,
-).map((r) => r.internal as string);
-
 export type HostDecision =
   | { kind: 'buildo' }
   | { kind: 'refuse' }
@@ -80,6 +75,19 @@ export function normalizeHost(host: string | null | undefined): string {
 }
 
 const underPrefix = (pathname: string, prefix: string): boolean => pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+/**
+ * The path as a router could read it, for the refusal of the internal prefix on other hosts only (OUTPUT security F5): decoded once and lower
+ * case. A path that does not decode is refused when its raw form is under the prefix and otherwise kept as is. The maxbld.ca rows still match
+ * exactly (fail closed there: an odd spelling is simply not served).
+ */
+function foldPath(pathname: string): string {
+  try {
+    return decodeURIComponent(pathname).toLowerCase();
+  } catch {
+    return pathname.toLowerCase();
+  }
+}
 
 /** The row serving `pathname`, or null. One trailing slash on a non-root path is ignored; case is not folded (fail closed). */
 export function matchMaxbldRoute(pathname: string, routes: readonly MaxbldRoute[] = MAXBLD_ROUTES): MaxbldRoute | null {
@@ -105,7 +113,7 @@ export function resolveHost(
     if (!route) return { kind: 'refuse' };
     return { kind: 'maxbld', route, internal: route.internal ?? pathname };
   }
-  return underPrefix(pathname, MAXBLD_INTERNAL_PREFIX) ? { kind: 'refuse' } : { kind: 'buildo' };
+  return underPrefix(foldPath(pathname), MAXBLD_INTERNAL_PREFIX) ? { kind: 'refuse' } : { kind: 'buildo' };
 }
 
 /** The MaxBLD branch of the post-login target: a path on the host table, else the MaxBLD search page; never `/dashboard`. */

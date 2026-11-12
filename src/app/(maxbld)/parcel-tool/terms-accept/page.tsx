@@ -28,6 +28,13 @@ export default async function MaxbldTermsAcceptPage({ searchParams }: { searchPa
     throw cause;
   }
   if (!uid || !isUuid(uid)) redirect(`/login?redirect=${encodeURIComponent(target)}`);
-  if (await termsAccepted(pool, uid)) redirect(target);
+  let accepted: boolean;
+  try {
+    accepted = await termsAccepted(pool, uid);
+  } catch (cause) {
+    logError('[maxbld/terms-accept]', cause, { stage: 'terms-lookup', uid });
+    throw cause;
+  }
+  if (accepted) redirect(target);
   return <TermsAcceptClient target={target} />;
 }

@@ -26,6 +26,8 @@ export function TermsAcceptClient({ target }: { target: string }) {
       else if (r.code === 'required') setError(t['terms.required']);
       else if (r.code === 'expired') router.push(`/login?redirect=${encodeURIComponent(target)}`);
       else setError(t['terms.error']);
+    } catch {
+      setError(t['terms.error']);
     } finally {
       setBusy(false);
     }

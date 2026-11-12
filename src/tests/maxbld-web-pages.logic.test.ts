@@ -172,7 +172,9 @@ describe('L the live switch and the fences', () => {
       path.join(ROOT, 'src/components/surfaces/web/StaticBinding.tsx'), path.join(ROOT, 'src/lib/surfaces/maxbld-static.ts'), path.join(ROOT, 'scripts/surfaces/_schema/static-page.json')];
     // MF-46 stage B (dated 2026-11-11): 16 -> 23, the MaxBLD sign-in client mount, its four routes and the terms step page and client.
     // MF-46 (dated 2026-11-11, plan v1 fold 4): 23 -> 24, the refused-page target (static)/refused/page.tsx.
-    expect(all.length).toBe(24);
+    // MF-46 OUTPUT panel (regression F2, dated 2026-11-11): the shared LoginForm the mounts may import is scanned too, 24 -> 25.
+    all.push(path.join(ROOT, 'src/components/auth/LoginForm.tsx'));
+    expect(all.length).toBe(25);
     for (const f of all) for (const [re, why] of BANNED) expect([path.relative(ROOT, f), why, re.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), why, false]);
   });
   it('RED: each banned form is caught in a planted text', () => {

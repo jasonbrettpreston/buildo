@@ -8,8 +8,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
+const session = vi.hoisted(() => ({ cookie: null as null | { name: string; value: string } }));
 vi.mock('@/lib/supabase/middleware', () => ({
-  updateSession: vi.fn(async () => NextResponse.next()),
+  updateSession: vi.fn(async () => {
+    const res = NextResponse.next();
+    if (session.cookie) res.cookies.set(session.cookie.name, session.cookie.value);
+    return res;
+  }),
 }));
 const mockExchange = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/supabase/server', () => ({
@@ -26,7 +31,7 @@ import {
   resolveHost,
   type MaxbldRoute,
 } from '@/lib/auth/host-policy';
-import { classifyRoute } from '@/lib/auth/route-guard';
+import { classifyRoute, DEV_SESSION_COOKIE, SESSION_COOKIE_NAME } from '@/lib/auth/route-guard';
 import { safeRedirectPath } from '@/lib/auth/safe-redirect';
 import { middleware } from '@/middleware';
 
@@ -107,6 +112,10 @@ describe('host-policy: every other host is Buildo, minus the internal prefix', (
     expect(resolveHost(h, '/parcel-tool').kind).toBe('refuse');
     expect(resolveHost(h, '/parcel-tool/123').kind).toBe('refuse');
   });
+  it('OUTPUT security F5: a case or percent-encoded spelling of the prefix is refused too', () => {
+    for (const p of ['/Parcel-Tool', '/PARCEL-TOOL/1', '/parcel%2Dtool', '/parcel%2dtool/x', '/%70arcel-tool']) expect([p, resolveHost('buildo.com', p).kind]).toEqual([p, 'refuse']);
+    expect(resolveHost('buildo.com', '/%E0%A4%A').kind).toBe('buildo');
+  });
   it.each(OTHER_HOSTS)('%j keeps Buildo paths', (h) => {
     for (const p of ['/', '/dashboard', '/login', '/api/permits', '/admin', '/parcel-toolbox']) {
       expect(resolveHost(h, p)).toEqual({ kind: 'buildo' });
@@ -174,6 +183,26 @@ describe('middleware: the fence runs first', () => {
   it('maxbld.ca /parcel-tool with a session passes', async () => {
     const res = await middleware(req('maxbld.ca', '/parcel-tool', 'sb-x-auth-token=v'));
     expect(res.status).toBe(200);
+  });
+
+  it('OUTPUT panel (code reviewer 1): a rewrite keeps the query and carries the refreshed session cookie', async () => {
+    session.cookie = { name: 'sb-x-auth-token', value: 'refreshed' };
+    try {
+      const res = await middleware(req('maxbld.ca', '/login?redirect=%2Fparcel-tool'));
+      const rw = new URL(res.headers.get('x-middleware-rewrite') ?? 'https://none.invalid/');
+      expect([rw.pathname, rw.search]).toEqual(['/parcel-tool/login', '?redirect=%2Fparcel-tool']);
+      expect(res.cookies.get('sb-x-auth-token')?.value).toBe('refreshed');
+    } finally {
+      session.cookie = null;
+    }
+  });
+
+  it('OUTPUT panel (regression F3): dev mode through a rewritten authenticated row sets the dev cookie on the rewrite and forwards it', async () => {
+    process.env.DEV_MODE = 'true';
+    const res = await middleware(req('maxbld.ca', '/terms-accept'));
+    expect(new URL(res.headers.get('x-middleware-rewrite') ?? 'https://none.invalid/').pathname).toBe('/parcel-tool/terms-accept');
+    expect(res.cookies.get(SESSION_COOKIE_NAME)?.value).toBe(DEV_SESSION_COOKIE);
+    expect(res.headers.get('x-middleware-request-cookie') ?? res.headers.get('x-middleware-override-headers') ?? '').not.toBe('');
   });
 
   it('maxbld.ca /api/parcels/lookup signed out is a 401', async () => {
