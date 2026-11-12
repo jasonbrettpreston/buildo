@@ -38,6 +38,9 @@
       "sheet.record": "3,057 sq ft · 284 m²",
       "ad_scenario_detached_house_flat_or_shallow_roof": "Get your lot surveyed"
     },
+    "flags": {
+      "lot_size_entry_open": true
+    },
     "not_evaluated": [
       "o2"
     ]
@@ -613,6 +616,33 @@
             "kind": "pending",
             "pending": "classified",
             "text": "not yet classified"
+          }
+        ]
+      },
+      {
+        "kind": "lot_size",
+        "id": "lot_size",
+        "parts": [
+          {
+            "role": "title",
+            "brief": "C1",
+            "kind": "content",
+            "content": "ls.title",
+            "text": "Know your exact lot size?"
+          },
+          {
+            "role": "body",
+            "brief": "C1",
+            "kind": "content",
+            "content": "ls.body",
+            "text": "Survey data is more accurate than our estimate. Add lot size and every option is recalculated."
+          },
+          {
+            "role": "button",
+            "brief": "C1",
+            "kind": "content",
+            "content": "ls.button",
+            "text": "Add lot size"
           }
         ]
       },
@@ -1832,6 +1862,98 @@
             "kind": "pending",
             "pending": "estimated",
             "text": "not yet estimated"
+          }
+        ]
+      },
+      {
+        "kind": "sheet",
+        "id": "sheet",
+        "parts": [
+          {
+            "role": "title",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.h",
+            "text": "Add your lot size"
+          },
+          {
+            "role": "body",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.p",
+            "text": "Use the lot area from your survey. It replaces the City lot record for this report, and every option is recalculated."
+          },
+          {
+            "role": "record.label",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.now",
+            "text": "City lot record"
+          },
+          {
+            "role": "record.value",
+            "brief": "H0",
+            "kind": "value",
+            "field": "lot_size_sqm",
+            "key": "sheet.record",
+            "rule": "area_sqft_m2_dot",
+            "text": "3,057 sq ft · 284 m²"
+          },
+          {
+            "role": "input.label",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.label",
+            "text": "Lot size from your survey"
+          },
+          {
+            "role": "input.placeholder",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.placeholder",
+            "text": "e.g. 3,120"
+          },
+          {
+            "role": "unit.sqft",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.unit_sqft",
+            "text": "sq ft"
+          },
+          {
+            "role": "unit.m2",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.unit_m2",
+            "text": "m²"
+          },
+          {
+            "role": "error",
+            "brief": "H0",
+            "kind": "pending",
+            "pending": "estimated",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "note",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.note",
+            "text": "You can enter the lot size once. It is saved with this lot and marked as entered by you."
+          },
+          {
+            "role": "submit",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.submit",
+            "text": "Recalculate"
+          },
+          {
+            "role": "cancel",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.cancel",
+            "text": "Cancel"
           }
         ]
       }
