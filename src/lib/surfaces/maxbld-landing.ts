@@ -34,6 +34,7 @@ import { citywideLines, paced, readCitywideRow, readReportCheckPace, stepMs } fr
 import type { Queryable as PaceQueryable } from '@/lib/parcels/report-check-pace';
 import { buildTree, pageViewOf, viewOf, type PageView, type ReportView } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
+import { keepValued } from '@/lib/surfaces/maxbld-static';
 
 const TAG = '[maxbld-landing]';
 export const LANDING = 'web_landing';
@@ -123,13 +124,12 @@ export function sampleView(): PageView {
 export function landingPage(state: 'static' | 'degraded', values: StaticValues, report: StaticReport): StaticPage {
   const page = (pages.pages as Record<string, Record<string, StaticPage>>)[LANDING]?.[state];
   if (!page) throw new Error(`maxbld-landing: no page for ${state}`);
-  const keep = (p: StaticPage['sections'][number]['parts'][number]): boolean => {
-    if (p.value !== undefined) return Object.hasOwn(values, p.value);
+  // Dated 2026-11-12 (MF-46 Help & Support contact): the value rule is maxbld-static.ts keepValued (one home, shared with web_help).
+  return keepValued(page, values, (p) => {
     if (p.role === 'checked') return Object.keys(values).some((k) => k.startsWith(`checked.${p.group}.`));
     if (p.role === 'demo' || p.role === 'picture' || p.role === 'scene') return report[p.role] !== undefined;
     return true;
-  };
-  return { sections: page.sections.map((s) => ({ ...s, parts: s.parts.filter(keep) })).filter((s) => s.parts.length > 0) };
+  });
 }
 
 export interface Landing { state: 'static' | 'degraded'; page: StaticPage; content: Record<string, string>; values: StaticValues; report: StaticReport }

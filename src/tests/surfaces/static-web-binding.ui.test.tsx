@@ -10,6 +10,10 @@
 //   (b) the error state's Try again runs the mount's retry (the boundary reset); with no retry given the button is disabled;
 //   (c) RED: an unknown component, a missing content key, a number as content, an unknown section kind, a role outside its kind, a link with no
 //       or an off-origin href, and an unknown action each throw.
+//   (d) dated 2026-11-12 (MF-46 follow-up, Help & Support contact): with the inbox each topic is a real mailto link (the encoded label as the subject,
+//       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+//       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+//       topic on a paragraph throw.
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -18,7 +22,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { AdminMantineProvider } from '../../components/surfaces/web/AdminMantineProvider';
 import { StaticBinding, staticWebTree, type StaticNode, type StaticPage } from '../../components/surfaces/web/StaticBinding';
-import { STATIC_CONTENT, staticPage } from '../../lib/surfaces/maxbld-static';
+import { keepValued, STATIC_CONTENT, staticPage } from '../../lib/surfaces/maxbld-static';
+import { cleanValue, HelpPrefill, PREFILL_MAX } from '../../app/(maxbld)/parcel-tool/(static)/help/HelpPrefill';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
 const ROOT = process.cwd();
@@ -30,7 +35,9 @@ const GOLDENS: Json[] = IDS.flatMap((id) => fs.readdirSync(path.join(GROOT, id))
   .map((f) => JSON.parse(fs.readFileSync(path.join(GROOT, id, f), 'utf8')) as Json));
 const provided = (el: ReactElement): ReactElement => h(AdminMantineProvider, { scheme: 'dark', children: el });
 const decode = (s: string): string => s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-const ssr = (tree: StaticNode, content: Record<string, string>, extra: Json = {}): string => decode(renderToStaticMarkup(provided(h(StaticBinding, { tree, content, ...extra }))));
+// MF-46 follow-up (dated 2026-11-12): a reserved test domain, joined at run time so no address is ever written into the repo (the inbox is a setting).
+const INBOX = ['support', 'example.invalid'].join('@');
+const ssr = (tree: StaticNode, content: Record<string, string>, extra: Json = {}): string => decode(renderToStaticMarkup(provided(h(StaticBinding, { tree, content, values: { support_inbox: INBOX }, ...extra }))));
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
 
 // Console errors a library prints during a render that are not defects of the binding. Empty today: any entry needs a comment naming why.
@@ -124,5 +131,39 @@ describe('(c) RED: planted defects throw', () => {
     expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
     expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+  });
+});
+
+describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)', () => {
+  const TOPICS = ['general', 'address_match', 'lot_match', 'billing', 'enterprise'];
+  it('with the inbox: one real mailto link per topic, the encoded label as the subject; with none: no link, the page still renders', () => {
+    const { page, content } = staticPage('web_help', 'static');
+    const html = ssr(staticWebTree(page), content);
+    for (const t of TOPICS) {
+      const label = content[`help.mailto.${t}`] as string;
+      expect(html).toContain(`href="mailto:${INBOX}?subject=${encodeURIComponent(label)}" data-topic="${t}"`);
+    }
+    const none = ssr(staticWebTree(keepValued(page, {})), content, { values: {} });
+    expect([none.includes('mailto:'), none.includes(content['help.title'] as string)]).toEqual([false, true]);
+    expect(errors).toEqual([]);
+  });
+  it('the prefill: the fragment values, cleaned and encoded, become the body of the fragment topic link only', () => {
+    const { page, content } = staticPage('web_help', 'static');
+    window.location.hash = `#topic=address_match&q=${encodeURIComponent('1 Main St\r\nbcc: x')}&parcel=${encodeURIComponent('&cc=y')}`;
+    render(provided(h('div', null, h(StaticBinding, { tree: staticWebTree(page), content, values: { support_inbox: INBOX } }), h(HelpPrefill))));
+    const href = (t: string): string => (screen.getByTestId(`static-mailto-${t}`) as HTMLAnchorElement).getAttribute('href') ?? '';
+    expect(href('address_match').split('&body=')[1]).toBe(encodeURIComponent('1 Main St bcc: x\n&cc=y'));
+    expect(href('address_match').match(/&/g)).toHaveLength(1);
+    expect(href('general')).not.toContain('&body=');
+    expect([cleanValue('a\u0000b\u007f\u0085c'), cleanValue('x'.repeat(PREFILL_MAX + 9)).length, cleanValue(null)]).toEqual(['a b c', PREFILL_MAX, '']);
+    window.location.hash = '';
+  });
+  it('RED: a mailto without its value throws at render; a topic outside the list or on a paragraph throws in the tree', () => {
+    const { page, content } = staticPage('web_help', 'static');
+    expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+    const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
   });
 });

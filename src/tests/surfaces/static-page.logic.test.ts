@@ -14,12 +14,17 @@
 //   T5 the mounts are public: no plain page imports the parcel-tool gate; RED: a planted import is caught;
 //   T6 legal text parity (fold 22) and the inbox ruling: Terms name the free trial and the Basic, Pro and Enterprise plans and the trial continues on
 //      Basic; no "One plan"; no analytics claim; no unfilled placeholder; no email address anywhere in the content (the inbox is a setting).
-import { describe, expect, it } from 'vitest';
+//   T7 dated 2026-11-12 (MF-46 follow-up, Help & Support contact): the inbox read gives the page value only for a plain address; unset, not an
+//      address (a header or query payload included) or a read that throws gives {} (the mail links left out), logged, never thrown.
+//   T8 dated 2026-11-12 (MF-46 follow-up, P35-D18 a): the app's Help URL is MAXBLD_ORIGIN + /help (one origin; the app cannot import host-policy.ts),
+//      a public host-table row; the search page's address list carries "Report incorrect address match" opening it with the topic and the query.
+import { describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020Module from 'ajv/dist/2020.js';
-import { matchMaxbldRoute } from '@/lib/auth/host-policy';
+import { MAXBLD_ORIGIN, matchMaxbldRoute } from '@/lib/auth/host-policy';
 import { STATIC_CONTENT } from '@/lib/surfaces/maxbld-static';
+import { readSupportInbox, SUPPORT_INBOX_KEY } from '@/lib/surfaces/maxbld-support';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON documents
 const ROOT = process.cwd();
@@ -55,6 +60,12 @@ describe('T1 the page table against the contract', () => {
       ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
       ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
       ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
+      // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
     ];
     for (const [why, f] of plants) { const t = clone(TABLE); f(t); expect([why, validate(t)]).toEqual([why, false]); }
   });
@@ -112,7 +123,8 @@ describe('T5 the plain pages are public (no gate)', () => {
     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
     // MF-76 (dated 2026-11-11): + the landing mount home/page.tsx (public, no gate; its errors reach error.tsx).
-    expect(files.sort()).toEqual(['error.tsx', 'help/page.tsx', 'home/page.tsx', 'not-found.tsx', 'privacy/page.tsx', 'refused/page.tsx', 'terms/page.tsx']);
+    // Dated 2026-11-12 (MF-46 follow-up, Help & Support contact): + help/HelpPrefill.tsx, the help page's prefill island (no gate, renders nothing).
+    expect(files.sort()).toEqual(['error.tsx', 'help/HelpPrefill.tsx', 'help/page.tsx', 'home/page.tsx', 'not-found.tsx', 'privacy/page.tsx', 'refused/page.tsx', 'terms/page.tsx']);
     for (const f of files) expect([f, gateImports(fs.readFileSync(path.join(ROOT, MOUNTS, f), 'utf8'))]).toEqual([f, []]);
   });
   it('RED: a planted gate import is caught', () => {
@@ -154,5 +166,38 @@ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruli
       'web_terms: does not say "Enterprise"',
       'web_terms: does not say "plus HST"',
     ]);
+  });
+});
+
+describe('T7 the support inbox read (MF-46 follow-up, dated 2026-11-12)', () => {
+  const at = (local: string, domain = 'example.invalid'): string => [local, domain].join('@'); // never an address typed into the repo
+  const db = (v: unknown) => ({ query: vi.fn(async (_sql: string, _params: unknown[]) => ({ rows: v === undefined ? [] : [{ variable_value_json: v }] })) });
+  it('a plain address is the page value support_inbox (trimmed); the read names the one setting', async () => {
+    const d = db(` ${at('support')} `);
+    expect(await readSupportInbox(d as never)).toEqual({ support_inbox: at('support') });
+    expect(d.query.mock.calls[0]?.[1]).toEqual([SUPPORT_INBOX_KEY]);
+  });
+  it('RED: unset, empty, not a string, a header or query payload, and a read that throws each give {} and are logged', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    for (const v of [undefined, '', 7, 'support', at('a?cc=b'), at('a\r\nbcc:b'), at('a', 'b.c&body=x'), `${at('a')},${at('b')}`]) expect([v, await readSupportInbox(db(v) as never)]).toEqual([v, {}]);
+    expect(await readSupportInbox({ query: async () => { throw new Error('down'); } } as never)).toEqual({});
+    expect([warn.mock.calls.length, err.mock.calls.length]).toEqual([8, 1]);
+    vi.restoreAllMocks();
+  });
+});
+
+describe('T8 the app link to Help & Support (MF-46 follow-up, P35-D18 a; dated 2026-11-12)', () => {
+  const urlOf = (src: string): string | undefined => /export const MAXBLD_HELP_URL = '([^']+)';/.exec(src)?.[1];
+  it('MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic address_match and the query', () => {
+    expect(urlOf(fs.readFileSync(path.join(ROOT, 'mobile/src/lib/maxbldHelp.ts'), 'utf8'))).toBe(`${MAXBLD_ORIGIN}/help`);
+    expect(matchMaxbldRoute('/help')?.routeClass).toBe('public');
+    const find = (n: Json): Json | undefined => (n?.props?.testID === 'parcel-search-report' ? n : (n?.children ?? []).map(find).find(Boolean));
+    const report = find(rj('src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json').props);
+    expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'address_match', q: { derived: 'input' } }, [{ content: 'list.report' }]]);
+    expect(SEARCH['list.report']).toBe('Report incorrect address match');
+  });
+  it('RED: a second typed host is caught', () => {
+    expect(urlOf("export const MAXBLD_HELP_URL = 'https://maxbld.com/help';")).not.toBe(`${MAXBLD_ORIGIN}/help`);
   });
 });

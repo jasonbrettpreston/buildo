@@ -1292,6 +1292,37 @@
                 ]
               },
               {
+                "component": "Button",
+                "props": {
+                  "key": "report",
+                  "testID": "parcel-search-report",
+                  "variant": "link",
+                  "className": "mt-2 min-h-[44px] self-center",
+                  "accessibilityRole": "link",
+                  "onPress": {
+                    "action": "open_help",
+                    "topic": "address_match",
+                    "q": {
+                      "derived": "input"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "report-text",
+                      "className": "text-xs font-normal text-zinc-400 underline"
+                    },
+                    "children": [
+                      {
+                        "content": "list.report"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
                 "component": "Text",
                 "props": {
                   "key": "refine",
@@ -1312,7 +1343,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "8d4c452a9a17487c",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "17efc748dba71d69",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "316d9201090e1cbf"
     }
   }

@@ -24,6 +24,9 @@
 // the sample is ReportPage over the committed synthetic page tree, inside a keyboard-reachable named region that fades in by opacity when the demo
 // ends (#sample:target and reduce motion show it at once); the step picture and the process scene are the report Picture, drawn only when the server
 // sends an image.
+// Dated 2026-11-12 (MF-46 follow-up, Help & Support contact; operator "All recommendations accepted ... use schema's"; DECISIONS-v1 D-6 (a)): the
+// prose role mailto. The node carries {derived: support_inbox} under `mailto` and its topic; the render is a real link (a Mantine Button as `a`)
+// to mailto:<inbox>?subject=<the encoded label> with data-topic, where the help page's prefill island adds the body from the URL fragment.
 // Dated 2026-11-12 (MF-46 follow-up, McTest / next build): no 'use client' directive. The module has no hook and no state; the server mounts
 // call staticWebTree and render it, and a client boundary (error.tsx) imports it as a client module. With the directive, next build refused the
 // server call ("Attempted to call staticWebTree() from the server but staticWebTree is on the client").
@@ -38,7 +41,7 @@ import presentation from '../../../../scripts/surfaces/_schema/report-presentati
 
 export type StaticRef = { content: string } | { derived: string };
 export type StaticNode = { component: string; props: Record<string, unknown>; children: Array<StaticNode | StaticRef> };
-export type StaticPart = { role: string; content?: string; href?: string; value?: string; group?: string };
+export type StaticPart = { role: string; content?: string; href?: string; value?: string; group?: string; topic?: string };
 export type StaticSection = { kind: string; id: string; parts: StaticPart[] };
 export type StaticPage = { sections: StaticSection[] };
 
@@ -56,12 +59,15 @@ export const STATIC_KINDS: Readonly<Record<string, readonly string[]>> = Object.
 const HREF = new RegExp(schema.$defs.part.properties.href.pattern);
 const KEY = new RegExp(schema.$defs.part.properties.content.pattern);
 const SECTION_KEYS = ['kind', 'id', 'parts'];
-const PART_KEYS = ['role', 'content', 'href', 'value', 'group'];
+const PART_KEYS = ['role', 'content', 'href', 'value', 'group', 'topic'];
 const VALUE = new RegExp(schema.$defs.part.properties.value.pattern);
 /** The roles that carry an href and the roles that carry no content key, read from the schema's part rules (one home). */
-const [LINK_RULE, BARE_RULE] = schema.$defs.part.allOf;
+const [LINK_RULE, BARE_RULE, , MAILTO_RULE] = schema.$defs.part.allOf;
 const LINK_ROLES: readonly string[] = LINK_RULE?.if.properties.role.enum ?? [];
 const BARE_ROLES: readonly string[] = BARE_RULE?.if.properties.role.enum ?? [];
+/** The mailto topics and its one server read (the schema's mailto rule; one home). */
+const TOPICS: readonly string[] = schema.$defs.part.properties.topic.enum;
+const MAILTO_READ: string = (MAILTO_RULE?.then.properties as { value?: { const: string } } | undefined)?.value?.const ?? '';
 /** The citywide line keys of the report loading state, in its order (report-presentation.json states.checked; MF-62, one home). */
 const CITYWIDE_KEYS: readonly string[] = Object.keys(presentation.states.checked.lines.citywide);
 const SLOT = '{value}';
@@ -77,6 +83,7 @@ export const WEB_STATIC_LAYOUT = {
   list: 'text-base leading-7 text-zinc-300',
   item: 'text-base leading-7 text-zinc-300',
   retry: 'mt-2 self-start rounded-xl',
+  mailto: 'self-start rounded-xl', // dated 2026-11-12 (MF-46 Help & Support contact)
   footer: 'gap-3 border-t border-zinc-800 pt-6',
   links: 'gap-2',
   link: 'rounded-xl text-zinc-300',
@@ -141,6 +148,7 @@ const checkPart = (p: unknown, kind: string, at: string): StaticPart => {
   if (LINK_ROLES.includes(p.role as string) ? typeof p.href !== 'string' || !HREF.test(p.href) : p.href !== undefined) fail(`${at}: href ${JSON.stringify(p.href)} is not allowed here`);
   if (p.value !== undefined && (typeof p.value !== 'string' || !VALUE.test(p.value))) fail(`${at}: value ${JSON.stringify(p.value)} is not a declared read name`);
   if (p.role === 'checked' ? p.group !== 'citywide' : p.group !== undefined) fail(`${at}: group ${JSON.stringify(p.group)} is not allowed here`);
+  if (p.role === 'mailto' ? !TOPICS.includes(p.topic as string) || p.value !== MAILTO_READ : p.topic !== undefined) fail(`${at}: a mailto has a listed topic and the read ${MAILTO_READ}; no other part has a topic`);
   return p as StaticPart;
 };
 
@@ -158,6 +166,7 @@ const proseNode = (s: StaticSection): StaticNode => {
     if (p.role === 'title') kids.push(node('Title', { key, testID: 'static-title', className: L.title }, [txt(p)]));
     else if (p.role === 'heading') kids.push(node('Text', { key, component: 'h2', className: L.heading }, [txt(p)]));
     else if (p.role === 'paragraph') kids.push(node('Text', { key, className: L.paragraph }, [txt(p)]));
+    else if (p.role === 'mailto') kids.push(node('Button', { key, testID: `static-mailto-${p.topic}`, topic: p.topic, mailto: derived(MAILTO_READ), size: 'lg', variant: 'light', color: 'amber', className: L.mailto }, [txt(p)]));
     else kids.push(node('Button', { key, testID: 'static-retry', size: 'lg', variant: 'filled', color: 'amber', className: L.retry, onClick: { action: 'retry' } }, [txt(p)]));
   });
   return node('Stack', { key: s.id, testID: `static-${s.id}`, component: 'section', className: L.prose }, kids);
@@ -407,6 +416,12 @@ function renderStaticNode(n: StaticNode, ctx: Ctx): ReactNode {
       return <ListItem key={k} {...base}>{kids}</ListItem>;
     case 'Button': {
       const look = defined({ size: p.size, variant: p.variant, color: p.color });
+      if (p.mailto !== undefined) {
+        // A real mail link (126 §0b item 11): the server's inbox, the label as the encoded subject; the prefill island adds the body.
+        const inbox = valueOf(isObj(p.mailto) ? p.mailto.derived : undefined, ctx.values);
+        const href = `mailto:${inbox}?subject=${encodeURIComponent(kids.join(''))}`;
+        return <Button key={k} {...base} {...look} component="a" href={href} data-topic={String(p.topic)}>{kids}</Button>;
+      }
       if (p.href !== undefined) {
         if (typeof p.href !== 'string' || !HREF.test(p.href)) return fail(`href ${JSON.stringify(p.href)} is not a same-origin path`);
         return <Button key={k} {...base} {...look} component={Link} href={p.href}>{kids}</Button>;

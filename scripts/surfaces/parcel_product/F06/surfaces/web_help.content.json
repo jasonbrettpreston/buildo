@@ -4,5 +4,10 @@
   "footer.privacy": "Privacy Policy",
   "footer.terms": "Terms of Service",
   "help.intro": "Contact us about a report, a wrong address or lot, billing or an Enterprise plan.",
+  "help.mailto.address_match": "Report incorrect address match",
+  "help.mailto.billing": "Ask about billing",
+  "help.mailto.enterprise": "Ask about the Enterprise plan",
+  "help.mailto.general": "Email support",
+  "help.mailto.lot_match": "Report incorrect lot match",
   "help.title": "Help & Support"
 }

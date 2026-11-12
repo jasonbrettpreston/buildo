@@ -15,6 +15,36 @@
        {
         "role": "paragraph",
         "content": "help.intro"
+       },
+       {
+        "role": "mailto",
+        "content": "help.mailto.general",
+        "topic": "general",
+        "value": "support_inbox"
+       },
+       {
+        "role": "mailto",
+        "content": "help.mailto.address_match",
+        "topic": "address_match",
+        "value": "support_inbox"
+       },
+       {
+        "role": "mailto",
+        "content": "help.mailto.lot_match",
+        "topic": "lot_match",
+        "value": "support_inbox"
+       },
+       {
+        "role": "mailto",
+        "content": "help.mailto.billing",
+        "topic": "billing",
+        "value": "support_inbox"
+       },
+       {
+        "role": "mailto",
+        "content": "help.mailto.enterprise",
+        "topic": "enterprise",
+        "value": "support_inbox"
        }
       ]
      },

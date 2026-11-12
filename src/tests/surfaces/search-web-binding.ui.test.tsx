@@ -116,6 +116,12 @@ describe('(c) actions reach the mount', () => {
     expect(select).toHaveBeenCalledWith(first.parcelId);
     fireEvent.click(screen.getByTestId('parcel-search-select'));
     expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`);
+  });  // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" is a real link to Help & Support, the query in the fragment.
+  it('the report link opens /help with topic address_match and the encoded input in the fragment', () => {
+    const amb = { ...(SITUATIONS.ambiguous as WebSituation), input: 'Queen & Spadina #2' };
+    render(provided(bind(amb)));
+    const a = screen.getByTestId('parcel-search-report') as HTMLAnchorElement;
+    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=address_match&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);
   });
 });
 

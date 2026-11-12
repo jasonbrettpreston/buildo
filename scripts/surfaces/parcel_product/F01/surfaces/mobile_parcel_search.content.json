@@ -2,6 +2,7 @@
   "list.badge": "{count} candidates",
   "list.rail": "Ambiguous address query",
   "list.refine": "More than 10 lots match. Add a house number to narrow it down.",
+  "list.report": "Report incorrect address match",
   "list.select": "Select",
   "list.select.label": "Open the selected lot",
   "search.account.label": "Account",

@@ -1298,9 +1298,9 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Programme.** `S-088` · scope `parcel_product` · feature `F06` · build order 1064 · batch `B2` · review `unreviewed` — The MaxBLD web front door (Spec 126 §11b.7 W9; business requirement 5): a plain page of maxbld.ca.
 
-**What it is.** The MaxBLD Help & Support page on maxbld.ca: what support covers. The mail link to the one admin-set support inbox lands with that setting (Spec 126 §11b.7 dated note 2026-11-11 item 3); until then no address is shown.
+**What it is.** The MaxBLD Help & Support page on maxbld.ca: what support covers, and one mail link per topic to the one operator-set support inbox (Spec 126 §11b.7 dated note 2026-11-11 item 3; §11b.3 dated note 2026-11-12). Until the inbox is set no link and no address is shown.
 
-**What it reads and writes.** This surface reaches **no API contract at all**: every word is a content key of its own content file, laid out by its page in the static page table.
+**What it reads and writes.** This surface reaches **no API contract**: every word is a content key of its own content file, laid out by its page in the static page table. Its one value is a declared server read (Spec 128 §4 dated note 2026-11-11, FE-37): the support inbox setting in logic_variables (migration 313), read per request; the prefill (topic, query, lot) travels in the URL fragment and is read on the client.
 
 **Under Spec 126.** **CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component.
 
@@ -1318,40 +1318,42 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Data lineage.**
 
-_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `logic_variables` | `variable_key` · `variable_value_json` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `none` | `n/a` | `docs/specs/00-architecture/02_logic_variables.md` |
 
 **Evidence.**
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` · `scripts/surfaces/_schema/static-page.json` |
-| `contracts` | `none — the mount imports only the binding and src/lib/surfaces/maxbld-static.ts` |
-| `tables` | `none` |
+| `files` | `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` · `src/app/(maxbld)/parcel-tool/(static)/help/HelpPrefill.tsx` · `src/lib/surfaces/maxbld-support.ts` · `scripts/surfaces/_schema/static-page.json` |
+| `contracts` | `none — the page calls no API route; its one read runs on the server in src/lib/surfaces/maxbld-support.ts` |
+| `tables` | `logic_variables — maxbld_support_inbox (migration 313)` |
 | `gate` | `src/lib/auth/host-policy.ts — the public row /help → /parcel-tool/help` |
 | `states` | `scripts/surfaces/_schema/static-page.json — pages.web_help` |
 | `emits` | `none` |
-| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Help & Support` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Help & Support` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3 (dated note 2026-11-12, MF-46: the mailto role and the inbox setting)` |
 
 <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
 
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `none` | It reads no contract: the page and its strings are committed files. — `scripts/surfaces/_schema/static-page.json` |
+| 2 | `inputs` | `app_outputs` | Server read only, no API contract (Spec 128 §4 dated note 2026-11-11, FE-37): the support inbox setting declared under config. — `src/lib/surfaces/maxbld-support.ts` |
 | 3 | `outputs` | `none` | It writes nothing. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
 | 4 | `state` | `none` | No store and no local state. — `src/components/surfaces/web/StaticBinding.tsx` |
-| 5 | `staleness` | `static` | Its content changes only when its content file is redeployed. — `scripts/surfaces/_schema/static-page.json` |
+| 5 | `staleness` | `live` | Rendered per request (force-dynamic): a new inbox shows at once. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
 | 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 12 | `errors` | `none` | No fetch: a render error is caught by the plain pages' error boundary (web_maxbld_error). — `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
+| 12 | `errors` | `boundary` | A read that throws, an unset inbox or a value that is not an address leaves the mail links out (logged), never a 500; a defect in a committed file reaches the plain pages error boundary (web_maxbld_error). — `src/lib/surfaces/maxbld-support.ts`, `src/app/(maxbld)/parcel-tool/(static)/error.tsx` |
 | 13 | `emits` | `none` | It calls no captureEvent and writes no ledger row. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
 | 14 | `offers` | `none` | It renders no sponsored placement. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
 | 15 | `metering` | `none` | No usage_events write and no quota. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
-| 16 | `config` | `none` | No tunable. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
+| 16 | `config` | `logic_variables` | It reads the support inbox (an operator setting; unset or not an address leaves the mail links out). — `src/lib/surfaces/maxbld-support.ts` |
 | 17 | `sharing` | `none` | It renders no contract. — `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
@@ -1360,9 +1362,9 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 </details>
 
-**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx`
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` · `src/lib/surfaces/maxbld-support.ts`
 
-> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y").
+> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y"). Dated 2026-11-12 (MF-46 follow-up, Help & Support contact; operator "All recommendations accepted ..."): one mailto part per topic, the inbox a server read (migration 313).
 
 <a id="s-091"></a>
 
@@ -9688,7 +9690,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `lead_view_events` | `user_id` · `permit_num` · `revision_num` · `viewed_at` | `admin_user_detail` · `contract_admin_users_uid` | `contract_leads_view` |
 | `lead_views` | `id` · `user_id` · `lead_key` · `lead_type` · `permit_num` · `revision_num` · `entity_id` · `trade_slug` · `viewed_at` · `saved` · `saved_at` | `mobile_flight_board` · `mobile_flight_job_detail` · `mobile_lead_detail` · `mobile_lead_feed` · `mobile_map` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `admin_lead_feed_inspector` · `admin_user_detail` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_admin_users_uid` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_view` · `job_lead_views_retention_purge` | `mobile_flight_board` · `mobile_lead_detail` · `mobile_lead_feed` · `overlay_search_permits_sheet` · `contract_leads_save` · `contract_leads_view` · `job_lead_views_retention_purge` |
 | `lifecycle_status_history` | `id` · `lead_id` · `from_status` · `to_status` · `from_seq` · `to_seq` · `from_phase` · `to_phase` · `decision` · `decision_date` · `transitioned_at` · `detected_by` · `permit_type` · `project_type` · `coa_type_class` · `neighbourhood_id` · `event_date` | `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` | — |
-| `logic_variables` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `web_landing` · `web_subscribe` · `admin_control_panel` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `contract_admin_control_panel_configs` · `contract_admin_leads_inspect_id` · `contract_admin_notifications` · `contract_admin_users_uid_subscription_reconcile` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_quality` · `contract_subscribe_exchange` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_lead_views_retention_purge` | `admin_control_panel` · `contract_admin_control_panel_configs` |
+| `logic_variables` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `web_landing` · `web_subscribe` · `web_help` · `admin_control_panel` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `contract_admin_control_panel_configs` · `contract_admin_leads_inspect_id` · `contract_admin_notifications` · `contract_admin_users_uid_subscription_reconcile` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_quality` · `contract_subscribe_exchange` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_lead_views_retention_purge` | `admin_control_panel` · `contract_admin_control_panel_configs` |
 | `neighbourhoods` | `id` · `neighbourhood_id` · `name` · `geometry` · `avg_household_income` · `median_household_income` · `avg_individual_income` · `low_income_pct` · `tenure_owner_pct` · `tenure_renter_pct` · `period_of_construction` · `couples_pct` · `lone_parent_pct` · `married_pct` · `university_degree_pct` · `immigrant_pct` · `visible_minority_pct` · `english_knowledge_pct` · `top_mother_tongue` · `census_year` · `created_at` · `geom` | `mobile_lead_detail` · `mobile_lead_feed` · `mobile_map` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `admin_market_metrics` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_market_metrics` · `contract_admin_stats` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_permits_id` | — |
 | `notification_dispatches` | `id` · `user_id` · `lead_id` · `type` · `toronto_date` · `push_token` · `expo_ticket_id` · `status` · `detail` · `dispatched_at` · `receipt_checked_at` | `admin_notifications` · `admin_user_detail` · `contract_admin_notifications` | — |
 | `notifications` | `id` · `user_id` · `type` · `title` · `body` · `permit_num` · `trade_slug` · `channel` · `is_read` · `is_sent` · `sent_at` · `created_at` · `lead_id` | `admin_data_quality` · `admin_notifications` · `contract_admin_notifications` · `contract_admin_stats` · `contract_notifications` | `contract_notifications` |

@@ -15,8 +15,12 @@
 //                               throws; nothing is skipped silently.
 // The address highlighting and the route shape come from the shared pure core (mobile/src/lib/parcelSearchCore.ts), never re-implemented.
 // Navigation and fetching are the mount's (live switch, src/lib/surfaces/maxbld-web.ts); the tree carries action data only.
+// Dated 2026-11-12 (MF-46 follow-up, P35-D18 a; FE-07 parity with the mobile goldens): "Report incorrect address match" under SELECT carries the
+// action open_help {topic, q}; on the web it renders as a real link (126 §0b item 11) to the Help & Support page, the topic and the query in the
+// URL fragment (read by the page on the client, never sent to a server).
 'use client';
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
 import { diffCandidateAddress, parcelSearchPath, type AddressSegment, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
 
@@ -71,11 +75,14 @@ export const WEB_SEARCH_LAYOUT = {
   segment: 'text-base font-normal text-zinc-100',
   segmentDiffers: 'text-base font-semibold text-amber-500',
   select: 'mt-4 w-full rounded-xl uppercase tracking-widest',
+  report: 'mt-2 self-center rounded-xl text-xs font-normal text-zinc-400 underline', // MF-46 follow-up (dated 2026-11-12)
   refine: 'mt-3 text-center text-xs font-normal text-zinc-400',
   miss: 'mt-10 text-center text-base font-normal text-zinc-400',
   prompt: 'mt-10 text-center text-base font-normal text-zinc-500',
 } as const;
 const L = WEB_SEARCH_LAYOUT;
+/** The Help & Support page: the public maxbld.ca row /help (src/lib/auth/host-policy.ts; the page table's footer link). */
+const HELP_PATH = '/help';
 
 const CONTRACT = 'contract_parcels_lookup';
 const content = (key: string): Ref => ({ content: key });
@@ -191,6 +198,15 @@ const addressList = (s: WebSituation): WebNode[] => {
       ariaLabel: content('list.select.label'),
       onClick: route === null ? null : { action: 'push', route },
     }, [content('list.select')]),
+    node('Button', {
+      key: 'report',
+      testID: 'parcel-search-report',
+      size: 'lg',
+      variant: 'subtle',
+      color: 'gray',
+      className: L.report,
+      onClick: { action: 'open_help', topic: 'address_match', q: derived('input') },
+    }, [content('list.report')]),
   ];
 };
 
@@ -332,6 +348,10 @@ function renderWebNode(n: WebNode, ctx: Ctx): ReactNode {
     case 'Alert':
       return <Alert key={k} {...base} {...defined({ color: p.color, variant: p.variant })}>{kids}</Alert>;
     case 'Button': {
+      if (isObj(p.onClick) && p.onClick.action === 'open_help') {
+        const href = `${HELP_PATH}#topic=${encodeURIComponent(String(p.onClick.topic))}&q=${encodeURIComponent(String(resolveWebValue(p.onClick.q, ctx)))}`;
+        return <Button key={k} {...base} {...defined({ size: p.size, variant: p.variant, color: p.color })} component={Link} href={href}>{kids}</Button>;
+      }
       const click = handler(p.onClick, ctx);
       return (
         <Button key={k} {...base}

@@ -186,6 +186,9 @@ export const PARCEL_SEARCH_LAYOUT = {
   select: 'mt-4 min-h-[44px] w-full rounded-xl',
   selectText: 'text-sm font-semibold uppercase tracking-widest text-[#472a00]',
   refine: 'mt-3 text-center text-xs font-normal text-zinc-400',
+  /** MF-46 follow-up (P35-D18 a, dated 2026-11-12): the "Report incorrect address match" link under SELECT. */
+  report: 'mt-2 min-h-[44px] self-center',
+  reportText: 'text-xs font-normal text-zinc-400 underline',
   miss: 'mt-10 items-center',
   missText: 'mt-2 text-center text-base font-normal text-zinc-400',
   prompt: 'mt-10 text-center text-base font-normal text-zinc-600',

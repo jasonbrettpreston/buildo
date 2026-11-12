@@ -180,7 +180,10 @@ describe('L the live switch and the fences', () => {
     // server module src/lib/surfaces/maxbld-landing.ts (added to the list: its reads are a stored row and settings, never a lookup or a meter).
     all.push(path.join(ROOT, 'src/lib/surfaces/maxbld-landing.ts'));
     // MF-76 restacked onto MF-46 (dated 2026-11-11): 25 -> 27, the landing mount (found by the walk) and maxbld-landing.ts.
-    expect(all.length).toBe(27);
+    // MF-46 follow-up (dated 2026-11-12; Help & Support contact): 27 -> 29, the prefill island (static)/help/HelpPrefill.tsx (found by the walk) and
+    // the inbox read src/lib/surfaces/maxbld-support.ts (added to the list: one setting read, never a lookup or a meter).
+    all.push(path.join(ROOT, 'src/lib/surfaces/maxbld-support.ts'));
+    expect(all.length).toBe(29);
     for (const f of all) for (const [re, why] of BANNED) expect([path.relative(ROOT, f), why, re.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), why, false]);
   });
   it('RED: each banned form is caught in a planted text', () => {

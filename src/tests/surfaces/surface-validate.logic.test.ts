@@ -81,7 +81,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
     // MF-76 (FE-13; dated 2026-11-11): amended deliberately again, still an exact toBe: the MaxBLD landing (web_landing) is converted: 12 converted,
     // 4 pending, 61 goldens, 327 strings.
-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 31 in scope: converted 15, pending 3, parked 9, report 4) · S-screen ok (15 surfaces, 84 goldens) · S-sbind ok (15 surfaces, 377 strings)\n'); // MF-19: +2 FORM surfaces (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+    // MF-46 follow-up (dated 2026-11-12; Help & Support contact): + 5 web_help mailto labels and the search page's list.report (377 -> 383 strings).
+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 31 in scope: converted 15, pending 3, parked 9, report 4) · S-screen ok (15 surfaces, 84 goldens) · S-sbind ok (15 surfaces, 383 strings)\n'); // MF-19: +2 FORM surfaces (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
     expect(r.stdout).toContain('S-desc ok (examined 31 in scope:');
   });

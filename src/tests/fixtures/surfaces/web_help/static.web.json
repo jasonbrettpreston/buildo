@@ -54,6 +54,106 @@
                     "content": "help.intro"
                   }
                 ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "help-2",
+                  "testID": "static-mailto-general",
+                  "topic": "general",
+                  "mailto": {
+                    "derived": "support_inbox"
+                  },
+                  "size": "lg",
+                  "variant": "light",
+                  "color": "amber",
+                  "className": "self-start rounded-xl"
+                },
+                "children": [
+                  {
+                    "content": "help.mailto.general"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "help-3",
+                  "testID": "static-mailto-address_match",
+                  "topic": "address_match",
+                  "mailto": {
+                    "derived": "support_inbox"
+                  },
+                  "size": "lg",
+                  "variant": "light",
+                  "color": "amber",
+                  "className": "self-start rounded-xl"
+                },
+                "children": [
+                  {
+                    "content": "help.mailto.address_match"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "help-4",
+                  "testID": "static-mailto-lot_match",
+                  "topic": "lot_match",
+                  "mailto": {
+                    "derived": "support_inbox"
+                  },
+                  "size": "lg",
+                  "variant": "light",
+                  "color": "amber",
+                  "className": "self-start rounded-xl"
+                },
+                "children": [
+                  {
+                    "content": "help.mailto.lot_match"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "help-5",
+                  "testID": "static-mailto-billing",
+                  "topic": "billing",
+                  "mailto": {
+                    "derived": "support_inbox"
+                  },
+                  "size": "lg",
+                  "variant": "light",
+                  "color": "amber",
+                  "className": "self-start rounded-xl"
+                },
+                "children": [
+                  {
+                    "content": "help.mailto.billing"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "help-6",
+                  "testID": "static-mailto-enterprise",
+                  "topic": "enterprise",
+                  "mailto": {
+                    "derived": "support_inbox"
+                  },
+                  "size": "lg",
+                  "variant": "light",
+                  "color": "amber",
+                  "className": "self-start rounded-xl"
+                },
+                "children": [
+                  {
+                    "content": "help.mailto.enterprise"
+                  }
+                ]
               }
             ]
           },
@@ -147,8 +247,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json": "ac6d703f7ece6cf7",
-      "scripts/surfaces/parcel_product/F06/surfaces/web_help.descriptor.json": "23e0add3f3aaeb53"
+      "scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json": "36736ab836e9d830",
+      "scripts/surfaces/parcel_product/F06/surfaces/web_help.descriptor.json": "ee8b470983a55e8e"
     }
   }
 }

@@ -25,6 +25,7 @@ import {
 } from '@/components/surfaces/SearchBinding';
 import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
+import { openHelp } from '@/lib/maxbldHelp';
 import { useRecentSearchesStore } from '@/store/recentSearchesStore';
 
 export default function ParcelSearchScreen() {
@@ -99,6 +100,8 @@ export default function ParcelSearchScreen() {
       open_account: () => router.push(PARCEL_TAB_ROUTE.account),
       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
+      // MF-46 follow-up (P35-D18 a): "Report incorrect address match" leaves the app for Help & Support (Linking.openURL).
+      open_help: openHelp,
     }),
     [refetch, navigate, router],
   );

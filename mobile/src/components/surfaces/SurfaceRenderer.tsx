@@ -39,6 +39,9 @@ export type SurfaceActions = {
   open_account: () => void;
   /** MF-53: leave the page (the map page's clear button). */
   back: () => void;
+  /** MF-46 follow-up (dated 2026-11-12): open Help & Support in the browser with a topic and a value (mobile/src/lib/maxbldHelp.ts). A host
+   * that renders no help link need not pass it; a tree naming it there throws (the `in` guard). */
+  open_help?: (topic: string, q: string) => void;
 };
 /** MF-48: the REPORT callbacks (ReportPageHost.tsx holds the UI state they change). */
 export type ReportActions = {
@@ -119,6 +122,8 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
       return () => act.open_account();
     case 'back':
       return () => act.back();
+    case 'open_help':
+      return () => act.open_help?.(String(a.topic), String(resolveValue(a.q, ctx)));
     case 'toggle_panel':
       if (a.panel !== 'size' && a.panel !== 'cost') throw new Error(`SurfaceRenderer: unknown panel "${String(a.panel)}"`);
       return () => act.toggle_panel(String(a.option), a.panel as 'size' | 'cost');

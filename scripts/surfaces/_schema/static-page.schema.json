@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "static-page.schema.json",
   "title": "MaxBLD static page (archetype STATIC, web)",
-  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table). Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a) and D-2 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\", then \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2, section 12 fold 18, sections 13a and 13b): the landing kinds join the closed list: hero (nav and wordmark links, the tagline, the title and its accent, the sub line, the main link, the trial terms, the short legal line, the processing demo, the sample report region with its caption, and the process scene slot), figures (a heading, figures and the citywide group of the report loading state), items (a heading, a lede, then items: label, title, text and the one report picture) and plans (a heading, then boxes: name, price, per, tax, tick, note, link; a section foot). A part may name `value`, a declared server read of its surface: its content is then a template with exactly one {value} slot, filled on the server with a server-formatted string (FE-05; the FE-35 pattern; Spec 128 section 4 escalation of this date: a STATIC page may read declared stored values on the server). A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1)). Four roles carry no content key: checked (the citywide lines, MF-62 content, one home), demo (the shared loading state), picture (the report picture) and scene (a media-library image slot, nothing until an asset is set). A link may carry one query parameter and one fragment (/signup?plan=basic, /help#topic=enterprise, /#pricing); the host table still decides where it leads. Still content keys only, never a number.",
+  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table). Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a) and D-2 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\", then \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2, section 12 fold 18, sections 13a and 13b): the landing kinds join the closed list: hero (nav and wordmark links, the tagline, the title and its accent, the sub line, the main link, the trial terms, the short legal line, the processing demo, the sample report region with its caption, and the process scene slot), figures (a heading, figures and the citywide group of the report loading state), items (a heading, a lede, then items: label, title, text and the one report picture) and plans (a heading, then boxes: name, price, per, tax, tick, note, link; a section foot). A part may name `value`, a declared server read of its surface: its content is then a template with exactly one {value} slot, filled on the server with a server-formatted string (FE-05; the FE-35 pattern; Spec 128 section 4 escalation of this date: a STATIC page may read declared stored values on the server). A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1)). Four roles carry no content key: checked (the citywide lines, MF-62 content, one home), demo (the shared loading state), picture (the report picture) and scene (a media-library image slot, nothing until an asset is set). A link may carry one query parameter and one fragment (/signup?plan=basic, /help#topic=enterprise, /#pricing); the host table still decides where it leads. Still content keys only, never a number. Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's\"; DECISIONS-v1 D-6 (a), plan v1 fold 8): prose gains the role mailto, a mail link to the one support inbox. Its content is the visible label (also the mail subject); its topic is one of a closed list; its value is the declared server read support_inbox (FE-37, migration 313), never an address or an href in the data. The server leaves a mailto part out while the inbox is unset (the value mechanism of MF-76).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -96,7 +96,8 @@
                   "heading",
                   "paragraph",
                   "item",
-                  "retry"
+                  "retry",
+                  "mailto"
                 ]
               }
             }
@@ -165,6 +166,15 @@
         },
         "group": {
           "const": "citywide"
+        },
+        "topic": {
+          "enum": [
+            "general",
+            "address_match",
+            "lot_match",
+            "billing",
+            "enterprise"
+          ]
         }
       },
       "allOf": [
@@ -291,6 +301,46 @@
               },
               "required": [
                 "group"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "enum": [
+                  "mailto"
+                ]
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "topic": true,
+              "value": {
+                "const": "support_inbox"
+              }
+            },
+            "required": [
+              "topic",
+              "value"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "not": {
+              "type": "object",
+              "properties": {
+                "topic": true
+              },
+              "required": [
+                "topic"
               ]
             }
           }

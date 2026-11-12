@@ -37,8 +37,9 @@ describe('FE-32 (a) the contract kind is declared on both sides', () => {
     // at the end, so any further addition needs a dated edit of this pin.
     const nd = rj('scripts/surfaces/_schema/bindings.json').non_display_keys as string[];
     // MF-53 (dated 2026-11-11; plan v4 §3): + 19 react-native-maps prop names that carry no display text (initialRegion ... height), appended after MF-48's three.
-    expect([nd.length, nd.slice(47, 50), nd.slice(-4)]).toEqual([70, ['option', 'panel', 'pressBehavior'], ['pinColor', 'numberOfLines', 'height', 'tabIndex']]); // MF-76 (restacked onto 34520a43b): + tabIndex at the end
+    expect([nd.length, nd.slice(47, 50), nd.slice(-4)]).toEqual([71, ['option', 'panel', 'pressBehavior'], ['numberOfLines', 'height', 'tabIndex', 'topic']]); // MF-76 (restacked onto 34520a43b): + tabIndex at the end
     // MF-76 (dated 2026-11-11; plan v3 §3.4 WCAG 2.1.1): + tabIndex at the end (the landing sample region's keyboard stop, the number 0, never text).
+    // MF-46 follow-up (dated 2026-11-12; Help & Support contact): + topic at the end (a mailto node's topic, a closed list, never text). 70 -> 71.
   });
 });
 

@@ -11,7 +11,7 @@ import terms from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_ter
 import privacy from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json';
 import maxbldError from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json';
 import landing from '../../../scripts/surfaces/parcel_product/F06/surfaces/web_landing.content.json';
-import type { StaticPage } from '@/components/surfaces/web/StaticBinding';
+import type { StaticPage, StaticPart, StaticValues } from '@/components/surfaces/web/StaticBinding';
 
 /** The STATIC web surfaces and their content files (one per surface, beside its descriptor). */
 export const STATIC_CONTENT: Readonly<Record<string, Record<string, string>>> = {
@@ -39,4 +39,11 @@ export function staticTitle(surface: string, state: string): string {
   const title = key === undefined ? undefined : content[key];
   if (title === undefined) throw new Error(`maxbld-static: no title for ${surface} ${state}`);
   return title;
+}
+
+/** MF-76's value rule, one home (dated 2026-11-12, MF-46 Help & Support contact): every part naming a server value that is absent is left out,
+ * and a section left with no parts too; `keep` adds a surface's own rule for the parts that name no value (the landing's report regions). */
+export function keepValued(page: StaticPage, values: StaticValues, keep: (p: StaticPart) => boolean = () => true): StaticPage {
+  const kept = (p: StaticPart): boolean => (p.value === undefined ? keep(p) : Object.hasOwn(values, p.value));
+  return { sections: page.sections.map((s) => ({ ...s, parts: s.parts.filter(kept) })).filter((s) => s.parts.length > 0) };
 }

@@ -3034,6 +3034,19 @@
         ]
       }
     },
+    "src/lib/surfaces/maxbld-support.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "5a3a5e7865c273dc"
+      ],
+      "reads": {},
+      "writes": {}
+    },
     "src/lib/sync/process.ts": {
       "class": "static",
       "statements": 17,

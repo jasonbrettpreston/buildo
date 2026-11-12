@@ -188,6 +188,15 @@ const addressList = (s: SearchSituation): PropsNode[] => {
       node('Text', { key: 'select-text', className: L.selectText }, [content('list.select')]),
       node('Icon', { key: 'select-icon', icon: 'ArrowRight', size: I.button, color: H.onPrimary }),
     ]),
+    // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" opens Help & Support with the topic and the query.
+    node('Button', {
+      key: 'report',
+      testID: 'parcel-search-report',
+      variant: 'link',
+      className: L.report,
+      accessibilityRole: 'link',
+      onPress: { action: 'open_help', topic: 'address_match', q: derived('input') },
+    }, [node('Text', { key: 'report-text', className: L.reportText }, [content('list.report')])]),
   ];
 };
 

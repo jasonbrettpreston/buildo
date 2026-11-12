@@ -5006,20 +5006,22 @@
     "kind": "SURFACE",
     "status": "generated",
     "docs": {
-      "purpose": "The MaxBLD Help & Support page on maxbld.ca: what support covers. The mail link to the one admin-set support inbox lands with that setting (Spec 126 §11b.7 dated note 2026-11-11 item 3); until then no address is shown.",
-      "data_story": "This surface reaches **no API contract at all**: every word is a content key of its own content file, laid out by its page in the static page table.",
+      "purpose": "The MaxBLD Help & Support page on maxbld.ca: what support covers, and one mail link per topic to the one operator-set support inbox (Spec 126 §11b.7 dated note 2026-11-11 item 3; §11b.3 dated note 2026-11-12). Until the inbox is set no link and no address is shown.",
+      "data_story": "This surface reaches **no API contract**: every word is a content key of its own content file, laid out by its page in the static page table. Its one value is a declared server read (Spec 128 §4 dated note 2026-11-11, FE-37): the support inbox setting in logic_variables (migration 313), read per request; the prefill (topic, query, lot) travels in the URL fragment and is read on the client.",
       "under_126": "**CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component."
     },
     "evidence": {
       "files": [
         "src/app/(maxbld)/parcel-tool/(static)/help/page.tsx",
+        "src/app/(maxbld)/parcel-tool/(static)/help/HelpPrefill.tsx",
+        "src/lib/surfaces/maxbld-support.ts",
         "scripts/surfaces/_schema/static-page.json"
       ],
       "contracts": [
-        "none — the mount imports only the binding and src/lib/surfaces/maxbld-static.ts"
+        "none — the page calls no API route; its one read runs on the server in src/lib/surfaces/maxbld-support.ts"
       ],
       "tables": [
-        "none"
+        "logic_variables — maxbld_support_inbox (migration 313)"
       ],
       "gate": [
         "src/lib/auth/host-policy.ts — the public row /help → /parcel-tool/help"
@@ -5044,7 +5046,8 @@
       "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
       "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
       "spec_refs": [
-        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Help & Support"
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Help & Support",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3 (dated note 2026-11-12, MF-46: the mailto role and the inbox setting)"
       ],
       "spec_version": "0-draft",
       "versioning": {
@@ -5057,15 +5060,29 @@
       "ref": "S-088"
     },
     "inputs": {
-      "answer": "none",
-      "why": "It reads no contract: the page and its strings are committed files.",
+      "answer": "app_outputs",
+      "why": "Server read only, no API contract (Spec 128 §4 dated note 2026-11-11, FE-37): the support inbox setting declared under config.",
       "evidence": [
-        "scripts/surfaces/_schema/static-page.json"
+        "src/lib/surfaces/maxbld-support.ts"
       ],
       "contract_ref": [],
       "query_key": [],
       "field_whitelist": [],
-      "tables": []
+      "tables": [
+        {
+          "table": "logic_variables",
+          "columns": [
+            "variable_key",
+            "variable_value_json"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/00-architecture/02_logic_variables.md",
+          "evidence": [
+            "src/lib/surfaces/maxbld-support.ts"
+          ]
+        }
+      ]
     },
     "outputs": {
       "answer": "none",
@@ -5085,10 +5102,10 @@
       "fields": []
     },
     "staleness": {
-      "answer": "static",
-      "why": "Its content changes only when its content file is redeployed.",
+      "answer": "live",
+      "why": "Rendered per request (force-dynamic): a new inbox shows at once.",
       "evidence": [
-        "scripts/surfaces/_schema/static-page.json"
+        "src/app/(maxbld)/parcel-tool/(static)/help/page.tsx"
       ],
       "offline": "none"
     },
@@ -5103,9 +5120,9 @@
       },
       "rls_class": {
         "answer": "none",
-        "why": "It reaches no table.",
+        "why": "One server read of a setting through the server pool; no user data.",
         "evidence": [
-          "src/app/(maxbld)/parcel-tool/(static)/help/page.tsx"
+          "src/lib/surfaces/maxbld-support.ts"
         ]
       },
       "disclosure": "none",
@@ -5149,9 +5166,10 @@
       }
     ],
     "errors": {
-      "answer": "none",
-      "why": "No fetch: a render error is caught by the plain pages' error boundary (web_maxbld_error).",
+      "answer": "boundary",
+      "why": "A read that throws, an unset inbox or a value that is not an address leaves the mail links out (logged), never a 500; a defect in a committed file reaches the plain pages error boundary (web_maxbld_error).",
       "evidence": [
+        "src/lib/surfaces/maxbld-support.ts",
         "src/app/(maxbld)/parcel-tool/(static)/error.tsx"
       ]
     },
@@ -5180,12 +5198,18 @@
       ]
     },
     "config": {
-      "answer": "none",
-      "why": "No tunable.",
+      "answer": "logic_variables",
+      "why": "It reads the support inbox (an operator setting; unset or not an address leaves the mail links out).",
       "evidence": [
-        "src/app/(maxbld)/parcel-tool/(static)/help/page.tsx"
+        "src/lib/surfaces/maxbld-support.ts"
       ],
-      "logic_variables": [],
+      "logic_variables": [
+        {
+          "name": "maxbld_support_inbox",
+          "on_invalid": "fail",
+          "why": "readSupportInbox: unset, not an address or a failed read leaves the mail links out (logged)."
+        }
+      ],
       "retired": []
     },
     "sharing": {
@@ -5207,11 +5231,12 @@
     "deviations": "none",
     "limitations": [],
     "interpretation": "none",
-    "notes": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\").",
+    "notes": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\"). Dated 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted ...\"): one mailto part per topic, the inbox a server read (migration 313).",
     "x-draft": {
       "shard": "web-product",
       "files": [
-        "src/app/(maxbld)/parcel-tool/(static)/help/page.tsx"
+        "src/app/(maxbld)/parcel-tool/(static)/help/page.tsx",
+        "src/lib/surfaces/maxbld-support.ts"
       ],
       "measured_states": [
         "static"

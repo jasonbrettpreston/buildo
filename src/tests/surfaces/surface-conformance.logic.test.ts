@@ -242,7 +242,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // MF-53 (dated 2026-11-11): + the map page (11 mobile goldens, 21 strings).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
 
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (15 surfaces, 84 goldens)' }, { findings: [], note: 'S-sbind ok (15 surfaces, 377 strings)' }]); // MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+    // MF-46 follow-up (dated 2026-11-12; Help & Support contact): + 5 web_help mailto labels and the search page's list.report (377 -> 383 strings).
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (15 surfaces, 84 goldens)' }, { findings: [], note: 'S-sbind ok (15 surfaces, 383 strings)' }]); // MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));

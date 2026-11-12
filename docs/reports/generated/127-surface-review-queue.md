@@ -597,11 +597,13 @@ Registry detail: [`S-088`](../../../docs/reports/generated/127-surface-registry.
 
 **1. What does it do, and for whom?**
 
-The MaxBLD Help & Support page on maxbld.ca: what support covers. The mail link to the one admin-set support inbox lands with that setting (Spec 126 §11b.7 dated note 2026-11-11 item 3); until then no address is shown.
+The MaxBLD Help & Support page on maxbld.ca: what support covers, and one mail link per topic to the one operator-set support inbox (Spec 126 §11b.7 dated note 2026-11-11 item 3; §11b.3 dated note 2026-11-12). Until the inbox is set no link and no address is shown.
 
 **2. Which tables and columns, produced by which step?**
 
-_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `logic_variables` | `variable_key` · `variable_value_json` | `variable_key` · `variable_value` · `description` · `updated_at` · `variable_value_json` | `none` | `n/a` | `docs/specs/00-architecture/02_logic_variables.md` |
 
 **3. Which contracts, and who calls them?**
 
@@ -621,7 +623,7 @@ Swept; none found.
 
 **7. Does it match its owning spec section?**
 
-Spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · anchors: `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Help & Support`
+Spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · anchors: `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 W9 and dated note 2026-11-11 item 3 — Help & Support` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3 (dated note 2026-11-12, MF-46: the mailto role and the inbox setting)`
 
 **8. What is still unresearched?**
 

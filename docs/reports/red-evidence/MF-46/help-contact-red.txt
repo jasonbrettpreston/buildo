@@ -1,0 +1,22 @@
+MF-46 follow-up (Help & Support contact) RED evidence, 2026-11-12T14:55:35Z, base 8b651c128.
+Stubs (in-place, then restored): migration 313 emptied; readSupportInbox accepts any value; MAXBLD_HELP_URL emptied; HelpPrefill a no-op and cleanValue the identity; StaticBinding drops data-topic; the web search report node loses its action.
+
+   × migration 313: the support inbox setting (seeded empty, never typed) > the committed migration is clean 4ms
+   × migration 313: the support inbox setting (seeded empty, never typed) > RED: a typed address, a missing ON CONFLICT, an uncommented DOWN line 1ms
+   × T7 the support inbox read (MF-46 follow-up, dated 2026-11-12) > RED: unset, empty, not a string, a header or query payload, and a read that throws each give {} and are logged 5ms
+   × T8 the app link to Help & Support (MF-46 follow-up, P35-D18 a; dated 2026-11-12) > MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic address_match and the query 1ms
+   × (d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12) > with the inbox: one real mailto link per topic, the encoded label as the subject; with none: no link, the page still renders 4ms
+   × (d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12) > the prefill: the fragment values, cleaned and encoded, become the body of the fragment topic link only 8ms
+   × (a) every web golden renders with its situation > 10 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error 8ms
+   × (c) actions reach the mount > the report link opens /help with topic address_match and the encoded input in the fragment 10ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/migration-313-maxbld-support-inbox.infra.test.ts > migration 313: the support inbox setting (seeded empty, never typed) > the committed migration is clean
+ FAIL  src/tests/migration-313-maxbld-support-inbox.infra.test.ts > migration 313: the support inbox setting (seeded empty, never typed) > RED: a typed address, a missing ON CONFLICT, an uncommented DOWN line
+ FAIL  src/tests/surfaces/search-web-binding.ui.test.tsx > (a) every web golden renders with its situation > 10 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error
+ FAIL  src/tests/surfaces/search-web-binding.ui.test.tsx > (c) actions reach the mount > the report link opens /help with topic address_match and the encoded input in the fragment
+ FAIL  src/tests/surfaces/static-page.logic.test.ts > T7 the support inbox read (MF-46 follow-up, dated 2026-11-12) > RED: unset, empty, not a string, a header or query payload, and a read that throws each give {} and are logged
+ FAIL  src/tests/surfaces/static-page.logic.test.ts > T8 the app link to Help & Support (MF-46 follow-up, P35-D18 a; dated 2026-11-12) > MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic address_match and the query
+ FAIL  src/tests/surfaces/static-web-binding.ui.test.tsx > (d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12) > with the inbox: one real mailto link per topic, the encoded label as the subject; with none: no link, the page still renders
+ FAIL  src/tests/surfaces/static-web-binding.ui.test.tsx > (d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12) > the prefill: the fragment values, cleaned and encoded, become the body of the fragment topic link only
+ Test Files  4 failed (4)
+      Tests  8 failed | 27 passed (35)
