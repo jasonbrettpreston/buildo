@@ -1,0 +1,260 @@
+{
+ "$comment": "MF-46 follow-up (operator 2026-11-12, verbatim: \"All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's\"; R-18 option (b)): the R-18 lock (src/tests/surfaces/auth-class-parity.infra.test.ts) runs on every scope A-C descriptor; the findings it makes on the tip are named exceptions here, each with the row that owns its fix, in the navigation-lock form. Fail closed both ways: a finding not listed fails, and a listed finding the lock no longer makes fails. The owning row removes its entries in the commit that fixes them. This list may only shrink.",
+ "exceptions": [
+  {
+   "finding": "R-18 P-1 SURFACE admin_export_audit: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_advertiser_entry: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_offers: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-2 SURFACE advertiser_self_metrics: guards.session is \"UNRESEARCHED\", not a class",
+   "owner": "MF-77",
+   "why": "parked surface (Spec 126 §11b.3), session not researched: researched and declared with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_ledger_visualiser: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_run_ledger: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_lot_size_revert: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_media: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_media_delete: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_media_upload: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_parcel_cost: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_orphan_panel: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_parcel_account: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_parcel_disambiguation_map: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_parcel_search: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 CONTRACT contract_parcels_lot_size_entry: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_parcel_detail: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE report_lot_size_entry: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE overlay_sponsor_slot: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_tracked_lots: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_auth_confirm: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE overlay_error_boundary: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_onboarding_address: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_onboarding_complete: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_onboarding_first_permit: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_onboarding_path: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_onboarding_profession: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_onboarding_supplier: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_onboarding_terms: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE overlay_paywall: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE web_subscribe: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-4 SURFACE web_subscribe_success: guards.session anon (public) but contract contract_user_profile (/api/user-profile) is authenticated (authenticated)",
+   "owner": "MF-47",
+   "why": "the Stripe return page is public by design and reads the profile only with a session; MF-47 rebuilds checkout and declares the split"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_notifications: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE overlay_notification_permission_modal: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE binding_mobile_list: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE binding_mobile_report: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE binding_web_form: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE binding_web_list: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE binding_web_search: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE overlay_offline_banner: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE shared_mobile_surface_binding: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-4 SURFACE shell_app_root: guards.session anon (public) but contract contract_user_profile (/api/user-profile) is authenticated (authenticated)",
+   "owner": "MF-49",
+   "why": "the app root shell is public and calls signed-in routes only after sign-in; MF-49 moves the shell to the MaxBLD app and declares the split"
+  },
+  {
+   "finding": "R-18 P-4 SURFACE shell_app_root: guards.session anon (public) but contract contract_user_profile_reactivate (/api/user-profile/reactivate) is authenticated (authenticated)",
+   "owner": "MF-49",
+   "why": "the app root shell is public and calls signed-in routes only after sign-in; MF-49 moves the shell to the MaxBLD app and declares the split"
+  },
+  {
+   "finding": "R-18 P-4 SURFACE shell_app_root: guards.session anon (public) but contract contract_notifications_register (/api/notifications/register) is authenticated (authenticated)",
+   "owner": "MF-49",
+   "why": "the app root shell is public and calls signed-in routes only after sign-in; MF-49 moves the shell to the MaxBLD app and declares the split"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE shell_web_root: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE mobile_settings: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-4 SURFACE admin_data_quality: guards.session admin (admin) but contract contract_quality (/api/quality) is anon (public)",
+   "owner": "MF-77",
+   "why": "an admin page over a public data route (the /builders shape inside scope B): resolved at the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_home: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_pipeline_step_output: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_user_detail: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
+   "finding": "R-18 P-1 SURFACE admin_users: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  }
+ ]
+}

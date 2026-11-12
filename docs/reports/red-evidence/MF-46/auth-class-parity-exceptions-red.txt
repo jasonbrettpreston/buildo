@@ -1,0 +1,7 @@
+MF-46 follow-up red evidence (R-18 b): src/tests/surfaces/auth-class-parity.infra.test.ts with an empty exceptions list: every finding on the tip is unexplained. Run 2026-11-12T14:37Z.
+R-18: examined 122, scope D not scheduled: 47
+   × R-18 auth class parity (scopes A-C; scope D counted) > the real tree: every scope A-C descriptor declares the check and its class matches its path and its contracts 8ms
+   × R-18 auth class parity (scopes A-C; scope D counted) > RED: a new finding fails as unexplained; a fixed one left listed fails as stale 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+     98|     console.log(`R-18: examined ${r.examined}, scope D not scheduled: …
+      Tests  2 failed | 4 passed (6)
