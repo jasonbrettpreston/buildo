@@ -1,0 +1,85 @@
+{
+ "$comment": "Pre-registration, task MF-81, prereg 1: the McTest stress runner (tests/load/stress.mjs, PLAN Layer 4: 50/200/500 users on a production build against the test stack, labelled LOCAL; 429 and 403 REPORT_LIMIT_REACHED as their own classes). Zero scorer moves (McTest adds a test runner, canaries and catalogue fields; no engine, seed, cell or version change). Totals and floors copied from prereg-MB-83-8.json (the newest prereg on origin a39f91ae5). Committed ALONE directly before the MF-81 feature commit. Round 170, claimed in the ID ledger (~/Buildo-scratch/ids/round-170).",
+ "schema": "coa-round-prereg-v1",
+ "round": 170,
+ "task": "MF-81",
+ "rules": [
+  "FE-40"
+ ],
+ "plan_ref": "~/Buildo-scratch/mctest/PLAN.md (Layer 4); ~/Buildo-scratch/mctest/DECISIONS.md (D-1..D-14 all (a), operator 2026-11-12); ~/Buildo-scratch/mcfrontend/MF-81/plan.md",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "MATCH": 406,
+  "DIFFER": 31,
+  "NOT MODELLED": 94,
+  "NO ANSWER": 39,
+  "OWED": 68,
+  "DATA": 24,
+  "NOT SCORABLE": 25,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "MATCH": 282,
+  "DIFFER": 24,
+  "NOT MODELLED": 73,
+  "NO ANSWER": 27,
+  "OWED": 50,
+  "DATA": 22,
+  "NOT SCORABLE": 12,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "MATCH": 458,
+  "DIFFER": 35,
+  "NOT MODELLED": 129,
+  "NO ANSWER": 55,
+  "OWED": 73,
+  "DATA": 24,
+  "NOT SCORABLE": 34,
+  "BY-LAW CHANGED": 4
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_floors": "every floor line unchanged; the floors check OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; the Layer 2 table_version (d312906ff10e) and every golden and oracle file"
+}
