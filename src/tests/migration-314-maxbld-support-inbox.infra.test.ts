@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11 item 3: the support inbox is ONE setting),
 //            §11b.3 (dated note 2026-11-12, MF-46: the mailto role and the inbox setting); migration 219 (the JSONB-string precedent).
 //
-// MF-46 follow-up (Help & Support contact). Reads migrations/313_maxbld_support_inbox.sql as text (no DB; the operator's DB job applies it):
+// MF-46 follow-up (Help & Support contact). Reads migrations/314_maxbld_support_inbox.sql as text (no DB; the operator's DB job applies it):
 //   the one row is inserted EMPTY as a JSONB string with the sentinel 0 (the 219 precedent), ON CONFLICT (variable_key) DO NOTHING (an
 //   operator-set address is never clobbered), in one transaction, no table altered, the DOWN comment-only, and no email address anywhere in it
 //   (the address comes only from the operator's setting). Each RED plant is an in-memory copy of the text, never a file edit.
@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { SUPPORT_INBOX_KEY } from '@/lib/surfaces/maxbld-support';
 
-const MIGRATION = 'migrations/313_maxbld_support_inbox.sql';
+const MIGRATION = 'migrations/314_maxbld_support_inbox.sql';
 const read = (p: string): string => fs.readFileSync(path.join(process.cwd(), p), 'utf8');
 const upOf = (s: string): string => (s.split(/^--\s*DOWN/m)[0] ?? '').split('\n').filter((l) => !/^\s*--/.test(l)).join('\n');
 
@@ -27,7 +27,7 @@ export const migrationProblems = (s: string): string[] => {
   return out;
 };
 
-describe('migration 313: the support inbox setting (seeded empty, never typed)', () => {
+describe('migration 314: the support inbox setting (seeded empty, never typed)', () => {
   it('the committed migration is clean', () => {
     expect(migrationProblems(read(MIGRATION))).toEqual([]);
   });

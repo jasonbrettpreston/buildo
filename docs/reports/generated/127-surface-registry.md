@@ -1300,7 +1300,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **What it is.** The MaxBLD Help & Support page on maxbld.ca: what support covers, and one mail link per topic to the one operator-set support inbox (Spec 126 §11b.7 dated note 2026-11-11 item 3; §11b.3 dated note 2026-11-12). Until the inbox is set no link and no address is shown.
 
-**What it reads and writes.** This surface reaches **no API contract**: every word is a content key of its own content file, laid out by its page in the static page table. Its one value is a declared server read (Spec 128 §4 dated note 2026-11-11, FE-37): the support inbox setting in logic_variables (migration 313), read per request; the prefill (topic, query, lot) travels in the URL fragment and is read on the client.
+**What it reads and writes.** This surface reaches **no API contract**: every word is a content key of its own content file, laid out by its page in the static page table. Its one value is a declared server read (Spec 128 §4 dated note 2026-11-11, FE-37): the support inbox setting in logic_variables (migration 314), read per request; the prefill (topic, query, lot) travels in the URL fragment and is read on the client.
 
 **Under Spec 126.** **CONVERTED** (MF-46 stage C): descriptor + content + the one web STATIC binding (Spec 126 §11b.1). It owns no component.
 
@@ -1328,7 +1328,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 |---|---|
 | `files` | `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` · `src/app/(maxbld)/parcel-tool/(static)/help/HelpPrefill.tsx` · `src/lib/surfaces/maxbld-support.ts` · `scripts/surfaces/_schema/static-page.json` |
 | `contracts` | `none — the page calls no API route; its one read runs on the server in src/lib/surfaces/maxbld-support.ts` |
-| `tables` | `logic_variables — maxbld_support_inbox (migration 313)` |
+| `tables` | `logic_variables — maxbld_support_inbox (migration 314)` |
 | `gate` | `src/lib/auth/host-policy.ts — the public row /help → /parcel-tool/help` |
 | `states` | `scripts/surfaces/_schema/static-page.json — pages.web_help` |
 | `emits` | `none` |
@@ -1364,7 +1364,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/app/(maxbld)/parcel-tool/(static)/help/page.tsx` · `src/lib/surfaces/maxbld-support.ts`
 
-> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y"). Dated 2026-11-12 (MF-46 follow-up, Help & Support contact; operator "All recommendations accepted ..."): one mailto part per topic, the inbox a server read (migration 313).
+> ⚠️ MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 §12 folds 16, 18, 22; operator round 2026-11-11 "1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y"). Dated 2026-11-12 (MF-46 follow-up, Help & Support contact; operator "All recommendations accepted ..."): one mailto part per topic, the inbox a server read (migration 314).
 
 <a id="s-091"></a>
 

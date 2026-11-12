@@ -4,7 +4,7 @@
 //
 // MF-46 stage C · the MaxBLD Help & Support page (mount file of web_help, archetype STATIC). Public: maxbld.ca /help is a public host-table row rewritten here
 // (src/lib/auth/host-policy.ts); it gates nothing (never requireParcelToolPage). Every word comes from the content file.
-// Dated 2026-11-12 (MF-46 follow-up, Help & Support contact): the one server read is the support inbox (migration 313), per request so a new
+// Dated 2026-11-12 (MF-46 follow-up, Help & Support contact): the one server read is the support inbox (migration 314), per request so a new
 // address shows at once; unset or unreadable leaves the mail links out (keepValued), never a 500. HelpPrefill adds the fragment's prefill.
 import type { Metadata } from 'next';
 import { StaticBinding, staticWebTree } from '@/components/surfaces/web/StaticBinding';

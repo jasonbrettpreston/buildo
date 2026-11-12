@@ -3,7 +3,7 @@
 //            (dated note 2026-11-11: a STATIC page may read declared stored values on the server), docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
 //            FE-37.
 //
-// MF-46 follow-up · the Help & Support inbox, the one server read of web_help (migration 313; DECISIONS-v1 D-6 (a)). It goes to the page through
+// MF-46 follow-up · the Help & Support inbox, the one server read of web_help (migration 314; DECISIONS-v1 D-6 (a)). It goes to the page through
 // MF-76's STATIC value mechanism: the page table's mailto parts name the read `support_inbox`; an absent value leaves them out (keepValued).
 import type { StaticValues } from '@/components/surfaces/web/StaticBinding';
 import type { Queryable } from '@/lib/entitlements';

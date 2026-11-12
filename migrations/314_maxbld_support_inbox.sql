@@ -1,4 +1,4 @@
--- 313_maxbld_support_inbox.sql
+-- 314_maxbld_support_inbox.sql
 -- MF-46: the MaxBLD Help & Support inbox as ONE operator setting (operator 2026-11-11, small pages item 6: the support inbox is held as ONE
 -- setting, never typed into a page, a content file or a spec; Spec 126 §11b.7 dated note 2026-11-11 item 3). DECISIONS-v1 D-6 (a): Help &
 -- Support is a mailto link to this inbox. Operator 2026-11-12: "All recommendations accepted as long as they are complaint and are standardized,
@@ -15,7 +15,7 @@
 BEGIN;
 
 INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description) VALUES
-  ('maxbld_support_inbox', 0, '""'::jsonb, 'MF-46 (Spec 126 section 11b.7 dated note 2026-11-11 item 3; section 11b.3 dated note 2026-11-12): the MaxBLD Help & Support inbox, ONE operator setting (never typed into a page, content file or spec). JSONB string; empty or not an email address = unset, and the Help page shows no contact links. Inserted by migration 313. CONSUMED by src/lib/surfaces/maxbld-support.ts (readSupportInbox) for src/app/(maxbld)/parcel-tool/(static)/help/page.tsx.')
+  ('maxbld_support_inbox', 0, '""'::jsonb, 'MF-46 (Spec 126 section 11b.7 dated note 2026-11-11 item 3; section 11b.3 dated note 2026-11-12): the MaxBLD Help & Support inbox, ONE operator setting (never typed into a page, content file or spec). JSONB string; empty or not an email address = unset, and the Help page shows no contact links. Inserted by migration 314. CONSUMED by src/lib/surfaces/maxbld-support.ts (readSupportInbox) for src/app/(maxbld)/parcel-tool/(static)/help/page.tsx.')
 ON CONFLICT (variable_key) DO NOTHING;
 
 COMMIT;
