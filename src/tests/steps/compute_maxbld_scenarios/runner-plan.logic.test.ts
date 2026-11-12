@@ -113,7 +113,7 @@ describe('MB-35 b4 STOP: the real descriptor through the runner (no DB)', () => 
     const prepareValue = (req(path.join(ROOT, 'node_modules/pg/lib/utils.js')) as Json).prepareValue as (v: unknown) => unknown;
     const src = goldenSource();
     const rows = S.materializeRows(src.rows, { config: seedConfig(), lookups: src.lookups }).rows.e1 as Json[];
-    expect(rows.length).toBe(2 * 153);
+    expect(rows.length).toBe(2 * 169); // MB-27 increment 5 (lane B5B-1, FIT-a): +16 fitted rows per parcel (5 x 3 types + units_fit); was 2 * 153
     const bad: string[] = [];
     for (const r of rows) {
       for (const c of jsonbCols) {
@@ -140,7 +140,7 @@ describe('MB-35 b4 STOP: the real descriptor through the runner (no DB)', () => 
     expect(pool.sql.some((t) => /^\s*DELETE/i.test(t))).toBe(false);
     expect(pool.sql.some((t) => /^\s*INSERT INTO parcel_maxbld_scenarios/i.test(t))).toBe(true);
     expect(out.matched.processed).toBe(2);
-    expect(out.matched.rows_emitted).toBe(2 * 153);
-    expect(out.written.e1.scanned).toBe(2 * 153);
+    expect(out.matched.rows_emitted).toBe(2 * 169); // MB-27 increment 5 (lane B5B-1, FIT-a): +16 fitted rows per parcel (5 x 3 types + units_fit); was 2 * 153
+    expect(out.written.e1.scanned).toBe(2 * 169); // MB-27 increment 5 (lane B5B-1, FIT-a): +16 fitted rows per parcel (5 x 3 types + units_fit); was 2 * 153
   });
 });

@@ -77,6 +77,13 @@
     {"id":"formula:units_pitched_b","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row units_pitched_b"},
     {"id":"formula:unit_count","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row unit_count"},
     {"id":"formula:houseplex_bedrooms","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row houseplex_bedrooms"},
-    {"id":"formula:unit_area_m2","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row unit_area_m2"}
+    {"id":"formula:unit_area_m2","kind":"formula","state":"on","ruling":"M-378; M-496","reason":"increment 3 row unit_area_m2"},
+    {"id":"reading:fitted_house_storey_rule","kind":"reading","state":"on","ruling":"FIT-a; FD-1 (a); FD-4 (a); AR-7 (b); M-481","reason":"the fitted house: the fewest whole storeys on the flat stack (our shape choice, 800.50(820)) and the least height for them under the S-1 / S-2 storey rule","confidence":"medium","evidence":"FITTED-MEASURE FD-4 / ADDON-ALL-ROWS AR-7 (2026-11-12): the storey rule rests on M-404 (OBC minimum ceiling and assembly) and M-405 (S-2 = 0, an assumption); the FD-4 review condition places the medium confidence on this reading row; strengthen with plan facts (storey heights on CoA drawings)"},
+    {"id":"formula:storeys_fit","kind":"formula","state":"on","ruling":"M-378; FIT-a; FD-1 (a)","reason":"increment 5 row storeys_fit"},
+    {"id":"formula:footprint_fit_m2","kind":"formula","state":"on","ruling":"M-378; FIT-a; FD-1 (a)","reason":"increment 5 row footprint_fit_m2"},
+    {"id":"formula:depth_fit_m","kind":"formula","state":"on","ruling":"M-378; FIT-a; FD-1 (a)","reason":"increment 5 row depth_fit_m"},
+    {"id":"formula:upper_storey_depth_fit_m","kind":"formula","state":"on","ruling":"M-378; FIT-a; FD-1 (a)","reason":"increment 5 row upper_storey_depth_fit_m"},
+    {"id":"formula:height_fit_m","kind":"formula","state":"on","ruling":"M-378; FIT-a; FD-1 (a)","reason":"increment 5 row height_fit_m"},
+    {"id":"formula:units_fit","kind":"formula","state":"on","ruling":"M-378; FIT-a; AR-7 (b)","reason":"increment 5 row units_fit"}
   ]
 }

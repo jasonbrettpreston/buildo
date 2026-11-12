@@ -106,7 +106,7 @@ describe('Q-CONF a switchboard data', () => {
     for (const r of SW.rows.filter((x: Json) => x.kind === 'reading')) {
       expect([r.id, /\bC(?:[89]|1\d)\b/.test(String(r.evidence))]).toEqual([r.id, SIX.has(r.id)]);
     }
-    expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 8); // +1 increment-4 reading (D-1 b); was + 7
+    expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 9); // MB-27 increment 5 (lane B5B-1, FD-4 a): +1 reading:fitted_house_storey_rule (medium; it cites no confidence-register line); was + 8 // +1 increment-4 reading (D-1 b); was + 7
   });
 
   it('D4 shape_calibration keeps its state and ruling and gains a confidence and evidence', () => {

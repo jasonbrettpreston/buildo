@@ -1,0 +1,87 @@
+== MB-27 increment 5 lane B5B-1 (C2b, the fitted rows on the row alone; FD-1..FD-6 a, C1-C21, AR-7 b) red: the lock run on the parent 008e95c60 (no fitted rows, no audit census); green on the build commit
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0067 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0067 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0067 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0094 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0094 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0094 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0097 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0097 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0097 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0166 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0166 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0166 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0170 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0170 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0170 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0175 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0175 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0175 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0179 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0179 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0179 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0182 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0182 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0182 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0193 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0193 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0193 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0203 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0203 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0203 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0205 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0205 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0205 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0229 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0229 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0229 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0277 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0277 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0277 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0289 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0289 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0289 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0354 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0354 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0354 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0375 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0375 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0375 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0388 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0388 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0388 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0399 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0399 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0399 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0457 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0457 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0457 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0461 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0461 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0461 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0464 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0464 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0464 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0553 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0553 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0553 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0561 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0561 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0561 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0562 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0562 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0562 house_with_secondary_suite
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0578 detached_house
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0578 detached_houseplex
+   × FD-1 (a) / AR-7 (b): the fitted rows on the golden 25 x 3 rows equal the McProof key v2.1 (row alone) > A0578 house_with_secondary_suite
+   × worked examples (BUILD-PLAN golden-25 and worked examples, red first) > A0175 detached house: 2 storeys of 76.63 m2, 5.81 x 13.19 m, 5.536 m high (the card)
+   × worked examples (BUILD-PLAN golden-25 and worked examples, red first) > A0561 detached house: 4 storeys of 52.33 m2, the 4th set back (11.86 m deep), never 4 x 49.83 (the set-back storey, FD-1 a)
+   × C7 / C4 / C14 / C16: tags, disclosure, flags and confidence > every fitted row is on the flat card only (design_option flat_or_shallow_roof) and reads gfa_flat_m2, never the cross-form headline
+   × C7 / C4 / C14 / C16: tags, disclosure, flags and confidence > C6: no fitted row feeds units_flat or unit_count; units_fit is the houseplex row only
+   × C7 / C4 / C14 / C16: tags, disclosure, flags and confidence > C4: the shape-is-our-choice word rides every fitted row, cited to 800.50(820)
+   × C7 / C4 / C14 / C16: tags, disclosure, flags and confidence > C14 / C16: the height carries storeys_from_minimum_ceiling and rests on a reading row of confidence medium
+   × C4 / C15 / C6: asserted bounds fail closed (never a clip) and every bound is counted > C15: a fitted height above height_max_m refuses (fitted_height_above_max); it is never clipped
+   × C4 / C15 / C6: asserted bounds fail closed (never a clip) and every bound is counted > the census counts the declared audit bounds on the golden 25 (C6: storeys above 3 is a WARN count, not a failure)
+⎯⎯⎯⎯⎯⎯ Failed Tests 83 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  83 failed (83)

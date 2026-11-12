@@ -10,6 +10,9 @@ const LITERALS = [0, 1, 2];
 // M-481 (Q-CONF a): the closed confidence list of a switchboard reading row
 const CONFIDENCE = Object.freeze(['high', 'medium', 'medium-low', 'low']);
 
+/** The step census keys an audit count may never shadow (compute-maxbld-scenarios.js matched). */
+const CORE_COUNTS = ['parcels', 'processed', 'rows_emitted', 'layer2_cell_unparseable', 'status_outside_closed_set', 'numbers_without_trace', 'not_buildable_with_value', 'closure_violations', 'flags_missing', 'units_floor_refusals'];
+
 function toList(x) {
   return Array.isArray(x) ? x : [];
 }
@@ -156,6 +159,7 @@ module.exports = {
   sha256,
   seedShas,
   duplicateIds,
+  CORE_COUNTS,
 };
 
 /** One string per catalogue violation; an empty list means the catalogue is valid. */
@@ -173,12 +177,15 @@ function validateCatalogue(seeds, increments) {
   for (const r of rowsOf(catalogue)) {
     if (!Array.isArray(r.building_type) || !r.building_type.length || r.building_type.some((b) => !typeIds.has(b))) out.push(`row ${r.id}: building_type must be a non-empty list of building-types ids`);
     if (!switches.has(r.switch)) out.push(`row ${r.id}: switch ${r.switch} is not in the switchboard`);
+    // MB-27 increment 5 (C16): a row's declared `reading` is a switchboard reading row (rows.js pathSwitches carries its confidence)
+    if (r.reading !== undefined && !entities(s.switchboard, 'rows').some((x) => x.id === r.reading && x.kind === 'reading')) out.push(`row ${r.id}: reading ${r.reading} is not a reading row of the switchboard`);
     for (const v of revisionsOf(r)) if (!switches.has(v.switch)) out.push(`row ${r.id} revision ${v.increment}: switch ${v.switch} is not in the switchboard`);
   }
   for (const bt of entities(s.buildingTypes, 'rows')) {
     if (!switches.has(bt.switch)) out.push(`building_type ${bt.id}: switch ${bt.switch} is not in the switchboard`);
   }
   out.push(...confidenceViolations(s.switchboard));
+  out.push(...auditViolations(catalogue, rowIds));
   out.push(...stateViolations(s.switchboard));
   out.push(...nameSpaceViolations(catalogue, targets));
   out.push(...designOptionViolations(catalogue, s.vocab));
@@ -187,6 +194,25 @@ function validateCatalogue(seeds, increments) {
     topoOrder(catalogue);
   } catch (e) {
     out.push('cycle: catalogue row order is not acyclic');
+  }
+  return out;
+}
+
+/** MB-27 increment 5 (C4, C6, C15): each audit_counts entry names a catalogue row, a fresh key, and exactly one of reason (a declared refuse word) or above (a number). */
+function auditViolations(catalogue, rowIds) {
+  const out = [];
+  const refuse = toList(catalogue.refuse_reasons);
+  const keys = new Set();
+  for (const a of toList(catalogue.audit_counts)) {
+    const at = `audit_counts ${isObject(a) ? a.key : String(a)}: `;
+    if (!isObject(a) || typeof a.key !== 'string' || !a.key) { out.push(`${at}key is missing`); continue; }
+    if (CORE_COUNTS.includes(a.key) || keys.has(a.key)) out.push(`${at}key is a core count or a duplicate`);
+    keys.add(a.key);
+    if (!rowIds.has(a.row)) out.push(`${at}row ${a.row} is not a catalogue row`);
+    const hasReason = typeof a.reason === 'string';
+    const hasAbove = typeof a.above === 'number';
+    if (hasReason === hasAbove) out.push(`${at}exactly one of reason or above`);
+    if (hasReason && !refuse.includes(a.reason)) out.push(`${at}reason ${a.reason} is not a refuse reason`);
   }
   return out;
 }

@@ -36,13 +36,15 @@ const PINNED_SHA: Record<string, string> = {
   // re-pinned 2026-11-04 (MB-27 increment-2 rows + R1, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 37 increment-2 rows (M-457..M-487), the revisions of buildable_width_m (M-458) and gfa_max_m2 (M-476), the R1 design_option tags, 8 rafter settings (M-462), the flag word attic_outside_gfa and the refuse word no_permitted_gfa_base (M-480, Q-MECH0).
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): every row's building_type becomes a list (Q2 a); was catalogue: '
   // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): house_with_secondary_suite joins the 47 increment-1/2 rows, the bt_units_floor fact and the units_max increment-4 revision (E7); was catalogue: '42f5329578224c4753da0aa19e7e82bb2585095998b782aef1892cadad7eab09'
-  catalogue: 'd4d0e8f904e99951ae25960c9425ae38f0fb789d4dab97cbc18ea4647a5cfe9b',
+  // re-pinned 2026-11-12 (MB-27 increment 5, lane B5B-1, hash fields only; FIT-a, FD-1..FD-6 a, AR-7 b): the six fitted rows, two refuse words, the fitted_shape_chosen flag word and the audit_counts declaration; was catalogue: 'd4d0e8f904e99951ae25960c9425ae38f0fb789d4dab97cbc18ea4647a5cfe9b'
+  catalogue: '80907cbca12ed30202860f1f370666640db02d261f28cd28e6fdfca667de1915',
   // re-pinned 2026-11-04 (MB-27 switchboard confidence, operator Q-CONF a 'Q CONF a' and 'RP-10 approved, switchboard pin approved, shape low yes'): schema switchboard-v2; every reading row gained confidence and evidence; the seven increment-2 register readings C1-C7 joined as reading rows (M-481).
   // re-pinned 2026-11-04 (MB-27 increment-2 rows, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 39 formula switches (37 rows, 2 revisions; M-378, M-476), four off by "Q-default a".
   // re-pinned 2026-11-06 (MB-27 the switch-on, operator RP-SW "all recommended" (D-9) and RP-SW2 "a", version and hash fields only): the four Q-DEFAULT switches off -> on, their reason text; was 4aa44e44
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): the detached_houseplex switch and the six confidence readings; was switchboard:
   // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): the suite type switch, reading:suite_fsi_release_848 (D-1 b) and formula:units_max:increment_4 (E7); was switchboard: '3b812c786ab9b4cc93392097e629059ea458dc4492df4e6dc1dbc20caa131cfa'
-  switchboard: 'd94a9268c73cdc96596ba99dffb75f3e6a491edc917973a97e977021a48ea371',
+  // re-pinned 2026-11-12 (MB-27 increment 5, lane B5B-1, hash fields only; FIT-a, FD-1..FD-6 a, AR-7 b): reading:fitted_house_storey_rule and six formula switches; was switchboard: 'd94a9268c73cdc96596ba99dffb75f3e6a491edc917973a97e977021a48ea371'
+  switchboard: 'cb1920acc8bb962569104927e81fcddcf70e32154d9d685e6c1a4289e5cd1f45',
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): the detached_houseplex type; was buildingType
   // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): the house_with_secondary_suite type, units_floor per type and the units_floor_census declaration (E7) and the gain declaration (D-2 a); was buildingTypes: '05398a754244b841d7a49a4b6516e3e8bb0766ee71150946f63a6bcd29f9a936'
   buildingTypes: 'cf6a21410bfac5044a5e842cfbb4cd57f0f55e386f088bdc52433e11a7568c19',
@@ -100,12 +102,12 @@ describe('MB-31 catalogue invariants (B8)', () => {
   // Q-K-ASSERT a (M-457): the ten increment-1 rows in their pinned order, then the 37 increment-2 rows
   it('schema + ten increment-1 rows in the pinned order, then the 37 increment-2 rows, all detached_house', () => {
     expect(CAT.schema).toBe('layer3-catalogue-v1');
-    expect(CAT.rows).toHaveLength(55); // MB-27 inc3 E8 rows (operator 2026-11-08 E8 ruling): +8 houseplex rows (basement_livable_m2, basement_units, units_flat, units_pitched_a, units_pitched_b, unit_count, houseplex_bedrooms, unit_area_m2); was 47
+    expect(CAT.rows).toHaveLength(61); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): +6 increment-5 rows (5 on all three types, units_fit on the houseplex); was 55 // MB-27 inc3 E8 rows (operator 2026-11-08 E8 ruling): +8 houseplex rows (basement_livable_m2, basement_units, units_flat, units_pitched_a, units_pitched_b, unit_count, houseplex_bedrooms, unit_area_m2); was 47
     expect(CAT.rows.slice(0, 10).map((r: Json) => r.id)).toEqual(ROW_IDS);
     for (const [i, row] of CAT.rows.entries()) {
       // MB-27 increment 4 (D-8 a named move; P-3, Q2 a): the 47 increment-1/2 rows list the suite house too; the 8 houseplex-only rows do not
-      expect(row.building_type).toEqual(i >= 47 ? ['detached_houseplex'] : ['detached_house', 'detached_houseplex', 'house_with_secondary_suite']); // DL-21 a move 1 (Q2 a): every row's building_type is a list; the houseplex-only increment-3 rows list the houseplex alone
-      expect(row.increment).toBe(i < 10 ? '1' : i < 47 ? '2' : '3');
+      expect(row.building_type).toEqual((i >= 47 && i < 55) || i === 60 ? ['detached_houseplex'] : ['detached_house', 'detached_houseplex', 'house_with_secondary_suite']); // DL-21 a move 1 (Q2 a): every row's building_type is a list; the houseplex-only increment-3 rows list the houseplex alone
+      expect(row.increment).toBe(i < 10 ? '1' : i < 47 ? '2' : i < 55 ? '3' : '5'); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): the six increment-5 rows close the list
       expect(row.clauses.length).toBeGreaterThan(0);
       expect(row.rules.length).toBeGreaterThan(0);
       expect(row.example_ids.length).toBeGreaterThan(0);
@@ -155,7 +157,7 @@ describe('MB-31 catalogue invariants (B8)', () => {
 
   it('validateCatalogue on the real seeds: no violation', () => {
     // MB-27 increment 4 (E7, Spec 69a M-344 dated note 2026-11-11): the units_max revision is an increment-4 revision; was ['1', '2', '3']
-    expect(C.validateCatalogue(SEEDS, ['1', '2', '3', '4'])).toHaveLength(0); // Q-K-ASSERT a (M-457): the increment-2 rows; was ['1']
+    expect(C.validateCatalogue(SEEDS, ['1', '2', '3', '4', '5'])).toHaveLength(0); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): the increment-5 rows; was ['1', '2', '3', '4'] // Q-K-ASSERT a (M-457): the increment-2 rows; was ['1']
   });
 
   // D-3 a (MB-27 increment 4, Spec 69a M-379 dated note 2026-11-11; card ~/Buildo-scratch/mcbylaws/inc4/cards/CARD-D3-SUITE-SIZE.md):

@@ -166,7 +166,7 @@ describe('MB-27 R1: design_option tags on the catalogue rows (plan-reader-and-me
 
   it('R1-1 the flat run rows are setback_plate_m2 and gfa_flat_m2; the pitched run rows are the arm, attic, pitched GFA and mechanical rows; the rest carry no option', () => {
     const tag = (id: string): string | null => { const r = SEEDS.catalogue.rows.find((x: Json) => x.id === id); return r && r.design_option ? r.design_option.roof_form : null; };
-    expect(SEEDS.catalogue.rows.filter((r: Json) => tag(r.id) === 'flat_or_shallow_roof').map((r: Json) => r.id)).toEqual(['setback_plate_m2', 'gfa_flat_m2']);
+    expect(SEEDS.catalogue.rows.filter((r: Json) => tag(r.id) === 'flat_or_shallow_roof').map((r: Json) => r.id)).toEqual(['setback_plate_m2', 'gfa_flat_m2', 'storeys_fit', 'footprint_fit_m2', 'depth_fit_m', 'upper_storey_depth_fit_m', 'height_fit_m', 'units_fit']); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): C7 tags the six fitted rows flat_or_shallow_roof; was [setback_plate_m2, gfa_flat_m2]
     for (const id of ['roof_pitch_a', 'half_span_b_m', 'roof_assembly_depth_a_m', 'roof_vertical_thickness_b_m', 'attic_counted_floor_a_m2', 'gfa_pitched_a_m2', 'gfa_pitched_b_m2', 'gfa_pitched_m2', 'mechanical_attic_outside_gfa_b_m2', 'total_floor_area_pitched_a_m2']) expect(tag(id), id).toBe('pitched');
     for (const id of ['storeys_max', 'footprint_max_m2', 'wall_storeys', 'storeys_above_wall', 'attic_eave_clearance_m', 'front_rear_wall_width_m', 'gfa_max_m2', 'buildable_width_m']) expect(tag(id), id).toBeNull();
     for (const r of SEEDS.catalogue.rows) if (r.increment === '1') expect(r.design_option, r.id).toBeUndefined();

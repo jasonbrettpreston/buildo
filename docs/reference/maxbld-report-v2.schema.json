@@ -69,10 +69,12 @@
               "buildable_depth_m",
               "buildable_width_m",
               "card_image",
+              "depth_fit_m",
               "depth_room_m",
               "disclosure_texts",
               "display_label",
               "field_trust",
+              "footprint_fit_m2",
               "footprint_max_m2",
               "front_rear_wall_width_m",
               "front_setback_used_m",
@@ -83,6 +85,7 @@
               "gfa_pitched_m2",
               "half_span_a_m",
               "half_span_b_m",
+              "height_fit_m",
               "height_max_m",
               "houseplex_bedrooms",
               "mechanical_attic_outside_gfa_a_m2",
@@ -97,16 +100,19 @@
               "setback_plate_m2",
               "status_text",
               "storeys_above_wall",
+              "storeys_fit",
               "storeys_max",
               "total_floor_area_pitched_a_m2",
               "total_floor_area_pitched_b_m2",
               "trust_label",
               "unit_area_m2",
               "unit_count",
+              "units_fit",
               "units_flat",
               "units_max",
               "units_pitched_a",
               "units_pitched_b",
+              "upper_storey_depth_fit_m",
               "wall_storeys"
             ],
             "properties": {
@@ -353,6 +359,17 @@
                   "type": "object"
                 }
               },
+              "depth_fit_m": {
+                "description": "depth_fit_m",
+                "x-source": "catalogue:depth_fit_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "depth_room_m": {
                 "description": "depth_room_m",
                 "x-source": "catalogue:depth_room_m",
@@ -431,6 +448,17 @@
                 "x-source": "content:field_trust",
                 "x-status": "proposed",
                 "x-render": "payload_only"
+              },
+              "footprint_fit_m2": {
+                "description": "footprint_fit_m2",
+                "x-source": "catalogue:footprint_fit_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "footprint_max_m2": {
                 "description": "footprint_max_m2",
@@ -534,6 +562,17 @@
               "half_span_b_m": {
                 "description": "half_span_b_m",
                 "x-source": "catalogue:half_span_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "height_fit_m": {
+                "description": "height_fit_m",
+                "x-source": "catalogue:height_fit_m",
                 "x-status": "planned",
                 "x-render": "rendered",
                 "x-unit": "m",
@@ -690,6 +729,16 @@
                   "null"
                 ]
               },
+              "storeys_fit": {
+                "description": "storeys_fit",
+                "x-source": "catalogue:storeys_fit",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "storeys_max": {
                 "description": "Storeys (max)",
                 "x-source": "catalogue:storeys_max",
@@ -753,6 +802,16 @@
                   "null"
                 ]
               },
+              "units_fit": {
+                "description": "units_fit",
+                "x-source": "catalogue:units_fit",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "units_flat": {
                 "description": "units_flat",
                 "x-source": "catalogue:units_flat",
@@ -788,6 +847,17 @@
                 "x-source": "catalogue:units_pitched_b",
                 "x-status": "planned",
                 "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "upper_storey_depth_fit_m": {
+                "description": "upper_storey_depth_fit_m",
+                "x-source": "catalogue:upper_storey_depth_fit_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
                 "type": [
                   "number",
                   "null"

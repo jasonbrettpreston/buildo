@@ -8,12 +8,12 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-123 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+129 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
 | `ad_slot` | 4 |
-| `catalogue` | 55 |
+| `catalogue` | 61 |
 | `content` | 35 |
 | `parcels` | 27 |
 | `user_input` | 2 |
@@ -137,6 +137,12 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | unit_count | `scenarios.cards[].unit_count` | number |  | planned | rendered | `catalogue:unit_count` |  |
 | houseplex_bedrooms | `scenarios.cards[].houseplex_bedrooms` | number |  | planned | rendered | `catalogue:houseplex_bedrooms` |  |
 | unit_area_m2 | `scenarios.cards[].unit_area_m2` | number | m² | planned | rendered | `catalogue:unit_area_m2` |  |
+| storeys_fit | `scenarios.cards[].storeys_fit` | number |  | planned | rendered | `catalogue:storeys_fit` |  |
+| footprint_fit_m2 | `scenarios.cards[].footprint_fit_m2` | number | m² | planned | rendered | `catalogue:footprint_fit_m2` |  |
+| depth_fit_m | `scenarios.cards[].depth_fit_m` | number | m | planned | rendered | `catalogue:depth_fit_m` |  |
+| upper_storey_depth_fit_m | `scenarios.cards[].upper_storey_depth_fit_m` | number | m | planned | rendered | `catalogue:upper_storey_depth_fit_m` |  |
+| height_fit_m | `scenarios.cards[].height_fit_m` | number | m | planned | rendered | `catalogue:height_fit_m` |  |
+| units_fit | `scenarios.cards[].units_fit` | number |  | planned | rendered | `catalogue:units_fit` |  |
 | Status reason (plain words) | `scenarios.cards[].status_text` | text |  | proposed | rendered | `content:status_text` | PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback |
 | Per-field trust tier | `scenarios.cards[].field_trust` | jsonb |  | proposed | payload_only | `content:field_trust` | per-field trust (O-17); not generated yet: the catalogue rows carry no trust tier |
 | Trust label (plain words) | `scenarios.cards[].trust_label` | text |  | proposed | rendered | `content:trust_label` | PRESENTATION: high → "By-law derived", disclosed → "By-law derived, see notes", low → "Estimate", CoA → "Precedent estimate" |

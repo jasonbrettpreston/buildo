@@ -1,48 +1,41 @@
 {
   "task": "MB-27",
-  "item": "the increment-4 Layer 2 night INC4-NIGHT (2026-11-11): migration 304 alone (the option view lists house_with_secondary_suite), then a TRUNCATE-RELOAD of the three Layer 2 tables at 61 slots (storage form b) from 5550cb5a3 with no night patch, and the #44 witness recapture; the night itself gets an OUTPUT panel record, as the earlier nights did",
+  "item": "increment 5 C2b sub-lane 1 (lane B5B-1): the fitted house on the row alone (FIT-a; FD-1..FD-6 a with C1-C21; AR-7 b): six Layer 3 rows on the flat card, asserted bounds that refuse and are counted, the storey-rule reading row, the declared audit counts",
   "class": "D",
-  "stage": 8,
-  "date": "2026-11-11",
-  "head": "5550cb5a3",
+  "stage": 4,
+  "date": "2026-11-12",
+  "head": "008e95c60",
   "commits_reviewed": [
-    "05075508b the night recapture over 5550cb5a3 (both POST goldens, both witness traces, the _catalog.json cohort entry, the resolve_bylaws Rule 13 block)",
-    "8044da00c the night record docs/reports/nights/INC4-NIGHT.md",
-    "dcc2ea63e the explained-diffs whys for this night (accepted item A2, written after the seats)"
+    "the C2b build commit over prereg-MB-27-50.json (the working tree reviewed before commit, staged diff against 008e95c60)"
   ],
   "cards": [
-    "~/Buildo-scratch/mcbylaws/inc4/DECISIONS-v2.md (D-6 re-ruled a; the TRUNCATE blocker note at line 158)",
-    "~/Buildo-scratch/mcbylaws/inc4/build/NIGHT-STEPS.md"
+    "~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md",
+    "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md",
+    "~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/inc4/night/RUN.md (blocks b1-b6, r-release, r-restore); prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-48.json (layer2_night); night evidence ~/Buildo-scratch/mcbylaws/inc4/night/",
-  "output": "OUTPUT panel over ~/Buildo-scratch/mcbylaws/inc4/night/post/panel/bundle.md: ds-spec and ds-errorpaths (deepseek-reasoner via the dotenv preload, no downgrade) and one grounded-reviewer + reality-check seat (Sonnet, read-only DB; PASS, 0 blocker, 0 major, 3 minor, 3 info). The grounded seat re-derived every figure and L: citation of the record: the five items sum to 3,110,418 = cells_moved, moved + unchanged = 299 x 440,093, S2 14,789 = 6,549 + 7,808 + 81 + 351, obs/transitions.tsv, unchanged.tsv and row-sha.tsv byte-equal to the dry run and the prereg table row for row, items.awk equal to the prereg items, the timeline (TRUNCATE 47:23, captures 54:03 and 53:24, total 2:43:34), storage 754.95 (P_up 770.94 = 759.66 + 9.68 + 0.6 + 1). Reality check on the live DB (read-only): 440,093 lots on one pair equal to the tree input, width 61, stamps 32 B, 12 CHECKs validated, the option view 3 classes x 7 slots, suite option cells equal to the house's on samples (b5: 0 over all lots), live row_sha equal to the observe pass on 4,541 of 4,541 sampled lots; decoded sample: suite principal 3,920 of 3,920 cells equal the house's, family A (clause (B)) gone from all three classes, the houseplex (D) 45 and (A) cells kept as ruled (D-4). The catalog hand-edit checked: no test compares _catalog.json to the live DB, catalogMembership needs only listed columns to exist, 3 targeted files 81 tests green. The D-8 words on real rows (decision N-6, read-only, the tree read path): 25 of 25 stamps current, 0 stale-word lots, 0 unmapped, 17 with carried words, 25 of 25 equal to the fixture path; a mutated stamp gives the stale word. No defect in the night data. Accepted and disclosed here (the night record is not amended): (A1) S1 is the listing of the suite on the 7 option slots, values equal to the house's; what is stored is 1,167,392 suite option-slot entries in class_results on 392,262 lots (0 before; the houseplex holds 1,584,481 on 399,185 since increment 3), which is exactly row_sha_diff 392,262 (row_sha_same 47,831 = 40,908 gated + 6,923 ungated); the value moves are S2-S5, 29,767 cells; the NIGHT-STEPS proxy (about 23,390 entries on about 7,898 lots) undercounted the stored entries, and the exact G-STOR measure included them (754.95 against 770.94 and the 780 stop). (A2) the 24 G8 diffs, enumerated and explained in dcc2ea63e (6 entries). (A3) the 47 min 23 s TRUNCATE wait was a panel seat's long citywide read join (session 162775, cancelled by the operator), not an unknown writer. (A4) run 4435 completed 16:08:20 (L:952 is a poll line). (A5) RUN.md estimated about 1 h 55 min. (A6) the suite keeps no x.30.40 winner over a 900.* house on principal only; garden and laneway lot_coverage_pct keep (D), registered. (A7) family/clause map: family A = (B), B = (D), B' = (A), C = (D) to not_evaluated (351). (A8) the G-STOR record file holds the increment-3 measure under the increment-4 versions. (A9) pre-inc4.dump now also reverts 305, 307 and 308 if restored. (A10) the carried notes figures sit in a scratch path. (A11) T2 is 440,093/440,093/0. Rejected with evidence: row_sha unreconciled (A1 reconciles it), texts/units hashes (resolved_at), the cohort restore of 0 rows (the run healed the 20 rows; the increment-3 cap2.out reads the same), equivalence_checked 12,017 -> 12,444 (run-date sample: 204 ungated lots with parcel_id % 2000 = 768), migrations=288 (captured truth, explained), the catalog edit, isolation during the wait (a read join; T2 binds every row), the units lookup WARN (present since increment 3; ledger warnings []), self-comparison only (independent live decode and D-8), the 3 drift migrations (pre-existing), the 1,300 versus 780 basis (Q-S6 a), the public go literal (procedural by design), home paths (scratch bundle only), and the rest as listed in the adjudication.",
+  "plan": "~/Buildo-scratch/mcbylaws/inc5/BUILD-PLAN.md section 1 C2 (Layer 3, fitted rows) and ~/Buildo-scratch/mcbylaws/inc5/BUILD-COORD.md (lane B5B-1); oracle McProof key v2.1; prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-50.json",
+  "output": "OUTPUT panel over the staged diff: one DeepSeek bulk pass (deepseek-reasoner via the dotenv preload, review of the diff against CONDITIONS-FD1-6 and FITTED-MEASURE 1.1) and two Claude seats (Sonnet, read-only: grounded code reviewer, regression guardian). No HIGH stands. Folded: audit keys present at 0 on an empty page; a unit test of auditCountsOf on both branches; validateCatalogue refuses a dead or shadowing audit entry; auditCountsOf skips a core or object key at run time; descriptor emit formatting. Rejected with evidence: the DeepSeek HIGHs on height_m vs height_max_m (height_max_m is l2(height_m) in the same run), the units_fit extra plate (it is the basement, units_flat form, key unitsOf), storeys_above_wall in units_fit (the approved key counts S - ws storeys), and the files it did not see (excluded from its bundle: layer2 input, report artefacts, fixture); C2 (min with a not_evaluated wall_storeys is not_evaluated, evaluate-l3 minMax; the six lots compute on the flat run cell, as the key); flag carriage (asserted on every fitted row by the test). The G-STOR and expected-172/4d re-pins follow the a39f91ae5 version-only form.",
   "seats": [
     {
-      "seat": "ds-spec",
-      "verdict": "findings adjudicated: accepted A1, A2, A4, A7, A8, A11; the rest rejected with evidence"
+      "seat": "ds-bulk (deepseek-reasoner)",
+      "verdict": "findings adjudicated: accepted the core-key guard; the rest rejected with evidence"
     },
     {
-      "seat": "ds-errorpaths",
-      "verdict": "findings adjudicated: accepted A1, A2, A3, A8, A9, A10; the rest rejected with evidence"
+      "seat": "code-reviewer-grounded (Sonnet)",
+      "verdict": "no HIGH; 2 MEDIUM folded (audit keys at 0, auditCountsOf unit test); 3 LOW (1 folded)"
     },
     {
-      "seat": "grounded-reviewer + reality-check",
-      "verdict": "PASS (0 blocker, 0 major, 3 minor accepted as A3-A5, 3 info)"
-    },
-    {
-      "seat": "D-8 real rows",
-      "verdict": "PASS (25 of 25 current, 0 stale, 0 unmapped, 25 equal to the fixture path)"
+      "seat": "regression-guardian (Sonnet)",
+      "verdict": "no HIGH; 0 of 3,725 golden rows move except content shas (seed hashes); MEDIUM increment3 house lock is length-only (pre-existing gap, carded); LOW audit shape validation folded"
     }
   ],
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "card: storing equal-value option-slot entries for the non-first classes (suite 1,167,392 on 392,262 lots; houseplex 1,584,481 on 399,185); the impact-map proxy for such entries undercounts; storage is within the stop (A1)",
-    "card: no long read on the DB during a dblock window; b4 sets a lock_timeout and prints the blocking pids before the TRUNCATE (A3)",
-    "operator decision: commit the re-measured G-STOR record (770.94, parent 6b5ef8e22) or leave the re-measure in prereg 48 (A8)",
-    "the night notes figures (run 4435: units 1,014, texts 2,868, 754.9 MiB, 26.7 min, scenario_axis_cells 0) and the increment-3 held figures wait for the next Layer 2 recapture, which fills expected_shape what and measured together before its capture; owner MB-27 (A10)",
-    "the cohort backup table bylaw_resolution_lots_cohort_bak_20261111t2135z, backup/ and pre-inc4.dump (which would now also revert 305, 307, 308): kept until the operator word (L-1 a, L-4 a; A9)",
-    "card (carried): the forced-cohort plan prints bytea row_sha as raw bytes; the l2 content-hash run timestamp card"
+    "card: increment3-building-type \"the house never moves\" asserts length only since 9441861ae; add an id and value lock",
+    "C3 3.0 m audit entries after migration 316 (lane B5A)",
+    "operator: the A0553 houseplex / suite-house flat card draws a set-back storey 2.69 m deep (the stored gfa_flat_m2 stack already counts it); C3 says the stepped floor meets 3.0 m: count only, or refuse?",
+    "operator: units_fit counts storeys_max storeys on the fitted footprint (the approved key), not the fitted storeys; equal on the 25 (capped at units_max)"
   ],
-  "evidence": "~/Buildo-scratch/mcbylaws/inc4/night/post/panel/adjudication.md (out-spec.md, out-errorpaths.md, seat-grounded/report.md, ../d8/d8-real-rows.out.json)"
+  "evidence": "~/Buildo-scratch/mcbylaws/inc5/b5b1/ds-review.md"
 }

@@ -158,7 +158,7 @@ describe('(b) the golden 25 through the runtime loader reproduce the McProof key
   it('every stated house value and status, with settings_sha set on every row', () => {
     const out = S.materializeRows(ROWS, { config: CONFIG, lookups: RAW }) as Json;
     const rows = out.rows.e1 as Json[];
-    expect(rows.length).toBe(25 * 153);
+    expect(rows.length).toBe(25 * 169); // MB-27 increment 5 (lane B5B-1, FIT-a): +16 fitted rows per parcel (5 x 3 types + units_fit); was 25 * 153
     let compared = 0;
     for (const e of expected) {
       const house = new Map(rows.filter((r) => r.parcel_id === e.parcel_id && r.building_type === 'detached_house').map((r) => [r.field_id, r]));

@@ -68,11 +68,11 @@ describe('the step: one row per (building_type, field), the house unchanged', ()
       { seeds: s, vocab: s.vocab, layer2Classes: [], permissionKeys: {}, texts: {} });
     const keys = (out.rows.e1 as Json[]).map((r) => `${r.building_type}|${r.field_id}`);
     expect(keys.length).toBe(new Set(keys).size);
-    expect((out.rows.e1 as Json[]).filter((r) => r.building_type === "detached_house")).toHaveLength(47); // not 2 x 47 (the per-type loop)
+    expect((out.rows.e1 as Json[]).filter((r) => r.building_type === "detached_house")).toHaveLength(52); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): +5 fitted rows on the house; was 47 // not 2 x 47 (the per-type loop)
   });
   it('detached_house: the same 47 field ids and content shas as the increment-2 seeds (green on both trees; the house never moves)', () => {
     const rows = (S.buildParcelRows(PARCEL, seeds(), META) as Json[]).filter((r) => r.building_type === 'detached_house');
-    expect(rows).toHaveLength(47);
+    expect(rows).toHaveLength(52); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): the 47 increment-1..4 house rows plus the 5 fitted rows (flat card); was 47
   });
 });
 

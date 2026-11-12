@@ -126,6 +126,8 @@ export type ReportV2Scenarios = {
     buildable_width_m: number | null;
     /** Illustration — content:illustrations */
     card_image: Array<Record<string, unknown>> | null;
+    /** depth_fit_m — catalogue:depth_fit_m (m) */
+    depth_fit_m: number | null;
     /** depth_room_m — catalogue:depth_room_m (m) */
     depth_room_m: number | null;
     disclosure_texts: Array<{
@@ -142,6 +144,8 @@ export type ReportV2Scenarios = {
     display_label: string | null;
     /** Per-field trust tier — content:field_trust */
     field_trust: unknown;
+    /** footprint_fit_m2 — catalogue:footprint_fit_m2 (m²) */
+    footprint_fit_m2: number | null;
     /** footprint_max_m2 — catalogue:footprint_max_m2 (m²) */
     footprint_max_m2: number | null;
     /** front_rear_wall_width_m — catalogue:front_rear_wall_width_m (m) */
@@ -162,6 +166,8 @@ export type ReportV2Scenarios = {
     half_span_a_m: number | null;
     /** half_span_b_m — catalogue:half_span_b_m (m) */
     half_span_b_m: number | null;
+    /** height_fit_m — catalogue:height_fit_m (m) */
+    height_fit_m: number | null;
     /** Height (max) — catalogue:height_max_m (m) */
     height_max_m: number | null;
     /** houseplex_bedrooms — catalogue:houseplex_bedrooms */
@@ -190,6 +196,8 @@ export type ReportV2Scenarios = {
     status_text: string | null;
     /** storeys_above_wall — catalogue:storeys_above_wall */
     storeys_above_wall: number | null;
+    /** storeys_fit — catalogue:storeys_fit */
+    storeys_fit: number | null;
     /** Storeys (max) — catalogue:storeys_max */
     storeys_max: number | null;
     /** total_floor_area_pitched_a_m2 — catalogue:total_floor_area_pitched_a_m2 (m²) */
@@ -202,6 +210,8 @@ export type ReportV2Scenarios = {
     unit_area_m2: number | null;
     /** unit_count — catalogue:unit_count */
     unit_count: number | null;
+    /** units_fit — catalogue:units_fit */
+    units_fit: number | null;
     /** units_flat — catalogue:units_flat */
     units_flat: number | null;
     /** units_max — catalogue:units_max */
@@ -210,6 +220,8 @@ export type ReportV2Scenarios = {
     units_pitched_a: number | null;
     /** units_pitched_b — catalogue:units_pitched_b */
     units_pitched_b: number | null;
+    /** upper_storey_depth_fit_m — catalogue:upper_storey_depth_fit_m (m) */
+    upper_storey_depth_fit_m: number | null;
     /** wall_storeys — catalogue:wall_storeys */
     wall_storeys: number | null;
   }>;

@@ -537,6 +537,64 @@
       "status": "planned",
       "source": "catalogue:unit_area_m2",
       "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].storeys_fit",
+      "name": "storeys_fit",
+      "label": "storeys_fit",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:storeys_fit",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].footprint_fit_m2",
+      "name": "footprint_fit_m2",
+      "label": "footprint_fit_m2",
+      "type": "number",
+      "unit": "m²",
+      "status": "planned",
+      "source": "catalogue:footprint_fit_m2",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].depth_fit_m",
+      "name": "depth_fit_m",
+      "label": "depth_fit_m",
+      "type": "number",
+      "unit": "m",
+      "status": "planned",
+      "source": "catalogue:depth_fit_m",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].upper_storey_depth_fit_m",
+      "name": "upper_storey_depth_fit_m",
+      "label": "upper_storey_depth_fit_m",
+      "type": "number",
+      "unit": "m",
+      "status": "planned",
+      "source": "catalogue:upper_storey_depth_fit_m",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].height_fit_m",
+      "name": "height_fit_m",
+      "label": "height_fit_m",
+      "type": "number",
+      "unit": "m",
+      "status": "planned",
+      "source": "catalogue:height_fit_m",
+      "render": "rendered"
+    },
+    {
+      "path": "scenarios.cards[].units_fit",
+      "name": "units_fit",
+      "label": "units_fit",
+      "type": "number",
+      "status": "planned",
+      "source": "catalogue:units_fit",
+      "render": "rendered"
     }
   ]
 }

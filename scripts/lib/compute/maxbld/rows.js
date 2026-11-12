@@ -99,11 +99,21 @@ function readingSwitches(env, seeds, state, run) {
   return out;
 }
 
-/** The switches of a computed row: the evaluator's own (clause switches), then the readings it rests on (M-481). */
-function pathSwitches(env, seeds, state, run) {
+/**
+ * The switches of a computed row: the evaluator's own (clause switches), then the readings it rests on (M-481). MB-27 increment 5
+ * (C16, FD-4 a): a row that declares `reading` (a switchboard reading row) rests on that reading too, with the switchboard's
+ * confidence, so a row that reads it inherits it (readingSwitches); no row before increment 5 declares one.
+ */
+function pathSwitches(env, seeds, state, run, row) {
   const own = switchesOf([], env);
   const ids = new Set(own.map((s) => s.id));
-  return [...own, ...readingSwitches(env, seeds, state, run).filter((s) => !ids.has(s.id))];
+  const sw = row && typeof row.reading === 'string' ? findById(isObject(seeds.switchboard) ? seeds.switchboard.rows : null, row.reading) : null;
+  const self = sw && sw.kind === 'reading' && !ids.has(sw.id)
+    ? [{ id: sw.id, state: has(state, sw.id) ? state[sw.id] : sw.state, confidence: has(sw, 'confidence') ? sw.confidence : null, evidence: has(sw, 'evidence') ? sw.evidence : null }]
+    : [];
+  const all = [...own, ...self];
+  const seen = new Set(all.map((s) => s.id));
+  return [...all, ...readingSwitches(env, seeds, state, run).filter((s) => !seen.has(s.id))];
 }
 
 function result(row, status, extra) {
@@ -350,7 +360,7 @@ function exprResult(row, inputs, state, memo, runIn, revisionSwitches, runName) 
   // the taken branch (evaluate-l3.mjs `if`), so those words were lost (the A0179 stale-stamp gap). Declared input_flags are unchanged.
   const readFlags = env.trace.filter((t) => isObject(t) && t.kind === 'l2' && typeof t.id === 'string').flatMap((t) => toList((isObject(inputs.l2Flags) ? inputs.l2Flags : {})[t.id]));
   const flags = unique([...toList(v.flags), ...readFlags]);
-  const switched = pathSwitches(env, inputs.seeds, state, run); // M-481: the readings it rests on, with their confidence
+  const switched = pathSwitches(env, inputs.seeds, state, run, row); // M-481: the readings it rests on, with their confidence
   if (row.envelope === true && v.k === 'num' && v.v <= 0) {
     const read = env.trace.filter((t) => t && t.kind === 'l2' && typeof t.clause === 'string').map((t) => t.clause);
     return result(row, 'not_buildable', { clauses: [...read, ...toList(row.clauses)], switches: switched, trace: env.trace, flags });
