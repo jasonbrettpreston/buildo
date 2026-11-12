@@ -24,10 +24,10 @@
 | RF-7 | every declared CoA twin resolves to a produced field | PASS | — |
 | RF-8 | the S-001 descriptor field_whitelist names every area column the consumer assembler sends | FAIL | parcel.areas.cur_floor_gfa_sqm; parcel.areas.max_newbuild_coa_gfa_sqm; parcel.areas.realized_fsi_p90 |
 | RF-9 | the declared inputs are closed both ways (real targets and logic variables; every key reaches a chain; no banned ref mapped; every scope param exists) | PASS | — |
-| RF-10 | no rendered field reaches a vocab.banned_code_refs input | FAIL | S-001 parcel.areas.coa_fsi ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.envelope_constrained ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.envelope_constraint_reason ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.max_build_fsi ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.max_build_stories ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.max_buildable_gfa_sqm ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.opt_aor_gfa_sqm ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.coa_build.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.garage.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.garden_suite.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.laneway_suite.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.max_build.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.solar_coa.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.solar_max.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-072 lots[].maxBuildGfaSqm ← parcels.bylaw_standard_setback_m (STAND_SET); S-072 lots[].maxCoaBuildGfaSqm ← parcels.bylaw_standard_setback_m (STAND_SET) |
+| RF-10 | no rendered field reaches a vocab.banned_code_refs input | FAIL | S-001 parcel.areas.coa_fsi ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.envelope_constrained ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.envelope_constraint_reason ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.max_build_stories ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.areas.opt_aor_gfa_sqm ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.coa_build.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.garage.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.garden_suite.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.laneway_suite.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.max_build.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.solar_coa.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-001 parcel.costMenu.menu.solar_max.total ← parcels.bylaw_standard_setback_m (STAND_SET); S-072 lots[].maxBuildGfaSqm ← parcels.bylaw_standard_setback_m (STAND_SET); S-072 lots[].maxCoaBuildGfaSqm ← parcels.bylaw_standard_setback_m (STAND_SET) |
 | RF-11 | the generator raised no findings (unmapped render paths, unresolved refs, witness render failures, missing seed rows) | PASS | — |
 
-**Rendered fields:** 34 (cost_ref 13 · empirical_ref 10 · formula 9 · input 1 · none 1) · **payload-only:** 28 · **constants on chains:** 31 named, 35 logic variables, 12 inline literals, 36 DB rows.
+**Rendered fields:** 32 (cost_ref 13 · empirical_ref 10 · formula 7 · input 1 · none 1) · **payload-only:** 30 · **constants on chains:** 31 named, 35 logic variables, 12 inline literals, 36 DB rows.
 
 ## 1. Rendered calculated fields
 
@@ -36,36 +36,34 @@
 | # | Label | Payload → column | Render site | Format | Step (producer) | Kind | Variants | Layer-2 targets | Ev |
 |---|---|---|---|---|---|---|---|---|---|
 | D1 | Lot size | `parcel.areas.lot_size_sqm` → `lot_size_sqm` | [parcelId].tsx:128 | formatSqm | parcels (loader) | input | aor | none (no_mapped_input) | R |
-| D2 | Max buildable GFA | `parcel.areas.max_buildable_gfa_sqm` → `max_buildable_gfa_sqm` | [parcelId].tsx:129 | formatSqft | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| D3 | As-of-right GFA | `parcel.areas.opt_aor_gfa_sqm` → `opt_aor_gfa_sqm` | [parcelId].tsx:130 | formatSqft | enrich_parcels (optconfig) | formula | aor, fallback, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| D4 | Max build storeys | `parcel.areas.max_build_stories` → `max_build_stories` | [parcelId].tsx:131 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:height_m, principal:height_storeys, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| D5 | Max build FSI | `parcel.areas.max_build_fsi` → `max_build_fsi` | [parcelId].tsx:132 | formatFsi | compute_parcel_cost_estimates (cost) | formula | aor | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
-| D6 | CoA FSI | `parcel.areas.coa_fsi` → `coa_fsi` | [parcelId].tsx:133 | formatFsi | compute_parcel_cost_estimates (cost) | formula | coa | none (coa_variance (reaches the declared CoA twin coa_fsi, opt_coa_gfa_sqm; a variance is not a by-law target)) | W |
-| D7 | envelope_constrained | `parcel.areas.envelope_constrained` → `envelope_constrained` | [parcelId].tsx:135 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| D8 | Envelope constrained | `parcel.areas.envelope_constraint_reason` → `envelope_constraint_reason` | [parcelId].tsx:137 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
-| D9 | Comparable builds | `parcel.neighbourhood.compStats.compCount` → `comp_count` | [parcelId].tsx:164, [parcelId].tsx:173 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D10 | headline | `parcel.neighbourhood.summary.headline` → `nearby_builds_summary→headline` | [parcelId].tsx:169, [parcelId].tsx:170 | — | enrich_parcels (optconfig) | empirical_ref | aor, fallback | none (empirical) | R |
-| D11 | Typical FSI (p50) | `parcel.neighbourhood.compStats.compFsiP50` → `comp_fsi_p50` | [parcelId].tsx:174 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D12 | Dominant build | `parcel.neighbourhood.compStats.compDominantBuild` → `comp_dominant_build` | [parcelId].tsx:175 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D13 | address | `parcel.neighbourhood.comparableBuilds[].address` → `comparable_builds→address` | [parcelId].tsx:187, [parcelId].tsx:196 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D14 | FSI | `parcel.neighbourhood.comparableBuilds[].permit_fsi` → `comparable_builds→permit_fsi` | [parcelId].tsx:190 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D15 | structure_family | `parcel.neighbourhood.comparableBuilds[].structure_family` → `comparable_builds→structure_family` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D16 | work_type | `parcel.neighbourhood.comparableBuilds[].work_type` → `comparable_builds→work_type` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D17 | permit_gfa_sqm | `parcel.neighbourhood.comparableBuilds[].permit_gfa_sqm` → `comparable_builds→permit_gfa_sqm` | [parcelId].tsx:198 | formatSqft | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D18 | coa_decision | `parcel.neighbourhood.comparableBuilds[].coa_decision` → `comparable_builds→coa_decision` | [parcelId].tsx:199 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
-| D19 | New build (max) | `parcel.costMenu.menu.max_build.total` → `parcel_cost_menu→max_build.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor, fallback | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
-| D20 | New build (Committee of Adjustment) | `parcel.costMenu.menu.coa_build.total` → `parcel_cost_menu→coa_build.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | coa | none (coa_variance (reaches the declared CoA twin opt_coa_gfa_sqm; a variance is not a by-law target)) | W |
-| D21 | Addition | `parcel.costMenu.menu.addition.total` → `parcel_cost_menu→addition.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
-| D22 | Gut renovation | `parcel.costMenu.menu.gut.total` → `parcel_cost_menu→gut.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
-| D23 | Garden suite | `parcel.costMenu.menu.garden_suite.total` → `parcel_cost_menu→garden_suite.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, suite:gfa_m2, suite:height_storeys, suite:lane_setback_m, suite:rear_soft_landscaping_pct, suite:required_lot_area_m2, suite:separation_m | W |
-| D24 | Laneway suite | `parcel.costMenu.menu.laneway_suite.total` → `parcel_cost_menu→laneway_suite.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, suite:gfa_m2, suite:height_storeys, suite:lane_setback_m, suite:rear_soft_landscaping_pct, suite:required_lot_area_m2, suite:separation_m | W |
-| D25 | Garage | `parcel.costMenu.menu.garage.total` → `parcel_cost_menu→garage.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | ancillary:gfa_m2, ancillary:lot_coverage_pct, ancillary:parking_space_length_m, ancillary:parking_space_width_m, ancillary:required_lot_area_m2, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m, suite:rear_soft_landscaping_pct | W |
-| D26 | Solar (full roof) | `parcel.costMenu.menu.solar_max.total` → `parcel_cost_menu→solar_max.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
-| D27 | Solar (CoA envelope) | `parcel.costMenu.menu.solar_coa.total` → `parcel_cost_menu→solar_coa.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | coa | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
-| D28 | Basement finish | `parcel.costMenu.menu.basement.per_sqm` → `parcel_cost_menu→basement.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
-| D29 | Basement underpin | `parcel.costMenu.menu.basement_underpin.per_sqm` → `parcel_cost_menu→basement_underpin.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
-| D30 | Kitchen (per m²) | `parcel.costMenu.menu.kitchen.per_sqm` → `parcel_cost_menu→kitchen.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
-| D31 | Bathroom (per m²) | `parcel.costMenu.menu.bath.per_sqm` → `parcel_cost_menu→bath.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
+| D2 | As-of-right GFA | `parcel.areas.opt_aor_gfa_sqm` → `opt_aor_gfa_sqm` | [parcelId].tsx:130 | formatSqft | enrich_parcels (optconfig) | formula | aor, fallback, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
+| D3 | Max build storeys | `parcel.areas.max_build_stories` → `max_build_stories` | [parcelId].tsx:131 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:height_m, principal:height_storeys, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
+| D4 | CoA FSI | `parcel.areas.coa_fsi` → `coa_fsi` | [parcelId].tsx:133 | formatFsi | compute_parcel_cost_estimates (cost) | formula | coa | none (coa_variance (reaches the declared CoA twin coa_fsi, opt_coa_gfa_sqm; a variance is not a by-law target)) | W |
+| D5 | envelope_constrained | `parcel.areas.envelope_constrained` → `envelope_constrained` | [parcelId].tsx:135 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
+| D6 | Envelope constrained | `parcel.areas.envelope_constraint_reason` → `envelope_constraint_reason` | [parcelId].tsx:137 | — | enrich_parcels (maxbuild) | formula | aor, fallback, heritage, ravine | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
+| D7 | Comparable builds | `parcel.neighbourhood.compStats.compCount` → `comp_count` | [parcelId].tsx:164, [parcelId].tsx:173 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D8 | headline | `parcel.neighbourhood.summary.headline` → `nearby_builds_summary→headline` | [parcelId].tsx:169, [parcelId].tsx:170 | — | enrich_parcels (optconfig) | empirical_ref | aor, fallback | none (empirical) | R |
+| D9 | Typical FSI (p50) | `parcel.neighbourhood.compStats.compFsiP50` → `comp_fsi_p50` | [parcelId].tsx:174 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D10 | Dominant build | `parcel.neighbourhood.compStats.compDominantBuild` → `comp_dominant_build` | [parcelId].tsx:175 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D11 | address | `parcel.neighbourhood.comparableBuilds[].address` → `comparable_builds→address` | [parcelId].tsx:187, [parcelId].tsx:196 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D12 | FSI | `parcel.neighbourhood.comparableBuilds[].permit_fsi` → `comparable_builds→permit_fsi` | [parcelId].tsx:190 | formatFsi | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D13 | structure_family | `parcel.neighbourhood.comparableBuilds[].structure_family` → `comparable_builds→structure_family` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D14 | work_type | `parcel.neighbourhood.comparableBuilds[].work_type` → `comparable_builds→work_type` | [parcelId].tsx:193 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D15 | permit_gfa_sqm | `parcel.neighbourhood.comparableBuilds[].permit_gfa_sqm` → `comparable_builds→permit_gfa_sqm` | [parcelId].tsx:198 | formatSqft | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D16 | coa_decision | `parcel.neighbourhood.comparableBuilds[].coa_decision` → `comparable_builds→coa_decision` | [parcelId].tsx:199 | — | enrich_parcels (comps) | empirical_ref | aor | none (empirical) | R |
+| D17 | New build (max) | `parcel.costMenu.menu.max_build.total` → `parcel_cost_menu→max_build.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor, fallback | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
+| D18 | New build (Committee of Adjustment) | `parcel.costMenu.menu.coa_build.total` → `parcel_cost_menu→coa_build.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | coa | none (coa_variance (reaches the declared CoA twin opt_coa_gfa_sqm; a variance is not a by-law target)) | W |
+| D19 | Addition | `parcel.costMenu.menu.addition.total` → `parcel_cost_menu→addition.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
+| D20 | Gut renovation | `parcel.costMenu.menu.gut.total` → `parcel_cost_menu→gut.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
+| D21 | Garden suite | `parcel.costMenu.menu.garden_suite.total` → `parcel_cost_menu→garden_suite.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, suite:gfa_m2, suite:height_storeys, suite:lane_setback_m, suite:rear_soft_landscaping_pct, suite:required_lot_area_m2, suite:separation_m | W |
+| D22 | Laneway suite | `parcel.costMenu.menu.laneway_suite.total` → `parcel_cost_menu→laneway_suite.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, suite:gfa_m2, suite:height_storeys, suite:lane_setback_m, suite:rear_soft_landscaping_pct, suite:required_lot_area_m2, suite:separation_m | W |
+| D23 | Garage | `parcel.costMenu.menu.garage.total` → `parcel_cost_menu→garage.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | ancillary:gfa_m2, ancillary:lot_coverage_pct, ancillary:parking_space_length_m, ancillary:parking_space_width_m, ancillary:required_lot_area_m2, principal:front_setback_m, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m, suite:rear_soft_landscaping_pct | W |
+| D24 | Solar (full roof) | `parcel.costMenu.menu.solar_max.total` → `parcel_cost_menu→solar_max.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
+| D25 | Solar (CoA envelope) | `parcel.costMenu.menu.solar_coa.total` → `parcel_cost_menu→solar_coa.total` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | coa | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
+| D26 | Basement finish | `parcel.costMenu.menu.basement.per_sqm` → `parcel_cost_menu→basement.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
+| D27 | Basement underpin | `parcel.costMenu.menu.basement_underpin.per_sqm` → `parcel_cost_menu→basement_underpin.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
+| D28 | Kitchen (per m²) | `parcel.costMenu.menu.kitchen.per_sqm` → `parcel_cost_menu→kitchen.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
+| D29 | Bathroom (per m²) | `parcel.costMenu.menu.bath.per_sqm` → `parcel_cost_menu→bath.per_sqm` | [parcelId].tsx:153, parcelCostFormat.ts:14 | formatCurrency | compute_parcel_cost_estimates (cost) | cost_ref | aor | none (empirical) | W |
 
 ### S-072 `mobile_tracked_lots` (LIST — contract `status: new`)
 
@@ -83,69 +81,6 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 
 - column `lot_size_sqm` · step parcels · producer loader · kind input · evidence R
 - base inputs: —
-
-### S-001 `parcel.areas.max_buildable_gfa_sqm`
-
-- column `max_buildable_gfa_sqm` · step enrich_parcels · producer maxbuild · kind formula · evidence R
-- witness: buildMaxBuildSql not witnessed (static-render fingerprint not in the recorded trace)
-- upstream produced columns: `bylaw_max_coverage_pct`, `bylaw_max_fsi`, `bylaw_max_height_m`, `bylaw_max_stories`, `bylaw_standard_setback_m`, `depth_m`, `frontage_m`, `geom`, `is_corner_lot`, `is_heritage_designated`, `is_in_ravine_protection_area`, `is_through_lot`, `lot_size_sqm`, `zoning_class`
-- base inputs: `building_footprints.footprint_area_sqm`, `neighbourhood_storey_norms.storeys_p50`, `parcel_buildings.is_primary`, `parcels.bylaw_max_coverage_pct`, `parcels.bylaw_max_fsi`, `parcels.bylaw_max_height_m`, `parcels.bylaw_max_stories`, `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.zoning_class`
-- other inputs: LV `max_build_lot_max_sqm`, LV `max_build_lot_min_sqm`, LV `max_build_min_dimension_m`, LV `mislink_footprint_lot_tol`, LV `storey_height_m`
-- named constants: `max-build.js#COVERAGE_DEFAULTS.*` (13 leafs: 30/33/35/50/60/75; H:statistical_default), `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#NONRES_STOREY_HEIGHT_M` (1 leaf: 4; H:modelling_assumption), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
-- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`, `enrich-parcels.js:683 100`
-- chain:
-  - `buildMaxBuildSql:select.max_buildable_gfa_sqm` enrich-parcels.js:796 — `CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL WHEN heritage THEN round(existing_footprint_sqm * stories_calc, 2) ELSE LEAST(gfa_box, fsi_cap) END AS max_buildable_gfa_sqm`
-  - `buildMaxBuildSql:box.emit` enrich-parcels.js:648 — `COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit`
-  - `buildMaxBuildSql:tier.lot_size_confidence` enrich-parcels.js:630 — `CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…`
-  - `buildMaxBuildSql:lot.best_area` enrich-parcels.js:625 — `COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM`
-  - `buildMaxBuildSql:scope.(filter)` enrich-parcels.js:585 — `selection constants: ${scopeWhere}, ${incremental}`
-  - `buildMaxBuildSql:sb.geom_area` enrich-parcels.js:606 — `ST_Area(s.geom::geography)::numeric AS geom_area`
-  - `buildMaxBuildSql:sb.fxd_area` enrich-parcels.js:607 — `(s.frontage_m * s.depth_m)::numeric AS fxd_area`
-  - `buildMaxBuildSql:lot.pair_lg` enrich-parcels.js:619 — `(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg`
-  - `buildMaxBuildSql:lot.pair_lf` enrich-parcels.js:621 — `(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf`
-  - `buildMaxBuildSql:lot.pair_gf` enrich-parcels.js:623 — `(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf`
-  - `buildMaxBuildSql:env.heritage_no_massing` enrich-parcels.js:712 — `(is_heritage_designated AND (existing_footprint_sqm IS NULL OR existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum}))) AS heritage_no_massing`
-  - `buildMaxBuildSql:scope.is_heritage_designated` enrich-parcels.js:571 — `COALESCE(p.is_heritage_designated, false) AS is_heritage_designated`
-  - `buildMaxBuildSql:massing.existing_footprint_sqm` enrich-parcels.js:599 — `SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm`
-  - `buildMaxBuildSql:env.ravine_sub_floor` enrich-parcels.js:698 — `(is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL)) AS ravine_sub_floor`
-  - `buildMaxBuildSql:scope.is_in_ravine_protection_area` enrich-parcels.js:570 — `COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area`
-  - `buildMaxBuildSql:geo.width_m` enrich-parcels.js:668 — `CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m`
-  - `buildMaxBuildSql:box.width_raw` enrich-parcels.js:654 — `GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…`
-  - `buildMaxBuildSql:scope.is_corner_lot` enrich-parcels.js:569 — `COALESCE(p.is_corner_lot, false) AS is_corner_lot`
-  - `buildMaxBuildSql:sb.side_count` enrich-parcels.js:613 — `${mb.buildSideCountCase('s.zoning_class')} AS side_count`
-  - `buildMaxBuildSql:sb.side_setback` enrich-parcels.js:610 — `${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback`
-  - `buildMaxBuildSql:sb.flankage_setback` enrich-parcels.js:612 — `${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback`
-  - `buildMaxBuildSql:geo.length_m` enrich-parcels.js:669 — `CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m`
-  - `buildMaxBuildSql:box.length_raw` enrich-parcels.js:657 — `GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM`
-  - `buildMaxBuildSql:scope.is_through_lot` enrich-parcels.js:569 — `COALESCE(p.is_through_lot, false) AS is_through_lot`
-  - `buildMaxBuildSql:sb.front_setback` enrich-parcels.js:609 — `COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback`
-  - `buildMaxBuildSql:sb.rear_setback` enrich-parcels.js:611 — `${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback`
-  - `buildMaxBuildSql:env.stories_calc` enrich-parcels.js:717 — `CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories) WHEN pocket_p50 IS NOT NULL AND height_implied IS NOT NULL THEN LEAST(pocket_p50, height_implied) WHEN pocket_p50 IS NOT NULL THEN pocket_p50 E…`
-  - `buildMaxBuildSql:geo.pocket_p50` enrich-parcels.js:689 — `COALESCE(pocket_p50_local, (SELECT storeys_p50 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)) AS pocket_p50`
-  - `buildMaxBuildSql:geo.height_implied` enrich-parcels.js:686 — `CASE WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int) END AS height_implied`
-  - `buildMaxBuildSql:gfa.gfa_box` enrich-parcels.js:725 — `CASE WHEN footprint_calc IS NOT NULL AND stories_calc IS NOT NULL THEN round(footprint_calc * stories_calc, 2) END AS gfa_box`
-  - `buildMaxBuildSql:env.footprint_calc` enrich-parcels.js:703 — `CASE WHEN is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL) THEN NULL WHEN width_m IS NULL OR length_m IS NULL THEN coverage_cap ELSE LEAST(buffer_area, box_area, cove…`
-  - `buildMaxBuildSql:geo.coverage_cap` enrich-parcels.js:683 — `round(lot_size_sqm * COALESCE(bylaw_max_coverage_pct, ${mb.buildCoverageCase('zoning_class')}) / 100.0, 2) AS coverage_cap`
-  - `buildMaxBuildSql:geo.buffer_area` enrich-parcels.js:676 — `CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…`
-  - `buildMaxBuildSql:box.ravine_red` enrich-parcels.js:649 — `CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red`
-  - `buildMaxBuildSql:geo.box_area` enrich-parcels.js:670 — `CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area`
-  - `buildMaxBuildSql:gfa.fsi_cap` enrich-parcels.js:726 — `CASE WHEN bylaw_max_fsi IS NOT NULL THEN round(lot_size_sqm * bylaw_max_fsi, 2) END AS fsi_cap FROM`
-  - `buildMaxBuildSql:lotMinNum` enrich-parcels.js:545 — `N(lotMinSqm, mb.LOT_MIN_SQM)`
-  - `buildMaxBuildSql:lotMaxNum` enrich-parcels.js:546 — `N(lotMaxSqm, mb.LOT_MAX_SQM)`
-  - `buildMaxBuildSql:incremental` enrich-parcels.js:537 — `full ? 'TRUE' : '(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})'`
-  - `buildMassingScopeWhere:buildMassingScopeWhere()` enrich-parcels.js:524 — — [called from scripts/lib/compute/enrich-parcels.js:539]
-  - `buildMaxBuildSql:tol` enrich-parcels.js:540 — `mb`
-  - `buildMaxBuildSql:mislinkTolNum` enrich-parcels.js:561 — `N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT)`
-  - `buildMaxBuildSql:minDimNum` enrich-parcels.js:562 — `N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)`
-  - `buildMaxBuildSql:RAVINE_SETBACK_M` enrich-parcels.js:540 — `mb`
-  - `buildSideCountCase:buildSideCountCase()` max-build.js:174 — — [called from scripts/lib/compute/enrich-parcels.js:613]
-  - `buildSideCountCase:whens` max-build.js:175 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}') .join('\n')`
-  - `<module>:SETBACK_PREFIXES` max-build.js:138 — `Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)`
-  - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
-  - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
-  - `buildStoreyHeightCase:buildStoreyHeightCase()` max-build.js:48 — — [called from scripts/lib/compute/enrich-parcels.js:687]
-  - `buildCoverageCase:buildCoverageCase()` max-build.js:203 — — [called from scripts/lib/compute/enrich-parcels.js:683]
-  - `buildCoverageCase:whens` max-build.js:204 — `SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}') .join('\n')`
 
 ### S-001 `parcel.areas.opt_aor_gfa_sqm`
 
@@ -231,22 +166,6 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
   - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
   - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
   - `buildStoreyHeightCase:buildStoreyHeightCase()` max-build.js:48 — — [called from scripts/lib/compute/enrich-parcels.js:687]
-
-### S-001 `parcel.areas.max_build_fsi`
-
-- column `max_build_fsi` · step compute_parcel_cost_estimates · producer cost · kind formula · evidence W
-- witness: buildSourceSql W
-- upstream produced columns: `lot_size_sqm`, `max_buildable_gfa_sqm`
-- base inputs: `building_footprints.footprint_area_sqm`, `neighbourhood_storey_norms.storeys_p50`, `parcel_buildings.is_primary`, `parcels.bylaw_max_coverage_pct`, `parcels.bylaw_max_fsi`, `parcels.bylaw_max_height_m`, `parcels.bylaw_max_stories`, `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.max_buildable_gfa_sqm`, `parcels.zoning_class`
-- other inputs: LV `compute_parcel_cost_fsi_max_plausible`
-- named constants: `max-build.js#COVERAGE_DEFAULTS.*` (13 leafs: 30/33/35/50/60/75; H:statistical_default), `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#NONRES_STOREY_HEIGHT_M` (1 leaf: 4; H:modelling_assumption), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
-- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`, `enrich-parcels.js:683 100`
-- chain:
-  - `buildParcelCostMenu:mb.fsi` parcel-cost.js:373 — `plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot, cfg.fsiMaxPlausible)`
-  - `plausibleFsi:plausibleFsi()` parcel-cost.js:61 — — [called from scripts/lib/parcel-cost.js:373]
-  - `buildParcelCostMenu:lot` parcel-cost.js:372 — `num(parcel.lot_size_sqm)`
-  - `plausibleFsi:fsi` parcel-cost.js:66 — `round3(gfa / lot)`
-  - `buildParcelCostMenu:cfg.fsiMaxPlausible` parcel-cost.js:295 — `opts.config`
 
 ### S-001 `parcel.areas.coa_fsi`
 
@@ -1105,6 +1024,22 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 - column `lot_size_sqft` · step parcels · producer loader · kind input · evidence R
 - base inputs: —
 
+### S-001 `parcel.areas.max_build_fsi` (payload only)
+
+- column `max_build_fsi` · step compute_parcel_cost_estimates · producer cost · kind formula · evidence W
+- witness: buildSourceSql W
+- upstream produced columns: `lot_size_sqm`, `max_buildable_gfa_sqm`
+- base inputs: `building_footprints.footprint_area_sqm`, `neighbourhood_storey_norms.storeys_p50`, `parcel_buildings.is_primary`, `parcels.bylaw_max_coverage_pct`, `parcels.bylaw_max_fsi`, `parcels.bylaw_max_height_m`, `parcels.bylaw_max_stories`, `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.max_buildable_gfa_sqm`, `parcels.zoning_class`
+- other inputs: LV `compute_parcel_cost_fsi_max_plausible`
+- named constants: `max-build.js#COVERAGE_DEFAULTS.*` (13 leafs: 30/33/35/50/60/75; H:statistical_default), `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#NONRES_STOREY_HEIGHT_M` (1 leaf: 4; H:modelling_assumption), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
+- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`, `enrich-parcels.js:683 100`
+- chain:
+  - `buildParcelCostMenu:mb.fsi` parcel-cost.js:373 — `plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot, cfg.fsiMaxPlausible)`
+  - `plausibleFsi:plausibleFsi()` parcel-cost.js:61 — — [called from scripts/lib/parcel-cost.js:373]
+  - `buildParcelCostMenu:lot` parcel-cost.js:372 — `num(parcel.lot_size_sqm)`
+  - `plausibleFsi:fsi` parcel-cost.js:66 — `round3(gfa / lot)`
+  - `buildParcelCostMenu:cfg.fsiMaxPlausible` parcel-cost.js:295 — `opts.config`
+
 ### S-001 `parcel.areas.max_buildable_footprint_sqm` (payload only)
 
 - column `max_buildable_footprint_sqm` · step enrich_parcels · producer maxbuild · kind formula · evidence R
@@ -1158,6 +1093,69 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
   - `<module>:SETBACK_PREFIXES` max-build.js:138 — `Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)`
   - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
   - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
+  - `buildCoverageCase:buildCoverageCase()` max-build.js:203 — — [called from scripts/lib/compute/enrich-parcels.js:683]
+  - `buildCoverageCase:whens` max-build.js:204 — `SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}') .join('\n')`
+
+### S-001 `parcel.areas.max_buildable_gfa_sqm` (payload only)
+
+- column `max_buildable_gfa_sqm` · step enrich_parcels · producer maxbuild · kind formula · evidence R
+- witness: buildMaxBuildSql not witnessed (static-render fingerprint not in the recorded trace)
+- upstream produced columns: `bylaw_max_coverage_pct`, `bylaw_max_fsi`, `bylaw_max_height_m`, `bylaw_max_stories`, `bylaw_standard_setback_m`, `depth_m`, `frontage_m`, `geom`, `is_corner_lot`, `is_heritage_designated`, `is_in_ravine_protection_area`, `is_through_lot`, `lot_size_sqm`, `zoning_class`
+- base inputs: `building_footprints.footprint_area_sqm`, `neighbourhood_storey_norms.storeys_p50`, `parcel_buildings.is_primary`, `parcels.bylaw_max_coverage_pct`, `parcels.bylaw_max_fsi`, `parcels.bylaw_max_height_m`, `parcels.bylaw_max_stories`, `parcels.bylaw_standard_setback_m`, `parcels.depth_m`, `parcels.frontage_m`, `parcels.geom`, `parcels.is_corner_lot`, `parcels.is_heritage_designated`, `parcels.is_in_ravine_protection_area`, `parcels.is_through_lot`, `parcels.lot_size_sqm`, `parcels.zoning_class`
+- other inputs: LV `max_build_lot_max_sqm`, LV `max_build_lot_min_sqm`, LV `max_build_min_dimension_m`, LV `mislink_footprint_lot_tol`, LV `storey_height_m`
+- named constants: `max-build.js#COVERAGE_DEFAULTS.*` (13 leafs: 30/33/35/50/60/75; H:statistical_default), `max-build.js#LOT_MAX_SQM` (1 leaf: 2000; H:modelling_assumption), `max-build.js#LOT_MIN_SQM` (1 leaf: 50; H:data_cleaning_bound), `max-build.js#LOT_TOLERANCE` (1 leaf: 0.15; H:tolerance), `max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT` (1 leaf: 3; H:proxy_for_unmodelled_rule), `max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT` (1 leaf: 0.05; H:tolerance), `max-build.js#NONRES_STOREY_HEIGHT_M` (1 leaf: 4; H:modelling_assumption), `max-build.js#RAVINE_SETBACK_M` (1 leaf: 10; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.flankage` (13 leafs: 3/4.5/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.front` (13 leafs: 3/6; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.rear` (13 leafs: 3/7.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side` (13 leafs: 0/0.9/1.2/1.5; H:proxy_for_unmodelled_rule), `max-build.js#SETBACK_DEFAULTS.*.side_count` (13 leafs: 0/1/2; H:proxy_for_unmodelled_rule)
+- inline literals: `enrich-parcels.js:657 2`, `enrich-parcels.js:676 2`, `enrich-parcels.js:678 2`, `enrich-parcels.js:683 100`
+- chain:
+  - `buildMaxBuildSql:select.max_buildable_gfa_sqm` enrich-parcels.js:796 — `CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL WHEN heritage THEN round(existing_footprint_sqm * stories_calc, 2) ELSE LEAST(gfa_box, fsi_cap) END AS max_buildable_gfa_sqm`
+  - `buildMaxBuildSql:box.emit` enrich-parcels.js:648 — `COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit`
+  - `buildMaxBuildSql:tier.lot_size_confidence` enrich-parcels.js:630 — `CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…`
+  - `buildMaxBuildSql:lot.best_area` enrich-parcels.js:625 — `COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM`
+  - `buildMaxBuildSql:scope.(filter)` enrich-parcels.js:585 — `selection constants: ${scopeWhere}, ${incremental}`
+  - `buildMaxBuildSql:sb.geom_area` enrich-parcels.js:606 — `ST_Area(s.geom::geography)::numeric AS geom_area`
+  - `buildMaxBuildSql:sb.fxd_area` enrich-parcels.js:607 — `(s.frontage_m * s.depth_m)::numeric AS fxd_area`
+  - `buildMaxBuildSql:lot.pair_lg` enrich-parcels.js:619 — `(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg`
+  - `buildMaxBuildSql:lot.pair_lf` enrich-parcels.js:621 — `(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf`
+  - `buildMaxBuildSql:lot.pair_gf` enrich-parcels.js:623 — `(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf`
+  - `buildMaxBuildSql:env.heritage_no_massing` enrich-parcels.js:712 — `(is_heritage_designated AND (existing_footprint_sqm IS NULL OR existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum}))) AS heritage_no_massing`
+  - `buildMaxBuildSql:scope.is_heritage_designated` enrich-parcels.js:571 — `COALESCE(p.is_heritage_designated, false) AS is_heritage_designated`
+  - `buildMaxBuildSql:massing.existing_footprint_sqm` enrich-parcels.js:599 — `SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm`
+  - `buildMaxBuildSql:env.ravine_sub_floor` enrich-parcels.js:698 — `(is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL)) AS ravine_sub_floor`
+  - `buildMaxBuildSql:scope.is_in_ravine_protection_area` enrich-parcels.js:570 — `COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area`
+  - `buildMaxBuildSql:geo.width_m` enrich-parcels.js:668 — `CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m`
+  - `buildMaxBuildSql:box.width_raw` enrich-parcels.js:654 — `GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…`
+  - `buildMaxBuildSql:scope.is_corner_lot` enrich-parcels.js:569 — `COALESCE(p.is_corner_lot, false) AS is_corner_lot`
+  - `buildMaxBuildSql:sb.side_count` enrich-parcels.js:613 — `${mb.buildSideCountCase('s.zoning_class')} AS side_count`
+  - `buildMaxBuildSql:sb.side_setback` enrich-parcels.js:610 — `${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback`
+  - `buildMaxBuildSql:sb.flankage_setback` enrich-parcels.js:612 — `${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback`
+  - `buildMaxBuildSql:geo.length_m` enrich-parcels.js:669 — `CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m`
+  - `buildMaxBuildSql:box.length_raw` enrich-parcels.js:657 — `GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM`
+  - `buildMaxBuildSql:scope.is_through_lot` enrich-parcels.js:569 — `COALESCE(p.is_through_lot, false) AS is_through_lot`
+  - `buildMaxBuildSql:sb.front_setback` enrich-parcels.js:609 — `COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback`
+  - `buildMaxBuildSql:sb.rear_setback` enrich-parcels.js:611 — `${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback`
+  - `buildMaxBuildSql:env.stories_calc` enrich-parcels.js:717 — `CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories) WHEN pocket_p50 IS NOT NULL AND height_implied IS NOT NULL THEN LEAST(pocket_p50, height_implied) WHEN pocket_p50 IS NOT NULL THEN pocket_p50 E…`
+  - `buildMaxBuildSql:geo.pocket_p50` enrich-parcels.js:689 — `COALESCE(pocket_p50_local, (SELECT storeys_p50 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)) AS pocket_p50`
+  - `buildMaxBuildSql:geo.height_implied` enrich-parcels.js:686 — `CASE WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int) END AS height_implied`
+  - `buildMaxBuildSql:gfa.gfa_box` enrich-parcels.js:725 — `CASE WHEN footprint_calc IS NOT NULL AND stories_calc IS NOT NULL THEN round(footprint_calc * stories_calc, 2) END AS gfa_box`
+  - `buildMaxBuildSql:env.footprint_calc` enrich-parcels.js:703 — `CASE WHEN is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL) THEN NULL WHEN width_m IS NULL OR length_m IS NULL THEN coverage_cap ELSE LEAST(buffer_area, box_area, cove…`
+  - `buildMaxBuildSql:geo.coverage_cap` enrich-parcels.js:683 — `round(lot_size_sqm * COALESCE(bylaw_max_coverage_pct, ${mb.buildCoverageCase('zoning_class')}) / 100.0, 2) AS coverage_cap`
+  - `buildMaxBuildSql:geo.buffer_area` enrich-parcels.js:676 — `CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…`
+  - `buildMaxBuildSql:box.ravine_red` enrich-parcels.js:649 — `CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red`
+  - `buildMaxBuildSql:geo.box_area` enrich-parcels.js:670 — `CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area`
+  - `buildMaxBuildSql:gfa.fsi_cap` enrich-parcels.js:726 — `CASE WHEN bylaw_max_fsi IS NOT NULL THEN round(lot_size_sqm * bylaw_max_fsi, 2) END AS fsi_cap FROM`
+  - `buildMaxBuildSql:lotMinNum` enrich-parcels.js:545 — `N(lotMinSqm, mb.LOT_MIN_SQM)`
+  - `buildMaxBuildSql:lotMaxNum` enrich-parcels.js:546 — `N(lotMaxSqm, mb.LOT_MAX_SQM)`
+  - `buildMaxBuildSql:incremental` enrich-parcels.js:537 — `full ? 'TRUE' : '(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})'`
+  - `buildMassingScopeWhere:buildMassingScopeWhere()` enrich-parcels.js:524 — — [called from scripts/lib/compute/enrich-parcels.js:539]
+  - `buildMaxBuildSql:tol` enrich-parcels.js:540 — `mb`
+  - `buildMaxBuildSql:mislinkTolNum` enrich-parcels.js:561 — `N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT)`
+  - `buildMaxBuildSql:minDimNum` enrich-parcels.js:562 — `N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)`
+  - `buildMaxBuildSql:RAVINE_SETBACK_M` enrich-parcels.js:540 — `mb`
+  - `buildSideCountCase:buildSideCountCase()` max-build.js:174 — — [called from scripts/lib/compute/enrich-parcels.js:613]
+  - `buildSideCountCase:whens` max-build.js:175 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}') .join('\n')`
+  - `<module>:SETBACK_PREFIXES` max-build.js:138 — `Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)`
+  - `buildSetbackCase:buildSetbackCase()` max-build.js:156 — — [called from scripts/lib/compute/enrich-parcels.js:610]
+  - `buildSetbackCase:whens` max-build.js:158 — `SETBACK_PREFIXES .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}') .join('\n')`
+  - `buildStoreyHeightCase:buildStoreyHeightCase()` max-build.js:48 — — [called from scripts/lib/compute/enrich-parcels.js:687]
   - `buildCoverageCase:buildCoverageCase()` max-build.js:203 — — [called from scripts/lib/compute/enrich-parcels.js:683]
   - `buildCoverageCase:whens` max-build.js:204 — `SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ' WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}') .join('\n')`
 
@@ -1969,7 +1967,9 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 |---|---|---|---|---|---|
 | `parcel.areas.cur_floor_gfa_sqm` → `cur_floor_gfa_sqm` | enrich_parcels | empirical_ref | — | none (empirical) | W |
 | `parcel.areas.lot_size_sqft` → `lot_size_sqft` | parcels | input | — | none (no_mapped_input) | R |
+| `parcel.areas.max_build_fsi` → `max_build_fsi` | compute_parcel_cost_estimates | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | W |
 | `parcel.areas.max_buildable_footprint_sqm` → `max_buildable_footprint_sqm` | enrich_parcels | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
+| `parcel.areas.max_buildable_gfa_sqm` → `max_buildable_gfa_sqm` | enrich_parcels | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
 | `parcel.areas.max_newbuild_coa_gfa_sqm` → `max_newbuild_coa_gfa_sqm` | enrich_parcels | formula | — | none (coa_variance (reaches the declared CoA twin max_newbuild_coa_gfa_sqm; a variance is not a by-law target)) | W |
 | `parcel.areas.opt_aor_storeys` → `opt_aor_storeys` | enrich_parcels | formula | — | principal:building_depth_m, principal:building_length_m, principal:front_setback_m, principal:fsi, principal:height_m, principal:height_storeys, principal:lot_coverage_pct, principal:rear_setback_m, principal:required_lot_area_m2, principal:required_lot_frontage_m, principal:side_setback_m, principal:side_setback_street_m | R |
 | `parcel.areas.opt_coa_gfa_sqm` → `opt_coa_gfa_sqm` | enrich_parcels | formula | — | none (coa_variance (reaches the declared CoA twin opt_coa_gfa_sqm; a variance is not a by-law target)) | R |
@@ -2012,11 +2012,11 @@ Each node is `name` file:line — expression excerpt; SQL nodes are CTE/target a
 
 | As-of-right | CoA | Where (aor / coa) | Note |
 |---|---|---|---|
-| `max_buildable_gfa_sqm` | `max_newbuild_coa_gfa_sqm` | rendered (S-001, S-072) / rendered (S-072) | operator rows 1 ↔ 1a |
+| `max_buildable_gfa_sqm` | `max_newbuild_coa_gfa_sqm` | rendered (S-072) / rendered (S-072) | operator rows 1 ↔ 1a |
 | `opt_aor_gfa_sqm` | `opt_coa_gfa_sqm` | rendered (S-001) / payload only | operator rows 2 ↔ 2a |
 | `max_build_stories` | `max_build_stories_aggressive` | rendered (S-001) / produced, not exposed to any report | operator rows 3 ↔ 3a |
 | `opt_aor_storeys` | `opt_coa_storeys` | payload only / payload only | operator rows 3 ↔ 3b |
-| `max_build_fsi` | `coa_fsi` | rendered (S-001) / rendered (S-001) | operator rows 4 ↔ 4a |
+| `max_build_fsi` | `coa_fsi` | payload only / rendered (S-001) | operator rows 4 ↔ 4a |
 | `menu:max_build` | `menu:coa_build` | rendered (S-001) / rendered (S-001) | operator rows C1 ↔ C2 |
 | `menu:solar_max` | `menu:solar_coa` | rendered (S-001) / rendered (S-001) | operator rows C3 ↔ C4 |
 
@@ -2032,7 +2032,7 @@ none
 - `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `cc5686e6c200d816`
 - `migrations/205_archetype_cost_rates.sql` sha256 `9d8da50c991f1258`
 - `migrations/248_parcel_cost_lines.sql` sha256 `9f3caeb84373ef43`
-- `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `efb91c277ebc0f32`
+- `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `24cf6ef5b9671dba`
 - `mobile/src/components/parcel/TrackedLotRow.tsx` sha256 `5a915dd616a88bb2`
 - `mobile/src/lib/parcelCostFormat.ts` sha256 `f5d64ed403231148`
 - `mobile/src/lib/trackedLots.ts` sha256 `3e7974f73db4e058`

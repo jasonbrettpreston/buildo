@@ -1513,1179 +1513,6 @@
     {
       "base_inputs": [
         "building_footprints.footprint_area_sqm",
-        "neighbourhood_storey_norms.storeys_p50",
-        "parcel_buildings.is_primary",
-        "parcels.bylaw_max_coverage_pct",
-        "parcels.bylaw_max_fsi",
-        "parcels.bylaw_max_height_m",
-        "parcels.bylaw_max_stories",
-        "parcels.bylaw_standard_setback_m",
-        "parcels.depth_m",
-        "parcels.frontage_m",
-        "parcels.geom",
-        "parcels.is_corner_lot",
-        "parcels.is_heritage_designated",
-        "parcels.is_in_ravine_protection_area",
-        "parcels.is_through_lot",
-        "parcels.lot_size_sqm",
-        "parcels.zoning_class"
-      ],
-      "chain": [
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "box.emit",
-            "env.heritage_no_massing",
-            "env.ravine_sub_floor",
-            "scope.is_heritage_designated",
-            "massing.existing_footprint_sqm",
-            "env.stories_calc",
-            "gfa.gfa_box",
-            "gfa.fsi_cap"
-          ],
-          "expr": "CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL WHEN heritage THEN round(existing_footprint_sqm * stories_calc, 2) ELSE LEAST(gfa_box, fsi_cap) END AS max_buildable_gfa_sqm",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "select.max_buildable_gfa_sqm",
-          "kind": "sql",
-          "line": 796,
-          "name": "max_buildable_gfa_sqm",
-          "scope": "select",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "tier.lot_size_confidence"
-          ],
-          "expr": "COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "box.emit",
-          "kind": "sql",
-          "line": 648,
-          "name": "emit",
-          "scope": "box",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "lot.best_area",
-            "lot.pair_lg",
-            "lot.pair_lf",
-            "lot.pair_gf"
-          ],
-          "expr": "CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "tier.lot_size_confidence",
-          "kind": "sql",
-          "line": 630,
-          "name": "lot_size_confidence",
-          "scope": "tier",
-          "spans": [
-            "lotMinNum",
-            "lotMaxNum"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.lot_size_sqm",
-            "sb.geom_area",
-            "sb.fxd_area"
-          ],
-          "expr": "COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "lot.best_area",
-          "kind": "sql",
-          "line": 625,
-          "name": "best_area",
-          "scope": "lot",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [],
-          "expr": "selection constants: ${scopeWhere}, ${incremental}",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "scope.(filter)",
-          "kind": "sql",
-          "line": 585,
-          "name": "(filter)",
-          "scope": "scope",
-          "spans": [
-            "scopeWhere",
-            "incremental"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.geom"
-          ],
-          "expr": "ST_Area(s.geom::geography)::numeric AS geom_area",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "sb.geom_area",
-          "kind": "sql",
-          "line": 606,
-          "name": "geom_area",
-          "scope": "sb",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.frontage_m",
-            "parcels.depth_m"
-          ],
-          "expr": "(s.frontage_m * s.depth_m)::numeric AS fxd_area",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "sb.fxd_area",
-          "kind": "sql",
-          "line": 607,
-          "name": "fxd_area",
-          "scope": "sb",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.lot_size_sqm",
-            "sb.geom_area"
-          ],
-          "expr": "(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "lot.pair_lg",
-          "kind": "sql",
-          "line": 619,
-          "name": "pair_lg",
-          "scope": "lot",
-          "spans": [
-            "tol"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.lot_size_sqm",
-            "sb.fxd_area"
-          ],
-          "expr": "(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "lot.pair_lf",
-          "kind": "sql",
-          "line": 621,
-          "name": "pair_lf",
-          "scope": "lot",
-          "spans": [
-            "tol"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "sb.geom_area",
-            "sb.fxd_area"
-          ],
-          "expr": "(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "lot.pair_gf",
-          "kind": "sql",
-          "line": 623,
-          "name": "pair_gf",
-          "scope": "lot",
-          "spans": [
-            "tol"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "scope.is_heritage_designated",
-            "massing.existing_footprint_sqm",
-            "parcels.lot_size_sqm"
-          ],
-          "expr": "(is_heritage_designated AND (existing_footprint_sqm IS NULL OR existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum}))) AS heritage_no_massing",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "env.heritage_no_massing",
-          "kind": "sql",
-          "line": 712,
-          "name": "heritage_no_massing",
-          "scope": "env",
-          "spans": [
-            "mislinkTolNum"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.is_heritage_designated"
-          ],
-          "expr": "COALESCE(p.is_heritage_designated, false) AS is_heritage_designated",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "scope.is_heritage_designated",
-          "kind": "sql",
-          "line": 571,
-          "name": "is_heritage_designated",
-          "scope": "scope",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "building_footprints.footprint_area_sqm",
-            "parcel_buildings.is_primary"
-          ],
-          "expr": "SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "massing.existing_footprint_sqm",
-          "kind": "sql",
-          "line": 599,
-          "name": "existing_footprint_sqm",
-          "scope": "massing",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "scope.is_in_ravine_protection_area",
-            "scope.is_heritage_designated",
-            "geo.width_m",
-            "geo.length_m"
-          ],
-          "expr": "(is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL)) AS ravine_sub_floor",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "env.ravine_sub_floor",
-          "kind": "sql",
-          "line": 698,
-          "name": "ravine_sub_floor",
-          "scope": "env",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.is_in_ravine_protection_area"
-          ],
-          "expr": "COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "scope.is_in_ravine_protection_area",
-          "kind": "sql",
-          "line": 570,
-          "name": "is_in_ravine_protection_area",
-          "scope": "scope",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "box.width_raw"
-          ],
-          "expr": "CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "geo.width_m",
-          "kind": "sql",
-          "line": 668,
-          "name": "width_m",
-          "scope": "geo",
-          "spans": [
-            "minDimNum"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "scope.is_corner_lot",
-            "parcels.frontage_m",
-            "sb.side_count",
-            "sb.side_setback",
-            "sb.flankage_setback",
-            "scope.is_in_ravine_protection_area"
-          ],
-          "expr": "GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "box.width_raw",
-          "kind": "sql",
-          "line": 654,
-          "name": "width_raw",
-          "scope": "box",
-          "spans": [
-            "RAVINE_SETBACK_M"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.is_corner_lot"
-          ],
-          "expr": "COALESCE(p.is_corner_lot, false) AS is_corner_lot",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "scope.is_corner_lot",
-          "kind": "sql",
-          "line": 569,
-          "name": "is_corner_lot",
-          "scope": "scope",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [],
-          "expr": "${mb.buildSideCountCase('s.zoning_class')} AS side_count",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "sb.side_count",
-          "kind": "sql",
-          "line": 613,
-          "name": "side_count",
-          "scope": "sb",
-          "spans": [
-            "mb.buildSideCountCase('s.zoning_class')"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [],
-          "expr": "${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "sb.side_setback",
-          "kind": "sql",
-          "line": 610,
-          "name": "side_setback",
-          "scope": "sb",
-          "spans": [
-            "mb.buildSetbackCase('s.zoning_class', 'side')"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [],
-          "expr": "${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "sb.flankage_setback",
-          "kind": "sql",
-          "line": 612,
-          "name": "flankage_setback",
-          "scope": "sb",
-          "spans": [
-            "mb.buildSetbackCase('s.zoning_class', 'flankage')"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "box.length_raw"
-          ],
-          "expr": "CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "geo.length_m",
-          "kind": "sql",
-          "line": 669,
-          "name": "length_m",
-          "scope": "geo",
-          "spans": [
-            "minDimNum"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "scope.is_through_lot",
-            "parcels.depth_m",
-            "sb.front_setback",
-            "sb.rear_setback",
-            "scope.is_in_ravine_protection_area"
-          ],
-          "expr": "GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "box.length_raw",
-          "kind": "sql",
-          "line": 657,
-          "name": "length_raw",
-          "scope": "box",
-          "spans": [
-            "RAVINE_SETBACK_M"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.is_through_lot"
-          ],
-          "expr": "COALESCE(p.is_through_lot, false) AS is_through_lot",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "scope.is_through_lot",
-          "kind": "sql",
-          "line": 569,
-          "name": "is_through_lot",
-          "scope": "scope",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.bylaw_standard_setback_m"
-          ],
-          "expr": "COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "sb.front_setback",
-          "kind": "sql",
-          "line": 609,
-          "name": "front_setback",
-          "scope": "sb",
-          "spans": [
-            "mb.buildSetbackCase('s.zoning_class', 'front')"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [],
-          "expr": "${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "sb.rear_setback",
-          "kind": "sql",
-          "line": 611,
-          "name": "rear_setback",
-          "scope": "sb",
-          "spans": [
-            "mb.buildSetbackCase('s.zoning_class', 'rear')"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.bylaw_max_stories",
-            "geo.pocket_p50",
-            "geo.height_implied"
-          ],
-          "expr": "CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories) WHEN pocket_p50 IS NOT NULL AND height_implied IS NOT NULL THEN LEAST(pocket_p50, height_implied) WHEN pocket_p50 IS NOT NULL THEN pocket_p50 E…",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "env.stories_calc",
-          "kind": "sql",
-          "line": 717,
-          "name": "stories_calc",
-          "scope": "env",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "neighbourhood_storey_norms.storeys_p50"
-          ],
-          "expr": "COALESCE(pocket_p50_local, (SELECT storeys_p50 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)) AS pocket_p50",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "geo.pocket_p50",
-          "kind": "sql",
-          "line": 689,
-          "name": "pocket_p50",
-          "scope": "geo",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.bylaw_max_height_m"
-          ],
-          "expr": "CASE WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int) END AS height_implied",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "geo.height_implied",
-          "kind": "sql",
-          "line": 686,
-          "name": "height_implied",
-          "scope": "geo",
-          "spans": [
-            "mb.buildStoreyHeightCase('zoning_class', storeyHeight)"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "env.footprint_calc",
-            "env.stories_calc"
-          ],
-          "expr": "CASE WHEN footprint_calc IS NOT NULL AND stories_calc IS NOT NULL THEN round(footprint_calc * stories_calc, 2) END AS gfa_box",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "gfa.gfa_box",
-          "kind": "sql",
-          "line": 725,
-          "name": "gfa_box",
-          "scope": "gfa",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "scope.is_in_ravine_protection_area",
-            "scope.is_heritage_designated",
-            "geo.width_m",
-            "geo.length_m",
-            "geo.coverage_cap",
-            "geo.buffer_area",
-            "geo.box_area"
-          ],
-          "expr": "CASE WHEN is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL) THEN NULL WHEN width_m IS NULL OR length_m IS NULL THEN coverage_cap ELSE LEAST(buffer_area, box_area, cove…",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "env.footprint_calc",
-          "kind": "sql",
-          "line": 703,
-          "name": "footprint_calc",
-          "scope": "env",
-          "spans": []
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.lot_size_sqm",
-            "parcels.bylaw_max_coverage_pct"
-          ],
-          "expr": "round(lot_size_sqm * COALESCE(bylaw_max_coverage_pct, ${mb.buildCoverageCase('zoning_class')}) / 100.0, 2) AS coverage_cap",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "geo.coverage_cap",
-          "kind": "sql",
-          "line": 683,
-          "name": "coverage_cap",
-          "scope": "geo",
-          "spans": [
-            "mb.buildCoverageCase('zoning_class')"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.geom",
-            "sb.side_setback",
-            "sb.side_count",
-            "box.ravine_red"
-          ],
-          "expr": "CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "geo.buffer_area",
-          "kind": "sql",
-          "line": 676,
-          "name": "buffer_area",
-          "scope": "geo",
-          "spans": [
-            "minDimNum * minDimNum"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "scope.is_in_ravine_protection_area"
-          ],
-          "expr": "CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "box.ravine_red",
-          "kind": "sql",
-          "line": 649,
-          "name": "ravine_red",
-          "scope": "box",
-          "spans": [
-            "RAVINE_SETBACK_M"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "box.width_raw",
-            "box.length_raw"
-          ],
-          "expr": "CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "geo.box_area",
-          "kind": "sql",
-          "line": 670,
-          "name": "box_area",
-          "scope": "geo",
-          "spans": [
-            "minDimNum",
-            "minDimNum"
-          ]
-        },
-        {
-          "builder": "buildMaxBuildSql",
-          "deps": [
-            "parcels.bylaw_max_fsi",
-            "parcels.lot_size_sqm"
-          ],
-          "expr": "CASE WHEN bylaw_max_fsi IS NOT NULL THEN round(lot_size_sqm * bylaw_max_fsi, 2) END AS fsi_cap FROM",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "id": "gfa.fsi_cap",
-          "kind": "sql",
-          "line": 726,
-          "name": "fsi_cap",
-          "scope": "gfa",
-          "spans": []
-        },
-        {
-          "expr": "N(lotMinSqm, mb.LOT_MIN_SQM)",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMaxBuildSql",
-          "id": "buildMaxBuildSql:lotMinNum",
-          "kind": "js",
-          "line": 545,
-          "name": "lotMinNum",
-          "note": null
-        },
-        {
-          "expr": "N(lotMaxSqm, mb.LOT_MAX_SQM)",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMaxBuildSql",
-          "id": "buildMaxBuildSql:lotMaxNum",
-          "kind": "js",
-          "line": 546,
-          "name": "lotMaxNum",
-          "note": null
-        },
-        {
-          "expr": "full ? 'TRUE' : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})`",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMaxBuildSql",
-          "id": "buildMaxBuildSql:incremental",
-          "kind": "js",
-          "line": 537,
-          "name": "incremental",
-          "note": null
-        },
-        {
-          "expr": "",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMassingScopeWhere",
-          "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
-          "kind": "js",
-          "line": 524,
-          "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
-        },
-        {
-          "expr": "mb",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMaxBuildSql",
-          "id": "buildMaxBuildSql:tol",
-          "kind": "js",
-          "line": 540,
-          "name": "tol",
-          "note": null
-        },
-        {
-          "expr": "N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT)",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMaxBuildSql",
-          "id": "buildMaxBuildSql:mislinkTolNum",
-          "kind": "js",
-          "line": 561,
-          "name": "mislinkTolNum",
-          "note": null
-        },
-        {
-          "expr": "N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMaxBuildSql",
-          "id": "buildMaxBuildSql:minDimNum",
-          "kind": "js",
-          "line": 562,
-          "name": "minDimNum",
-          "note": null
-        },
-        {
-          "expr": "mb",
-          "file": "scripts/lib/compute/enrich-parcels.js",
-          "fn": "buildMaxBuildSql",
-          "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
-          "kind": "js",
-          "line": 540,
-          "name": "RAVINE_SETBACK_M",
-          "note": null
-        },
-        {
-          "expr": "",
-          "file": "scripts/lib/max-build.js",
-          "fn": "buildSideCountCase",
-          "id": "buildSideCountCase:buildSideCountCase()",
-          "kind": "js",
-          "line": 174,
-          "name": "buildSideCountCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
-        },
-        {
-          "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
-          "file": "scripts/lib/max-build.js",
-          "fn": "buildSideCountCase",
-          "id": "buildSideCountCase:whens",
-          "kind": "js",
-          "line": 175,
-          "name": "whens",
-          "note": null
-        },
-        {
-          "expr": "Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)",
-          "file": "scripts/lib/max-build.js",
-          "fn": "<module>",
-          "id": "<module>:SETBACK_PREFIXES",
-          "kind": "js",
-          "line": 138,
-          "name": "SETBACK_PREFIXES",
-          "note": null
-        },
-        {
-          "expr": "",
-          "file": "scripts/lib/max-build.js",
-          "fn": "buildSetbackCase",
-          "id": "buildSetbackCase:buildSetbackCase()",
-          "kind": "js",
-          "line": 156,
-          "name": "buildSetbackCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
-        },
-        {
-          "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
-          "file": "scripts/lib/max-build.js",
-          "fn": "buildSetbackCase",
-          "id": "buildSetbackCase:whens",
-          "kind": "js",
-          "line": 158,
-          "name": "whens",
-          "note": null
-        },
-        {
-          "expr": "",
-          "file": "scripts/lib/max-build.js",
-          "fn": "buildStoreyHeightCase",
-          "id": "buildStoreyHeightCase:buildStoreyHeightCase()",
-          "kind": "js",
-          "line": 48,
-          "name": "buildStoreyHeightCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:687"
-        },
-        {
-          "expr": "",
-          "file": "scripts/lib/max-build.js",
-          "fn": "buildCoverageCase",
-          "id": "buildCoverageCase:buildCoverageCase()",
-          "kind": "js",
-          "line": 203,
-          "name": "buildCoverageCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:683"
-        },
-        {
-          "expr": "SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}`) .join('\\n')",
-          "file": "scripts/lib/max-build.js",
-          "fn": "buildCoverageCase",
-          "id": "buildCoverageCase:whens",
-          "kind": "js",
-          "line": 204,
-          "name": "whens",
-          "note": null
-        }
-      ],
-      "column": "max_buildable_gfa_sqm",
-      "constants": [
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 187,
-          "logic_variable": [],
-          "proposed": [
-            "H:statistical_default"
-          ],
-          "ref": "scripts/lib/max-build.js#COVERAGE_DEFAULTS.*",
-          "values": [
-            30,
-            33,
-            35,
-            50,
-            60,
-            75
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 28,
-          "logic_variable": [],
-          "proposed": [
-            "H:modelling_assumption"
-          ],
-          "ref": "scripts/lib/max-build.js#LOT_MAX_SQM",
-          "values": [
-            2000
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 27,
-          "logic_variable": [],
-          "proposed": [
-            "H:data_cleaning_bound"
-          ],
-          "ref": "scripts/lib/max-build.js#LOT_MIN_SQM",
-          "values": [
-            50
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 25,
-          "logic_variable": [],
-          "proposed": [
-            "H:tolerance"
-          ],
-          "ref": "scripts/lib/max-build.js#LOT_TOLERANCE",
-          "values": [
-            0.15
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 87,
-          "logic_variable": [
-            "max_build_min_dimension_m=3"
-          ],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
-          "values": [
-            3
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 40,
-          "logic_variable": [
-            "mislink_footprint_lot_tol=0.05"
-          ],
-          "proposed": [
-            "H:tolerance"
-          ],
-          "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
-          "values": [
-            0.05
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 35,
-          "logic_variable": [],
-          "proposed": [
-            "H:modelling_assumption"
-          ],
-          "ref": "scripts/lib/max-build.js#NONRES_STOREY_HEIGHT_M",
-          "values": [
-            4
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 81,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#RAVINE_SETBACK_M",
-          "values": [
-            10
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.flankage",
-          "values": [
-            3,
-            4.5,
-            6
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.front",
-          "values": [
-            3,
-            6
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.rear",
-          "values": [
-            3,
-            7.5
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side",
-          "values": [
-            0,
-            0.9,
-            1.2,
-            1.5
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side_count",
-          "values": [
-            0,
-            1,
-            2
-          ],
-          "via": null
-        }
-      ],
-      "cuts": [],
-      "db_constants": [],
-      "direct_bases": [
-        "building_footprints.footprint_area_sqm",
-        "neighbourhood_storey_norms.storeys_p50",
-        "parcel_buildings.is_primary",
-        "parcels.bylaw_max_coverage_pct",
-        "parcels.bylaw_max_fsi",
-        "parcels.bylaw_max_height_m",
-        "parcels.bylaw_max_stories",
-        "parcels.bylaw_standard_setback_m",
-        "parcels.depth_m",
-        "parcels.frontage_m",
-        "parcels.geom",
-        "parcels.is_corner_lot",
-        "parcels.is_heritage_designated",
-        "parcels.is_in_ravine_protection_area",
-        "parcels.is_through_lot",
-        "parcels.lot_size_sqm",
-        "parcels.zoning_class"
-      ],
-      "evidence": "R",
-      "flags": [],
-      "formatter": "formatSqft",
-      "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:657 2",
-        "scripts/lib/compute/enrich-parcels.js:676 2",
-        "scripts/lib/compute/enrich-parcels.js:678 2",
-        "scripts/lib/compute/enrich-parcels.js:683 100"
-      ],
-      "inputs": [
-        {
-          "key": "max_build_lot_max_sqm",
-          "kind": "logic_variable",
-          "via": "buildMaxBuildSql(lotMaxSqm)"
-        },
-        {
-          "key": "max_build_lot_min_sqm",
-          "kind": "logic_variable",
-          "via": "buildMaxBuildSql(lotMinSqm)"
-        },
-        {
-          "key": "max_build_min_dimension_m",
-          "kind": "logic_variable",
-          "via": "buildMaxBuildSql(minDim)"
-        },
-        {
-          "key": "mislink_footprint_lot_tol",
-          "kind": "logic_variable",
-          "via": "buildMaxBuildSql(mislinkTol)"
-        },
-        {
-          "key": "storey_height_m",
-          "kind": "logic_variable",
-          "via": "buildMaxBuildSql(storeyHeight)"
-        }
-      ],
-      "json_key": null,
-      "kind": "formula",
-      "label": "Max buildable GFA",
-      "label_how": "label_attr",
-      "layer2_reason": null,
-      "layer2_targets": [
-        "principal:building_depth_m",
-        "principal:building_length_m",
-        "principal:front_setback_m",
-        "principal:fsi",
-        "principal:height_m",
-        "principal:height_storeys",
-        "principal:lot_coverage_pct",
-        "principal:rear_setback_m",
-        "principal:required_lot_area_m2",
-        "principal:required_lot_frontage_m",
-        "principal:side_setback_m",
-        "principal:side_setback_street_m"
-      ],
-      "logic_variables": [
-        {
-          "default": 2000,
-          "js_fallbacks": [],
-          "key": "max_build_lot_max_sqm"
-        },
-        {
-          "default": 50,
-          "js_fallbacks": [],
-          "key": "max_build_lot_min_sqm"
-        },
-        {
-          "default": 3,
-          "js_fallbacks": [
-            {
-              "class": "unmapped",
-              "proposed": "H:proxy_for_unmodelled_rule",
-              "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
-              "value": 3
-            }
-          ],
-          "key": "max_build_min_dimension_m"
-        },
-        {
-          "default": 0.05,
-          "js_fallbacks": [
-            {
-              "class": "unmapped",
-              "proposed": "H:tolerance",
-              "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
-              "value": 0.05
-            }
-          ],
-          "key": "mislink_footprint_lot_tol"
-        },
-        {
-          "default": 3,
-          "js_fallbacks": [
-            {
-              "class": "unmapped",
-              "proposed": "H:modelling_assumption",
-              "ref": "scripts/lib/max-build.js#STOREY_HEIGHT_M",
-              "value": 3
-            }
-          ],
-          "key": "storey_height_m"
-        }
-      ],
-      "payload": "parcel.areas.max_buildable_gfa_sqm",
-      "producer": "maxbuild",
-      "render_sites": [
-        "mobile/app/(app)/parcel-tool/[parcelId].tsx:129"
-      ],
-      "rendered": true,
-      "section": "headline",
-      "step": "enrich_parcels",
-      "surface": "S-001",
-      "unresolved": [],
-      "upstream": [
-        "bylaw_max_coverage_pct",
-        "bylaw_max_fsi",
-        "bylaw_max_height_m",
-        "bylaw_max_stories",
-        "bylaw_standard_setback_m",
-        "depth_m",
-        "frontage_m",
-        "geom",
-        "is_corner_lot",
-        "is_heritage_designated",
-        "is_in_ravine_protection_area",
-        "is_through_lot",
-        "lot_size_sqm",
-        "zoning_class"
-      ],
-      "variants": [
-        "aor",
-        "fallback",
-        "heritage",
-        "ravine"
-      ],
-      "whitelist": "CONSUMER_HEADLINE_COLS",
-      "witness": [
-        {
-          "builder": "buildMaxBuildSql",
-          "fingerprint": "cb120353429e88f3",
-          "reason": "static-render fingerprint not in the recorded trace",
-          "witnessed": false
-        }
-      ]
-    },
-    {
-      "base_inputs": [
-        "building_footprints.footprint_area_sqm",
         "neighbourhood_build_norms.storeys_p50",
         "neighbourhood_storey_norms.storeys_p50",
         "parcel_buildings.is_primary",
@@ -4292,442 +3119,6 @@
           "fingerprint": "cb120353429e88f3",
           "reason": "static-render fingerprint not in the recorded trace",
           "witnessed": false
-        }
-      ]
-    },
-    {
-      "base_inputs": [
-        "building_footprints.footprint_area_sqm",
-        "neighbourhood_storey_norms.storeys_p50",
-        "parcel_buildings.is_primary",
-        "parcels.bylaw_max_coverage_pct",
-        "parcels.bylaw_max_fsi",
-        "parcels.bylaw_max_height_m",
-        "parcels.bylaw_max_stories",
-        "parcels.bylaw_standard_setback_m",
-        "parcels.depth_m",
-        "parcels.frontage_m",
-        "parcels.geom",
-        "parcels.is_corner_lot",
-        "parcels.is_heritage_designated",
-        "parcels.is_in_ravine_protection_area",
-        "parcels.is_through_lot",
-        "parcels.lot_size_sqm",
-        "parcels.max_buildable_gfa_sqm",
-        "parcels.zoning_class"
-      ],
-      "chain": [
-        {
-          "expr": "plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot, cfg.fsiMaxPlausible)",
-          "file": "scripts/lib/parcel-cost.js",
-          "fn": "buildParcelCostMenu",
-          "id": "buildParcelCostMenu:mb.fsi",
-          "kind": "js",
-          "line": 373,
-          "name": "mb.fsi",
-          "note": null
-        },
-        {
-          "expr": "",
-          "file": "scripts/lib/parcel-cost.js",
-          "fn": "plausibleFsi",
-          "id": "plausibleFsi:plausibleFsi()",
-          "kind": "js",
-          "line": 61,
-          "name": "plausibleFsi()",
-          "note": "called from scripts/lib/parcel-cost.js:373"
-        },
-        {
-          "expr": "num(parcel.lot_size_sqm)",
-          "file": "scripts/lib/parcel-cost.js",
-          "fn": "buildParcelCostMenu",
-          "id": "buildParcelCostMenu:lot",
-          "kind": "js",
-          "line": 372,
-          "name": "lot",
-          "note": null
-        },
-        {
-          "expr": "round3(gfa / lot)",
-          "file": "scripts/lib/parcel-cost.js",
-          "fn": "plausibleFsi",
-          "id": "plausibleFsi:fsi",
-          "kind": "js",
-          "line": 66,
-          "name": "fsi",
-          "note": null
-        },
-        {
-          "expr": "opts.config",
-          "file": "scripts/lib/parcel-cost.js",
-          "fn": "buildParcelCostMenu",
-          "id": "buildParcelCostMenu:cfg.fsiMaxPlausible",
-          "kind": "js",
-          "line": 295,
-          "name": "cfg.fsiMaxPlausible",
-          "note": null
-        }
-      ],
-      "column": "max_build_fsi",
-      "constants": [
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 187,
-          "logic_variable": [],
-          "proposed": [
-            "H:statistical_default"
-          ],
-          "ref": "scripts/lib/max-build.js#COVERAGE_DEFAULTS.*",
-          "values": [
-            30,
-            33,
-            35,
-            50,
-            60,
-            75
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 28,
-          "logic_variable": [],
-          "proposed": [
-            "H:modelling_assumption"
-          ],
-          "ref": "scripts/lib/max-build.js#LOT_MAX_SQM",
-          "values": [
-            2000
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 27,
-          "logic_variable": [],
-          "proposed": [
-            "H:data_cleaning_bound"
-          ],
-          "ref": "scripts/lib/max-build.js#LOT_MIN_SQM",
-          "values": [
-            50
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 25,
-          "logic_variable": [],
-          "proposed": [
-            "H:tolerance"
-          ],
-          "ref": "scripts/lib/max-build.js#LOT_TOLERANCE",
-          "values": [
-            0.15
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 87,
-          "logic_variable": [
-            "max_build_min_dimension_m=3"
-          ],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
-          "values": [
-            3
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 40,
-          "logic_variable": [
-            "mislink_footprint_lot_tol=0.05"
-          ],
-          "proposed": [
-            "H:tolerance"
-          ],
-          "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
-          "values": [
-            0.05
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 35,
-          "logic_variable": [],
-          "proposed": [
-            "H:modelling_assumption"
-          ],
-          "ref": "scripts/lib/max-build.js#NONRES_STOREY_HEIGHT_M",
-          "values": [
-            4
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 1,
-          "line": 81,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#RAVINE_SETBACK_M",
-          "values": [
-            10
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.flankage",
-          "values": [
-            3,
-            4.5,
-            6
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.front",
-          "values": [
-            3,
-            6
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.rear",
-          "values": [
-            3,
-            7.5
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side",
-          "values": [
-            0,
-            0.9,
-            1.2,
-            1.5
-          ],
-          "via": null
-        },
-        {
-          "class": [
-            "unmapped"
-          ],
-          "in_code_roots": true,
-          "leaves": 13,
-          "line": 121,
-          "logic_variable": [],
-          "proposed": [
-            "H:proxy_for_unmodelled_rule"
-          ],
-          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side_count",
-          "values": [
-            0,
-            1,
-            2
-          ],
-          "via": null
-        }
-      ],
-      "cuts": [],
-      "db_constants": [],
-      "direct_bases": [
-        "parcels.lot_size_sqm",
-        "parcels.max_buildable_gfa_sqm"
-      ],
-      "evidence": "W",
-      "flags": [],
-      "formatter": "formatFsi",
-      "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:657 2",
-        "scripts/lib/compute/enrich-parcels.js:676 2",
-        "scripts/lib/compute/enrich-parcels.js:678 2",
-        "scripts/lib/compute/enrich-parcels.js:683 100"
-      ],
-      "inputs": [
-        {
-          "key": "compute_parcel_cost_fsi_max_plausible",
-          "kind": "logic_variable",
-          "via": "buildParcelCostMenu(fsiMaxPlausible)"
-        }
-      ],
-      "json_key": null,
-      "kind": "formula",
-      "label": "Max build FSI",
-      "label_how": "label_attr",
-      "layer2_reason": null,
-      "layer2_targets": [
-        "principal:building_depth_m",
-        "principal:building_length_m",
-        "principal:front_setback_m",
-        "principal:fsi",
-        "principal:height_m",
-        "principal:height_storeys",
-        "principal:lot_coverage_pct",
-        "principal:rear_setback_m",
-        "principal:required_lot_area_m2",
-        "principal:required_lot_frontage_m",
-        "principal:side_setback_m",
-        "principal:side_setback_street_m"
-      ],
-      "logic_variables": [
-        {
-          "default": 99.999,
-          "js_fallbacks": [],
-          "key": "compute_parcel_cost_fsi_max_plausible"
-        },
-        {
-          "default": 2000,
-          "js_fallbacks": [],
-          "key": "max_build_lot_max_sqm"
-        },
-        {
-          "default": 50,
-          "js_fallbacks": [],
-          "key": "max_build_lot_min_sqm"
-        },
-        {
-          "default": 3,
-          "js_fallbacks": [
-            {
-              "class": "unmapped",
-              "proposed": "H:proxy_for_unmodelled_rule",
-              "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
-              "value": 3
-            }
-          ],
-          "key": "max_build_min_dimension_m"
-        },
-        {
-          "default": 0.05,
-          "js_fallbacks": [
-            {
-              "class": "unmapped",
-              "proposed": "H:tolerance",
-              "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
-              "value": 0.05
-            }
-          ],
-          "key": "mislink_footprint_lot_tol"
-        },
-        {
-          "default": 3,
-          "js_fallbacks": [
-            {
-              "class": "unmapped",
-              "proposed": "H:modelling_assumption",
-              "ref": "scripts/lib/max-build.js#STOREY_HEIGHT_M",
-              "value": 3
-            }
-          ],
-          "key": "storey_height_m"
-        }
-      ],
-      "payload": "parcel.areas.max_build_fsi",
-      "producer": "cost",
-      "render_sites": [
-        "mobile/app/(app)/parcel-tool/[parcelId].tsx:132"
-      ],
-      "rendered": true,
-      "section": "headline",
-      "step": "compute_parcel_cost_estimates",
-      "surface": "S-001",
-      "unresolved": [],
-      "upstream": [
-        "lot_size_sqm",
-        "max_buildable_gfa_sqm"
-      ],
-      "variants": [
-        "aor"
-      ],
-      "whitelist": "CONSUMER_HEADLINE_COLS",
-      "witness": [
-        {
-          "builder": "buildSourceSql",
-          "fingerprint": "bf6e30932cffb49c",
-          "reason": null,
-          "witnessed": true
         }
       ]
     },
@@ -19469,9 +17860,7 @@
         "S-001 parcel.areas.coa_fsi ← parcels.bylaw_standard_setback_m (STAND_SET)",
         "S-001 parcel.areas.envelope_constrained ← parcels.bylaw_standard_setback_m (STAND_SET)",
         "S-001 parcel.areas.envelope_constraint_reason ← parcels.bylaw_standard_setback_m (STAND_SET)",
-        "S-001 parcel.areas.max_build_fsi ← parcels.bylaw_standard_setback_m (STAND_SET)",
         "S-001 parcel.areas.max_build_stories ← parcels.bylaw_standard_setback_m (STAND_SET)",
-        "S-001 parcel.areas.max_buildable_gfa_sqm ← parcels.bylaw_standard_setback_m (STAND_SET)",
         "S-001 parcel.areas.opt_aor_gfa_sqm ← parcels.bylaw_standard_setback_m (STAND_SET)",
         "S-001 parcel.costMenu.menu.coa_build.total ← parcels.bylaw_standard_setback_m (STAND_SET)",
         "S-001 parcel.costMenu.menu.garage.total ← parcels.bylaw_standard_setback_m (STAND_SET)",
@@ -19763,7 +18152,7 @@
     },
     {
       "path": "mobile/app/(app)/parcel-tool/[parcelId].tsx",
-      "sha256": "efb91c277ebc0f32"
+      "sha256": "24cf6ef5b9671dba"
     },
     {
       "path": "mobile/src/components/parcel/TrackedLotRow.tsx",
@@ -20834,6 +19223,441 @@
     {
       "base_inputs": [
         "building_footprints.footprint_area_sqm",
+        "neighbourhood_storey_norms.storeys_p50",
+        "parcel_buildings.is_primary",
+        "parcels.bylaw_max_coverage_pct",
+        "parcels.bylaw_max_fsi",
+        "parcels.bylaw_max_height_m",
+        "parcels.bylaw_max_stories",
+        "parcels.bylaw_standard_setback_m",
+        "parcels.depth_m",
+        "parcels.frontage_m",
+        "parcels.geom",
+        "parcels.is_corner_lot",
+        "parcels.is_heritage_designated",
+        "parcels.is_in_ravine_protection_area",
+        "parcels.is_through_lot",
+        "parcels.lot_size_sqm",
+        "parcels.max_buildable_gfa_sqm",
+        "parcels.zoning_class"
+      ],
+      "chain": [
+        {
+          "expr": "plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot, cfg.fsiMaxPlausible)",
+          "file": "scripts/lib/parcel-cost.js",
+          "fn": "buildParcelCostMenu",
+          "id": "buildParcelCostMenu:mb.fsi",
+          "kind": "js",
+          "line": 373,
+          "name": "mb.fsi",
+          "note": null
+        },
+        {
+          "expr": "",
+          "file": "scripts/lib/parcel-cost.js",
+          "fn": "plausibleFsi",
+          "id": "plausibleFsi:plausibleFsi()",
+          "kind": "js",
+          "line": 61,
+          "name": "plausibleFsi()",
+          "note": "called from scripts/lib/parcel-cost.js:373"
+        },
+        {
+          "expr": "num(parcel.lot_size_sqm)",
+          "file": "scripts/lib/parcel-cost.js",
+          "fn": "buildParcelCostMenu",
+          "id": "buildParcelCostMenu:lot",
+          "kind": "js",
+          "line": 372,
+          "name": "lot",
+          "note": null
+        },
+        {
+          "expr": "round3(gfa / lot)",
+          "file": "scripts/lib/parcel-cost.js",
+          "fn": "plausibleFsi",
+          "id": "plausibleFsi:fsi",
+          "kind": "js",
+          "line": 66,
+          "name": "fsi",
+          "note": null
+        },
+        {
+          "expr": "opts.config",
+          "file": "scripts/lib/parcel-cost.js",
+          "fn": "buildParcelCostMenu",
+          "id": "buildParcelCostMenu:cfg.fsiMaxPlausible",
+          "kind": "js",
+          "line": 295,
+          "name": "cfg.fsiMaxPlausible",
+          "note": null
+        }
+      ],
+      "column": "max_build_fsi",
+      "constants": [
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 187,
+          "logic_variable": [],
+          "proposed": [
+            "H:statistical_default"
+          ],
+          "ref": "scripts/lib/max-build.js#COVERAGE_DEFAULTS.*",
+          "values": [
+            30,
+            33,
+            35,
+            50,
+            60,
+            75
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 28,
+          "logic_variable": [],
+          "proposed": [
+            "H:modelling_assumption"
+          ],
+          "ref": "scripts/lib/max-build.js#LOT_MAX_SQM",
+          "values": [
+            2000
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 27,
+          "logic_variable": [],
+          "proposed": [
+            "H:data_cleaning_bound"
+          ],
+          "ref": "scripts/lib/max-build.js#LOT_MIN_SQM",
+          "values": [
+            50
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 25,
+          "logic_variable": [],
+          "proposed": [
+            "H:tolerance"
+          ],
+          "ref": "scripts/lib/max-build.js#LOT_TOLERANCE",
+          "values": [
+            0.15
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 87,
+          "logic_variable": [
+            "max_build_min_dimension_m=3"
+          ],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
+          "values": [
+            3
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 40,
+          "logic_variable": [
+            "mislink_footprint_lot_tol=0.05"
+          ],
+          "proposed": [
+            "H:tolerance"
+          ],
+          "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
+          "values": [
+            0.05
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 35,
+          "logic_variable": [],
+          "proposed": [
+            "H:modelling_assumption"
+          ],
+          "ref": "scripts/lib/max-build.js#NONRES_STOREY_HEIGHT_M",
+          "values": [
+            4
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 81,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#RAVINE_SETBACK_M",
+          "values": [
+            10
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.flankage",
+          "values": [
+            3,
+            4.5,
+            6
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.front",
+          "values": [
+            3,
+            6
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.rear",
+          "values": [
+            3,
+            7.5
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side",
+          "values": [
+            0,
+            0.9,
+            1.2,
+            1.5
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side_count",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "via": null
+        }
+      ],
+      "cuts": [],
+      "db_constants": [],
+      "direct_bases": [
+        "parcels.lot_size_sqm",
+        "parcels.max_buildable_gfa_sqm"
+      ],
+      "duplicate_of": null,
+      "evidence": "W",
+      "flags": [],
+      "formatter": null,
+      "inline_literals": [
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
+      ],
+      "inputs": [
+        {
+          "key": "compute_parcel_cost_fsi_max_plausible",
+          "kind": "logic_variable",
+          "via": "buildParcelCostMenu(fsiMaxPlausible)"
+        }
+      ],
+      "json_key": null,
+      "kind": "formula",
+      "label": null,
+      "label_how": "not rendered",
+      "layer2_reason": null,
+      "layer2_targets": [
+        "principal:building_depth_m",
+        "principal:building_length_m",
+        "principal:front_setback_m",
+        "principal:fsi",
+        "principal:height_m",
+        "principal:height_storeys",
+        "principal:lot_coverage_pct",
+        "principal:rear_setback_m",
+        "principal:required_lot_area_m2",
+        "principal:required_lot_frontage_m",
+        "principal:side_setback_m",
+        "principal:side_setback_street_m"
+      ],
+      "logic_variables": [
+        {
+          "default": 99.999,
+          "js_fallbacks": [],
+          "key": "compute_parcel_cost_fsi_max_plausible"
+        },
+        {
+          "default": 2000,
+          "js_fallbacks": [],
+          "key": "max_build_lot_max_sqm"
+        },
+        {
+          "default": 50,
+          "js_fallbacks": [],
+          "key": "max_build_lot_min_sqm"
+        },
+        {
+          "default": 3,
+          "js_fallbacks": [
+            {
+              "class": "unmapped",
+              "proposed": "H:proxy_for_unmodelled_rule",
+              "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
+              "value": 3
+            }
+          ],
+          "key": "max_build_min_dimension_m"
+        },
+        {
+          "default": 0.05,
+          "js_fallbacks": [
+            {
+              "class": "unmapped",
+              "proposed": "H:tolerance",
+              "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
+              "value": 0.05
+            }
+          ],
+          "key": "mislink_footprint_lot_tol"
+        },
+        {
+          "default": 3,
+          "js_fallbacks": [
+            {
+              "class": "unmapped",
+              "proposed": "H:modelling_assumption",
+              "ref": "scripts/lib/max-build.js#STOREY_HEIGHT_M",
+              "value": 3
+            }
+          ],
+          "key": "storey_height_m"
+        }
+      ],
+      "payload": "parcel.areas.max_build_fsi",
+      "producer": "cost",
+      "render_sites": [],
+      "rendered": false,
+      "section": "payload_only",
+      "step": "compute_parcel_cost_estimates",
+      "surface": "S-001",
+      "unresolved": [],
+      "upstream": [
+        "lot_size_sqm",
+        "max_buildable_gfa_sqm"
+      ],
+      "variants": [
+        "aor"
+      ],
+      "whitelist": "CONSUMER_HEADLINE_COLS",
+      "witness": [
+        {
+          "builder": "buildSourceSql",
+          "fingerprint": "bf6e30932cffb49c",
+          "reason": null,
+          "witnessed": true
+        }
+      ]
+    },
+    {
+      "base_inputs": [
+        "building_footprints.footprint_area_sqm",
         "parcel_buildings.is_primary",
         "parcels.bylaw_max_coverage_pct",
         "parcels.bylaw_standard_setback_m",
@@ -21822,6 +20646,1178 @@
       "unresolved": [],
       "upstream": [
         "bylaw_max_coverage_pct",
+        "bylaw_standard_setback_m",
+        "depth_m",
+        "frontage_m",
+        "geom",
+        "is_corner_lot",
+        "is_heritage_designated",
+        "is_in_ravine_protection_area",
+        "is_through_lot",
+        "lot_size_sqm",
+        "zoning_class"
+      ],
+      "variants": [
+        "aor",
+        "fallback",
+        "heritage",
+        "ravine"
+      ],
+      "whitelist": "CONSUMER_HEADLINE_COLS",
+      "witness": [
+        {
+          "builder": "buildMaxBuildSql",
+          "fingerprint": "cb120353429e88f3",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
+        }
+      ]
+    },
+    {
+      "base_inputs": [
+        "building_footprints.footprint_area_sqm",
+        "neighbourhood_storey_norms.storeys_p50",
+        "parcel_buildings.is_primary",
+        "parcels.bylaw_max_coverage_pct",
+        "parcels.bylaw_max_fsi",
+        "parcels.bylaw_max_height_m",
+        "parcels.bylaw_max_stories",
+        "parcels.bylaw_standard_setback_m",
+        "parcels.depth_m",
+        "parcels.frontage_m",
+        "parcels.geom",
+        "parcels.is_corner_lot",
+        "parcels.is_heritage_designated",
+        "parcels.is_in_ravine_protection_area",
+        "parcels.is_through_lot",
+        "parcels.lot_size_sqm",
+        "parcels.zoning_class"
+      ],
+      "chain": [
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "box.emit",
+            "env.heritage_no_massing",
+            "env.ravine_sub_floor",
+            "scope.is_heritage_designated",
+            "massing.existing_footprint_sqm",
+            "env.stories_calc",
+            "gfa.gfa_box",
+            "gfa.fsi_cap"
+          ],
+          "expr": "CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL WHEN heritage THEN round(existing_footprint_sqm * stories_calc, 2) ELSE LEAST(gfa_box, fsi_cap) END AS max_buildable_gfa_sqm",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "select.max_buildable_gfa_sqm",
+          "kind": "sql",
+          "line": 796,
+          "name": "max_buildable_gfa_sqm",
+          "scope": "select",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "tier.lot_size_confidence"
+          ],
+          "expr": "COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "box.emit",
+          "kind": "sql",
+          "line": 648,
+          "name": "emit",
+          "scope": "box",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "lot.best_area",
+            "lot.pair_lg",
+            "lot.pair_lf",
+            "lot.pair_gf"
+          ],
+          "expr": "CASE WHEN best_area IS NULL THEN NULL WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low' WHEN pair_lg AND pair_lf AND pair_gf THEN 'high' WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium' ELSE 'low' END…",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "tier.lot_size_confidence",
+          "kind": "sql",
+          "line": 630,
+          "name": "lot_size_confidence",
+          "scope": "tier",
+          "spans": [
+            "lotMinNum",
+            "lotMaxNum"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.lot_size_sqm",
+            "sb.geom_area",
+            "sb.fxd_area"
+          ],
+          "expr": "COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area FROM",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "lot.best_area",
+          "kind": "sql",
+          "line": 625,
+          "name": "best_area",
+          "scope": "lot",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [],
+          "expr": "selection constants: ${scopeWhere}, ${incremental}",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "scope.(filter)",
+          "kind": "sql",
+          "line": 585,
+          "name": "(filter)",
+          "scope": "scope",
+          "spans": [
+            "scopeWhere",
+            "incremental"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.geom"
+          ],
+          "expr": "ST_Area(s.geom::geography)::numeric AS geom_area",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "sb.geom_area",
+          "kind": "sql",
+          "line": 606,
+          "name": "geom_area",
+          "scope": "sb",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.frontage_m",
+            "parcels.depth_m"
+          ],
+          "expr": "(s.frontage_m * s.depth_m)::numeric AS fxd_area",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "sb.fxd_area",
+          "kind": "sql",
+          "line": 607,
+          "name": "fxd_area",
+          "scope": "sb",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.lot_size_sqm",
+            "sb.geom_area"
+          ],
+          "expr": "(lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "lot.pair_lg",
+          "kind": "sql",
+          "line": 619,
+          "name": "pair_lg",
+          "scope": "lot",
+          "spans": [
+            "tol"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.lot_size_sqm",
+            "sb.fxd_area"
+          ],
+          "expr": "(lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "lot.pair_lf",
+          "kind": "sql",
+          "line": 621,
+          "name": "pair_lf",
+          "scope": "lot",
+          "spans": [
+            "tol"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "sb.geom_area",
+            "sb.fxd_area"
+          ],
+          "expr": "(geom_area IS NOT NULL AND fxd_area IS NOT NULL AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "lot.pair_gf",
+          "kind": "sql",
+          "line": 623,
+          "name": "pair_gf",
+          "scope": "lot",
+          "spans": [
+            "tol"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "scope.is_heritage_designated",
+            "massing.existing_footprint_sqm",
+            "parcels.lot_size_sqm"
+          ],
+          "expr": "(is_heritage_designated AND (existing_footprint_sqm IS NULL OR existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum}))) AS heritage_no_massing",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "env.heritage_no_massing",
+          "kind": "sql",
+          "line": 712,
+          "name": "heritage_no_massing",
+          "scope": "env",
+          "spans": [
+            "mislinkTolNum"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.is_heritage_designated"
+          ],
+          "expr": "COALESCE(p.is_heritage_designated, false) AS is_heritage_designated",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "scope.is_heritage_designated",
+          "kind": "sql",
+          "line": 571,
+          "name": "is_heritage_designated",
+          "scope": "scope",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "building_footprints.footprint_area_sqm",
+            "parcel_buildings.is_primary"
+          ],
+          "expr": "SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "massing.existing_footprint_sqm",
+          "kind": "sql",
+          "line": 599,
+          "name": "existing_footprint_sqm",
+          "scope": "massing",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "scope.is_in_ravine_protection_area",
+            "scope.is_heritage_designated",
+            "geo.width_m",
+            "geo.length_m"
+          ],
+          "expr": "(is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL)) AS ravine_sub_floor",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "env.ravine_sub_floor",
+          "kind": "sql",
+          "line": 698,
+          "name": "ravine_sub_floor",
+          "scope": "env",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.is_in_ravine_protection_area"
+          ],
+          "expr": "COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "scope.is_in_ravine_protection_area",
+          "kind": "sql",
+          "line": 570,
+          "name": "is_in_ravine_protection_area",
+          "scope": "scope",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "box.width_raw"
+          ],
+          "expr": "CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "geo.width_m",
+          "kind": "sql",
+          "line": 668,
+          "name": "width_m",
+          "scope": "geo",
+          "spans": [
+            "minDimNum"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "scope.is_corner_lot",
+            "parcels.frontage_m",
+            "sb.side_count",
+            "sb.side_setback",
+            "sb.flankage_setback",
+            "scope.is_in_ravine_protection_area"
+          ],
+          "expr": "GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback ELSE frontage_m - side_count * side_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETB…",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "box.width_raw",
+          "kind": "sql",
+          "line": 654,
+          "name": "width_raw",
+          "scope": "box",
+          "spans": [
+            "RAVINE_SETBACK_M"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.is_corner_lot"
+          ],
+          "expr": "COALESCE(p.is_corner_lot, false) AS is_corner_lot",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "scope.is_corner_lot",
+          "kind": "sql",
+          "line": 569,
+          "name": "is_corner_lot",
+          "scope": "scope",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [],
+          "expr": "${mb.buildSideCountCase('s.zoning_class')} AS side_count",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "sb.side_count",
+          "kind": "sql",
+          "line": 613,
+          "name": "side_count",
+          "scope": "sb",
+          "spans": [
+            "mb.buildSideCountCase('s.zoning_class')"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [],
+          "expr": "${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "sb.side_setback",
+          "kind": "sql",
+          "line": 610,
+          "name": "side_setback",
+          "scope": "sb",
+          "spans": [
+            "mb.buildSetbackCase('s.zoning_class', 'side')"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [],
+          "expr": "${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "sb.flankage_setback",
+          "kind": "sql",
+          "line": 612,
+          "name": "flankage_setback",
+          "scope": "sb",
+          "spans": [
+            "mb.buildSetbackCase('s.zoning_class', 'flankage')"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "box.length_raw"
+          ],
+          "expr": "CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "geo.length_m",
+          "kind": "sql",
+          "line": 669,
+          "name": "length_m",
+          "scope": "geo",
+          "spans": [
+            "minDimNum"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "scope.is_through_lot",
+            "parcels.depth_m",
+            "sb.front_setback",
+            "sb.rear_setback",
+            "scope.is_in_ravine_protection_area"
+          ],
+          "expr": "GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback ELSE depth_m - front_setback - rear_setback END) - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw FROM",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "box.length_raw",
+          "kind": "sql",
+          "line": 657,
+          "name": "length_raw",
+          "scope": "box",
+          "spans": [
+            "RAVINE_SETBACK_M"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.is_through_lot"
+          ],
+          "expr": "COALESCE(p.is_through_lot, false) AS is_through_lot",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "scope.is_through_lot",
+          "kind": "sql",
+          "line": 569,
+          "name": "is_through_lot",
+          "scope": "scope",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.bylaw_standard_setback_m"
+          ],
+          "expr": "COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "sb.front_setback",
+          "kind": "sql",
+          "line": 609,
+          "name": "front_setback",
+          "scope": "sb",
+          "spans": [
+            "mb.buildSetbackCase('s.zoning_class', 'front')"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [],
+          "expr": "${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "sb.rear_setback",
+          "kind": "sql",
+          "line": 611,
+          "name": "rear_setback",
+          "scope": "sb",
+          "spans": [
+            "mb.buildSetbackCase('s.zoning_class', 'rear')"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.bylaw_max_stories",
+            "geo.pocket_p50",
+            "geo.height_implied"
+          ],
+          "expr": "CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories) WHEN pocket_p50 IS NOT NULL AND height_implied IS NOT NULL THEN LEAST(pocket_p50, height_implied) WHEN pocket_p50 IS NOT NULL THEN pocket_p50 E…",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "env.stories_calc",
+          "kind": "sql",
+          "line": 717,
+          "name": "stories_calc",
+          "scope": "env",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "neighbourhood_storey_norms.storeys_p50"
+          ],
+          "expr": "COALESCE(pocket_p50_local, (SELECT storeys_p50 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)) AS pocket_p50",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "geo.pocket_p50",
+          "kind": "sql",
+          "line": 689,
+          "name": "pocket_p50",
+          "scope": "geo",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.bylaw_max_height_m"
+          ],
+          "expr": "CASE WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int) END AS height_implied",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "geo.height_implied",
+          "kind": "sql",
+          "line": 686,
+          "name": "height_implied",
+          "scope": "geo",
+          "spans": [
+            "mb.buildStoreyHeightCase('zoning_class', storeyHeight)"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "env.footprint_calc",
+            "env.stories_calc"
+          ],
+          "expr": "CASE WHEN footprint_calc IS NOT NULL AND stories_calc IS NOT NULL THEN round(footprint_calc * stories_calc, 2) END AS gfa_box",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "gfa.gfa_box",
+          "kind": "sql",
+          "line": 725,
+          "name": "gfa_box",
+          "scope": "gfa",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "scope.is_in_ravine_protection_area",
+            "scope.is_heritage_designated",
+            "geo.width_m",
+            "geo.length_m",
+            "geo.coverage_cap",
+            "geo.buffer_area",
+            "geo.box_area"
+          ],
+          "expr": "CASE WHEN is_in_ravine_protection_area AND NOT is_heritage_designated AND (width_m IS NULL OR length_m IS NULL) THEN NULL WHEN width_m IS NULL OR length_m IS NULL THEN coverage_cap ELSE LEAST(buffer_area, box_area, cove…",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "env.footprint_calc",
+          "kind": "sql",
+          "line": 703,
+          "name": "footprint_calc",
+          "scope": "env",
+          "spans": []
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.lot_size_sqm",
+            "parcels.bylaw_max_coverage_pct"
+          ],
+          "expr": "round(lot_size_sqm * COALESCE(bylaw_max_coverage_pct, ${mb.buildCoverageCase('zoning_class')}) / 100.0, 2) AS coverage_cap",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "geo.coverage_cap",
+          "kind": "sql",
+          "line": 683,
+          "name": "coverage_cap",
+          "scope": "geo",
+          "spans": [
+            "mb.buildCoverageCase('zoning_class')"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.geom",
+            "sb.side_setback",
+            "sb.side_count",
+            "box.ravine_red"
+          ],
+          "expr": "CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2) >= ${minDimNum * minDimNum} THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2…",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "geo.buffer_area",
+          "kind": "sql",
+          "line": 676,
+          "name": "buffer_area",
+          "scope": "geo",
+          "spans": [
+            "minDimNum * minDimNum"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "scope.is_in_ravine_protection_area"
+          ],
+          "expr": "CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "box.ravine_red",
+          "kind": "sql",
+          "line": 649,
+          "name": "ravine_red",
+          "scope": "box",
+          "spans": [
+            "RAVINE_SETBACK_M"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "box.width_raw",
+            "box.length_raw"
+          ],
+          "expr": "CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "geo.box_area",
+          "kind": "sql",
+          "line": 670,
+          "name": "box_area",
+          "scope": "geo",
+          "spans": [
+            "minDimNum",
+            "minDimNum"
+          ]
+        },
+        {
+          "builder": "buildMaxBuildSql",
+          "deps": [
+            "parcels.bylaw_max_fsi",
+            "parcels.lot_size_sqm"
+          ],
+          "expr": "CASE WHEN bylaw_max_fsi IS NOT NULL THEN round(lot_size_sqm * bylaw_max_fsi, 2) END AS fsi_cap FROM",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "id": "gfa.fsi_cap",
+          "kind": "sql",
+          "line": 726,
+          "name": "fsi_cap",
+          "scope": "gfa",
+          "spans": []
+        },
+        {
+          "expr": "N(lotMinSqm, mb.LOT_MIN_SQM)",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMaxBuildSql",
+          "id": "buildMaxBuildSql:lotMinNum",
+          "kind": "js",
+          "line": 545,
+          "name": "lotMinNum",
+          "note": null
+        },
+        {
+          "expr": "N(lotMaxSqm, mb.LOT_MAX_SQM)",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMaxBuildSql",
+          "id": "buildMaxBuildSql:lotMaxNum",
+          "kind": "js",
+          "line": 546,
+          "name": "lotMaxNum",
+          "note": null
+        },
+        {
+          "expr": "full ? 'TRUE' : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})`",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMaxBuildSql",
+          "id": "buildMaxBuildSql:incremental",
+          "kind": "js",
+          "line": 537,
+          "name": "incremental",
+          "note": null
+        },
+        {
+          "expr": "",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMassingScopeWhere",
+          "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
+          "kind": "js",
+          "line": 524,
+          "name": "buildMassingScopeWhere()",
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
+        },
+        {
+          "expr": "mb",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMaxBuildSql",
+          "id": "buildMaxBuildSql:tol",
+          "kind": "js",
+          "line": 540,
+          "name": "tol",
+          "note": null
+        },
+        {
+          "expr": "N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT)",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMaxBuildSql",
+          "id": "buildMaxBuildSql:mislinkTolNum",
+          "kind": "js",
+          "line": 561,
+          "name": "mislinkTolNum",
+          "note": null
+        },
+        {
+          "expr": "N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT)",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMaxBuildSql",
+          "id": "buildMaxBuildSql:minDimNum",
+          "kind": "js",
+          "line": 562,
+          "name": "minDimNum",
+          "note": null
+        },
+        {
+          "expr": "mb",
+          "file": "scripts/lib/compute/enrich-parcels.js",
+          "fn": "buildMaxBuildSql",
+          "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
+          "kind": "js",
+          "line": 540,
+          "name": "RAVINE_SETBACK_M",
+          "note": null
+        },
+        {
+          "expr": "",
+          "file": "scripts/lib/max-build.js",
+          "fn": "buildSideCountCase",
+          "id": "buildSideCountCase:buildSideCountCase()",
+          "kind": "js",
+          "line": 174,
+          "name": "buildSideCountCase()",
+          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
+        },
+        {
+          "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
+          "file": "scripts/lib/max-build.js",
+          "fn": "buildSideCountCase",
+          "id": "buildSideCountCase:whens",
+          "kind": "js",
+          "line": 175,
+          "name": "whens",
+          "note": null
+        },
+        {
+          "expr": "Object.keys(SETBACK_DEFAULTS) .filter((k) => k !== 'DEFAULT') .sort((a, b) => b.length - a.length)",
+          "file": "scripts/lib/max-build.js",
+          "fn": "<module>",
+          "id": "<module>:SETBACK_PREFIXES",
+          "kind": "js",
+          "line": 138,
+          "name": "SETBACK_PREFIXES",
+          "note": null
+        },
+        {
+          "expr": "",
+          "file": "scripts/lib/max-build.js",
+          "fn": "buildSetbackCase",
+          "id": "buildSetbackCase:buildSetbackCase()",
+          "kind": "js",
+          "line": 156,
+          "name": "buildSetbackCase()",
+          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
+        },
+        {
+          "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
+          "file": "scripts/lib/max-build.js",
+          "fn": "buildSetbackCase",
+          "id": "buildSetbackCase:whens",
+          "kind": "js",
+          "line": 158,
+          "name": "whens",
+          "note": null
+        },
+        {
+          "expr": "",
+          "file": "scripts/lib/max-build.js",
+          "fn": "buildStoreyHeightCase",
+          "id": "buildStoreyHeightCase:buildStoreyHeightCase()",
+          "kind": "js",
+          "line": 48,
+          "name": "buildStoreyHeightCase()",
+          "note": "called from scripts/lib/compute/enrich-parcels.js:687"
+        },
+        {
+          "expr": "",
+          "file": "scripts/lib/max-build.js",
+          "fn": "buildCoverageCase",
+          "id": "buildCoverageCase:buildCoverageCase()",
+          "kind": "js",
+          "line": 203,
+          "name": "buildCoverageCase()",
+          "note": "called from scripts/lib/compute/enrich-parcels.js:683"
+        },
+        {
+          "expr": "SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}`) .join('\\n')",
+          "file": "scripts/lib/max-build.js",
+          "fn": "buildCoverageCase",
+          "id": "buildCoverageCase:whens",
+          "kind": "js",
+          "line": 204,
+          "name": "whens",
+          "note": null
+        }
+      ],
+      "column": "max_buildable_gfa_sqm",
+      "constants": [
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 187,
+          "logic_variable": [],
+          "proposed": [
+            "H:statistical_default"
+          ],
+          "ref": "scripts/lib/max-build.js#COVERAGE_DEFAULTS.*",
+          "values": [
+            30,
+            33,
+            35,
+            50,
+            60,
+            75
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 28,
+          "logic_variable": [],
+          "proposed": [
+            "H:modelling_assumption"
+          ],
+          "ref": "scripts/lib/max-build.js#LOT_MAX_SQM",
+          "values": [
+            2000
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 27,
+          "logic_variable": [],
+          "proposed": [
+            "H:data_cleaning_bound"
+          ],
+          "ref": "scripts/lib/max-build.js#LOT_MIN_SQM",
+          "values": [
+            50
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 25,
+          "logic_variable": [],
+          "proposed": [
+            "H:tolerance"
+          ],
+          "ref": "scripts/lib/max-build.js#LOT_TOLERANCE",
+          "values": [
+            0.15
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 87,
+          "logic_variable": [
+            "max_build_min_dimension_m=3"
+          ],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
+          "values": [
+            3
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 40,
+          "logic_variable": [
+            "mislink_footprint_lot_tol=0.05"
+          ],
+          "proposed": [
+            "H:tolerance"
+          ],
+          "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
+          "values": [
+            0.05
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 35,
+          "logic_variable": [],
+          "proposed": [
+            "H:modelling_assumption"
+          ],
+          "ref": "scripts/lib/max-build.js#NONRES_STOREY_HEIGHT_M",
+          "values": [
+            4
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 1,
+          "line": 81,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#RAVINE_SETBACK_M",
+          "values": [
+            10
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.flankage",
+          "values": [
+            3,
+            4.5,
+            6
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.front",
+          "values": [
+            3,
+            6
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.rear",
+          "values": [
+            3,
+            7.5
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side",
+          "values": [
+            0,
+            0.9,
+            1.2,
+            1.5
+          ],
+          "via": null
+        },
+        {
+          "class": [
+            "unmapped"
+          ],
+          "in_code_roots": true,
+          "leaves": 13,
+          "line": 121,
+          "logic_variable": [],
+          "proposed": [
+            "H:proxy_for_unmodelled_rule"
+          ],
+          "ref": "scripts/lib/max-build.js#SETBACK_DEFAULTS.*.side_count",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "via": null
+        }
+      ],
+      "cuts": [],
+      "db_constants": [],
+      "direct_bases": [
+        "building_footprints.footprint_area_sqm",
+        "neighbourhood_storey_norms.storeys_p50",
+        "parcel_buildings.is_primary",
+        "parcels.bylaw_max_coverage_pct",
+        "parcels.bylaw_max_fsi",
+        "parcels.bylaw_max_height_m",
+        "parcels.bylaw_max_stories",
+        "parcels.bylaw_standard_setback_m",
+        "parcels.depth_m",
+        "parcels.frontage_m",
+        "parcels.geom",
+        "parcels.is_corner_lot",
+        "parcels.is_heritage_designated",
+        "parcels.is_in_ravine_protection_area",
+        "parcels.is_through_lot",
+        "parcels.lot_size_sqm",
+        "parcels.zoning_class"
+      ],
+      "duplicate_of": null,
+      "evidence": "R",
+      "flags": [],
+      "formatter": null,
+      "inline_literals": [
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
+      ],
+      "inputs": [
+        {
+          "key": "max_build_lot_max_sqm",
+          "kind": "logic_variable",
+          "via": "buildMaxBuildSql(lotMaxSqm)"
+        },
+        {
+          "key": "max_build_lot_min_sqm",
+          "kind": "logic_variable",
+          "via": "buildMaxBuildSql(lotMinSqm)"
+        },
+        {
+          "key": "max_build_min_dimension_m",
+          "kind": "logic_variable",
+          "via": "buildMaxBuildSql(minDim)"
+        },
+        {
+          "key": "mislink_footprint_lot_tol",
+          "kind": "logic_variable",
+          "via": "buildMaxBuildSql(mislinkTol)"
+        },
+        {
+          "key": "storey_height_m",
+          "kind": "logic_variable",
+          "via": "buildMaxBuildSql(storeyHeight)"
+        }
+      ],
+      "json_key": null,
+      "kind": "formula",
+      "label": null,
+      "label_how": "not rendered",
+      "layer2_reason": null,
+      "layer2_targets": [
+        "principal:building_depth_m",
+        "principal:building_length_m",
+        "principal:front_setback_m",
+        "principal:fsi",
+        "principal:height_m",
+        "principal:height_storeys",
+        "principal:lot_coverage_pct",
+        "principal:rear_setback_m",
+        "principal:required_lot_area_m2",
+        "principal:required_lot_frontage_m",
+        "principal:side_setback_m",
+        "principal:side_setback_street_m"
+      ],
+      "logic_variables": [
+        {
+          "default": 2000,
+          "js_fallbacks": [],
+          "key": "max_build_lot_max_sqm"
+        },
+        {
+          "default": 50,
+          "js_fallbacks": [],
+          "key": "max_build_lot_min_sqm"
+        },
+        {
+          "default": 3,
+          "js_fallbacks": [
+            {
+              "class": "unmapped",
+              "proposed": "H:proxy_for_unmodelled_rule",
+              "ref": "scripts/lib/max-build.js#MAX_BUILD_MIN_DIMENSION_M_DEFAULT",
+              "value": 3
+            }
+          ],
+          "key": "max_build_min_dimension_m"
+        },
+        {
+          "default": 0.05,
+          "js_fallbacks": [
+            {
+              "class": "unmapped",
+              "proposed": "H:tolerance",
+              "ref": "scripts/lib/max-build.js#MISLINK_FOOTPRINT_LOT_TOL_DEFAULT",
+              "value": 0.05
+            }
+          ],
+          "key": "mislink_footprint_lot_tol"
+        },
+        {
+          "default": 3,
+          "js_fallbacks": [
+            {
+              "class": "unmapped",
+              "proposed": "H:modelling_assumption",
+              "ref": "scripts/lib/max-build.js#STOREY_HEIGHT_M",
+              "value": 3
+            }
+          ],
+          "key": "storey_height_m"
+        }
+      ],
+      "payload": "parcel.areas.max_buildable_gfa_sqm",
+      "producer": "maxbuild",
+      "render_sites": [],
+      "rendered": false,
+      "section": "payload_only",
+      "step": "enrich_parcels",
+      "surface": "S-001",
+      "unresolved": [],
+      "upstream": [
+        "bylaw_max_coverage_pct",
+        "bylaw_max_fsi",
+        "bylaw_max_height_m",
+        "bylaw_max_stories",
         "bylaw_standard_setback_m",
         "depth_m",
         "frontage_m",
@@ -34030,7 +34026,7 @@
   "twins": [
     {
       "aor": "max_buildable_gfa_sqm",
-      "aor_where": "rendered (S-001, S-072)",
+      "aor_where": "rendered (S-072)",
       "coa": "max_newbuild_coa_gfa_sqm",
       "coa_where": "rendered (S-072)",
       "note": "operator rows 1 ↔ 1a"
@@ -34058,7 +34054,7 @@
     },
     {
       "aor": "max_build_fsi",
-      "aor_where": "rendered (S-001)",
+      "aor_where": "payload only",
       "coa": "coa_fsi",
       "coa_where": "rendered (S-001)",
       "note": "operator rows 4 ↔ 4a"

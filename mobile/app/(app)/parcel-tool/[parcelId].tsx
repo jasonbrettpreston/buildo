@@ -126,10 +126,10 @@ export default function ParcelDetailScreen() {
           </Text>
           <View className="flex-row flex-wrap">
             <Headline label="Lot size" value={formatSqm(areas.lot_size_sqm)} />
-            <Headline label="Max buildable GFA" value={formatSqft(areas.max_buildable_gfa_sqm)} />
+            {/* W-0 (a), operator 2026-11-12 "sounds good accepted..": Max buildable GFA (legacy max_buildable_gfa_sqm) hidden until MB-38 */}
             <Headline label="As-of-right GFA" value={formatSqft(areas.opt_aor_gfa_sqm)} />
             <Headline label="Max build storeys" value={areas.max_build_stories != null ? String(areas.max_build_stories) : null} />
-            <Headline label="Max build FSI" value={formatFsi(areas.max_build_fsi)} />
+            {/* W-0 (a): Max build FSI (legacy max_build_fsi) hidden until MB-38; ~/Buildo-scratch/mcbylaws/inc5/WALKTHROUGH-20261112.md */}
             <Headline label="CoA FSI" value={formatFsi(areas.coa_fsi)} />
           </View>
           {areas.envelope_constrained ? (

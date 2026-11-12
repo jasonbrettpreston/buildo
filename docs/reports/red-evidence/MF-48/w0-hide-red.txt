@@ -1,0 +1,9 @@
+W-0 (a) hide lock, red against origin 00dddc547 (mobile jest __tests__/parcelDetailW0Hide.behaviour.test.tsx, screen unchanged), 2026-11-12:
+  ● W-0 (a): the mobile parcel page hides the legacy Max build FSI and Max buildable GFA › neither label nor value renders, with both values present
+    expect(received).toBeNull()
+    > 56 |     expect(screen.queryByText('Max build FSI')).toBeNull();
+      57 |     expect(screen.queryByText('Max buildable GFA')).toBeNull();
+      58 |     expect(screen.queryByText('3.17')).toBeNull();
+      59 |     expect(screen.queryByText('10,753 sq ft')).toBeNull();
+      at Object.toBeNull (__tests__/parcelDetailW0Hide.behaviour.test.tsx:56:49)
+Tests:       1 failed, 1 passed, 2 total
