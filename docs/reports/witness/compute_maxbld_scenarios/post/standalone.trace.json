@@ -1,0 +1,622 @@
+{
+  "trace_version": 1,
+  "step": "scripts/compute-maxbld-scenarios.js",
+  "chain": "none",
+  "source_fingerprint": "8d6d61988b1c290d5ee016e42b1d26a8150d580977c4f116edf6756081bf458a",
+  "git_head": "008e95c6094509197e8c5047cf15d8e606a6ca0a",
+  "header": {
+    "processes": 1,
+    "calls": 117,
+    "distinct": 27,
+    "utility": 13,
+    "tracer_self_ms": 807.591,
+    "wall_ms": 87250
+  },
+  "statements": [
+    {
+      "fingerprint": "024e5abf33946149",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1014,
+      "reads": {
+        "bylaw_resolution_units": [
+          "unit_id",
+          "unit_key"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "09647d963a6395a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last AS (\n       SELECT started_at, completed_at, records_meta\n         FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[])\n          AND status IN ('completed', 'completed_with_warnings')\n          AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n        ORDER BY completed_at DESC, id DESC\n        LIMIT 1\n     ),\n     -- 'skipped' rows ⇒ RUN, deliberately: ANY status other than 'completed'\n     -- in the upstream window counts toward non_completed, including a\n     -- literal status='skipped' row (a lock-contention self-skip, or a\n     -- legacy pre-DS4 skip that never re-stamped 'completed'). We cannot\n     -- positively confirm such a row changed nothing, so the fail-safe is\n     -- RUN — \"the first post-scoped-run never skips\" (header item 6).\n     upstream_since AS (\n       SELECT\n         COUNT(*) FILTER (WHERE p.status <> 'completed')                                            AS non_completed,\n         COUNT(*) FILTER (WHERE p.status = 'completed'\n                             AND (COALESCE(p.records_new, 0) + COALESCE(p.records_updated, 0)) > 0)  AS completed_with_changes,\n         -- Commit E (B3 output-panel remediation) — defence-in-depth VISIBILITY\n         -- only (chain-concurrency.js:36's 12h TTL convention, same class of\n         -- staleness): an upstream 'running' row whose started_at is already\n         -- past the TTL is almost certainly an orphan (a crashed/killed\n         -- producer that never reached its finalize step — the load-wsib.js\n         -- E#1 defect this commit also fixes). It STILL counts toward\n         -- non_completed above (E-R2: a stranded running row must keep\n         -- forcing RUN — fail-safe, pinned so a future \"optimization\" cannot\n         -- quietly start treating a stale running row as safe-to-skip-past).\n         -- This count exists ONLY so a caller/operator can tell \"genuinely\n         -- busy upstream\" apart from \"an orphaned row nobody ever finalized\"\n         -- without changing the skip/run decision itself.\n         COUNT(*) FILTER (WHERE p.status = 'running'\n                             AND p.started_at <= NOW() - INTERVAL '12 hours')                        AS stale_running\n         FROM pipeline_runs p\n         CROSS JOIN own_last o\n        WHERE p.pipeline = ANY($2::text[])\n          AND COALESCE(p.completed_at, 'infinity'::timestamptz) > o.started_at\n     )\n     SELECT\n       (SELECT started_at    FROM own_last)              AS own_started,\n       (SELECT completed_at  FROM own_last)               AS own_completed,\n       (SELECT records_meta  FROM own_last)               AS own_last_records_meta,\n       (SELECT non_completed FROM upstream_since)          AS non_completed,\n       (SELECT completed_with_changes FROM upstream_since) AS completed_with_changes,\n       (SELECT stale_running FROM upstream_since)          AS stale_running",
+      "params": [
+        [
+          [
+            "sources:compute_maxbld_scenarios",
+            "compute_maxbld_scenarios",
+            "compute-maxbld-scenarios"
+          ],
+          [
+            "sources:resolve_bylaws",
+            "resolve_bylaws",
+            "resolve-bylaws",
+            "sources:link_parcel_abutments",
+            "link_parcel_abutments",
+            "link-parcel-abutments",
+            "sources:parcels",
+            "parcels",
+            "sources:enrich_parcels",
+            "enrich_parcels",
+            "enrich-parcels",
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline",
+            "sources:enrich_heritage",
+            "enrich_heritage",
+            "enrich-heritage"
+          ]
+        ]
+      ]
+    },
+    {
+      "fingerprint": "0bbb8570831e68aa",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_abutments": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "0d56fe481e7b08e7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "bylaw_resolution_texts": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "151289322d8a4d08",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_maxbld_population": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "52422eca2f88a3e0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "bylaw_resolution_results": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed",
+          86989,
+          null,
+          4447,
+          1921,
+          90287,
+          0,
+          "{\"rows_emitted\":293913,\"layer2_cell_unparseable\":0,\"units_floor_refusals\":0,\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"sources:compute_maxbld_scenarios\",\"compute_maxbld_scenarios\",\"compute-maxbld-scenarios\"],\"upstream_slugs\":[\"sources:resolve_bylaws\",\"resolve_bylaws\",\"resolve-bylaws\",\"sources:link_parcel_abutments\",\"link_parcel_abutments\",\"link-parcel-abutments\",\"sources:parcels\",\"parcels\",\"sources:enrich_parcels\",\"enrich_parcels\",\"enrich-parcels\",\"sources:enrich_centreline\",\"enrich_centreline\",\"enrich-centreline\",\"sources:enrich_heritage\",\"enrich_heritage\",\"enrich-heritage\"],\"own_last_completed_at\":\"2026-11-12T19:52:35.171Z\",\"upstream_non_completed\":3,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":2},\"config\":{\"fya_porch_allowance_m\":1,\"fya_placeholder_street_radius_m\":200,\"fya_placeholder_street_min_n\":3,\"fya_placeholder_zone_radius_m\":500,\"fya_placeholder_zone_min_n\":5,\"fya_placeholder_ring_depth\":2,\"fya_placeholder_ring_min_n\":1,\"fya_est_min_m\":0,\"fya_est_max_m\":30,\"houseplex_circulation_share\":0.1,\"houseplex_unit_min_net_m2\":30,\"s1_ceiling_min_m\":2.3,\"s1_floor_assembly_m\":0.212,\"s1_parapet_m\":0.3,\"s2_first_floor_above_grade_m\":0,\"compute_maxbld_scenarios_rafter_span_1_m\":3.89,\"compute_maxbld_scenarios_roof_assembly_depth_1_m\":0.1622,\"compute_maxbld_scenarios_rafter_span_2_m\":5.11,\"compute_maxbld_scenarios_roof_assembly_depth_2_m\":0.2062,\"compute_maxbld_scenarios_rafter_span_3_m\":6.52,\"compute_maxbld_scenarios_roof_assembly_depth_3_m\":0.2572,\"compute_maxbld_scenarios_rafter_span_4_m\":7.66,\"compute_maxbld_scenarios_roof_assembly_depth_4_m\":0.3082,\"footprint_shape_factor\":1,\"compute_maxbld_scenarios_population_parcel_ids\":[\"6640\",\"30065\",\"30554\",\"33830\",\"119522\",\"120669\",\"122034\",\"153191\",\"159079\",\"169742\",\"170105\",\"173273\",\"205238\",\"216666\",\"258388\",\"274216\",\"283723\",\"304365\",\"313999\",\"403569\",\"410720\",\"427312\",\"428050\",\"442123\",\"461807\"],\"compute_maxbld_scenarios_bbox_degree_divisor\":78000,\"compute_maxbld_scenarios_batch_size\":500,\"resolve_bylaws_population_zone_classes\":[\"R\",\"RD\",\"RS\",\"RT\",\"RM\"]},\"terminal\":\"materialized_incremental\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"008e95c6094509197e8c5047cf15d8e606a6ca0a\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Compute Max-Build Scenarios (Layer 3)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"rows_written\",\"value\":293913,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"closure_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"status_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"numbers_without_trace\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"flags_missing\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"not_buildable_with_value\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"layer2_cell_unparseable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"bylaw_resolution_results\":118825110,\"bylaw_resolution_option_results\":9241953,\"bylaw_resolution_lot_stamps\":440093,\"bylaw_resolution_units\":1014,\"bylaw_resolution_texts\":2868,\"parcels\":496536,\"parcel_abutments\":1674346,\"parcel_maxbld_population\":1897},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"bylaw_resolution_lot_stamps\":440093},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_maxbld_scenarios.status\",\"value\":\"within declared values (7 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_basement_livable_share\",\"value\":\"\\\"compute_maxbld_scenarios_basement_livable_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_circulation_share\",\"value\":\"\\\"compute_maxbld_scenarios_circulation_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading\",\"value\":\"\\\"compute_maxbld_scenarios_coxwell_generous_reading\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m\",\"value\":\"\\\"compute_maxbld_scenarios_depth_search_step_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min\",\"value\":\"\\\"compute_maxbld_scenarios_existing_confidence_min\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty\",\"value\":\"\\\"compute_maxbld_scenarios_existing_shared_footprint_penalty\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m\",\"value\":\"\\\"compute_maxbld_scenarios_first_floor_elevation_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units\",\"value\":\"\\\"compute_maxbld_scenarios_houseplex_min_units\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m\",\"value\":\"\\\"compute_maxbld_scenarios_lane_buffer_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_max_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_min_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m\",\"value\":\"\\\"compute_maxbld_scenarios_lot_viability_margin_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_min_dimension_m\",\"value\":\"\\\"compute_maxbld_scenarios_min_dimension_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct\",\"value\":\"\\\"compute_maxbld_scenarios_not_evaluated_max_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m\",\"value\":\"\\\"compute_maxbld_scenarios_roof_assembly_depth_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_pitch\",\"value\":\"\\\"compute_maxbld_scenarios_roof_pitch\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_storey_height_m\",\"value\":\"\\\"compute_maxbld_scenarios_storey_height_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_weight\",\"value\":\"\\\"compute_maxbld_scenarios_suite_weight\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m\",\"value\":\"\\\"compute_maxbld_scenarios_triangle_simplify_tol_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct\",\"value\":\"\\\"compute_maxbld_scenarios_trust_high_min_pass_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_unit_min_interior_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":22.08,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":86989,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 878,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "compute_maxbld_scenarios",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6dcff3f0dca82930",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 7,
+      "reads": {
+        "parcel_maxbld_scenarios": [
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "72ccf0f2c6f1c702",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 2868,
+      "reads": {
+        "bylaw_resolution_texts": [
+          "text",
+          "text_key"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 39,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b934a255ea22b621",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "bylaw_resolution_option_results": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c191a8d3c86c63ec",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "bylaw_resolution_lot_stamps": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c658fddde99a6b15",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c9f90b585890f7be",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "bylaw_resolution_units": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ce17088cae0635bd",
+      "kind": "read",
+      "count": 5,
+      "rowCount": 1921,
+      "reads": {
+        "bylaw_resolution_lot_stamps": [
+          "evaluator_version",
+          "lot_gate",
+          "parcel_id",
+          "permitted",
+          "permitted_text_ids",
+          "table_version"
+        ],
+        "bylaw_resolution_option_results": [
+          "class",
+          "lot_gate",
+          "option",
+          "parcel_id",
+          "reason",
+          "status",
+          "structure",
+          "target",
+          "value",
+          "value_kind",
+          "winner_unit_id"
+        ],
+        "bylaw_resolution_results": [
+          "class",
+          "lot_gate",
+          "parcel_id",
+          "reason",
+          "status",
+          "structure",
+          "target",
+          "value",
+          "value_kind",
+          "winner_unit_id"
+        ],
+        "parcel_abutments": [
+          "bldg_to_subject_m",
+          "est_status",
+          "front_setback_est_m",
+          "neighbour_id",
+          "neighbour_residential",
+          "parcel_id",
+          "same_frontage_street",
+          "shared_len_m"
+        ],
+        "parcel_maxbld_population": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "abuts_laneway",
+          "depth_m",
+          "exception_number",
+          "frontage_m",
+          "geom",
+          "id",
+          "in_sixplex_area",
+          "is_corner_lot",
+          "is_heritage_designated",
+          "is_through_lot",
+          "lot_size_sqm",
+          "on_policy_road",
+          "parcel_id",
+          "primary_frontage_street_name",
+          "zoning_class",
+          "zoning_is_ambiguous",
+          "zoning_overlays",
+          "zoning_zn_string"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e007e3f4be40f911",
+      "kind": "write",
+      "count": 77,
+      "rowCount": 90287,
+      "reads": {
+        "parcel_maxbld_scenarios": [
+          "content_sha"
+        ]
+      },
+      "writes": {
+        "parcel_maxbld_scenarios": [
+          "building_type",
+          "catalogue_sha",
+          "computed_at",
+          "content_sha",
+          "field_id",
+          "flags",
+          "increment",
+          "layer2_table_version",
+          "parcel_id",
+          "reason",
+          "settings_sha",
+          "status",
+          "switchboard_sha",
+          "switches",
+          "trace",
+          "unit",
+          "value"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f3202f16cf99fdb0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_maxbld_population": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "59023:2",
+      "write_fingerprints": [
+        "e007e3f4be40f911"
+      ]
+    },
+    {
+      "client": "59023:2",
+      "write_fingerprints": [
+        "e007e3f4be40f911"
+      ]
+    },
+    {
+      "client": "59023:2",
+      "write_fingerprints": [
+        "e007e3f4be40f911"
+      ]
+    },
+    {
+      "client": "59023:2",
+      "write_fingerprints": [
+        "e007e3f4be40f911"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "bylaw_resolution_lot_stamps": [
+        "evaluator_version",
+        "lot_gate",
+        "parcel_id",
+        "permitted",
+        "permitted_text_ids",
+        "table_version"
+      ],
+      "bylaw_resolution_option_results": [
+        "class",
+        "lot_gate",
+        "option",
+        "parcel_id",
+        "reason",
+        "status",
+        "structure",
+        "target",
+        "value",
+        "value_kind",
+        "winner_unit_id"
+      ],
+      "bylaw_resolution_results": [
+        "class",
+        "lot_gate",
+        "parcel_id",
+        "reason",
+        "status",
+        "structure",
+        "target",
+        "value",
+        "value_kind",
+        "winner_unit_id"
+      ],
+      "bylaw_resolution_texts": [
+        "text",
+        "text_key"
+      ],
+      "bylaw_resolution_units": [
+        "unit_id",
+        "unit_key"
+      ],
+      "parcel_abutments": [
+        "bldg_to_subject_m",
+        "est_status",
+        "front_setback_est_m",
+        "neighbour_id",
+        "neighbour_residential",
+        "parcel_id",
+        "same_frontage_street",
+        "shared_len_m"
+      ],
+      "parcel_maxbld_population": [
+        "parcel_id"
+      ],
+      "parcel_maxbld_scenarios": [
+        "building_type",
+        "catalogue_sha",
+        "computed_at",
+        "content_sha",
+        "field_id",
+        "flags",
+        "increment",
+        "layer2_table_version",
+        "parcel_id",
+        "reason",
+        "settings_sha",
+        "status",
+        "switchboard_sha",
+        "switches",
+        "trace",
+        "unit",
+        "value"
+      ],
+      "parcels": [
+        "abuts_laneway",
+        "depth_m",
+        "exception_number",
+        "frontage_m",
+        "geom",
+        "id",
+        "in_sixplex_area",
+        "is_corner_lot",
+        "is_heritage_designated",
+        "is_through_lot",
+        "lot_size_sqm",
+        "on_policy_road",
+        "parcel_id",
+        "primary_frontage_street_name",
+        "zoning_class",
+        "zoning_is_ambiguous",
+        "zoning_overlays",
+        "zoning_zn_string"
+      ]
+    },
+    "writes": {
+      "parcel_maxbld_scenarios": [
+        "building_type",
+        "catalogue_sha",
+        "computed_at",
+        "content_sha",
+        "field_id",
+        "flags",
+        "increment",
+        "layer2_table_version",
+        "parcel_id",
+        "reason",
+        "settings_sha",
+        "status",
+        "switchboard_sha",
+        "switches",
+        "trace",
+        "unit",
+        "value"
+      ]
+    }
+  },
+  "errors": []
+}

@@ -1,0 +1,18 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/standalone.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "{sql}",
+          "DELETE FROM parcel_maxbld_scenarios WHERE building_type = 'detached_house'"
+        ],
+        [
+          "{harness}"
+        ]
+      ],
+      "why": "run 1 of a net-new step must be nonzero (#38, Spec 124 R-CZ): the DELETE is the descriptor recovery.reset (the detached_house rows of the population), then a plain harness run re-derives them through the guarded upsert (records_new = the deleted rows) and the harness second run must write 0 rows (the rerun-zero proof). MB-35 capture rerun MB35-RECAP (decision D-54, amendment recap a) on the cohort the MB35-COHORT night loaded: 1,921 lots, 293,913 rows, 90,287 detached_house rows reset and re-derived with every value, status and unit equal to the rows before the reset; while the Layer 2 stamps predate the repo table_version a re-derived row carries phase2_disclosures_not_current in place of its family words (the row check blocks/rowcheck.cjs of the job)."
+    }
+  }
+}

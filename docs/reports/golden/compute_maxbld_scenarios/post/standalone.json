@@ -1,0 +1,1784 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/compute-maxbld-scenarios.js",
+  "chain": "none",
+  "git_head": "008e95c6094509197e8c5047cf15d8e606a6ca0a",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 1921,
+    "records_new": 90287,
+    "records_updated": 0,
+    "records_meta": {
+      "rows_emitted": 293913,
+      "layer2_cell_unparseable": 0,
+      "units_floor_refusals": 0,
+      "gate": {
+        "reason": "upstream_activity_since_last_run",
+        "gated_skip": false,
+        "own_slugs": [
+          "sources:compute_maxbld_scenarios",
+          "compute_maxbld_scenarios",
+          "compute-maxbld-scenarios"
+        ],
+        "upstream_slugs": [
+          "sources:resolve_bylaws",
+          "resolve_bylaws",
+          "resolve-bylaws",
+          "sources:link_parcel_abutments",
+          "link_parcel_abutments",
+          "link-parcel-abutments",
+          "sources:parcels",
+          "parcels",
+          "sources:enrich_parcels",
+          "enrich_parcels",
+          "enrich-parcels",
+          "sources:enrich_centreline",
+          "enrich_centreline",
+          "enrich-centreline",
+          "sources:enrich_heritage",
+          "enrich_heritage",
+          "enrich-heritage"
+        ],
+        "own_last_completed_at": "2026-11-12T19:52:35.171Z",
+        "upstream_non_completed": 3,
+        "upstream_completed_with_changes": 0,
+        "upstream_stale_running": 2
+      },
+      "config": {
+        "fya_porch_allowance_m": 1,
+        "fya_placeholder_street_radius_m": 200,
+        "fya_placeholder_street_min_n": 3,
+        "fya_placeholder_zone_radius_m": 500,
+        "fya_placeholder_zone_min_n": 5,
+        "fya_placeholder_ring_depth": 2,
+        "fya_placeholder_ring_min_n": 1,
+        "fya_est_min_m": 0,
+        "fya_est_max_m": 30,
+        "houseplex_circulation_share": 0.1,
+        "houseplex_unit_min_net_m2": 30,
+        "s1_ceiling_min_m": 2.3,
+        "s1_floor_assembly_m": 0.212,
+        "s1_parapet_m": 0.3,
+        "s2_first_floor_above_grade_m": 0,
+        "compute_maxbld_scenarios_rafter_span_1_m": 3.89,
+        "compute_maxbld_scenarios_roof_assembly_depth_1_m": 0.1622,
+        "compute_maxbld_scenarios_rafter_span_2_m": 5.11,
+        "compute_maxbld_scenarios_roof_assembly_depth_2_m": 0.2062,
+        "compute_maxbld_scenarios_rafter_span_3_m": 6.52,
+        "compute_maxbld_scenarios_roof_assembly_depth_3_m": 0.2572,
+        "compute_maxbld_scenarios_rafter_span_4_m": 7.66,
+        "compute_maxbld_scenarios_roof_assembly_depth_4_m": 0.3082,
+        "footprint_shape_factor": 1,
+        "compute_maxbld_scenarios_population_parcel_ids": [
+          "6640",
+          "30065",
+          "30554",
+          "33830",
+          "119522",
+          "120669",
+          "122034",
+          "153191",
+          "159079",
+          "169742",
+          "170105",
+          "173273",
+          "205238",
+          "216666",
+          "258388",
+          "274216",
+          "283723",
+          "304365",
+          "313999",
+          "403569",
+          "410720",
+          "427312",
+          "428050",
+          "442123",
+          "461807"
+        ],
+        "compute_maxbld_scenarios_bbox_degree_divisor": 78000,
+        "compute_maxbld_scenarios_batch_size": 500,
+        "resolve_bylaws_population_zone_classes": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      },
+      "terminal": "materialized_incremental",
+      "ledger_row": "owned",
+      "chain_run_id": null,
+      "code_sha": "008e95c6094509197e8c5047cf15d8e606a6ca0a",
+      "pool_errors": 0,
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
+      "audit_table": {
+        "phase": 0,
+        "name": "Compute Max-Build Scenarios (Layer 3)",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "rows_written",
+            "value": 293913,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "closure_violations",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "status_outside_closed_set",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "numbers_without_trace",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "flags_missing",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "not_buildable_with_value",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "layer2_cell_unparseable",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "inputs_nonempty",
+            "value": {
+              "bylaw_resolution_results": 118825110,
+              "bylaw_resolution_option_results": 9241953,
+              "bylaw_resolution_lot_stamps": 440093,
+              "bylaw_resolution_units": 1014,
+              "bylaw_resolution_texts": 2868,
+              "parcels": 496536,
+              "parcel_abutments": 1674346,
+              "parcel_maxbld_population": 1897
+            },
+            "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+            "status": "INFO"
+          },
+          {
+            "metric": "empty_source_guard",
+            "value": {
+              "bylaw_resolution_lot_stamps": 440093
+            },
+            "threshold": "guards.empty_source table(s) non-empty",
+            "status": "INFO"
+          },
+          {
+            "metric": "vocabulary:parcel_maxbld_scenarios.status",
+            "value": "within declared values (7 distinct)",
+            "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_basement_livable_share",
+            "value": "\"compute_maxbld_scenarios_basement_livable_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_circulation_share",
+            "value": "\"compute_maxbld_scenarios_circulation_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading",
+            "value": "\"compute_maxbld_scenarios_coxwell_generous_reading\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m",
+            "value": "\"compute_maxbld_scenarios_depth_search_step_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min",
+            "value": "\"compute_maxbld_scenarios_existing_confidence_min\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty",
+            "value": "\"compute_maxbld_scenarios_existing_shared_footprint_penalty\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m",
+            "value": "\"compute_maxbld_scenarios_first_floor_elevation_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units",
+            "value": "\"compute_maxbld_scenarios_houseplex_min_units\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m",
+            "value": "\"compute_maxbld_scenarios_lane_buffer_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm",
+            "value": "\"compute_maxbld_scenarios_lot_max_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm",
+            "value": "\"compute_maxbld_scenarios_lot_min_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m",
+            "value": "\"compute_maxbld_scenarios_lot_viability_margin_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_min_dimension_m",
+            "value": "\"compute_maxbld_scenarios_min_dimension_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct",
+            "value": "\"compute_maxbld_scenarios_not_evaluated_max_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m",
+            "value": "\"compute_maxbld_scenarios_roof_assembly_depth_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_pitch",
+            "value": "\"compute_maxbld_scenarios_roof_pitch\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_storey_height_m",
+            "value": "\"compute_maxbld_scenarios_storey_height_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm",
+            "value": "\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_weight",
+            "value": "\"compute_maxbld_scenarios_suite_weight\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m",
+            "value": "\"compute_maxbld_scenarios_triangle_simplify_tol_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct",
+            "value": "\"compute_maxbld_scenarios_trust_high_min_pass_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm",
+            "value": "\"compute_maxbld_scenarios_unit_min_interior_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 22.08,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 86989,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "bylaw_resolution_results": [
+          "parcel_id",
+          "lot_gate",
+          "class",
+          "structure",
+          "target",
+          "status",
+          "value_kind",
+          "value",
+          "reason",
+          "winner_unit_id"
+        ],
+        "bylaw_resolution_option_results": [
+          "parcel_id",
+          "lot_gate",
+          "class",
+          "structure",
+          "target",
+          "option",
+          "status",
+          "value_kind",
+          "value",
+          "reason",
+          "winner_unit_id"
+        ],
+        "bylaw_resolution_lot_stamps": [
+          "parcel_id",
+          "lot_gate",
+          "permitted",
+          "permitted_text_ids",
+          "table_version",
+          "evaluator_version"
+        ],
+        "bylaw_resolution_units": [
+          "unit_key",
+          "unit_id"
+        ],
+        "bylaw_resolution_texts": [
+          "text_key",
+          "text"
+        ],
+        "parcels": [
+          "id",
+          "parcel_id",
+          "lot_size_sqm",
+          "frontage_m",
+          "depth_m",
+          "is_corner_lot",
+          "zoning_class",
+          "zoning_zn_string",
+          "exception_number",
+          "zoning_overlays",
+          "on_policy_road",
+          "is_through_lot",
+          "abuts_laneway",
+          "zoning_is_ambiguous",
+          "in_sixplex_area",
+          "is_heritage_designated",
+          "primary_frontage_street_name",
+          "geom"
+        ],
+        "parcel_abutments": [
+          "parcel_id",
+          "neighbour_id",
+          "shared_len_m",
+          "same_frontage_street",
+          "neighbour_residential",
+          "bldg_to_subject_m",
+          "front_setback_est_m",
+          "est_status"
+        ],
+        "parcel_maxbld_population": [
+          "parcel_id"
+        ]
+      },
+      "writes": {
+        "parcel_maxbld_scenarios": [
+          "parcel_id",
+          "building_type",
+          "field_id",
+          "increment",
+          "status",
+          "value",
+          "unit",
+          "reason",
+          "flags",
+          "trace",
+          "content_sha",
+          "switches",
+          "catalogue_sha",
+          "switchboard_sha",
+          "settings_sha",
+          "layer2_table_version",
+          "computed_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [
+    "completed"
+  ],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_maxbld_scenarios]\",\"msg\":\"[compute_maxbld_scenarios] target: compute_maxbld_scenarios (descriptor.database) → database=postgres user=postgres migrations=301 (floor 0)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_maxbld_scenarios]\",\"msg\":\"materialize gate: RUN (upstream_activity_since_last_run)\"}\nPIPELINE_SUMMARY:{\"records_total\":1921,\"records_new\":90287,\"records_updated\":0,\"records_meta\":{\"rows_emitted\":293913,\"layer2_cell_unparseable\":0,\"units_floor_refusals\":0,\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"sources:compute_maxbld_scenarios\",\"compute_maxbld_scenarios\",\"compute-maxbld-scenarios\"],\"upstream_slugs\":[\"sources:resolve_bylaws\",\"resolve_bylaws\",\"resolve-bylaws\",\"sources:link_parcel_abutments\",\"link_parcel_abutments\",\"link-parcel-abutments\",\"sources:parcels\",\"parcels\",\"sources:enrich_parcels\",\"enrich_parcels\",\"enrich-parcels\",\"sources:enrich_centreline\",\"enrich_centreline\",\"enrich-centreline\",\"sources:enrich_heritage\",\"enrich_heritage\",\"enrich-heritage\"],\"own_last_completed_at\":\"2026-11-12T19:52:35.171Z\",\"upstream_non_completed\":3,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":2},\"config\":{\"fya_porch_allowance_m\":1,\"fya_placeholder_street_radius_m\":200,\"fya_placeholder_street_min_n\":3,\"fya_placeholder_zone_radius_m\":500,\"fya_placeholder_zone_min_n\":5,\"fya_placeholder_ring_depth\":2,\"fya_placeholder_ring_min_n\":1,\"fya_est_min_m\":0,\"fya_est_max_m\":30,\"houseplex_circulation_share\":0.1,\"houseplex_unit_min_net_m2\":30,\"s1_ceiling_min_m\":2.3,\"s1_floor_assembly_m\":0.212,\"s1_parapet_m\":0.3,\"s2_first_floor_above_grade_m\":0,\"compute_maxbld_scenarios_rafter_span_1_m\":3.89,\"compute_maxbld_scenarios_roof_assembly_depth_1_m\":0.1622,\"compute_maxbld_scenarios_rafter_span_2_m\":5.11,\"compute_maxbld_scenarios_roof_assembly_depth_2_m\":0.2062,\"compute_maxbld_scenarios_rafter_span_3_m\":6.52,\"compute_maxbld_scenarios_roof_assembly_depth_3_m\":0.2572,\"compute_maxbld_scenarios_rafter_span_4_m\":7.66,\"compute_maxbld_scenarios_roof_assembly_depth_4_m\":0.3082,\"footprint_shape_factor\":1,\"compute_maxbld_scenarios_population_parcel_ids\":[\"6640\",\"30065\",\"30554\",\"33830\",\"119522\",\"120669\",\"122034\",\"153191\",\"159079\",\"169742\",\"170105\",\"173273\",\"205238\",\"216666\",\"258388\",\"274216\",\"283723\",\"304365\",\"313999\",\"403569\",\"410720\",\"427312\",\"428050\",\"442123\",\"461807\"],\"compute_maxbld_scenarios_bbox_degree_divisor\":78000,\"compute_maxbld_scenarios_batch_size\":500,\"resolve_bylaws_population_zone_classes\":[\"R\",\"RD\",\"RS\",\"RT\",\"RM\"]},\"terminal\":\"materialized_incremental\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"008e95c6094509197e8c5047cf15d8e606a6ca0a\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Compute Max-Build Scenarios (Layer 3)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"rows_written\",\"value\":293913,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"closure_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"status_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"numbers_without_trace\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"flags_missing\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"not_buildable_with_value\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"layer2_cell_unparseable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"bylaw_resolution_results\":118825110,\"bylaw_resolution_option_results\":9241953,\"bylaw_resolution_lot_stamps\":440093,\"bylaw_resolution_units\":1014,\"bylaw_resolution_texts\":2868,\"parcels\":496536,\"parcel_abutments\":1674346,\"parcel_maxbld_population\":1897},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"bylaw_resolution_lot_stamps\":440093},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_maxbld_scenarios.status\",\"value\":\"within declared values (7 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_basement_livable_share\",\"value\":\"\\\"compute_maxbld_scenarios_basement_livable_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_circulation_share\",\"value\":\"\\\"compute_maxbld_scenarios_circulation_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading\",\"value\":\"\\\"compute_maxbld_scenarios_coxwell_generous_reading\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m\",\"value\":\"\\\"compute_maxbld_scenarios_depth_search_step_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min\",\"value\":\"\\\"compute_maxbld_scenarios_existing_confidence_min\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty\",\"value\":\"\\\"compute_maxbld_scenarios_existing_shared_footprint_penalty\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m\",\"value\":\"\\\"compute_maxbld_scenarios_first_floor_elevation_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units\",\"value\":\"\\\"compute_maxbld_scenarios_houseplex_min_units\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m\",\"value\":\"\\\"compute_maxbld_scenarios_lane_buffer_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_max_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_min_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m\",\"value\":\"\\\"compute_maxbld_scenarios_lot_viability_margin_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_min_dimension_m\",\"value\":\"\\\"compute_maxbld_scenarios_min_dimension_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct\",\"value\":\"\\\"compute_maxbld_scenarios_not_evaluated_max_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m\",\"value\":\"\\\"compute_maxbld_scenarios_roof_assembly_depth_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_pitch\",\"value\":\"\\\"compute_maxbld_scenarios_roof_pitch\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_storey_height_m\",\"value\":\"\\\"compute_maxbld_scenarios_storey_height_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_weight\",\"value\":\"\\\"compute_maxbld_scenarios_suite_weight\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m\",\"value\":\"\\\"compute_maxbld_scenarios_triangle_simplify_tol_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct\",\"value\":\"\\\"compute_maxbld_scenarios_trust_high_min_pass_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_unit_min_interior_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":22.08,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":86989,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"bylaw_resolution_results\":[\"parcel_id\",\"lot_gate\",\"class\",\"structure\",\"target\",\"status\",\"value_kind\",\"value\",\"reason\",\"winner_unit_id\"],\"bylaw_resolution_option_results\":[\"parcel_id\",\"lot_gate\",\"class\",\"structure\",\"target\",\"option\",\"status\",\"value_kind\",\"value\",\"reason\",\"winner_unit_id\"],\"bylaw_resolution_lot_stamps\":[\"parcel_id\",\"lot_gate\",\"permitted\",\"permitted_text_ids\",\"table_version\",\"evaluator_version\"],\"bylaw_resolution_units\":[\"unit_key\",\"unit_id\"],\"bylaw_resolution_texts\":[\"text_key\",\"text\"],\"parcels\":[\"id\",\"parcel_id\",\"lot_size_sqm\",\"frontage_m\",\"depth_m\",\"is_corner_lot\",\"zoning_class\",\"zoning_zn_string\",\"exception_number\",\"zoning_overlays\",\"on_policy_road\",\"is_through_lot\",\"abuts_laneway\",\"zoning_is_ambiguous\",\"in_sixplex_area\",\"is_heritage_designated\",\"primary_frontage_street_name\",\"geom\"],\"parcel_abutments\":[\"parcel_id\",\"neighbour_id\",\"shared_len_m\",\"same_frontage_street\",\"neighbour_residential\",\"bldg_to_subject_m\",\"front_setback_est_m\",\"est_status\"],\"parcel_maxbld_population\":[\"parcel_id\"]},\"writes\":{\"parcel_maxbld_scenarios\":[\"parcel_id\",\"building_type\",\"field_id\",\"increment\",\"status\",\"value\",\"unit\",\"reason\",\"flags\",\"trace\",\"content_sha\",\"switches\",\"catalogue_sha\",\"switchboard_sha\",\"settings_sha\",\"layer2_table_version\",\"computed_at\"]}}\n\n[compute_maxbld_scenarios] completed in 87.0s\n",
+  "stderr": "",
+  "pipeline_runs": [
+    {
+      "id": 4447,
+      "pipeline": "compute_maxbld_scenarios",
+      "status": "completed",
+      "started_at": "2026-11-12T21:51:59.071Z",
+      "completed_at": "2026-11-12T21:53:26.044Z",
+      "duration_ms": 86989,
+      "records_total": 1921,
+      "records_new": 90287,
+      "records_updated": 0,
+      "records_meta": {
+        "gate": {
+          "reason": "upstream_activity_since_last_run",
+          "own_slugs": [
+            "sources:compute_maxbld_scenarios",
+            "compute_maxbld_scenarios",
+            "compute-maxbld-scenarios"
+          ],
+          "gated_skip": false,
+          "upstream_slugs": [
+            "sources:resolve_bylaws",
+            "resolve_bylaws",
+            "resolve-bylaws",
+            "sources:link_parcel_abutments",
+            "link_parcel_abutments",
+            "link-parcel-abutments",
+            "sources:parcels",
+            "parcels",
+            "sources:enrich_parcels",
+            "enrich_parcels",
+            "enrich-parcels",
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline",
+            "sources:enrich_heritage",
+            "enrich_heritage",
+            "enrich-heritage"
+          ],
+          "own_last_completed_at": "2026-11-12T19:52:35.171Z",
+          "upstream_non_completed": 3,
+          "upstream_stale_running": 2,
+          "upstream_completed_with_changes": 0
+        },
+        "config": {
+          "s1_parapet_m": 0.3,
+          "fya_est_max_m": 30,
+          "fya_est_min_m": 0,
+          "s1_ceiling_min_m": 2.3,
+          "s1_floor_assembly_m": 0.212,
+          "fya_porch_allowance_m": 1,
+          "footprint_shape_factor": 1,
+          "houseplex_unit_min_net_m2": 30,
+          "fya_placeholder_ring_depth": 2,
+          "fya_placeholder_ring_min_n": 1,
+          "fya_placeholder_zone_min_n": 5,
+          "houseplex_circulation_share": 0.1,
+          "fya_placeholder_street_min_n": 3,
+          "s2_first_floor_above_grade_m": 0,
+          "fya_placeholder_zone_radius_m": 500,
+          "fya_placeholder_street_radius_m": 200,
+          "compute_maxbld_scenarios_batch_size": 500,
+          "resolve_bylaws_population_zone_classes": [
+            "R",
+            "RD",
+            "RS",
+            "RT",
+            "RM"
+          ],
+          "compute_maxbld_scenarios_rafter_span_1_m": 3.89,
+          "compute_maxbld_scenarios_rafter_span_2_m": 5.11,
+          "compute_maxbld_scenarios_rafter_span_3_m": 6.52,
+          "compute_maxbld_scenarios_rafter_span_4_m": 7.66,
+          "compute_maxbld_scenarios_bbox_degree_divisor": 78000,
+          "compute_maxbld_scenarios_population_parcel_ids": [
+            "6640",
+            "30065",
+            "30554",
+            "33830",
+            "119522",
+            "120669",
+            "122034",
+            "153191",
+            "159079",
+            "169742",
+            "170105",
+            "173273",
+            "205238",
+            "216666",
+            "258388",
+            "274216",
+            "283723",
+            "304365",
+            "313999",
+            "403569",
+            "410720",
+            "427312",
+            "428050",
+            "442123",
+            "461807"
+          ],
+          "compute_maxbld_scenarios_roof_assembly_depth_1_m": 0.1622,
+          "compute_maxbld_scenarios_roof_assembly_depth_2_m": 0.2062,
+          "compute_maxbld_scenarios_roof_assembly_depth_3_m": 0.2572,
+          "compute_maxbld_scenarios_roof_assembly_depth_4_m": 0.3082
+        },
+        "errors": [],
+        "code_sha": "008e95c6094509197e8c5047cf15d8e606a6ca0a",
+        "terminal": "materialized_incremental",
+        "warnings": [],
+        "ledger_row": "owned",
+        "audit_table": {
+          "name": "Compute Max-Build Scenarios (Layer 3)",
+          "rows": [
+            {
+              "value": 293913,
+              "metric": "rows_written",
+              "source": "check",
+              "status": "INFO",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "closure_violations",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "status_outside_closed_set",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "numbers_without_trace",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "flags_missing",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "not_buildable_with_value",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": 0,
+              "metric": "layer2_cell_unparseable",
+              "source": "check",
+              "status": "PASS",
+              "observed": "after_write",
+              "threshold": "viol == 0"
+            },
+            {
+              "value": {
+                "parcels": 496536,
+                "parcel_abutments": 1674346,
+                "bylaw_resolution_texts": 2868,
+                "bylaw_resolution_units": 1014,
+                "bylaw_resolution_results": 118825110,
+                "parcel_maxbld_population": 1897,
+                "bylaw_resolution_lot_stamps": 440093,
+                "bylaw_resolution_option_results": 9241953
+              },
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
+            },
+            {
+              "value": {
+                "bylaw_resolution_lot_stamps": 440093
+              },
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source table(s) non-empty"
+            },
+            {
+              "value": "within declared values (7 distinct)",
+              "metric": "vocabulary:parcel_maxbld_scenarios.status",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_basement_livable_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_basement_livable_share",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_circulation_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_circulation_share",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_coxwell_generous_reading\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_depth_search_step_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_existing_confidence_min\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_existing_shared_footprint_penalty\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_first_floor_elevation_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_houseplex_min_units\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_lane_buffer_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_lot_max_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_lot_min_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_lot_viability_margin_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_min_dimension_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_min_dimension_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_not_evaluated_max_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_roof_assembly_depth_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_roof_pitch\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_pitch",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_storey_height_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_storey_height_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_suite_weight\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_weight",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_triangle_simplify_tol_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_trust_high_min_pass_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": "\"compute_maxbld_scenarios_unit_min_interior_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": 22.08,
+              "metric": "sys_velocity_rows_sec",
+              "status": "INFO",
+              "threshold": null
+            },
+            {
+              "value": 86989,
+              "metric": "sys_duration_ms",
+              "status": "INFO",
+              "threshold": null
+            }
+          ],
+          "phase": 0,
+          "verdict": "PASS"
+        },
+        "pool_errors": 0,
+        "chain_run_id": null,
+        "rows_emitted": 293913,
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "units_floor_refusals": 0,
+        "layer2_cell_unparseable": 0
+      },
+      "error_message": null
+    }
+  ],
+  "pipeline_runs_max_id_before": 4446,
+  "table_state": [
+    {
+      "table": "parcel_maxbld_scenarios",
+      "row_count": 293913,
+      "ceiling_bypassed": "projected",
+      "content_hash": "b5fb528bac85890d653b9e40f66bcb60",
+      "order_by": "explicit",
+      "order_columns": [
+        "parcel_id",
+        "building_type",
+        "field_id"
+      ],
+      "columns": [
+        "parcel_id",
+        "building_type",
+        "field_id",
+        "content_sha"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcel_maxbld_scenarios": 316
+  },
+  "table_specs": {
+    "parcel_maxbld_scenarios": {
+      "columns": [
+        "parcel_id",
+        "building_type",
+        "field_id",
+        "content_sha"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "parcel_id",
+        "building_type",
+        "field_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:pipeline_runs[0].completed_at",
+    "key:pipeline_runs[0].duration_ms",
+    "key:pipeline_runs[0].id",
+    "key:pipeline_runs[0].records_meta.chain_run_id",
+    "key:pipeline_runs[0].records_meta.code_sha",
+    "key:pipeline_runs[0].started_at",
+    "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
+    "pattern:duration_literal",
+    "pattern:iso_timestamp",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/compute-maxbld-scenarios.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Compute Max-Build Scenarios (Layer 3)",
+          "phase": 0,
+          "rows": [
+            {
+              "metric": "rows_written",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 293913
+            },
+            {
+              "metric": "closure_violations",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "status_outside_closed_set",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "numbers_without_trace",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "flags_missing",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "not_buildable_with_value",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "layer2_cell_unparseable",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+              "value": {
+                "bylaw_resolution_lot_stamps": 440093,
+                "bylaw_resolution_option_results": 9241953,
+                "bylaw_resolution_results": 118825110,
+                "bylaw_resolution_texts": 2868,
+                "bylaw_resolution_units": 1014,
+                "parcel_abutments": 1674346,
+                "parcel_maxbld_population": 1897,
+                "parcels": 496536
+              }
+            },
+            {
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source table(s) non-empty",
+              "value": {
+                "bylaw_resolution_lot_stamps": 440093
+              }
+            },
+            {
+              "metric": "vocabulary:parcel_maxbld_scenarios.status",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+              "value": "within declared values (7 distinct)"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_basement_livable_share",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_basement_livable_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_circulation_share",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_circulation_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_coxwell_generous_reading\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_depth_search_step_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_existing_confidence_min\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_existing_shared_footprint_penalty\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_first_floor_elevation_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_houseplex_min_units\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_lane_buffer_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_lot_max_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_lot_min_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_lot_viability_margin_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_min_dimension_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_min_dimension_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_not_evaluated_max_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_roof_assembly_depth_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_pitch",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_roof_pitch\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_storey_height_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_storey_height_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_weight",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_suite_weight\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_triangle_simplify_tol_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_trust_high_min_pass_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            },
+            {
+              "metric": "retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"compute_maxbld_scenarios_unit_min_interior_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "config": {
+          "compute_maxbld_scenarios_batch_size": 500,
+          "compute_maxbld_scenarios_bbox_degree_divisor": 78000,
+          "compute_maxbld_scenarios_population_parcel_ids": [
+            "6640",
+            "30065",
+            "30554",
+            "33830",
+            "119522",
+            "120669",
+            "122034",
+            "153191",
+            "159079",
+            "169742",
+            "170105",
+            "173273",
+            "205238",
+            "216666",
+            "258388",
+            "274216",
+            "283723",
+            "304365",
+            "313999",
+            "403569",
+            "410720",
+            "427312",
+            "428050",
+            "442123",
+            "461807"
+          ],
+          "compute_maxbld_scenarios_rafter_span_1_m": 3.89,
+          "compute_maxbld_scenarios_rafter_span_2_m": 5.11,
+          "compute_maxbld_scenarios_rafter_span_3_m": 6.52,
+          "compute_maxbld_scenarios_rafter_span_4_m": 7.66,
+          "compute_maxbld_scenarios_roof_assembly_depth_1_m": 0.1622,
+          "compute_maxbld_scenarios_roof_assembly_depth_2_m": 0.2062,
+          "compute_maxbld_scenarios_roof_assembly_depth_3_m": 0.2572,
+          "compute_maxbld_scenarios_roof_assembly_depth_4_m": 0.3082,
+          "footprint_shape_factor": 1,
+          "fya_est_max_m": 30,
+          "fya_est_min_m": 0,
+          "fya_placeholder_ring_depth": 2,
+          "fya_placeholder_ring_min_n": 1,
+          "fya_placeholder_street_min_n": 3,
+          "fya_placeholder_street_radius_m": 200,
+          "fya_placeholder_zone_min_n": 5,
+          "fya_placeholder_zone_radius_m": 500,
+          "fya_porch_allowance_m": 1,
+          "houseplex_circulation_share": 0.1,
+          "houseplex_unit_min_net_m2": 30,
+          "resolve_bylaws_population_zone_classes": [
+            "R",
+            "RD",
+            "RS",
+            "RT",
+            "RM"
+          ],
+          "s1_ceiling_min_m": 2.3,
+          "s1_floor_assembly_m": 0.212,
+          "s1_parapet_m": 0.3,
+          "s2_first_floor_above_grade_m": 0
+        },
+        "errors": [],
+        "gate": {
+          "gated_skip": false,
+          "own_last_completed_at": "<TS>",
+          "own_slugs": [
+            "sources:compute_maxbld_scenarios",
+            "compute_maxbld_scenarios",
+            "compute-maxbld-scenarios"
+          ],
+          "reason": "upstream_activity_since_last_run",
+          "upstream_completed_with_changes": 0,
+          "upstream_non_completed": 3,
+          "upstream_slugs": [
+            "sources:resolve_bylaws",
+            "resolve_bylaws",
+            "resolve-bylaws",
+            "sources:link_parcel_abutments",
+            "link_parcel_abutments",
+            "link-parcel-abutments",
+            "sources:parcels",
+            "parcels",
+            "sources:enrich_parcels",
+            "enrich_parcels",
+            "enrich-parcels",
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline",
+            "sources:enrich_heritage",
+            "enrich_heritage",
+            "enrich-heritage"
+          ],
+          "upstream_stale_running": 2
+        },
+        "layer2_cell_unparseable": 0,
+        "ledger_row": "owned",
+        "pool_errors": 0,
+        "rows_emitted": 293913,
+        "terminal": "materialized_incremental",
+        "units_floor_refusals": 0,
+        "warnings": []
+      },
+      "records_new": 90287,
+      "records_total": 1921,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "bylaw_resolution_lot_stamps": [
+            "parcel_id",
+            "lot_gate",
+            "permitted",
+            "permitted_text_ids",
+            "table_version",
+            "evaluator_version"
+          ],
+          "bylaw_resolution_option_results": [
+            "parcel_id",
+            "lot_gate",
+            "class",
+            "structure",
+            "target",
+            "option",
+            "status",
+            "value_kind",
+            "value",
+            "reason",
+            "winner_unit_id"
+          ],
+          "bylaw_resolution_results": [
+            "parcel_id",
+            "lot_gate",
+            "class",
+            "structure",
+            "target",
+            "status",
+            "value_kind",
+            "value",
+            "reason",
+            "winner_unit_id"
+          ],
+          "bylaw_resolution_texts": [
+            "text_key",
+            "text"
+          ],
+          "bylaw_resolution_units": [
+            "unit_key",
+            "unit_id"
+          ],
+          "parcel_abutments": [
+            "parcel_id",
+            "neighbour_id",
+            "shared_len_m",
+            "same_frontage_street",
+            "neighbour_residential",
+            "bldg_to_subject_m",
+            "front_setback_est_m",
+            "est_status"
+          ],
+          "parcel_maxbld_population": [
+            "parcel_id"
+          ],
+          "parcels": [
+            "id",
+            "parcel_id",
+            "lot_size_sqm",
+            "frontage_m",
+            "depth_m",
+            "is_corner_lot",
+            "zoning_class",
+            "zoning_zn_string",
+            "exception_number",
+            "zoning_overlays",
+            "on_policy_road",
+            "is_through_lot",
+            "abuts_laneway",
+            "zoning_is_ambiguous",
+            "in_sixplex_area",
+            "is_heritage_designated",
+            "primary_frontage_street_name",
+            "geom"
+          ]
+        },
+        "writes": {
+          "parcel_maxbld_scenarios": [
+            "parcel_id",
+            "building_type",
+            "field_id",
+            "increment",
+            "status",
+            "value",
+            "unit",
+            "reason",
+            "flags",
+            "trace",
+            "content_sha",
+            "switches",
+            "catalogue_sha",
+            "switchboard_sha",
+            "settings_sha",
+            "layer2_table_version",
+            "computed_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [
+      {
+        "error_message": null,
+        "pipeline": "compute_maxbld_scenarios",
+        "records_meta": {
+          "audit_table": {
+            "name": "Compute Max-Build Scenarios (Layer 3)",
+            "phase": 0,
+            "rows": [
+              {
+                "metric": "rows_written",
+                "observed": "after_write",
+                "source": "check",
+                "status": "INFO",
+                "threshold": "viol == 0",
+                "value": 293913
+              },
+              {
+                "metric": "closure_violations",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "status_outside_closed_set",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "numbers_without_trace",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "flags_missing",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "not_buildable_with_value",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "layer2_cell_unparseable",
+                "observed": "after_write",
+                "source": "check",
+                "status": "PASS",
+                "threshold": "viol == 0",
+                "value": 0
+              },
+              {
+                "metric": "inputs_nonempty",
+                "status": "INFO",
+                "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+                "value": {
+                  "bylaw_resolution_lot_stamps": 440093,
+                  "bylaw_resolution_option_results": 9241953,
+                  "bylaw_resolution_results": 118825110,
+                  "bylaw_resolution_texts": 2868,
+                  "bylaw_resolution_units": 1014,
+                  "parcel_abutments": 1674346,
+                  "parcel_maxbld_population": 1897,
+                  "parcels": 496536
+                }
+              },
+              {
+                "metric": "empty_source_guard",
+                "status": "INFO",
+                "threshold": "guards.empty_source table(s) non-empty",
+                "value": {
+                  "bylaw_resolution_lot_stamps": 440093
+                }
+              },
+              {
+                "metric": "vocabulary:parcel_maxbld_scenarios.status",
+                "status": "INFO",
+                "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+                "value": "within declared values (7 distinct)"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_basement_livable_share",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_basement_livable_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_circulation_share",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_circulation_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_coxwell_generous_reading\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_depth_search_step_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_existing_confidence_min\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_existing_shared_footprint_penalty\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_first_floor_elevation_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_houseplex_min_units\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_lane_buffer_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_lot_max_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_lot_min_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_lot_viability_margin_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_min_dimension_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_min_dimension_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_not_evaluated_max_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_roof_assembly_depth_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_roof_pitch",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_roof_pitch\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_storey_height_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_storey_height_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_suite_weight",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_suite_weight\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_triangle_simplify_tol_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_trust_high_min_pass_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              },
+              {
+                "metric": "retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"compute_maxbld_scenarios_unit_min_interior_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row"
+              }
+            ],
+            "verdict": "PASS"
+          },
+          "checks_failed": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
+          "config": {
+            "compute_maxbld_scenarios_batch_size": 500,
+            "compute_maxbld_scenarios_bbox_degree_divisor": 78000,
+            "compute_maxbld_scenarios_population_parcel_ids": [
+              "6640",
+              "30065",
+              "30554",
+              "33830",
+              "119522",
+              "120669",
+              "122034",
+              "153191",
+              "159079",
+              "169742",
+              "170105",
+              "173273",
+              "205238",
+              "216666",
+              "258388",
+              "274216",
+              "283723",
+              "304365",
+              "313999",
+              "403569",
+              "410720",
+              "427312",
+              "428050",
+              "442123",
+              "461807"
+            ],
+            "compute_maxbld_scenarios_rafter_span_1_m": 3.89,
+            "compute_maxbld_scenarios_rafter_span_2_m": 5.11,
+            "compute_maxbld_scenarios_rafter_span_3_m": 6.52,
+            "compute_maxbld_scenarios_rafter_span_4_m": 7.66,
+            "compute_maxbld_scenarios_roof_assembly_depth_1_m": 0.1622,
+            "compute_maxbld_scenarios_roof_assembly_depth_2_m": 0.2062,
+            "compute_maxbld_scenarios_roof_assembly_depth_3_m": 0.2572,
+            "compute_maxbld_scenarios_roof_assembly_depth_4_m": 0.3082,
+            "footprint_shape_factor": 1,
+            "fya_est_max_m": 30,
+            "fya_est_min_m": 0,
+            "fya_placeholder_ring_depth": 2,
+            "fya_placeholder_ring_min_n": 1,
+            "fya_placeholder_street_min_n": 3,
+            "fya_placeholder_street_radius_m": 200,
+            "fya_placeholder_zone_min_n": 5,
+            "fya_placeholder_zone_radius_m": 500,
+            "fya_porch_allowance_m": 1,
+            "houseplex_circulation_share": 0.1,
+            "houseplex_unit_min_net_m2": 30,
+            "resolve_bylaws_population_zone_classes": [
+              "R",
+              "RD",
+              "RS",
+              "RT",
+              "RM"
+            ],
+            "s1_ceiling_min_m": 2.3,
+            "s1_floor_assembly_m": 0.212,
+            "s1_parapet_m": 0.3,
+            "s2_first_floor_above_grade_m": 0
+          },
+          "errors": [],
+          "gate": {
+            "gated_skip": false,
+            "own_last_completed_at": "<TS>",
+            "own_slugs": [
+              "sources:compute_maxbld_scenarios",
+              "compute_maxbld_scenarios",
+              "compute-maxbld-scenarios"
+            ],
+            "reason": "upstream_activity_since_last_run",
+            "upstream_completed_with_changes": 0,
+            "upstream_non_completed": 3,
+            "upstream_slugs": [
+              "sources:resolve_bylaws",
+              "resolve_bylaws",
+              "resolve-bylaws",
+              "sources:link_parcel_abutments",
+              "link_parcel_abutments",
+              "link-parcel-abutments",
+              "sources:parcels",
+              "parcels",
+              "sources:enrich_parcels",
+              "enrich_parcels",
+              "enrich-parcels",
+              "sources:enrich_centreline",
+              "enrich_centreline",
+              "enrich-centreline",
+              "sources:enrich_heritage",
+              "enrich_heritage",
+              "enrich-heritage"
+            ],
+            "upstream_stale_running": 2
+          },
+          "layer2_cell_unparseable": 0,
+          "ledger_row": "owned",
+          "pool_errors": 0,
+          "rows_emitted": 293913,
+          "terminal": "materialized_incremental",
+          "units_floor_refusals": 0,
+          "warnings": []
+        },
+        "records_new": 90287,
+        "records_total": 1921,
+        "records_updated": 0,
+        "status": "completed"
+      }
+    ],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[compute_maxbld_scenarios] target: compute_maxbld_scenarios (descriptor.database) → database=postgres user=postgres migrations=301 (floor 0)\",\"tag\":\"[compute_maxbld_scenarios]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"materialize gate: RUN (upstream_activity_since_last_run)\",\"tag\":\"[compute_maxbld_scenarios]\"}",
+      "[compute_maxbld_scenarios] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "parcel_id",
+          "building_type",
+          "field_id",
+          "content_sha"
+        ],
+        "content_hash": "b5fb528bac85890d653b9e40f66bcb60",
+        "order_by": "explicit",
+        "order_columns": [
+          "parcel_id",
+          "building_type",
+          "field_id"
+        ],
+        "row_count": 293913,
+        "table": "parcel_maxbld_scenarios"
+      }
+    ],
+    "invariants": []
+  },
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "parcel_maxbld_scenarios",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 1 table(s) [parcel_maxbld_scenarios]",
+    "txid_before_run2": 1881271,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "materialized_incremental",
+      "audit": {
+        "rows_written": 293913,
+        "closure_violations": 0,
+        "status_outside_closed_set": 0,
+        "numbers_without_trace": 0,
+        "flags_missing": 0,
+        "not_buildable_with_value": 0,
+        "layer2_cell_unparseable": 0,
+        "inputs_nonempty": {
+          "bylaw_resolution_results": 118825110,
+          "bylaw_resolution_option_results": 9241953,
+          "bylaw_resolution_lot_stamps": 440093,
+          "bylaw_resolution_units": 1014,
+          "bylaw_resolution_texts": 2868,
+          "parcels": 496536,
+          "parcel_abutments": 1674346,
+          "parcel_maxbld_population": 1897
+        },
+        "empty_source_guard": {
+          "bylaw_resolution_lot_stamps": 440093
+        },
+        "vocabulary:parcel_maxbld_scenarios.status": "within declared values (7 distinct)",
+        "retired_var_row_present:compute_maxbld_scenarios_basement_livable_share": "\"compute_maxbld_scenarios_basement_livable_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_circulation_share": "\"compute_maxbld_scenarios_circulation_share\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading": "\"compute_maxbld_scenarios_coxwell_generous_reading\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m": "\"compute_maxbld_scenarios_depth_search_step_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min": "\"compute_maxbld_scenarios_existing_confidence_min\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty": "\"compute_maxbld_scenarios_existing_shared_footprint_penalty\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m": "\"compute_maxbld_scenarios_first_floor_elevation_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units": "\"compute_maxbld_scenarios_houseplex_min_units\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m": "\"compute_maxbld_scenarios_lane_buffer_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm": "\"compute_maxbld_scenarios_lot_max_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm": "\"compute_maxbld_scenarios_lot_min_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m": "\"compute_maxbld_scenarios_lot_viability_margin_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_min_dimension_m": "\"compute_maxbld_scenarios_min_dimension_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct": "\"compute_maxbld_scenarios_not_evaluated_max_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m": "\"compute_maxbld_scenarios_roof_assembly_depth_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_roof_pitch": "\"compute_maxbld_scenarios_roof_pitch\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_storey_height_m": "\"compute_maxbld_scenarios_storey_height_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm": "\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_suite_weight": "\"compute_maxbld_scenarios_suite_weight\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m": "\"compute_maxbld_scenarios_triangle_simplify_tol_m\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct": "\"compute_maxbld_scenarios_trust_high_min_pass_pct\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm": "\"compute_maxbld_scenarios_unit_min_interior_sqm\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row",
+        "sys_velocity_rows_sec": 23.22,
+        "sys_duration_ms": 82748
+      }
+    }
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 4447,
+      "recorded_by": "step"
+    },
+    {
+      "id": 4448,
+      "recorded_by": "step"
+    }
+  ],
+  "source_fingerprint": "8d6d61988b1c290d5ee016e42b1d26a8150d580977c4f116edf6756081bf458a",
+  "fingerprint_files": [
+    "scripts/compute-maxbld-scenarios.descriptor.json",
+    "scripts/compute-maxbld-scenarios.js",
+    "scripts/compute-maxbld-scenarios.notes.json",
+    "scripts/lib/compute/compute-maxbld-scenarios.js"
+  ],
+  "lib_fingerprint": "22754c45371a1648b2a2fb850687b785dbae44d5d8b652d86fc11b5f8d03d3a3"
+}

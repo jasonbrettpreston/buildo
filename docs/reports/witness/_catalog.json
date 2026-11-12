@@ -1098,6 +1098,44 @@
       "id",
       "updated_at"
     ],
+    "parcel_maxbld_population": [
+      "added_at",
+      "cohort",
+      "parcel_id"
+    ],
+    "parcel_maxbld_scenarios": [
+      "building_type",
+      "catalogue_sha",
+      "computed_at",
+      "content_sha",
+      "field_id",
+      "flags",
+      "increment",
+      "layer2_table_version",
+      "parcel_id",
+      "reason",
+      "settings_sha",
+      "status",
+      "switchboard_sha",
+      "switches",
+      "trace",
+      "unit",
+      "value"
+    ],
+    "parcel_user_inputs": [
+      "entered_at",
+      "entered_by",
+      "id",
+      "input_key",
+      "parcel_id",
+      "reverted_at",
+      "reverted_by",
+      "source",
+      "status",
+      "typed_unit",
+      "typed_value",
+      "value_sqm"
+    ],
     "parcels": [
       "abuts_laneway",
       "addr_num_normalized",
