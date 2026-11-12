@@ -1,0 +1,32 @@
+MF-81 stress canaries red evidence (2026-11-12): src/tests/mctest/load.logic.test.ts.
+
+Red 1, before any implementation (scripts/mctest/lib.cjs without the MF-81 helpers, tests/load/stress.mjs absent): 17 of 17 failing.
+
+   × status classes (PLAN Layer 4) > keeps 429 and 403 REPORT_LIMIT_REACHED apart from errors 3ms
+   × status classes (PLAN Layer 4) > counts neither 429 nor 403 REPORT_LIMIT_REACHED as an error 0ms
+   × the load target (D-2 a: never production or Vercel) > accepts the local app 0ms
+   × the load target (D-2 a: never production or Vercel) > refuses production 0ms
+   × the load target (D-2 a: never production or Vercel) > refuses a Vercel host 0ms
+   × the load target (D-2 a: never production or Vercel) > refuses a remote address 0ms
+   × the load target (D-2 a: never production or Vercel) > refuses not a URL 0ms
+   × the app's environment (D-1 a) > points the app at the test stack and blanks inherited DB, Upstash and secret variables 0ms
+   × the app's environment (D-1 a) > refuses without the test stack 3ms
+   × pacing and lots (D-12 a) > gives each user its own fixed lots and never more than the allowance 0ms
+   × pacing and lots (D-12 a) > picks a request kind by the catalogue mix 0ms
+   × pacing and lots (D-12 a) > reads p50, p95 and p99 from the Node histogram in ms 1ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses the dev DB 54322 48ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses the dev sign-in 54321 49ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses no stack at all 49ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses a production target 54ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > plans a test-stack run, labelled LOCAL 59ms
+
+Red 2, the runner with its two refusals removed (the test-stack guard and the loopback-target guard). Run in --plan mode, which stops before any connection, so no DB or sign-in service was contacted: the four refusal cases fail, the plan case passes.
+
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses the dev DB 54322 38ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses the dev sign-in 54321 36ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses no stack at all 40ms
+   × the stress runner refuses before any connection (D-1 a, D-2 a) > refuses a production target 38ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 1 passed | 12 skipped (17)
+
+Green with both restored: 17 of 17 (src/tests/mctest: 5 files, 61 tests).

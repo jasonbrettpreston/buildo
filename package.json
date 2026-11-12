@@ -55,7 +55,8 @@
     "mctest:web": "playwright test",
     "mctest:sweep": "playwright test tests/e2e/lot-sweep.spec.ts",
     "mctest:report": "node scripts/mctest/report.mjs",
-    "mctest:nightly": "node scripts/mctest/nightly.mjs"
+    "mctest:nightly": "node scripts/mctest/nightly.mjs",
+    "mctest:load": "node tests/load/stress.mjs"
   },
   "lint-staged": {
     "src/features/leads/**/*.{ts,tsx}": [

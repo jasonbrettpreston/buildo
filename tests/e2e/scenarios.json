@@ -866,7 +866,9 @@
       "schedule": "nightly",
       "status": "waits",
       "owner": "MF-45",
-      "waits_on": "MF-81 (the runner)"
+      "waits_on": "MF-81: the seed go (MF-79), then the first LOCAL run; thresholds not ruled (operator, MF-33 pattern)",
+      "interval_s": 4,
+      "runner": "tests/load/stress.mjs"
     },
     {
       "id": "S-200",
@@ -885,7 +887,9 @@
       "schedule": "weekly",
       "status": "waits",
       "owner": "MF-45",
-      "waits_on": "MF-81 (the runner)"
+      "waits_on": "MF-81: the seed go (MF-79), then the first LOCAL run; thresholds not ruled (operator, MF-33 pattern)",
+      "interval_s": 4,
+      "runner": "tests/load/stress.mjs"
     },
     {
       "id": "S-500",
@@ -904,7 +908,9 @@
       "schedule": "weekly",
       "status": "waits",
       "owner": "MF-45",
-      "waits_on": "MF-81 (the runner)"
+      "waits_on": "MF-81: the seed go (MF-79), then the first LOCAL run; thresholds not ruled (operator, MF-33 pattern)",
+      "interval_s": 4,
+      "runner": "tests/load/stress.mjs"
     }
   ],
   "failure_drills": [

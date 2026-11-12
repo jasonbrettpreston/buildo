@@ -339,7 +339,103 @@ function emptyShown(payload, shown) {
     });
 }
 
+// ── MF-81 · stress (PLAN Layer 4; D-2 a, D-6 load a) ───────────────────────────────────────────────────────────────
+
+/** The class of one answer. 429 and 403 REPORT_LIMIT_REACHED are their own classes, never errors (PLAN Layer 4). */
+function statusClass(status, code) {
+  if (!status) return "network";
+  if (status >= 200 && status < 300) return "2xx";
+  if (status === 401) return "401";
+  if (status === 403)
+    return code === "REPORT_LIMIT_REACHED"
+      ? "403_REPORT_LIMIT_REACHED"
+      : "403_other";
+  if (status === 429) return "429";
+  if (status >= 500) return "5xx";
+  return "4xx_other";
+}
+const ERROR_CLASSES = ["401", "403_other", "4xx_other", "5xx", "network"];
+/** Errors over all answers; 429 and 403 REPORT_LIMIT_REACHED count as answers, never as errors. */
+function errorRate(counts) {
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  if (!total) return 0;
+  return ERROR_CLASSES.reduce((a, k) => a + (counts[k] ?? 0), 0) / total;
+}
+
+/** The app under load must be a loopback http app: never production, Vercel or any remote host (D-2 a). */
+function loadTarget(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return { ok: false, reason: "the target is not a URL" };
+  }
+  if (u.protocol !== "http:" || !LOOPBACK.has(u.hostname))
+    return { ok: false, reason: "the target is not a local app" };
+  return { ok: true };
+}
+
+/** Inherited variables that could point the app at another DB, sign-in service or limiter store: blanked, then set to the stack. */
+const APP_BLANKED = /^(POSTGRES|DATABASE|ALT_DATABASE|SUPABASE|UPSTASH|PG)/;
+/**
+ * The environment of the app the stress runner builds and starts: the test stack only (D-1 a); throws "refused: ..." otherwise.
+ * @param {Record<string, string | undefined>} env
+ * @returns {Record<string, string | undefined>}
+ */
+function appEnv(env) {
+  const stack = testStack(env);
+  if (!stack.ok) throw new Error(`refused: ${stack.reason}`);
+  const out = {};
+  for (const [k, v] of Object.entries(env))
+    if (!k.startsWith("MCTEST_")) out[k] = APP_BLANKED.test(k) ? "" : v;
+  return {
+    ...out,
+    DATABASE_URL: env.MCTEST_DATABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL: env.MCTEST_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: env.MCTEST_SUPABASE_ANON_KEY,
+    DEV_MODE: "false",
+    NEXT_PUBLIC_DEV_MODE: "false",
+  };
+}
+
+/** User n's fixed lots (D-12 a): never more than `per`, so a user never passes its allowance; a short sample wraps. */
+function userLots(lots, n, per) {
+  return Array.from(
+    { length: per },
+    (_, i) => lots[(n * per + i) % lots.length],
+  );
+}
+
+/** The request kind for a draw x in [0, 1) by the catalogue mix ({ kind: share }). */
+function pickKind(x, mix) {
+  let acc = 0;
+  const kinds = Object.entries(mix);
+  for (const [kind, share] of kinds) {
+    acc += share;
+    if (x < acc) return kind;
+  }
+  return kinds[kinds.length - 1][0];
+}
+
+/** p50 / p95 / p99 in ms from a Node RecordableHistogram holding microseconds. */
+function summarize(h) {
+  const ms = (p) => (h.count ? h.percentile(p) / 1000 : null);
+  return {
+    count: h.count,
+    p50_ms: ms(50),
+    p95_ms: ms(95),
+    p99_ms: ms(99),
+  };
+}
+
 module.exports = {
+  statusClass,
+  errorRate,
+  loadTarget,
+  appEnv,
+  userLots,
+  pickKind,
+  summarize,
   errorClass,
   getPath,
   evalBound,
