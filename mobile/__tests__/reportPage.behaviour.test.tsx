@@ -27,6 +27,9 @@ const rj = (p: string): Json => JSON.parse(fs.readFileSync(path.join(REPO, p), '
 const view = (state: string): PageView => rj(`src/tests/fixtures/report-page/props/${state}.mobile.json`).view as PageView;
 const lifecycle = ((rj('scripts/surfaces/_schema/report-presentation.json').states as Json).lifecycle) as Record<string, string>;
 const CONTENT: Record<string, string> = Object.fromEntries(LIFECYCLE_CONTENT_KEYS.map((k) => [k, lifecycle[k.split('.')[2] as string] as string]));
+// 2026-11-11 MF-62 follow-up: the legal line is the operator-ruled short disclaimer (open-questions.md; pre-approved decision D-45), read from the
+// report presentation page texts the captured page views carry (`page["legal.line"]`), instead of the old by-law sentence.
+const LEGAL_LINE = ((rj('scripts/surfaces/_schema/report-presentation.json').page as Json)['legal.line']) as string;
 const show = (state: string) => render(<ReportPageHost view={view(state)} lifecycle="loading" content={CONTENT} />);
 const sheetIndex = (): unknown => screen.UNSAFE_getByType(BottomSheet).props.index;
 const label = (id: string): string => within(screen.getByTestId(id)).getAllByText(/.+/).map((t) => String(t.props.children)).join('|');
@@ -35,7 +38,7 @@ describe('MF-48 mobile REPORT render smoke (FE-33 mobile REPORT case)', () => {
   it.each(['page_v21', 'page_option_hidden', 'page_not_evaluated', 'page_no_ad', 'page_all_null'])('%s renders through the host with the legal line and the lot-size box', (s) => {
     show(s);
     expect(screen.getByTestId('report-page')).toBeTruthy();
-    expect(screen.getByText(/^Based on our reading of Toronto zoning by-laws\./)).toBeTruthy();
+    expect(screen.getByText(LEGAL_LINE)).toBeTruthy();
     expect(screen.getByTestId('report-lot-size-open')).toBeTruthy();
     expect(screen.getByTestId('report-sheet')).toBeTruthy();
   });
