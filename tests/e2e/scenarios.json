@@ -1,0 +1,941 @@
+{
+  "$comment": "McTest scenario catalogue (FE-40; Spec 126 §0b item 10; DECISIONS D-7 a: the one source; the YAML in ~/Buildo-scratch/mctest/ was the review copy). Data first: adding a case means adding a row; no test code names a case. Every row has id, status (active | waits) and owner (the task a failure is routed to). A waits row names waits_on and shows as WAITS, never PASS or FAIL. An active runnable row names its runner (a repo file). A run without the test stack shows SKIP with the reason. Lock: src/tests/mctest/catalogue.infra.test.ts.",
+  "version": 2,
+  "source_ref": "origin/wf1/mb-rulings@8b651c128",
+  "statuses": [
+    "active",
+    "waits"
+  ],
+  "personas": [
+    {
+      "id": "anonymous",
+      "entitlement": null,
+      "expect": {
+        "search_page": "redirect_sign_in",
+        "lookup_api": 401
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "signed_in_no_plan",
+      "email": "mctest-noplan@mctest.test",
+      "entitlement": null,
+      "expect": {
+        "search_page": "refused",
+        "lookup_api": "403_SUBSCRIPTION_REQUIRED"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "new_trial",
+      "email": "mctest-trial@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "trial",
+        "reports_used": 0
+      },
+      "limit_key": "parcel_tool_report_limit_trial",
+      "expect": {
+        "search_page": "shown",
+        "new_lot": "counted"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "paid",
+      "email": "mctest-paid@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "reports_used": 1
+      },
+      "limit_key": "parcel_tool_report_limit_plan",
+      "expect": {
+        "search_page": "shown",
+        "new_lot": "counted",
+        "same_lot_again": "already_counted"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "paid_basic",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "tier": "basic"
+      },
+      "status": "waits",
+      "owner": "MF-47",
+      "waits_on": "MF-47 (D-9 a: tiers not ruled)"
+    },
+    {
+      "id": "paid_pro",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "tier": "pro"
+      },
+      "status": "waits",
+      "owner": "MF-47",
+      "waits_on": "MF-47 (D-9 a: tiers not ruled)"
+    },
+    {
+      "id": "at_limit",
+      "email": "mctest-atlimit@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "reports_used": "=limit"
+      },
+      "expect": {
+        "new_lot": "403_REPORT_LIMIT_REACHED",
+        "already_counted_lot": "shown"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "over_cap",
+      "email": "mctest-overcap@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "reports_used": "=limit+3"
+      },
+      "expect": {
+        "new_lot": "403_REPORT_LIMIT_REACHED",
+        "already_counted_lot": "shown",
+        "usage_shown": "never negative remaining"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "past_due",
+      "email": "mctest-pastdue@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "past_due"
+      },
+      "expect": {
+        "search_page": "shown",
+        "new_lot": "counted"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "cancelled",
+      "email": "mctest-cancelled@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "expired"
+      },
+      "expect": {
+        "search_page": "refused",
+        "lookup_api": "403_SUBSCRIPTION_REQUIRED",
+        "plan_link": "web_portal"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "deleted",
+      "email": "mctest-deleted@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "cancelled_pending_deletion"
+      },
+      "expect": {
+        "sign_in": "refused_or_reactivate_offer",
+        "lookup_api": 403
+      },
+      "status": "active",
+      "owner": "MF-52"
+    },
+    {
+      "id": "admin_managed",
+      "email": "mctest-adminmanaged@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "admin_managed"
+      },
+      "expect": {
+        "search_page": "shown",
+        "new_lot": "counted"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "lead_gen_only",
+      "email": "mctest-leadgen@mctest.test",
+      "entitlement": {
+        "product": "lead_gen",
+        "status": "active"
+      },
+      "expect": {
+        "lookup_api": 200,
+        "meter": "unmetered"
+      },
+      "status": "active",
+      "owner": "MF-50"
+    },
+    {
+      "id": "admin",
+      "email": "mctest-admin@mctest.test",
+      "role": "admin",
+      "status": "active",
+      "owner": "MF-30"
+    },
+    {
+      "id": "sweep_pool",
+      "count": 50,
+      "email_pattern": "mctest-sweep-{n}@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active"
+      },
+      "status": "active",
+      "owner": "MF-45"
+    },
+    {
+      "id": "stress_pool",
+      "count": 500,
+      "email_pattern": "mctest-load-{n}@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "reports_used": 0
+      },
+      "status": "active",
+      "owner": "MF-45"
+    }
+  ],
+  "journeys": [
+    {
+      "id": "J-WEB-FULL",
+      "platform": "web",
+      "personas": [
+        "new_trial",
+        "paid",
+        "at_limit",
+        "over_cap",
+        "cancelled",
+        "deleted"
+      ],
+      "steps": [
+        {
+          "step": "landing",
+          "route": "/",
+          "owner": "MF-76",
+          "status": "waits",
+          "waits_on": "MF-79 (the runner); built on origin by MF-76 (maxbld.ca /)"
+        },
+        {
+          "step": "sign_up",
+          "route": "/signup",
+          "owner": "MF-46",
+          "status": "waits",
+          "waits_on": "MF-79 (the runner); built on origin by MF-46 (maxbld.ca /signup)"
+        },
+        {
+          "step": "sign_in",
+          "route": "/login",
+          "owner": "MF-46",
+          "status": "waits",
+          "waits_on": "MF-79 (the runner)"
+        },
+        {
+          "step": "checkout",
+          "route": "/subscribe",
+          "owner": "MF-47",
+          "status": "waits",
+          "waits_on": "MF-47 (not built)"
+        },
+        {
+          "step": "search",
+          "route": "/parcel-tool",
+          "owner": "MF-44",
+          "status": "waits",
+          "waits_on": "MF-79 (the runner)"
+        },
+        {
+          "step": "choose_lot",
+          "route": "/parcel-tool (map)",
+          "owner": "MF-44",
+          "status": "waits",
+          "waits_on": "MF-44 (not built)"
+        },
+        {
+          "step": "processing",
+          "route": "/parcel-tool/[parcelId]",
+          "owner": "MF-48",
+          "status": "waits",
+          "waits_on": "MF-48 (the report on the lot route; that part is held as MF-74 by an unpushed lane, not yet a queue row on origin)"
+        },
+        {
+          "step": "report",
+          "route": "/parcel-tool/[parcelId]",
+          "owner": "MB-44",
+          "status": "waits",
+          "waits_on": "MB-44 (not built)"
+        },
+        {
+          "step": "track_lot",
+          "route": "tracked (W7, not set)",
+          "owner": "MF-51",
+          "status": "waits",
+          "waits_on": "MF-51 (not built)"
+        },
+        {
+          "step": "account",
+          "route": "account (W8, not set)",
+          "owner": "MF-52",
+          "status": "waits",
+          "waits_on": "MF-52 (not built)"
+        },
+        {
+          "step": "delete_account",
+          "route": "account (W8, not set)",
+          "owner": "MF-52",
+          "status": "waits",
+          "waits_on": "MF-52 (not built)"
+        }
+      ],
+      "host": "maxbld.ca"
+    },
+    {
+      "id": "J-API",
+      "platform": "api",
+      "personas": [
+        "anonymous",
+        "signed_in_no_plan",
+        "new_trial",
+        "paid",
+        "at_limit",
+        "over_cap",
+        "past_due",
+        "cancelled",
+        "deleted"
+      ],
+      "steps": [
+        {
+          "step": "entitlement",
+          "call": "GET /api/parcels/entitlement",
+          "owner": "MF-45",
+          "status": "waits",
+          "waits_on": "MF-79 (the runner)"
+        },
+        {
+          "step": "search",
+          "call": "GET /api/parcels/lookup?q={address}",
+          "owner": "MF-35",
+          "status": "waits",
+          "waits_on": "MF-79 (the runner)"
+        },
+        {
+          "step": "open_lot",
+          "call": "GET /api/parcels/lookup?parcelId={id}",
+          "owner": "MF-45",
+          "status": "waits",
+          "expect_meter": "counted",
+          "waits_on": "MF-79 (the runner)"
+        },
+        {
+          "step": "reopen_lot",
+          "call": "GET /api/parcels/lookup?parcelId={same id}",
+          "owner": "MF-45",
+          "status": "waits",
+          "expect_meter": "already_counted",
+          "waits_on": "MF-79 (the runner)"
+        },
+        {
+          "step": "new_lot_at_cap",
+          "call": "GET /api/parcels/lookup?parcelId={new id}",
+          "owner": "MF-45",
+          "status": "waits",
+          "personas_only": [
+            "at_limit",
+            "over_cap"
+          ],
+          "waits_on": "MF-79 (the runner)"
+        }
+      ]
+    },
+    {
+      "id": "J-PIN",
+      "platform": "web",
+      "personas": [
+        "paid"
+      ],
+      "steps": [
+        {
+          "step": "report_follows_live_switch",
+          "route": "/parcel-tool/{any id}",
+          "expect": "404 while MAXBLD_WEB_LIVE is false (read from src/lib/surfaces/maxbld-web.ts, never hard-coded); result labelled gate-only",
+          "owner": "MF-44",
+          "status": "waits",
+          "waits_on": "MF-79 (the runner)"
+        }
+      ]
+    },
+    {
+      "id": "J-PHONE",
+      "platform": "ios",
+      "personas": [
+        "new_trial",
+        "paid",
+        "at_limit",
+        "cancelled"
+      ],
+      "steps": [
+        {
+          "step": "sign_in",
+          "screen": "(auth)/sign-in",
+          "owner": "MF-49",
+          "status": "waits",
+          "waits_on": "MF-82 (D-4: no simulator)"
+        },
+        {
+          "step": "search",
+          "screen": "(app)/parcel-tool/index",
+          "owner": "MF-35",
+          "status": "waits",
+          "waits_on": "MF-82 (D-4: no simulator)"
+        },
+        {
+          "step": "choose_lot",
+          "screen": "(app)/parcel-tool/disambiguate",
+          "owner": "MF-53",
+          "status": "waits",
+          "waits_on": "MF-82 (D-4: no simulator)"
+        },
+        {
+          "step": "processing",
+          "screen": "(app)/parcel-tool/[parcelId]",
+          "owner": "MF-48",
+          "status": "waits",
+          "waits_on": "MF-48 (the report on the lot route; that part is held as MF-74 by an unpushed lane, not yet a queue row on origin)"
+        },
+        {
+          "step": "report",
+          "screen": "(app)/parcel-tool/[parcelId]",
+          "owner": "MF-48",
+          "status": "waits",
+          "waits_on": "MF-82 (D-4: no simulator)"
+        },
+        {
+          "step": "track_lot",
+          "screen": "(app)/parcel-tool/tracked",
+          "owner": "MF-51",
+          "status": "waits",
+          "waits_on": "MF-82 (D-4: no simulator)"
+        },
+        {
+          "step": "account",
+          "screen": "(app)/parcel-tool/account",
+          "owner": "MF-52",
+          "status": "waits",
+          "waits_on": "MF-82 (D-4: no simulator)"
+        },
+        {
+          "step": "delete_account",
+          "screen": "(app)/parcel-tool/account",
+          "owner": "MF-52",
+          "status": "waits",
+          "waits_on": "MF-82 (D-4: no simulator)"
+        }
+      ]
+    }
+  ],
+  "crawler": {
+    "id": "C-DEAD-WIRE",
+    "status": "waits",
+    "waits_on": "MF-79 (the runner)",
+    "owner": "MF-32",
+    "maxbld_pages_source": "src/lib/auth/host-policy.ts MAXBLD_ROUTES (the maxbld.ca host table; API rows excluded)",
+    "admin_pages": [
+      {
+        "route": "/admin/report-preview",
+        "spec": "126 §11b.7 D1"
+      },
+      {
+        "route": "/admin/media",
+        "spec": "126 §11b.7 D2 (MF-37)"
+      },
+      {
+        "route": "/admin/placements",
+        "spec": "126 §11b.7 D3 (MF-40)"
+      },
+      {
+        "route": "/admin/parcel-cost",
+        "spec": "126 §11b.7 D4"
+      },
+      {
+        "route": "/admin/lot-size",
+        "spec": "src/app/(maxbld)/admin/lot-size (report_lot_size_entry)"
+      }
+    ],
+    "gate_only_switch": "src/lib/surfaces/maxbld-web.ts MAXBLD_WEB_LIVE (false: /parcel-tool pages prove the gate only)",
+    "sample_parcel_id": "from L-RANDOM on the test stack; without it the dynamic page is called with \"0\" (gate-only)",
+    "personas": [
+      "anonymous",
+      "new_trial",
+      "admin"
+    ],
+    "known_nav_violations": {
+      "audit_rows": [
+        3,
+        15,
+        16,
+        22,
+        29,
+        30
+      ],
+      "source": "~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md; owners MF-46, MF-48/MF-74, MF-49"
+    },
+    "fail_on": {
+      "http_status_min": 400,
+      "page_error": true,
+      "console_error": true,
+      "visible_text_regex": "\\b(undefined|null|NaN)\\b|\\[object Object\\]|Invalid Date"
+    },
+    "destructive_controls": {
+      "press_only_as": [
+        "deleted"
+      ],
+      "stack": "test"
+    },
+    "owner_rule": "the surface's queue row in Spec 126 §11b.3 / §11b.7; else MF-32 (convert on touch)"
+  },
+  "lot_cases": [
+    {
+      "id": "L-RANDOM",
+      "count": 1000,
+      "where": "p.zoning_class IS NOT NULL",
+      "how": "lookup ?q=<address_full>; assert it lands on the same parcel_id, then check the bounds and the shown fields",
+      "expect": {
+        "resolution": "unique",
+        "lands_on_same_parcel": true,
+        "schema_parses": true,
+        "no_empty_shown_field": true
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "L-HERITAGE",
+      "count": 25,
+      "where": "is_heritage_designated",
+      "pool": 10616,
+      "expect": {
+        "disclosure": "heritage"
+      },
+      "owner": "MB-44",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (the consumer whitelist excludes these columns, consumer-lookup.ts:37-38)"
+    },
+    {
+      "id": "L-RAVINE",
+      "count": 25,
+      "where": "is_in_ravine_protection_area",
+      "pool": 33006,
+      "expect": {
+        "disclosure": "ravine"
+      },
+      "owner": "MB-44",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (the consumer whitelist excludes these columns, consumer-lookup.ts:37-38)"
+    },
+    {
+      "id": "L-EXCEPTION",
+      "count": 25,
+      "where": "exception_number is not null",
+      "pool": 369209,
+      "expect": {
+        "exception_cited": true
+      },
+      "owner": "MB-44",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (the consumer whitelist excludes these columns, consumer-lookup.ts:37-38)"
+    },
+    {
+      "id": "L-NOT-EVALUATED",
+      "count": 25,
+      "where": "zoning_class is null",
+      "pool": 17829,
+      "expect": {
+        "status_prefix": "not_evaluated:"
+      },
+      "owner": "MB-44",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (the consumer whitelist excludes these columns, consumer-lookup.ts:37-38)"
+    },
+    {
+      "id": "L-AMBIGUOUS-ZONE",
+      "count": 25,
+      "where": "zoning_is_ambiguous",
+      "pool": 958,
+      "expect": {
+        "disclosure_or_not_evaluated": true
+      },
+      "owner": "MB-44",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (the consumer whitelist excludes these columns, consumer-lookup.ts:37-38)"
+    },
+    {
+      "id": "L-CORNER",
+      "count": 25,
+      "where": "is_corner_lot",
+      "pool": 55901,
+      "expect": {
+        "street_side_yard_applied": true
+      },
+      "owner": "MB-27",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (the consumer whitelist excludes these columns, consumer-lookup.ts:37-38)"
+    },
+    {
+      "id": "L-GOLDEN-25",
+      "count": 25,
+      "where": "the McBylaws 25 golden cases (answer key)",
+      "expect": {
+        "numbers_equal_answer_key": true
+      },
+      "owner": "MF-22",
+      "status": "waits",
+      "waits_on": "MF-22 (the answer-key run)"
+    },
+    {
+      "id": "L-MULTI-LOT-ADDRESS",
+      "count": 25,
+      "select": "multi_parcel_address",
+      "expect": {
+        "resolution": "multi_parcel",
+        "map_lots_min": 2
+      },
+      "owner": "MF-53",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "L-UNLINKED",
+      "count": 10,
+      "select": "unlinked_address",
+      "expect": {
+        "resolution": "unlinked"
+      },
+      "owner": "MF-53",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "L-NO-LOT",
+      "count": 10,
+      "rule": "a real linear_name_full from address_points (retired_at is null) with a number outside every lo_num..hi_num on that street",
+      "expect": {
+        "resolution": "no_match"
+      },
+      "owner": "MF-35",
+      "status": "waits",
+      "waits_on": "MF-80 second pass (the selection query)"
+    },
+    {
+      "id": "L-INTERSECTION",
+      "count": 10,
+      "rule": "'<street> and <street>' from toronto_centreline intersection pairs",
+      "expect": {
+        "resolution": "no_match"
+      },
+      "owner": "MF-60",
+      "status": "waits",
+      "waits_on": "MF-80 second pass (the selection query)"
+    },
+    {
+      "id": "L-RENOVATION-NO-INPUT",
+      "count": 25,
+      "rule": "a random in-scope lot with no existing-house input",
+      "expect": {
+        "renovation_status": "not_evaluated:no_existing_house",
+        "renovation_rows_stored": 0
+      },
+      "owner": "MB-27",
+      "status": "waits",
+      "waits_on": "MB-27 increment 6 (McStorage strategy ST-4)"
+    },
+    {
+      "id": "L3B-HEADLINE-EQUALS-DETAIL",
+      "count": 1000,
+      "rule": "per sampled lot: the stored per-option headline (status, reason, size, units, flags, confidence, cost via Spec 88) and the on-demand detail",
+      "expect": {
+        "headline_field": "a value or a closed not_evaluated:<reason>",
+        "detail_headline_equals_stored": true,
+        "content_sha_matches": true
+      },
+      "owner": "MB-38",
+      "status": "waits",
+      "waits_on": "MB-35, MB-38, MB-44, MF-74 (the headline table and the on-demand detail do not exist yet; McStorage strategy ST-5)"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "B-W0-FSI-ZONE",
+      "lhs": "parcel.areas.max_build_fsi",
+      "rhs": [
+        "db.zone_d"
+      ],
+      "tol": 0.005,
+      "owner": "MB-38",
+      "source": "W-0 (a) 2026-11-12; D-11 a: the zone limit is the zone string d",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "B-W1-GFA-FSI",
+      "lhs": "parcel.areas.opt_aor_gfa_sqm",
+      "rhs": [
+        "db.zone_d",
+        "parcel.areas.lot_size_sqm"
+      ],
+      "tol": 0.5,
+      "owner": "MB-38",
+      "source": "W-1 (a) 2026-11-12: GFA <= FSI x lot",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "B-W1-GFA-STOREYS",
+      "lhs": "parcel.areas.opt_aor_gfa_sqm",
+      "rhs": [
+        "parcel.areas.max_buildable_footprint_sqm",
+        "parcel.areas.opt_aor_storeys"
+      ],
+      "tol": 0.5,
+      "owner": "MB-38",
+      "source": "W-1 (a) 2026-11-12: GFA <= footprint x storeys (no cited attic or basement basis on the legacy fields)",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "B-FOOTPRINT-LOT",
+      "lhs": "parcel.areas.max_buildable_footprint_sqm",
+      "rhs": [
+        "parcel.areas.lot_size_sqm"
+      ],
+      "tol": 0.5,
+      "owner": "MB-44",
+      "source": "INV-LOT",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "B-FOOTPRINT-COVERAGE",
+      "lhs": "parcel.areas.max_buildable_footprint_sqm",
+      "rhs": [
+        "parcel.areas.lot_size_sqm",
+        "db.coverage_frac"
+      ],
+      "tol": 0.5,
+      "owner": "MB-44",
+      "source": "INV-COVERAGE",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "B-W1-FOOTPRINT-ENVELOPE",
+      "lhs": "footprint shown",
+      "rhs": [
+        "depth",
+        "buildable width"
+      ],
+      "owner": "MB-44",
+      "source": "W-1 (a); INV-ENVELOPE",
+      "status": "waits",
+      "waits_on": "MB-44 (parcels has only bylaw_standard_setback_m; the setback fields arrive with MB-44)"
+    },
+    {
+      "id": "INV-HONEST",
+      "rule": "scripts/surfaces/report-checks.mjs honestProblems(tree) is empty",
+      "owner": "MF-14",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (no live REPORT tree)"
+    },
+    {
+      "id": "INV-BANNED-WORDS",
+      "rule": "no assurance word from the McBylaws vocabulary (Spec 68 rule 12) and no undefined, null, NaN, [object Object] (D-8 a)",
+      "owner": "MF-14",
+      "status": "waits",
+      "waits_on": "L3b: MB-44 and MF-74 (no live REPORT tree)"
+    }
+  ],
+  "checks": [
+    {
+      "id": "S-STORAGE",
+      "schedule": "nightly",
+      "read_only": true,
+      "tables": [
+        "bylaw_resolution_units",
+        "bylaw_resolution_texts",
+        "bylaw_resolution_lots"
+      ],
+      "tables_source": "scripts/lib/compute/resolve-bylaws.js TABLES",
+      "stop_source": "docs/reports/storage-gates/MB-27L2-G-STOR.json stop_mib",
+      "budget_setting": "resolve_bylaws_storage_budget_mb",
+      "warn_ratio": 0.6,
+      "later_tables": [
+        "parcel_maxbld_scenarios"
+      ],
+      "expect": "Layer 2 <= stop_mib; Layer 2 + Layer 3 <= the budget setting; WARN at 0.60 of the budget (McStorage strategy ST-3)",
+      "owner": "MB-27",
+      "status": "waits",
+      "waits_on": "MF-80 (the runner)"
+    },
+    {
+      "id": "S-DETAIL-LATENCY",
+      "budget_setting": "mctest_detail_latency_p95_ms",
+      "budget_ruling": "operator 2026-11-12, verbatim \"latency 1\": p95 <= 1 s to open a See-details sheet, an admin setting read by the check",
+      "measure": [
+        "p50_ms",
+        "p95_ms",
+        "p99_ms"
+      ],
+      "also_under": [
+        "S-50",
+        "S-200",
+        "S-500"
+      ],
+      "owner": "MB-38",
+      "status": "waits",
+      "waits_on": "MB-38 (the on-demand detail path; the admin preview may expose it earlier via MB-93). The admin setting lands with the check."
+    }
+  ],
+  "stress_profiles": [
+    {
+      "id": "S-50",
+      "concurrent_users": 50,
+      "warmup_s": 30,
+      "hold_s": 120,
+      "mix": {
+        "search_q": 0.6,
+        "open_lot": 0.3,
+        "entitlement": 0.1
+      },
+      "pacing": "arrival_rate_under_per_user_limits",
+      "measure": [
+        "p50_ms",
+        "p95_ms",
+        "p99_ms",
+        "error_rate",
+        "rps",
+        "db_connections_max",
+        "pool_wait_ms"
+      ],
+      "classes_reported_separately": [
+        429,
+        "403_REPORT_LIMIT_REACHED"
+      ],
+      "thresholds": {
+        "p95_ms": null,
+        "error_rate": null
+      },
+      "schedule": "nightly",
+      "status": "waits",
+      "owner": "MF-45",
+      "waits_on": "MF-81 (the runner)"
+    },
+    {
+      "id": "S-200",
+      "concurrent_users": 200,
+      "warmup_s": 30,
+      "hold_s": 120,
+      "mix": {
+        "search_q": 0.6,
+        "open_lot": 0.3,
+        "entitlement": 0.1
+      },
+      "thresholds": {
+        "p95_ms": null,
+        "error_rate": null
+      },
+      "schedule": "weekly",
+      "status": "waits",
+      "owner": "MF-45",
+      "waits_on": "MF-81 (the runner)"
+    },
+    {
+      "id": "S-500",
+      "concurrent_users": 500,
+      "warmup_s": 30,
+      "hold_s": 120,
+      "mix": {
+        "search_q": 0.6,
+        "open_lot": 0.3,
+        "entitlement": 0.1
+      },
+      "thresholds": {
+        "p95_ms": null,
+        "error_rate": null
+      },
+      "schedule": "weekly",
+      "status": "waits",
+      "owner": "MF-45",
+      "waits_on": "MF-81 (the runner)"
+    }
+  ],
+  "failure_drills": [
+    {
+      "id": "F-DB-SLOW",
+      "inject": "test stack only: statement_timeout lowered for the app role, or a held pg_sleep lock on parcels",
+      "expect": "sanitised 5xx within the route timeout; nothing metered; error logged",
+      "status": "waits",
+      "owner": "MF-45",
+      "waits_on": "MF-81 (the runner)"
+    },
+    {
+      "id": "F-DB-DOWN",
+      "inject": "stop the test-stack Postgres container",
+      "expect": "lookup fails closed: no report, no meter; page shows its error state",
+      "status": "waits",
+      "owner": "MF-45",
+      "waits_on": "MF-81 (the runner)"
+    },
+    {
+      "id": "F-SESSION-EXPIRED",
+      "inject": "revoke the persona's session in the test-stack auth mid-journey",
+      "expect": "401; web returns to sign-in; no stale report shown",
+      "status": "waits",
+      "owner": "MF-46",
+      "waits_on": "MF-81 (the runner)"
+    },
+    {
+      "id": "F-CAP-REACHED",
+      "inject": "persona at_limit opens a new lot",
+      "expect": "403 REPORT_LIMIT_REACHED with the reset date; already-counted lot still opens",
+      "status": "waits",
+      "owner": "MF-45",
+      "waits_on": "MF-81 (the runner)"
+    },
+    {
+      "id": "F-OFFLINE-MID-REPORT",
+      "inject": "Maestro: open a report, turn the simulator network off, then on",
+      "expect": "offline state; nothing half-drawn; recovers on reconnect",
+      "status": "waits",
+      "owner": "MF-48",
+      "waits_on": "MF-82 (D-4: no simulator)"
+    },
+    {
+      "id": "F-STRIPE-WEBHOOK",
+      "inject": "Stripe CLI test mode: bad signature; duplicate event; out-of-order event; first delivery 500 then retry",
+      "expect": "400 on bad signature; duplicate ignored; entitlement correct after the retry",
+      "status": "waits",
+      "owner": "MF-47",
+      "waits_on": "MF-47 (Stripe test mode)"
+    }
+  ]
+}

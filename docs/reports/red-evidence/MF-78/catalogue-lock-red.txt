@@ -1,0 +1,12 @@
+MF-78 red evidence (2026-11-12): src/tests/mctest/catalogue.infra.test.ts run against a stub catalogueProblems() that returns [] (scripts/mctest/lib.cjs). Every planted-fault case fails; the two real-catalogue cases pass. Then green with the real function: 10 of 10.
+
+   × McTest catalogue (FE-40) > fails on an unknown status 2ms
+   × McTest catalogue (FE-40) > fails on an owner that is not a queue task 0ms
+   × McTest catalogue (FE-40) > fails on a step with no owner 0ms
+   × McTest catalogue (FE-40) > fails on a waits row with no reason 0ms
+   × McTest catalogue (FE-40) > fails on an active row with no runner 0ms
+   × McTest catalogue (FE-40) > fails on an active row whose runner is missing 0ms
+   × McTest catalogue (FE-40) > fails on a duplicate id 0ms
+   × McTest catalogue (FE-40) > fails on a real-looking email 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  8 failed | 2 passed (10)
