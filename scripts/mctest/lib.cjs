@@ -103,6 +103,28 @@ function catalogueProblems(cat, { ownerIds, fileExists }) {
       if (!/@[a-z0-9.-]+\.test$/.test(e))
         problems.push(`${where}: ${e} is not a .test address`);
   }
+  for (const b of cat.bounds ?? [])
+    if (
+      b.status === "active" &&
+      !(
+        typeof b.lhs === "string" &&
+        Array.isArray(b.rhs) &&
+        b.rhs.length &&
+        typeof b.tol === "number"
+      )
+    )
+      problems.push(
+        `bounds/${b.id}: an active bound needs lhs, rhs[] and a numeric tol`,
+      );
+  const c = cat.crawler ?? {};
+  for (const [page, owner] of [
+    ...Object.entries(c.page_owners ?? {}),
+    ...(c.admin_pages ?? []).map((a) => [a.route, a.owner]),
+  ])
+    if (!ownerIds.has(owner))
+      problems.push(
+        `crawler page ${page}: owner ${JSON.stringify(owner)} is not a queue task`,
+      );
   return problems;
 }
 
@@ -120,7 +142,10 @@ const DEV_PORTS = {
  * { ok: true } or { ok: false, reason } — absent, unparsable, not loopback, or the dev stack's port are all refusals.
  */
 function testStack(env) {
-  const missing = Object.keys(DEV_PORTS).filter((k) => !env[k]);
+  const missing = [
+    ...Object.keys(DEV_PORTS),
+    "MCTEST_SUPABASE_ANON_KEY",
+  ].filter((k) => !env[k]);
   if (missing.length)
     return {
       ok: false,
@@ -173,9 +198,24 @@ function result({
   };
 }
 
-/** A failure's fingerprint: scenario row + case + error class (the detail's first word), so one class makes one card. */
-const fingerprint = (r) =>
-  `${r.row}|${r.case}|${String(r.detail).split(/[\s:]/)[0]}`;
+/**
+ * The error class of a failure detail: its first segment that is not a generic console line, with URLs and paths removed, so one
+ * cause on many pages or personas is one class (OUTPUT panel, observability F3).
+ */
+function errorClass(detail) {
+  const parts = String(detail).split(" | ");
+  const first =
+    parts.find((p) => !p.startsWith("console_error")) ?? parts[0] ?? "";
+  return first
+    .split("\n")[0]
+    .replace(/\S*[/\\]\S*/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+}
+
+/** A failure's fingerprint: scenario row + error class (PLAN §6). The cases that share it are listed on one card. */
+const fingerprint = (r) => `${r.row}|${errorClass(r.detail)}`;
 
 /** The WAITS lines for every waits row and step (shown, never PASS or FAIL). */
 function waitsResults(cat) {
@@ -202,13 +242,17 @@ function hash(s) {
 }
 
 /** A failure card for the orchestrator (PLAN §6): routed to the owning task; McTest never edits a queue file. */
-function cardText(r, { sha, runDir, firstSeen, lastSeen }) {
+function cardText(
+  r,
+  { sha, runDir, firstSeen, lastSeen, ownerLine = undefined, cases = [r.case] },
+) {
   return [
     `# McTest failure: ${r.row}`,
     "",
     `- Fingerprint: \`${fingerprint(r)}\``,
-    `- Owning task: ${r.owner} (route as a dated note on that row, Spec 126 §0b item 1)`,
-    `- Case: ${r.case}`,
+    ownerLine ??
+      `- Owning task: ${r.owner} (route as a dated note on that row, Spec 126 §0b item 1)`,
+    `- Cases (${cases.length}): ${cases.slice(0, 20).join("; ")}`,
     `- What failed: ${r.detail}`,
     `- Labels: ${r.label || "none"}`,
     `- Ref: ${sha}`,
@@ -234,14 +278,17 @@ function resultsPage(results, { sha, stamp, stackReason }) {
   );
   const n = (s) => results.filter((r) => r.status === s).length;
   const tr = (r) =>
-    `<tr class="${r.status}"><td>${r.status}</td><td>${esc(r.row)}</td><td>${esc(r.case)}</td><td>${esc(r.owner)}</td><td>${esc(r.label)}</td><td>${esc(r.detail)}</td></tr>`;
+    `<tr class="${r.status}"><td>${r.status}</td><td>${esc(r.row)}</td><td>${esc(r.case)}</td><td>${esc(r.owner)}</td><td>${esc(r.label)}</td><td>${esc(r.detail)}</td><td><code>${esc(r.replay)}</code></td></tr>`;
+  const noDb = results.filter(
+    (r) => r.status === "PASS" && /no-DB/.test(r.label),
+  ).length;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>McTest run ${esc(stamp)}</title>
 <style>:root{--bg:#fff;--fg:#1a1a1a;--line:#ddd;--fail:#b3261e;--pass:#1e7b34;--muted:#666}@media (prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eee;--line:#333;--fail:#ff8a80;--pass:#7bd88f;--muted:#aaa}}
 body{background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
 tr.FAIL td:first-child{color:var(--fail);font-weight:600}tr.PASS td:first-child{color:var(--pass)}tr.WAITS td,tr.SKIP td{color:var(--muted)}.wrap{overflow-x:auto}</style></head><body>
-<h1>McTest run ${esc(stamp)}</h1><p>Ref ${esc(sha)}. FAIL ${n("FAIL")} · PASS ${n("PASS")} · SKIP ${n("SKIP")} · WAITS ${n("WAITS")}.${stackReason ? ` Test stack: ${esc(stackReason)}.` : ""}</p>
+<h1>McTest run ${esc(stamp)}</h1><p>Ref ${esc(sha)}. FAIL ${n("FAIL")} · PASS ${n("PASS")} (${noDb} of them no-DB) · SKIP ${n("SKIP")} · WAITS ${n("WAITS")}.${stackReason ? ` Test stack: ${esc(stackReason)}.` : ""}</p>
 <p>WAITS = the owning task is not built (never a pass or a fail). gate-only = the page is behind an off switch and proves the gate only. no-DB = the app ran with no database.</p>
-<div class="wrap"><table><thead><tr><th>Result</th><th>Row</th><th>Case</th><th>Owner</th><th>Labels</th><th>Detail</th></tr></thead><tbody>
+<div class="wrap"><table><thead><tr><th>Result</th><th>Row</th><th>Case</th><th>Owner</th><th>Labels</th><th>Detail</th><th>Replay</th></tr></thead><tbody>
 ${sorted.map(tr).join("\n")}
 </tbody></table></div></body></html>
 `;
@@ -293,6 +340,7 @@ function emptyShown(payload, shown) {
 }
 
 module.exports = {
+  errorClass,
   getPath,
   evalBound,
   shownFields,

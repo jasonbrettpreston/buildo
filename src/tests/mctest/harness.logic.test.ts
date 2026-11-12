@@ -3,15 +3,19 @@
 //
 // MF-79 · the harness canaries, both ways: the test-stack guard refuses the dev stack and accepts a separate local stack; the broken-text
 // check catches each broken value and passes clean text; a failure makes one card per fingerprint; WAITS is never a pass or a fail.
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   brokenText,
   cardName,
   cardText,
+  errorClass,
   fingerprint,
   readCatalogue,
   result,
   resultsPage,
+  ROOT,
   testStack,
   waitsResults,
 } from "../../../scripts/mctest/lib.cjs";
@@ -19,6 +23,7 @@ import {
 const TEST = {
   MCTEST_DATABASE_URL: "postgres://postgres:x@127.0.0.1:55322/postgres",
   MCTEST_SUPABASE_URL: "http://127.0.0.1:55321",
+  MCTEST_SUPABASE_ANON_KEY: "test-stack-key",
 };
 
 describe("test-stack guard (D-1 a)", () => {
@@ -27,6 +32,11 @@ describe("test-stack guard (D-1 a)", () => {
   });
   it.each([
     ["absent", {}, /absent/],
+    [
+      "no sign-in key",
+      { ...TEST, MCTEST_SUPABASE_ANON_KEY: "" },
+      /MCTEST_SUPABASE_ANON_KEY unset/,
+    ],
     [
       "the dev DB port 54322",
       {
@@ -60,6 +70,20 @@ describe("test-stack guard (D-1 a)", () => {
   });
 });
 
+it("refuses the dev DB port the DB-test guard refuses (one rule, read from setup-testcontainer.ts)", () => {
+  const src = fs.readFileSync(
+    path.join(ROOT, "src/tests/db/setup-testcontainer.ts"),
+    "utf8",
+  );
+  const port = src.match(/DEV_STACK_PORT = '(\d+)'/)?.[1];
+  expect(port).toBeTruthy();
+  const r = testStack({
+    ...TEST,
+    MCTEST_DATABASE_URL: `postgres://postgres:x@127.0.0.1:${port}/postgres`,
+  });
+  expect(r.reason).toMatch(/dev stack/);
+});
+
 describe("broken text (D-8 a), the catalogue regex", () => {
   const re = readCatalogue().crawler.fail_on.visible_text_regex;
   it.each([
@@ -86,9 +110,22 @@ describe("results and cards (PLAN §4, §6)", () => {
     status: "FAIL",
     detail: "http_500: /help",
   });
-  it("one fingerprint per row, case and error class", () => {
-    const again = { ...fail, detail: "http_500: /help (second night)" };
+  it("one fingerprint per row and error class: one cause on many pages is one card", () => {
+    const again = {
+      ...fail,
+      kase: "anonymous /terms",
+      detail: "http_500: /terms",
+    };
     expect(fingerprint(again)).toBe(fingerprint(fail));
+    const build = (page: string) => ({
+      ...fail,
+      kase: page,
+      detail: `console_error: Failed to load ${page} | page_error: Module build failed (from ../x/${page}.js):\nError`,
+    });
+    expect(fingerprint(build("a"))).toBe(fingerprint(build("b")));
+    expect(errorClass(build("a").detail)).toMatch(
+      /^page_error: Module build failed/,
+    );
     expect(fingerprint({ ...fail, detail: 'broken_text: "NaN"' })).not.toBe(
       fingerprint(fail),
     );
@@ -125,6 +162,10 @@ describe("results and cards (PLAN §4, §6)", () => {
     ).toBe(true);
   });
   it("the page escapes text and lists failures first", () => {
+    const withReplay = { ...fail, replay: "npm run mctest:web -- -g x" };
+    expect(
+      resultsPage([withReplay], { sha: "s", stamp: "t", stackReason: "" }),
+    ).toContain("npm run mctest:web -- -g x");
     const html = resultsPage(
       [result({ ...fail, kase: "a", status: "PASS", detail: "<b>" }), fail],
       { sha: "s", stamp: "t", stackReason: "" },

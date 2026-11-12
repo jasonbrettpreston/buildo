@@ -7,7 +7,16 @@
 // The anonymous persona needs no database and runs always.
 import { expect, test, type APIRequestContext } from "playwright/test";
 import { ConsumerParcelLookupResponseSchema } from "../../src/app/api/parcels/lookup/types";
-import { cat, persona, record, sample, stack, token as signIn } from "./mctest";
+import {
+  cat,
+  guarded,
+  persona,
+  record,
+  sample,
+  SEED,
+  stack,
+  token as signIn,
+} from "./mctest";
 
 type Step = {
   step: string;
@@ -59,101 +68,105 @@ for (const id of J?.personas ?? []) {
       "catalogue row journeys/J-API waits",
     );
     test.skip(id !== "anonymous" && !stack.ok, String(stack.reason));
-    const p = persona(id);
-    const e = (p.expect ?? {}) as Record<string, string>;
-    const lots =
-      id === "anonymous"
-        ? [
-            { address: "100 Queen St W", parcelId: "0" },
-            { address: "", parcelId: "1" },
-          ]
-        : await sampleLots();
-    const bearer = id === "anonymous" ? null : await signIn(String(p.email));
-    const want = wanted(e);
-    const outcomes: [string, boolean, string][] = [];
-    const usage = async () =>
-      (await call(request, "/api/parcels/entitlement", bearer)).body?.data
-        ?.reportsUsed ?? null;
-    const check = (step: string, ok: boolean, detail: string) =>
-      outcomes.push([step, ok, detail]);
+    // A throw before the per-step lines (sampling, sign-in, a dead server) is recorded as a FAIL, never silent.
+    const done = await guarded("journeys/J-API", "MF-45", id, async () => {
+      const p = persona(id);
+      const e = (p.expect ?? {}) as Record<string, string>;
+      const lots =
+        id === "anonymous"
+          ? [
+              { address: "100 Queen St W", parcelId: "0" },
+              { address: "", parcelId: "1" },
+            ]
+          : await sampleLots();
+      const bearer = id === "anonymous" ? null : await signIn(String(p.email));
+      const want = wanted(e);
+      const outcomes: [string, boolean, string][] = [];
+      const usage = async () =>
+        (await call(request, "/api/parcels/entitlement", bearer)).body?.data
+          ?.reportsUsed ?? null;
+      const check = (step: string, ok: boolean, detail: string) =>
+        outcomes.push([step, ok, detail]);
 
-    const ent = await call(request, "/api/parcels/entitlement", bearer);
-    check(
-      "entitlement",
-      ent.status === (bearer ? 200 : 401),
-      `http_${ent.status}`,
-    );
-    const lot = lots[0] ?? { address: "", parcelId: "" };
-    const before = bearer ? await usage() : null;
-    const search = await call(
-      request,
-      `/api/parcels/lookup?q=${encodeURIComponent(lot.address)}`,
-      bearer,
-    );
-    const atCap = e.new_lot === "403_REPORT_LIMIT_REACHED";
-    if (want.status !== 200 || atCap) {
-      const s = atCap ? { status: 403, code: "REPORT_LIMIT_REACHED" } : want;
+      const ent = await call(request, "/api/parcels/entitlement", bearer);
       check(
-        "search",
-        search.status === s.status && (!s.code || search.code === s.code),
-        `http_${search.status} ${search.code ?? ""} (want ${s.status} ${s.code ?? ""})`,
+        "entitlement",
+        ent.status === (bearer ? 200 : 401),
+        `http_${ent.status}`,
       );
-    } else {
-      const parsed = ConsumerParcelLookupResponseSchema.safeParse(
-        search.body?.data,
-      );
-      const lands =
-        parsed.success && parsed.data.match?.parcelId === lot.parcelId;
-      check(
-        "search",
-        search.status === 200 && lands,
-        `http_${search.status} ${parsed.success ? `lands_${lands}` : "schema_drift"}`,
-      );
-      const afterOpen = await usage();
-      const metered = e.meter !== "unmetered";
-      check(
-        "open_lot",
-        afterOpen === (before ?? 0) + (metered ? 1 : 0),
-        `reportsUsed ${before} -> ${afterOpen}`,
-      );
-      const reopen = await call(
+      const lot = lots[0] ?? { address: "", parcelId: "" };
+      const before = bearer ? await usage() : null;
+      const search = await call(
         request,
-        `/api/parcels/lookup?parcelId=${encodeURIComponent(lot.parcelId)}`,
+        `/api/parcels/lookup?q=${encodeURIComponent(lot.address)}`,
         bearer,
       );
-      const afterReopen = await usage();
-      check(
-        "reopen_lot",
-        reopen.status === 200 && afterReopen === afterOpen,
-        `http_${reopen.status} reportsUsed ${afterOpen} -> ${afterReopen}`,
-      );
-    }
-    if (stepOf("new_lot_at_cap")?.personas_only?.includes(id)) {
-      const next = await call(
-        request,
-        `/api/parcels/lookup?parcelId=${encodeURIComponent(lots[1]?.parcelId ?? "")}`,
-        bearer,
-      );
-      check(
-        "new_lot_at_cap",
-        next.status === 403 &&
-          next.code === "REPORT_LIMIT_REACHED" &&
-          !next.body?.data,
-        `http_${next.status} ${next.code ?? ""}`,
-      );
-    }
-    for (const [step, ok, detail] of outcomes) {
-      const s = stepOf(step);
-      record({
-        row: `journeys/J-API/${step}`,
-        owner: s?.owner ?? "MF-45",
-        kase: id,
-        status: ok ? "PASS" : "FAIL",
-        detail: ok ? "" : detail,
-        label: stack.ok ? "" : "no-DB",
-        replay: `npm run mctest:web -- -g "J-API ${id}"`,
-      });
-    }
-    expect(outcomes.filter(([, ok]) => !ok)).toEqual([]);
+      const atCap = e.new_lot === "403_REPORT_LIMIT_REACHED";
+      if (want.status !== 200 || atCap) {
+        const s = atCap ? { status: 403, code: "REPORT_LIMIT_REACHED" } : want;
+        check(
+          "search",
+          search.status === s.status && (!s.code || search.code === s.code),
+          `http_${search.status} ${search.code ?? ""} (want ${s.status} ${s.code ?? ""})`,
+        );
+      } else {
+        const parsed = ConsumerParcelLookupResponseSchema.safeParse(
+          search.body?.data,
+        );
+        const lands =
+          parsed.success && parsed.data.match?.parcelId === lot.parcelId;
+        check(
+          "search",
+          search.status === 200 && lands,
+          `http_${search.status} ${parsed.success ? `lands_${lands}` : "schema_drift"}`,
+        );
+        const afterOpen = await usage();
+        const metered = e.meter !== "unmetered";
+        check(
+          "open_lot",
+          afterOpen === (before ?? 0) + (metered ? 1 : 0),
+          `reportsUsed ${before} -> ${afterOpen}`,
+        );
+        const reopen = await call(
+          request,
+          `/api/parcels/lookup?parcelId=${encodeURIComponent(lot.parcelId)}`,
+          bearer,
+        );
+        const afterReopen = await usage();
+        check(
+          "reopen_lot",
+          reopen.status === 200 && afterReopen === afterOpen,
+          `http_${reopen.status} reportsUsed ${afterOpen} -> ${afterReopen}`,
+        );
+      }
+      if (stepOf("new_lot_at_cap")?.personas_only?.includes(id)) {
+        const next = await call(
+          request,
+          `/api/parcels/lookup?parcelId=${encodeURIComponent(lots[1]?.parcelId ?? "")}`,
+          bearer,
+        );
+        check(
+          "new_lot_at_cap",
+          next.status === 403 &&
+            next.code === "REPORT_LIMIT_REACHED" &&
+            !next.body?.data,
+          `http_${next.status} ${next.code ?? ""}`,
+        );
+      }
+      for (const [step, ok, detail] of outcomes) {
+        const s = stepOf(step);
+        record({
+          row: `journeys/J-API/${step}`,
+          owner: s?.owner ?? "MF-45",
+          kase: id,
+          status: ok ? "PASS" : "FAIL",
+          detail: ok ? "" : detail,
+          label: stack.ok ? "" : "no-DB",
+          replay: `MCTEST_SEED=${SEED} npm run mctest:web -- -g "J-API ${id}"`,
+        });
+      }
+      return outcomes;
+    });
+    expect(done.filter(([, ok]) => !ok)).toEqual([]);
   });
 }

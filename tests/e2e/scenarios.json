@@ -461,27 +461,32 @@
     "admin_pages": [
       {
         "route": "/admin/report-preview",
-        "spec": "126 §11b.7 D1"
+        "spec": "126 §11b.7 D1",
+        "owner": "MF-32"
       },
       {
         "route": "/admin/media",
-        "spec": "126 §11b.7 D2 (MF-37)"
+        "spec": "126 §11b.7 D2 (MF-37)",
+        "owner": "MF-37"
       },
       {
         "route": "/admin/placements",
-        "spec": "126 §11b.7 D3 (MF-40)"
+        "spec": "126 §11b.7 D3 (MF-40)",
+        "owner": "MF-40"
       },
       {
         "route": "/admin/parcel-cost",
-        "spec": "126 §11b.7 D4"
+        "spec": "126 §11b.7 D4",
+        "owner": "MF-32"
       },
       {
         "route": "/admin/lot-size",
-        "spec": "src/app/(maxbld)/admin/lot-size (report_lot_size_entry)"
+        "spec": "src/app/(maxbld)/admin/lot-size (report_lot_size_entry)",
+        "owner": "MF-19"
       }
     ],
     "gate_only_switch": "src/lib/surfaces/maxbld-web.ts MAXBLD_WEB_LIVE (false: /parcel-tool pages prove the gate only)",
-    "sample_parcel_id": "from L-RANDOM on the test stack; without it the dynamic page is called with \"0\" (gate-only)",
+    "sample_parcel_id": "MCTEST_SAMPLE_PARCEL_ID (a lot from L-RANDOM on the test stack); without it the report page is called with \"0\" (gate-only)",
     "personas": [
       "anonymous",
       "new_trial",
@@ -511,7 +516,20 @@
       "stack": "test"
     },
     "owner_rule": "the surface's queue row in Spec 126 §11b.3 / §11b.7; else MF-32 (convert on touch)",
-    "runner": "tests/e2e/crawler.spec.ts"
+    "runner": "tests/e2e/crawler.spec.ts",
+    "page_owners": {
+      "/parcel-tool": "MF-44",
+      "/login": "MF-46",
+      "/signup": "MF-46",
+      "/reset-password": "MF-46",
+      "/set-password": "MF-46",
+      "/terms-accept": "MF-46",
+      "/": "MF-76",
+      "/help": "MF-46",
+      "/terms": "MF-46",
+      "/privacy": "MF-46"
+    },
+    "page_owners_source": "the queue row that built each maxbld.ca host-table path (src/lib/auth/host-policy.ts MAXBLD_ROUTES); a path not listed falls back to owner"
   },
   "lot_cases": [
     {

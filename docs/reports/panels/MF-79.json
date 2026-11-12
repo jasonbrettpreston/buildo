@@ -10,5 +10,5 @@
     "Operator 2026-11-12, verbatim: \"latency 1\" (S-DETAIL-LATENCY p95 at most 1 s, an admin setting)."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mctest/PLAN.md (sections 1-9), scenarios.yaml, DECISIONS.md (D-1..D-14 all (a)); PLAN panel record PLAN.md section 8 (regression-guardian 11 findings and a fresh general-purpose seat 12 findings, both BLOCK pairs folded); alignment ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md section 4. Rows first (MF-78..MF-82, FE-40), then the prereg prereg MF-79-1 (round 167) committed alone before the code.",
-  "output": "OUTPUT panel owed: runs over the whole McTest range (MF-78..MF-80) before push (caller)"
+  "output": "OUTPUT panel over the McTest range 57a8995d3..5353e62bc (2026-11-12): code-reviewer-grounded (2 BLOCK, 3 FOLD, notes; tsc clean, 34 targeted tests), regression-guardian (no BLOCK, no FOLD; every fence preserved; 92 targeted tests), observability-reviewer (2 BLOCK, 5 FOLD, notes). All BLOCKs and FOLDs folded in the MF-79 OUTPUT folds commit; notes folded or recorded there. Full suite on the tip after the renumber restack: run by this lane under SUITE.lock before ready."
 }

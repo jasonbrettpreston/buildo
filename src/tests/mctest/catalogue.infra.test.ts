@@ -100,6 +100,22 @@ describe("McTest catalogue (FE-40)", () => {
       /missing\.spec\.ts/,
     ],
     [
+      "a crawler page owner that is not a queue task",
+      (c) => {
+        (c.crawler as { page_owners: Record<string, string> }).page_owners[
+          "/help"
+        ] = "MF-9998";
+      },
+      /crawler page \/help: owner "MF-9998"/,
+    ],
+    [
+      "an active bound with no tolerance",
+      (c) => {
+        delete (c.bounds as Row[])[0]?.tol;
+      },
+      /needs lhs, rhs\[\] and a numeric tol/,
+    ],
+    [
       "a duplicate id",
       (c) => {
         at(c.lot_cases, 1).id = at(c.lot_cases, 0).id;

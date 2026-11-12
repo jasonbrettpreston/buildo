@@ -16,7 +16,7 @@ const stamp = new Date()
   .toISOString()
   .replace(/[-:]/g, "")
   .replace("T", "-")
-  .slice(0, 13);
+  .slice(0, 15); // YYYYMMDD-HHMMSS: two runs in one minute never share a folder
 const runDir = path.join(home, "Buildo-scratch/mctest/runs", stamp);
 fs.mkdirSync(runDir, { recursive: true });
 const write = (r) =>
@@ -56,7 +56,24 @@ if (skip) {
   );
 } else {
   // One Playwright run: the crawler, the journeys and the lot sweep (each signed-in run skips itself without the test stack).
-  spawnSync("npx", ["playwright", "test"], { stdio: "inherit", env });
+  const pw = spawnSync("npx", ["playwright", "test"], {
+    stdio: "inherit",
+    env,
+  });
+  // A non-zero exit with no FAIL line (the server never started, a crash before any test) is recorded, never silent.
+  const lines = fs.existsSync(path.join(runDir, "results.jsonl"))
+    ? fs.readFileSync(path.join(runDir, "results.jsonl"), "utf8")
+    : "";
+  if (pw.status !== 0 && !lines.includes('"status":"FAIL"'))
+    write(
+      result({
+        row: "nightly",
+        owner: "MF-79",
+        kase: "playwright",
+        status: "FAIL",
+        detail: `playwright_exit: status ${pw.status} with no failure line`,
+      }),
+    );
   const stack = testStack(process.env);
   if (!stack.ok)
     write(
@@ -79,7 +96,7 @@ const runsRoot = path.dirname(runDir);
 const cutoff = Date.now() - 14 * 86_400_000;
 for (const d of fs.readdirSync(runsRoot)) {
   if (
-    /^\d{8}-\d{4}$/.test(d) &&
+    /^\d{8}-\d{4,6}$/.test(d) &&
     fs.statSync(path.join(runsRoot, d)).mtimeMs < cutoff
   )
     fs.rmSync(path.join(runsRoot, d), { recursive: true });

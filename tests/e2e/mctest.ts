@@ -42,7 +42,35 @@ export function persona(id: string): Record<string, unknown> {
   return p;
 }
 
+/**
+ * Runs one test body; a throw (a dead server, a failed sign-in or sample, a timeout) is recorded as a FAIL line before it is rethrown,
+ * so no outcome is silent (OUTPUT panel, observability F2).
+ */
+export async function guarded<T>(
+  row: string,
+  owner: string,
+  kase: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    record({
+      row,
+      owner,
+      kase,
+      status: "FAIL",
+      detail: `error: ${err instanceof Error ? err.message : String(err)}`,
+    });
+    throw err;
+  }
+}
+
 /** The rows of a lot case's catalogue SQL ($1 the seed, $2 the count), read in a read-only session on the test stack only. */
+/** The night's sample seed (logged in every replay command, so a failure replays on the same lots). */
+export const SEED =
+  process.env.MCTEST_SEED ?? new Date().toISOString().slice(0, 10);
+
 export async function sample(
   caseId: string,
   count: number,
@@ -61,9 +89,6 @@ export async function sample(
     await db.end();
   }
 }
-
-export const SEED =
-  process.env.MCTEST_SEED ?? new Date().toISOString().slice(0, 10);
 
 /** A seeded persona's access token from the test stack's own sign-in service (D-3 a: sign-in itself is exercised). */
 export async function token(email: string): Promise<string> {

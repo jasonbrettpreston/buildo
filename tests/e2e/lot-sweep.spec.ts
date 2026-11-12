@@ -163,8 +163,13 @@ test.describe("L3a lot sweep", () => {
         row,
         owner: b?.owner ?? lc?.owner ?? "MF-44",
         kase: String(kase),
-        status: t.fail ? "FAIL" : "PASS",
-        detail: t.fail ? `fail: ${detail}` : detail,
+        // PASS needs at least one evaluated lot: all not_evaluated is a SKIP with its count, never a pass (D-11 a; OUTPUT panel).
+        status: t.fail ? "FAIL" : t.pass ? "PASS" : "SKIP",
+        detail: t.fail
+          ? `fail: ${detail}`
+          : t.pass
+            ? detail
+            : `not_evaluated: ${detail}`,
         label,
         replay,
       });
@@ -229,7 +234,7 @@ test.describe("L3a lot sweep", () => {
         kase: "sizes",
         status: ok ? "PASS" : "FAIL",
         detail,
-        label: ratio >= s.warn_ratio ? "WARN at the 0.60 line" : "",
+        label: ratio >= s.warn_ratio ? `WARN at the ${s.warn_ratio} line` : "",
       });
       expect(ok, detail).toBe(true);
     } finally {

@@ -9,7 +9,7 @@ import { expect, test, type Page } from "playwright/test";
 import { MAXBLD_ROUTES } from "../../src/lib/auth/host-policy";
 import { MAXBLD_WEB_LIVE } from "../../src/lib/surfaces/maxbld-web";
 import { brokenText } from "../../scripts/mctest/lib.cjs";
-import { cat, persona, record, stack } from "./mctest";
+import { cat, guarded, persona, record, stack } from "./mctest";
 
 const C = cat.crawler as {
   id: string;
@@ -17,7 +17,8 @@ const C = cat.crawler as {
   owner: string;
   personas: string[];
   fail_on: { http_status_min: number; visible_text_regex: string };
-  admin_pages: { route: string }[];
+  admin_pages: { route: string; owner: string }[];
+  page_owners: Record<string, string>;
 };
 const ROW = `crawler/${C.id}`;
 const SAMPLE = process.env.MCTEST_SAMPLE_PARCEL_ID ?? "0";
@@ -30,8 +31,28 @@ const pages = [
 ];
 const gateOnly = (url: string) =>
   !MAXBLD_WEB_LIVE && url.includes("maxbld.ca/parcel-tool");
+/** The report page answers 404 to a signed-in visitor while the live switch is off (J-PIN); read from the switch, never typed. */
+const reportStatus = (url: string, who: string) =>
+  who !== "anonymous" && url === `http://maxbld.ca/parcel-tool/${SAMPLE}`
+    ? MAXBLD_WEB_LIVE
+      ? 200
+      : 404
+    : null;
+/** The queue row that owns a page (catalogue page_owners / admin_pages), else the crawler row's owner. */
+function ownerOf(url: string): string {
+  if (!url.startsWith("http"))
+    return C.admin_pages.find((a) => a.route === url)?.owner ?? C.owner;
+  const path = new URL(url).pathname;
+  const route = MAXBLD_ROUTES.find((r) =>
+    r.match === "exact"
+      ? r.path === path
+      : path === r.path || path.startsWith(`${r.path}/`),
+  );
+  return (route && C.page_owners[route.path]) ?? C.owner;
+}
 const checkedLinks = new Map<string, number>();
 
+/** Signs in through the page's own login form; origin "" = the app's baseURL (the Buildo host, for the admin pages). */
 async function signIn(page: Page, origin: string, id: string) {
   await page.goto(`${origin}/login`);
   await page
@@ -48,7 +69,11 @@ async function signIn(page: Page, origin: string, id: string) {
   ]);
 }
 
-async function crawl(page: Page, url: string): Promise<string[]> {
+async function crawl(
+  page: Page,
+  url: string,
+  want: number | null,
+): Promise<string[]> {
   const problems: string[] = [];
   page.on("pageerror", (e) => problems.push(`page_error: ${e.message}`));
   page.on("console", (m) => {
@@ -56,8 +81,10 @@ async function crawl(page: Page, url: string): Promise<string[]> {
   });
   const res = await page.goto(url, { waitUntil: "networkidle" });
   const status = res?.status() ?? 0;
-  if (status >= C.fail_on.http_status_min)
-    problems.push(`http_${status}: ${url}`);
+  if (want !== null ? status !== want : status >= C.fail_on.http_status_min)
+    problems.push(
+      `http_${status}: ${url}${want !== null ? ` (want ${want})` : ""}`,
+    );
   for (const w of brokenText(
     await page.locator("body").innerText(),
     C.fail_on.visible_text_regex,
@@ -86,9 +113,21 @@ for (const who of C.personas) {
     test.skip(who !== "anonymous" && !stack.ok, String(stack.reason));
     for (const url of pages) {
       test(`${who} ${url}`, async ({ page }) => {
-        if (who !== "anonymous")
-          await signIn(page, new URL(url, "http://127.0.0.1").origin, who);
-        const problems = await crawl(page, url);
+        const owner = ownerOf(url);
+        const problems = await guarded(
+          ROW,
+          owner,
+          `${who} ${url}`,
+          async () => {
+            if (who !== "anonymous")
+              await signIn(
+                page,
+                url.startsWith("http") ? new URL(url).origin : "",
+                who,
+              );
+            return crawl(page, url, reportStatus(url, who));
+          },
+        );
         const labels = [
           gateOnly(url) ? "gate-only" : "",
           stack.ok ? "" : "no-DB",
@@ -97,7 +136,7 @@ for (const who of C.personas) {
           .join(", ");
         record({
           row: ROW,
-          owner: C.owner,
+          owner,
           kase: `${who} ${url}`,
           status: problems.length ? "FAIL" : "PASS",
           detail: problems.join(" | "),
@@ -122,10 +161,19 @@ test.describe("J-PIN", () => {
   test.skip(step.status !== "active", `catalogue row journeys/J-PIN waits`);
   test.skip(!stack.ok, String(stack.reason));
   test("the report page follows the live switch", async ({ page }) => {
-    await signIn(page, "http://maxbld.ca", pin?.personas[0] ?? "paid");
-    const status =
-      (await page.goto(`http://maxbld.ca/parcel-tool/${SAMPLE}`))?.status() ??
-      0;
+    const status = await guarded(
+      "journeys/J-PIN/report_follows_live_switch",
+      step.owner ?? "MF-44",
+      "paid",
+      async () => {
+        await signIn(page, "http://maxbld.ca", pin?.personas[0] ?? "paid");
+        return (
+          (
+            await page.goto(`http://maxbld.ca/parcel-tool/${SAMPLE}`)
+          )?.status() ?? 0
+        );
+      },
+    );
     const want = MAXBLD_WEB_LIVE ? 200 : 404; // read from the switch, never typed (plan J-PIN)
     record({
       row: "journeys/J-PIN/report_follows_live_switch",
@@ -134,6 +182,7 @@ test.describe("J-PIN", () => {
       status: status === want ? "PASS" : "FAIL",
       detail: `http_${status} (want ${want})`,
       label: "gate-only",
+      replay: `npm run mctest:web -- -g "J-PIN"`,
     });
     expect(status).toBe(want);
   });
