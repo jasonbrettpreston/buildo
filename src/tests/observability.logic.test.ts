@@ -78,6 +78,23 @@ describe('Observability — initObservability', () => {
     vi.resetModules();
   });
 
+  it('MF-46 follow-up (PostHog b): never loads on maxbld.ca; loads on another host when a key is set', async () => {
+    vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', 'phc_test');
+    try {
+      for (const [host, calls] of [['maxbld.ca', 0], ['MAXBLD.CA:443', 0], ['buildo.com', 1]] as const) {
+        vi.resetModules();
+        mockPosthog.init.mockClear();
+        vi.stubGlobal('window', { location: { host } });
+        const mod = await import('@/lib/observability/capture');
+        mod.initObservability();
+        expect([host, mockPosthog.init.mock.calls.length]).toEqual([host, calls]);
+      }
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('is idempotent — multiple calls do nothing extra', async () => {
     const mod = await import('@/lib/observability/capture');
     mod.initObservability();

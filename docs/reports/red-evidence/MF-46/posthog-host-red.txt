@@ -1,0 +1,5 @@
+MF-46 follow-up red evidence (PostHog b): src/tests/observability.logic.test.ts against the base capture.ts (origin 8b651c128). Run 2026-11-12T14:37Z.
+   × Observability — initObservability > MF-46 follow-up (PostHog b): never loads on maxbld.ca; loads on another host when a key is set 6ms
+     → expected [ 'maxbld.ca', 1 ] to deeply equal [ 'maxbld.ca', +0 ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 7 passed (8)

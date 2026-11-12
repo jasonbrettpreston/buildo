@@ -8,6 +8,7 @@
 // once PostHog finishes loading.
 
 import posthog from 'posthog-js';
+import { MAXBLD_HOST, normalizeHost } from '@/lib/auth/host-policy';
 
 /** Type-safe event name union — extend as new events are added. */
 type EventName =
@@ -101,6 +102,14 @@ function isBrowser(): boolean {
 export function initObservability(): void {
   if (initialized || !isBrowser()) return;
   initialized = true;
+
+  // MF-46 follow-up (operator 2026-11-12, PostHog option (b): "All recommendations accepted ... Ensure the least amount of code"): no analytics
+  // on the MaxBLD pages (maxbld.ca; the host table's one host). The Privacy page names no analytics, so none loads there; queued events drop.
+  if (normalizeHost(window.location?.host) === MAXBLD_HOST) {
+    initFailed = true;
+    queue.length = 0;
+    return;
+  }
 
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
