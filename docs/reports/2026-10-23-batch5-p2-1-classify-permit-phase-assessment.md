@@ -271,7 +271,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | classify_permit_phase | PASS | min_migration=279 <= migrations count=299 |
+| 1 | classify_permit_phase | PASS | min_migration=279 <= migrations count=300 |
 | 2 | classify_permit_phase | PASS | 3 declared, missing from seeds: none |
 | 3 | classify_permit_phase | PASS | retired=0 overlap-with-declared=none |
 | 7 | classify_permit_phase | PASS | SPEC LINK header present=true |
