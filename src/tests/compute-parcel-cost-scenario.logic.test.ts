@@ -34,6 +34,7 @@ const SCENARIO_ROWS = [
   { id: 'scenario:detached_house/gfa_flat_m2', archetype: 'FB', base_confidence: 'high', fit_permitted_values: null },
   { id: 'scenario:detached_house/gfa_pitched_m2', archetype: 'FB', base_confidence: 'high', fit_permitted_values: null },
   { id: 'scenario:detached_houseplex/gfa_max_m2', archetype: 'HOUSEPLEX', base_confidence: 'low', fit_permitted_values: null },
+  { id: 'scenario:house_with_secondary_suite/gfa_max_m2', archetype: 'FB', base_confidence: 'high', fit_permitted_values: null },
 ];
 
 function contractPool(lineRows: Json[]) {
@@ -146,7 +147,7 @@ describe('MB-86 runCostMenuPass: scenario lines ride the existing menu write', (
     expect(menu7['scenario:detached_house/gfa_pitched_m2']).toMatchObject({ status: 'not_evaluated', reason: 'no_area_row' });
     expect(menu7['scenario:detached_houseplex/gfa_max_m2']).toMatchObject({ status: 'not_evaluated', reason: 'no_area_row' });
     expect(Object.keys(menu8).some((k) => k.startsWith('scenario:'))).toBe(false);
-    expect(res.scenarioCounts).toMatchObject({ parcels: 1, priced: 1, at_least: 1, refused: 2, exceed_coa: 1, gfa_computed_cost_missing: 0 });
+    expect(res.scenarioCounts).toMatchObject({ parcels: 1, priced: 1, at_least: 1, refused: 3, exceed_coa: 1, gfa_computed_cost_missing: 0 });
   });
 });
 

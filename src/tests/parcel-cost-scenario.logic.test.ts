@@ -34,12 +34,14 @@ const DB_ROWS = [
   { id: 'scenario:detached_house/gfa_flat_m2', archetype: 'FB', base_confidence: 'high' },
   { id: 'scenario:detached_house/gfa_pitched_m2', archetype: 'FB', base_confidence: 'high' },
   { id: 'scenario:detached_houseplex/gfa_max_m2', archetype: 'HOUSEPLEX', base_confidence: 'low' },
+  { id: 'scenario:house_with_secondary_suite/gfa_max_m2', archetype: 'FB', base_confidence: 'high' }, // migration 317 (MB-86 suite line, MB-94 (b))
 ];
 const LINES = P.mergeScenarioLines(P.SCENARIO_COST_LINES, DB_ROWS);
 const MAX = 'scenario:detached_house/gfa_max_m2';
 const FLAT = 'scenario:detached_house/gfa_flat_m2';
 const PITCHED = 'scenario:detached_house/gfa_pitched_m2';
 const HOUSEPLEX = 'scenario:detached_houseplex/gfa_max_m2';
+const SUITE = 'scenario:house_with_secondary_suite/gfa_max_m2';
 
 const row = (bt: string, field: string, over: Json = {}): Json => ({
   building_type: bt, field_id: field, status: 'computed', value: 200, reason: null, flags: [], content_sha: `sha-${bt}-${field}`, ...over,
@@ -63,8 +65,8 @@ describe('MB-86 golden-25 cost answer key (blind seat, plan v2 §5.1)', () => {
     for (const [line, v] of Object.entries(out.lines) as [string, Json][]) got.push({ parcel_id: parcelId, line, ...v });
   }
 
-  it('the key has 100 lines (25 lots x 4 scenarios) and the engine produces exactly those lines', () => {
-    expect(KEY.rows).toHaveLength(100);
+  it('the key has 125 lines (25 lots x 5 scenarios) and the engine produces exactly those lines', () => {
+    expect(KEY.rows).toHaveLength(125);
     expect(got.map((g) => `${g.parcel_id}|${g.line}`).sort()).toEqual(KEY.rows.map((k: Json) => `${k.parcel_id}|${k.line}`).sort());
   });
 
@@ -95,7 +97,8 @@ describe('MB-86 golden-25 cost answer key (blind seat, plan v2 §5.1)', () => {
     const unpriced = (KEY.rows as Json[]).filter((k) => k.total === null);
     expect(unpriced.filter((k) => k.line === HOUSEPLEX && k.reason === 'no_area_row')).toHaveLength(25);
     expect(unpriced.filter((k) => k.case === 'A0166_26EYK' && k.reason === 'l3_not_evaluated:unlimited_in_arithmetic')).toHaveLength(3);
-    expect(unpriced).toHaveLength(28);
+    expect(unpriced.filter((k) => k.line === SUITE && k.reason === 'no_area_row')).toHaveLength(25); // no stored suite rows in the 25-lot fixture
+    expect(unpriced).toHaveLength(53);
     expect((KEY.rows as Json[]).filter((k) => k.status === 'at_least').map((k) => k.case).sort()).toEqual(['A0097_26SC', 'A0179_26EYK']);
   });
 });
@@ -128,8 +131,8 @@ describe('MB-86 worked examples COST-1..COST-14 (plan v2 §5.2)', () => {
     expect(out.lines[FLAT].total).toBeUndefined();
     expect(out.counts).toMatchObject({ no_rate: 1, gfa_computed_cost_missing: 1 });
   });
-  it('COST-7 premium 1.35: per_sqm 6,539.40, 200 m2 = $1,307,880.00', () => {
-    expect(run([house('gfa_flat_m2')], { premium: 1.35 }).lines[FLAT]).toMatchObject({ per_sqm: 6539.4, total: 1307880 });
+  it('COST-7 (EI-D3) the parcel premium 1.35 is NOT in the customer figure: per_sqm 4,844.00, 200 m2 = $968,800.00, rate_inputs.premium 1', () => {
+    expect(run([house('gfa_flat_m2')], { premium: 1.35 }).lines[FLAT]).toMatchObject({ per_sqm: 4844, total: 968800, rate_inputs: { premium: 1 } });
   });
   it('COST-8 escalation floor: index 90 < base 100 gives x1 (never deflate); index 110 gives x1.1', () => {
     expect(run([house('gfa_flat_m2')], { index: 90 }).lines[FLAT]).toMatchObject({ total: 968800, rate_inputs: { escalation_multiplier: 1 } });
@@ -138,7 +141,7 @@ describe('MB-86 worked examples COST-1..COST-14 (plan v2 §5.2)', () => {
   it('COST-9 GFA refused while the rate is present -> the inherited refusal, not a price', () => {
     const out = run([house('gfa_max_m2', { status: 'not_evaluated', value: null, reason: 'unlimited_in_arithmetic' })]);
     expect(out.lines[MAX]).toMatchObject({ status: 'not_evaluated', reason: 'l3_not_evaluated:unlimited_in_arithmetic' });
-    expect(out.counts).toMatchObject({ refused: 4, gfa_computed_cost_missing: 0 }); // the inherited refusal + three no_area_row lines
+    expect(out.counts).toMatchObject({ refused: 5, gfa_computed_cost_missing: 0 }); // the inherited refusal + four no_area_row lines
   });
   it('COST-10 two scenarios with equal GFA -> equal cost', () => {
     const out = run([house('gfa_flat_m2', { value: 254.485 }), house('gfa_pitched_m2', { value: 254.485 })]);
@@ -162,9 +165,9 @@ describe('MB-86 worked examples COST-1..COST-14 (plan v2 §5.2)', () => {
     expect(out.lines[FLAT]).toMatchObject({ status: 'not_evaluated', reason: 'malformed_rate' });
     expect(out.counts).toMatchObject({ malformed_rate: 1, gfa_computed_cost_missing: 1 });
   });
-  it('COST-13 houseplex: the premium applies (1.35 -> $5,813.10/m2, 300 m2 = $1,743,930.00) and a lower bound is at_least', () => {
+  it('COST-13 houseplex: no premium (1.35 ignored -> $4,306/m2, 300 m2 = $1,291,800.00) and a lower bound is at_least', () => {
     const l = run([row('detached_houseplex', 'gfa_max_m2', { value: 300, flags: ['headline_lower_bound:x'] })], { premium: 1.35 }).lines[HOUSEPLEX];
-    expect(l).toMatchObject({ status: 'at_least', per_sqm: 5813.1, total: 1743930 });
+    expect(l).toMatchObject({ status: 'at_least', per_sqm: 4306, total: 1291800 });
   });
   it('COST-14 houseplex with no stored area row -> not_evaluated/no_area_row; with no parcel_cost_lines row -> no_rate_line', () => {
     expect(run([house('gfa_flat_m2')]).lines[HOUSEPLEX]).toEqual({ status: 'not_evaluated', reason: 'no_area_row', flags: [], l3_content_sha: null, area_basis: 'bylaw_gfa' });
@@ -175,13 +178,46 @@ describe('MB-86 worked examples COST-1..COST-14 (plan v2 §5.2)', () => {
   });
 });
 
+describe('MB-94 (b) + MB-86 suite line: COST-15, COST-16, L-1', () => {
+  const suite = (over: Json = {}) => row('house_with_secondary_suite', 'gfa_max_m2', over);
+  it('COST-15 suite house priced on FB: 200 m2 = $968,800.00, high area band, the Layer 3 content_sha rides the line; the headline lower bound makes it at_least', () => {
+    const l = run([suite()]).lines[SUITE];
+    expect(l).toMatchObject({ status: 'computed', total: 968800, per_sqm: 4844, area: 200, area_confidence: 'high', area_basis: 'bylaw_gfa', l3_content_sha: 'sha-house_with_secondary_suite-gfa_max_m2', rate_inputs: { archetype: 'FB', rate_confidence: 'high' } });
+    expect(run([suite({ flags: ['headline_lower_bound:x'] })]).lines[SUITE].status).toBe('at_least');
+  });
+  it('COST-16 suite house: no stored row -> no_area_row; not_buildable keeps its reason; no parcel_cost_lines row -> no_rate_line', () => {
+    expect(run([house('gfa_flat_m2')]).lines[SUITE]).toEqual({ status: 'not_evaluated', reason: 'no_area_row', flags: [], l3_content_sha: null, area_basis: 'bylaw_gfa' });
+    expect(run([suite({ status: 'not_buildable', value: null, reason: 'narrow' })]).lines[SUITE]).toMatchObject({ status: 'not_buildable', reason: 'narrow' });
+    const lines = P.mergeScenarioLines(P.SCENARIO_COST_LINES, DB_ROWS.slice(0, 4));
+    expect(run([suite()], { lines }).lines[SUITE]).toMatchObject({ status: 'not_evaluated', reason: 'no_rate_line' });
+  });
+  it('L-1 (Spec 88 §2.7 dated note 2026-11-12): a scenario line with base high and parcels.max_build_confidence low stays high; base low stays low; the 13-line helper is unchanged', () => {
+    expect(run([house('gfa_flat_m2')], { maxBuildConfidence: 'low' }).lines[FLAT].area_confidence).toBe('high');
+    expect(run([row('detached_houseplex', 'gfa_max_m2', { value: 300 })], { maxBuildConfidence: 'high' }).lines[HOUSEPLEX].area_confidence).toBe('low');
+    expect(P.areaConfidenceFor('high', 'low')).toBe('low');
+  });
+  it('EI-D3: whatever the parcel premium (null, 1.00, 1.85) the scenario figure and its stamp are the same', () => {
+    const base = run([house('gfa_flat_m2')]).lines[FLAT];
+    for (const premium of [1.15, 1.85]) expect(run([house('gfa_flat_m2')], { premium }).lines[FLAT]).toEqual(base);
+  });
+});
+
+describe('migrations 298 + 317 carry exactly the SCENARIO_COST_LINES ids (parity)', () => {
+  it('the scenario: ids inserted by the two migration files equal the structural ids, in set terms', () => {
+    const dir = path.join(ROOT, 'migrations');
+    const sql = ['298_mb86_scenario_cost_lines.sql', '317_mb86_suite_scenario_cost_line.sql'].map((n) => fs.readFileSync(path.join(dir, n), 'utf8')).join('\n');
+    const ids = [...sql.matchAll(/^\s*\('(scenario:[^']+)',/gm)].map((m) => m[1]).sort();
+    expect(ids).toEqual(P.SCENARIO_COST_LINES.map((l: Json) => l.id).sort());
+  });
+});
+
 describe('MB-86 locks (plan v2 §5.3)', () => {
   const ALL = [house('gfa_max_m2', { value: 312.5 }), house('gfa_flat_m2', { value: 0 }), house('gfa_pitched_m2', { status: 'not_modelled', value: null, reason: 'r' }), row('detached_houseplex', 'gfa_max_m2', { value: 410.2 })];
 
-  it('every scenario has a cost or a stated reason: all four lines present, each with a total or a non-empty reason', () => {
+  it('every scenario has a cost or a stated reason: all five lines present, each with a total or a non-empty reason', () => {
     for (const premium of [1, 1.15, 1.85]) {
       const out = run(ALL, { premium });
-      expect(Object.keys(out.lines).sort()).toEqual([FLAT, MAX, PITCHED, HOUSEPLEX].sort());
+      expect(Object.keys(out.lines).sort()).toEqual([FLAT, MAX, PITCHED, HOUSEPLEX, SUITE].sort());
       for (const [id, l] of Object.entries(out.lines) as [string, Json][]) {
         const priced = typeof l.total === 'number';
         expect(priced || (typeof l.reason === 'string' && l.reason.length > 0) || l.status === 'not_modelled', id).toBe(true);
@@ -192,7 +228,7 @@ describe('MB-86 locks (plan v2 §5.3)', () => {
   it('a parcel with no stored Layer 3 rows gets no scenario line at all (no menu churn outside the Layer 3 population)', () => {
     expect(run(null).lines).toEqual({});
   });
-  it('identity, positivity and the premium-ratio plausibility invariant (D-13): per_sqm / (rate x adj x esc) equals the premium, in [1.00, 1.85]', () => {
+  it('identity, positivity and the basis invariant (D-13, EI-D3): per_sqm / (rate x adj x esc) equals 1 whatever the parcel premium', () => {
     for (const premium of [1, 1.15, 1.35, 1.6, 1.85]) {
       const out = run(ALL, { premium });
       for (const l of Object.values(out.lines) as Json[]) {
@@ -202,9 +238,8 @@ describe('MB-86 locks (plan v2 §5.3)', () => {
         expect(Math.abs(l.total / l.area - l.per_sqm)).toBeLessThanOrEqual(0.01);
         const ri = l.rate_inputs;
         const ratio = l.per_sqm / (ri.cost_per_sqm * ri.adjustment_factor * ri.escalation_multiplier);
-        expect(Math.abs(ratio - premium)).toBeLessThanOrEqual(0.01);
-        expect(ratio).toBeGreaterThanOrEqual(0.995);
-        expect(ratio).toBeLessThanOrEqual(1.855);
+        expect(Math.abs(ratio - 1)).toBeLessThanOrEqual(0.01);
+        expect(ri.premium).toBe(1);
       }
     }
   });
@@ -214,7 +249,7 @@ describe('MB-86 locks (plan v2 §5.3)', () => {
     expect(out.lines[FLAT]).toMatchObject({ status: 'not_evaluated', reason: 'area_not_priceable' });
     expect(out.lines[PITCHED]).toMatchObject({ status: 'not_modelled', reason: 'r' });
     expect(out.lines[PITCHED].total).toBeUndefined();
-    expect(out.counts).toMatchObject({ priced: 2, refused: 1, not_modelled: 1, gfa_computed_cost_missing: 1 });
+    expect(out.counts).toMatchObject({ priced: 2, refused: 2, not_modelled: 1, gfa_computed_cost_missing: 1 }); // refused = the area_not_priceable flat line + the suite no_area_row
   });
   it('coherence: a scenario total above the coa_build total by more than $1 carries l3_envelope_exceeds_old_coa and is counted; at or within $1 it does not', () => {
     const r = [house('gfa_flat_m2', { value: 200, flags: ['b', 'a'] })]; // total 968,800
@@ -238,6 +273,6 @@ describe('MB-86 locks (plan v2 §5.3)', () => {
   it('the 13 existing lines are untouched: PARCEL_COST_LINES has no scenario: id, and scenario ids are disjoint', () => {
     expect(P.PARCEL_COST_LINES).toHaveLength(13);
     expect(P.PARCEL_COST_LINES.some((l: Json) => String(l.id).startsWith('scenario:'))).toBe(false);
-    expect(P.SCENARIO_COST_LINES.map((l: Json) => l.id)).toEqual([MAX, FLAT, PITCHED, HOUSEPLEX]);
+    expect(P.SCENARIO_COST_LINES.map((l: Json) => l.id)).toEqual([MAX, FLAT, PITCHED, HOUSEPLEX, SUITE]);
   });
 });

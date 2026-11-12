@@ -1,6 +1,6 @@
 {
- "$comment": "MB-86 cost answer key for the 25 golden lots (Spec 88 §2.3/§2.4 dated notes 2026-11-09; plan v2 §5.1). Derived BLIND by a second seat from src/tests/fixtures/cost/golden-25-scenario-areas.json and the written rule only (no repo code read; ~/Buildo-scratch/mcfrontend/COST/key-blind/), then folded against the engine: 100 of 100 lines equal, 0 mismatches. Fixture rate inputs: FB 4844 $/m², adjustment 1.000, escalation base 100.0, index 100.0, premium 1.00 (the real per-lot premiums and coa_build totals arrive with the operator Q1 after MB-35). 70 priced exact, 2 at_least, 28 with a stated reason (25 houseplex no_area_row until lane E stores the detached_houseplex rows; A0166_26EYK x3 l3_not_evaluated:unlimited_in_arithmetic). Headline min 615401.14 (A0388_26TEY), max 2412796.40 (A0229_26NY).",
- "derivation": "Hand-derived from the stated rules; per_sqm_unrounded = 4844*1*1*1 = 4844.00. Node script: total = 4844*value rounded half-up to cents (Math.round(x*100)/100), area = value rounded to cents; at_least when a flag is headline_lower_bound or starts with headline_lower_bound:; non-priced rows get l3_<status>[:reason]; added 25 no_area_row lines for detached_houseplex/gfa_max_m2; sorted by parcel_id then line.",
+ "$comment": "MB-86 cost answer key for the 25 golden lots (Spec 88 §2.3/§2.4 dated notes 2026-11-09; plan v2 §5.1). Derived BLIND by a second seat from src/tests/fixtures/cost/golden-25-scenario-areas.json and the written rule only (no repo code read; ~/Buildo-scratch/mcfrontend/COST/key-blind/), then folded against the engine: 100 of 100 lines equal, 0 mismatches. Fixture rate inputs: FB 4844 $/m², adjustment 1.000, escalation base 100.0, index 100.0, premium 1.00 (the real per-lot premiums and coa_build totals arrive with the operator Q1 after MB-35). 70 priced exact, 2 at_least, 53 with a stated reason (25 houseplex no_area_row until lane E stores the detached_houseplex rows; A0166_26EYK x3 l3_not_evaluated:unlimited_in_arithmetic). Headline min 615401.14 (A0388_26TEY), max 2412796.40 (A0229_26NY).",
+ "derivation": "Hand-derived from the stated rules; per_sqm_unrounded = 4844*1*1*1 = 4844.00. Node script: total = 4844*value rounded half-up to cents (Math.round(x*100)/100), area = value rounded to cents; at_least when a flag is headline_lower_bound or starts with headline_lower_bound:; non-priced rows get l3_<status>[:reason]; added 25 no_area_row lines for detached_houseplex/gfa_max_m2 and (2026-11-13, MB-94 (b) suite line, plan 4b) 25 no_area_row lines for house_with_secondary_suite/gfa_max_m2 (the fixture holds no stored suite rows); sorted by parcel_id then line.",
  "rate_inputs": {
   "archetype": "FB",
   "cost_per_sqm": 4844,
@@ -51,6 +51,16 @@
    "area": null
   },
   {
+   "case": "A0203_26NY",
+   "parcel_id": 6640,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0182_26EYK",
    "parcel_id": 30065,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -84,6 +94,16 @@
    "case": "A0182_26EYK",
    "parcel_id": 30065,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0182_26EYK",
+   "parcel_id": 30065,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -131,6 +151,16 @@
    "area": null
   },
   {
+   "case": "A0562_26TEY",
+   "parcel_id": 30554,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0205_26NY",
    "parcel_id": 33830,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -171,6 +201,16 @@
    "area": null
   },
   {
+   "case": "A0205_26NY",
+   "parcel_id": 33830,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0166_26EYK",
    "parcel_id": 119522,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -204,6 +244,16 @@
    "case": "A0166_26EYK",
    "parcel_id": 119522,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0166_26EYK",
+   "parcel_id": 119522,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -251,6 +301,16 @@
    "area": null
   },
   {
+   "case": "A0179_26EYK",
+   "parcel_id": 120669,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0277_26NY",
    "parcel_id": 122034,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -284,6 +344,16 @@
    "case": "A0277_26NY",
    "parcel_id": 122034,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0277_26NY",
+   "parcel_id": 122034,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -331,6 +401,16 @@
    "area": null
   },
   {
+   "case": "A0354_26TEY",
+   "parcel_id": 153191,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0094_26SC",
    "parcel_id": 159079,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -364,6 +444,16 @@
    "case": "A0094_26SC",
    "parcel_id": 159079,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0094_26SC",
+   "parcel_id": 159079,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -411,6 +501,16 @@
    "area": null
   },
   {
+   "case": "A0461_26TEY",
+   "parcel_id": 169742,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0289_26TEY",
    "parcel_id": 170105,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -444,6 +544,16 @@
    "case": "A0289_26TEY",
    "parcel_id": 170105,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0289_26TEY",
+   "parcel_id": 170105,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -491,6 +601,16 @@
    "area": null
   },
   {
+   "case": "A0175_26NY",
+   "parcel_id": 173273,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0067_26SC",
    "parcel_id": 205238,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -524,6 +644,16 @@
    "case": "A0067_26SC",
    "parcel_id": 205238,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0067_26SC",
+   "parcel_id": 205238,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -571,6 +701,16 @@
    "area": null
   },
   {
+   "case": "A0457_25EYK",
+   "parcel_id": 216666,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0170_26EYK",
    "parcel_id": 258388,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -604,6 +744,16 @@
    "case": "A0170_26EYK",
    "parcel_id": 258388,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0170_26EYK",
+   "parcel_id": 258388,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -651,6 +801,16 @@
    "area": null
   },
   {
+   "case": "A0097_26SC",
+   "parcel_id": 274216,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0399_24EYK",
    "parcel_id": 283723,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -684,6 +844,16 @@
    "case": "A0399_24EYK",
    "parcel_id": 283723,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0399_24EYK",
+   "parcel_id": 283723,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -731,6 +901,16 @@
    "area": null
   },
   {
+   "case": "A0193_26EYK",
+   "parcel_id": 304365,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0229_26NY",
    "parcel_id": 313999,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -764,6 +944,16 @@
    "case": "A0229_26NY",
    "parcel_id": 313999,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0229_26NY",
+   "parcel_id": 313999,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -811,6 +1001,16 @@
    "area": null
   },
   {
+   "case": "A0578_26TEY",
+   "parcel_id": 403569,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0375_26TEY",
    "parcel_id": 410720,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -844,6 +1044,16 @@
    "case": "A0375_26TEY",
    "parcel_id": 410720,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0375_26TEY",
+   "parcel_id": 410720,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -891,6 +1101,16 @@
    "area": null
   },
   {
+   "case": "A0464_26TEY",
+   "parcel_id": 427312,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0553_26TEY",
    "parcel_id": 428050,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -924,6 +1144,16 @@
    "case": "A0553_26TEY",
    "parcel_id": 428050,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0553_26TEY",
+   "parcel_id": 428050,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,
@@ -971,6 +1201,16 @@
    "area": null
   },
   {
+   "case": "A0388_26TEY",
+   "parcel_id": 442123,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
    "case": "A0561_26TEY",
    "parcel_id": 461807,
    "line": "scenario:detached_house/gfa_flat_m2",
@@ -1004,6 +1244,16 @@
    "case": "A0561_26TEY",
    "parcel_id": 461807,
    "line": "scenario:detached_houseplex/gfa_max_m2",
+   "status": "not_evaluated",
+   "reason": "no_area_row",
+   "total": null,
+   "per_sqm": null,
+   "area": null
+  },
+  {
+   "case": "A0561_26TEY",
+   "parcel_id": 461807,
+   "line": "scenario:house_with_secondary_suite/gfa_max_m2",
    "status": "not_evaluated",
    "reason": "no_area_row",
    "total": null,

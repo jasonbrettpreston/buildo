@@ -108,7 +108,7 @@ none
 - `scripts/lib/compute/enrich-parcels.js` sha256 `8e76004b9bef01de`
 - `scripts/lib/max-build.js` sha256 `b4d23240936fa986`
 - `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
-- `scripts/lib/parcel-cost.js` sha256 `06cec1fb1748722b`
+- `scripts/lib/parcel-cost.js` sha256 `88d27d0a94f1dcbc`
 - `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - `scripts/seeds/bylaw/vocab.json` sha256 `c38a77b57c7b8a06`
 - `scripts/seeds/lineage-meta-snapshot.json` sha256 `dec51c67181e95e1`

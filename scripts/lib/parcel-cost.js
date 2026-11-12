@@ -400,6 +400,8 @@ const SCENARIO_COST_LINES = Object.freeze([
   { id: 'scenario:detached_house/gfa_flat_m2', buildingType: 'detached_house', fieldId: 'gfa_flat_m2' },
   { id: 'scenario:detached_house/gfa_pitched_m2', buildingType: 'detached_house', fieldId: 'gfa_pitched_m2' }, // pitched a and b share it
   { id: 'scenario:detached_houseplex/gfa_max_m2', buildingType: 'detached_houseplex', fieldId: 'gfa_max_m2' }, // HOUSEPLEX rate
+  // Increment 4 closed: the suite house, priced on FB (migration 317; plan §4b, MB-94 (b)). Later scenarios add a line when their increment closes.
+  { id: 'scenario:house_with_secondary_suite/gfa_max_m2', buildingType: 'house_with_secondary_suite', fieldId: 'gfa_max_m2' },
 ]);
 
 /** The Layer 3 flag that makes a computed area a lower bound (catalogue lexicon `headline_lower_bound_`). */
@@ -474,7 +476,9 @@ function buildScenarioCostLines(parcel, scenarioRows, rates, indexNow, opts = {}
 
   const byKey = new Map();
   for (const r of scenarioRows) byKey.set(`${r.building_type}/${r.field_id}`, r);
-  const premium = num(parcel.neighbourhood_cost_premium) ?? cfg.premiumDefault;
+  // EI-D3 (Spec 88 §2.6 dated note 2026-11-12): the customer figure carries NO neighbourhood premium. The
+  // parcel premium is not read here; the stamp records the multiplier actually applied (1).
+  const premium = 1;
   const coaTotal = num(opts.coaTotal);
 
   const refuse = (line, row, status, reason) => {
@@ -542,7 +546,9 @@ function buildScenarioCostLines(parcel, scenarioRows, rates, indexNow, opts = {}
       total,
       per_sqm,
       area: round2(area),
-      area_confidence: areaConfidenceFor(line.baseConfidence, parcel.max_build_confidence ?? null),
+      // L-1 (Spec 88 §2.7 dated note 2026-11-12): by-law GFA is not the imagery footprint, so the line's
+      // base confidence stands; parcels.max_build_confidence does not downgrade a scenario line.
+      area_confidence: line.baseConfidence,
       rate_inputs: {
         archetype: line.archetype,
         cost_per_sqm: ratePerSqm,
