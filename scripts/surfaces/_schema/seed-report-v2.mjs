@@ -468,6 +468,12 @@ const cardSec = out.find((x) => x.id === 'card');
 const at = cardSec.fields.findIndex((fl) => fl.source.startsWith('catalogue:'));
 for (const sec of out) sec.fields = sec.fields.filter((fl) => !fl.source.startsWith('catalogue:'));
 cardSec.fields.splice(at < 0 ? cardSec.fields.length : at, 0, ...catalogueFields);
+// K2 (operator 2026-11-13, "approved - ... a new yes/no page rule"): the three lot facts the page shows as Yes / No bind the parcels columns the page producer
+// reads (src/lib/admin/report-preview-live/stored-page.ts). Heritage and ravine read null for a never-enriched lot (the enrichment-version column), corner reads its own column.
+const lotSec = out.find((x) => x.id === 'lot');
+for (const [name, label, col] of [['is_heritage_designated', 'Heritage designated', 'is_heritage_designated'], ['is_in_ravine_protection_area', 'In a ravine protection area', 'is_in_ravine_protection_area'], ['is_corner_lot', 'Corner lot', 'is_corner_lot']]) {
+  lotSec.fields.push({ path: `parcel.lot.${name}`, name, label, type: 'boolean', status: 'live', source: `parcels:${col}`, render: 'rendered', note: 'K2: Yes / No on the page (rule yes_no); null (never enriched) shows the dash, Spec 78 section 6.6 rule 5' });
+}
 // MF-20 (Spec 126 11a.10, FE-23): one declared field per ad slot of the ad contract, bound ad_slot:<slot id>. The two Q-8 slots are fields named by their id;
 // the per-scenario slot is one field per scenario key (AD.scenario_fields), all bound ad_slot:scenario_card. Generated from the contract, never hand-edited.
 const adSec = out.find((x) => x.id === 'ads');

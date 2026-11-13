@@ -49,3 +49,16 @@ export function formatPageRule(rule: string, n: number): Formatted | null {
       return null;
   }
 }
+
+/** K2 (operator 2026-11-13, "a new yes/no page rule ... the existing formatter pattern"): the closed TEXT rules. A text rule formats one stored
+ *  non-number (a yes/no column; a confidence word of a stored reading) to the text of a value part; an unknown rule, or a value of the wrong
+ *  kind, is refused (null: the page shows the ruled dash, Spec 78 section 6.6 rule 5). */
+export const TEXT_RULES = ['yes_no', 'confidence'] as const;
+const CONFIDENCE_WORDS: Record<string, string> = { high: 'High confidence', medium: 'Medium confidence', 'medium-low': 'Medium-low confidence', low: 'Low confidence' };
+/** The weakest first (M-481 words), so the weakest of several stored readings is the one shown. */
+export const CONFIDENCE_ORDER = ['low', 'medium-low', 'medium', 'high'] as const;
+export function formatTextRule(rule: string, v: unknown): string | null {
+  if (rule === 'yes_no') return v === true ? 'Yes' : v === false ? 'No' : null;
+  if (rule === 'confidence') return typeof v === 'string' && Object.hasOwn(CONFIDENCE_WORDS, v) ? (CONFIDENCE_WORDS[v] as string) : null;
+  return null;
+}

@@ -201,8 +201,9 @@
         {
           "role": "size.badge",
           "brief": "B6",
-          "pending": "estimated",
-          "why": "card_confidence: no report field declared (brief: undeclared)"
+          "field": "gfa_pitched_m2",
+          "rule": "confidence",
+          "key": "o1.size.badge"
         },
         {
           "role": "size.label",
@@ -294,8 +295,9 @@
         {
           "role": "size.panel.notes",
           "brief": "B9",
-          "pending": "estimated",
-          "why": "disclosure texts per option: no report field declared (brief: undeclared); open item 13"
+          "field": "permitted",
+          "rule": "reason_text",
+          "key": "o1.panel.reason"
         },
         {
           "role": "size.panel.all",
@@ -692,8 +694,9 @@
         {
           "role": "size.badge",
           "brief": "B6",
-          "pending": "estimated",
-          "why": "card_confidence: no report field declared (brief: undeclared)"
+          "field": "gfa_flat_m2",
+          "rule": "confidence",
+          "key": "o2.size.badge"
         },
         {
           "role": "size.label",
@@ -785,8 +788,9 @@
         {
           "role": "size.panel.notes",
           "brief": "B9",
-          "pending": "estimated",
-          "why": "disclosure texts per option: no report field declared (brief: undeclared); open item 13"
+          "field": "permitted",
+          "rule": "reason_text",
+          "key": "o2.panel.reason"
         },
         {
           "role": "size.panel.all",
@@ -1106,8 +1110,9 @@
         {
           "role": "size.badge",
           "brief": "B6",
-          "pending": "estimated",
-          "why": "card_confidence: no report field declared (brief: undeclared)"
+          "field": "gfa_max_m2",
+          "rule": "confidence",
+          "key": "o3.size.badge"
         },
         {
           "role": "size.label",
@@ -1183,8 +1188,9 @@
         {
           "role": "unit.badge",
           "brief": "B8",
-          "pending": "estimated",
-          "why": "open item 8 (no confidence field for the per-unit figure)"
+          "field": "unit_area_m2",
+          "rule": "confidence",
+          "key": "o3.unit.badge"
         },
         {
           "role": "unit.label",
@@ -1237,8 +1243,9 @@
         {
           "role": "size.panel.notes",
           "brief": "B9",
-          "pending": "estimated",
-          "why": "disclosure texts per option: no report field declared (brief: undeclared); open item 13"
+          "field": "permitted",
+          "rule": "reason_text",
+          "key": "o3.panel.reason"
         },
         {
           "role": "size.panel.all",
@@ -1556,8 +1563,9 @@
         {
           "role": "row.value",
           "brief": "F5",
-          "pending": "estimated",
-          "why": "heritage: no report field declared (brief: undeclared); yes/no columns are NOT NULL DEFAULT false: never-enriched lots must show the null value via *_dataset_version_when_enriched (owed server rule)"
+          "field": "is_heritage_designated",
+          "rule": "yes_no",
+          "key": "lot.heritage.value"
         },
         {
           "role": "row.label",
@@ -1567,8 +1575,9 @@
         {
           "role": "row.value",
           "brief": "F6",
-          "pending": "estimated",
-          "why": "ravine: no report field declared (brief: undeclared); yes/no columns are NOT NULL DEFAULT false: never-enriched lots must show the null value via *_dataset_version_when_enriched (owed server rule)"
+          "field": "is_in_ravine_protection_area",
+          "rule": "yes_no",
+          "key": "lot.ravine.value"
         },
         {
           "role": "row.label",
@@ -1578,8 +1587,9 @@
         {
           "role": "row.value",
           "brief": "F7",
-          "pending": "estimated",
-          "why": "corner lot: no report field declared (brief: undeclared); yes/no columns are NOT NULL DEFAULT false: never-enriched lots must show the null value via *_dataset_version_when_enriched (owed server rule)"
+          "field": "is_corner_lot",
+          "rule": "yes_no",
+          "key": "lot.corner.value"
         },
         {
           "role": "row.label",

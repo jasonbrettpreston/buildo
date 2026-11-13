@@ -59,6 +59,11 @@
               }
             }
           },
+          "lot": {
+            "is_corner_lot": null,
+            "is_heritage_designated": null,
+            "is_in_ravine_protection_area": null
+          },
           "neighbourhood": {
             "compStats": {
               "compCount": null,

@@ -19,7 +19,7 @@
 import reportPage from '../../../../scripts/surfaces/_schema/report-page.json';
 import decl from '../../../../scripts/surfaces/_schema/report-v2.decl.json';
 import presentation from '../../../../scripts/surfaces/_schema/report-presentation.json';
-import { formatPageRule } from './format';
+import { CONFIDENCE_ORDER, PAGE_RULES, formatPageRule, formatTextRule, TEXT_RULES } from './format';
 import type { SeedShas } from './seed-shas';
 
 /** One stored parcel_maxbld_scenarios row (migration 287 draft columns; NUMERIC arrives from pg as a string). */
@@ -37,6 +37,8 @@ export interface StoredRow {
   switchboard_sha: string | null;
   settings_sha: string | null;
   layer2_table_version: string | null;
+  /** The readings the row rests on (M-481): each `{id, state, confidence, evidence}`; optional so a row read before the column was selected still types. */
+  switches?: Array<{ id?: string; confidence?: string | null }> | null;
 }
 /** The parcels row of the lot (integer parcels.id, the varchar lookup id, the parcels-sourced columns). */
 export interface LotFacts { id: number; parcel_id: string; address: string | null; zoning: string | null; columns: Record<string, unknown> }
@@ -100,6 +102,12 @@ export function pageBindings(page: unknown = reportPage, fields: Json[] = declFi
       const [kind, name] = src.split(':');
       if (!name || (kind !== 'catalogue' && kind !== 'parcels' && kind !== 'user_input')) throw new Error(`MB-93: page field ${p.field} has a source the preview cannot read: ${src}`);
       const source: Source = kind === 'catalogue' ? { kind, field_id: name } : kind === 'parcels' ? { kind, column: name } : { kind, member: name };
+      if (kind !== 'user_input') {
+        const rule = String(p.rule);
+        const known = (PAGE_RULES as readonly string[]).includes(rule) || (TEXT_RULES as readonly string[]).includes(rule) || rule === 'reason_text';
+        if (!known) throw new Error(`MB-93: page field ${p.field} has a rule the preview cannot format: ${rule}`);
+        if (rule === 'reason_text' && p.field !== 'permitted') throw new Error(`MB-93: the reason_text rule binds the permitted field only (${p.field})`);
+      }
       const scenario = typeof s.scenario === 'string' ? s.scenario : null;
       out.push({
         section: String(s.id),
@@ -128,6 +136,16 @@ const HIDDEN_STATES: string[] = (presentation as unknown as { states: { hidden: 
 const PERMITTED = 'permitted';
 const COMPUTED = 'computed';
 const PERMITTED_FIELD = 'permitted';
+const NOT_EVALUATED = 'not_evaluated';
+const STATUS_TEXT = (presentation as unknown as { status_text: Record<string, string> }).status_text;
+const isTextRule = (r: string): boolean => (TEXT_RULES as readonly string[]).includes(r);
+/** The weakest confidence word among a stored row's readings (M-481); null when no reading carries one (the page then shows the dash, never a guess). */
+const weakestConfidence = (r: StoredRow): string | null => {
+  const words: string[] = [];
+  for (const s of Array.isArray(r.switches) ? r.switches : []) if (typeof s?.confidence === 'string') words.push(s.confidence); // a reading with no confidence word is not a witness
+  if (words.some((w) => !(CONFIDENCE_ORDER as readonly string[]).includes(w))) return null; // a word the register does not know: fail closed, never show a stronger reading than the row rests on
+  return CONFIDENCE_ORDER.find((w) => words.includes(w)) ?? null;
+};
 const BOUND_FIELDS = new Set(BINDINGS.flatMap((b) => (b.source.kind === 'catalogue' ? [b.source.field_id] : [])));
 
 const num = (v: unknown): number | null => {
@@ -188,6 +206,24 @@ export function projectStoredPage(input: ProjectInput): { response: PageResponse
   const values: Record<string, string> = {};
   for (const b of BINDINGS) {
     if (b.source.kind === 'user_input') continue; // D-46: never a value; named in lineage.user_inputs_not_evaluated
+    if (b.rule === 'reason_text') {
+      // Spec 78 6.6 rule 5: a not-evaluated option shows its stored reason in See details (the ruled status text), never on the face.
+      const r = b.building_type !== null && options[b.section]?.shown_as === 'not_evaluated' ? rowOf(b.building_type, b.field) : undefined;
+      const sentence = r && r.status === NOT_EVALUATED && r.reason ? STATUS_TEXT[`not_evaluated:${r.reason}`] : undefined;
+      if (typeof sentence === 'string' && sentence !== '') values[b.key] = sentence;
+      continue;
+    }
+    if (isTextRule(b.rule)) {
+      let raw: unknown = null;
+      if (b.source.kind === 'parcels') raw = lot.columns[b.source.column];
+      else if (b.building_type !== null && shownPermitted.has(b.section)) {
+        const r = rowOf(b.building_type, b.source.field_id);
+        if (r && r.status === COMPUTED) raw = weakestConfidence(r);
+      }
+      const text = formatTextRule(b.rule, raw);
+      if (text !== null) values[b.key] = text;
+      continue;
+    }
     let n: number | null = null;
     if (b.source.kind === 'parcels') n = num(lot.columns[b.source.column]);
     else if (b.building_type !== null && shownPermitted.has(b.section)) {

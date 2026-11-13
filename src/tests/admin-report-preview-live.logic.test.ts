@@ -18,7 +18,7 @@ import { createRequire } from 'node:module';
 
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
 
-import { formatPageRule, PAGE_RULES, SQFT_PER_M2 } from '@/lib/admin/report-preview-live/format';
+import { formatPageRule, PAGE_RULES, SQFT_PER_M2, TEXT_RULES } from '@/lib/admin/report-preview-live/format';
 import { CURRENT_SEED_SHAS } from '@/lib/admin/report-preview-live/seed-shas';
 import { pageBindings, pageOptions, projectStoredPage, type StoredRow, type LotStamp } from '@/lib/admin/report-preview-live/project';
 import { readPreviewSwitch, storedPageResponse, PREVIEW_SWITCH_KEY, type Queryable } from '@/lib/admin/report-preview-live/stored-page';
@@ -117,7 +117,7 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', () 
   it('the five page rules are exactly the rules the page table binds; the 15 flagged rules stay pending', () => {
     // D-46 (dated 2026-11-11): a user_input field is never formatted by the preview (never a value), so its rule (date_dmy on entered.date) is not a preview rule.
     const bound = new Set(pageBindings().filter((b) => b.source.kind !== 'user_input').map((b) => b.rule));
-    expect([...bound].sort()).toEqual([...PAGE_RULES].sort());
+    expect([...bound].sort()).toEqual([...PAGE_RULES, ...TEXT_RULES, 'reason_text'].sort()); // K2: the closed text rules and the reason rule (project.ts)
     for (const r of PAGE.fe05_flagged_rules as string[]) expect(bound.has(r)).toBe(false);
   });
   it('matches the mobile helpers digit for digit on shared samples (parity; mobile untouched)', async () => {

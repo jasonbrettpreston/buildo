@@ -8,14 +8,14 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-129 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+132 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
 | `ad_slot` | 4 |
 | `catalogue` | 61 |
 | `content` | 35 |
-| `parcels` | 27 |
+| `parcels` | 30 |
 | `user_input` | 2 |
 
 ## Gates
@@ -76,6 +76,9 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | Today's max storeys | `parcel.areas.max_build_stories` | number |  | live | rendered | `parcels:max_build_stories` |  |
 | Today's max FSI | `parcel.areas.max_build_fsi` | number |  | live | rendered | `parcels:max_build_fsi` |  |
 | Today's CoA FSI | `parcel.areas.coa_fsi` | number |  | live | rendered | `parcels:coa_fsi` |  |
+| Heritage designated | `parcel.lot.is_heritage_designated` | boolean |  | live | rendered | `parcels:is_heritage_designated` | K2: Yes / No on the page (rule yes_no); null (never enriched) shows the dash, Spec 78 section 6.6 rule 5 |
+| In a ravine protection area | `parcel.lot.is_in_ravine_protection_area` | boolean |  | live | rendered | `parcels:is_in_ravine_protection_area` | K2: Yes / No on the page (rule yes_no); null (never enriched) shows the dash, Spec 78 section 6.6 rule 5 |
+| Corner lot | `parcel.lot.is_corner_lot` | boolean |  | live | rendered | `parcels:is_corner_lot` | K2: Yes / No on the page (rule yes_no); null (never enriched) shows the dash, Spec 78 section 6.6 rule 5 |
 
 ## Max build card (one per new-build scenario) (`card`)
 

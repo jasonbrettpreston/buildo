@@ -109,9 +109,11 @@
           {
             "role": "size.badge",
             "brief": "B6",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "gfa_pitched_m2",
+            "key": "o1.size.badge",
+            "rule": "confidence",
+            "text": "—"
           },
           {
             "role": "size.label",
@@ -227,9 +229,11 @@
           {
             "role": "size.panel.notes",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "permitted",
+            "key": "o1.panel.reason",
+            "rule": "reason_text",
+            "text": "—"
           },
           {
             "role": "size.panel.all",
@@ -675,9 +679,11 @@
           {
             "role": "size.badge",
             "brief": "B6",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "gfa_flat_m2",
+            "key": "o2.size.badge",
+            "rule": "confidence",
+            "text": "—"
           },
           {
             "role": "size.label",
@@ -793,9 +799,11 @@
           {
             "role": "size.panel.notes",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "permitted",
+            "key": "o2.panel.reason",
+            "rule": "reason_text",
+            "text": "—"
           },
           {
             "role": "size.panel.all",
@@ -1193,9 +1201,11 @@
           {
             "role": "size.badge",
             "brief": "B6",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "gfa_max_m2",
+            "key": "o3.size.badge",
+            "rule": "confidence",
+            "text": "—"
           },
           {
             "role": "size.label",
@@ -1290,9 +1300,11 @@
           {
             "role": "unit.badge",
             "brief": "B8",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "unit_area_m2",
+            "key": "o3.unit.badge",
+            "rule": "confidence",
+            "text": "—"
           },
           {
             "role": "unit.label",
@@ -1359,9 +1371,11 @@
           {
             "role": "size.panel.notes",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "permitted",
+            "key": "o3.panel.reason",
+            "rule": "reason_text",
+            "text": "—"
           },
           {
             "role": "size.panel.all",
@@ -1770,9 +1784,11 @@
           {
             "role": "row.value",
             "brief": "F5",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "is_heritage_designated",
+            "key": "lot.heritage.value",
+            "rule": "yes_no",
+            "text": "—"
           },
           {
             "role": "row.label",
@@ -1784,9 +1800,11 @@
           {
             "role": "row.value",
             "brief": "F6",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "is_in_ravine_protection_area",
+            "key": "lot.ravine.value",
+            "rule": "yes_no",
+            "text": "—"
           },
           {
             "role": "row.label",
@@ -1798,9 +1816,11 @@
           {
             "role": "row.value",
             "brief": "F7",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "value",
+            "field": "is_corner_lot",
+            "key": "lot.corner.value",
+            "rule": "yes_no",
+            "text": "—"
           },
           {
             "role": "row.label",

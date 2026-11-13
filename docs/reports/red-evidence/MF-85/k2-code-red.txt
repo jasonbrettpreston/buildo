@@ -1,0 +1,24 @@
+MF-85 code part red evidence, 2026-11-13, pre-build tree (e4eeca377 plus the new test file); npx vitest run src/tests/surfaces/report-honest-k2b.logic.test.ts
+   × K2 yes/no page rule (formatter pattern, no new component) > the text rules are closed: yes_no and confidence; booleans and words only 2ms
+   × K2 yes/no page rule (formatter pattern, no new component) > the three lot-fact parts are bound parcels columns with the yes_no rule (no longer pending) 2ms
+   × K2 yes/no page rule (formatter pattern, no new component) > a lot sends Yes / No for heritage, ravine, corner; a null column sends nothing (the face shows the dash) 1ms
+   × K2 confidence: the weakest stored reading the option rests on > size.badge of each option is a bound value part with the confidence rule 0ms
+   × K2 confidence: the weakest stored reading the option rests on > the badge shows the lowest confidence among the row switches; no reading with a confidence sends nothing 0ms
+   × K2 not-evaluated: the stored reason in See details, the dash on the face (Spec 78 6.6 rule 5) > size.panel.notes is a bound value part with the reason_text rule on the permitted field 0ms
+   × K2 not-evaluated: the stored reason in See details, the dash on the face (Spec 78 6.6 rule 5) > a not_evaluated option with a worded reason sends the ruled sentence; no number reaches the face 0ms
+ FAIL  src/tests/surfaces/report-honest-k2b.logic.test.ts > K2 yes/no page rule (formatter pattern, no new component) > the text rules are closed: yes_no and confidence; booleans and words only
+TypeError: TEXT_RULES is not iterable
+ FAIL  src/tests/surfaces/report-honest-k2b.logic.test.ts > K2 yes/no page rule (formatter pattern, no new component) > the three lot-fact parts are bound parcels columns with the yes_no rule (no longer pending)
+AssertionError: expected [] to deeply equal [ 'is_corner_lot', …(2) ]
+ FAIL  src/tests/surfaces/report-honest-k2b.logic.test.ts > K2 yes/no page rule (formatter pattern, no new component) > a lot sends Yes / No for heritage, ravine, corner; a null column sends nothing (the face shows the dash)
+AssertionError: expected undefined to be 'Yes' // Object.is equality
+ FAIL  src/tests/surfaces/report-honest-k2b.logic.test.ts > K2 confidence: the weakest stored reading the option rests on > size.badge of each option is a bound value part with the confidence rule
+AssertionError: o1: expected undefined to be 'confidence' // Object.is equality
+ FAIL  src/tests/surfaces/report-honest-k2b.logic.test.ts > K2 confidence: the weakest stored reading the option rests on > the badge shows the lowest confidence among the row switches; no reading with a confidence sends nothing
+AssertionError: expected undefined to be 'Medium-low confidence' // Object.is equality
+ FAIL  src/tests/surfaces/report-honest-k2b.logic.test.ts > K2 not-evaluated: the stored reason in See details, the dash on the face (Spec 78 6.6 rule 5) > size.panel.notes is a bound value part with the reason_text rule on the permitted field
+AssertionError: o1: expected [ undefined, undefined ] to deeply equal [ 'permitted', 'reason_text' ]
+ FAIL  src/tests/surfaces/report-honest-k2b.logic.test.ts > K2 not-evaluated: the stored reason in See details, the dash on the face (Spec 78 6.6 rule 5) > a not_evaluated option with a worded reason sends the ruled sentence; no number reaches the face
+AssertionError: expected undefined to be 'A site-specific exception applies; no…' // Object.is equality
+ Test Files  1 failed (1)
+      Tests  7 failed | 1 passed (8)

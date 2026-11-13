@@ -52,15 +52,18 @@ export async function readPreviewSwitch(db: Queryable): Promise<boolean> {
 /** The parcels columns the page binds (declared `parcels:<column>` sources). The parcels read is ONE static statement (the src SQL ledger
  *  witnesses it; no interpolated text), so every bound column must be in its select list: a new parcels-sourced page field fails here at load. */
 const PARCEL_COLUMNS: string[] = [...new Set(pageBindings().flatMap((b) => (b.source.kind === 'parcels' ? [b.source.column] : [])))];
-const PARCEL_SQL = `SELECT id, parcel_id, zoning_zn_string, lot_size_sqm,
+// K2: a heritage / ravine yes-no column is NOT NULL DEFAULT false, so a never-enriched lot would read "No"; the lineage column nulls it (the page then shows the dash).
+const PARCEL_SQL = `SELECT id, parcel_id, zoning_zn_string, lot_size_sqm, is_corner_lot,
+       CASE WHEN heritage_dataset_version_when_enriched IS NULL THEN NULL ELSE is_heritage_designated END AS is_heritage_designated,
+       CASE WHEN ravine_dataset_version_when_enriched IS NULL THEN NULL ELSE is_in_ravine_protection_area END AS is_in_ravine_protection_area,
        NULLIF(TRIM(COALESCE(address_number, '') || ' ' || COALESCE(linear_name_full, '')), '') AS address
   FROM parcels WHERE parcel_id = $1 LIMIT 1`;
-const PARCEL_SELECTED = ['lot_size_sqm'];
+const PARCEL_SELECTED = ['lot_size_sqm', 'is_corner_lot', 'is_heritage_designated', 'is_in_ravine_protection_area'];
 for (const c of PARCEL_COLUMNS) if (!PARCEL_SELECTED.includes(c)) throw new Error(`MB-93: page field source parcels:${c} is not in the static parcels read`);
 const STAMP_SQL = 'SELECT lot_gate, table_version, evaluator_version FROM bylaw_resolution_lot_stamps WHERE parcel_id = $1 LIMIT 1';
 const TABLE_SQL = "SELECT to_regclass('public.parcel_maxbld_scenarios') IS NOT NULL AS present";
 const ROWS_SQL = `SELECT building_type, field_id, increment, status, value, unit, reason, flags, content_sha,
-       catalogue_sha, switchboard_sha, settings_sha, layer2_table_version
+       catalogue_sha, switchboard_sha, settings_sha, layer2_table_version, switches
   FROM parcel_maxbld_scenarios WHERE parcel_id = $1 ORDER BY building_type, field_id`;
 
 /**

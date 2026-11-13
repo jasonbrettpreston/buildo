@@ -117,6 +117,36 @@
           "status": "live",
           "source": "parcels:coa_fsi",
           "render": "rendered"
+        },
+        {
+          "path": "parcel.lot.is_heritage_designated",
+          "name": "is_heritage_designated",
+          "label": "Heritage designated",
+          "type": "boolean",
+          "status": "live",
+          "source": "parcels:is_heritage_designated",
+          "render": "rendered",
+          "note": "K2: Yes / No on the page (rule yes_no); null (never enriched) shows the dash, Spec 78 section 6.6 rule 5"
+        },
+        {
+          "path": "parcel.lot.is_in_ravine_protection_area",
+          "name": "is_in_ravine_protection_area",
+          "label": "In a ravine protection area",
+          "type": "boolean",
+          "status": "live",
+          "source": "parcels:is_in_ravine_protection_area",
+          "render": "rendered",
+          "note": "K2: Yes / No on the page (rule yes_no); null (never enriched) shows the dash, Spec 78 section 6.6 rule 5"
+        },
+        {
+          "path": "parcel.lot.is_corner_lot",
+          "name": "is_corner_lot",
+          "label": "Corner lot",
+          "type": "boolean",
+          "status": "live",
+          "source": "parcels:is_corner_lot",
+          "render": "rendered",
+          "note": "K2: Yes / No on the page (rule yes_no); null (never enriched) shows the dash, Spec 78 section 6.6 rule 5"
         }
       ]
     },

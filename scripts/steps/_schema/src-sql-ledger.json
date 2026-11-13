@@ -1816,9 +1816,9 @@
       "resolve_errors": 0,
       "fingerprints": [
         "0f97e5ecb408958d",
-        "30f89b13d6acca30",
-        "630899561be92b85",
         "83cc21ad31fee961",
+        "b1b705ee13f829a0",
+        "f4a6761c3d2146cb",
         "f5730dce47400ed9"
       ],
       "reads": {
@@ -1841,15 +1841,21 @@
           "settings_sha",
           "status",
           "switchboard_sha",
+          "switches",
           "unit",
           "value"
         ],
         "parcels": [
           "address_number",
+          "heritage_dataset_version_when_enriched",
           "id",
+          "is_corner_lot",
+          "is_heritage_designated",
+          "is_in_ravine_protection_area",
           "linear_name_full",
           "lot_size_sqm",
           "parcel_id",
+          "ravine_dataset_version_when_enriched",
           "zoning_zn_string"
         ]
       },
