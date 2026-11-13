@@ -141,7 +141,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=305 |
+| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=306 |
 | 2 | resolve_bylaws | PASS | 8 declared, missing from seeds: none |
 | 3 | resolve_bylaws | PASS | retired=0 overlap-with-declared=none |
 | 7 | resolve_bylaws | PASS | SPEC LINK header present=true |
