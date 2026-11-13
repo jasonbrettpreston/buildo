@@ -2104,6 +2104,10 @@
       "section": "fam-general"
     },
     {
+      "id": "m.516",
+      "section": "fam-general"
+    },
+    {
       "id": "lc.15",
       "section": "fam-general"
     },
@@ -7615,6 +7619,17 @@
         "register": true,
         "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
         "anchor": "**M-515**"
+      }
+    },
+    {
+      "id": "M-516",
+      "kind": "m-row",
+      "status": "active",
+      "handbook_line": "m.516",
+      "source": {
+        "register": true,
+        "file": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+        "anchor": "**M-516**"
       }
     },
     {
