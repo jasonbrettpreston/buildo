@@ -808,7 +808,6 @@ export async function verifyCommand(parsed, write, deps = {}) {
   const say = typeof write === 'function' ? write : () => {};
   const root = str(parsed && parsed.root) || '.';
   const regression = loadRegression(root);
-  const git = gitOr(deps, root);
   const history = recordHistory(readRecords(root));
   const latest = [];
   for (const r of history) {
@@ -859,9 +858,11 @@ export async function verifyCommand(parsed, write, deps = {}) {
     const inputs = rec.inputs && typeof rec.inputs === 'object' ? rec.inputs : {};
     const treeBlobs = {};
     const missing = [];
-    for (const p of Object.keys(inputs)) {
-      if (LIVE_DATA_RE.test(p)) continue; // a pin value or an external data hash: not a tree path
-      const id = await blobAt(deps, git, ':index', root, p);
+    // one reader call for every tree path of the record (not one git spawn per path)
+    const treePaths = Object.keys(inputs).filter((p) => !LIVE_DATA_RE.test(p)); // a pin value or an external data hash: not a tree path
+    const ids = await blobIdsOf(deps, root, treePaths);
+    for (const p of treePaths) {
+      const id = ids[p];
       if (id) treeBlobs[p] = id;
       else missing.push(p);
     }

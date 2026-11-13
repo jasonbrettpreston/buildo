@@ -371,6 +371,29 @@ describe('verifyCommand: derived values are computed here, never read from the r
     expect(entry?.cases).toEqual([{ id: qid('A0001|1'), status: 'pass', record_says: null, artifact: IDS_REL }]);
   });
 
+  it('reads the blob ids of a record\'s tree inputs in ONE reader call, not one per path (loop-gate e2e timeout card)', async () => {
+    const root = makeRepo('verify-one-call');
+    resetLines();
+    const files = ['scripts/analysis/bylaw/evaluator.mjs', IDS_REL, 'docs/reports/loop-records/1/round-01.json'];
+    const inputs: Record<string, string> = {};
+    for (const f of files) inputs[f] = 'e'.repeat(40);
+    inputs['pin / ruling'] = 'some pin value';
+    writeRecord(root, 'docs/reports/loop-records/1/round-01.json', {
+      schema: 'loop-record-v1', increment: '1', round: 1, decision: 'revert', reason: 'round one: two cases still differ from the City', inputs,
+    });
+    const calls: string[][] = [];
+    const blobIdsAt = (_root: string, rev: string, paths: string[]): Record<string, string> => {
+      expect(rev).toBe(':index');
+      calls.push([...paths]);
+      return Object.fromEntries(paths.map((p) => [p, 'e'.repeat(40)]));
+    };
+    await verifyCmd(parsedFor(root, { command: 'verify', json: true }), capture(), { computeRun: fakeComputeRun(fakeRun()), blobIdsAt });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual(files);
+    const out = JSON.parse(lines[0] ?? '') as VerifyEntry[];
+    expect(out[0]?.bound_ok).toBe(true);
+  });
+
   it('a record whose bound file changed on disk reads bound_ok: false (the blob from the index no longer matches)', async () => {
     const root = makeRepo('verify-stale');
     resetLines();
