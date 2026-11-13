@@ -1,0 +1,15 @@
+ ❯ src/tests/parcel-lot-form.logic.test.ts:48:51
+     46|   });
+     47|   it('the view not yet applied (SQLSTATE 42P01, migration 320 is a DB …
+     48|     queryMock.mockRejectedValueOnce(Object.assign(new Error('relation …
+       |                                                   ^
+     49|     expect(await readLotForm('P6')).toBeNull();
+     50|     expect(warnMock).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 passed (23)
+   Start at  17:24:53
+   Duration  363ms (transform 56ms, setup 17ms, collect 60ms, tests 5ms, environment 0ms, prepare 39ms)
+

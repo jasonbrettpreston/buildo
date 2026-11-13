@@ -14,6 +14,8 @@ import * as path from 'node:path';
 
 const queryMock = vi.fn();
 vi.mock('@/lib/db/client', () => ({ query: (...a: unknown[]) => queryMock(...a) }));
+const warnMock = vi.fn();
+vi.mock('@/lib/logger', () => ({ logWarn: (...a: unknown[]) => warnMock(...a), logInfo: vi.fn(), logError: vi.fn() }));
 
 import { readLotForm, lotFormEffective, lotFormAuditCounts, LOT_FORM_VIEW, LOT_FORM_SETTING_KEYS } from '@/lib/parcels/lot-form';
 import { ConsumerLotFormSchema, ConsumerParcelLookupResponseSchema } from '@/app/api/parcels/lookup/types';
@@ -23,7 +25,7 @@ const PRES = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/s
 const SEED = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf8'));
 const ROUTE = fs.readFileSync(path.resolve(__dirname, '../app/api/parcels/lookup/route.ts'), 'utf8');
 
-beforeEach(() => queryMock.mockReset());
+beforeEach(() => { queryMock.mockReset(); warnMock.mockReset(); });
 
 describe('readLotForm (the lookup reads the view row)', () => {
   it('a strict O-4 lot: semi_half, basis o4_two_parcel_abut, not unsure (L-SEMI a)', async () => {
@@ -41,6 +43,15 @@ describe('readLotForm (the lookup reads the view row)', () => {
   it('no row (an unknown lot) is null, never a guess', async () => {
     queryMock.mockResolvedValueOnce([]);
     expect(await readLotForm('NOPE')).toBeNull();
+  });
+  it('the view not yet applied (SQLSTATE 42P01, migration 320 is a DB job after the push) reads null and warns: the lookup never 500s, the app never asks', async () => {
+    queryMock.mockRejectedValueOnce(Object.assign(new Error('relation "parcel_lot_form" does not exist'), { code: '42P01' }));
+    expect(await readLotForm('P6')).toBeNull();
+    expect(warnMock).toHaveBeenCalledTimes(1);
+  });
+  it('any other database error still throws (only the missing view degrades)', async () => {
+    queryMock.mockRejectedValueOnce(Object.assign(new Error('connection lost'), { code: '08006' }));
+    await expect(readLotForm('P7')).rejects.toThrow('connection lost');
   });
   it('a row the contract does not know throws (a drifted view is loud, not a silent detached)', async () => {
     queryMock.mockResolvedValueOnce([{ lot_form_detected: 'triplex', lot_form_basis: 'x', unsure: false }]);

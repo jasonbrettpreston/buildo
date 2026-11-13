@@ -7,6 +7,7 @@
 // `lotFormEffective` is the shared pure function of the report (P5.7, O-12): the owner's answer ?? the detected form; the pipeline never
 // reads the override.
 import { query } from '@/lib/db/client';
+import { logWarn } from '@/lib/logger';
 import { ConsumerLotFormSchema, type ConsumerLotForm } from '@/app/api/parcels/lookup/types';
 
 export const LOT_FORM_VIEW = 'parcel_lot_form'; // the SQL below names it literally (the src-sql ledger allows no new interpolation); a test locks the two equal
@@ -19,14 +20,25 @@ type ViewRow = { lot_form_detected: unknown; lot_form_basis: unknown; unsure: un
 
 /** The lot's view row, by the consumer parcel id (parcels.parcel_id); null when the lot has no row. A row outside the contract throws. */
 export async function readLotForm(parcelId: string): Promise<ConsumerLotForm | null> {
-  const rows = await query<ViewRow>(
+  let rows: ViewRow[];
+  try {
+    rows = await query<ViewRow>(
     // The lot's internal id is resolved first as a scalar subquery so the view's lateral runs for ONE lot (0.4 ms measured; a JOIN to parcels
     // instead scanned every parcel, 2.9 s). The view's parcel_id is parcels.id.
     `SELECT l.lot_form_detected, l.lot_form_basis, l.unsure
        FROM parcel_lot_form l
       WHERE l.parcel_id = (SELECT p.id FROM parcels p WHERE p.parcel_id = $1)`,
     [parcelId],
-  );
+    );
+  } catch (err) {
+    // Migration 320 is a DB job run AFTER the push: until it lands the view is absent (SQLSTATE 42P01). Only that case degrades to "no block" (the app
+    // never asks, as with an older server); the lookup must not 500 on it. Every other database error still throws.
+    if ((err as { code?: string } | null)?.code === '42P01') {
+      logWarn('[parcels/lot-form]', 'parcel_lot_form is not applied yet (migration 320): lotForm omitted', { sqlstate: '42P01' });
+      return null;
+    }
+    throw err;
+  }
   const r = rows[0];
   if (!r) return null;
   return ConsumerLotFormSchema.parse({ detected: r.lot_form_detected, basis: r.lot_form_basis, unsure: r.unsure });

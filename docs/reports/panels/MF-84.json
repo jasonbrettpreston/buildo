@@ -4,14 +4,15 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-13",
-  "head": "bef63fdf8",
+  "head": "3dc51a394",
   "cards": [
     "Operator 2026-11-13: \"semi all y\" and \"semi ask a - and we need a new mini page similar to the \\\"choose your lot\\\" excpet it just asks one question\""
   ],
   "plan": "Plan ~/Buildo-scratch/mcbylaws/SEMI-O4/plan.md with the operator rulings at its end (D1 to D6 as recommended; ask only in the doubt band; three answers). Tests in the plan: L-SEMI a-h (tests/e2e/scenarios.json), src/tests/parcel-lot-form.logic.test.ts, src/tests/db/parcel-lot-form.db.test.ts, mobile lotForm, page-behaviour and golden tests. Red-first evidence in docs/reports/red-evidence/SEMI-B/. No separate plan panel was convened: the lane brief fixed the plan and the rulings.",
-  "output": "OUTPUT panel as the lane brief set it: a DeepSeek (deepseek-chat, fast) bulk pass on migrations/320, src/lib/parcels/lot-form.ts and the five new mobile files (records in ~/Buildo-scratch/mcbylaws/SEMI-O4/panel-deepseek-*.txt), each claim adjudicated by the lane by execution. Changed code: the lot lookup resolves the id as a scalar subquery (2.9 s with a JOIN, 0.4 ms measured with EXPLAIN ANALYZE on dev); needsSemiQuestion treats only the exact sentinel as answered; ORDER BY names; the audit count is documented as admin-gated by its caller. Refuted by measurement: multi-primary parcels = 0 and the view has exactly one row per parcel (496,536 = parcels); the abutting-population concern (an unrelated parcel cannot count: the lateral joins parcel_abutments); the redirect and error handling mirror the shipped MF-53 pattern. Not run: the Claude seats (code-reviewer-grounded, regression-guardian, observability) and the DB test (needs the test stack, orchestrator rehearsal).",
+  "output": "OUTPUT panel as the lane brief set it: a DeepSeek (deepseek-chat, fast) bulk pass on migrations/320, src/lib/parcels/lot-form.ts and the five new mobile files (records in ~/Buildo-scratch/mcbylaws/SEMI-O4/panel-deepseek-*.txt), each claim adjudicated by the lane by execution. Changed code: the lot lookup resolves the id as a scalar subquery (2.9 s with a JOIN, 0.4 ms measured with EXPLAIN ANALYZE on dev); needsSemiQuestion treats only the exact sentinel as answered; ORDER BY names; the audit count is documented as admin-gated by its caller. Refuted by measurement: multi-primary parcels = 0 and the view has exactly one row per parcel (496,536 = parcels); the abutting-population concern (an unrelated parcel cannot count: the lateral joins parcel_abutments); the redirect and error handling mirror the shipped MF-53 pattern. Claude review added by lane SEMI-R (one grounded Sonnet seat): the view's three branches (strict, doubt, weak party wall), unsure (never NULL: shared_len_m is NOT NULL), one row per parcel, the three answers and routes, the redirect-once rule and the lookup change were read against the plan and the rulings; no rule drift found. ONE real finding folded, red test first (docs/reports/red-evidence/SEMI-B/red-5-missing-view.txt): migration 320 is a DB job after the push, so until it lands readLotForm threw on the missing view (SQLSTATE 42P01) and the whole lookup returned 500; it now reads null and warns for that code only (the app then never asks, as with an older server); every other database error still throws. Not run: code-reviewer-grounded, regression-guardian and observability seats, and the DB test (needs the test stack, orchestrator rehearsal).",
   "seats": [
-    "DeepSeek lens pass (fast), lane-grounded"
+    "DeepSeek lens pass (fast), lane-grounded",
+    "Claude review (Sonnet, lane SEMI-R, grounded): migration 320 view, lookup change and the question page against plan.md and the operator rulings at its end"
   ],
   "verdict": "PASS with follow-ups",
   "blockers": [],
@@ -19,7 +20,8 @@
     "Migration 320 applied by the orchestrator DB job DB-320 (rehearsed); then recapture the witness catalog and drop parcel_lot_form from the uncatalogued list in src/tests/src-sql-ledger.logic.test.ts.",
     "The 50-lot imagery check (operator), then re-set semi_doubt_min_shared_len_m and semi_doubt_max_link_parcels.",
     "The step flags.semiHalf read: ~/Buildo-scratch/mcbylaws/SEMI-O4/hashed.patch in the single recapture commit (D-78).",
-    "The owner answer is a route param (no server store, O-12); the report reads lotFormOverride when APP-RENO lands; corrections cannot be counted until then."
+    "The owner answer is a route param (no server store, O-12); the report reads lotFormOverride when APP-RENO lands; corrections cannot be counted until then.",
+    "When migration 320 is applied the 42P01 degrade in readLotForm is dead code in practice; keep it (it only fires when the view is absent)."
   ],
   "evidence": [
     "docs/reports/red-evidence/SEMI-B/"
