@@ -127,7 +127,11 @@ describe('INGESTOR prerequisite 0q — download retries', () => {
     const tmp = fs.mkdtempSync(path.join(process.cwd(), 'tmp-0q-t4-'));
     const dest = path.join(tmp, 'source.zip');
     const { log } = warnLog();
-    let seenByAttempt2: boolean | null = null;
+    // What attempt 2 finds at dest (null = absent). Content, not bare existence: an errored
+    // write stream whose async open lands just AFTER the failure cleanup (CPU load, 8/300 in a
+    // 300-run harness) can leave an EMPTY file; attempt 2's own 'w' open truncates it. The
+    // invariant is that no PARTIAL BYTES are ever left behind to be seen.
+    let seenByAttempt2: string | null = null;
     let call = 0;
     const fetchImpl = vi.fn(async () => {
       call++;
@@ -143,7 +147,7 @@ describe('INGESTOR prerequisite 0q — download retries', () => {
         });
         return new Response(stream, { status: 200, statusText: 'OK' });
       }
-      seenByAttempt2 = fs.existsSync(dest);
+      seenByAttempt2 = fs.existsSync(dest) ? fs.readFileSync(dest, 'utf8') : null;
       return new Response(new Uint8Array(Buffer.from('complete')), { status: 200, statusText: 'OK' });
     });
     try {
@@ -152,7 +156,8 @@ describe('INGESTOR prerequisite 0q — download retries', () => {
         { retries: 1, backoffMs: 0, log, tag: '[t4]' },
       );
       expect(fetchImpl).toHaveBeenCalledTimes(2);
-      expect(seenByAttempt2, 'attempt 1\'s partial dest must be GONE before attempt 2 starts').toBe(false);
+      expect(seenByAttempt2, 'attempt 1\'s partial BYTES must never be visible to attempt 2').not.toBe('partial-bytes');
+      expect(fs.readFileSync(dest, 'utf8'), 'the retried attempt\'s bytes are what lands at dest').toBe('complete');
       expect(dl.attempts).toBe(2);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
