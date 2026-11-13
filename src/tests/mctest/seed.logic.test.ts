@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { ROOT } from "../../../scripts/mctest/lib.cjs";
 import {
   personaEmails,
+  confirmEmail,
   setProfile,
   usedCount,
 } from "../../../scripts/mctest/seed-personas.mjs";
@@ -106,6 +107,31 @@ describe("the profiles row (MF-79 fix: the test stack has no sign-up trigger row
   it("fails the user's transaction when no row is written", async () => {
     await expect(setProfile(stub(0), "u1", true)).rejects.toThrow(
       /profiles row not written/,
+    );
+  });
+});
+
+describe("confirmEmail (MF-79 follow-up: seeded users must be able to sign in)", () => {
+  const stub = (rowCount: number) => {
+    const sql: string[] = [];
+    return {
+      sql,
+      query: async (q: string) => {
+        sql.push(q);
+        return { rowCount };
+      },
+    };
+  };
+  it("marks only an @mctest.test user's email confirmed", async () => {
+    const db = stub(1);
+    await confirmEmail(db, "u1");
+    expect(db.sql.join(" ")).toMatch(
+      /UPDATE auth\.users SET email_confirmed_at = COALESCE\(email_confirmed_at, now\(\)\)[\s\S]*email LIKE '%@mctest\.test'/,
+    );
+  });
+  it("fails the user's transaction when no row is updated", async () => {
+    await expect(confirmEmail(stub(0), "u1")).rejects.toThrow(
+      /email not confirmed/,
     );
   });
 });

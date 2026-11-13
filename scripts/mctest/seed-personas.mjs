@@ -54,6 +54,19 @@ export async function setProfile(db, uid, isAdmin) {
   if (r.rowCount !== 1) throw new Error("profiles row not written");
 }
 
+/**
+ * Marks the seeded user's email confirmed so password sign-in works (the test stack's auth config has confirmation on, which returned
+ * 400 email_not_confirmed to every stress and drill sign-in). Test stack only (main() refuses otherwise) and only an @mctest.test
+ * address. No row updated fails the user's transaction.
+ */
+export async function confirmEmail(db, uid) {
+  const r = await db.query(
+    "UPDATE auth.users SET email_confirmed_at = COALESCE(email_confirmed_at, now()) WHERE id = $1 AND email LIKE '%@mctest.test'",
+    [uid],
+  );
+  if (r.rowCount !== 1) throw new Error("email not confirmed");
+}
+
 async function account(email) {
   const base = process.env.MCTEST_SUPABASE_URL;
   const headers = {
@@ -117,6 +130,7 @@ async function main() {
         const uid = await account(email);
         await db.query("BEGIN");
         await setProfile(db, uid, p.role === "admin");
+        await confirmEmail(db, uid);
         await db.query(
           "INSERT INTO user_profiles (user_id, trade_slug) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING",
           [uid, TRADE],
