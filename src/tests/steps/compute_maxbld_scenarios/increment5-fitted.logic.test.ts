@@ -122,3 +122,20 @@ describe('C4 / C15 / C6: asserted bounds fail closed (never a clip) and every bo
     for (const w of ['core count', 'not a catalogue row', 'exactly one of reason or above', 'not a refuse reason']) expect([w, errs.some((e) => e.includes(w))]).toEqual([w, true]);
   });
 });
+
+describe('Q3 (b), operator ruling 2026-11-13 / AR-7 (b): units_fit counts units on the FITTED storeys, not storeys_max', () => {
+  const run = (rowsIn: Record<string, number>) => {
+    const R = req(path.join(ROOT, 'scripts/lib/compute/maxbld/rows.js')) as Json;
+    const s = seeds();
+    const rows = Object.fromEntries(Object.entries(rowsIn).map(([k, v]) => [k, { value: v }]));
+    const input = { ...parcelInput(LOTS.get('A0175') as Json, bt(s, 'detached_houseplex')), seeds: s, rows };
+    return R.runRow('units_fit', input) as Json;
+  };
+  const base = { units_max: 99, wall_storeys: 3, storeys_max: 4, footprint_max_m2: 100, setback_plate_m2: 80, footprint_fit_m2: 100, basement_units: 0 };
+  it('fitted storeys below storeys_max give fewer units than the storeys_max count', () => {
+    const atMax = run({ ...base, storeys_fit: 4, storeys_above_wall: 1 });
+    const fitted = run({ ...base, storeys_fit: 2, storeys_above_wall: 1 });
+    expect([atMax.status, fitted.status]).toEqual(['computed', 'computed']);
+    expect((fitted.value as number) < (atMax.value as number)).toBe(true);
+  });
+});
