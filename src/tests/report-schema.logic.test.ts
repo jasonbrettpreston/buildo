@@ -187,7 +187,8 @@ describe('Q-7 scope', () => {
   it('no pending row remains: the Q-7 rows are left out until their parcels column and whitelist entry land, and the bound parcel facts read parcels columns', () => {
     const inp = fresh();
     expect(JSON.stringify(inp.decl)).not.toContain('pending:');
-    expect(allFields(inp).some((f) => f.path.startsWith('parcel.lot.'))).toBe(false);
+    // K2 (operator 2026-11-13): heritage, ravine and corner now have their parcels column and whitelist entry; the other Q-7 rows stay left out
+    expect(allFields(inp).filter((f) => f.path.startsWith('parcel.lot.')).map((f) => `${f.path} ${f.source}`).sort()).toEqual(['parcel.lot.is_corner_lot parcels:is_corner_lot', 'parcel.lot.is_heritage_designated parcels:is_heritage_designated', 'parcel.lot.is_in_ravine_protection_area parcels:is_in_ravine_protection_area']);
     expect(field(inp, 'parcel.areas.lot_size_sqm').source).toBe('parcels:lot_size_sqm');
   });
   it('FAILs a pending form once more (the same form the Q-7 rows used)', () => {

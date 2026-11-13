@@ -2957,6 +2957,30 @@
     },
     {
       "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
+      "producer": "enrich_centreline",
+      "kind": "table",
+      "key": "parcels.is_corner_lot",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
+      "producer": "enrich_heritage",
+      "kind": "table",
+      "key": "parcels.heritage_dataset_version_when_enriched",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
+      "producer": "enrich_heritage",
+      "kind": "table",
+      "key": "parcels.is_heritage_designated",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
       "producer": "enrich_parcels",
       "kind": "table",
       "key": "parcels.zoning_zn_string",
@@ -2965,9 +2989,33 @@
     },
     {
       "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
+      "producer": "enrich_ravines",
+      "kind": "table",
+      "key": "parcels.is_in_ravine_protection_area",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
+      "producer": "enrich_ravines",
+      "kind": "table",
+      "key": "parcels.ravine_dataset_version_when_enriched",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
       "producer": "parcels",
       "kind": "table",
       "key": "parcels.address_number",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.heritage_dataset_version_when_enriched",
       "value": "any",
       "source": "src_sql"
     },
@@ -3000,6 +3048,14 @@
       "producer": "parcels",
       "kind": "table",
       "key": "parcels.parcel_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/report-preview-live/stored-page.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.ravine_dataset_version_when_enriched",
       "value": "any",
       "source": "src_sql"
     },

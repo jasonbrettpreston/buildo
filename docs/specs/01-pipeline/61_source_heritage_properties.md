@@ -493,7 +493,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
   - data (descriptor): `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: load_heritage · parcels
   - downstream: enrich_parcels
-  - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms) · src/lib/parcels/what-we-checked.ts (table parcels: 2 columns)
+  - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms) · src/lib/admin/report-preview-live/stored-page.ts (table parcels: 2 columns) · src/lib/parcels/what-we-checked.ts (table parcels: 2 columns)
 <!-- /generated:target-files -->
 
 - `scripts/analysis/enrich-heritage-cohort-differential.js` + `docs/reports/golden/enrich_heritage/differential/cohort.json` (batch-2 row 2.2 — the committed-perturbation differential; re-runnable against the LOCAL dev DB only)

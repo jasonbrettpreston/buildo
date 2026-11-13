@@ -485,7 +485,7 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
   - data (descriptor): `parcels` reads+writes (migrations/011_parcels.sql); `ravines` reads (migrations/167_create_ravines_table.sql)
   - upstream: load_ravines · parcels
   - downstream: enrich_parcels
-  - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms) · src/lib/parcels/what-we-checked.ts (table parcels: 2 columns)
+  - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms) · src/lib/admin/report-preview-live/stored-page.ts (table parcels: 2 columns) · src/lib/parcels/what-we-checked.ts (table parcels: 2 columns)
 <!-- /generated:target-files -->
 
 - `migrations/NNN_create_ravines_table.sql` (NEW — M-1; planar + geography GIST per L13)

@@ -504,7 +504,7 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
   - data (descriptor): `parcels` reads+writes (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
   - upstream: load_centreline · parcels
   - downstream: enrich_parcels · link_parcel_abutments
-  - consumers: enrich_centreline (records_meta centreline_enrich) · scripts/analysis/enrich-centreline-cohort-differential.js (records_meta centreline_enrich) · src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms)
+  - consumers: enrich_centreline (records_meta centreline_enrich) · scripts/analysis/enrich-centreline-cohort-differential.js (records_meta centreline_enrich) · src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms) · src/lib/admin/report-preview-live/stored-page.ts (table parcels: 1 column)
 <!-- /generated:target-files -->
 
 - `scripts/lib/source-version.js` (**[as-built ②]** the tier-1/tier-2 skip-check gate + skip re-emit, called via the library's `scripts/lib/step/{staleness,acquire}.js`, not from the step body)
