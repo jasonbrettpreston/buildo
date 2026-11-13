@@ -493,6 +493,7 @@ Scope LEAN (card answer Q-MFS a): only the report page converts first; reuse gat
   - Done-condition: migration 320 applied by the orchestrator DB job DB-320 (rehearsed on the test stack), the 50-lot imagery check done by the operator and the semi_doubt_* settings re-set from it, the L-SEMI McTest rows run, the step's flags.semiHalf read landed in the single recapture commit (parked patch `~/Buildo-scratch/mcbylaws/SEMI-O4/hashed.patch`, D-78), and the owner answer stored when APP-RENO lands (until then it is a route param).
   - FE rows owned: none.
   - Dated note 2026-11-13 (M-246; SEMI-B · McFrontend queue · lane SEMI-B): row added by this commit.
+  - Dated note 2026-11-13 (M-246, prior text kept; SEMI-R · McFrontend queue · lane SEMI-R; relayed by the coordinator, operator words as relayed: "as long as they are compliant"): the three strings of S-093 (select.none "Choose an answer", select.go "Continue", select.label "Open the report with this answer") are approved on that condition. They stay content entries in mobile_parcel_semi_question.content.json (no copy in code) and follow the shipped MF-53 pattern (disambiguation: "Choose a lot", "Open the report for the chosen lot"); the descriptor declares a11y labels complete, and the surface conformance and golden tests pass. The no-stored-answer note stays pending.
 
 ## Later: convert-on-touch
 

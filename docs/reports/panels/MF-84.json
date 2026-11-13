@@ -26,5 +26,5 @@
   "evidence": [
     "docs/reports/red-evidence/SEMI-B/"
   ],
-  "notes": "The view reads the lot rows under the current settings; the dev measurement: 102,466 clear semis, 706 short-wall asked, 21,565 doubt-band asked, 371,799 detached."
+  "notes": "The view reads the lot rows under the current settings; the dev measurement: 102,466 clear semis, 706 short-wall asked, 21,565 doubt-band asked, 371,799 detached. Microcopy (S-093 select.none, select.go, select.label): approved by the operator \"as long as they are compliant\" (relayed by the coordinator, 2026-11-13); kept as content entries and checked against the MF-53 pattern and the descriptor a11y labels (complete); surface conformance and golden tests pass."
 }
