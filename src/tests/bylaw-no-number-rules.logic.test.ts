@@ -43,10 +43,12 @@ describe('NN-Q3: main_building_gfa_m2, plan facts then footprint x storeys then 
       vars: { lot_frontage_m: 12, lot_depth_m: 40, lot_area_m2: 480, main_building_gfa_m2: gfa } });
     const eff = (l: Json) => E.effective(l, 'gfa_m2', E.loadCandidates(l, units).candidates, C);
     const byId = new Map<string, Json>(units.map((u: Json) => [u.unit_id, u]));
-    for (const id of ['150.7.60.50(2)#whole', '150.8.60.50(2)#whole']) expect([byId.get(id)?.archetype, byId.get(id)?.target, byId.get(id)?.bound]).toEqual(['LIMIT', 'gfa_m2', 'max']);
-    const g = eff(lot('garden_suite', 86.02));
-    expect([g.status, g.value, String(g.winner?.unit_id ?? g.winner)]).toEqual(['value', 86.02, '150.7.60.50(2)#whole']); // below the 120 m2 cap: the house decides
-    expect(eff(lot('garden_suite', 200)).value).toBe(120); // above it: the 120 m2 cap of 150.7.60.50(4)(A) decides
+    expect([byId.get('150.8.60.50(2)#whole')?.archetype, byId.get('150.8.60.50(2)#whole')?.target, byId.get('150.8.60.50(2)#whole')?.bound]).toEqual(['LIMIT', 'gfa_m2', 'max']);
+    // MB-27 increment 5 item 1 (named re-pin): 150.7.60.50(2) leaves the stored gfa_m2 for Layer 3 on its own target; the evaluator still answers it from the house figure
+    expect([byId.get('150.7.60.50(2)#whole')?.archetype, byId.get('150.7.60.50(2)#whole')?.target, byId.get('150.7.60.50(2)#whole')?.bound]).toEqual(['LIMIT', 'suite_gfa_below_main_m2', 'max']);
+    const g = E.effective(lot('garden_suite', 86.02), 'suite_gfa_below_main_m2', E.loadCandidates(lot('garden_suite', 86.02), units).candidates, C);
+    expect([g.status, g.value, String(g.winner?.unit_id ?? g.winner)]).toEqual(['value', 86.02, '150.7.60.50(2)#whole']);
+    expect(eff(lot('garden_suite', 86.02)).value).toBe(120); // the stored gfa_m2 is the 120 m2 cap of 150.7.60.50(4)(A)
     const l = eff(lot('laneway_suite', 90));
     expect([l.status, l.value]).toEqual(['value', 90]);
   });

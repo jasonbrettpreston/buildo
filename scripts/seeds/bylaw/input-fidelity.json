@@ -58,6 +58,13 @@
       "status": "approximates",
       "why": "The by-law's gross floor area is the sum of the area of each floor level above and below ground, measured from the exterior of the main wall. A plan-facts figure is what the applicant's plans state; footprint x storeys leaves out basements and differing floor plates; the maximum build is a rule-derived figure, not the house on the lot (CHAT-198.NN-Q3).",
       "evidence_ref": "docs/reference/bylaw-provisions.md (800.50(320)); docs/specs/01-pipeline/69a_mcbylaw_register.md M-82 dated note 2026-10-29"
+    },
+    "800.50(775)": {
+      "input": "principal_side_setback_m",
+      "our_field": "none in Layer 2 (the residential building's required side yard is the house's own Layer 2 cell, read by the step)",
+      "status": "unknown",
+      "why": "150.7.60.20(6)(C) compares the garden suite's street-side yard with the required minimum side yard setback for the residential building on the lot (item 6 reading 2: its street-side yard, else its interior side yard). Layer 2 evaluates the suite and cannot read the house's cell, so the stored cell is not_evaluated:missing_input; the Layer 3 step supplies the value (Spec 78 P5.13; operator B5A-2 a, 2026-11-12).",
+      "evidence_ref": "docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2"
     }
   }
 }

@@ -146,6 +146,9 @@ export function makeContext(vocab, extra = {}) {
     // M-251 (operator approved 2026-10-21, F-SC-7): the article_application form by unit id, for a unit whose text names no
     // building type but which the operator scoped to the residential building (900.3.10(70)(B)).
     unitScope: vocabMap(vocab.unit_application),
+    // D-3 a (MB-27 increment 5 item 3; extends M-267 / M-314): one generic row, a type-less Chapter 900 exception unit binds the residential
+    // building, not the listed building types, except on the untouched targets (coverage, item 4)
+    typeLessException: vocab.type_less_exception_application || null,
     // M-222 / M-224: a map-gated unit whose map is not held takes the literal reading (the unit is set aside, its own
     // disclosure says so), never not_evaluated:map_area_not_held on every lot.
     mapUnheldReading: vocabMap(vocab.map_area_unheld_reading),
@@ -605,6 +608,12 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   const uScope = C.unitScope && C.unitScope[u.unit_id];
   if (uScope) reads.add('building_type');
   if (uScope && bt && uScope.excluded_building_types.includes(bt)) return { ok: false, why: `building_type ${bt} (outside ${uScope.citation}, ${uScope.ruling})` };
+  const tl = C.typeLessException;
+  if (tl && u.layer === tl.layer && target && !tl.untouched_targets.includes(target) && (app.building_types || []).every((t) => tl.type_less_building_types.includes(t))) {
+    for (const r of tl.reads) reads.add(r);
+    const namesAccessory = (app.uses || []).some((x) => C.accessoryUses && C.accessoryUses.has(x && x.token !== undefined ? x.token : x));
+    if (bt && !namesAccessory && tl.excluded_building_types.includes(bt)) return { ok: false, why: tl.why };
+  }
   const types = app.building_types || [];
   if (types.length && !types.includes('any')) {
     reads.add('building_type');

@@ -65,7 +65,7 @@ describe('MB-18 j — J1 data (red): the fallback target, its entry, the scope p
     const scope = read('scripts/seeds/bylaw/layer2-scope.json');
     const principal: string[] = scope.targets.principal;
     expect(principal.indexOf(TARGET)).toBe(11);
-    expect(principal.length).toBe(26);
+    expect(principal.length).toBe(27); // MB-27 increment 5 (named re-pin): principal_coverage_path_b_pct joins after it (Q3 a as ruled B5A-1 c)
     expect(isSortedUnique(principal)).toBe(true);
     expect(principal).toContain('front_setback_m');
   });

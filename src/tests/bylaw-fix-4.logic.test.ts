@@ -193,7 +193,7 @@ describe('F-SC-9 / M-253 — garden-suite lots: the 20 % all-ancillary cap, the 
   it('the suite lot: ancillary_coverage_pct 20 % from (1)(B) on a lot with no Lot Coverage Overlay; the coverage answer stays the (B) path', () => {
     const a = eff(yar('garden_suite'), 'ancillary_coverage_pct');
     expect([a.status, a.value, a.winner]).toEqual(['value', 20, '150.7.60.70(1)#(1)(B)']);
-    expect(eff(yar('garden_suite'), 'lot_coverage_pct').value).toBe('unregulated');
+    expect(eff(yar('garden_suite'), 'lot_coverage_pct').value).toBe(45); // MB-27 increment 5 item 5 (D-8 a, named re-pin): path (A) is a flat 45 % on every lot; the (B) house figure is principal_coverage_path_b_pct
   });
 
   it('(A) 45 % is disclosed as the alternative path', () => {

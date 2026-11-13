@@ -4258,14 +4258,14 @@
       "verified_on": "2026-11-11"
     },
     "849-2025": {
-      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
+      "basis": "M-481",
       "bylaw": "849-2025",
       "enacted_on": "2025-07-24",
-      "in_force_on": null,
-      "in_force_trigger": "in force except one property-specific appeal maintained (City page)",
+      "in_force_on": "2025-07-24",
+      "in_force_trigger": "in force except one property-specific appeal; property not named (City page); recorded in force from enactment in the CARD-848-INFORCE form by item 12 (D-10 a, MB-27 increment 5, operator 2026-11-12 \"a\"), confidence medium (the M-481 row); all 15 garden-suite CoA notices were heard after 2025-07-24 (~/Buildo-scratch/mcbylaws/inc5/mcproof/evidence-849-hearings.out); earlier basis S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md)",
       "source_sha256": "ab3ab9737ffdbfe92d78f6b54523cdef8f2124fd6cf29162c6f1f67238c937e3",
       "source_url": "https://www.toronto.ca/city-government/planning-development/planning-studies-initiatives/garden-suites/",
-      "status": "partially_in_force",
+      "status": "in_force",
       "verified_on": "2026-10-07"
     },
     "851-2020": {

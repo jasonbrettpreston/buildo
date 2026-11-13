@@ -449,11 +449,13 @@ function optionPairs(scope, designOptions) {
     if (!vo || typeof vo.token !== 'string' || !Array.isArray(vo.values) || !vo.values.length) throw new Error(`optionPairs: option ${name} has no vocab.design_options record`);
     if (!Array.isArray(so.classes) || !so.classes.length) throw new Error(`optionPairs: option ${name} lists no classes`);
     for (const v of vo.values) if (typeof v.option !== 'string' || typeof v.holds !== 'boolean') throw new Error(`optionPairs: option ${name} value ${JSON.stringify(v)} needs option and a boolean holds`);
+    // MB-27 increment 5 item 7 (D-4 a): `sets`, the other lot conditions a value fixes in its run, each a boolean (never the option's own token)
+    for (const v of vo.values) if (v.sets !== undefined && (!v.sets || typeof v.sets !== 'object' || Array.isArray(v.sets) || Object.entries(v.sets).some(([k, b]) => k === vo.token || typeof b !== 'boolean'))) throw new Error(`optionPairs: option ${name} value ${v.option} sets must map other lot conditions to booleans`);
     for (const structure of scope.structures) {
       for (const target of (so.targets && so.targets[structure]) || []) {
         const bi = at.get(`${structure}\u0000${target}`);
         if (bi === undefined) throw new Error(`optionPairs: option target ${structure} ${target} is not a base pair`);
-        for (const v of vo.values) out.push({ structure, target, option_name: name, option: v.option, token: vo.token, holds: v.holds, base_index: bi, classes: [...so.classes] });
+        for (const v of vo.values) out.push({ structure, target, option_name: name, option: v.option, token: vo.token, holds: v.holds, ...(v.sets ? { sets: { ...v.sets } } : {}), base_index: bi, classes: [...so.classes] });
       }
     }
     for (const structure of scope.structures) {
@@ -466,15 +468,15 @@ function optionPairs(scope, designOptions) {
   return out;
 }
 
-/** M-465 (1): the class lot evaluated under one option slot: the option's token held or not; the threshold pair takes the lot unchanged. */
+/** M-465 (1): the class lot evaluated under one option slot: the option's token held or not, plus the lot conditions its value `sets` (D-4 a); the threshold pair takes the lot unchanged. */
 function optionLot(lot, pair) {
   if (pair.option === null) return lot;
-  return { ...lot, flags: { ...(lot.flags || {}), [pair.token]: pair.holds } };
+  return { ...lot, flags: { ...(lot.flags || {}), ...(pair.sets || {}), [pair.token]: pair.holds } };
 }
 
 /** The lot inputs an option slot sets (so they are not lot inputs): left out of inputs_used, kept in the cell cache key. */
 function optionInputPaths(pairs) {
-  return [...new Set(pairs.filter((p) => p.option !== null).map((p) => `flags.${p.token}`))].sort();
+  return [...new Set(pairs.filter((p) => p.option !== null).flatMap((p) => [p.token, ...Object.keys(p.sets || {})]).map((t) => `flags.${t}`))].sort();
 }
 
 const FIELD_SEP = '\u001f';

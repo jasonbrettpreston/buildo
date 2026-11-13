@@ -184,7 +184,8 @@ describe('R5 / R6 / R7: nothing else moves; RT; I13', () => {
     const o = mz.materializeBatch([rt], env);
     const d = lr.makeDecodeDicts({ units: o.rows.units, texts: o.rows.texts });
     const rows = lr.decodeOptionResults({ lot: o.rows.lots[0], pairs: env.pairs, classes: env.classes, map: MAP, dicts: d, optionPairs: env.optionPairs }) as Json[];
-    for (const r of rows.filter((x) => x.option !== null && x.class === 'detached_house')) expect([r.target, r.option, r.shared_with_base]).toEqual([r.target, r.option, true]);
+    // MB-27 increment 5 (named re-pin): the roof_form slots only; the suite_height slots differ from their base pair by the ruled arm (D-1 a)
+    for (const r of rows.filter((x) => x.option !== null && x.class === 'detached_house' && x.option_name !== 'suite_height' && !['suite_low', 'suite_tall'].includes(x.option))) expect([r.target, r.option, r.shared_with_base]).toEqual([r.target, r.option, true]);
     const thr = rows.find((x) => x.option === null) as Json;
     expect([thr.status, thr.value_kind, thr.evidence_kind]).toEqual(['applies', 'unregulated', 'absence']);
   });
@@ -223,7 +224,7 @@ describe('R10: the pitched step-back (M-465 (3), a dated note on M-183)', () => 
     }
   });
   it('a token outside design_options known false (major_street) is unaffected: the rule reads design-option tokens only', () => {
-    expect(env.ctx.designOptionTokens).toEqual(new Set([RF.token]));
+    expect(env.ctx.designOptionTokens).toEqual(new Set([RF.token, 'suite_height_over_4m'])); // MB-27 increment 5 (named re-pin): the second design option's token (D-1 a)
     expect([...env.ctx.designOptionTokens]).not.toContain('major_street');
   });
 });

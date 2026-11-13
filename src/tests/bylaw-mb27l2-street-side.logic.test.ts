@@ -94,7 +94,7 @@ describe('M-475 on the production path: a house lot in a zone with no street-sid
 
 describe('M-475 moves no other cell: suites, townhouses, apartments and the null type keep their answers', () => {
   it.each(ZONES)('%s: the garden and laneway suite cells are unchanged (150.7 garden suite clause; 150.8 laneway suite)', (z) => {
-    expect(show(eff(lot(z, 'garden_suite')))).toEqual(['not_evaluated', null, 'condition_unknown:adjacent_lot_fronts_flanking_street', null, null, null]);
+    expect(show(eff(lot(z, 'garden_suite')))).toEqual(['not_evaluated', null, 'missing_input:principal_side_setback_m', null, null, null]); // MB-27 increment 5 item 6 reading 2 (named re-pin): 150.7.60.20(6)(C) is on the street-side target, the house's cell supplied by the step (P5.13)
     expect(show(eff(lot(z, 'laneway_suite')))).toEqual(['not_evaluated', null, 'no_candidate', null, null, null]);
   });
   it.each(ZONES)('%s: townhouse and apartment off a major street stay no_candidate', (z) => {

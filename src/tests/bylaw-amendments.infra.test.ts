@@ -68,7 +68,7 @@ describe('amendments.json over the committed adoption (G-PROV amendment arm)', (
       ['648-2025', 'in_force', 'M-36'],
       ['654-2025', 'in_force', 'M-36'],
       ['848-2025', 'in_force', 'M-481'],
-      ['849-2025', 'partially_in_force', SPIKE],
+      ['849-2025', 'in_force', 'M-481'], // MB-27 increment 5 item 12 (D-10 a, operator 2026-11-12 "a"): in force 2025-07-24, the carve-out kept (named re-pin)
       ['89-2022', 'in_force', SPIKE],
     ]));
     for (const s of verified) expect(s.source_sha256).toMatch(/^[0-9a-f]{64}$/);

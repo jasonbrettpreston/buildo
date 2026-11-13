@@ -12,12 +12,12 @@
 - input `scripts/lib/compute/enrich-parcels.js` sha256 `8e76004b9bef01de`
 - input `scripts/lib/max-build.js` sha256 `b4d23240936fa986`
 - input `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
-- input `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`
+- input `scripts/lib/parcel-cost.js` sha256 `88d27d0a94f1dcbc`
 - input `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - input `scripts/seeds/bylaw/external.json` sha256 `23ab08b99383271d`
-- input `scripts/seeds/bylaw/vocab.json` sha256 `6ec1cc3d08e168b8`
-- input `scripts/seeds/logic_variables.json` sha256 `d037a1c1694dcf02`
-- input `src/lib/db/generated/schema.ts` sha256 `0392f955cce7e290`
+- input `scripts/seeds/bylaw/vocab.json` sha256 `cfea7ffa4aff9072`
+- input `scripts/seeds/logic_variables.json` sha256 `61cf5f92b04b7666`
+- input `src/lib/db/generated/schema.ts` sha256 `0d919f4ea43a4629`
 
 ## Summary
 
@@ -26,7 +26,7 @@
 | G-CODE (i) blocking | not_run | 0 violation(s) over 0 row(s) |
 | G-CODE (ii) report-only | — | 0 expects mismatch(es) |
 | feeds cross-check report-only | — | 0 finding(s) over 0 unit(s) |
-| G-CODE (iv) report-only | — | 134 constants in 39 named declarations: by-law 0 · heuristic 0 · unmapped 134 |
+| G-CODE (iv) report-only | — | 135 constants in 40 named declarations: by-law 0 · heuristic 0 · unmapped 135 |
 
 ## G-CODE (i) — blocking violations
 
@@ -45,7 +45,7 @@ None.
 `class` is the gate class (from row `code_refs` and `model_heuristic` rows). `proposed` is read from the code comments
 for the operator to confirm at S9 — it never sets the class: `by_law_cited` (the comment cites a clause) · `by_law_claimed_unsourced`
 (the comment or its section header claims a by-law source with no clause; the operator classifies, F-2) · `heuristic` with a
-proposed `heuristic_reason`. Inline disclosure: 298 numeric literals outside named constants and 27 decimal numbers
+proposed `heuristic_reason`. Inline disclosure: 319 numeric literals outside named constants and 27 decimal numbers
 inside string/SQL text are not classified (see blind spots).
 
 | # | Module | Member | Value | Line | Class | Proposed | Evidence | Logic variable |
@@ -183,14 +183,15 @@ inside string/SQL text are not classified (see blind spots).
 | 131 | `scripts/lib/optimal-config.js` | `BYLAW.GARAGE_MAX_SQM` | 60 | 43 | unmapped | by_law_claimed_unsourced | [stmt] --- By-law constants (569-2013 Ch.150.7 in-force consolidation). Operator-tunable where the by-law     may shift (footprint caps, so… | — |
 | 132 | `scripts/lib/parcel-cost.js` | `PARCEL_COST_SCHEMA_VERSION` | 1 | 35 | unmapped | heuristic: modelling_assumption | Current parcel_cost_menu JSONB schema version (root `_schema_version`). | — |
 | 133 | `scripts/lib/parcel-cost.js` | `FSI_MAX_PLAUSIBLE` | 99.999 | 52 | unmapped | heuristic: data_cleaning_bound | Batch-2 row 2.4 (Spec 122 §5.5 conversion) — this constant is now ONLY the seed default documented in scripts/seeds/logic_variables.json un… | — |
-| 134 | `scripts/lib/zoning-precedence.js` | `AMBIGUOUS_DOMINANT_SHARE_MAX` | 0.6 | 13 | unmapped | heuristic: modelling_assumption | Ambiguity threshold — mirrors docs/specs/_contracts.json zoning.ambiguous_dominant_share_max. (contracts.infra.test.ts asserts this literal… | — |
+| 134 | `scripts/lib/parcel-cost.js` | `COA_TOLERANCE_CAD` | 1 | 411 | unmapped | heuristic: modelling_assumption |  | — |
+| 135 | `scripts/lib/zoning-precedence.js` | `AMBIGUOUS_DOMINANT_SHARE_MAX` | 0.6 | 13 | unmapped | heuristic: modelling_assumption | Ambiguity threshold — mirrors docs/specs/_contracts.json zoning.ambiguous_dominant_share_max. (contracts.infra.test.ts asserts this literal… | — |
 
 ### Proposed counts (for the S12b heuristic list)
 
 - by_law_cited: 11
 - by_law_claimed_unsourced: 21
 - heuristic: data_cleaning_bound: 5
-- heuristic: modelling_assumption: 13
+- heuristic: modelling_assumption: 14
 - heuristic: proxy_for_unmodelled_rule: 67
 - heuristic: statistical_default: 15
 - heuristic: tolerance: 2
@@ -203,7 +204,7 @@ inside string/SQL text are not classified (see blind spots).
 | `scripts/lib/compute/enrich-parcels.js` | 0 | 224 | 25 |
 | `scripts/lib/max-build.js` | 105 | 14 | 2 |
 | `scripts/lib/optimal-config.js` | 20 | 44 | 0 |
-| `scripts/lib/parcel-cost.js` | 2 | 16 | 0 |
+| `scripts/lib/parcel-cost.js` | 3 | 37 | 0 |
 | `scripts/lib/zoning-precedence.js` | 1 | 0 | 0 |
 
 ## Blind spots (declared)

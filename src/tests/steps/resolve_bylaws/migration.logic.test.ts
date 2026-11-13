@@ -32,6 +32,13 @@ const lr = (): Json => require(path.join(ROOT, 'scripts/lib/bylaw-lot-row.js')) 
 const PAIRS = (SCOPE.structures as string[]).flatMap((structure) => (SCOPE.targets[structure] as string[]).map((target) => ({ structure, target })));
 const MIG_FB = 'migrations/293_resolve_bylaws_fallback_slot.sql';
 const sqlFb = (): string => read(MIG_FB);
+// MB-27 increment 5 (named re-pin): migration 315 is now the latest writer of the width CHECKs and of bylaw_resolution_results (55 base pairs,
+// width 70 = the base pairs + the option slots of rb.optionPairs); 293 keeps its own 54-pair text (the scope before principal_coverage_path_b_pct).
+const MIG_LATEST = 'migrations/315_resolve_bylaws_suite_height_option.sql';
+const sqlLatest = (): string => read(MIG_LATEST);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const WIDTH = PAIRS.length + ((require(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')) as Json).optionPairs(SCOPE, readJson('scripts/seeds/bylaw/vocab.json').design_options) as unknown[]).length;
+const PAIRS_293 = PAIRS.filter((p) => p.target !== 'principal_coverage_path_b_pct');
 
 let sql = '';
 let tree: Json[] = [];
@@ -113,7 +120,8 @@ describe('closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)
     const codes = lr().resultCodes(MAP) as string[];
     const m = /cardinality\(codes\) = (\d+) AND codes <@ ARRAY\[([0-9, ]+)\]::smallint\[\]/.exec(sqlFb());
     expect(m).toBeTruthy();
-    expect(Number((m as RegExpExecArray)[1])).toBe(PAIRS.length);
+    expect(Number((m as RegExpExecArray)[1])).toBe(PAIRS_293.length);
+    expect(sqlLatest()).toContain(`CHECK (cardinality(codes) = ${WIDTH} AND`);
     expect((m as RegExpExecArray)[2]!.split(',').map((x) => Number(x))).toEqual(codes.map((_, i) => i));
   });
 
@@ -129,7 +137,8 @@ describe('closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)
     const fb = sqlFb();
     const w = /bylaw_resolution_lots_array_width CHECK \(([\s\S]*?)\) NOT VALID;/.exec(fb);
     expect(w).toBeTruthy();
-    for (const c of ['numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) expect((w as RegExpExecArray)[1], c).toContain(`${c} IS NULL OR cardinality(${c}) = ${PAIRS.length}`);
+    for (const c of ['numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) expect((w as RegExpExecArray)[1], c).toContain(`${c} IS NULL OR cardinality(${c}) = ${PAIRS_293.length}`);
+    for (const c of ['numbers', 'reason_ids', 'winner_ids', 'evidence_kinds', 'evidence_ref_ids']) expect(sqlLatest(), c).toContain(`${c} IS NULL OR cardinality(${c}) = ${WIDTH}`);
     expect(fb).toMatch(/bylaw_resolution_lots_codes_closed CHECK \(cardinality\(codes\) =/);
   });
 
@@ -145,14 +154,14 @@ describe('closed-column CHECKs equal their sources both ways (Spec 134 §3, §4)
 
 describe('the view names every array position by its target (CHAT-80.QP)', () => {
   // The latest view text is migration 293's (it replaces 282's); it runs from the CREATE to the statement's own semicolon.
-  const view = (): string => /CREATE OR REPLACE VIEW bylaw_resolution_results AS([\s\S]*?);\n/.exec(sqlFb())![1]!;
+  const view = (): string => /CREATE OR REPLACE VIEW bylaw_resolution_results AS([\s\S]*?);\n/.exec(sqlLatest())![1]!;
   it('its pair list equals layer2-scope.json pairs in scope order, both ways, with 1-based positions', () => {
     const v = view();
     const list = [...v.matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
     expect(list).toEqual(PAIRS.map((p, i) => ({ i: i + 1, ...p })));
   });
   it('it returns only full-width rows: a stale narrower row is hidden, not decoded against the wrong positions', () => {
-    expect(view()).toContain(`WHERE cardinality(l.codes) = ${PAIRS.length}`);
+    expect(view()).toContain(`WHERE cardinality(l.codes) = ${WIDTH}`);
   });
   it('its class list equals layer2-scope.json classes in order', () => {
     const m = /CROSS JOIN \(VALUES ((?:\('[a-z_]+'\)(?:, )?)+)\) AS c \(class\)/.exec(view());
@@ -295,10 +304,10 @@ describe('migration 293 (item j: one more slot)', () => {
   it('its view pair list equals layer2-scope.json pairs both ways, and its pair count equals the 293 cardinality text', () => {
     const v = /CREATE OR REPLACE VIEW bylaw_resolution_results AS([\s\S]*?);\n/.exec(fb)![1]!;
     const list = [...v.matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
-    expect(list).toEqual(PAIRS.map((p, i) => ({ i: i + 1, ...p })));
+    expect(list).toEqual(PAIRS_293.map((p, i) => ({ i: i + 1, ...p })));
     const n = /cardinality\(codes\) = (\d+) AND codes/.exec(fb);
     expect(n).toBeTruthy();
-    expect(PAIRS.length).toBe(Number((n as RegExpExecArray)[1]));
+    expect(PAIRS_293.length).toBe(Number((n as RegExpExecArray)[1]));
   });
 });
 

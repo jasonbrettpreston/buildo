@@ -173,8 +173,13 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // unregulated by absence (the 35 RD/RS/RT/RM lots × 4 variants, zone-wide); nothing else moved.
     // re-pinned 2026-11-06 (DL-4 a, operator E1C a; M-190 / Q10 a, ABS-11.1..11.4): the RM detached_houseplex main_wall_front_rear_share_pct,
     // main_wall_side_share_pct, upper_storey_setback_m and pitched_roof_slope_min cells move no_candidate → unregulated by absence; before 6f871587…, after 094c0572…
-    expect(h.digest('hex')).toBe('094c05726b7f24c7d1e239d41227c1ee2ea35fde10d97f3b3685351ffcd99906');
+    // re-pinned 2026-11-12 (MB-27 increment 5 C2a; WALK2 rulings items 1, 3, 5, 6, D-6 a, Q3 a as ruled B5A-1 c): the garden suite height /
+    // separation cells read the suite_height token (condition_unknown outside an option run), 150.7.60.20(2)(A) reads height_m, 150.7.60.50(2) leaves gfa_m2,
+    // 150.7.60.70(1)(A) is a flat 45 %, 150.7.60.20(6)(C) moves to side_setback_street_m, type-less exception units leave the garden suite, and the new
+    // principal target principal_coverage_path_b_pct joins the corpus; before 094c0572…, after fbe7b685….
+    expect(h.digest('hex')).toBe('fbe7b6855a210d9aeef685a7502aed154386db28d5ce4747ebb499e8b78f8d60');
     // E1C-S (standing approval; the same ruled data change, ABS-11.1..11.4): the left-out digest moves mechanically; before cada5b36…, after 2e8d816d…
-    expect(hLeftOut.digest('hex')).toBe('2e8d816db99d73a1ea26fe52e5f46f59c38692ec2f8b93f0a350385238f0f32e');
+    // re-pinned 2026-11-12 (MB-27 increment 5 C2a, the same keying change): the left-out digest moves mechanically; before 2e8d816d…, after 97d047fe…
+    expect(hLeftOut.digest('hex')).toBe('97d047feb621f5fd5348a7ac02accf7ebd142b2592078b0ede8d3492daf2b340');
   }, 60_000);
 });

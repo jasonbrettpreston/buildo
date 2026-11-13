@@ -115568,6 +115568,500 @@
           "overlay_mapped"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.30(1)#(1)(A)/condition",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.30(1)#(1)(A)",
+      "value": {
+        "if": "not holds(suite_height_over_4m)",
+        "tokens": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.30(1)#(1)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.30(1)#(1)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.30(1)#(1)(A)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "supersedes": "COR-150.7.60.30(1)#(1)(A)/application.evidence",
+      "unit": "150.7.60.30(1)#(1)(A)",
+      "value": {
+        "garden_suite": "a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.30(1)#(1)(B)/condition",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.30(1)#(1)(B)",
+      "value": {
+        "tokens": [
+          "suite_height_over_4m"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.30(1)#(1)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.30(1)#(1)(B)",
+      "value": [
+        "suite_height_over_4m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.30(1)#(1)(B)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "supersedes": "COR-150.7.60.30(1)#(1)(B)/application.evidence",
+      "unit": "150.7.60.30(1)#(1)(B)",
+      "value": {
+        "garden_suite": "a garden suite",
+        "suite_height_over_4m": "is greater than 4.0 metres"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.30(1)#(1)(C)/condition",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.30(1)#(1)(C)",
+      "value": {
+        "tokens": [
+          "suite_height_over_4m"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.30(1)#(1)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.30(1)#(1)(C)",
+      "value": [
+        "suite_height_over_4m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.30(1)#(1)(C)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "The height arm is the suite_height design option (D-1 a), not a scenario value: \"no greater than 4.0 metres\" is the low option (token suite_height_over_4m false), \"greater than 4.0 metres\" the tall option (token true); the option run sets the token (bylaw-resolution.js optionLot), a run without it leaves the unit undecided",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "supersedes": "COR-150.7.60.30(1)#(1)(C)/application.evidence",
+      "unit": "150.7.60.30(1)#(1)(C)",
+      "value": {
+        "garden_suite": "a garden suite",
+        "suite_height_over_4m": "a height greater than 4.0 metres"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.40(1)#(1)(A)/condition",
+      "kind": "correction",
+      "reason": "The distance arm of 150.7.60.40(1) is the suite_height design option (D-1 a), paired as 150.7.60.30(1) pairs it: \"less than 7.5 metres\" (height 4.0 m) is the low option (token suite_height_over_4m false), \"7.5 metres or more\" (height 6.3 m) the tall option (token true)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.40(1)#(1)(A)",
+      "value": {
+        "if": "not holds(suite_height_over_4m)",
+        "tokens": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.40(1)#(1)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "The distance arm of 150.7.60.40(1) is the suite_height design option (D-1 a), paired as 150.7.60.30(1) pairs it: \"less than 7.5 metres\" (height 4.0 m) is the low option (token suite_height_over_4m false), \"7.5 metres or more\" (height 6.3 m) the tall option (token true)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.40(1)#(1)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.40(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The distance arm of 150.7.60.40(1) is the suite_height design option (D-1 a), paired as 150.7.60.30(1) pairs it: \"less than 7.5 metres\" (height 4.0 m) is the low option (token suite_height_over_4m false), \"7.5 metres or more\" (height 6.3 m) the tall option (token true)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.40(1)#(1)(A)",
+      "value": {
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.40(1)#(1)(B)/condition",
+      "kind": "correction",
+      "reason": "The distance arm of 150.7.60.40(1) is the suite_height design option (D-1 a), paired as 150.7.60.30(1) pairs it: \"less than 7.5 metres\" (height 4.0 m) is the low option (token suite_height_over_4m false), \"7.5 metres or more\" (height 6.3 m) the tall option (token true)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.40(1)#(1)(B)",
+      "value": {
+        "tokens": [
+          "suite_height_over_4m"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.40(1)#(1)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "The distance arm of 150.7.60.40(1) is the suite_height design option (D-1 a), paired as 150.7.60.30(1) pairs it: \"less than 7.5 metres\" (height 4.0 m) is the low option (token suite_height_over_4m false), \"7.5 metres or more\" (height 6.3 m) the tall option (token true)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.40(1)#(1)(B)",
+      "value": [
+        "suite_height_over_4m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.40(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The distance arm of 150.7.60.40(1) is the suite_height design option (D-1 a), paired as 150.7.60.30(1) pairs it: \"less than 7.5 metres\" (height 4.0 m) is the low option (token suite_height_over_4m false), \"7.5 metres or more\" (height 6.3 m) the tall option (token true)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.40(1)#(1)(B)",
+      "value": {
+        "garden_suite": "containing a garden suite",
+        "suite_height_over_4m": "7.5 metres or more"
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.20(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "Half the height of the ancillary building is the option's own height_m (4.0 m low, 6.3 m tall; D-1 a), read in the same option run, not the proposed_height_m scenario value",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12 \"a was for the fitted house 1a for the two heights\": the suite_height design option (vocab.design_options.suite_height; low 4.0 m at 4.0 m separation, tall 6.3 m at 7.5 m); Spec 69a M-465 (the design-option form), M-286; M-75",
+      "unit": "150.7.60.20(2)#(2)(A)",
+      "value": [
+        "rear_setback_m = max(1.5 m; 0.5 ratio × height_m) @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.50(4)#(4)(B)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "The low option is one storey (M-404), so the 60 m2 arm binds there",
+      "rule": "MB-27 increment 5 item 7 (D-4 a), operator 2026-11-12 \"a\": the low arm sets suite_one_storey true (60 m2), the tall arm keeps it false (120 m2); Spec 69a M-284, M-404 (S-1, the one-storey link); M-75",
+      "supersedes": "COR-150.7.60.50(4)#(4)(B)/calculation_handling",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": {
+        "description": "Despite (4)(A), a one-storey garden suite building may have at most 60 m2 GFA.",
+        "gaps": "\"one storey\" is the design-choice token suite_one_storey (M-284): the suite_height low option sets it true (60 m2 answered), the tall option false (120 m2 answered) (vocab.design_options.suite_height values[].sets; item 7, D-4 a); the one-storey link of the low option is M-404 (S-1), not the by-law. Outside an option run it is taken as false (two storeys) and the 60 m2 arm is disclosed.",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "has_garden_suite",
+          "suite_one_storey"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.7.60.50(2)#whole/target~s1",
+      "kind": "correction",
+      "reason": "\"must be less than the gross floor area of the residential building\" compares the suite with the house; the maximum build applies it in Layer 3 at the split (INV-2 suite_lt_main, D-59 bound), so it leaves the stored gfa_m2 (the stored cell is the 150.7.60.50(4) cap per option) and is keyed on its own target suite_gfa_below_main_m2, outside the Layer 2 scope; the evaluator still answers it where main_building_gfa_m2 is supplied (the CoA scorer, CHAT-198 NN-Q3)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12: moving 150.7.60.50(2) (\"< the main GFA\") to Layer 3 agreed by all four reviews (WALK2-20261112.md item 1); the comparator is the split's main GFA, not a by-law number (INV-2, D-59); the 150.7.60.20(4)(A) form for a cross-reference with no literal (Spec 68 §7.3 G-SHAPE; Q6/Q7); M-75",
+      "supersedes": "COR-150.7.60.50(2)#whole/target",
+      "unit": "150.7.60.50(2)#whole",
+      "value": "suite_gfa_below_main_m2"
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.50(2)#whole/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "\"must be less than the gross floor area of the residential building\" compares the suite with the house; the maximum build applies it in Layer 3 at the split (INV-2 suite_lt_main, D-59 bound), so it leaves the stored gfa_m2 (the stored cell is the 150.7.60.50(4) cap per option) and is keyed on its own target suite_gfa_below_main_m2, outside the Layer 2 scope; the evaluator still answers it where main_building_gfa_m2 is supplied (the CoA scorer, CHAT-198 NN-Q3)",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12: moving 150.7.60.50(2) (\"< the main GFA\") to Layer 3 agreed by all four reviews (WALK2-20261112.md item 1); the comparator is the split's main GFA, not a by-law number (INV-2, D-59); the 150.7.60.20(4)(A) form for a cross-reference with no literal (Spec 68 §7.3 G-SHAPE; Q6/Q7); M-75",
+      "supersedes": "COR-150.7.60.50(2)#whole/numeric_expression",
+      "unit": "150.7.60.50(2)#whole",
+      "value": [
+        "suite_gfa_below_main_m2 = main_building_gfa_m2 @(2)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.70(1)#(1)(A)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Item 5 (a): (A) \"the area of the lot covered by all buildings and structures must not exceed 45 percent\" is its own path on every lot; the (B)(i)/(ii) house figure is not mixed into it; Layer 3 compares the two paths (M-191), a tie keeps (B) (M-253)",
+      "rule": "MB-27 increment 5 item 5 (D-8 a), operator 2026-11-12 \"a\": the whole (A) statement is a flat 45 % on every lot; (B) keeps the house's own cell (overlay or none) and 20 % on ancillary_coverage_pct; Layer 3 picks the larger build (M-191), tie keeps (B) (M-253); D-61 (AR-5) every class; Spec 69a M-179(1), M-191, M-253; M-75",
+      "supersedes": "COR-150.7.60.70(1)#(1)(A)/numeric_expression",
+      "unit": "150.7.60.70(1)#(1)(A)",
+      "value": [
+        "lot_coverage_pct = 45 pct @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.70(1)#(1)(A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Item 5 (a): (A) \"the area of the lot covered by all buildings and structures must not exceed 45 percent\" is its own path on every lot; the (B)(i)/(ii) house figure is not mixed into it; Layer 3 compares the two paths (M-191), a tie keeps (B) (M-253)",
+      "rule": "MB-27 increment 5 item 5 (D-8 a), operator 2026-11-12 \"a\": the whole (A) statement is a flat 45 % on every lot; (B) keeps the house's own cell (overlay or none) and 20 % on ancillary_coverage_pct; Layer 3 picks the larger build (M-191), tie keeps (B) (M-253); D-61 (AR-5) every class; Spec 69a M-179(1), M-191, M-253; M-75",
+      "supersedes": "COR-150.7.60.70(1)#(1)(A)/calculation_handling",
+      "unit": "150.7.60.70(1)#(1)(A)",
+      "value": {
+        "description": "Despite 10.5.60.70(1), 10.10.60.70(1) and the zone lot coverage regulations, on a lot with a residential building (not an apartment building) and a garden suite building, option (A): the area covered by all buildings and structures must not exceed 45 percent.",
+        "gaps": "Option (A) is a flat 45 % on every lot (item 5 (a)). Option (B) is the suite left out of coverage with all ancillary buildings together at most 20 % (ancillary_coverage_pct, 150.7.60.70(1)(B)) and the house at the overlay value where mapped, else no coverage for the house ((B)(i)/(ii)); Layer 3 takes the option that builds more (M-191), a tie keeps (B) (M-253). A site-specific coverage figure caps the (A) total as well as the house (item 4 (a), confidence medium).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite",
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.70(1)#(1)(A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Item 5 (a): (A) \"the area of the lot covered by all buildings and structures must not exceed 45 percent\" is its own path on every lot; the (B)(i)/(ii) house figure is not mixed into it; Layer 3 compares the two paths (M-191), a tie keeps (B) (M-253)",
+      "rule": "MB-27 increment 5 item 5 (D-8 a), operator 2026-11-12 \"a\": the whole (A) statement is a flat 45 % on every lot; (B) keeps the house's own cell (overlay or none) and 20 % on ancillary_coverage_pct; Layer 3 picks the larger build (M-191), tie keeps (B) (M-253); D-61 (AR-5) every class; Spec 69a M-179(1), M-191, M-253; M-75",
+      "supersedes": "COR-150.7.60.70(1)#(1)(A)/disclosure",
+      "unit": "150.7.60.70(1)#(1)(A)",
+      "value": "With a garden suite the coverage option that builds more is used: (A) 45 % for all buildings, or (B) the suite left out of coverage, all ancillary buildings together at most 20 % and the house at its own limit; the other option is shown."
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.7.60.20(6)#(6)(C)/target",
+      "kind": "correction",
+      "reason": "(6)(C) sets the side yard that abuts the street on a corner lot (the stem \"Garden Suite on Corner Lot\"; reading 2): its target is side_setback_street_m, the larger of the house's street-side requirement (its interior side where the house has none) and 1.5 m; the house's yard is the input principal_side_setback_m the step supplies (P5.13), so the stored cell is not_evaluated:missing_input until then; the suite's interior side then takes 150.7.60.20(5)(B)",
+      "rule": "MB-27 increment 5 item 6 reading 2 (E9 / D-6), operator 2026-11-12 \"2 and flag confidence\": (6)(C) is keyed to the suite's street-side target from the house's street-side yard, falling back to the interior side where the house has no separate street-side requirement (a Layer 3 relation, Spec 78 P5.13); the suite's interior side takes (5)(B); confidence medium (M-481); Spec 69a M-198(2); M-75",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": "side_setback_street_m"
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.20(6)#(6)(C)/numeric_expression~s2",
+      "kind": "correction",
+      "reason": "(6)(C) sets the side yard that abuts the street on a corner lot (the stem \"Garden Suite on Corner Lot\"; reading 2): its target is side_setback_street_m, the larger of the house's street-side requirement (its interior side where the house has none) and 1.5 m; the house's yard is the input principal_side_setback_m the step supplies (P5.13), so the stored cell is not_evaluated:missing_input until then; the suite's interior side then takes 150.7.60.20(5)(B)",
+      "rule": "MB-27 increment 5 item 6 reading 2 (E9 / D-6), operator 2026-11-12 \"2 and flag confidence\": (6)(C) is keyed to the suite's street-side target from the house's street-side yard, falling back to the interior side where the house has no separate street-side requirement (a Layer 3 relation, Spec 78 P5.13); the suite's interior side takes (5)(B); confidence medium (M-481); Spec 69a M-198(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/numeric_expression~s1",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": [
+        "side_setback_street_m = max(principal_side_setback_m; 1.5 m) @(6)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(6)#(6)(C)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "(6)(C) sets the side yard that abuts the street on a corner lot (the stem \"Garden Suite on Corner Lot\"; reading 2): its target is side_setback_street_m, the larger of the house's street-side requirement (its interior side where the house has none) and 1.5 m; the house's yard is the input principal_side_setback_m the step supplies (P5.13), so the stored cell is not_evaluated:missing_input until then; the suite's interior side then takes 150.7.60.20(5)(B)",
+      "rule": "MB-27 increment 5 item 6 reading 2 (E9 / D-6), operator 2026-11-12 \"2 and flag confidence\": (6)(C) is keyed to the suite's street-side target from the house's street-side yard, falling back to the interior side where the house has no separate street-side requirement (a Layer 3 relation, Spec 78 P5.13); the suite's interior side takes (5)(B); confidence medium (M-481); Spec 69a M-198(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/calculation_handling~s1",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": {
+        "description": "In all other corner-lot cases, the garden suite's minimum side yard setback on the street side is the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres.",
+        "gaps": "Reading 2 (item 6, confidence medium): the residential building's requirement is its street-side yard, falling back to its interior side where it has no separate street-side requirement; that value is the input principal_side_setback_m, supplied by the step (Spec 78 P5.13; B5A-2 a), so the stored cell is not_evaluated:missing_input:principal_side_setback_m. Condition corner_lot read from the stem heading 'Garden Suite on Corner Lot' and the (A)/(B) context.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(3)#(3)(A)/calculation_handling~s2",
+      "kind": "correction",
+      "reason": "D-6 (a): the neighbour's required front yard is approximated by this lot's own front setback (M-198(1)), with (B)'s 1.5 m as the floor; the proxy is not an upper bound, so the answer may understate",
+      "rule": "MB-27 increment 5 item 6 through-lot half (D-6 a), operator 2026-11-12 \"narrow y and through y\": the M-198(1) proxy, rear = max(own front setback, 1.5 m) under 150.7.60.20(3)(A), disclosed \"may understate\" (the proxy is not an upper bound); Spec 69a M-198(1), M-176; M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/calculation_handling~s1",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "description": "On a through lot where a residential building on an adjacent lot fronts on the street abutting the rear lot line, the garden suite building's minimum rear yard setback equals the required minimum front yard setback for the residential building on the adjacent lot.",
+        "gaps": "The adjacent-lot fact is taken as holding (M-176, larger setback); the neighbour's required front yard is approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m, and the larger of (A) and (B) 1.5 m is taken (M-198(1); D-6 (a)). The proxy may understate. With no input the answer is not_evaluated:missing_input.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(3)#(3)(A)/disclosure",
+      "kind": "correction",
+      "reason": "D-6 (a): the neighbour's required front yard is approximated by this lot's own front setback (M-198(1)), with (B)'s 1.5 m as the floor; the proxy is not an upper bound, so the answer may understate",
+      "rule": "MB-27 increment 5 item 6 through-lot half (D-6 a), operator 2026-11-12 \"narrow y and through y\": the M-198(1) proxy, rear = max(own front setback, 1.5 m) under 150.7.60.20(3)(A), disclosed \"may understate\" (the proxy is not an upper bound); Spec 69a M-198(1), M-176; M-75",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": "On a through lot, a garden suite must be set back from the rear street as far as the neighbour's required front setback; we use this lot's own front setback (at least 1.5 m), which may understate it."
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.70(1)#(1)(B)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "150.7.60.70(1)(B)(i)/(ii) is the residential building's coverage under path (B) beside a garden suite; the house figure is carried by a generated unit (D-76: vocab generated_units, assembly.mjs), so this unit keeps its own 20 % statement for the garden suite",
+      "rule": "MB-27 increment 5 build Q3 (a) (\"Q1 a, Q2 a, Q3 a\", operator 2026-11-12) as ruled B5A-1 (c) (operator 2026-11-12 \"B5A-1 c\"): the house's (B)(i)/(ii) figure is a principal Layer 2 target, width 70, the scope lock unchanged; AR-1 = R1 (\"under path (B) beside a houseplex / house-with-suite, the house is held to the overlay value ((B)(i))\"); Spec 78 §6.7 (law values from Layer 1 rows through Layer 2); M-179(1), M-191; M-75; D-76 (2026-11-12, pre-approved log)",
+      "supersedes": "COR-150.7.60.70(1)#(1)(B)/calculation_handling",
+      "unit": "150.7.60.70(1)#(1)(B)",
+      "value": {
+        "description": "Option (B): the garden suite building is excluded from the overall lot coverage; all ancillary buildings combined, including the garden suite, may not exceed 20 percent of the lot area; and the residential building's maximum lot coverage is the Lot Coverage Overlay Map value if mapped, otherwise no lot coverage applies to it.",
+        "gaps": "All ancillary buildings combined, including the garden suite, are capped at 20 % of the lot on ancillary_coverage_pct (M-179(1)); the residential building's figure ((B)(i) overlay, (B)(ii) none) is generated from this unit as 150.7.60.70(1)#principal(1)(B) on the principal target principal_coverage_path_b_pct for the residential house types (Q3 a / B5A-1 c; D-76, the M-465 generated-unit form), the house's cap under path (B) beside a garden suite (AR-1 R1: also beside a houseplex or a house with a secondary suite, not x.30.40(1)(D)); Layer 3 compares path (A) and path (B) (M-191, tie (B) M-253). Other ancillary buildings are taken as absent (M-177(3)).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite",
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.60.30(1)#(1)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"4.0 metres\" is the clause's own height / distance test, now read through the suite_height design option token suite_height_over_4m (D-1 a), not written in an expression",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12; Spec 69a M-465; M-75",
+      "unit": "150.7.60.30(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "4.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.60.30(1)#(1)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"4.0 metres\" is the clause's own height / distance test, now read through the suite_height design option token suite_height_over_4m (D-1 a), not written in an expression",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12; Spec 69a M-465; M-75",
+      "unit": "150.7.60.30(1)#(1)(B)",
+      "value": [
+        {
+          "clause": "(1)(B)",
+          "literal": "4.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.60.30(1)#(1)(C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"4.0 metres\" is the clause's own height / distance test, now read through the suite_height design option token suite_height_over_4m (D-1 a), not written in an expression",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12; Spec 69a M-465; M-75",
+      "unit": "150.7.60.30(1)#(1)(C)",
+      "value": [
+        {
+          "clause": "(1)(C)",
+          "literal": "4.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.60.40(1)#(1)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"7.5 metres\" is the clause's own height / distance test, now read through the suite_height design option token suite_height_over_4m (D-1 a), not written in an expression",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12; Spec 69a M-465; M-75",
+      "unit": "150.7.60.40(1)#(1)(A)",
+      "value": [
+        {
+          "clause": "(1)(A)",
+          "literal": "7.5 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-12",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.60.40(1)#(1)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "\"7.5 metres\" is the clause's own height / distance test, now read through the suite_height design option token suite_height_over_4m (D-1 a), not written in an expression",
+      "rule": "MB-27 increment 5 item 1 (D-1 a), operator 2026-11-12; Spec 69a M-465; M-75",
+      "unit": "150.7.60.40(1)#(1)(B)",
+      "value": [
+        {
+          "clause": "(1)(B)",
+          "literal": "7.5 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
     }
   ]
 }

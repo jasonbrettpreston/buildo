@@ -37,29 +37,33 @@ beforeAll(() => {
 });
 
 describe('B1 / B2: the slot order and a 61-wide round trip', () => {
-  it('B1: 54 base pairs (unchanged), then flat and pitched for height_m, main_wall_height_m and upper_storey_setback_m, then the threshold', () => {
+  // MB-27 increment 5 (named re-pin; migration 315): 55 base pairs (principal_coverage_path_b_pct joins at 22, so upper_storey_setback_m is base 27),
+  // the 7 roof_form slots, then the 8 suite_height slots (low then tall) on the garden suite gfa_m2, height_m, rear_setback_m and separation_m
+  it('B1: 55 base pairs, then flat and pitched for height_m, main_wall_height_m and upper_storey_setback_m, the threshold, then the suite height slots', () => {
     expect(env.pairs).toEqual(rb.scopePairs(SCOPE));
-    expect(env.pairs).toHaveLength(54);
+    expect(env.pairs).toHaveLength(55);
     expect(env.optionPairs.map((p: Json) => [p.target, p.option, p.base_index])).toEqual([
       ['height_m', 'flat_or_shallow_roof', 14], ['height_m', 'pitched', 14],
       ['main_wall_height_m', 'flat_or_shallow_roof', 19], ['main_wall_height_m', 'pitched', 19],
-      ['upper_storey_setback_m', 'flat_or_shallow_roof', 25], ['upper_storey_setback_m', 'pitched', 25],
+      ['upper_storey_setback_m', 'flat_or_shallow_roof', 26], ['upper_storey_setback_m', 'pitched', 26],
       ['pitched_roof_slope_min', null, null],
+      ['gfa_m2', 'suite_low', 30], ['gfa_m2', 'suite_tall', 30], ['height_m', 'suite_low', 31], ['height_m', 'suite_tall', 31],
+      ['rear_setback_m', 'suite_low', 35], ['rear_setback_m', 'suite_tall', 35], ['separation_m', 'suite_low', 37], ['separation_m', 'suite_tall', 37],
     ]);
     for (const p of env.optionPairs) if (p.base_index !== null) expect(env.pairs[p.base_index]).toEqual({ structure: p.structure, target: p.target });
   });
   it('B2: rows stays 54 pairs x 5 classes; option rows are the 7 slots for each listed class (RR-03; DL-7 a: the houseplex joins)', () => {
     const lot = out.rows.lots[0];
-    expect(lot.codes).toHaveLength(61);
-    expect(lr.decodeLotResults({ lot, pairs: env.pairs, classes: env.classes, map: MAP, dicts, optionPairs: env.optionPairs })).toHaveLength(54 * 5);
+    expect(lot.codes).toHaveLength(70);
+    expect(lr.decodeLotResults({ lot, pairs: env.pairs, classes: env.classes, map: MAP, dicts, optionPairs: env.optionPairs })).toHaveLength(55 * 5);
     const o = lr.decodeOptionResults({ lot, pairs: env.pairs, classes: env.classes, map: MAP, dicts, optionPairs: env.optionPairs }) as Json[];
     // MB-27 increment 4 (D-8 a named move; the scope lists house_with_secondary_suite third, migration 304): 3 listed classes x 7 slots; was 14
-    expect(o).toHaveLength(21);
+    expect(o).toHaveLength(45); // MB-27 increment 5 (named re-pin): 3 listed classes x 15 slots (7 roof_form + 8 suite_height); was 21
     expect(new Set(o.map((r) => r.class))).toEqual(new Set(['detached_house', 'detached_houseplex', 'house_with_secondary_suite']));
   });
   it('B2: a 61-wide lot decoded without the option slots, or a shared code at a base slot, throws (never decoded against the wrong positions)', () => {
     const lot = out.rows.lots[0];
-    expect(() => lr.decodeLotResults({ lot, pairs: env.pairs, classes: env.classes, map: MAP, dicts })).toThrow(/length 61 != 54/);
+    expect(() => lr.decodeLotResults({ lot, pairs: env.pairs, classes: env.classes, map: MAP, dicts })).toThrow(/length 70 != 55/);
     const bad = { ...lot, codes: lot.codes.map((c: number, i: number) => (i === 0 ? lr.sharedCode(MAP) : c)) };
     expect(() => lr.decodeLotResults({ lot: bad, pairs: env.pairs, classes: env.classes, map: MAP, dicts, optionPairs: env.optionPairs })).toThrow(/shared code at base slot 1/);
   });
@@ -78,19 +82,19 @@ describe('B3 / B4 / B6: no override at the option slots; the option flag is not 
     expect(out.matched.inputs_defaulted).toBe(0);
     const v = mz.logicalRowsOf(row(1), out.rows.lots[0], dicts, env) as Json;
     for (const r of v.option_rows as Json[]) expect(r.inputs_used, `${r.target} ${r.option}`).not.toContain('flags.flat_or_shallow_roof');
-    expect(env.optionInputs).toEqual(['flags.flat_or_shallow_roof']);
+    expect(env.optionInputs).toEqual(['flags.flat_or_shallow_roof', 'flags.suite_height_over_4m', 'flags.suite_one_storey']); // MB-27 increment 5 (named re-pin): the suite_height token and its sets
   });
   it('B6: a gated lot writes every option slot in full as the gate (code not_evaluated; never shared, the I4 CHECK)', () => {
     const g = out.rows.lots[1];
     expect(g.lot_gate).toBe('ambiguous_zone');
-    expect(g.codes.slice(54)).toEqual(new Array(7).fill(lr.resultCodes(MAP).indexOf('not_evaluated')));
+    expect(g.codes.slice(55)).toEqual(new Array(15).fill(lr.resultCodes(MAP).indexOf('not_evaluated')));
   });
 });
 
 describe('B5 / B7: the I12 / I15 audit covers the option slots; traceOption', () => {
   it('B5: the audit checks the 54 base pairs and the 7 option slots, and agrees with the uncached evaluator and itself reversed', () => {
     const o = mz.materializeBatch([row(1)], mkEnv({ audit: { everyNth: 1, offset: 0 } }));
-    expect(o.matched.equivalence_checked).toBe(61);
+    expect(o.matched.equivalence_checked).toBe(70); // MB-27 increment 5 (named re-pin): 55 base pairs + 15 option slots
     expect(o.matched.equivalence_disagreements).toBe(0);
     expect(o.matched.order_disagreements).toBe(0);
   });
@@ -117,7 +121,7 @@ describe('the run tallies count every result written, the option slots included 
       : { status: 'value', value: 1, bound: 'max', winner: null, evidence: { kind: 'absence', ruling: 'M-54' }, losers: [], disclosures: [], applied: [], inputs: ['zone', 'exception'], trace: [] });
     const o = mz.materializeBatch([row(1)], mkEnv({ hooks: { evaluate: ev, permitted: () => ({ status: 'permitted', winners: [] }) } }));
     expect(o.matched.not_evaluated_by_reason.conflict).toBe(6); // the six option slots; the threshold runs on the base lot
-    expect(Object.values(o.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(61);
+    expect(Object.values(o.matched.results_by_status as Record<string, number>).reduce((a, b) => a + b, 0)).toBe(70); // MB-27 increment 5 (named re-pin): width 70
   });
 });
 

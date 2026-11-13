@@ -27,7 +27,8 @@ export async function loadRealLotAssembly(root) {
   };
   const linked = base.map((u) => { let d = { targets: [], optional_variation: false }; try { d = X.displacesOf(index, u.unit_id, I.vocab, external); } catch { /* unresolved: no links */ } return { ...u, displaces: d.targets.map((t) => t.id), displaces_optional: d.optional_variation === true, ...includeLink(u) }; });
   // M-465 (4), OP-1: the design option's threshold units, generated per clause from the clause's own words (thresholdUnits below)
-  const units = [...linked, ...thresholdUnits(linked, I.vocab)];
+  // D-76: the units declared in vocab generated_units, built from their source unit (generatedUnits below)
+  const units = [...linked, ...thresholdUnits(linked, I.vocab), ...generatedUnits(linked, I.vocab)];
   const enactments = {}; for (const p of I.snap.pages || []) Object.assign(enactments, E.enactedDatesFromText(p.normalized || ''));
   // exception authoring state (ruling (d)), as the review builder: authored when every unit of the exception is agreed / adjudicated
   const isExcReg = (r) => /^900\.\d+\.10\(/.test(r);
@@ -91,7 +92,9 @@ export function thresholdUnits(units, vocab) {
   const out = new Map();
   const taken = new Set(units.map((u) => u.unit_id));
   for (const [name, opt] of designOptions(vocab)) {
-    if (typeof opt.token !== 'string' || typeof opt.threshold_target !== 'string') throw new Error(`design-options: ${name} has no token or threshold_target`);
+    if (typeof opt.token !== 'string') throw new Error(`design-options: ${name} has no token`);
+    if (opt.threshold_target === undefined) continue; // MB-27 increment 5 item 1 (D-1 a): an option with no threshold (suite_height) generates no threshold units
+    if (typeof opt.threshold_target !== 'string') throw new Error(`design-options: ${name} threshold_target must be a string`);
     const skip = new Set(opt.no_threshold_units || []);
     for (const u of units) {
       if (!tokensOf(u.condition).includes(opt.token) || skip.has(u.unit_id)) continue;
@@ -129,6 +132,30 @@ export function thresholdUnits(units, vocab) {
       disclosure: 'none', not_an_override: [],
       regulation_id: g.reg, layer: g.u.layer, ...(g.u.exception ? { exception: g.u.exception } : {}),
       displaces: [], displaces_optional: false, generated_from: [...g.from].sort(cmp),
+    };
+  });
+}
+
+/**
+ * D-76 (2026-11-12, pre-approved log; the M-465 threshold-unit form): the units vocab.generated_units declares, each built from its
+ * source unit (`from`) with the declared target, statement and building types; zones, condition, lot conditions, layer and regulation
+ * are the source's. Throws (never guesses) when the source is missing or the id is already a unit id.
+ */
+export function generatedUnits(units, vocab) {
+  const decl = (vocab && vocab.generated_units && vocab.generated_units.units) || [];
+  const byId = new Map(units.map((u) => [u.unit_id, u]));
+  return decl.map((g) => {
+    const s = byId.get(g.from);
+    if (!s) throw new Error(`generated_units: source ${g.from} of ${g.id} is not a unit`);
+    if (byId.has(g.id)) throw new Error(`generated_units: ${g.id} is already a unit id`);
+    const app = s.application || {};
+    return {
+      unit_id: g.id, archetype: 'LIMIT', target: g.target, bound: g.bound, requirement: 'none', instrument: 'none', evaluated_by_us: 'none', ranks_layers: 'none',
+      condition: s.condition, applies_to: s.applies_to, numeric_expression: [g.statement], literals_not_expressed: [],
+      application: { zones: app.zones || [], building_types: [...g.building_types], lot_conditions: app.lot_conditions || [], uses: app.uses || [], evidence: Object.fromEntries(g.building_types.map((t) => [t, g.evidence])) },
+      calculation_handling: { status: 'modelled', not_modelled_reason: 'none', user_inputs: [], description: g.description, gaps: g.gaps },
+      disclosure: 'none', not_an_override: [], regulation_id: s.regulation_id, layer: s.layer, ...(s.exception ? { exception: s.exception } : {}),
+      displaces: [], displaces_optional: false, generated_from: [g.from],
     };
   });
 }

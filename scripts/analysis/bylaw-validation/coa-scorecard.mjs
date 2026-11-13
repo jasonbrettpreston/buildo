@@ -230,12 +230,13 @@ function family(c, target, bt) {
   return 'other';
 }
 const tol = (unit) => unit === '%' ? 0.5 : unit === 'm²' ? 1 : unit === '× lot area' ? 0.005 : unit === 'storeys' ? 0 : 0.01;
+const DESIGN_TOKENS = new Set(Object.values(I.vocab.design_options || {}).map((o) => o && o.token).filter(Boolean)); // MB-27 increment 5: suite_height_over_4m beside the roof token
 const OWED_TOKENS = new Set(['front_averaging_not_applicable', 'one_abutting_building_within_15_m', 'two_abutting_buildings_within_15_m', 'flat_or_shallow_roof',
   'has_secondary_suite', 'has_garden_suite', 'has_laneway_suite', 'blank_side_wall', 'suite_wall_openings', 'all_units_front_street', 'individual_private_driveway']);
 function owedOrNoAnswer(reason) {
   const r = String(reason || ''); const code = r.split(':')[0]; const det = r.slice(code.length + 1);
   if (code === 'missing_input' || code === 'needs_user_input' || code === 'existing_building_facts') return 'OWED';
-  if (code === 'condition_unknown' && OWED_TOKENS.has(det)) return 'OWED';
+  if (code === 'condition_unknown' && (OWED_TOKENS.has(det) || DESIGN_TOKENS.has(det))) return 'OWED'; // a design-option token (vocab design_options) the plan facts do not settle is owed, as flat_or_shallow_roof
   return 'NO ANSWER';
 }
 const slim = (r) => ({ status: r.status, value: r.value ?? null, reason: r.reason ?? null, winner: r.winner ? (r.winner.unit_id || r.winner) : null,
@@ -286,12 +287,17 @@ function runNotice(n, surveyOn, rows, lots) {
   const AF = LF.applicantFigures(pf);
   const MG = MB.resolveMainBuildingGfa({ plan_gfa_m2: AF.existing_gfa_m2, max_build_gfa_m2: p ? p.max_buildable_gfa_sqm : null }); // NN-Q3: plan facts, then the user's footprint and storeys (none in a scorer run), then the maximum build
   const UFA = AF.neighbour_front_setbacks_m.length ? FA.resolveFrontSetback([], FYA_TABLE, { zone_default_m: 0 }, { neighbour_front_setbacks_m: AF.neighbour_front_setbacks_m }) : null; // NN-Q4
-  const applicantInputs = (bt) => {
+  const applicantInputs = (bt, target) => {
     const vars = {}; const flags = {}; const basis = {};
     if (MG.value != null) { vars.main_building_gfa_m2 = MG.value; basis.main_building_gfa_m2 = MG.basis; }
     if (['garden_suite', 'laneway_suite'].includes(bt)) { // NN-Q2: M-291 keeps a non-suite ancillary building owed
       if (AF.suite_height_m != null) { vars.proposed_height_m = AF.suite_height_m; basis.proposed_height_m = 'plan_facts'; }
       if (AF.suite_separation_m != null) { vars.distance_to_residential_m = AF.suite_separation_m; basis.distance_to_residential_m = 'plan_facts'; }
+      // MB-27 increment 5 (D-1 a): the garden suite's height arm is a design option token; an applicant's plan height sets it (vocab design_options.<o>.from_input)
+      for (const o of Object.values(I.vocab.design_options || {})) {
+        const fi = o && o.from_input; const r = fi && fi.structure_types.includes(bt) ? (fi.by_target || {})[target] || fi.default : null;
+        if (r && vars[r.input] != null) { flags[o.token] = r.holds_at_or_above != null ? vars[r.input] >= r.holds_at_or_above : vars[r.input] > r.holds_above; basis[o.token] = 'plan_facts'; }
+      }
     }
     if (UFA && UFA.basis === 'user_supplied') { Object.assign(vars, UFA.vars); Object.assign(flags, UFA.flags); basis.abutting_front_setback_m = 'plan_facts neighbour_front_setbacks_m'; }
     return { vars, flags, basis };
@@ -385,7 +391,7 @@ function runNotice(n, surveyOn, rows, lots) {
       const shareDirection = (req, val, lim) => { const t = String(req || ''); return new RegExp(`(no less than|not less than|at least|minimum of)\\s*${val}\\s*%`, 'i').test(t) ? 'min' : /maximum/i.test(t) ? 'max' : lim; };
       if (T && T.unit === 'pct' && (T.bound === 'min' || T.bound === 'max') && cityUnit === '%' && typeof cityVal === 'number' && shareDirection(v.requirement, cityVal, row.limit) !== T.bound) {
         row.complement_of = cityVal; cityVal = Math.round((100 - cityVal) * 1000) / 1000; row.scorer_fix = row.scorer_fix || 'EXC-W2-complement'; } }
-    const AI = applicantInputs(bt); if (Object.keys(AI.basis).length) row.applicant_inputs = AI.basis;
+    const AI = applicantInputs(bt, target); if (Object.keys(AI.basis).length) row.applicant_inputs = AI.basis;
     const lot = makeLot(base, bt, row.dwelling_units, { vars: AI.vars, flags: AI.flags });
     const only = ELEMENT_TARGETS.has(target) ? new Set(matched.map((u) => u.unit_id)) : null;
     let r = evalTarget(lot, target, only);

@@ -1,11 +1,11 @@
 {
- "commit": "076c3ad7",
+ "commit": "7b4a0156",
  "notices": 123,
  "variances": 496,
  "totals": {
   "ANSWERED": 2,
-  "MATCH": 282,
-  "DIFFER": 24,
+  "MATCH": 283,
+  "DIFFER": 23,
   "NOT MODELLED": 73,
   "NO ANSWER": 27,
   "OWED": 50,
@@ -14,9 +14,9 @@
   "BY-LAW CHANGED": 4
  },
  "inputs": {
-  "table_version": "816e514b072bb8f95f931cfb9da3121c6d2964091814b65307f85d830e531fc0",
-  "evaluator_version": "54c20374745f59aa98dd8b602b8da1c4bd21a548b26982460a535a51a7ae1527",
-  "scorer_sha": "f0ac2bae21a55349"
+  "table_version": "fe54cdb5986b1d01a0106516e62d806f843e2e93ec1b3805b50a461bd3ba738e",
+  "evaluator_version": "9b46954c9a0380c6225cea653c510a4769a6c1ee296a738c3838d8b8e94ae716",
+  "scorer_sha": "35a51e208e2cf945"
  },
  "note": "pinned by coa-scorecard.mjs --pin; the lock is live while inputs equal the tree"
 }

@@ -35181,6 +35181,9 @@
       "building_type": "garden_suite",
       "vars": {
        "proposed_height_m": 6.3
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "rear_setback_m",
@@ -35235,6 +35238,9 @@
       "building_type": "garden_suite",
       "vars": {
        "proposed_height_m": 6.3
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "rear_setback_m",
@@ -35289,6 +35295,9 @@
       "building_type": "garden_suite",
       "vars": {
        "proposed_height_m": 6.3
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "rear_setback_m",
@@ -35343,6 +35352,9 @@
       "building_type": "garden_suite",
       "vars": {
        "proposed_height_m": 6.3
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "rear_setback_m",
@@ -35397,6 +35409,9 @@
       "building_type": "garden_suite",
       "vars": {
        "proposed_height_m": 6.3
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "rear_setback_m",
@@ -39708,13 +39723,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (ravine): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (ravine): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39726,13 +39741,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_m180): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_m180): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39769,13 +39784,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_cov): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_cov): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39787,13 +39802,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_cov): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_cov): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39830,13 +39845,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_m180): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_m180): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39848,13 +39863,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_m180): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_m180): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39891,13 +39906,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (ravine): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (ravine): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39909,13 +39924,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (label_u_rt): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (label_u_rt): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39952,13 +39967,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (plain_12_18): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (plain_12_18): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -39970,13 +39985,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (plain_18p): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (plain_18p): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40013,13 +40028,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (ravine): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (ravine): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40031,13 +40046,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_m180): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_m180): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40074,13 +40089,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_cov): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_cov): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40092,13 +40107,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_cov): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_cov): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40135,13 +40150,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_m180): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_m180): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40153,13 +40168,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (exc_m180): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (exc_m180): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40196,13 +40211,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (ravine): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (ravine): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40214,13 +40229,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (label_u_rt): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (label_u_rt): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40257,13 +40272,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (plain_12_18): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (plain_12_18): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40275,13 +40290,13 @@
      "scenario": {
       "building_type": "garden_suite"
      },
-     "rationale": "affected lot (plain_18p): applies undecided (missing_input:proposed_height_m)",
+     "rationale": "affected lot (plain_18p): applies undecided (condition_unknown:suite_height_over_4m)",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": null,
-       "why": "missing_input:proposed_height_m",
+       "why": "condition_unknown:suite_height_over_4m",
        "disclosures": []
       }
      }
@@ -40319,6 +40334,9 @@
       "building_type": "garden_suite",
       "vars": {
        "proposed_height_m": 6.3
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "separation_m",
@@ -40356,6 +40374,9 @@
       "building_type": "garden_suite",
       "vars": {
        "proposed_height_m": 6.3
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "separation_m",
@@ -40743,6 +40764,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 6
+      },
+      "flags": {
+       "suite_height_over_4m": false
       }
      },
      "target": "height_m",
@@ -40796,6 +40820,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 6
+      },
+      "flags": {
+       "suite_height_over_4m": false
       }
      },
      "target": "height_m",
@@ -40849,6 +40876,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 6
+      },
+      "flags": {
+       "suite_height_over_4m": false
       }
      },
      "target": "height_m",
@@ -40902,6 +40932,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 6
+      },
+      "flags": {
+       "suite_height_over_4m": false
       }
      },
      "target": "height_m",
@@ -40955,6 +40988,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 6
+      },
+      "flags": {
+       "suite_height_over_4m": false
       }
      },
      "target": "height_m",
@@ -41008,6 +41044,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 8
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "height_m",
@@ -41061,6 +41100,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 8
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "height_m",
@@ -41114,6 +41156,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 8
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "height_m",
@@ -41167,6 +41212,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 8
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "height_m",
@@ -41220,6 +41268,9 @@
       "building_type": "garden_suite",
       "vars": {
        "distance_to_residential_m": 8
+      },
+      "flags": {
+       "suite_height_over_4m": true
       }
      },
      "target": "height_m",
@@ -43658,7 +43709,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43714,7 +43764,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43770,7 +43819,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43826,7 +43874,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43882,7 +43929,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(A)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -43938,7 +43984,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -43994,7 +44039,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -44050,7 +44094,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -44106,7 +44149,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -44162,7 +44204,6 @@
        "reason": null,
        "winner": "150.7.60.50(4)#(4)(B)",
        "applied": [
-        "150.7.60.50(2)#whole",
         "150.7.60.50(4)#(4)(B)"
        ],
        "disclosures": [],
@@ -50258,9 +50299,9 @@
      },
      "target": "lot_coverage_pct",
      "expect": {
-      "value": "unregulated"
+      "value": 45
      },
-     "rationale": "R lot with no LC overlay: unregulated (the expression's own else-arm)",
+     "rationale": "R lot with no LC overlay: path (A) is still 45 % (item 5, D-8 a); the house figure (none) is principal_coverage_path_b_pct",
      "initial": {
       "pass": true,
       "observed": {
@@ -50268,7 +50309,7 @@
        "applies": true,
        "why": null,
        "status": "value",
-       "value": "unregulated",
+       "value": 45,
        "reason": null,
        "winner": "150.7.60.70(1)#(1)(A)",
        "applied": [
@@ -50290,7 +50331,7 @@
      "expect": {
       "value": 45
      },
-     "rationale": "R lot with LC 35: max(45 %, 35 %) = 45 %",
+     "rationale": "R lot with LC 35: path (A) 45 %; the overlay 35 % is the house figure on principal_coverage_path_b_pct",
      "initial": {
       "pass": true,
       "observed": {
@@ -50339,7 +50380,7 @@
      "expect": {
       "value": 45
      },
-     "rationale": "lot with an LC overlay: max(45 %, overlay LC) = 45 %",
+     "rationale": "path (A): a flat 45 % on every lot (MB-27 increment 5 item 5, D-8 a)",
      "initial": {
       "pass": true,
       "observed": {
@@ -50388,7 +50429,7 @@
      "expect": {
       "value": 45
      },
-     "rationale": "lot with an LC overlay: max(45 %, overlay LC) = 45 %",
+     "rationale": "path (A): a flat 45 % on every lot (MB-27 increment 5 item 5, D-8 a)",
      "initial": {
       "pass": true,
       "observed": {
@@ -50437,7 +50478,7 @@
      "expect": {
       "value": 45
      },
-     "rationale": "lot with an LC overlay: max(45 %, overlay LC) = 45 %",
+     "rationale": "path (A): a flat 45 % on every lot (MB-27 increment 5 item 5, D-8 a)",
      "initial": {
       "pass": true,
       "observed": {
@@ -50486,7 +50527,7 @@
      "expect": {
       "value": 45
      },
-     "rationale": "lot with an LC overlay: max(45 %, overlay LC) = 45 %",
+     "rationale": "path (A): a flat 45 % on every lot (MB-27 increment 5 item 5, D-8 a)",
      "initial": {
       "pass": true,
       "observed": {

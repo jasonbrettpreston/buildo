@@ -35,7 +35,8 @@ const targetsOf = (u: Json): string[] => [u.target].flat().filter((t: unknown) =
 const parkingIds = new Set(resolved.filter((u) => usesOf(u).includes('parking_space')).map((u) => u.unit_id));
 
 const suiteLot = (zone: string, buildingType: string, vars: Json, mapAreas: string[] = []): Json => ({
-  zone, label: {}, overlays: {}, flags: { lawfully_existing: false }, building_type: buildingType, map_areas: mapAreas,
+  // MB-27 increment 5 (named re-pin): the garden suite height arm is the design option token (D-1 a), held when the suite is taller than 4.0 m
+  zone, label: {}, overlays: {}, flags: { lawfully_existing: false, suite_height_over_4m: Number(vars.proposed_height_m) > 4 }, building_type: buildingType, map_areas: mapAreas,
   vars: { lot_frontage_m: 12, lot_depth_m: 40, ...vars },
 });
 const sep = (lot: Json): Json => E.effective(lot, 'separation_m', E.loadCandidates(lot, units).candidates, C);

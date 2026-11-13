@@ -1,0 +1,18 @@
+== MB-27 increment 5 C2a (Layer 1 / 2: suite_height option, type-less exception rule, flat 45 % (A), the D-76 generated unit for principal_coverage_path_b_pct, the D-77 corner heading pattern, corner / through-lot keying, 849-2025 in force, migration 315; migration 316 moved to the B5B commit with its consumers) red: the lock run on the parent 6c22252af (C0 on origin 076c3ad7c); green on the build commit. Two tests green on the parent are guards: assembly makes no threshold unit for an option without one, and the garden suite keeps the source 20 %.
+   × item 1 (D-1 a) + item 7 (D-4 a): the suite_height design option > vocab declares suite_height after roof_form, token suite_height_over_4m, no threshold; low sets one storey, tall does not
+   × item 1 (D-1 a) + item 7 (D-4 a): the suite_height design option > the row is 70 wide: 55 base pairs, roof_form 56-62, suite_height 63-70 (low then tall), the option run sets the token and `sets`
+   × item 1 (D-1 a) + item 7 (D-4 a): the suite_height design option > the golden 25: low 4.0 m high at 4.0 m separation, GFA cap 60; tall 6.3 m at 7.5 m, cap 120; outside a run the arm is undecided
+   × item 1 (D-1 a) + item 7 (D-4 a): the suite_height design option > 150.7.60.20(2)(A) reads the option's own height on a lot deeper than 45 m (A0277: 2.0 low, 3.15 tall)
+   × item 1 (D-1 a) + item 7 (D-4 a): the suite_height design option > 150.7.60.50(2) leaves the stored gfa_m2 (a Layer 3 relation, INV-2): its own target, outside the Layer 2 scope
+   × item 3 (D-3 a): a type-less exception unit binds the house, not the garden suite; coverage untouched > vocab carries one generic row, coverage targets untouched
+   × item 3 (D-3 a): a type-less exception unit binds the house, not the garden suite; coverage untouched > A0166 / A0170 suite GFA is the 120 m2 cap (key E5, E6); A0203 suite side is 150.7.60.20(5)(B); the house keeps its exception
+   × item 5 (D-8 a) / D-61 and Q3 a as ruled B5A-1 c: the two coverage paths > 150.7.60.70(1)(A) is a flat 45 % on every lot
+   × item 5 (D-8 a) / D-61 and Q3 a as ruled B5A-1 c: the two coverage paths > the house's path-(B) figure is the principal target principal_coverage_path_b_pct: overlay where mapped, else unregulated (AR-1 R1)
+   × D-76: the generated unit carries the house figure; the source unit keeps its 20 % > 150.7.60.70(1)#principal(1)(B) is generated from 150.7.60.70(1)#(1)(B) for the residential house types, M-465 form
+   × D-77: the (6) heading licenses the street-side target for 150.7.60.20(6) only > the heading phrase occurs once across every page (the 150.7.60.20(6) heading), so it licenses no other unit
+   × item 6 reading 2 and D-6 a (B5A-2 a): the corner and through-lot suite yards > (6)(C) is keyed to the suite's street-side target; the interior side takes (5)(B); the street cell waits for the step (P5.13)
+   × item 6 reading 2 and D-6 a (B5A-2 a): the corner and through-lot suite yards > (3)(A) is the M-198(1) proxy with the 1.5 m floor, disclosed "may understate"; the step supplies the front (P5.13)
+   × item 12 (D-10 a): By-law 849-2025 in force, carve-out kept > statuses["849-2025"] is in_force from 2025-07-24, basis M-481, the carve-out in the trigger
+   × migration 315 (written, not applied) > 315: width 70, the shared code refused at the 55 base slots and the threshold slot 62, toast_tuple_target 1624 (ST-1), both views at 70
+   × migration 315 (written, not applied) > 315: both views name every position both ways against rb.scopePairs / rb.optionPairs (the 295 lock form, at width 70)
+      Tests  17 failed | 2 passed (19)

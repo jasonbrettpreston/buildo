@@ -626,6 +626,7 @@
     "units": [],
     "layer2_targets": [
      "lot_coverage_pct",
+     "principal_coverage_path_b_pct",
      "building_depth_m",
      "building_length_m",
      "front_setback_m",

@@ -140,7 +140,8 @@ describe('M-176(2) / M-190 — the eight x.40.10(2)(A)/(B) main-wall units are a
 describe('M-179(1) / M-191 — garden-suite coverage: (A)/(B) one max statement, (B)\'s 20 % on ancillary_coverage_pct', () => {
   it('150.7.60.70(1)(A) is one statement: max(45 % @(1)(A); overlay @(1)(B)(i)) where mapped, else none, never a min-combine with (B)', () => {
     const u = unitOf('150.7.60.70(1)#(1)(A)');
-    expect([u.target, u.numeric_expression]).toEqual(['lot_coverage_pct', ['lot_coverage_pct = if(mapped(LC); max(45 pct @(1)(A); overlay(LC) @(1)(B)(i)); unregulated) @(1)']]);
+    // MB-27 increment 5 item 5 (D-8 a, named re-pin): (A) is a flat 45 % on every lot; the (B)(i)/(ii) house figure is its own principal target
+    expect([u.target, u.numeric_expression]).toEqual(['lot_coverage_pct', ['lot_coverage_pct = 45 pct @(1)(A)']]);
   });
   it('150.7.60.70(1)(B) bounds the ancillary buildings together at 20 %, on its own target (as the laneway twin 150.8.60.70(1)(B) at 30 %)', () => {
     const u = unitOf('150.7.60.70(1)#(1)(B)');

@@ -38,6 +38,7 @@
       "main_wall_front_rear_share_pct",
       "main_wall_height_m",
       "main_wall_side_share_pct",
+      "principal_coverage_path_b_pct",
       "rear_setback_m",
       "roof_slope_max",
       "side_setback_m",
@@ -79,7 +80,7 @@
   },
   "deferred": {},
   "options": {
-    "$comment": "M-465 (M-400's first design option) as amended by DL-7 a (M-494, D5): option slots appended after the base pairs, in this order: for each option, for each structure and target listed, one slot per vocab.design_options value (in its order); then the option's threshold pair (option null). Stored for the listed classes (M-465 (6), RC-1, DL-7 a): the representative arrays hold the first listed class's results, and another listed class writes a class override at a slot only where its tuple differs from the representative's (stored only where they differ, Q-STOR a F); a class not listed reads no option row (R3-11). The base pairs and their positions are unchanged (M-60). Read through the view bylaw_resolution_option_results (migration 295; the listed classes and the override read are migration 297; house_with_secondary_suite, the third listed class, is migration 304, MB-27 increment 4, Spec 69a M-379 dated note 2026-11-11).",
+    "$comment": "M-465 (M-400's first design option) as amended by DL-7 a (M-494, D5): option slots appended after the base pairs, in this order: for each option, for each structure and target listed, one slot per vocab.design_options value (in its order); then the option's threshold pair (option null). Stored for the listed classes (M-465 (6), RC-1, DL-7 a): the representative arrays hold the first listed class's results, and another listed class writes a class override at a slot only where its tuple differs from the representative's (stored only where they differ, Q-STOR a F); a class not listed reads no option row (R3-11). The base pairs and their positions are unchanged (M-60). Read through the view bylaw_resolution_option_results (migration 295; the listed classes and the override read are migration 297; house_with_secondary_suite, the third listed class, is migration 304, MB-27 increment 4, Spec 69a M-379 dated note 2026-11-11). MB-27 increment 5 (migration 315): the second option suite_height (item 1, D-1 a) on the garden_suite gfa_m2, height_m, rear_setback_m and separation_m, no threshold pair; and the principal target principal_coverage_path_b_pct (Q3 a as ruled B5A-1 c) joins the base pairs in its sorted place, so the base pairs after it move by one (the night rewrites every row; 315 re-creates both views): width 70.",
     "roof_form": {
       "classes": ["detached_house", "detached_houseplex", "house_with_secondary_suite"],
       "targets": {
@@ -87,6 +88,12 @@
       },
       "threshold": {
         "principal": "pitched_roof_slope_min"
+      }
+    },
+    "suite_height": {
+      "classes": ["detached_house", "detached_houseplex", "house_with_secondary_suite"],
+      "targets": {
+        "garden_suite": ["gfa_m2", "height_m", "rear_setback_m", "separation_m"]
       }
     }
   }

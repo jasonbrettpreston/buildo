@@ -40,7 +40,17 @@ const view = (name: string): string => {
   expect(m, `${name} is created`).toBeTruthy();
   return (m as RegExpExecArray)[1] as string;
 };
-const width = (): number => rb().scopePairs(SCOPE).length + rb().optionPairs(SCOPE, VOCAB.design_options).length;
+const liveWidth = (): number => rb().scopePairs(SCOPE).length + rb().optionPairs(SCOPE, VOCAB.design_options).length;
+// MB-27 increment 5 (named re-pin): migration 315 widens the row to 70 (principal_coverage_path_b_pct joins the base pairs; the suite_height
+// option slots follow roof_form). This file is 295's own text, so its anchors are the 295 era: the 54 base pairs without the new target and the
+// roof_form slots only (both ways against the live scope, filtered); migration 315 is locked by src/tests/bylaw-inc5-layer2.logic.test.ts.
+const ERA_PAIRS = (): Json[] => (rb().scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'principal_coverage_path_b_pct');
+const ERA_OPTIONS = (): Json[] => {
+  const live = rb().scopePairs(SCOPE) as Json[]; const era = live.filter((p) => p.target !== 'principal_coverage_path_b_pct');
+  return (rb().optionPairs(SCOPE, VOCAB.design_options) as Json[]).filter((p) => p.option_name === 'roof_form')
+    .map((p) => ({ ...p, base_index: p.base_index === null ? null : era.indexOf(live[p.base_index] as Json) }));
+};
+const width = (): number => ERA_PAIRS().length + ERA_OPTIONS().length;
 
 describe('migration 295: a parseable, append-only file (282 and 293 are not edited)', () => {
   it('parses, has UP and DOWN markers, the SPEC LINK and M-465, and names Q-STOR a', () => {
@@ -58,8 +68,9 @@ describe('migration 295: a parseable, append-only file (282 and 293 are not edit
 
 describe('M-465 (1)-(4): width 61, the closed code shared, the base view unchanged in its pairs', () => {
   it('the lot row is 61 wide: the 54 base pairs plus the 7 option slots (a literal anchor, as profiles.logic.test.ts does for 54)', () => {
-    expect(rb().scopePairs(SCOPE)).toHaveLength(54);
+    expect(ERA_PAIRS()).toHaveLength(54);
     expect(width()).toBe(61);
+    expect(liveWidth()).toBe(70); // migration 315 (MB-27 increment 5)
   });
   it('codes: width 61 and closed to the result codes plus storage code shared (layer2-map.json), NOT VALID', () => {
     const m = /bylaw_resolution_lots_codes_closed CHECK \(cardinality\(codes\) = (\d+) AND codes <@ ARRAY\[([0-9, ]+)\]::smallint\[\]\) NOT VALID;/.exec(bare);
@@ -80,14 +91,14 @@ describe('M-465 (1)-(4): width 61, the closed code shared, the base view unchang
   it('bylaw_resolution_results keeps its 54 pairs in scope order and returns only 61-wide rows', () => {
     const v = view('bylaw_resolution_results');
     const list = [...v.matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
-    expect(list).toEqual(rb().scopePairs(SCOPE).map((p: Json, i: number) => ({ i: i + 1, ...p })));
+    expect(list).toEqual(ERA_PAIRS().map((p: Json, i: number) => ({ i: i + 1, ...p })));
     expect(v).toContain(`WHERE cardinality(l.codes) = ${width()}`);
   });
   it('bylaw_resolution_option_results names the option slots of rb.optionPairs both ways: position, option (NULL for the threshold), base pair', () => {
     const v = view('bylaw_resolution_option_results');
     const list = [...v.matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)', (NULL|'[a-z_]+'), (NULL|\d+)\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3], option: m[4] === 'NULL' ? null : m[4]!.slice(1, -1), base: m[5] === 'NULL' ? null : Number(m[5]) }));
-    const base = rb().scopePairs(SCOPE).length;
-    expect(list).toEqual((rb().optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => ({ i: base + k + 1, structure: p.structure, target: p.target, option: p.option, base: p.base_index === null ? null : p.base_index + 1 })));
+    const base = ERA_PAIRS().length;
+    expect(list).toEqual((ERA_OPTIONS() as Json[]).map((p, k) => ({ i: base + k + 1, structure: p.structure, target: p.target, option: p.option, base: p.base_index === null ? null : p.base_index + 1 })));
     expect(list.filter((p) => p.option === null).map((p) => p.target)).toEqual(['pitched_roof_slope_min']); // test C: the threshold row has option NULL
     expect(v).toContain('CASE WHEN s.shared THEN l.codes[p.base_i] ELSE l.codes[p.i] END AS code');
     expect(v).toContain('r.shared AS shared_with_base');

@@ -17,7 +17,9 @@ const SCOPE = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/la
 const VOCAB = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/vocab.json'), 'utf8'));
 const file = fs.readdirSync(path.join(ROOT, 'migrations')).find((f) => /^297_.*\.sql$/.test(f));
 const SQL = file ? fs.readFileSync(path.join(ROOT, 'migrations', file), 'utf8') : '';
-const width = (RB.tailPairs ? RB.tailPairs(SCOPE).length : 0) + RB.scopePairs(SCOPE).length + RB.optionPairs(SCOPE, VOCAB.design_options).length;
+// MB-27 increment 5 (named re-pin): migration 315 widens the encoder to 70; this file's text is the 61-wide era (54 base pairs + the 7 roof_form
+// slots), so the encoder width is read with the increment-5 additions taken out (the new principal target and the suite_height slots).
+const width = (RB.tailPairs ? RB.tailPairs(SCOPE).length : 0) + RB.scopePairs(SCOPE).filter((p: { target: string }) => p.target !== 'principal_coverage_path_b_pct').length + RB.optionPairs(SCOPE, VOCAB.design_options).filter((p: { option_name: string }) => p.option_name === 'roof_form').length;
 
 describe('migration 297 (written, not applied)', () => {
   it('exists as one file', () => {
@@ -41,7 +43,7 @@ describe('migration 297 (written, not applied)', () => {
     const w = [...new Set(ws)];
     expect(w.length).toBe(1);
     expect([61, 63]).toContain(w[0]);
-    expect([RB.scopePairs(SCOPE).length, RB.optionPairs(SCOPE, VOCAB.design_options).length]).toEqual([54, 7]);
+    expect([RB.scopePairs(SCOPE).length, RB.optionPairs(SCOPE, VOCAB.design_options).length]).toEqual([55, 15]); // MB-27 increment 5 (named re-pin): 315 adds one base pair and the 8 suite_height slots; 297's own text stays 61
   });
   it("the migration width equals the encoder width (the second, independent check)", () => {
     const ws = [...SQL.matchAll(/cardinality\((?:l\.)?(?:codes|numbers|reason_ids|unit_ids)\) = (\d+)/g)].map((x) => Number(x[1]));

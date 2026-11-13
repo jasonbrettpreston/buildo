@@ -40,7 +40,7 @@ const ZONES = ['R', 'RD', 'RS', 'RT', 'RM'];
 // a lot as Layer 3 would hand it over: site facts not holding (M-169), design choices set explicitly per test
 const lot = (zone: string, buildingType: string, extra: Json = {}): Json => ({
   zone, label: { f: 12, d: 0.6 }, overlays: {}, map_areas: [], building_type: buildingType,
-  flags: { lawfully_existing: false, corner_lot: false, through_lot: false, front_averaging_not_applicable: true, abuts_lane: false, suite_wall_openings: false, flat_or_shallow_roof: false, ...(extra.flags ?? {}) },
+  flags: { lawfully_existing: false, corner_lot: false, through_lot: false, front_averaging_not_applicable: true, abuts_lane: false, suite_wall_openings: false, flat_or_shallow_roof: false, suite_height_over_4m: false, ...(extra.flags ?? {}) }, // suite_height_over_4m: MB-27 increment 5 (named re-pin), the garden suite height arm is the design option token (D-1 a), here the low arm the old proposed_height_m 4 gave
   vars: { lot_frontage_m: 12, lot_depth_m: 40, proposed_height_m: 4, distance_to_residential_m: 5, main_building_gfa_m2: 500, ...(extra.vars ?? {}) }, // main_building_gfa_m2: the third source of the value order (the maximum build) always holds a figure in the product (CHAT-198.NN-Q3)
   ...Object.fromEntries(Object.entries(extra).filter(([k]) => k !== 'flags' && k !== 'vars')),
 });
@@ -195,7 +195,7 @@ describe('M-197 — the garden-suite openings arms are disclosed; the blank wall
 
 describe('M-222 / M-224 — the Coxwell area unit takes the literal reading while its polygon is not held', () => {
   const tall = (mapAreas: string[] | undefined): Json => {
-    const l = lot('RD', 'garden_suite', { vars: { proposed_height_m: 6.3, distance_to_residential_m: 5 } });
+    const l = lot('RD', 'garden_suite', { vars: { proposed_height_m: 6.3, distance_to_residential_m: 5 }, flags: { suite_height_over_4m: true } }); // the tall arm (D-1 a)
     if (mapAreas === undefined) delete l.map_areas; else l.map_areas = mapAreas;
     return l;
   };

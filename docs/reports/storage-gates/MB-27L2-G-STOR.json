@@ -1,42 +1,36 @@
 {
-  "$comment": "MB-27.L2 G-STOR v2, FINAL before the axis night (plan-roof-axis v5 section 2, v8 section 4; operator Q-ROOF: storage measured against the 0.60 line, 780 MiB of the 1,300 MiB budget). Exact, read-only, on the tree at 4a3f1c4fb (every code item that rides the night). The step's own pure core (materializeBatch) runs over every parcel in a default_transaction_read_only session; each of the 440093 lot rows is sized by lane D2's calibrated tuple model (MB-27L2/dryrun/pgsize.mjs tupleLen: exact datum sizes, alignment, short varlena, pglz and TOAST at 2,032 B; it reproduces pg_column_size(l.*) on 440,093 of 440,093 stored rows) with the stamps as hex text and as bytea (Q-STOR a). The page fill is next-fit in the LIVE HEAP ORDER (dryrun/fill-order.awk over gstor-cal-full/heap-order.txt; MAXALIGN 8, 4 B line pointer, 8,168 B usable). Calibration: the stored rows fill 93515 pages in that order against 89375 actual. Option B saves 81.3 B per row. Script and rows: ~/Buildo-scratch/mcbylaws/MB-27L2/gate/gstor-final.zsh, gstor-v2-exact.mjs and gstor-inc3-final-e2c.tsv.",
+  "$comment": "MB-27 increment 5 G-STOR (ST-3 exact model; McStorage rulings ST-1..ST-3, 2026-11-12), bound to the increment-5 tree (C2a on origin 076c3ad7c + C0 6c22252af). Read-only on the dev DB: the tree's own pure core (materializeBatch) over every parcel in default_transaction_read_only sessions (dry-run harness ~/Buildo-scratch/mcbylaws/MB-27L2/dryrun, command ~/Buildo-scratch/mcbylaws/inc5/night/run-dry.zsh); each of the 440093 lot rows sized by pgsize.mjs tupleLen at width 70 with the stamps as bytea and the table's toast_tuple_target 1624 (ST-1; the toaster runs above 2,032 B and compresses / moves values until the row fits 1,624 B), next-fit in parcel_id order (the reload's insert order; MAXALIGN 8, 4 B line pointer, 8,168 B usable); the out-of-line values (68257 rows) sized as TOAST chunk tuples (1,996 B chunks) with an index estimate; pkey/forks and dictionaries carried from the increment-4 record. ST-3: the night's record takes P_up = max(this model, the measured test write x 1.02) and stops on a gap above 3 % (D-74: |model - test| / model); the test write is the test-stack rehearsal's full reload, measured after VACUUM FULL (S2). Dry-run outputs: ~/Buildo-scratch/mcbylaws/inc5/night/dry/.",
   "verdict": "PASS",
-  "P_up_mib": 768.35,
+  "P_up_mib": 699.24,
   "stop_mib": 780,
-  "ratio": 0.591,
-  "T0_mib": 708.51,
-  "method": "exact tuple model (pgsize.mjs) on the built core's rows; next-fit in live heap order",
+  "ratio": 0.538,
+  "T0_mib": 758.77,
+  "method": "exact tuple model (pgsize.mjs, toast_tuple_target 1624, TOAST relation sized) on the built core's rows; next-fit in parcel_id order; ST-3 test write recorded by the night",
   "parts_mib": {
-    "lots_heap": 757.09,
-    "lots_pkey_and_forks": 9.66,
+    "lots_heap": 637.88,
+    "toast_heap": 48.63,
+    "toast_index_estimate": 1.45,
+    "lots_pkey_and_forks": 9.68,
     "dictionaries": 0.6,
     "delta_dict_allowance": 1
   },
   "heap_pages": {
-    "projected": 96907,
-    "today_simulated_heap_order": 93515,
-    "today_actual": 89375
-  },
-  "without_option_B_mib": {
-    "lots_heap": 800.41,
-    "P_up": 811.67
+    "projected_lots": 81648,
+    "projected_toast": 6224,
+    "stored_simulated": 97122
   },
   "rows": 440093,
   "row_bytes": {
-    "projected_hex_avg": 1669.08,
-    "projected_bytea_avg": 1587.73,
-    "option_B_saving_avg": 81.35,
-    "max": 2032,
-    "over_toast_threshold": 0
+    "projected_bytea_avg": 1421.61,
+    "max": 1624,
+    "rows_out_of_line": 68257,
+    "toast_payload_bytes": 45707869
   },
-  "reconciliation": {
-    "lane_D2_v8_model_heap_mib": 712.42,
-    "lane_D2_v8_model_bytea_avg": 1544.3,
-    "first_estimate_ctid_order_flat96_heap_mib": 729.29,
-    "first_landing_measure_heap_mib": 728.55
-  },
-  "table_version": "816e514b072bb8f95f931cfb9da3121c6d2964091814b65307f85d830e531fc0",
-  "evaluator_version": "54c20374745f59aa98dd8b602b8da1c4bd21a548b26982460a535a51a7ae1527",
-  "parent_sha": "4a3f1c4fb6f9b34b747ed810de9d25a2c0f66443",
-  "measured": "2026-11-10"
+  "table_version": "fe54cdb5986b1d01a0106516e62d806f843e2e93ec1b3805b50a461bd3ba738e",
+  "evaluator_version": "9b46954c9a0380c6225cea653c510a4769a6c1ee296a738c3838d8b8e94ae716",
+  "parent_sha": "6c22252af77ff547d21f406fe62e3eedd7ef3036",
+  "measured": "2026-11-12",
+  "toast_tuple_target": 1624,
+  "width": 70,
+  "rebound": "2026-11-13 re-cut on origin 33af0759a (wf1/inc5a-1113): table_version moved b65aa721278d -> fe54cdb5986b by the landed Layer 2 seed edits (B5B-1, E-COST); re-bound by regeneration, not re-measured: the stored cells and model rows are Layer 2 only and unchanged (21,053,617 moved cells, P_up 699.24 MiB); the night re-measures P_up from the test write (ST-3)"
 }

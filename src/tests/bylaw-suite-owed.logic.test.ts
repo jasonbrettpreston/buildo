@@ -39,7 +39,7 @@ const unitOf = (id: string): Json => {
 // a lot as Layer 3 hands it over (M-169: site facts not holding; design choices explicit), as bylaw-evaluator-fixes
 const lot = (zone: string, buildingType: string, extra: Json = {}): Json => ({
   zone, label: { f: 12, d: 0.6 }, overlays: {}, map_areas: [], building_type: buildingType,
-  flags: { lawfully_existing: false, corner_lot: false, through_lot: false, front_averaging_not_applicable: true, abuts_lane: false, suite_wall_openings: false, flat_or_shallow_roof: false, ...(extra.flags ?? {}) },
+  flags: { lawfully_existing: false, corner_lot: false, through_lot: false, front_averaging_not_applicable: true, abuts_lane: false, suite_wall_openings: false, flat_or_shallow_roof: false, suite_height_over_4m: Number((extra.vars ?? {}).proposed_height_m ?? 4) > 4, ...(extra.flags ?? {}) }, // suite_height_over_4m: MB-27 increment 5 (named re-pin), the height arm is the design option token (D-1 a)
   vars: { lot_frontage_m: 12, lot_depth_m: 40, proposed_height_m: 4, distance_to_residential_m: 5, main_building_gfa_m2: 500, ...(extra.vars ?? {}) }, // main_building_gfa_m2: the third source of the value order (the maximum build) always holds a figure in the product (CHAT-198.NN-Q3)
 });
 const eff = (l: Json, t: string): Json => E.effective(l, t, E.loadCandidates(l, units).candidates, C);
@@ -107,7 +107,8 @@ describe('M-177(1)/(2) — the garden-suite caps answer on every lot from class 
   it('M-177(2): 150.7.60.50(2) the garden suite is kept smaller than the house, disclosed, never an unchecked comparison', () => {
     // CHAT-198.NN-Q3 (2026-10-29-batch-aa): the comparison is now evaluated through main_building_gfa_m2; the disclosure names where the main building's floor area comes from
     expect(unitOf('150.7.60.50(2)#whole').disclosure).toBe("A garden suite must be smaller (in gross floor area) than the main building on the lot; the main building's floor area is taken from the plan facts, else the footprint and storeys given, else the maximum build.");
-    expect([unitOf('150.7.60.50(2)#whole').archetype, unitOf('150.7.60.50(2)#whole').numeric_expression]).toEqual(['LIMIT', ['gfa_m2 = main_building_gfa_m2 @(2)']]);
+    // MB-27 increment 5 item 1 (named re-pin): the comparison leaves the stored gfa_m2 for Layer 3 (INV-2 suite_lt_main; its own target suite_gfa_below_main_m2, outside the Layer 2 scope)
+    expect([unitOf('150.7.60.50(2)#whole').archetype, unitOf('150.7.60.50(2)#whole').numeric_expression]).toEqual(['LIMIT', ['suite_gfa_below_main_m2 = main_building_gfa_m2 @(2)']]);
   });
   it('M-177(2) / M-198: 150.7.60.40(1) the garden suite is 4.0 m below 7.5 m from the house and 6.3 m at 7.5 m or more', () => {
     for (const zone of ZONES) {
@@ -115,7 +116,7 @@ describe('M-177(1)/(2) — the garden-suite caps answer on every lot from class 
       const far = eff(lot(zone, 'garden_suite', { vars: { proposed_height_m: 6.3, distance_to_residential_m: 7.5 } }), 'height_m');
       expect([near.value, near.winner, far.value, far.winner]).toEqual([4, '150.7.60.40(1)#(1)(A)', 6.3, '150.7.60.40(1)#(1)(B)']);
     }
-    expect(unitOf('150.7.60.40(1)#(1)(B)').condition).toEqual({ tokens: ['separation_band'], if: 'distance_to_residential_m ≥ 7.5 m' });
+    expect(unitOf('150.7.60.40(1)#(1)(B)').condition).toEqual({ tokens: ['suite_height_over_4m'] }); // MB-27 increment 5 item 1 (named re-pin): the tall option token (D-1 a)
   });
 });
 

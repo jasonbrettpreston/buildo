@@ -32,11 +32,12 @@ describe('R-JA: scopePairs — the pointer order is the scope seed order', () =>
   // Q-AUd (operator "Q-AUd confirmed", audit ~/Buildo-scratch/mcbylaws/AUDIT-gates-1103.md item 9): an independent literal anchor.
   // NPAIRS and PAIRS are both computed from layer2-scope.json, so the check above cannot see a slot added or dropped there.
   // 54 = the width after MB-18 (j) (migration 293). A later slot change edits this literal as a named, ruled edit.
-  it('the scope holds exactly 54 (structure, target) pairs, a literal that a scope edit alone cannot move', () => {
-    expect(NPAIRS).toBe(54);
+  // 55 = MB-27 increment 5 (migration 315): principal_coverage_path_b_pct joins (build Q3 a as ruled B5A-1 c, operator 2026-11-12).
+  it('the scope holds exactly 55 (structure, target) pairs, a literal that a scope edit alone cannot move', () => {
+    expect(NPAIRS).toBe(55);
   });
 
-  it('the literal is not computed from the scope: a 53-pair or a 55-pair copy of the scope counts differently', () => {
+  it('the literal is not computed from the scope: a 54-pair or a 56-pair copy of the scope counts differently', () => {
     const count = (scope: Json): number => (scope.structures as string[]).reduce((n: number, s: string) => n + (scope.targets[s] as string[]).length, 0);
     const copy = (): Json => JSON.parse(JSON.stringify(SCOPE)) as Json;
     const fewer = copy();
@@ -44,10 +45,10 @@ describe('R-JA: scopePairs — the pointer order is the scope seed order', () =>
     const more = copy();
     more.targets.principal = [...(more.targets.principal as string[]), 'zz_extra_target_m'];
     expect(count(SCOPE)).toBe(NPAIRS);
-    expect(count(fewer)).toBe(53);
-    expect(count(more)).toBe(55);
-    expect(rb().scopePairs(fewer)).toHaveLength(53);
-    expect(rb().scopePairs(more)).toHaveLength(55);
+    expect(count(fewer)).toBe(54);
+    expect(count(more)).toBe(56);
+    expect(rb().scopePairs(fewer)).toHaveLength(54);
+    expect(rb().scopePairs(more)).toHaveLength(56);
   });
 });
 

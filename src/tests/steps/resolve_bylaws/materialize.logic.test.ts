@@ -295,7 +295,9 @@ describe('classes by stub: a differing class stores only the positions that diff
   it('the representative fills the arrays; a differing class is stored as overrides keyed by pair index', () => {
     expect(out.rows.lots[0].numbers.slice(0, PAIRS.length).every((v: number) => v === 10)).toBe(true);
     // M-465 (2): the stub answers every option slot as its base pair, so each is the closed code shared; the threshold has no base pair
-    expect(out.rows.lots[0].codes.slice(PAIRS.length, -1).every((c: number) => c === lr().sharedCode(MAP))).toBe(true);
+    // MB-27 increment 5 (named re-pin): the threshold slot is no longer the last one (the suite_height slots follow it), so the slots are read by optionPairs
+    const opts = rb().optionPairs(SCOPE, VOCAB.design_options) as Json[];
+    expect(out.rows.lots[0].codes.slice(PAIRS.length).filter((_: number, k: number) => opts[k]!.option !== null).every((c: number) => c === lr().sharedCode(MAP))).toBe(true);
     const cr = out.rows.lots[0].class_results;
     // MB-27 increment 4 (D-8 a named move; layer2-scope options.roof_form.classes gains the suite, DL-7 a form): the listed suite class
     // stores its option slots as overrides where the representative slot holds the closed code shared; its base pairs equal the representative's

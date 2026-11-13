@@ -350,6 +350,7 @@
       "id": "ABS-9.1",
       "occurrence_patterns": [
         "side yard abutting a street",
+        "garden suite on corner lot - side yard setback",
         "side lot line that abuts a street",
         "side lot line abutting a street",
         "street abutting the side lot line",
@@ -392,6 +393,7 @@
       "id": "ABS-9.2",
       "occurrence_patterns": [
         "side yard abutting a street",
+        "garden suite on corner lot - side yard setback",
         "side lot line that abuts a street",
         "side lot line abutting a street",
         "street abutting the side lot line",
@@ -434,6 +436,7 @@
       "id": "ABS-9.3",
       "occurrence_patterns": [
         "side yard abutting a street",
+        "garden suite on corner lot - side yard setback",
         "side lot line that abuts a street",
         "side lot line abutting a street",
         "street abutting the side lot line",
@@ -476,6 +479,7 @@
       "id": "ABS-9.4",
       "occurrence_patterns": [
         "side yard abutting a street",
+        "garden suite on corner lot - side yard setback",
         "side lot line that abuts a street",
         "side lot line abutting a street",
         "street abutting the side lot line",

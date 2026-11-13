@@ -400,6 +400,7 @@ export function evaluatorVocab(vocab) {
     map_area_unheld_reading: vocab.map_area_unheld_reading, // M-222 / M-224: literal reading while a map is not held
     specific_use: vocab.specific_use, // M-159(3) / M-244: a specific-use unit applies only on a lot that has the use
     unit_application: vocab.unit_application, // M-251: a unit the operator scoped to the residential building (by unit id)
+    type_less_exception_application: vocab.type_less_exception_application, // D-3 a (MB-27 increment 5 item 3): the generic type-less exception row
     zone_category_chapter: vocab.zone_category_chapter, // M-159(1) / M-217: a chapter's base units load only in its zone category
     building_type_parent: Object.fromEntries(names.filter((n) => types[n].parent).map((n) => [n, types[n].parent])),
     building_type_structure: Object.fromEntries(names.filter((n) => types[n].structure).map((n) => [n, types[n].structure])), // M-241

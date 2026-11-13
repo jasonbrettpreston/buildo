@@ -80,6 +80,8 @@
       "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least", "minimum required lot frontage", "minimum frontage"]
     },
     "lot_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage, percent of the lot area, of the buildings the unit applies to", "patterns": ["lot coverage"] },
+    "suite_gfa_below_main_m2": { "unit": "m2", "aspect": "envelope", "concept": "the garden suite's gross floor area bound by the residential building's (150.7.60.50(2) \"must be less than\"): a comparison Layer 3 applies at the split (INV-2 suite_lt_main, margin compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm); not a Layer 2 scope target, so the stored gfa_m2 is the 150.7.60.50(4) cap per option (MB-27 increment 5 item 1); the evaluator still answers it for a validation run (the CoA scorer, CHAT-198 NN-Q3)", "patterns": ["must be less than the gross floor area of the residential building"] },
+    "principal_coverage_path_b_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage of the residential building alone under 150.7.60.70(1)(B) on a lot with a garden suite: the Lot Coverage Overlay value where mapped ((B)(i)), else none ((B)(ii)); the house's path-(B) cell beside a garden suite (MB-27 increment 5, Q3 a as ruled B5A-1 c; AR-1 R1)", "patterns": ["permitted maximum lot coverage for the residential building"] },
     "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined", "covered by ancillary buildings and structures", "covered by all ancillary buildings and structures", "lot coverage for ancillary buildings"] },
     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
@@ -187,7 +189,7 @@
       "unit": "m",
       "aspect": "envelope",
       "concept": "minimum setback from a side lot line abutting a street (flankage)",
-      "patterns": ["side yard abutting a street", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line", "lot that flanks on a street", "if the lot line abuts a street", "side lot line abuts the street", "side yard setback for a lot that abuts a street", "side lot line abuts a street", "side lot line that abuts a road"],
+      "patterns": ["side yard abutting a street", "garden suite on corner lot - side yard setback", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line", "lot that flanks on a street", "if the lot line abuts a street", "side lot line abuts the street", "side yard setback for a lot that abuts a street", "side lot line abuts a street", "side lot line that abuts a road"],
       "reference_patterns": ["required minimum building setbacks for the zone"]
     },
     "street_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from any lot line abutting a street", "patterns": ["lot line abutting a street", "lot line that abuts a street"] },
@@ -300,6 +302,7 @@
     "proposed_building_length_m": { "unit": "m", "definition": "800.50(105)", "licensed_by": ["building length"], "note": "a scenario value" },
     "proposed_storeys": { "unit": "storeys", "null_reason": "not_a_measurement", "licensed_by": ["additional storey", "storey building"], "note": "the number of storeys of the building the unit applies to, a count (a scenario value; Spec 69a M-251, 900.3.10(70)(B))" },
     "abutting_front_setback_m": { "unit": "m", "definition": "800.50(290)", "licensed_by": ["front yard setback of", "abutting lot", "on the adjacent lot", "adjoining lot"], "note": "front yard setback of the abutting building(s), for front-yard averaging" },
+    "principal_side_setback_m": { "unit": "m", "definition": "800.50(775)", "licensed_by": ["side yard setback for the residential building", "minimum required side yard setback of the principal residential building"], "note": "the residential building's required side yard on the lot, for a garden-suite rule that reads it (150.7.60.20(6)(C); item 6 reading 2: its street-side yard, else its interior side yard), supplied by the step (Spec 78 P5.13), never a Layer 2 cell" },
     "parking_width_m": {
       "unit": "m",
       "null_reason": "no_ch800_definition",
@@ -393,6 +396,7 @@
     "has_secondary_suite": { "user_input": "has_secondary_suite" },
     "ancillary_contains_parking_space": { "user_input": "ancillary_contains_parking_space", "patterns": ["containing a parking space", "with a parking space"] },
     "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units", "slope of less than 1.0 vertical units for every 4.0 horizontal units"] },
+    "suite_height_over_4m": { "patterns": ["is greater than 4.0 metres", "a height greater than 4.0 metres", "7.5 metres or more", "is no greater than 4.0 metres", "less than 7.5 metres"] },
     "suite_wall_openings": { "user_input": "suite_wall_openings", "patterns": ["openings such as"] },
     "blank_side_wall": { "user_input": "blank_side_wall", "patterns": ["no windows or doors in that side"] },
     "main_wall_openings": { "user_input": "main_wall_openings", "patterns": ["openings to dwelling units"] },
@@ -635,6 +639,8 @@
     "150.8.60.60(3)#(3)(A)": { "citation": "150.8.60.60(3)", "ruling": "M-288", "excluded_building_types": ["ancillary_building", "garden_suite", "secondary_suite"] },
     "150.8.60.60(3)#(3)(B)": { "citation": "150.8.60.60(3)", "ruling": "M-288", "excluded_building_types": ["ancillary_building", "garden_suite", "secondary_suite"] }
   },
+  "generated_units": {"$comment":"D-76 (2026-11-12, pre-approved log; build Q3 a as ruled B5A-1 c): units the assembly generates from a Layer 1 unit's own clause when a statement of that clause binds a building the clause names only as \"a residential building\" (the clause gates cannot key it on the source unit: G-CLAUSE evidence, any_with_named_type, feeds). The M-465 threshold-unit form: generated_from the source unit, id <regulation>#<tag><clause path>, never a prefix of a cited clause; the gates read the source unit, the evaluator reads both.","units":[{"id":"150.7.60.70(1)#principal(1)(B)","from":"150.7.60.70(1)#(1)(B)","target":"principal_coverage_path_b_pct","bound":"max","statement":"principal_coverage_path_b_pct = if(mapped(LC); overlay(LC); unregulated) @(1)(B)","building_types":["detached_house","semi_detached_house","townhouse","detached_houseplex","semi_detached_houseplex"],"evidence":"a residential building, other than an apartment building","description":"Option (B) beside a garden suite: the residential building's maximum lot coverage is the Lot Coverage Overlay Map value if mapped ((B)(i)), otherwise no lot coverage applies to it ((B)(ii)).","gaps":"Generated from 150.7.60.70(1)#(1)(B) (D-76). Layer 3 compares path (A) and path (B) (M-191, tie (B) M-253); AR-1 R1: beside a houseplex or a house with a secondary suite the house is held to this figure, not x.30.40(1)(D).","ruling":"D-76; Q3 a as ruled B5A-1 c; AR-1 R1"}]},
+  "type_less_exception_application": {"$comment":"D-3 a (MB-27 increment 5 item 3, operator 2026-11-12 \"a\"; extends M-267 / M-314, the unit_application form generalised to one row): a Chapter 900 exception unit that names no building type (application.building_types empty or [\"any\"]) and no accessory-structure use (a garage: vocab accessory_structure_use) binds the residential building, not the garden suite: applies() sets it aside for the listed building types on every target but the untouched coverage targets (item 4); a unit that names an ancillary building, a garage or a suite keeps binding (refinement 1); GFA reading (i). Confidence (M-481): high for the less strict cells, medium for the stricter ones (no CoA test). Read by evaluate.mjs applies() through these fields only (arm L: no literal in code).","ruling":"D-3 a (MB-27 increment 5 item 3, operator 2026-11-12 \"a\"; extends M-267 / M-314)","citation":"900.1.10(2), 900.1.10(3); 150.7.60.20(5)","layer":"exception","type_less_building_types":["any"],"excluded_building_types":["garden_suite"],"untouched_targets":["ancillary_coverage_pct","lot_coverage_pct"],"reads":["building_type"],"why":"building_type garden_suite (a type-less Chapter 900 exception unit binds the residential building, D-3 a)"},
   "map_area_unheld_reading": {
     "$comment": "Spec 69a M-222 / M-224: a map-gated unit whose map polygon is not held (lot.map_areas absent) takes the literal reading — the unit is set aside and its disclosure is attached — instead of not_evaluated:map_area_not_held on every lot. Listed units only; any other map-gated unit stays not_evaluated until its map is held.",
     "150.7.60.30(1)#(1)(C)": { "ruling": "M-224", "map": "Coxwell–Victoria Park area (bylaw_map_areas polygon owed, M-193)" }
@@ -881,6 +887,7 @@
       "unit_not_fronting_street": "a townhouse dwelling unit does not front on a street",
       "no_individual_private_driveway": "the dwelling unit has no individual private driveway leading to its front",
       "flat_or_shallow_roof": "the roof slopes less than 1.0 in 10.0 over more than half of its area (a flat or shallow roof)",
+      "suite_height_over_4m": "the garden suite is taller than 4.0 metres",
       "suite_wall_openings": "the suite's main wall has openings such as doors or windows",
       "blank_side_wall": "the side of the building has no windows or doors",
       "main_wall_openings": "a facing main wall has an opening to a dwelling unit",
@@ -4374,6 +4381,16 @@
       "no_threshold_units": ["900.3.10(18)#(18)[SSP](C)", "900.3.10(21)#(21)[SSP](A)", "900.3.10(28)#(28)[SSP](A)", "900.3.10(37)#(37)[SSP](A)"],
       "not_above": [{ "target": "main_wall_height_m", "bound_by": "height_m", "disclosure": "main_wall_limit_above_height" }],
       "ruling": "M-465"
+    },
+    "suite_height": {
+      "$comment": "MB-27 increment 5 item 1 (D-1 a, operator 2026-11-12 \"a was for the fitted house 1a for the two heights\"): the garden suite's height arm as a design option (150.7.60.30(1), 150.7.60.40(1)): low = 4.0 m at 4.0 m separation, tall = 6.3 m at 7.5 m. No threshold (no threshold_target: assembly generates no threshold units for it). from_input: how a validation run (the CoA scorer) sets the token from an applicant's own figure. sets: the other lot conditions an option value fixes in its run (item 7, D-4 a: the low arm is one storey, suite_one_storey true, 60 m2 under 150.7.60.50(4)(B), cited to M-404; the tall arm keeps it false, 120 m2).",
+      "token": "suite_height_over_4m",
+      "values": [
+        { "option": "suite_low", "holds": false, "sets": { "suite_one_storey": true }, "label": "garden suite 4.0 m high or lower" },
+        { "option": "suite_tall", "holds": true, "sets": { "suite_one_storey": false }, "label": "garden suite over 4.0 m, up to 6.3 m high" }
+      ],
+      "from_input": { "structure_types": ["garden_suite"], "default": { "input": "proposed_height_m", "holds_above": 4.0, "clause": "150.7.60.30(1)(B): the height of the ancillary building is greater than 4.0 metres" }, "by_target": { "height_m": { "input": "distance_to_residential_m", "holds_at_or_above": 7.5, "clause": "150.7.60.40(1)(B): located 7.5 metres or more from the residential building" } }, "use": "validation only (M-286, CHAT-198 NN-Q2): the CoA scorer reads an applicant's plan figures into the option token by the clause's own test for the target scored (height for separation, rear yard and floor area; distance for height); the option values' sets are not applied there; the product never fills the token from data (M-465)" },
+      "ruling": "D-1 a; D-4 a; M-465; M-284; M-404"
     }
   }
 }

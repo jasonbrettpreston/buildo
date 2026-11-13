@@ -13636,7 +13636,7 @@
    ],
    "owed": [],
    "checks": [
-    "correction COR-150.7.60.20(3)#(3)(A)/condition, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions, COR-150.7.60.20(3)#(3)(A)/application.evidence, COR-150.7.60.20(3)#(3)(A)/calculation_handling, COR-150.7.60.20(3)#(3)(A)/condition~s1, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions~s1, COR-150.7.60.20(3)#(3)(A)/application.evidence~s1, COR-150.7.60.20(3)#(3)(A)/calculation_handling~s1",
+    "correction COR-150.7.60.20(3)#(3)(A)/condition, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions, COR-150.7.60.20(3)#(3)(A)/application.evidence, COR-150.7.60.20(3)#(3)(A)/calculation_handling, COR-150.7.60.20(3)#(3)(A)/condition~s1, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions~s1, COR-150.7.60.20(3)#(3)(A)/application.evidence~s1, COR-150.7.60.20(3)#(3)(A)/calculation_handling~s1, COR-150.7.60.20(3)#(3)(A)/calculation_handling~s2, COR-150.7.60.20(3)#(3)(A)/disclosure",
     "verified by named lock: M-198"
    ],
    "state": "INCORPORATED",
@@ -15461,7 +15461,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-150.7.60.70(1)#(1)(A)/numeric_expression, COR-150.7.60.70(1)#(1)(A)/calculation_handling, COR-150.7.60.70(1)#(1)(A)/disclosure"
+    "correction COR-150.7.60.70(1)#(1)(A)/numeric_expression, COR-150.7.60.70(1)#(1)(A)/calculation_handling, COR-150.7.60.70(1)#(1)(A)/disclosure, COR-150.7.60.70(1)#(1)(A)/numeric_expression~s1, COR-150.7.60.70(1)#(1)(A)/calculation_handling~s1, COR-150.7.60.70(1)#(1)(A)/disclosure~s1"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
@@ -15487,7 +15487,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-150.7.60.70(1)#(1)(B)/target, COR-150.7.60.70(1)#(1)(B)/numeric_expression, COR-150.7.60.70(1)#(1)(B)/calculation_handling, COR-150.7.60.70(1)#(1)(B)/application.building_types~s1, COR-150.7.60.70(1)#(1)(B)/application.evidence~s1"
+    "correction COR-150.7.60.70(1)#(1)(B)/target, COR-150.7.60.70(1)#(1)(B)/numeric_expression, COR-150.7.60.70(1)#(1)(B)/calculation_handling, COR-150.7.60.70(1)#(1)(B)/application.building_types~s1, COR-150.7.60.70(1)#(1)(B)/application.evidence~s1, COR-150.7.60.70(1)#(1)(B)/calculation_handling~s1"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
