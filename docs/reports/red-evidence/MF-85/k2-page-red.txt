@@ -1,0 +1,12 @@
+MF-85 red evidence (K2 report honesty, page parts). Captured 2026-11-13 on the pre-build tree (33af0759a plus the new test file),
+command: npx vitest run src/tests/surfaces/report-honest-k2.logic.test.ts
+
+ x K2 Q2: "(by-law allows)" only where no setting or estimate sits behind the figure > no option tile carries a size.sub part, and the words are in no page text
+   AssertionError: o1: expected [ { role: 'size.sub', ... } ] to deeply equal []
+ x K2 Q1: our settings are explained in See details; the O-17 label is not downgraded > each option See-details panel opens with a bound text ...
+   AssertionError: o1 size.panel.why is content, not pending: expected undefined to be 'panel.settings_note'
+ x K2 unit-size tile: See details says the figure includes the basement and the circulation share (M-496 formula unchanged) > the houseplex panel has a row ...
+   AssertionError: the label part: expected -1 to be greater than -1
+ Test Files  1 failed (1)   Tests  3 failed | 1 passed (4)   (the passing test is O-17: trust_label.high stays "By-law derived")
+
+After the build (same command): Test Files 1 passed (1)   Tests 4 passed (4).

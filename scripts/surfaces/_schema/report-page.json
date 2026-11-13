@@ -210,11 +210,6 @@
           "content": "tile.size.label"
         },
         {
-          "role": "size.sub",
-          "brief": "B6",
-          "content": "tile.size.sub"
-        },
-        {
           "role": "size.value",
           "brief": "B6",
           "field": "gfa_pitched_m2",
@@ -288,8 +283,7 @@
         {
           "role": "size.panel.why",
           "brief": "B9",
-          "pending": "estimated",
-          "why": "confidence_reason: no report field declared (brief: undeclared)"
+          "content": "panel.settings_note"
         },
         {
           "role": "size.panel.notes_h",
@@ -707,11 +701,6 @@
           "content": "tile.size.label"
         },
         {
-          "role": "size.sub",
-          "brief": "B6",
-          "content": "tile.size.sub"
-        },
-        {
           "role": "size.value",
           "brief": "B6",
           "field": "gfa_flat_m2",
@@ -785,8 +774,7 @@
         {
           "role": "size.panel.why",
           "brief": "B9",
-          "pending": "estimated",
-          "why": "confidence_reason: no report field declared (brief: undeclared)"
+          "content": "panel.settings_note"
         },
         {
           "role": "size.panel.notes_h",
@@ -1127,11 +1115,6 @@
           "content": "tile.size.label"
         },
         {
-          "role": "size.sub",
-          "brief": "B6",
-          "content": "tile.size.sub"
-        },
-        {
           "role": "size.value",
           "brief": "B6",
           "field": "gfa_max_m2",
@@ -1243,8 +1226,7 @@
         {
           "role": "size.panel.why",
           "brief": "B9",
-          "pending": "estimated",
-          "why": "confidence_reason: no report field declared (brief: undeclared)"
+          "content": "panel.settings_note"
         },
         {
           "role": "size.panel.notes_h",
@@ -1298,6 +1280,16 @@
           "field": "unit_area_m2",
           "rule": "area_sqft_m2_paren",
           "key": "o3.row.unit_size"
+        },
+        {
+          "role": "size.row.label",
+          "brief": "B9.5",
+          "content": "row.unit_size_basis"
+        },
+        {
+          "role": "size.row.value",
+          "brief": "B9.5",
+          "content": "row.unit_size_basis_value"
         },
         {
           "role": "size.row.label",

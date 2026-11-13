@@ -118,13 +118,6 @@
             "text": "Max Build Size"
           },
           {
-            "role": "size.sub",
-            "brief": "B6",
-            "kind": "content",
-            "content": "tile.size.sub",
-            "text": "(by-law allows)"
-          },
-          {
             "role": "size.value",
             "brief": "B6",
             "kind": "value",
@@ -217,9 +210,9 @@
           {
             "role": "size.panel.why",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "content",
+            "content": "panel.settings_note",
+            "text": "Some of these figures rest on our own settings where the by-law is silent, such as minimum ceiling heights and a simple box shape for the building. They are our settings, not by-law limits, and a real design may differ."
           },
           {
             "role": "size.panel.notes_h",
@@ -691,13 +684,6 @@
             "text": "Max Build Size"
           },
           {
-            "role": "size.sub",
-            "brief": "B6",
-            "kind": "content",
-            "content": "tile.size.sub",
-            "text": "(by-law allows)"
-          },
-          {
             "role": "size.value",
             "brief": "B6",
             "kind": "value",
@@ -790,9 +776,9 @@
           {
             "role": "size.panel.why",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "content",
+            "content": "panel.settings_note",
+            "text": "Some of these figures rest on our own settings where the by-law is silent, such as minimum ceiling heights and a simple box shape for the building. They are our settings, not by-law limits, and a real design may differ."
           },
           {
             "role": "size.panel.notes_h",
@@ -1216,13 +1202,6 @@
             "text": "Max Build Size"
           },
           {
-            "role": "size.sub",
-            "brief": "B6",
-            "kind": "content",
-            "content": "tile.size.sub",
-            "text": "(by-law allows)"
-          },
-          {
             "role": "size.value",
             "brief": "B6",
             "kind": "value",
@@ -1363,9 +1342,9 @@
           {
             "role": "size.panel.why",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "content",
+            "content": "panel.settings_note",
+            "text": "Some of these figures rest on our own settings where the by-law is silent, such as minimum ceiling heights and a simple box shape for the building. They are our settings, not by-law limits, and a real design may differ."
           },
           {
             "role": "size.panel.notes_h",
@@ -1435,6 +1414,20 @@
             "key": "o3.row.unit_size",
             "rule": "area_sqft_m2_paren",
             "text": "739 sq ft (69 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.5",
+            "kind": "content",
+            "content": "row.unit_size_basis",
+            "text": "Size per unit includes"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.5",
+            "kind": "content",
+            "content": "row.unit_size_basis_value",
+            "text": "the basement; 10 % circulation"
           },
           {
             "role": "size.row.label",

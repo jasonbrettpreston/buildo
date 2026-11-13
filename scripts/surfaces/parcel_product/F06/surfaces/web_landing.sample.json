@@ -108,13 +108,6 @@
             "text": "Max Build Size"
           },
           {
-            "role": "size.sub",
-            "brief": "B6",
-            "kind": "content",
-            "content": "tile.size.sub",
-            "text": "(by-law allows)"
-          },
-          {
             "role": "size.value",
             "brief": "B6",
             "kind": "value",
@@ -207,9 +200,9 @@
           {
             "role": "size.panel.why",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "content",
+            "content": "panel.settings_note",
+            "text": "Some of these figures rest on our own settings where the by-law is silent, such as minimum ceiling heights and a simple box shape for the building. They are our settings, not by-law limits, and a real design may differ."
           },
           {
             "role": "size.panel.notes_h",
@@ -654,13 +647,6 @@
             "text": "Max Build Size"
           },
           {
-            "role": "size.sub",
-            "brief": "B6",
-            "kind": "content",
-            "content": "tile.size.sub",
-            "text": "(by-law allows)"
-          },
-          {
             "role": "size.value",
             "brief": "B6",
             "kind": "value",
@@ -753,9 +739,9 @@
           {
             "role": "size.panel.why",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "content",
+            "content": "panel.settings_note",
+            "text": "Some of these figures rest on our own settings where the by-law is silent, such as minimum ceiling heights and a simple box shape for the building. They are our settings, not by-law limits, and a real design may differ."
           },
           {
             "role": "size.panel.notes_h",
@@ -1194,13 +1180,6 @@
             "text": "Max Build Size"
           },
           {
-            "role": "size.sub",
-            "brief": "B6",
-            "kind": "content",
-            "content": "tile.size.sub",
-            "text": "(by-law allows)"
-          },
-          {
             "role": "size.value",
             "brief": "B6",
             "kind": "value",
@@ -1341,9 +1320,9 @@
           {
             "role": "size.panel.why",
             "brief": "B9",
-            "kind": "pending",
-            "pending": "estimated",
-            "text": "not yet estimated"
+            "kind": "content",
+            "content": "panel.settings_note",
+            "text": "Some of these figures rest on our own settings where the by-law is silent, such as minimum ceiling heights and a simple box shape for the building. They are our settings, not by-law limits, and a real design may differ."
           },
           {
             "role": "size.panel.notes_h",
@@ -1413,6 +1392,20 @@
             "key": "o3.row.unit_size",
             "rule": "area_sqft_m2_paren",
             "text": "739 sq ft (69 m²)"
+          },
+          {
+            "role": "size.row.label",
+            "brief": "B9.5",
+            "kind": "content",
+            "content": "row.unit_size_basis",
+            "text": "Size per unit includes"
+          },
+          {
+            "role": "size.row.value",
+            "brief": "B9.5",
+            "kind": "content",
+            "content": "row.unit_size_basis_value",
+            "text": "the basement; 10 % circulation"
           },
           {
             "role": "size.row.label",
@@ -1847,10 +1840,10 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
-      "scripts/surfaces/_schema/report-presentation.json": "a13f8e92c7d45603",
+      "scripts/surfaces/_schema/report-presentation.json": "79634f1a37d70cb3",
       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
-      "scripts/surfaces/_schema/report-v2.decl.json": "d7b3e07ec0d85e75",
-      "scripts/surfaces/_schema/report-page.json": "3fbf420fd2822b3d",
+      "scripts/surfaces/_schema/report-v2.decl.json": "4bd591ef4e708b91",
+      "scripts/surfaces/_schema/report-page.json": "6998d6a239cf574d",
       "scripts/surfaces/_schema/report-page.schema.json": "f79e00423cc3e519"
     }
   }

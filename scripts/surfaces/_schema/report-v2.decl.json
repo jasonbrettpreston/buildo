@@ -11,7 +11,7 @@
     },
     "review": "scratchpad/report-review/REVIEW.md §6",
     "seeded": "2026-10-20",
-    "inputs_sha256_16": "f870747117fe90ea"
+    "inputs_sha256_16": "368b103739cf083a"
   },
   "inputs": {
     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
