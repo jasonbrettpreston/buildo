@@ -5068,6 +5068,22 @@
       "source": "src_sql"
     },
     {
+      "consumer": "src/lib/parcels/lot-form.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-form.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.parcel_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
       "consumer": "src/lib/parcels/lot-map.ts",
       "producer": "address_points",
       "kind": "table",

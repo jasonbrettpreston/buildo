@@ -1294,7 +1294,10 @@ const GROUP_ORDER = [
     "label": "Parcel Lookup",
     "keys": [
       "parcel_map_neighbour_radius_m",
-      "parcel_map_neighbour_limit"
+      "parcel_map_neighbour_limit",
+      "semi_doubt_enabled",
+      "semi_doubt_max_link_parcels",
+      "semi_doubt_min_shared_len_m"
     ]
   },
   {

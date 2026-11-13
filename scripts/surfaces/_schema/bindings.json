@@ -17,6 +17,7 @@
     { "path": "mobile/src/components/surfaces/SurfaceRenderer.tsx", "platform": "mobile", "archetypes": ["SEARCH", "REPORT", "LIST"], "owner": "shared_mobile_surface_binding", "exports": ["COMPONENTS", "ICONS", "resolveValue", "SurfaceRenderer"] },
     { "path": "mobile/src/components/surfaces/SearchBinding.tsx", "platform": "mobile", "archetypes": ["SEARCH"], "owner": "shared_mobile_surface_binding", "exports": ["SEARCH_SLICE", "DERIVED_NAMES", "searchProps", "searchData", "SEARCH_CANDIDATE_LIMIT", "SEARCH_DEBOUNCE_MS", "SEARCH_MIN_QUERY_LEN"] },
     { "path": "mobile/src/components/surfaces/LotMapBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["LOT_MAP_SLICE", "LOT_MAP_DERIVED_NAMES", "lotMapProps", "lotMapData"] },
+    { "path": "mobile/src/components/surfaces/SemiQuestionBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["SEMI_QUESTION_SLICE", "SEMI_QUESTION_DERIVED_NAMES", "semiQuestionProps", "semiQuestionData"] },
     { "path": "mobile/src/components/surfaces/ReportBinding.tsx", "platform": "mobile", "archetypes": ["REPORT"], "owner": "binding_mobile_report", "exports": ["reportProps", "lifecycleProps", "REPORT_UI_CLOSED", "UNSHOWN", "LIFECYCLE_CONTENT_KEYS"] },
     { "path": "mobile/src/components/surfaces/ReportPageHost.tsx", "platform": "mobile", "archetypes": ["REPORT"], "owner": "binding_mobile_report", "exports": ["ReportPageHost", "REPORT_UI"] }
   ],
@@ -27,6 +28,7 @@
     { "surface": "admin_media_delete", "path": "src/app/(maxbld)/admin/media/MediaPageClient.tsx" },
     { "surface": "mobile_parcel_search", "path": "mobile/app/(app)/parcel-tool/index.tsx" },
     { "surface": "mobile_parcel_disambiguation_map", "path": "mobile/app/(app)/parcel-tool/disambiguate.tsx" },
+    { "surface": "mobile_parcel_semi_question", "path": "mobile/app/(app)/parcel-tool/semi-question.tsx" },
     { "surface": "admin_placements", "path": "src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx" },
     { "surface": "admin_offers", "path": "src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx" },
     { "surface": "admin_advertiser_entry", "path": "src/app/(maxbld)/admin/placements/PlacementsPageClient.tsx" },

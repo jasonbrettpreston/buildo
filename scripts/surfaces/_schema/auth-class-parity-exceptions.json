@@ -72,6 +72,11 @@
    "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
   },
   {
+   "finding": "R-18 P-1 SURFACE mobile_parcel_semi_question: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row (the sibling of mobile_parcel_disambiguation_map)"
+  },
+  {
    "finding": "R-18 P-1 SURFACE mobile_parcel_search: declares no auth_class_parity check",
    "owner": "MF-77",
    "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"

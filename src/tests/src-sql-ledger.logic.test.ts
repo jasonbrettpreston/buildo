@@ -338,7 +338,9 @@ describe('src-sql-ledger — committed ledger (live)', () => {
     // recapture lands (the MF-37 / MF-40 / MF-45 precedent: the catalog is a DB snapshot, never hand-edited).
     // MB-35 (2026-11-12): the capture commit lands the witness catalog recaptured on the dev DB (MB35-RECAP, migrations 305 and 309 applied), so
     // parcel_user_inputs and parcel_maxbld_scenarios are catalogued and the matview is again the only uncatalogued name (the precedent above).
-    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats']);
+    // SEMI-B (2026-11-13, operator "semi all y"): src/lib/parcels/lot-form.ts reads the view parcel_lot_form (migration 320, written, not applied), so it is
+    // uncatalogued until the orchestrator DB job SEMI-320 applies 320 and the witness catalog is recaptured; then this list returns to the matview alone.
+    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats', 'parcel_lot_form']);
   });
 
   it('exit criterion: every SQL-bearing src/ file is classified', async () => {

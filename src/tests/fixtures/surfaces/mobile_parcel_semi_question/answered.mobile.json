@@ -1,0 +1,286 @@
+{
+  "surface": "mobile_parcel_semi_question",
+  "state": "hit",
+  "target": "mobile",
+  "covers": [
+    "hit"
+  ],
+  "situation": "ask_yes",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-semi-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-semi-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "header",
+                  "className": "mt-4 flex-row items-center justify-between"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "back",
+                      "testID": "parcel-semi-back",
+                      "variant": "ghost",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "back.label"
+                      },
+                      "onPress": {
+                        "action": "back"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "back-icon",
+                          "icon": "X",
+                          "size": 16,
+                          "color": "#a1a1aa"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "question",
+                  "testID": "parcel-semi-question",
+                  "className": "text-base font-semibold text-zinc-100",
+                  "role": "header"
+                },
+                "children": [
+                  {
+                    "content": "question.title"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "answer-yes",
+                  "testID": "parcel-semi-answer-yes",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-primary dark:border-primary active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": true
+                  },
+                  "accessibilityLabel": {
+                    "content": "answer.yes"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "derived": "answer.0"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-title",
+                          "className": "mt-1 text-base font-semibold text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "answer.yes"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "check",
+                          "icon": "Check",
+                          "size": 16,
+                          "color": "#f59e0b"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "answer-no",
+                  "testID": "parcel-semi-answer-no",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "content": "answer.no"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "derived": "answer.1"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-title",
+                          "className": "mt-1 text-base font-semibold text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "answer.no"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "answer-not_sure",
+                  "testID": "parcel-semi-answer-not_sure",
+                  "variant": "outline",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "role": "radio",
+                  "accessibilityState": {
+                    "checked": false
+                  },
+                  "accessibilityLabel": {
+                    "content": "answer.not_sure"
+                  },
+                  "onPress": {
+                    "action": "select",
+                    "parcelId": {
+                      "derived": "answer.2"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "card-row",
+                      "className": "w-full flex-row items-center justify-between gap-2"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "card-title",
+                          "className": "mt-1 text-base font-semibold text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "answer.not_sure"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "continue",
+                  "testID": "parcel-semi-continue",
+                  "variant": "default",
+                  "className": "mt-4 min-h-[44px] w-full rounded-xl",
+                  "disabled": false,
+                  "accessibilityRole": "button",
+                  "accessibilityState": {
+                    "disabled": false
+                  },
+                  "accessibilityLabel": {
+                    "content": "select.label"
+                  },
+                  "onPress": {
+                    "action": "push",
+                    "route": "/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=semi_half"
+                  }
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "continue-text",
+                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
+                    },
+                    "children": [
+                      {
+                        "content": "select.go"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "a39904be41673eb8"
+    }
+  }
+}

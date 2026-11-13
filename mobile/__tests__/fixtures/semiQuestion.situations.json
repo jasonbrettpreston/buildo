@@ -1,0 +1,213 @@
+{
+  "$comment": "SEMI-B: the inputs of the S-093 mobile_parcel_semi_question goldens (scripts/surfaces/semi-question-golden-capture.ts) and the named cases of the golden test. `goldens` maps a committed golden to its state and situation; `inputs` are the buildSemiQuestionSituation arguments.",
+  "goldens": {
+    "loading": {
+      "state": "loading",
+      "situation": "loading"
+    },
+    "ask": {
+      "state": "ambiguous",
+      "situation": "ask"
+    },
+    "answered": {
+      "state": "hit",
+      "situation": "ask_yes"
+    },
+    "redirect": {
+      "state": "redirect",
+      "situation": "redirect_clear"
+    },
+    "error": {
+      "state": "error",
+      "situation": "error"
+    },
+    "schema_drift": {
+      "state": "schema_drift",
+      "situation": "schema_drift"
+    },
+    "rate_limited": {
+      "state": "rate_limited",
+      "situation": "rate_limited"
+    },
+    "unauthorized": {
+      "state": "unauthorized",
+      "situation": "unauthorized"
+    }
+  },
+  "inputs": {
+    "loading": {
+      "parcelId": "PCL-S1",
+      "isFetching": true
+    },
+    "ask": {
+      "parcelId": "PCL-S1",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "semi_half",
+          "basis": "doubt_multi_parcel_abut",
+          "unsure": true
+        }
+      }
+    },
+    "ask_yes": {
+      "parcelId": "PCL-S1",
+      "selected": "yes",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "semi_half",
+          "basis": "doubt_multi_parcel_abut",
+          "unsure": true
+        }
+      }
+    },
+    "ask_no": {
+      "parcelId": "PCL-S1",
+      "selected": "no",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "semi_half",
+          "basis": "doubt_multi_parcel_abut",
+          "unsure": true
+        }
+      }
+    },
+    "ask_not_sure": {
+      "parcelId": "PCL-S1",
+      "selected": "not_sure",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "semi_half",
+          "basis": "o4_two_parcel_abut",
+          "unsure": true
+        }
+      }
+    },
+    "redirect_clear": {
+      "parcelId": "PCL-S1",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "semi_half",
+          "basis": "o4_two_parcel_abut",
+          "unsure": false
+        }
+      }
+    },
+    "redirect_detached": {
+      "parcelId": "PCL-S1",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "detached",
+          "basis": "o4_not_met",
+          "unsure": false
+        }
+      }
+    },
+    "redirect_older_server": {
+      "parcelId": "PCL-S1",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null
+      }
+    },
+    "redirect_no_data": {
+      "parcelId": "PCL-S1"
+    },
+    "error": {
+      "parcelId": "PCL-S1",
+      "error": "unexpected"
+    },
+    "schema_drift": {
+      "parcelId": "PCL-S1",
+      "error": "schema_drift"
+    },
+    "rate_limited": {
+      "parcelId": "PCL-S1",
+      "error": "rate_limited"
+    },
+    "unauthorized": {
+      "parcelId": "PCL-S1",
+      "error": "entitlement"
+    },
+    "stale_pick_outside_ask": {
+      "parcelId": "PCL-S1",
+      "selected": "yes",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "detached",
+          "basis": "o4_not_met",
+          "unsure": false
+        }
+      }
+    }
+  },
+  "named": [
+    "ask_no",
+    "ask_not_sure",
+    "redirect_detached",
+    "redirect_older_server",
+    "redirect_no_data",
+    "stale_pick_outside_ask"
+  ]
+}

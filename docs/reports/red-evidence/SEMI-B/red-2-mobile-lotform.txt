@@ -1,0 +1,15 @@
+       8 | import { ConsumerParcelLookupResultSchema } from '@/lib/schemas';
+    >  9 | import {
+         | ^
+      10 |   SEMI_ANSWERS,
+      11 |   answerToOverride,
+      12 |   lotFormEffective,
+
+      at createNoMappedModuleFoundError (../../Buildo-wt-mf35-spike/mobile/node_modules/jest-resolve/build/index.js:1117:17)
+      at Object.require (__tests__/lotForm.test.ts:9:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.503 s
+Ran all test suites matching __tests__/lotForm.test.ts.

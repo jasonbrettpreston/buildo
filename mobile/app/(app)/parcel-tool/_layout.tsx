@@ -56,6 +56,7 @@ export default function ParcelToolLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="[parcelId]" />
         <Stack.Screen name="disambiguate" />
+        <Stack.Screen name="semi-question" />
         <Stack.Screen name="tracked" />
         <Stack.Screen name="account" />
       </Stack>

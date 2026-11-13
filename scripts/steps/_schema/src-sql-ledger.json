@@ -2559,6 +2559,31 @@
       },
       "writes": {}
     },
+    "src/lib/parcels/lot-form.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0e9233689eb3cd74",
+        "69d50f88fd1f8a05"
+      ],
+      "reads": {
+        "parcel_lot_form": [
+          "lot_form_basis",
+          "lot_form_detected",
+          "parcel_id",
+          "unsure"
+        ],
+        "parcels": [
+          "id",
+          "parcel_id"
+        ]
+      },
+      "writes": {}
+    },
     "src/lib/parcels/lot-map.ts": {
       "class": "static",
       "statements": 4,

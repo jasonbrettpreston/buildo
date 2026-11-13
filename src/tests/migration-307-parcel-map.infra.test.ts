@@ -32,7 +32,8 @@ describe('migration 307: seed truth, migration rows, the Admin Control Panel lis
     expect(SEED[LOT_MAP_LIMIT_KEYS.limit]).toMatchObject({ default: 30, type: 'number', min: 1, max: 50, admin: { group: 'Parcel Lookup' } });
   });
   it('the Admin Control Panel lists both keys under "Parcel Lookup" with their defaults', () => {
-    expect(GROUPS.find((g) => g.label === 'Parcel Lookup')?.keys).toEqual(keys);
+    // Migration 320 (SEMI-B, 2026-11-13) adds its three semi_doubt_* keys to the same group after these two: the group's first two stay these.
+    expect(GROUPS.find((g) => g.label === 'Parcel Lookup')?.keys.slice(0, keys.length)).toEqual(keys);
     expect(keys.map((k) => LOGIC_VAR_DEFAULTS[k])).toEqual([25, 30]);
   });
   it('the UP half writes nothing else, and the DOWN is comment-only', () => {

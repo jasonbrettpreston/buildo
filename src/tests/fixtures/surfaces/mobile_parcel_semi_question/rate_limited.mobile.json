@@ -1,0 +1,123 @@
+{
+  "surface": "mobile_parcel_semi_question",
+  "state": "rate_limited",
+  "target": "mobile",
+  "covers": [
+    "rate_limited"
+  ],
+  "situation": "rate_limited",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-[#0e0e10]",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-semi-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-semi-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "View",
+                "props": {
+                  "key": "header",
+                  "className": "mt-4 flex-row items-center justify-between"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "back",
+                      "testID": "parcel-semi-back",
+                      "variant": "ghost",
+                      "size": "icon",
+                      "className": "min-h-[44px] min-w-[44px] rounded-full",
+                      "accessibilityRole": "button",
+                      "accessibilityLabel": {
+                        "content": "back.label"
+                      },
+                      "onPress": {
+                        "action": "back"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "back-icon",
+                          "icon": "X",
+                          "size": 16,
+                          "color": "#a1a1aa"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Alert",
+                "props": {
+                  "key": "ratelimit",
+                  "testID": "parcel-semi-ratelimit",
+                  "icon": "AlertTriangle",
+                  "iconClassName": "text-red-400",
+                  "className": "mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]"
+                },
+                "children": [
+                  {
+                    "component": "AlertDescription",
+                    "props": {
+                      "key": "ratelimit-text",
+                      "className": "text-xs font-normal text-red-400"
+                    },
+                    "children": [
+                      {
+                        "text": {
+                          "content": "state.ratelimit"
+                        },
+                        "vars": {
+                          "seconds": {
+                            "contract": "contract_parcels_lookup.errors.429.retryAfterSeconds"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "4eaa79fdbb10c38d",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "a39904be41673eb8"
+    }
+  }
+}

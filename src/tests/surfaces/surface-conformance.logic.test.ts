@@ -233,7 +233,7 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
     // MF-76 (dated 2026-11-11; operator D-1 (a); plan v3 §12 folds 14, 15): web_landing converted from pending (converted 11 -> 12, pending 5 -> 4;
     // 29 in scope: the old Buildo page moved to its own scope-D descriptor); its 2 web goldens (59 -> 61) and 54 content strings (273 -> 327) join.
-    expect(d.note).toBe('S-desc ok (examined 31 in scope: converted 15, pending 3, parked 9, report 4)'); // MF-53: the map page converted
+    expect(d.note).toBe('S-desc ok (examined 32 in scope: converted 16, pending 3, parked 9, report 4)'); // MF-53: the map page converted; SEMI-B (dated 2026-11-13): + the one-question page
     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
     // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
     // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
@@ -243,7 +243,7 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
 
     // MF-46 follow-up (dated 2026-11-12; Help & Support contact): + 5 web_help mailto labels and the search page's list.report (377 -> 383 strings).
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (15 surfaces, 84 goldens)' }, { findings: [], note: 'S-sbind ok (15 surfaces, 383 strings)' }]); // MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (16 surfaces, 92 goldens)' }, { findings: [], note: 'S-sbind ok (16 surfaces, 398 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
@@ -374,7 +374,7 @@ describe('C-3 bindings.json integrity', () => {
     // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
     // MF-76 (dated 2026-11-11; plan v3 §12 fold 13): + the landing mount (19 -> 20 mounts).
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([9, 7, 24]); // MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([10, 7, 25]); // SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -483,7 +483,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     // MF-48 (dated 2026-11-11; D-2 a): +1 promoted binding entry (binding_mobile_report).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
     // MF-76 (dated 2026-11-11; plan v3 §12 fold 15): +1 SURFACE (web_buildo_landing, scope D: the old src/app/page.tsx knowledge; web_landing is repointed).
-    expect(all.length).toBe(169); // MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    expect(all.length).toBe(170); // SEMI-B (dated 2026-11-13): +1 SURFACE (mobile_parcel_semi_question). MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
@@ -789,7 +789,7 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
   it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile for their archetypes (SEARCH; the renderer SEARCH and LIST); no FlashList', () => {
     console.log(`C-8m: ${mods.length} mobile modules`);
     // MF-48 (dated 2026-11-11): + ReportBinding.tsx (no JSX) and the host ReportPageHost.tsx (its own table, mapping.mobile.REPORT_HOST, host list). MF-53: + LotMapBinding.tsx (no JSX).
-    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/LotMapBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']);
+    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/LotMapBinding.tsx', 'mobile/src/components/surfaces/SemiQuestionBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']);
     for (const m of mods) {
       const host = MOBILE_HOSTS[m.path];
       const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[host ? `${a}_HOST` : a] ?? []))];

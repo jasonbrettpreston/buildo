@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **92 surfaces, 71 contracts and 6 jobs** in it today.
+There are **93 surfaces, 71 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 92 |
+| SURFACE | 93 |
 | CONTRACT | 71 |
 | JOB | 6 |
-| **Total** | **169** |
+| **Total** | **170** |
 
 ### 2.1 By archetype
 
@@ -219,7 +219,7 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
 | `FORM` | SURFACE | 6 | 1 | 6 | 13 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 9 | 7 | 3 | 19 |
+| `LIST` | SURFACE | 9 | 7 | 4 | 20 |
 | `MUTATION` | CONTRACT | 20 | 7 | 0 | 27 |
 | `QUERY` | CONTRACT | 33 | 2 | 0 | 35 |
 | `REPORT` | SURFACE | 2 | 4 | 0 | 6 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**30 of 169 rows fully researched · 139 still open · 439 unresearched fields in total.**
+**31 of 170 rows fully researched · 139 still open · 439 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
-| `mobile-product.json` | 40 | 10 | 30 | 63 |
+| `mobile-product.json` | 41 | 11 | 30 | 63 |
 | `web-product.json` | 20 | 10 | 10 | 88 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 17 | 9 | 8 | 15 |
 | `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **169** | **30** | **139** | **439** |
+| **total** | **170** | **31** | **139** | **439** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -266,7 +266,7 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 |---|---:|---|
 | exists | 127 | the code is in the tree today |
 | new | 27 | specified, not built |
-| generated | 15 | will be rendered from descriptors, not hand-written |
+| generated | 16 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 17 | 14 (82%) | 11 | yes |
+| **A** | `parcel_product` | 18 | 15 (83%) | 12 | yes |
 | **B** | `parcel_admin` | 26 | 9 (35%) | 20 | yes |
 | **C** | `platform_shared` | 79 | 7 (9%) | 43 | yes |
 | **D** | `estate_other` | 47 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
-| | **total** | **169** | **30** | | |
+| | **total** | **170** | **31** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -320,7 +320,7 @@ The path from a customer tapping a screen to the pipeline step that built what t
 
 One line per entry in scopes A, B and C, organised **scope → type → build order**. `build_order` is derived, not chosen: scope rank × 1000 + feature rank × 10 + kind rank, where the kind rank puts **tables before contracts before surfaces before admin** — it answers *"what must exist before this can be built"*. Follow an id to its detail in §3.
 
-**§A `parcel_product` (17)**
+**§A `parcel_product` (18)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -328,6 +328,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-071`](#s-071) | surface | `mobile_parcel_disambiguation_map` | `LIST` | `F01` address-lookup | 1013 | 100% | [detail](#s-071) |
 | [`S-002`](#s-002) | surface | `mobile_parcel_search` | `SEARCH` | `F01` address-lookup | 1013 | 100% | [detail](#s-002) |
 | [`S-004`](#s-004) | surface | `shell_parcel_tool_stack` | `SHELL` | `F01` address-lookup | 1013 | 100% | [detail](#s-004) |
+| [`S-093`](#s-093) | surface | `mobile_parcel_semi_question` | `LIST` | `F01` address-lookup | 1014 | 100% | [detail](#s-093) |
 | [`C-001`](#c-001) | contract | `contract_parcels_lookup` | `QUERY` | `F02` parcel-report | 1022 | 97% | [detail](#c-001) |
 | [`C-069`](#c-069) | contract | `contract_parcels_entitlement` | `QUERY` | `F02` parcel-report | 1023 | 97% | [detail](#c-069) |
 | [`S-001`](#s-001) | surface | `mobile_parcel_detail` **(pilot)** | `REPORT` | `F02` parcel-report | 1023 | 100% | [detail](#s-001) |
@@ -519,7 +520,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 
 | Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |
 |---|---|---|---:|---:|---|
-| **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) | 0 | 3 | 4 descriptor(s), and would orphan no table — every table it touches is shared |
+| **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) · [`S-093`](#s-093) | 0 | 4 | 5 descriptor(s), and would orphan 1 table(s): `parcel_lot_form` |
 | **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-086`](#s-086) · [`C-070`](#c-070) | 3 | 9 | 5 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
@@ -594,7 +595,7 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 
 The estate shares one repository; it does not share one programme. Sections A–C are what **Spec 126 governs**. Section D is the other product — inventoried so a shared contract or an orphan is visible, and deliberately rendered in one line each rather than in full (Spec 126 §2; the fence is Spec 128 R-03).
 
-### §A `parcel_product` — the MaxBLD parcel cost tool (17)
+### §A `parcel_product` — the MaxBLD parcel cost tool (18)
 
 **This is the programme.** The surfaces, contracts and jobs a customer of the parcel tool touches, plus the five business requirements that hang off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; batched first by Spec 127 §4.4.
 
@@ -911,6 +912,80 @@ WHY HIDDEN RATHER THAN ESCAPED. Two ways to stop the five-tab bar rendering here
 SHELF COMPONENT. The shelf is extracted to `mobile/src/components/parcel/ParcelShelf.tsx` rather than drawn inline, so `owns.components` names a real file that R-13 totality can account for exactly once, and so the shelf is testable on its own.
 
 ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookmark-outline / person-outline). That package is not a declared dependency of mobile/ and has zero usages; `lucide-react-native` is the established icon layer. Compass / Bookmark / User are its equivalents, with the active tab’s icon filled.
+
+<a id="s-093"></a>
+
+###### `S-093` `mobile_parcel_semi_question`
+
+**Programme.** `S-093` · scope `parcel_product` · feature `F01` · build order 1014 · batch `B2` · review `unreviewed` — The question before the report for a lot the detector cannot place: one question on the entry flow of the parcel tool.
+
+**What it is.** The one-question page before the report (SEMI-B; operator "semi ask a", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: "Is this house one half of a semi-detached pair?" with three answers: "Yes, it's one half of a semi" (semi view, renovations only), "No, it's detached" (the full report), "Not sure" (the semi view, with "This isn't a semi" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen.
+
+**What it reads and writes.** It reads one contract, GET /api/parcels/lookup?parcelId= (C-001), through the same query the report reads (['parcel-lookup', parcelId]), so it makes no extra request. The server names the lot's form from the view parcel_lot_form (migration 320): lotForm.detected, lotForm.basis and lotForm.unsure; the page asks only when unsure is true. The answer is the owner's input lot_form_user_override (Spec 78): yes writes semi_half, no writes detached, not sure writes nothing. It is carried to the report as a route param and applied there through the shared pure function lotFormEffective (O-12: the pipeline never reads it; there is no server store). It emits **no analytics event**.
+
+**Under Spec 126.** **CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** generated · **lines** 0 · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (It inherits the tab gate and the parcel-tool Stack: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed.) · session **required** · entitlement parcel_tool · flag none · device permission none
+
+**Calls.** `/api/parcels/lookup` — idiom: hook
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `loading` · `ask` · `error` · `redirect`
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `parcel_lot_form` **(net-new)** | `parcel_id` · `lot_form_detected` · `lot_form_basis` · `unsure` | _does not exist yet_ | `none` | `n/a` | `docs/specs/01-pipeline/78_optimal_lot_configuration.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `mobile/app/(app)/parcel-tool/semi-question.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/lib/semiQuestion.ts` · `mobile/src/lib/lotForm.ts` |
+| `contracts` | `mobile/app/(app)/parcel-tool/semi-question.tsx — useParcelLookup(parcelId) (GET /api/parcels/lookup?parcelId=)` |
+| `tables` | `src/lib/parcels/lot-form.ts — readLotForm (the view parcel_lot_form, migration 320)` |
+| `gate` | `mobile/app/(app)/_layout.tsx:236-265` · `mobile/app/(app)/parcel-tool/_layout.tsx:15-19` · `src/app/api/parcels/lookup/route.ts:47-60` |
+| `states` | `mobile/src/lib/semiQuestion.ts — SEMI_QUESTION_STATES and buildSemiQuestionSituation` · `mobile/__tests__/fixtures/semiQuestion.situations.json — goldens` |
+| `emits` | `mobile/app/(app)/parcel-tool/semi-question.tsx — no track() call` |
+| `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7` · `docs/specs/01-pipeline/78_optimal_lot_configuration.md O-4` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | One GET /api/parcels/lookup?parcelId= through useParcelLookup, the same TanStack entry the report reads. The route param `parcelId` is the lot; whether to ask comes from the response (`lotForm.unsure`), never from the param. — `mobile/app/(app)/parcel-tool/semi-question.tsx — useParcelLookup(id)`, `mobile/src/hooks/useParcelLookup.ts — export function useParcelLookup` |
+| 3 | `outputs` | `none` | It writes nothing to a server: the answer is the owner's input lot_form_user_override, carried to the report as the route param lotFormOverride (yes semi_half, no detached, not sure none) with semi=answered, and applied there by lotFormEffective (O-12: the pipeline never reads it). The only action is opening the report. — `mobile/src/lib/lotForm.ts — reportRouteAfterAnswer, answerToOverride` |
+| 4 | `state` | `none` | No store: the chosen answer is component useState in the mount (nothing selected at open), cleared when the page leaves. — `mobile/app/(app)/parcel-tool/semi-question.tsx — useState selected` |
+| 5 | `staleness` | `query_cache` | useParcelLookup declares a 60-second staleTime; the page reuses the report entry. — `mobile/src/hooks/useParcelLookup.ts — staleTime: 60_000` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `inline` | Every failure class has its own notice (the search page's classes and copy); the schema drift text has no Retry. — `mobile/src/components/surfaces/SemiQuestionBinding.tsx — errorNotices` |
+| 13 | `emits` | `none` | No client analytics in SEMI-B; the only record of a lookup is the server log line, which carries the form and the unsure flag, never the address. — `src/app/api/parcels/lookup/route.ts — logInfo consumer parcel lookup` |
+| 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/app/(app)/parcel-tool/semi-question.tsx` |
+| 15 | `metering` | `none` | The question shows no report and counts nothing; the report it opens meters through the parcelId path as before. — `src/tests/parcel-lookup-gate.infra.test.ts` |
+| 16 | `config` | `logic_variables` | The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page itself has no tunable and reads only the unsure flag. — `migrations/320_parcel_lot_form_view.sql`, `scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m` |
+| 17 | `sharing` | `shared` | It shares C-001 and its report query with the report (S-001). — `mobile/src/hooks/useParcelLookup.ts — useParcelLookup` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/semi-question.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/lib/semiQuestion.ts` · `mobile/src/lib/lotForm.ts`
+
+> ⚠️ SEMI-B (operator "semi all y" and "semi ask a", 2026-11-13). The mini page of the address-lookup flow, modelled on S-071 (MF-53). The report mount [parcelId].tsx replaces itself with this page once, on the first settled data, when lotForm.unsure is true and the route has no `semi` param; Continue replaces this page with the report carrying semi=answered (and lotFormOverride for yes and no). Archetype LIST: radio cards and one Continue, like the lot cards.
 
 <a id="c-001"></a>
 
@@ -7064,7 +7139,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Calls.** —
 
-**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx`
+**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx`
 
 **Emits.** —
 
@@ -7076,7 +7151,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `mobile/src/components/surfaces/LotMapBinding.tsx` · `~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md` |
+| `files` | `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md` |
 | `contracts` | `contract_parcels_lookup` |
 | `tables` | — |
 | `gate` | — |
@@ -9667,7 +9742,7 @@ _Rendered in one line each on purpose. These convert under the same standard in 
 
 Every table any entry reads or writes, its real columns, and who touches it. **exists** = present in the introspected schema; **net-new** = specified but not yet in the database.
 
-**74** distinct tables are touched — **53** exist today, **21** are net-new.
+**75** distinct tables are touched — **53** exist today, **22** are net-new.
 
 ### Existing tables (53)
 
@@ -9727,7 +9802,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `user_profiles` | `user_id` · `trade_slug` · `display_name` · `created_at` · `updated_at` · `full_name` · `phone_number` · `company_name` · `email` · `backup_email` · `default_tab` · `location_mode` · `home_base_lat` · `home_base_lng` · `radius_km` · `supplier_selection` · `lead_views_count` · `stripe_customer_id` · `onboarding_complete` · `tos_accepted_at` · `account_deleted_at` · `account_preset` · `trade_slugs_override` · `radius_cap_km` · `new_lead_min_cost_tier` · `phase_changed` · `lifecycle_stalled_pref` · `start_date_urgent` · `notification_schedule` · `stripe_cancel_failed_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `web_subscribe` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_notifications` · `admin_user_detail` · `admin_users` · `contract_admin_notifications` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_subscribe_portal_session` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` · `job_offboarding_sweep_30day` | `mobile_lead_feed` · `mobile_onboarding_address` · `mobile_onboarding_complete` · `mobile_onboarding_profession` · `mobile_onboarding_supplier` · `mobile_onboarding_terms` · `mobile_settings` · `overlay_lead_filter_sheet` · `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_retry_cancel` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_notifications_preferences` · `contract_parcels_lookup` · `contract_subscribe_exchange` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` |
 | `wsib_registry` | `id` · `legal_name` · `trade_name` · `legal_name_normalized` · `trade_name_normalized` · `mailing_address` · `predominant_class` · `naics_code` · `naics_description` · `subclass` · `subclass_description` · `business_size` · `match_confidence` · `matched_at` · `first_seen_at` · `last_seen_at` · `linked_entity_id` · `primary_phone` · `primary_email` · `website` · `last_enriched_at` · `is_gta` | `mobile_lead_feed` · `admin_data_quality` · `admin_lead_feed` · `contract_admin_builders` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_entities_id` · `contract_leads_feed` | — |
 
-### Net-new tables (21)
+### Net-new tables (22)
 
 | Table | Columns | Read by | Written by |
 |---|---|---|---|
@@ -9742,6 +9817,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `media_assets` | _net-new — no introspected columns_ | `contract_admin_media_list` · `contract_admin_media_upload` · `contract_admin_media_delete` | — |
 | `mv_monthly_permit_stats` | _net-new — no introspected columns_ | `admin_market_metrics` · `contract_admin_market_metrics` | `job_mv_monthly_permit_stats_refresh` |
 | `offers` | _net-new — no introspected columns_ | `admin_placements` · `advertiser_self_metrics` · `contract_admin_placements_list` · `contract_admin_offer_upsert` | `admin_placements` |
+| `parcel_lot_form` | _net-new — no introspected columns_ | `mobile_parcel_semi_question` | — |
 | `parcel_user_inputs` | _net-new — no introspected columns_ | `contract_parcels_lot_size_entry` · `contract_admin_lot_size_revert` | `job_offboarding_sweep_30day` |
 | `pdf_exports` | _net-new — no introspected columns_ | `admin_export_audit` | — |
 | `pg_class` | _net-new — no introspected columns_ | `admin_data_quality` · `admin_pipeline_step_output` · `contract_admin_pipeline_step_output` · `contract_admin_stats` | — |
@@ -9759,7 +9835,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 14 of 73 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 14 of 74 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -9799,4 +9875,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 169 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 170 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

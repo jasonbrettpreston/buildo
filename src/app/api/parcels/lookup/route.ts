@@ -46,6 +46,7 @@ import { logInfo, logWarn } from '@/lib/logger';
 import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
 import { assembleConsumerPayload, assembleLotMap, hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
 import { resolveLotMap } from '@/lib/parcels/lot-map';
+import { readLotForm } from '@/lib/parcels/lot-form';
 import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
 import {
   ConsumerParcelLookupQuerySchema,
@@ -109,6 +110,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       resolution: resolved.resolution,
       map,
       page: null,
+      lotForm: null,
     };
 
     // The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text.
@@ -117,7 +119,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       const row = await fetchParcelById(resolved.match.parcelId);
       if (!row) {
         // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
-        response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null };
+        response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
       } else {
         const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
         const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
@@ -127,6 +129,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
         const pageResponse = await readCustomerPageResponse(parcelRef);
         const page = pageResponse === null ? null : mobilePageView(pageResponse);
+        // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
+        const lotForm = await readLotForm(parcelRef);
         response = {
           match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
           candidates: [],
@@ -135,6 +139,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
           resolution: 'unique',
           map: null,
           page,
+          lotForm,
         };
       }
     }
@@ -173,6 +178,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       duration_ms,
       access,
       meter,
+      lot_form: response.lotForm?.detected ?? null, // SEMI-B: the detected form, never the address
+      lot_form_unsure: response.lotForm?.unsure ?? null,
       page: response.page !== null, // MF-48 Stage B: whether a report page was sent (never its content)
     });
     if (duration_ms > SLOW_QUERY_MS) {

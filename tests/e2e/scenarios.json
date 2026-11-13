@@ -739,6 +739,124 @@
       "owner": "MB-38",
       "status": "waits",
       "waits_on": "MB-35, MB-38, MB-44, MF-74 (the headline table and the on-demand detail do not exist yet; McStorage strategy ST-5)"
+    },
+    {
+      "id": "L-SEMI-A",
+      "count": 5,
+      "how": "lookup ?q=<address_full> of a lot whose view row is o4_two_parcel_abut and not unsure",
+      "where": "parcel_lot_form.lot_form_basis = 'o4_two_parcel_abut' AND NOT unsure",
+      "expect": {
+        "lotForm": {
+          "detected": "semi_half",
+          "unsure": false
+        },
+        "question_page": "not shown",
+        "report_cards": "renovation only"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
+    },
+    {
+      "id": "L-SEMI-B",
+      "count": 5,
+      "how": "lookup of a lot whose footprint links 3 parcels and abuts one with a wall of at least semi_doubt_min_shared_len_m",
+      "where": "parcel_lot_form.lot_form_basis = 'doubt_multi_parcel_abut'",
+      "expect": {
+        "lotForm": {
+          "detected": "semi_half",
+          "basis": "doubt_multi_parcel_abut",
+          "unsure": true
+        },
+        "question_page": "shown before the report"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
+    },
+    {
+      "id": "L-SEMI-C",
+      "count": 5,
+      "how": "the same 3-parcel lots with semi_doubt_enabled = 0 (test stack setting, restored after)",
+      "where": "parcel_lot_form.lot_form_basis = 'doubt_multi_parcel_abut' with the switch on",
+      "expect": {
+        "lotForm": {
+          "detected": "detached",
+          "unsure": false
+        },
+        "question_page": "not shown"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
+    },
+    {
+      "id": "L-SEMI-D",
+      "count": 3,
+      "how": "on an unsure lot answer \"No, it's detached\"; then answer \"Yes, it's one half of a semi\"; then \"Not sure\"",
+      "where": "an unsure lot (L-SEMI-B)",
+      "expect": {
+        "no": "report route with lotFormOverride=detached: full report, D/H/2 cards and the headline",
+        "yes": "report route with lotFormOverride=semi_half: renovation cards only",
+        "not_sure": "no override; the semi view; the \"This isn't a semi\" link still offered"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
+    },
+    {
+      "id": "L-SEMI-E",
+      "count": 5,
+      "how": "lookup of a detached lot (no second primary link)",
+      "where": "parcel_lot_form.lot_form_basis = 'o4_not_met'",
+      "expect": {
+        "lotForm": {
+          "detected": "detached",
+          "unsure": false
+        },
+        "semi_party_wall": "never shown",
+        "question_page": "not shown"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
+    },
+    {
+      "id": "L-SEMI-F",
+      "count": 5,
+      "how": "read the stored scenarios of non-semi lots",
+      "where": "parcel_lot_form.lot_form_detected = 'detached'",
+      "expect": {
+        "s_row": "no S (suite) row on a non-semi lot (isProduced)"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
+    },
+    {
+      "id": "L-SEMI-G",
+      "count": 5,
+      "how": "read the stored scenarios of semi lots",
+      "where": "parcel_lot_form.lot_form_detected = 'semi_half'",
+      "expect": {
+        "suite_add_on": false,
+        "reason": "Q-3; 10.5.20.40(6)"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
+    },
+    {
+      "id": "L-SEMI-H",
+      "count": 25,
+      "how": "for random lots compare the view row with the step flags.semiHalf and with the lookup lotForm.detected",
+      "where": "any parcel (md5 of parcel id and the night seed)",
+      "expect": {
+        "equal": "the view, the step and the lookup read the same row: no drift"
+      },
+      "owner": "MF-44",
+      "status": "waits",
+      "waits_on": "SEMI-B: migration 320 (parcel_lot_form) applied on the test stack by the orchestrator DB job; the mobile question page built"
     }
   ],
   "bounds": [

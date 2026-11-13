@@ -3133,8 +3133,8 @@
     "layer2_targets": [],
     "owed": [
      {
-      "what": "the O-4 detection on the step's lot vector and the owner correction path",
-      "owner": "step commit ① (Spec 78 §Phase-5)"
+      "what": "the step's flags.semiHalf read of the view parcel_lot_form (the D-78 recapture commit; the detection itself is the view, migration 320, SEMI-B 2026-11-13) and the storage of the owner answer",
+      "owner": "step commit ① (Spec 78 §Phase-5); APP-RENO (the answer store)"
      }
     ]
    },
@@ -3153,7 +3153,7 @@
     "RI",
     "RB"
    ],
-   "computation": "`semi_half` where Spec 78 O-4 holds (the primary footprint primary-linked to exactly two parcels that abut; derived on read, fidelity `differs`, ML-4), else `detached`. A `semi_half` lot shows only the renovation cards and no estimated existing-house figures until the owner enters them; the owner's \"this is not a semi\" correction switches the lot to the full report (Q-1 / Q-2, operator 2026-10-20)",
+   "computation": "`semi_half` where Spec 78 O-4 holds (the primary footprint primary-linked to exactly two parcels that abut) or the doubt rule holds (the footprint links up to `semi_doubt_max_link_parcels` parcels and a linked parcel abuts with a wall of at least `semi_doubt_min_shared_len_m`; switch `semi_doubt_enabled`); the view `parcel_lot_form` (migration 320) derives it on read, fidelity `differs`, ML-4, and marks the doubt band `unsure` so the app asks the owner one question before the report (operator \"semi ask a\", 2026-11-13); else `detached`. A `semi_half` lot shows only the renovation cards and no estimated existing-house figures until the owner enters them; the owner's \"this is not a semi\" correction switches the lot to the full report (Q-1 / Q-2, operator 2026-10-20)",
    "trust_tier": "estimate",
    "null_when": "never",
    "change": "new 2026-10-20 (report schema v2 lineage queue; Q-1 / Q-2)"

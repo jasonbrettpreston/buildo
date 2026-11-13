@@ -1,0 +1,5 @@
+SEMI-B · the count locks that moved when S-093 mobile_parcel_semi_question joined (observed on the first run after the descriptor, bindings and census entries landed, before the locks were amended; the locks were amended, never loosened):
+src/tests/surfaces/admin-media.golden.test.ts   T7 (d): "no mobile golden test declared for mobile_parcel_semi_question" (surface-goldens.ts MOBILE_GOLDEN_TESTS); T7 (b) converted ids 15 -> 16; mobile list 2 -> 3
+src/tests/surfaces/auth-class-parity.infra.test.ts   unexplained: "R-18 P-1 SURFACE mobile_parcel_semi_question: declares no auth_class_parity check" (exception row added, owner MF-77, as the sibling S-071)
+src/tests/surfaces/surface-conformance.logic.test.ts   SV-DESC 31 -> 32 in scope, converted 15 -> 16; S-screen 15/84 -> 16/92; S-sbind 15/383 -> 16/398; C-3 modules 9 -> 10, mounts 24 -> 25; C-7 descriptors 169 -> 170; C-8m mobile modules +SemiQuestionBinding.tsx; C-3 "owner binding_mobile_list does not own it" (owns.components extended)
+src/tests/surfaces/surface-validate.logic.test.ts   exact stdout line, same counts

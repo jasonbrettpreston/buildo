@@ -410,6 +410,17 @@ export const ReportPageViewSchema = z.object({
   ),
 });
 
+// SEMI-B (Spec 78 O-4 + the doubt rule; operator "semi all y" / "semi ask a", 2026-11-13): mirrors src/app/api/parcels/lookup/types.ts
+// ConsumerLotFormSchema. Optional and nullable: an older server omits it and the app then never asks.
+export const ParcelLotFormSchema = z
+  .object({
+    detected: z.enum(['semi_half', 'detached']),
+    basis: z.enum(['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met']),
+    unsure: z.boolean(),
+  })
+  .strict();
+export type ParcelLotForm = z.infer<typeof ParcelLotFormSchema>;
+
 export const ConsumerParcelLookupResultSchema = z.object({
   match: ParcelMatchSchema.nullable(),
   candidates: z.array(ParcelCandidateSchema),
@@ -418,6 +429,7 @@ export const ConsumerParcelLookupResultSchema = z.object({
   resolution: z.enum(['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']).optional(),
   map: ParcelLotMapSchema.nullable().optional(),
   page: ReportPageViewSchema.nullable().optional(),
+  lotForm: ParcelLotFormSchema.nullable().optional(),
 });
 export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
 export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;

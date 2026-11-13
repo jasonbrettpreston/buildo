@@ -1,0 +1,15 @@
+ ❯ src/tests/parcel-lot-form.logic.test.ts:5:25
+      3| //
+      4| // SEMI-B · the semi detector's server half (operator "semi all y" and…
+      5| // The rule lives in ONE place, the view `parcel_lot_form` (migration …
+       |                         ^
+      6| //   - the view reads the three settings and holds no cut as a literal…
+      7| //   - readLotForm maps the view row to the response block, null when …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  15:57:01
+   Duration  177ms (transform 32ms, setup 7ms, collect 0ms, tests 0ms, environment 0ms, prepare 20ms)
+

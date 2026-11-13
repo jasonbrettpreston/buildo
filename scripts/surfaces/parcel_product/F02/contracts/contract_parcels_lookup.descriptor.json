@@ -154,7 +154,11 @@
       "source",
       "label",
       "value",
-      "disclosure"
+      "disclosure",
+      "lotForm",
+      "detected",
+      "basis",
+      "unsure"
     ],
     "tables": [
       {

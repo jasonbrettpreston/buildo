@@ -1,0 +1,28 @@
+{
+  "task": "MF-84",
+  "item": "SEMI-B: the Spec 78 O-4 semi detector (view parcel_lot_form, migration 320, written not applied; three admin settings), lotForm on the consumer lookup, and the one-question page S-093 mobile_parcel_semi_question shown before the report only in the unsure band.",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-13",
+  "head": "bef63fdf8",
+  "cards": [
+    "Operator 2026-11-13: \"semi all y\" and \"semi ask a - and we need a new mini page similar to the \\\"choose your lot\\\" excpet it just asks one question\""
+  ],
+  "plan": "Plan ~/Buildo-scratch/mcbylaws/SEMI-O4/plan.md with the operator rulings at its end (D1 to D6 as recommended; ask only in the doubt band; three answers). Tests in the plan: L-SEMI a-h (tests/e2e/scenarios.json), src/tests/parcel-lot-form.logic.test.ts, src/tests/db/parcel-lot-form.db.test.ts, mobile lotForm, page-behaviour and golden tests. Red-first evidence in docs/reports/red-evidence/SEMI-B/. No separate plan panel was convened: the lane brief fixed the plan and the rulings.",
+  "output": "OUTPUT panel as the lane brief set it: a DeepSeek (deepseek-chat, fast) bulk pass on migrations/320, src/lib/parcels/lot-form.ts and the five new mobile files (records in ~/Buildo-scratch/mcbylaws/SEMI-O4/panel-deepseek-*.txt), each claim adjudicated by the lane by execution. Changed code: the lot lookup resolves the id as a scalar subquery (2.9 s with a JOIN, 0.4 ms measured with EXPLAIN ANALYZE on dev); needsSemiQuestion treats only the exact sentinel as answered; ORDER BY names; the audit count is documented as admin-gated by its caller. Refuted by measurement: multi-primary parcels = 0 and the view has exactly one row per parcel (496,536 = parcels); the abutting-population concern (an unrelated parcel cannot count: the lateral joins parcel_abutments); the redirect and error handling mirror the shipped MF-53 pattern. Not run: the Claude seats (code-reviewer-grounded, regression-guardian, observability) and the DB test (needs the test stack, orchestrator rehearsal).",
+  "seats": [
+    "DeepSeek lens pass (fast), lane-grounded"
+  ],
+  "verdict": "PASS with follow-ups",
+  "blockers": [],
+  "followups": [
+    "Migration 320 applied by the orchestrator DB job DB-320 (rehearsed); then recapture the witness catalog and drop parcel_lot_form from the uncatalogued list in src/tests/src-sql-ledger.logic.test.ts.",
+    "The 50-lot imagery check (operator), then re-set semi_doubt_min_shared_len_m and semi_doubt_max_link_parcels.",
+    "The step flags.semiHalf read: ~/Buildo-scratch/mcbylaws/SEMI-O4/hashed.patch in the single recapture commit (D-78).",
+    "The owner answer is a route param (no server store, O-12); the report reads lotFormOverride when APP-RENO lands; corrections cannot be counted until then."
+  ],
+  "evidence": [
+    "docs/reports/red-evidence/SEMI-B/"
+  ],
+  "notes": "The view reads the lot rows under the current settings; the dev measurement: 102,466 clear semis, 706 short-wall asked, 21,565 doubt-band asked, 371,799 detached."
+}

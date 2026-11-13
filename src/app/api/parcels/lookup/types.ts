@@ -122,6 +122,17 @@ export const ConsumerLotMapSchema = z
   })
   .strict();
 export type ConsumerLotMap = z.infer<typeof ConsumerLotMapSchema>;
+// SEMI-B (Spec 78 O-4 + the doubt rule, operator "semi all y" / "semi ask a", 2026-11-13): the lot's form from the view parcel_lot_form (migration 320).
+// `unsure` is the ask band: the app shows the one-question page before the report. The evidence columns of the view are not sent.
+export const LOT_FORM_BASES = ['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met'] as const;
+export const ConsumerLotFormSchema = z
+  .object({
+    detected: z.enum(['semi_half', 'detached']), // parcel_lot_form.lot_form_detected
+    basis: z.enum(LOT_FORM_BASES), // parcel_lot_form.lot_form_basis
+    unsure: z.boolean(), // parcel_lot_form.unsure
+  })
+  .strict();
+export type ConsumerLotForm = z.infer<typeof ConsumerLotFormSchema>;
 export const RESOLUTIONS = ['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match'] as const;
 export const MAP_RESOLUTIONS: readonly string[] = ['multi_parcel', 'unlinked'];
 
@@ -166,9 +177,11 @@ export const ConsumerParcelLookupResponseSchema = z
     resolution: z.enum(RESOLUTIONS),
     map: ConsumerLotMapSchema.nullable(),
     page: ReportPageViewSchema.nullable(), // MF-48 Stage B: a page only with a parcel (the refine below)
+    lotForm: ConsumerLotFormSchema.nullable().default(null), // SEMI-B: the lot form, only with a parcel (the refine below)
   })
   .strict()
   .refine((r) => r.page === null || r.parcel !== null, { message: 'page is present only with a parcel (a hit)', path: ['page'] })
+  .refine((r) => r.lotForm === null || r.parcel !== null, { message: 'lotForm is present only with a parcel (a hit)', path: ['lotForm'] })
   .refine((r) => (r.map !== null) === MAP_RESOLUTIONS.includes(r.resolution), {
     message: 'map is present exactly when resolution is multi_parcel or unlinked',
     path: ['map'],

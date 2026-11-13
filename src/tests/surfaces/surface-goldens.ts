@@ -42,6 +42,8 @@ export const MOBILE_GOLDEN_TESTS: Record<string, string> = {
   mobile_parcel_search: 'mobile/__tests__/parcelScreens.golden.test.ts',
   // MF-53 (dated 2026-11-11): the choose-your-lot map page; its goldens are written by scripts/surfaces/lotmap-golden-capture.ts.
   mobile_parcel_disambiguation_map: 'mobile/__tests__/lotMapScreens.golden.test.ts',
+  // SEMI-B (dated 2026-11-13): the one-question page before the report; its goldens are written by scripts/surfaces/semi-question-golden-capture.ts.
+  mobile_parcel_semi_question: 'mobile/__tests__/semiQuestionScreens.golden.test.ts',
 };
 
 /** A non-web target: the declared mobile golden test of `id`, else a throw (fail closed; never a silent skip). */

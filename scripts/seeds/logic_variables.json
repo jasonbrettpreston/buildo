@@ -10478,6 +10478,36 @@
       "group": "Parcel Lookup"
     }
   },
+  "semi_doubt_enabled": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 78 O-4 doubt rule (operator \"semi all y\", 2026-11-13; D4): 1 = on, 0 = off. On: a lot whose footprint links 2..semi_doubt_max_link_parcels parcels, or whose strict-O-4 party wall is shorter than semi_doubt_min_shared_len_m, is treated as a possible semi and the app asks the one-question page before the report (operator \"semi ask a\"). Off: strict O-4 only, never asks. Inserted by migration 320. CONSUMED by the view parcel_lot_form (migration 320), read by the consumer lookup (src/lib/parcels/lot-form.ts).",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "semi_doubt_max_link_parcels": {
+    "default": 3,
+    "type": "number",
+    "min": 2,
+    "max": 6,
+    "description": "Spec 78 O-4 doubt rule (operator \"semi all y\", 2026-11-13; D4): the most parcels the primary footprint may link to for the doubt rule to apply (strict O-4 is exactly 2; a semi whose footprint also touches a sliver, laneway or garage lot links 3; measured 1,525 of 3,239 undetected permit-semi lots). Bounds 2..6 (2 = strict only). Inserted by migration 320. CONSUMED by the view parcel_lot_form (migration 320), read by the consumer lookup (src/lib/parcels/lot-form.ts).",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "semi_doubt_min_shared_len_m": {
+    "default": 5,
+    "type": "number",
+    "min": 0,
+    "max": 50,
+    "description": "Spec 78 O-4 doubt rule (operator \"semi all y\", 2026-11-13; D4): the shortest shared boundary, in metres, that counts as a party wall. A doubt-rule lot below it stays detached; a strict-O-4 lot below it is still a semi but is asked (unsure). Starting value 5 m from the measured spread (strict pairs: 2 percent under 10.2 m, median 35 m; 706 strict lots under 5 m); to be re-set from the 50-lot imagery check. Bounds 0..50. Inserted by migration 320. CONSUMED by the view parcel_lot_form (migration 320), read by the consumer lookup (src/lib/parcels/lot-form.ts).",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
   "user_lot_size_entry_enabled": {
     "default": 0,
     "type": "number",

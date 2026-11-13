@@ -1,0 +1,12 @@
+      13 | import { SEARCH_MAX_WIDTH } from '@/constants/parcelSearch';
+      14 | import type { SemiQuestionSituation } from '@/lib/semiQuestion';
+
+      at createNoMappedModuleFoundError (../../Buildo-wt-mf35-spike/mobile/node_modules/jest-resolve/build/index.js:1117:17)
+      at Object.require (src/components/surfaces/SemiQuestionBinding.tsx:11:1)
+      at Object.require (__tests__/semiQuestionScreens.golden.test.ts:13:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.288 s
+Ran all test suites matching __tests__/semiQuestionScreens.golden.test.ts.

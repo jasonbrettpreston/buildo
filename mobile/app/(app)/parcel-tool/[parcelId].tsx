@@ -8,17 +8,28 @@
 // the page view itself is built on the server by MF-57's core and sent as `page` (null for every lot until MB-44, so the approved miss text shows).
 // Offline, the persisted query cache (mobile/app/_layout.tsx, 24 h) still serves a fetched page. Back goes back with history, else to the Lookup
 // route (the MF-53 rule, NAV-AUDIT #3). The old hand-built screen, its sponsor slot and its phone formatting are retired (MF-74 Q2 i).
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
 import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
 import { useParcelLookup } from '@/hooks/useParcelLookup';
 import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
+import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm';
 
 export default function ParcelReportScreen() {
   const router = useRouter();
-  const { parcelId } = useLocalSearchParams<{ parcelId: string }>();
-  const { data, isError, refetch } = useParcelLookup(parcelId);
+  const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
+  const { data, isError, isFetching, refetch } = useParcelLookup(parcelId);
+  // SEMI-B (operator "semi ask a", 2026-11-13): an unsure lot (the doubt band of Spec 78 O-4) is asked the one question BEFORE the report shows. The
+  // redirect fires once, on the first settled data (Spec 99 §6.5), never on a background refetch; a `semi` param means it was answered, and an older
+  // server that sends no lotForm never asks. Clear semis and clear detached lots stay on the report.
+  const askedRef = useRef(false);
+  const ask = needsSemiQuestion(data, typeof semi === 'string' ? semi : undefined);
+  useEffect(() => {
+    if (isFetching || !ask || askedRef.current || !parcelId) return;
+    askedRef.current = true;
+    router.replace(semiQuestionRoute(parcelId));
+  }, [ask, isFetching, parcelId, router]);
   const { view, lifecycle } = reportScreenState({ data: data ? { page: data.page ?? null } : undefined, isError });
   const onRetry = useCallback(() => void refetch(), [refetch]);
   const onBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);

@@ -35,6 +35,11 @@ vi.mock('@/lib/parcels/consumer-lookup', async (orig) => {
 });
 // MF-53: the map read is mocked here (its SQL is pinned in parcel-lookup-resolution.logic.test.ts); a map response must meter nothing.
 vi.mock('@/lib/parcels/lot-map', async (orig) => ({ ...(await orig<typeof import('@/lib/parcels/lot-map')>()), resolveLotMap: vi.fn() }));
+// SEMI-B: the lot-form read is mocked (its SQL is pinned in parcel-lot-form.logic.test.ts); a hit carries the block, a form never meters.
+vi.mock('@/lib/parcels/lot-form', async (orig) => ({
+  ...(await orig<typeof import('@/lib/parcels/lot-form')>()),
+  readLotForm: vi.fn(async () => ({ detected: 'detached', basis: 'o4_not_met', unsure: false })),
+}));
 const logInfo = vi.fn();
 vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
 

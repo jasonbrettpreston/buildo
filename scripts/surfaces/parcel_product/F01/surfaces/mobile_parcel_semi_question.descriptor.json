@@ -1,0 +1,391 @@
+{
+  "kind": "SURFACE",
+  "status": "generated",
+  "docs": {
+    "purpose": "The one-question page before the report (SEMI-B; operator \"semi ask a\", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: \"Is this house one half of a semi-detached pair?\" with three answers: \"Yes, it's one half of a semi\" (semi view, renovations only), \"No, it's detached\" (the full report), \"Not sure\" (the semi view, with \"This isn't a semi\" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen.",
+    "data_story": "It reads one contract, GET /api/parcels/lookup?parcelId= (C-001), through the same query the report reads (['parcel-lookup', parcelId]), so it makes no extra request. The server names the lot's form from the view parcel_lot_form (migration 320): lotForm.detected, lotForm.basis and lotForm.unsure; the page asks only when unsure is true. The answer is the owner's input lot_form_user_override (Spec 78): yes writes semi_half, no writes detached, not sure writes nothing. It is carried to the report as a route param and applied there through the shared pure function lotFormEffective (O-12: the pipeline never reads it; there is no server store). It emits **no analytics event**.",
+    "under_126": "**CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component."
+  },
+  "evidence": {
+    "files": [
+      "mobile/app/(app)/parcel-tool/semi-question.tsx",
+      "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+      "mobile/src/lib/semiQuestion.ts",
+      "mobile/src/lib/lotForm.ts"
+    ],
+    "contracts": [
+      "mobile/app/(app)/parcel-tool/semi-question.tsx — useParcelLookup(parcelId) (GET /api/parcels/lookup?parcelId=)"
+    ],
+    "tables": [
+      "src/lib/parcels/lot-form.ts — readLotForm (the view parcel_lot_form, migration 320)"
+    ],
+    "gate": [
+      "mobile/app/(app)/_layout.tsx:236-265",
+      "mobile/app/(app)/parcel-tool/_layout.tsx:15-19",
+      "src/app/api/parcels/lookup/route.ts:47-60"
+    ],
+    "states": [
+      "mobile/src/lib/semiQuestion.ts — SEMI_QUESTION_STATES and buildSemiQuestionSituation",
+      "mobile/__tests__/fixtures/semiQuestion.situations.json — goldens"
+    ],
+    "emits": [
+      "mobile/app/(app)/parcel-tool/semi-question.tsx — no track() call"
+    ]
+  },
+  "identity": {
+    "id": "mobile_parcel_semi_question",
+    "route": "mobile/app/(app)/parcel-tool/semi-question.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6",
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3.2",
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1",
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7",
+      "docs/specs/01-pipeline/78_optimal_lot_configuration.md O-4"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It reads `lotForm` as sent; the block is optional in the mobile mirror, so a payload from an older server still parses and the page never asks.",
+      "evidence": [
+        "mobile/src/lib/schemas.ts — ConsumerParcelLookupResultSchema (lotForm optional)"
+      ]
+    },
+    "ref": "S-093"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One GET /api/parcels/lookup?parcelId= through useParcelLookup, the same TanStack entry the report reads. The route param `parcelId` is the lot; whether to ask comes from the response (`lotForm.unsure`), never from the param.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/semi-question.tsx — useParcelLookup(id)",
+      "mobile/src/hooks/useParcelLookup.ts — export function useParcelLookup"
+    ],
+    "contract_ref": [
+      "/api/parcels/lookup"
+    ],
+    "query_key": [
+      "parcel-lookup",
+      "parcelId"
+    ],
+    "field_whitelist": [
+      "lotForm",
+      "detected",
+      "basis",
+      "unsure",
+      "match.parcelId"
+    ],
+    "tables": [
+      {
+        "table": "parcel_lot_form",
+        "columns": [
+          "parcel_id",
+          "lot_form_detected",
+          "lot_form_basis",
+          "unsure"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/01-pipeline/78_optimal_lot_configuration.md",
+        "evidence": [
+          "src/lib/parcels/lot-form.ts — readLotForm"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing to a server: the answer is the owner's input lot_form_user_override, carried to the report as the route param lotFormOverride (yes semi_half, no detached, not sure none) with semi=answered, and applied there by lotFormEffective (O-12: the pipeline never reads it). The only action is opening the report.",
+    "evidence": [
+      "mobile/src/lib/lotForm.ts — reportRouteAfterAnswer, answerToOverride"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store: the chosen answer is component useState in the mount (nothing selected at open), cleared when the page leaves.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/semi-question.tsx — useState selected"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "useParcelLookup declares a 60-second staleTime; the page reuses the report entry.",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts — staleTime: 60_000"
+    ],
+    "offline": "blocked",
+    "stale_time_ms": 60000,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "It inherits the tab gate and the parcel-tool Stack: shell_app_tabs will not mount the tab tree at all unless subscription_status is trial/active/past_due/admin_managed.",
+      "evidence": [
+        "mobile/app/(app)/_layout.tsx:236-265",
+        "src/app/api/parcels/lookup/route.ts:47-60"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "parcels, address_points and parcel_address_points are RLS-enabled with zero policies (default deny), read as the table owner through C-001.",
+      "evidence": [
+        "migrations/227_rls_class_b_default_deny.sql:42-110"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": {
+      "product": "parcel_tool",
+      "statuses": [
+        "trial",
+        "active",
+        "past_due",
+        "admin_managed"
+      ],
+      "on_missing": "403"
+    },
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "parcels-lookup:{uid} — 30/min, 60s window (the detail bucket; the page shares the report request)"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": {
+      "item_archetype": "answer card (the answer text, a check when chosen)",
+      "pagination": "none",
+      "recycling": "none — exactly 3 answers"
+    }
+  },
+  "checks": [
+    {
+      "id": "parcelsemi_ask_only_when_unsure",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "operator \"semi ask a\" 2026-11-13: the question is asked ONLY when the detector is unsure (lotForm.unsure); a clear semi, a clear detached lot and an older server (no block) go straight to the report. Locked by mobile/__tests__/lotForm.test.ts and semiQuestionPage.behaviour.test.tsx."
+    },
+    {
+      "id": "parcelsemi_nothing_preselected",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The MF-53 rule (parceldisambig_nothing_preselected) applied to this page: no answer is selected when it opens and Continue is disabled until a tap; an answer is the owner's choice, never a default. Locked by mobile/__tests__/semiQuestionScreens.golden.test.ts."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "loading"
+    },
+    {
+      "name": "ambiguous",
+      "golden": "ask"
+    },
+    {
+      "name": "hit",
+      "golden": "answered"
+    },
+    {
+      "name": "redirect",
+      "golden": "redirect"
+    },
+    {
+      "name": "error",
+      "golden": "error"
+    },
+    {
+      "name": "schema_drift",
+      "golden": "schema_drift"
+    },
+    {
+      "name": "rate_limited",
+      "golden": "rate_limited"
+    },
+    {
+      "name": "unauthorized",
+      "golden": "unauthorized"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "Every failure class has its own notice (the search page's classes and copy); the schema drift text has no Retry.",
+    "evidence": [
+      "mobile/src/components/surfaces/SemiQuestionBinding.tsx — errorNotices"
+    ],
+    "classes": [
+      {
+        "class": "403",
+        "ui": "A distinct locked-out line: the parcel tool is not in the current subscription. Explicitly says this is not a missing address."
+      },
+      {
+        "class": "429",
+        "ui": "Inline red \"Too many searches. Try again in Ns.\" from RateLimitError.retryAfterSeconds."
+      },
+      {
+        "class": "500",
+        "ui": "Inline red \"Couldn’t reach the lot service.\" with a Try-again button wired to refetch()."
+      },
+      {
+        "class": "schema_drift",
+        "ui": "Inline red \"We couldn’t read the response for that address\" and NO retry button — a deterministic failure is not worth a second round trip. Sentry already has it."
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No client analytics in SEMI-B; the only record of a lookup is the server log line, which carries the form and the unsure flag, never the address.",
+    "evidence": [
+      "src/app/api/parcels/lookup/route.ts — logInfo consumer parcel lookup"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered.",
+    "evidence": [
+      "mobile/app/(app)/parcel-tool/semi-question.tsx"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "The question shows no report and counts nothing; the report it opens meters through the parcelId path as before.",
+    "evidence": [
+      "src/tests/parcel-lookup-gate.infra.test.ts"
+    ]
+  },
+  "config": {
+    "answer": "logic_variables",
+    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page itself has no tunable and reads only the unsure flag.",
+    "evidence": [
+      "migrations/320_parcel_lot_form_view.sql",
+      "scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m"
+    ],
+    "logic_variables": [
+      {
+        "name": "semi_doubt_enabled",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "semi_doubt_max_link_parcels",
+        "min": 2,
+        "max": 6,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "semi_doubt_min_shared_len_m",
+        "min": 0,
+        "max": 50,
+        "on_invalid": "fail"
+      }
+    ],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "It shares C-001 and its report query with the report (S-001).",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts — useParcelLookup"
+    ],
+    "surfaces": [
+      "mobile_parcel_detail"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": [
+    {
+      "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): the three answers are an ordered client list",
+      "why": "P35-D14 a form: the answers are the closed list yes, no, not_sure from mobile/src/lib/lotForm.ts SEMI_ANSWERS (derived names answer.<i>), and the renderer's `select` action carries the answer id instead of a parcel id (the one mount callback maps it; SurfaceRenderer.tsx is not changed).",
+      "adjudicated_by": "operator 2026-11-13, \"semi ask a - and we need a new mini page similar to the \\\"choose your lot\\\" excpet it just asks one question\" (reuse of the MF-53 components and pattern)",
+      "date": "2026-11-13"
+    },
+    {
+      "from": "Spec 126 R-01 / Spec 116 §5 OD5 amendment: a parcel_tool surface is gated on the parcel_tool entitlement",
+      "why": "Reached through the transitional lead_gen path like the search page (the lookup route admits the lead_gen status; the App A shelf passes the Buildo app gate). Removed by MF-50 (and the app gate by MF-49).",
+      "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"); queue row MF-45",
+      "date": "2026-11-11"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The answer is not stored on a server: it is a route param read by the report, so a lot opened again later (a new session, a deep link) asks again when it is still unsure. A stored answer is owed with the report's owner-input path (APP-RENO).",
+      "measured": "mobile/src/lib/lotForm.ts reportRouteAfterAnswer; no table holds lot_form_user_override (grep of migrations, 2026-11-13).",
+      "check_id": "parcelsemi_ask_only_when_unsure"
+    },
+    {
+      "what": "The report page applies the override through lotFormEffective only when the report's semi rules are mounted (renovation cards, increment 6); today the param is carried and the report still shows its approved miss text.",
+      "measured": "mobile/app/(app)/parcel-tool/[parcelId].tsx reads no lotFormOverride yet.",
+      "check_id": "parcelsemi_ask_only_when_unsure"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "SEMI-B (operator \"semi all y\" and \"semi ask a\", 2026-11-13). The mini page of the address-lookup flow, modelled on S-071 (MF-53). The report mount [parcelId].tsx replaces itself with this page once, on the first settled data, when lotForm.unsure is true and the route has no `semi` param; Continue replaces this page with the report carrying semi=answered (and lotFormOverride for yes and no). Archetype LIST: radio cards and one Continue, like the lot cards.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/app/(app)/parcel-tool/semi-question.tsx",
+      "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+      "mobile/src/lib/semiQuestion.ts",
+      "mobile/src/lib/lotForm.ts"
+    ],
+    "loc": 0,
+    "call_idiom": "hook",
+    "stores": [],
+    "measured_states": [
+      "loading",
+      "ask",
+      "error",
+      "redirect"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "parcel_tool",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "The question before the report for a lot the detector cannot place: one question on the entry flow of the parcel tool.",
+    "feature": "F01",
+    "build_order": 1014,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}
