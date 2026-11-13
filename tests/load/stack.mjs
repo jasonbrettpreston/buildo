@@ -30,7 +30,13 @@ export function runFiles() {
     cwd: ROOT,
     encoding: "utf8",
   }).stdout.trim();
-  return { runDir, line, sha };
+  // A JSON result file inside the run folder; returns its path. (2026-11-13: stress.mjs named runDir, which it never had.)
+  const saveJson = (name, obj) => {
+    const file = path.join(runDir, name);
+    fs.writeFileSync(file, `${JSON.stringify(obj, null, 1)}\n`);
+    return file;
+  };
+  return { runDir, line, sha, saveJson };
 }
 
 /**
@@ -90,9 +96,21 @@ export async function startApp(port, env) {
   throw new Error("app_not_ready_in_120s");
 }
 
-/** The catalogue's L-RANDOM lots, read in a read-only session on the test stack. */
-export async function sampleLots(cat, seed, count) {
-  const sql = cat.lot_cases.find((l) => l.id === "L-RANDOM").sql;
+/**
+ * The catalogue's sample SQL (data, not code): L-RANDOM's `sql`, or with counting=true its `sql_counting` (lots with a stored Layer 3
+ * option that has an evaluated value, the only lots the meter counts: EI-D1 "1 b").
+ */
+export function lotSql(cat, counting) {
+  const row = cat.lot_cases.find((l) => l.id === "L-RANDOM");
+  const sql = counting ? row.sql_counting : row.sql;
+  if (!sql)
+    throw new Error(`L-RANDOM has no ${counting ? "sql_counting" : "sql"}`);
+  return sql;
+}
+
+/** The catalogue's lots (counting lots when asked), read in a read-only session on the test stack. */
+export async function sampleLots(cat, seed, count, counting = false) {
+  const sql = lotSql(cat, counting);
   const db = new pg.Client({
     connectionString: process.env.MCTEST_DATABASE_URL,
     application_name: "mctest-load-sample",
@@ -101,7 +119,10 @@ export async function sampleLots(cat, seed, count) {
   try {
     await db.query("SET default_transaction_read_only = on");
     const rows = (await db.query(sql, [seed, count])).rows;
-    if (!rows.length) throw new Error("sample_empty");
+    if (!rows.length)
+      throw new Error(
+        counting ? "sample_empty: no counting lots" : "sample_empty",
+      );
     return rows.map((r) => ({
       parcelId: String(r.parcel_id),
       address: String(r.address_full),

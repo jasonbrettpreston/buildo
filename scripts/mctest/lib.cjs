@@ -329,7 +329,8 @@ function shownFields(payload) {
   if (page == null || !Array.isArray(page.sections)) return null;
   const out = new Set();
   for (const sec of page.sections)
-    for (const p of sec.parts || []) if (p.kind === "value" && typeof p.field === "string") out.add(p.field);
+    for (const p of sec.parts || [])
+      if (p.kind === "value" && typeof p.field === "string") out.add(p.field);
   return out;
 }
 
@@ -344,7 +345,12 @@ function emptyShown(payload) {
   const out = [];
   for (const sec of page.sections)
     for (const p of sec.parts || [])
-      if (p.kind === "value" && typeof p.field === "string" && (typeof p.text !== "string" || DEAD_TEXT.test(p.text))) out.push(`${sec.id}.${p.field}`);
+      if (
+        p.kind === "value" &&
+        typeof p.field === "string" &&
+        (typeof p.text !== "string" || DEAD_TEXT.test(p.text))
+      )
+        out.push(`${sec.id}.${p.field}`);
   return out;
 }
 
@@ -523,13 +529,30 @@ function downVerdict(a, { afterSignIn = false } = {}) {
   );
 }
 
-/** Signed-out session (MF81-6 a): the old token gets 401 from the lookup and the entitlement, and nothing is metered. */
+/**
+ * Signed-out session (MF81-6 a, corrected 2026-11-13 from the first real run; Spec 13 §3.1, §3.2): the lookup and the entitlement are
+ * read paths on getClaims, a local JWKS signature check with no round-trip to the sign-in service, so a signed-out token is served until
+ * it expires (stateless JWT); a 401 is also accepted. A token with a tampered signature must get 401 (the check is real), no answer is a
+ * 5xx or none, and a refused (401) lookup is never metered (a lookup served on a still-valid token may count, as any lookup).
+ */
 function sessionVerdict(a) {
-  const ok =
-    a.lookupStatus === 401 && a.entitlementStatus === 401 && !a.metered;
+  const answered = (s) => s === 200 || s === 401;
+  const bad = [a.lookupStatus, a.entitlementStatus].filter((s) => !answered(s));
+  if (bad.length)
+    return verdict(
+      false,
+      `lookup http_${a.lookupStatus}, entitlement http_${a.entitlementStatus}: neither served nor refused`,
+    );
+  if (a.tamperedStatus !== 401)
+    return verdict(
+      false,
+      `a tampered-signature token got http_${a.tamperedStatus}, not 401`,
+    );
+  if (a.lookupStatus === 401 && a.metered)
+    return verdict(false, "a refused lookup was metered");
   return verdict(
-    ok,
-    `lookup http_${a.lookupStatus}, entitlement http_${a.entitlementStatus}${a.metered ? ", metered" : ""}`,
+    true,
+    `lookup http_${a.lookupStatus}, entitlement http_${a.entitlementStatus}, tampered http_${a.tamperedStatus}${a.lookupStatus === 200 ? " (signed-out token served until expiry, stateless JWT, Spec 13 3.2)" : ""}`,
   );
 }
 

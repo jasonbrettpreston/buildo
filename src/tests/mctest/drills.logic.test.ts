@@ -121,28 +121,20 @@ describe("DB down", () => {
 });
 
 describe("signed-out session (MF81-6 a)", () => {
-  it("passes 401 on both calls with nothing metered, fails a live token or a meter", () => {
-    expect(
-      sessionVerdict({
-        lookupStatus: 401,
-        entitlementStatus: 401,
-        metered: false,
-      }).status,
-    ).toBe("PASS");
-    expect(
-      sessionVerdict({
-        lookupStatus: 200,
-        entitlementStatus: 401,
-        metered: false,
-      }).status,
-    ).toBe("FAIL");
-    expect(
-      sessionVerdict({
-        lookupStatus: 401,
-        entitlementStatus: 401,
-        metered: true,
-      }).status,
-    ).toBe("FAIL");
+  it("passes a served or refused signed-out token, fails a 5xx, a live tampered token or a metered refusal (Spec 13 3.2, 2026-11-13)", () => {
+    const base = {
+      lookupStatus: 401,
+      entitlementStatus: 401,
+      tamperedStatus: 401,
+      metered: false,
+    };
+    expect(sessionVerdict(base).status).toBe("PASS");
+    expect(sessionVerdict({ ...base, lookupStatus: 200 }).status).toBe("PASS");
+    expect(sessionVerdict({ ...base, tamperedStatus: 200 }).status).toBe(
+      "FAIL",
+    );
+    expect(sessionVerdict({ ...base, metered: true }).status).toBe("FAIL");
+    expect(sessionVerdict({ ...base, lookupStatus: 503 }).status).toBe("FAIL");
   });
 });
 

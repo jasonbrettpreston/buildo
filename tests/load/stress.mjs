@@ -14,8 +14,6 @@
 //      the mix; only the hold window is measured; DB connections from pg_stat_activity every second on a separate read-only
 //      connection;
 //   5. one JSON per profile and one result line in ~/Buildo-scratch/mctest/runs/<stamp>/ (outside the repo).
-import fs from "node:fs";
-import path from "node:path";
 import { createHistogram } from "node:perf_hooks";
 import pg from "pg";
 import {
@@ -96,12 +94,12 @@ async function main() {
     return;
   }
 
-  const { line, sha } = runFiles();
+  const { line, sha, saveJson } = runFiles();
 
   let stop = () => {};
   try {
     if (!arg("target")) stop = await startApp(PORT, appEnv(process.env));
-    const lots = await sampleLots(cat, seed, users * LOTS_PER_USER);
+    const lots = await sampleLots(cat, seed, users * LOTS_PER_USER, true);
     const signedInAt = Date.now();
     const tokens = await signInAll(emails.slice(0, users), SIGNIN_PER_5MIN);
     for (const p of profiles) {
@@ -113,11 +111,12 @@ async function main() {
           `tokens_too_old_for_${p.id}: signed in ${Math.round(ageMs / 60000)} min ago, the test stack's tokens last ${TOKEN_LIFE_MS / 60000} min`,
         );
       const out = await runProfile(p, { target, lots, tokens, seed });
-      const file = path.join(runDir, `stress-${p.id}.json`);
-      fs.writeFileSync(
-        file,
-        `${JSON.stringify({ ...out, sha, label: LABEL, budget: BUDGET }, null, 1)}\n`,
-      );
+      const file = saveJson(`stress-${p.id}.json`, {
+        ...out,
+        sha,
+        label: LABEL,
+        budget: BUDGET,
+      });
       const answered = out.overall.count;
       line({
         row: `stress_profiles/${p.id}`,

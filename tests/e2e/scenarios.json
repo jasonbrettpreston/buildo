@@ -584,6 +584,8 @@
       "owner": "MF-44",
       "status": "active",
       "sql": "SELECT parcel_id, address_full, zone_d, coverage_frac FROM (SELECT DISTINCT ON (p.parcel_id) p.parcel_id, ap.address_full, (regexp_match(p.zoning_zn_string, '[(; ]d([0-9.]+)'))[1]::numeric AS zone_d, p.bylaw_max_coverage_pct / 100.0 AS coverage_frac FROM parcels p JOIN parcel_address_points pap ON pap.parcel_id = p.id JOIN address_points ap ON ap.address_point_id = pap.address_point_id AND ap.retired_at IS NULL WHERE p.zoning_class IS NOT NULL ORDER BY p.parcel_id, ap.address_full) s ORDER BY md5(parcel_id || $1) LIMIT $2",
+      "sql_counting": "SELECT parcel_id, address_full, zone_d, coverage_frac FROM (SELECT DISTINCT ON (p.parcel_id) p.parcel_id, ap.address_full, (regexp_match(p.zoning_zn_string, '[(; ]d([0-9.]+)'))[1]::numeric AS zone_d, p.bylaw_max_coverage_pct / 100.0 AS coverage_frac FROM parcels p JOIN parcel_address_points pap ON pap.parcel_id = p.id JOIN address_points ap ON ap.address_point_id = pap.address_point_id AND ap.retired_at IS NULL WHERE p.zoning_class IS NOT NULL AND EXISTS (SELECT 1 FROM parcel_maxbld_scenarios s WHERE s.parcel_id = p.id AND s.status = 'computed' AND s.value IS NOT NULL) ORDER BY p.parcel_id, ap.address_full) s ORDER BY md5(parcel_id || $1) LIMIT $2",
+      "sql_counting_note": "2026-11-13 (MF-81 follow-up): the drills and the stress runner sample these lots, those with a stored Layer 3 row that is computed with a value (the 1,921-lot cohort in parcel_maxbld_scenarios), because the meter counts only a lot with an evaluated option (Spec 100 3.2 dated note 2026-11-12, EI-D1 '1 b'; route hasEvaluatedOption). The lot sweep keeps the plain sql. Read-only.",
       "sql_params": "$1 the night seed (logged), $2 count; read-only on the test stack",
       "runner": "tests/e2e/lot-sweep.spec.ts"
     },
@@ -1092,7 +1094,7 @@
     {
       "id": "F-SESSION-EXPIRED",
       "inject": "sign the persona out (all its sessions) through the test stack sign-in service, then call with the old token (MF81-6 a)",
-      "expect": "lookup and entitlement 401; nothing metered; LOCAL auth-roundtrip (production read paths serve until expiry, Spec 13 3.2); the web part waits on MF-46",
+      "expect": "2026-11-13 correction (Spec 13 3.1, 3.2): both routes are read paths on getClaims, a local signature check, so a signed-out token is served (200) until it expires; 401 is also accepted. PASS: lookup and entitlement answer 200 or 401, a tampered-signature token gets 401, never a 5xx, a refused (401) call is never metered. The old rule (401 on both) expected a revocation check these routes do not make by design. The web part waits on MF-46",
       "status": "active",
       "owner": "MF-46",
       "persona": "drill_session",
@@ -1110,7 +1112,7 @@
     {
       "id": "F-RATE-LIMITED",
       "inject": "drill_rate opens one lot, then reopens it without pause (at most 61 calls)",
-      "expect": "a 429 with Retry-After, its own class; never a 5xx; reopens never metered",
+      "expect": "a 429 with Retry-After, its own class; never a 5xx; reopens never metered. 2026-11-13: on the test stack the limiter is the in-memory one (no Upstash; src/lib/auth/rate-limit.ts), so this proves the route's 429 contract on one instance, not the production Upstash limit; confirm production has Upstash configured",
       "persona": "drill_rate",
       "runner": "tests/load/drills.mjs",
       "status": "active",

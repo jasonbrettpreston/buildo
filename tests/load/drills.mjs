@@ -9,7 +9,8 @@
 //   F-DB-SLOW          drill_session: a new lot with every DB reply delayed 3 s (FAIL only on a hang, an unsanitised body, a meter on a failure)
 //   F-DB-DOWN          drill_session: (1) the whole DB refused: fails closed, not metered, answers again once the DB is back;
 //                      (2) the DB cut at the lookup's first parcels query, after sign-in: a sanitised server error, not metered
-//   F-SESSION-EXPIRED  drill_session: signed out, the old token gets 401 and nothing is metered (web part WAITS on MF-46)
+//   F-SESSION-EXPIRED  drill_session: signed out; the old token is served or refused (read path, getClaims, Spec 13 §3.2, corrected 2026-11-13),
+//                      a tampered token gets 401, never a 5xx (web part WAITS on MF-46)
 //   F-CAP-REACHED      drill_cap: real lots up to the limit, then 403 REPORT_LIMIT_REACHED with the reset date; a counted lot reopens
 //   F-RATE-LIMITED     drill_rate: one lot reopened until a 429 with Retry-After; never a 5xx; reopens never metered
 import {
@@ -196,6 +197,11 @@ async function sessionDrills(cat, lots, relay, only, out) {
     if (!logout.ok) throw new Error(`sign_out_${logout.status}`);
     const l = await lookup(lots[11], token);
     const e = await call("/api/parcels/entitlement", token);
+    const parts = token.split(".");
+    const tampered = await call(
+      "/api/parcels/entitlement",
+      `${parts[0]}.${parts[1]}.${parts[2].slice(0, -4)}${parts[2].endsWith("AAAA") ? "BBBB" : "AAAA"}`,
+    );
     token = await tokenOf(cat, "drill_session");
     out.drill(
       "F-SESSION-EXPIRED",
@@ -203,9 +209,10 @@ async function sessionDrills(cat, lots, relay, only, out) {
       sessionVerdict({
         lookupStatus: l.status,
         entitlementStatus: e.status,
+        tamperedStatus: tampered.status,
         metered: (await used(token)) !== before,
       }),
-      "LOCAL auth-roundtrip: the test stack checks the session on every call; production read paths serve a signed-out token until it expires (Spec 13 §3.2)",
+      "LOCAL: read paths verify the signature locally (getClaims), so a signed-out token is served until it expires (Spec 13 §3.2)",
     );
     out.waits(
       "F-SESSION-EXPIRED",
@@ -313,6 +320,7 @@ async function rateDrill(cat, lots, out) {
       retryAfter,
       metered: (await used(token)) !== before,
     }),
+    "LOCAL in-memory limiter (one app instance; production's Upstash limiter not exercised)",
   );
 }
 
@@ -401,10 +409,12 @@ async function main() {
       ...appEnv(process.env),
       DATABASE_URL: relayUrl(process.env.MCTEST_DATABASE_URL, RELAY_PORT),
     });
+    // counting lots: the meter counts only a lot with an evaluated option (EI-D1 "1 b"), so a sample of any lot makes the drills vacuous
     const lots = await sampleLots(
       cat,
       `${new Date().toISOString().slice(0, 10)}-drills`,
       200,
+      true,
     );
     if (["F-DB-SLOW", "F-DB-DOWN", "F-SESSION-EXPIRED"].some(only))
       await sessionDrills(cat, lots, relay, only, out);
