@@ -1,0 +1,419 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 57 file name prereg-MB-27-57 (R-MA; round 181, claimed in the ID ledger before use; this file is the re-cut of prereg 56, which carried no oracle door list: the same moves, round 181 and totals, plus expected_value_changes, the door list for the four hand-authored test files this slice re-pins), committed alone directly before the MB-27 increment 5 Part B lane B5B-5 Layer 2 build commit: two garden_suite floor targets in the still-unapplied migration 321 (P1 b: side_setback_street_floor_m, the 150.7.60.20(6)(C) corner floor; P2 a: rear_setback_through_floor_m, the 150.7.60.20(3)(B) through-lot floor, a generated unit); width 70 -> 72. No Layer 1 value moves; one CoA row moves class (see expected_moves). No hashed #44 file is touched.",
+ "schema": "coa-round-prereg-v1",
+ "round": 181,
+ "task": "MB-27",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "M-198",
+  "M-465",
+  "M-179(2)",
+  "M-481",
+  "M-494"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc5/BUILD-COORD.md (lane B5B-4 position, operator 2026-11-13 evening and ~19:50 P1 b / P2 a); ~/Buildo-scratch/mcbylaws/inc5/b5b4/p1a.patch",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0314/26TEY",
+   "n": 1,
+   "clause": "150.7.60.20(6)",
+   "from": "OWED",
+   "to": "NO ANSWER",
+   "reason": "A named accepted finding of this round (P1 b, operator 2026-11-13 \"P1 (b)\"): 150.7.60.20(6)(C) moves onto its own target side_setback_street_floor_m, so the garden suite's street-side cell (the (6)(A) / (6)(B) arms) no longer waits on the house's side-yard input (missing_input:principal_side_setback_m) and answers condition_unknown:adjacent_lot_fronts_flanking_street; the scorer reads that as NO ANSWER instead of OWED. Measured on this set against the parent (origin 2e9533d84) with the tree's own scorer (coa-scorecard.mjs --pin; MATCH unchanged).",
+   "ruling": "M-198"
+  }
+ ],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 30,
+  "MATCH": 407,
+  "NO ANSWER": 40,
+  "NOT MODELLED": 94,
+  "NOT SCORABLE": 25,
+  "OWED": 67
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 30,
+  "MATCH": 407,
+  "NO ANSWER": 39,
+  "NOT MODELLED": 94,
+  "NOT SCORABLE": 25,
+  "OWED": 68
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [
+  {
+   "notice": "A0314/26TEY",
+   "n": 1,
+   "clause": "150.7.60.20(6)",
+   "from": "OWED",
+   "to": "NO ANSWER",
+   "reason": "A named accepted finding of this round (P1 b, operator 2026-11-13 \"P1 (b)\"): 150.7.60.20(6)(C) moves onto its own target side_setback_street_floor_m, so the garden suite's street-side cell (the (6)(A) / (6)(B) arms) no longer waits on the house's side-yard input (missing_input:principal_side_setback_m) and answers condition_unknown:adjacent_lot_fronts_flanking_street; the scorer reads that as NO ANSWER instead of OWED. Measured on this set against the parent (origin 2e9533d84) with the tree's own scorer (coa-scorecard.mjs --pin; MATCH unchanged).",
+   "ruling": "M-198"
+  }
+ ],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "BY-LAW CHANGED": 4,
+  "DATA": 22,
+  "DIFFER": 23,
+  "MATCH": 283,
+  "NO ANSWER": 28,
+  "NOT MODELLED": 73,
+  "NOT SCORABLE": 12,
+  "OWED": 49
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "BY-LAW CHANGED": 4,
+  "DATA": 22,
+  "DIFFER": 23,
+  "MATCH": 283,
+  "NO ANSWER": 27,
+  "NOT MODELLED": 73,
+  "NOT SCORABLE": 12,
+  "OWED": 50
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0314/26TEY",
+   "n": 1,
+   "clause": "150.7.60.20(6)",
+   "from": "OWED",
+   "to": "NO ANSWER",
+   "reason": "A named accepted finding of this round (P1 b, operator 2026-11-13 \"P1 (b)\"): 150.7.60.20(6)(C) moves onto its own target side_setback_street_floor_m, so the garden suite's street-side cell (the (6)(A) / (6)(B) arms) no longer waits on the house's side-yard input (missing_input:principal_side_setback_m) and answers condition_unknown:adjacent_lot_fronts_flanking_street; the scorer reads that as NO ANSWER instead of OWED. Measured on this set against the parent (origin 2e9533d84) with the tree's own scorer (coa-scorecard.mjs --pin; MATCH unchanged).",
+   "ruling": "M-198"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 34,
+  "MATCH": 459,
+  "NO ANSWER": 56,
+  "NOT MODELLED": 129,
+  "NOT SCORABLE": 34,
+  "OWED": 72
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 34,
+  "MATCH": 459,
+  "NO ANSWER": 55,
+  "NOT MODELLED": 129,
+  "NOT SCORABLE": 34,
+  "OWED": 73
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_before_totals_source": "prereg-MB-27-54.json (round 182, the newest MB prereg on origin 2e9533d84 carrying totals), equal to the scores of the parent tree",
+ "expected_floors": "every floor line unchanged; the floors check OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets except the one named move: class and City figure; every golden-25 expected line; body_sha256 and evaluator_version of the Layer 1 input",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version (filesHash over scripts/seeds/bylaw moves with vocab.json, layer2-scope.json, adjudications.json; body_sha256 and evaluator_version unchanged); maxbld-amendment-index.json layer2_table_version (generate-amendment-index --write); expected-172.json and expected-4d.json commit, table_version and the one OWED -> NO ANSWER swap through coa-scorecard.mjs --pin; the G-STOR record table_version (re-bind by regeneration, not re-measured; the D-81 re-run measures width 72)",
+  "hash pins of the CoA-corpus tests that hash every target (bylaw-eval-perf, bylaw-permission-disclosure G5_PIN): the two new targets join the corpus"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/resolve_bylaws/profiles.logic.test.ts",
+   "row": "scope pair count",
+   "from": 55,
+   "to": 57,
+   "rule": "two garden_suite floor targets (P1 b, P2 a)",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize-roof-axis.logic.test.ts",
+   "row": "pairs / width / option base positions",
+   "from": "55 pairs, width 70",
+   "to": "57 pairs, width 72, separation_m base 38",
+   "rule": "migration 321 width",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/d5-houseplex-option-slots.logic.test.ts",
+   "row": "base / option pair counts",
+   "from": "[55, 15]",
+   "to": "[57, 15]",
+   "rule": "migration 321",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/migration-295.logic.test.ts",
+   "row": "live width; era filters",
+   "from": 70,
+   "to": 72,
+   "rule": "migration 321 (the 295 text keeps its own era)",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/migration-297.logic.test.ts, migration-304.logic.test.ts, migration.logic.test.ts",
+   "row": "era filters and latest writer",
+   "from": "315 is the latest writer",
+   "to": "321 is the latest writer; older texts keep their eras",
+   "rule": "migration 321",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts",
+   "row": "lineage both-ways lock",
+   "from": "garden suite targets = lineage",
+   "to": "+ GARDEN_ONLY [rear_setback_through_floor_m, side_setback_street_floor_m]",
+   "rule": "garden-only floor targets read by Layer 3 beside the house's values",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a); M-198"
+  },
+  {
+   "file": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "row": "width, base positions, 20(6)(C) target and cells, 315 era text",
+   "from": "width 70, 20(6)(C) on side_setback_street_m",
+   "to": "width 72, 20(6)(C) on side_setback_street_floor_m, separation base 39",
+   "rule": "P1 b, P2 a",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+   "row": "garden suite street-side cell on a corner lot",
+   "from": "missing_input:principal_side_setback_m",
+   "to": "condition_unknown:adjacent_lot_fronts_flanking_street",
+   "rule": "P1 b",
+   "authority": "operator 2026-11-13 P1 (b)"
+  },
+  {
+   "file": "src/tests/bylaw-eval-perf.logic.test.ts, src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "row": "corpus hash pins",
+   "from": "fbe7b685 / 97d047fe / af995f63",
+   "to": "new hashes",
+   "rule": "hash fields only; the new targets join the corpus",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  }
+ ],
+ "expected_value_changes": [
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "bylaw-eval-perf corpus digests re-pinned for Part B P1 b + P2 a: two new garden_suite targets (the 150.7.60.20(6)(C) corner street-side floor side_setback_street_floor_m and the 150.7.60.20(3)(B) through-lot rear floor rear_setback_through_floor_m) join the corpus; the same pin-move form as the item 5 flat 45 % re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": "expect(h.digest('hex')).toBe('fbe7b6855a210d9aeef685a7502aed154386db28d5ce4747ebb499e8b78f8d60');",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "bylaw-eval-perf corpus digests re-pinned for Part B P1 b + P2 a: two new garden_suite targets (the 150.7.60.20(6)(C) corner street-side floor side_setback_street_floor_m and the 150.7.60.20(3)(B) through-lot rear floor rear_setback_through_floor_m) join the corpus; the same pin-move form as the item 5 flat 45 % re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": "expect(hLeftOut.digest('hex')).toBe('97d047feb621f5fd5348a7ac02accf7ebd142b2592078b0ede8d3492daf2b340');",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "bylaw-eval-perf corpus digests re-pinned for Part B P1 b + P2 a: two new garden_suite targets (the 150.7.60.20(6)(C) corner street-side floor side_setback_street_floor_m and the 150.7.60.20(3)(B) through-lot rear floor rear_setback_through_floor_m) join the corpus; the same pin-move form as the item 5 flat 45 % re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": null,
+   "new": "// re-pinned 2026-11-13 (MB-27 increment 5 Part B, P1 b; operator 2026-11-13): the new garden_suite target side_setback_street_floor_m joins the corpus and"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "bylaw-eval-perf corpus digests re-pinned for Part B P1 b + P2 a: two new garden_suite targets (the 150.7.60.20(6)(C) corner street-side floor side_setback_street_floor_m and the 150.7.60.20(3)(B) through-lot rear floor rear_setback_through_floor_m) join the corpus; the same pin-move form as the item 5 flat 45 % re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": null,
+   "new": "// 150.7.60.20(6)(C) moves onto it (1.5 m); the through-lot-floor target rear_setback_through_floor_m (P2 a) joins too; before fbe7b685…, after 7d438f65…."
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "bylaw-eval-perf corpus digests re-pinned for Part B P1 b + P2 a: two new garden_suite targets (the 150.7.60.20(6)(C) corner street-side floor side_setback_street_floor_m and the 150.7.60.20(3)(B) through-lot rear floor rear_setback_through_floor_m) join the corpus; the same pin-move form as the item 5 flat 45 % re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": null,
+   "new": "expect(h.digest('hex')).toBe('7d438f651dcbcbedea3485e155fb7857635482de890e27d6a239b437632df888');"
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "bylaw-eval-perf corpus digests re-pinned for Part B P1 b + P2 a: two new garden_suite targets (the 150.7.60.20(6)(C) corner street-side floor side_setback_street_floor_m and the 150.7.60.20(3)(B) through-lot rear floor rear_setback_through_floor_m) join the corpus; the same pin-move form as the item 5 flat 45 % re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": null,
+   "new": "// re-pinned 2026-11-13 (MB-27 increment 5 Part B, P1 b, the same keying change, P1 b + P2 a): before 97d047fe…, after 08703422…."
+  },
+  {
+   "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+   "case": "bylaw-eval-perf corpus digests re-pinned for Part B P1 b + P2 a: two new garden_suite targets (the 150.7.60.20(6)(C) corner street-side floor side_setback_street_floor_m and the 150.7.60.20(3)(B) through-lot rear floor rear_setback_through_floor_m) join the corpus; the same pin-move form as the item 5 flat 45 % re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": null,
+   "new": "expect(hLeftOut.digest('hex')).toBe('08703422c054c13f0810c2974c964cca1453905556bee6bb47f240f9988b2dc2');"
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "bylaw-permission-disclosure G5_PIN re-pinned for Part B P1 b + P2 a: the two floor targets join the eval-perf corpus; same pin-move form as the item 5 re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": "const G5_PIN = 'af995f63ce492d1aa1debcd1acd989eb91bf21059befd7876287c46c859f5e13';",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "bylaw-permission-disclosure G5_PIN re-pinned for Part B P1 b + P2 a: the two floor targets join the eval-perf corpus; same pin-move form as the item 5 re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": null,
+   "new": "// re-pinned 2026-11-13 (MB-27 increment 5 Part B, P1 b): the corner-floor and (P2 a, B5B-5) through-lot-floor targets join the corpus, as bylaw-eval-perf; before af995f63…, after 41e93eea…."
+  },
+  {
+   "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "case": "bylaw-permission-disclosure G5_PIN re-pinned for Part B P1 b + P2 a: the two floor targets join the eval-perf corpus; same pin-move form as the item 5 re-key (the F-SC-9 lot A0232/26EYK)",
+   "ruling": "M-253",
+   "ruling_ref": "CHAT-29.F-SC-9",
+   "old": null,
+   "new": "const G5_PIN = '41e93eeac5ad2f2acd5a5f2717529b96c271ebab00bb0aa47b6f36a0a7a6801c';"
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+   "case": "bylaw-mb27l2-street-side M-475 suite cells: the garden-suite street-side cell is 150.7.60.20(6)(A)/(B) only once the (6)(C) floor has its own target, so it answers condition_unknown:adjacent_lot_fronts_flanking_street (Part B P1 b; the M-475 street-side target, A0375/26TEY)",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": "expect(show(eff(lot(z, 'garden_suite')))).toEqual(['not_evaluated', null, 'missing_input:principal_side_setback_m', null, null, null]); // MB-27 increment 5 item 6 reading 2 (named re-pin): 150.7.60.20(6)(C) is on the street-side target, the house's cell supplied by the step (P5.13)",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+   "case": "bylaw-mb27l2-street-side M-475 suite cells: the garden-suite street-side cell is 150.7.60.20(6)(A)/(B) only once the (6)(C) floor has its own target, so it answers condition_unknown:adjacent_lot_fronts_flanking_street (Part B P1 b; the M-475 street-side target, A0375/26TEY)",
+   "ruling": "M-475",
+   "ruling_ref": "CHAT-225.MCPROOF-1",
+   "old": null,
+   "new": "expect(show(eff(lot(z, 'garden_suite')))).toEqual(['not_evaluated', null, 'condition_unknown:adjacent_lot_fronts_flanking_street', null, null, null]); // MB-27 increment 5 item 6 reading 2 (named re-pin, 2026-11-12), re-pinned back by Part B P1 b (2026-11-13): 150.7.60.20(6)(C) is now the floor target side_setback_street_floor_m, so the street-side cell is (6)(A) / (6)(B) only"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": "expect([base.length, base.length + opts.length]).toEqual([55, 70]);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": "'rear_setback_m:suite_low:36', 'rear_setback_m:suite_tall:36', 'separation_m:suite_low:38', 'separation_m:suite_tall:38']);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": "expect(unit('150.7.60.20(6)#(6)(C)').numeric_expression).toEqual(['side_setback_street_m = max(principal_side_setback_m; 1.5 m) @(6)(C)']);",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": "expect(unit('150.7.60.20(6)#(6)(C)').target).toBe('side_setback_street_m');",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": "expect(cell('A0578', 'garden_suite', 'side_setback_street_m', 'detached_house')).toBe('not_evaluated:missing_input:principal_side_setback_m');",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": "expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).map((p, i) => ({ i: i + 1, ...p })));",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : p.base_index + 1]));",
+   "new": null
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "expect([base.length, base.length + opts.length]).toEqual([57, 72]); // Part B, P2 a (named re-pin; migration 321, width 72: the through-lot rear floor joins at base 37, the corner floor moves to 41, the option slots to 58-72); P1 b: (named re-pin; migration 321): the corner floor joins the base pairs at 40; the option slots move to 57-71 (the roof_form threshold 63, suite_height 64-71); the suite_height base positions 31-38 are before it and do not move"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "'rear_setback_m:suite_low:36', 'rear_setback_m:suite_tall:36', 'separation_m:suite_low:39', 'separation_m:suite_tall:39']); // P2 a (named re-pin): separation_m base position 38 -> 39 (the through-lot rear floor joins at 37)"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "expect(unit('150.7.60.20(6)#(6)(C)').numeric_expression).toEqual(['side_setback_street_floor_m = 1.5 m @(6)(C)']); // Part B, P1 b (named re-pin): the floor is its own target; the heading pattern now licenses only (6)(A) and (6)(B) on side_setback_street_m"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "expect(unit('150.7.60.20(6)#(6)(C)').target).toBe('side_setback_street_floor_m'); // Part B, P1 b (named re-pin): the floor is its own target (the by-law table stores the 1.5 m); Layer 3 takes the larger of it and the house's yard"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "expect(cell('A0578', 'garden_suite', 'side_setback_street_m', 'detached_house')).toBe('not_evaluated:condition_unknown:adjacent_lot_fronts_flanking_street'); // Part B, P1 b (named re-pin): (6)(A) / (6)(B) only; (6)(C) no longer reads the house's yard input"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "expect(cell('A0578', 'garden_suite', 'side_setback_street_floor_m', 'detached_house')).toBe('number:1.5@150.7.60.20(6)#(6)(C)');"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m').map((p, i) => ({ i: i + 1, ...p }))); // Part B, P1 b (named re-pin): 315's text is the 55-pair era; migration 321 is locked by bylaw-inc5-corner-floor.logic.test.ts"
+  },
+  {
+   "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "case": "bylaw-inc5-layer2 named re-pins for Part B P1 b + P2 a: slot width 70 -> 72 (base 57 pairs), separation_m base 39, 150.7.60.20(6)(C) on side_setback_street_floor_m, migration 315 text unchanged at 55 pairs; the M-284 design-token slot layout (A0079/26SC)",
+   "ruling": "M-284",
+   "ruling_ref": "CHAT-38.F-4D-5",
+   "old": null,
+   "new": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : (rb.scopePairs(SCOPE) as Json[]).filter((q) => q.target !== 'side_setback_street_floor_m' && q.target !== 'rear_setback_through_floor_m').findIndex((q) => q.structure === p.structure && q.target === p.target) + 1])); // P2 a (named re-pin): base positions in 315's own 55-pair text"
+  }
+ ]
+}
