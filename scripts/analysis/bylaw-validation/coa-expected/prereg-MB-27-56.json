@@ -1,0 +1,202 @@
+{
+ "$comment": "M-321 pre-registration, task MB-27, prereg 56 file name prereg-MB-27-56 (R-MA; round 181, claimed in the ID ledger before use; this file is the re-cut of prereg 55, whose moves cited the sub-clause token M-198(2) that the register does not hold as a ruled id: the same moves cite M-198), committed alone directly before the MB-27 increment 5 Part B lane B5B-5 Layer 2 build commit: two garden_suite floor targets in the still-unapplied migration 321 (P1 b: side_setback_street_floor_m, the 150.7.60.20(6)(C) corner floor; P2 a: rear_setback_through_floor_m, the 150.7.60.20(3)(B) through-lot floor, a generated unit); width 70 -> 72. No Layer 1 value moves; one CoA row moves class (see expected_moves). No hashed #44 file is touched.",
+ "schema": "coa-round-prereg-v1",
+ "round": 181,
+ "task": "MB-27",
+ "rules": [
+  "M-321",
+  "R-MA",
+  "M-198",
+  "M-465",
+  "M-179(2)",
+  "M-481",
+  "M-494"
+ ],
+ "plan_ref": "~/Buildo-scratch/mcbylaws/inc5/BUILD-COORD.md (lane B5B-4 position, operator 2026-11-13 evening and ~19:50 P1 b / P2 a); ~/Buildo-scratch/mcbylaws/inc5/b5b4/p1a.patch",
+ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+ "expected_moves": [
+  {
+   "notice": "A0314/26TEY",
+   "n": 1,
+   "clause": "150.7.60.20(6)",
+   "from": "OWED",
+   "to": "NO ANSWER",
+   "reason": "A named accepted finding of this round (P1 b, operator 2026-11-13 \"P1 (b)\"): 150.7.60.20(6)(C) moves onto its own target side_setback_street_floor_m, so the garden suite's street-side cell (the (6)(A) / (6)(B) arms) no longer waits on the house's side-yard input (missing_input:principal_side_setback_m) and answers condition_unknown:adjacent_lot_fronts_flanking_street; the scorer reads that as NO ANSWER instead of OWED. Measured on this set against the parent (origin 2e9533d84) with the tree's own scorer (coa-scorecard.mjs --pin; MATCH unchanged).",
+   "ruling": "M-198"
+  }
+ ],
+ "expected_totals": {
+  "ANSWERED": 7,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 30,
+  "MATCH": 407,
+  "NO ANSWER": 40,
+  "NOT MODELLED": 94,
+  "NOT SCORABLE": 25,
+  "OWED": 67
+ },
+ "expected_before_totals": {
+  "ANSWERED": 7,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 30,
+  "MATCH": 407,
+  "NO ANSWER": 39,
+  "NOT MODELLED": 94,
+  "NOT SCORABLE": 25,
+  "OWED": 68
+ },
+ "expected_figure_changes": [],
+ "expected_moves_4d": [
+  {
+   "notice": "A0314/26TEY",
+   "n": 1,
+   "clause": "150.7.60.20(6)",
+   "from": "OWED",
+   "to": "NO ANSWER",
+   "reason": "A named accepted finding of this round (P1 b, operator 2026-11-13 \"P1 (b)\"): 150.7.60.20(6)(C) moves onto its own target side_setback_street_floor_m, so the garden suite's street-side cell (the (6)(A) / (6)(B) arms) no longer waits on the house's side-yard input (missing_input:principal_side_setback_m) and answers condition_unknown:adjacent_lot_fronts_flanking_street; the scorer reads that as NO ANSWER instead of OWED. Measured on this set against the parent (origin 2e9533d84) with the tree's own scorer (coa-scorecard.mjs --pin; MATCH unchanged).",
+   "ruling": "M-198"
+  }
+ ],
+ "expected_totals_4d": {
+  "ANSWERED": 2,
+  "BY-LAW CHANGED": 4,
+  "DATA": 22,
+  "DIFFER": 23,
+  "MATCH": 283,
+  "NO ANSWER": 28,
+  "NOT MODELLED": 73,
+  "NOT SCORABLE": 12,
+  "OWED": 49
+ },
+ "expected_before_totals_4d": {
+  "ANSWERED": 2,
+  "BY-LAW CHANGED": 4,
+  "DATA": 22,
+  "DIFFER": 23,
+  "MATCH": 283,
+  "NO ANSWER": 27,
+  "NOT MODELLED": 73,
+  "NOT SCORABLE": 12,
+  "OWED": 50
+ },
+ "expected_figure_changes_4d": [],
+ "expected_moves_cumulative": [
+  {
+   "notice": "A0314/26TEY",
+   "n": 1,
+   "clause": "150.7.60.20(6)",
+   "from": "OWED",
+   "to": "NO ANSWER",
+   "reason": "A named accepted finding of this round (P1 b, operator 2026-11-13 \"P1 (b)\"): 150.7.60.20(6)(C) moves onto its own target side_setback_street_floor_m, so the garden suite's street-side cell (the (6)(A) / (6)(B) arms) no longer waits on the house's side-yard input (missing_input:principal_side_setback_m) and answers condition_unknown:adjacent_lot_fronts_flanking_street; the scorer reads that as NO ANSWER instead of OWED. Measured on this set against the parent (origin 2e9533d84) with the tree's own scorer (coa-scorecard.mjs --pin; MATCH unchanged).",
+   "ruling": "M-198"
+  }
+ ],
+ "expected_totals_cumulative": {
+  "ANSWERED": 9,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 34,
+  "MATCH": 459,
+  "NO ANSWER": 56,
+  "NOT MODELLED": 129,
+  "NOT SCORABLE": 34,
+  "OWED": 72
+ },
+ "expected_before_totals_cumulative": {
+  "ANSWERED": 9,
+  "BY-LAW CHANGED": 4,
+  "DATA": 24,
+  "DIFFER": 34,
+  "MATCH": 459,
+  "NO ANSWER": 55,
+  "NOT MODELLED": 129,
+  "NOT SCORABLE": 34,
+  "OWED": 73
+ },
+ "expected_figure_changes_cumulative": [],
+ "expected_before_totals_source": "prereg-MB-27-54.json (round 182, the newest MB prereg on origin 2e9533d84 carrying totals), equal to the scores of the parent tree",
+ "expected_floors": "every floor line unchanged; the floors check OK",
+ "expected_unchanged": "every row of the 172, 4d and cumulative sets except the one named move: class and City figure; every golden-25 expected line; body_sha256 and evaluator_version of the Layer 1 input",
+ "expected_repin": [
+  "docs/reference/bylaw-layer2-input.json table_version (filesHash over scripts/seeds/bylaw moves with vocab.json, layer2-scope.json, adjudications.json; body_sha256 and evaluator_version unchanged); maxbld-amendment-index.json layer2_table_version (generate-amendment-index --write); expected-172.json and expected-4d.json commit, table_version and the one OWED -> NO ANSWER swap through coa-scorecard.mjs --pin; the G-STOR record table_version (re-bind by regeneration, not re-measured; the D-81 re-run measures width 72)",
+  "hash pins of the CoA-corpus tests that hash every target (bylaw-eval-perf, bylaw-permission-disclosure G5_PIN): the two new targets join the corpus"
+ ],
+ "increment": "1",
+ "expected_assertion_changes": [
+  {
+   "file": "src/tests/steps/resolve_bylaws/profiles.logic.test.ts",
+   "row": "scope pair count",
+   "from": 55,
+   "to": 57,
+   "rule": "two garden_suite floor targets (P1 b, P2 a)",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a); any other change to this assertion stops"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/materialize-roof-axis.logic.test.ts",
+   "row": "pairs / width / option base positions",
+   "from": "55 pairs, width 70",
+   "to": "57 pairs, width 72, separation_m base 38",
+   "rule": "migration 321 width",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/d5-houseplex-option-slots.logic.test.ts",
+   "row": "base / option pair counts",
+   "from": "[55, 15]",
+   "to": "[57, 15]",
+   "rule": "migration 321",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/migration-295.logic.test.ts",
+   "row": "live width; era filters",
+   "from": 70,
+   "to": 72,
+   "rule": "migration 321 (the 295 text keeps its own era)",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/migration-297.logic.test.ts, migration-304.logic.test.ts, migration.logic.test.ts",
+   "row": "era filters and latest writer",
+   "from": "315 is the latest writer",
+   "to": "321 is the latest writer; older texts keep their eras",
+   "rule": "migration 321",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/steps/resolve_bylaws/layer2-scope.logic.test.ts",
+   "row": "lineage both-ways lock",
+   "from": "garden suite targets = lineage",
+   "to": "+ GARDEN_ONLY [rear_setback_through_floor_m, side_setback_street_floor_m]",
+   "rule": "garden-only floor targets read by Layer 3 beside the house's values",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a); M-198"
+  },
+  {
+   "file": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+   "row": "width, base positions, 20(6)(C) target and cells, 315 era text",
+   "from": "width 70, 20(6)(C) on side_setback_street_m",
+   "to": "width 72, 20(6)(C) on side_setback_street_floor_m, separation base 39",
+   "rule": "P1 b, P2 a",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  },
+  {
+   "file": "src/tests/bylaw-mb27l2-street-side.logic.test.ts",
+   "row": "garden suite street-side cell on a corner lot",
+   "from": "missing_input:principal_side_setback_m",
+   "to": "condition_unknown:adjacent_lot_fronts_flanking_street",
+   "rule": "P1 b",
+   "authority": "operator 2026-11-13 P1 (b)"
+  },
+  {
+   "file": "src/tests/bylaw-eval-perf.logic.test.ts, src/tests/bylaw-permission-disclosure.logic.test.ts",
+   "row": "corpus hash pins",
+   "from": "fbe7b685 / 97d047fe / af995f63",
+   "to": "new hashes",
+   "rule": "hash fields only; the new targets join the corpus",
+   "authority": "operator 2026-11-13 P1 (b), P2 (a)"
+  }
+ ],
+ "expected_value_changes": []
+}
