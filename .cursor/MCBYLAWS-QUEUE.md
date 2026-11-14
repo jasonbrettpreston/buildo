@@ -24,7 +24,7 @@ Pointer 2026-11-14 (M-246, prior text kept; McQueue · McBylaws queue · lane MQ
 > Folds both PLAN-panel rounds (`ds/ADJUDICATION.md`, `ds/ADJUDICATION-r2.md`) and CARD P3-DATA-MODEL. Earlier drafts: `MCBYLAWS-QUEUE.v3.v1.md`, `MCBYLAWS-QUEUE.v3.v2.md`.
 > **Smaller: 19 open tasks — 12 on the Phase 3 exit path, 7 follow-on** (draft v2: 31; draft v1: 41; queue v2: 43).
 
-A task not listed here is not done. Next free id: **MB-107** (MB-86 is held by the per-scenario cost job, local commits `f982e64cd`, not yet on origin). Dated note 2026-11-12 (M-246, prior text kept; MB-94 · McBylaws queue · engine-inputs lane; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"): the line read "Next free id: **MB-88**" before this note, which was stale. MB-86 and MB-87 are on origin. MB-88..MB-92 are held by the unlanded queue-owed commit (wf1/queue-owed-1111b, the MB-93 panel record). MB-93 is the internal preview producer. MB-94 is "Engine inputs bind". So the next free id is MB-95. Ids are never reused. Paths: specs are in `~/Buildo-wt-p3model/docs/specs/`. `124:42` means `01-pipeline/124_step_standard_policy.md` line 42; `08:` means `00-architecture/08_agents.md`; "audit #n" means `HANDBOOK-AUDIT.md` §2 row n. Rule ids M-378.., R-KF.. and "dated note on …" refer to proposals in `HANDBOOK-AMENDMENTS.md`. Dated note 2026-11-12 (M-246, prior text kept; queue review · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): the line read "Next free id: **MB-95**" before this note. MB-88..MB-92 land by this commit, the rows of the never-landed queue-owed commit `c941c7761` (wf1/queue-owed-1111b, 139 behind) re-cut unchanged onto the tip, each now claimed in the id ledger; MB-95 is the storeys data checks and MB-96 the switch-state fix; next free id **MB-97**, now also the first value on the line, the one tools read. Dated note 2026-11-13 (M-246, prior text kept; holistic review rows · McBylaws queue · lane R; operator, verbatim: "all recommendations accepted. proceed with the plan"): the line read "Next free id: **MB-97**" before this note. MB-97..MB-106 are the rows added below MB-96 (semi detection; report honesty; literal gate; four coverage cards; inc 3 and inc 4 follow-ups; flake notes), each claimed in the id ledger; next free id **MB-107**.
+A task not listed here is not done. Next free id: **MB-109** (MB-86 is held by the per-scenario cost job, local commits `f982e64cd`, not yet on origin). Dated note 2026-11-12 (M-246, prior text kept; MB-94 · McBylaws queue · engine-inputs lane; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"): the line read "Next free id: **MB-88**" before this note, which was stale. MB-86 and MB-87 are on origin. MB-88..MB-92 are held by the unlanded queue-owed commit (wf1/queue-owed-1111b, the MB-93 panel record). MB-93 is the internal preview producer. MB-94 is "Engine inputs bind". So the next free id is MB-95. Ids are never reused. Paths: specs are in `~/Buildo-wt-p3model/docs/specs/`. `124:42` means `01-pipeline/124_step_standard_policy.md` line 42; `08:` means `00-architecture/08_agents.md`; "audit #n" means `HANDBOOK-AUDIT.md` §2 row n. Rule ids M-378.., R-KF.. and "dated note on …" refer to proposals in `HANDBOOK-AMENDMENTS.md`. Dated note 2026-11-12 (M-246, prior text kept; queue review · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): the line read "Next free id: **MB-95**" before this note. MB-88..MB-92 land by this commit, the rows of the never-landed queue-owed commit `c941c7761` (wf1/queue-owed-1111b, 139 behind) re-cut unchanged onto the tip, each now claimed in the id ledger; MB-95 is the storeys data checks and MB-96 the switch-state fix; next free id **MB-97**, now also the first value on the line, the one tools read. Dated note 2026-11-13 (M-246, prior text kept; holistic review rows · McBylaws queue · lane R; operator, verbatim: "all recommendations accepted. proceed with the plan"): the line read "Next free id: **MB-97**" before this note. MB-97..MB-106 are the rows added below MB-96 (semi detection; report honesty; literal gate; four coverage cards; inc 3 and inc 4 follow-ups; flake notes), each claimed in the id ledger; next free id **MB-107**. Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · McBylaws queue · lane MQ; evidence `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` line 280): the first value on this line read "**MB-107**" before this note. MB-107 (the later feature, card `~/Buildo-scratch/mcbylaws/CARD-MB-107-existing-house-suite.md`) and MB-108 (McQueue, Spec 137) are claimed in the id ledger and their rows are added below MB-106; next free id **MB-109**.
 
 ## What we calculate (the catalogue's basis)
 The catalogue is built from the Phase 2 target vocabulary (`scripts/seeds/bylaw/vocab.json`: 94 `dsl_target` entries, `building_type`, `scenario_class_units`) and from the questions the product answers. Spec 78 P5.10's output schema and P5.2's method were written for the old engine. They are **reference only, never the basis**.
@@ -293,6 +293,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 ### (1) Guardrails
 
 **MB-66 Record the operator decisions and the WHOLE ruling ledger (above) — O-1 answered 2026-10-30** (R) · claude
+Status: DONE · since 2026-10-30 · expires none · next: none
 - Rules: BOOT-1; 124:185-187; 132:427; 69:7.
 - What: record M-384 (CARD P3-DATA-MODEL and the narrowed L3-REBUILD), M-383 with the Spec 69 note, Spec 68 O-9..O-12 / SC-14..SC-20, the 69a header note, and the 2026-10-30 cards not yet carried by batch ai. Every other row is recorded by its owning task.
 - Tests: `decision-log.logic`; `spec133-bylaw-handbook.logic`; `spec-split-check --check` arm iii-b.
@@ -300,6 +301,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: standardized, observable, understandable.
 
 **MB-67 The commit gate and the pre-push summary (G2, G3, G5, G6, G9–G13) — DONE 2026-10-31 (MB-67@72b0b021, the landing merge; follow-up commits to MB-67@ba05d889, pushed; stage 8 record `9e33ef86`)** (G) · deepseek, claude for hook wiring
+Status: DONE · since 2026-10-31 · expires none · next: none
 - Rules: BOOT-1; R-KG, R-KH, R-KK, R-KL, R-KM, R-KN, M-381, M-382, Spec 08 §7 rule 10 (each recorded here with its lock); 124a:984.
 - What, as one gate module run at commit, pre-push and CI:
   - a cited RULED rule from the task's `rules[]`, on Layer 2/3 code paths (G3);
@@ -327,6 +329,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: standardized, observable, accurate.
 
 **MB-68 The loop gate (G4, G7) — DONE 2026-10-31 (MB-68@1ab95c8d, the landing merge; pushed)** (G) · deepseek, claude for pre-push/CI wiring
+Status: DONE · since 2026-10-31 · expires none · next: none
 - Rules: BOOT-1; R-KI and the dated note on M-61 (3) (the loop), each recorded here with its lock; M-322 (69a:456); M-360 (133:650); M-321.
 - What:
   - `regression-set.json` and the `pending/` split;
@@ -340,6 +343,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 ### (2) Tables and checks first
 
 **MB-64 The loop set — DONE 2026-10-31 (MB-64@2b25c035, its evidence tracked in `mcbylaws/sources/evidence/MB-64/`; operator close, `CARD-mb64-close.answered.md`; leftovers MB-80)** (T, O) · deepseek per brief · absorbs v2 MB-63, MB-04, MB-24 and MB-45g
+Status: DONE · since 2026-10-31 · expires none · next: none
 - Rules: M-358 "operator-checked spreadsheet, never LLM-filled" (69a:492); M-379 and M-380 (recorded here with their locks); M-362 (69a:498); LC-43 (133:1714).
 - What, all protected paths (only the T lane writes them; F-33):
   - (a) Worked examples, about three per catalogue row on either side of each min/max switch, written fresh from the row and the by-law text, operator-checked per the O-10 sample.
@@ -354,6 +358,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, observable.
 
 **MB-75 Coverage map — WAITS MB-31 catalogue** (G) · claude
+Status: WAITS · since 2026-11-12 · expires when MB-38 is done · next: Hold until MB-38; then build from the generated catalogue map (waits: MB-38 headline records)
 - Rules: `CARD-coverage-reality-gemini.answered.md` (operator "add 1 and 3, 4 for disagreement"); M-358.
 - What: every catalogue row and every branch has at least one worked example, or a cited reason why it has none. The loop gate enforces the map.
 - Done when: the map is generated from the catalogue and the examples, and the loop gate refuses an uncovered row.
@@ -361,6 +366,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-75 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): reads the headline records only (McStorage strategy ST-5, alignment Q4); a coverage figure on a detail field is a request to add it to the ST-6 list (an operator word).
 
 **MB-76 City-wide reality check — WAITS the MB-31 step's first local run** (T) · deepseek seat, claude grounding
+Status: WAITS · since 2026-11-12 · expires when MB-38 is done · next: Hold until MB-38 (waits: MB-38 headline records)
 - Rules: `CARD-coverage-reality-gemini.answered.md`; McProof (MB-77) Part B.
 - What: a Reality-Check seat runs over every lot's output with zone-aware bounds, invariants and outliers. Gemini blind-checks only where DeepSeek and Claude disagree.
 - Done when: the report is filed and every outlier is explained or opened as a finding.
@@ -368,6 +374,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-76 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section; McStorage alignment Q6): "reads the headline records for all lots; the detail bounds run on the on-demand rows in streamed batches; it writes only findings (ST-5)".
 
 **MB-77 Record and adopt McProof, the validation standard for every Phase 3 increment — WAITS MB-78 commit 3** (R, then T) · deepseek lenses, claude recording
+Status: DONE · since 2026-11-02 · expires none · next: Drift: update heading to DONE with sha
 - Rules: `CARD-mcproof-sizing.answered.md`, `CARD-mcproof-1-7.answered.md`, `CARD-approve-1-6-review.answered.md` item 6; M-358, M-362, M-380.
 - What: the full draft is `MB-77/QUEUE-ENTRY.md` (stage plan, increments-table edit, ruling-ledger row, lane pointer), applied once the rows are recorded. Sub-items in lane T, red-first: (a) `sizing.mjs`; (b) the MCPROOF-12 builder changes; (c) a prompt builder with a field whitelist.
 - First use: MB-64 increment 1, now in review round 3.
@@ -375,6 +382,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: standardized, observable, accurate, understandable.
 
 **MB-78 Decision batch 2026-10-31-pm, with one re-pin — DONE 2026-11-01 (MB-78@3fde1015, commit 3 `0570417a`; pushed to origin/wf1/mb-rulings; stage 10 not run by the checker: MB-73 is not wired, so a person wrote this line, a deviation from stage 10)** (R) · claude recording, an independent verify that reads the whole text
+Status: DONE · since 2026-11-01 · expires none · next: none
 - What: record these answered cards (`~/Buildo-scratch/p2close/`) in one batch:
   - CARD-o19-o21, CARD-perm-reading, CARD-l31-15-16-18, CARD-side-yard-city, CARD-parcel-minsize-review (after the OBC 2024 official-text check), CARD-coverage-reality-gemini, CARD-mcproof-sizing, CARD-mcproof-1-7, CARD-approve-1-6-review;
   - the gate cards: CARD-prepolicy-exempt, CARD-rulemap-literal-exempt, CARD-bootstrap-rebuild, CARD-gate-scope-from-bootstrap (124a rows);
@@ -386,6 +394,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Stage 8 re-check before commit 3: (K-1 from MB-79 (h) stage 8, `MB-79/h/output-panel/adjudication.md:35`) commit 3's zero-move claim rests on totals only at the hook's `--root .`; re-check it with an absolute `--root` and the base rows count, per MB-79 (j).
 
 **MB-79 Gate follow-ups — RUNNING (per item, next line)** (G) · claude
+Status: WAITS · since 2026-11-12 · expires when the infra-freeze is lifted · next: Per item: land only if it blocks a project commit; else hold. Refresh per-item status in the row (waits: infra freeze; most items at stage 1)
 - Status by item (moved out of the heading 2026-11-01, WAIT-P67-2, so the heading carries one status word): item (h) landed 2026-11-01 (`32c35ef9`, `f1b92f95`; R-MA RECORDED in `0570417a` under the R-LT note of batch ap `3fde1015`; pushed); items (j)-(l) (K-1..K-3) at stage 1, lane G beside MB-73, O-28 break (B); items (m) (range check) and (o) (push reads HEAD) at stage 1, before the CI landing to main; items (n), (p), (q) added 2026-11-01 at stage 1. Bundle: (j), (m), (n), (o) and (q) are one build, full ten stages, lane G second slot (break (B)) beside MB-73, operator-approved 2026-11-01 (`CARD-mb79-gate-bundle.answered.md`, verbatim: "Is this what you need to resolve the gate issues - we are not weakening the gates but making them achieve their objective - if so approved - use queue system and teh spec 08 lanes -"); the card's proposal names (j), (o), Q1 (= (q)), (m) and (n), and carries the condition "no fix may weaken a gate; each fix makes the gate achieve its recorded rule". (p) was found after the approval: it is its own item at stage 1, and its fix joins the bundle only with the operator's word. Bundle plan due at `MB-79/gates/` (stage 1 next); item (f) stage 2 return for P-9 running 2026-11-01 (`MB-79/f/stage2-return.md`), build WAITS MB-73, PR-79f-1 and the M-180 note recorded (O-29, O-30 answered; drafts `R-batch-ao/drafts.md`). Update 2026-11-01 night (M-246, prior text kept): the bundle (j), (m), (n), (o), (q) plus (p) (operator "2. yes", `CARD-mb79-gapj-p.answered.md`; R-MA dated note `2026-11-01-batch-aq#CHAT-218.MB79-P`) is built as G1-G9 on `wf1/mb79g` (`~/Buildo-wt-mb79g`; stage 6 prereg `d560d6a5`, committed alone). Stage 7 G7 stopped on a plan gap, folded (fold 4) and validated. The stage 8 OUTPUT panel passed (`MB-79/gates/output-panel/adjudication.md`); its K-3 (a lost commit-time refusal) was fixed by fold 5 rather than disclosed, under the card's "we are not weakening the gates"; re-check 1 PASS on `build.patch` v3 `636ec2c1387bd3c3`; packaging departure D-16 (one code commit, both Operator-Ruling trailers) accepted. The stage 9 commit was refused by the pre-commit hook on an old MB-67 test (item (s)); the code is uncommitted and WAITS the operator (`CARD-mb79g-hook-env.md`). Update 2026-11-01 night (d) (M-246, prior text kept): the operator answered the hook card with option 1 (`CARD-mb79g-hook-env.answered.md`, "1 if the receommendation is complaint - state rule"; Process 1), so (s) joined the bundle as fold 6 (folds 4, 5 and 6 in all). Stage 8: PASS, then re-check 1 PASS (`build.patch` v3 `636ec2c1387bd3c3`) and re-check 2 PASS (v4 `b16cd5180b97bad1`, including a real-hook commit in a scratch clone) (`MB-79/gates/output-panel/adjudication.md`). The panel routed K-1, K-2 and K-4 to item (v). Stage 9: the bundle (j), (m), (n), (o), (p), (q) and (s) is landed locally, stage 10 waits the MB-73 wiring: prereg `d560d6a5`, code `2faaa651` (three Operator-Ruling trailers, D-16), panel record `53dd7c5a`, then merge `ed979d99` (wf1/mb-rulings `bf254d3f` merged into wf1/mb79g, then wf1/mb-rulings fast-forwarded to it). Not pushed (origin/wf1/mb-rulings is `79bcfe2b`). `gate.mjs --ci --base origin/wf1/mb-rulings` at `ed979d99` gives GATE OK ("held, worktree and tty: not evaluated in CI"); the push waits the operator's TTY prompt. Batch aq part 2 (CHAT-218 items 2, 4 and 5) landed in this task's lane R slot: prereg `bbce0532` (`prereg-MB-79-2.json`), then `bf254d3f` (M-452..M-454; the one approved re-pin, `table_version` 7efebeda3734 → 7567b39c2fe3; round record `round-06`); second seat PASS (`R-batch-aq/land-245/second-seat.md`). Batch ar (CHAT-219: the M-377, M-378 and LC-16 seed path notes and the R-KR `exc-lit-scope.json` note): drafts FINAL (panel REVISE, `R-batch-ar/panel/adjudication.md`; folded, `R-batch-ar/fold1.md`; validated). Recording is STOPPED on the Spec 131 byte budget (`spec-split --check` arm (iv), 43188/38693 bytes) and WAITS the operator (`~/Buildo-scratch/p2close/CARD-spec131-budget.md`, O-31). The staged patch is archived at `R-batch-ar/land/staged-full.patch` (sha256 `49ea603f…`); nothing is committed. The drafts' `{G-ITEM}` is item (u). Items (t), (u), (v) and (w) added at stage 1. Update 2026-11-03 (M-246, prior text kept): MB-79 (x) · lane G · stage 9: built, landed and pushed 2026-11-03 as `ca00fa904` (the loop gate refuses a listed move with no RULED id, R-LE, and reuses arm C); MB-18 (i), which waited it, landed after it (`ff601b393`). Other items are open, so MB-79 stays RUNNING.
 - Update 2026-11-03 (M-246, prior text kept): MB-79 (v) K-4 · lane G · stage 9: landed and pushed. Prereg-MB-79-4 is `801dea2f2`, alone; the test-only fix `66b374410` makes the loop-gate run test check base-tree removal in a private TMPDIR; the stage 8 OUTPUT panel record `eff11630e` is PASS with 2 MINOR, F1 fixed before the prereg commit. The other K-items of (v) are unchanged.
 - Update 2026-11-03 (M-246, prior text kept): MB-79 (f) · lane G · stage 9:
@@ -426,12 +435,14 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-79 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): item recorded (infra freeze: allowed, it blocks project commits, the MB-35 recap and the increment-5 night): the rehearsal gate (`~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh`, MCINC-7) records origin tip and repo table_version in REHEARSAL.pass and the dev run refuses when either moved; every DB job takes SUITE.lock by atomic mkdir before the dblock and refuses while a suite runs (MB35-RECAP "recap a"). Standing order rule: no push between a rehearsal and its dev run.
 
 **MB-81 Lock fail-open: the COMPUTE_MODULES check — WAITS MB-18 (lane M, one writer)** (M) · deepseek
+Status: WAITS (unverified 2026-11-14) · since 2026-11-01 · expires when the infra-freeze is lifted · next: Decide: do now under freeze exception or hold; refresh the heading
 - Rules: R-DET extended to the compute module (Spec 134:123, wf1/mb78 tree); found by `MB-18/stage8/adjudication.md` Re-check 1, kept note K1.
 - What: make the `COMPUTE_MODULES` arm of `bylaw-provisions.infra.test.ts` fail when a listed module is missing; red first.
 - Done when: the lock is red with a module removed and green on HEAD.
 - Serves: observable, accurate.
 
 **MB-82 Spec 78 §5.3: stale Phase 5 text marked superseded by McBylaws — RUNNING (detail next line)** (R) · claude
+Status: DONE · since 2026-11-03 · expires none · next: Stamp DONE line with sha (heading drift)
 - Status detail 2026-11-03: added (operator, 2026-11-03: "can we update the spec 78 with the proper citation - we should also update it with the changes to detached housing increment 1 and phase 1 and phase 2 as well"; then "MB-82 a - the ohter option is to wait until we complete phase 3"). Option (a) is one new section, Spec 78 §5.3, directly after §5.2 (78:417), on the §5.2 precedent; option (b) was to wait for Phase 3. MB-82 · lane R · stage 7: the §5.3 text, one docs commit.
 - Update 2026-11-03 (M-246, prior text kept): MB-82 · lane R · stage 9: Spec 78 §5.3 is committed and pushed.
   - T1-T3 are in `4a752920e` (operator "MB-82 a").
@@ -444,6 +455,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: understandable, standardized.
 
 **MB-83 Record the increment-2 operator answers of 2026-11-03 (roof forms, wall storeys, street side, attic reading) — RUNNING (detail next line)** (R) · claude
+Status: DONE · since 2026-11-08 · expires none · next: Stamp DONE line (heading drift)
 - Status detail 2026-11-03: added (operator, 2026-11-03: "batch part 1 approved", recorded at the end of `~/Buildo-scratch/mcbylaws/inc2/open-questions.md`). Part 1 is the decision batch 2026-11-03-batch-au (CHAT-222): Spec 69a rows M-457..M-464 and M-466, from the answers Q-SCOPE, Q2 a, Q3 b, Q4-W, Q-PITCH, Q-RAFTER, Q-SLOPE, Q-ATTIC A and OP-2; drafts, verify and two re-checks at `~/Buildo-scratch/mcbylaws/R-batch-inc2/`. Part 2 (M-465, Q-ROOF A) waits lane E's MB-27.L2 text and is not recorded. MB-83 · lane R · stage 9.
 - Update 2026-11-03 (M-246, prior text kept): MB-83 (part 2) · lane R · stage 9:
   - **Q-RDMECH** "Q-RDMECH (c)" (`~/Buildo-scratch/mcbylaws/inc2/open-questions.md`): RD 10.20.40.10(8) stays disclosure-only (M-473); the card `CARD-rd-mechanical-attic.md` is closed as option C; evidence `~/Buildo-scratch/mcbylaws/inc2/attic-mechanical-evidence.md`.
@@ -458,6 +470,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: standardized, observable, understandable.
 
 **MB-84 Land the CoA ledger work (CHAT-191 CL-Q* closes and locks, wf2/coa-ledger-1) on wf1/mb-rulings — RUNNING (detail next line)** (O) · claude
+Status: DONE · since 2026-11-03 · expires none · next: Stamp DONE line (heading drift)
 - Status detail 2026-11-03: added (operator, 2026-11-03: "Q-Ledger-A", recorded in `~/Buildo-scratch/p2close/CARD-coa-park.answered.md` §Q-LEDGER: "The CoA ledger work (wf2/coa-ledger-1, tip e7820bd4c, 30 commits) lands on wf1/mb-rulings ... as its own queue task, with a fresh verify-50, the full suite and every gate; the operator pushes."). Plan `~/Buildo-scratch/archive/coa-park-1103/ledger-landing-plan.md`; step-0 checks `~/Buildo-scratch/mcbylaws/MB-84/`. The landing touches no Layer 2/3, oracle, generated or metadata path (loop classifier), so it has no loop round and no prereg (R-MA). MB-84 · lane O · stage 9.
 - Update 2026-11-03 (M-246, prior text kept): MB-84 · lane R/O · stage 9: landed and pushed in two pushes.
   - Push 1 is `0b1a792be`: batch 2026-11-03-batch-av, CHAT-223.MB84-EXC, register row R-MB (a one-time landing exception in the R-LS form for exactly the 14 pre-policy CoA ledger commits), its 14 entries in `mcbylaws/landing-exceptions.json`, and the gate lock L1 extended by name (operator "Q-MB84 confirmed" and "Q-L1 confirmed", `~/Buildo-scratch/p2close/CARD-coa-park.answered.md`).
@@ -470,6 +483,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: standardized, observable, accurate.
 
 **MB-85 Ticket header, closed reply status and citation checks (text now, rows batch bd after bc) — RUNNING (detail next line)** (R)
+Status: DONE · since 2026-11-08 · expires none · next: Stamp DONE line (heading drift)
 - Status detail 2026-11-06: added (operator, 2026-11-06, verbatim: "push complete - let's take the 1-4 as you suggested can will also apply any learnings ie status to the non deepseek part of our queue system as well."; "E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry"; "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?"; "P3 Mb-86 D1-D7. Teh final quesstion is the rules citation and compaince check - has this been optimized as well?"; "C1-C4"). Decisions in `~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md` and `DECISIONS-2.md`; card `~/Buildo-scratch/mcbylaws/MB-85/CARD-ticket-status.md`. MB-85 · McBylaws queue · lane R · stage 2.
 - Rules: Process 5 (rulings recorded by decision-log in the same commit as their lock); R-IZ (3) (scope grows only by a ruling); M-246 (prior text kept); M-381 (cite form).
 - What: (1) this registration; (2) the text commit (Spec 08 §11.9 TKT-1..TKT-5, §7 rules 9 and 10, §C.6, §9, and the queue Process notes); (3) the prereg, then the rows as batch bd, on the then tip.
@@ -478,6 +492,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-08 (M-246, prior text kept; MB-85 · McBylaws queue · lane R · stage 9; row owed from the status index, E4 a): landed locally in mb-rul: the registration, the text commit and the MF-33 documents (re-cut 6e6a1699a; full suite 1039 files, 23,887 passed, 0 failed), then batch bd (prereg ce34ea83b, rows 30831df52 M-501..M-513, CHAT-231, touch-up 1c0b552c3; full suite 1044 files, 23,937 passed, 0 failed). Operator answers recorded in `~/Buildo-scratch/mcbylaws/MB-85/DECISIONS.md` and `DECISIONS-2.md` (for example "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days.") and in `~/Buildo-scratch/mcbylaws/inc3/open-questions.md` ("approved conditional upon compliance with governing handbook or spec Q1–Q3, bd 1 and 2, and the headline card."). Window 2 landed (origin = 113eea525; d337dd606 E2a, 113eea525 E2b). Window 3 carried bd 1c0b552c3 and LANDED 2026-11-08 (origin = 3c1a7fdf5, confirmed by ls-remote). The E5 card sweep (115 cards, `MB-85/card-sweep/`) and the citation review (`MB-85/cite-review.md`) are read-only and open, each expiring 2026-11-13 (E7 a). No status word on this row changes.
 
 **MB-80 MB-64 increment-1 leftovers — RUNNING (detail next line)** (T) · deepseek per brief, claude grounding
+Status: OPERATOR · since 2026-11-02 · expires when increment 6 closes · next: Operator: keep with new date, answer O-12/O-13, or drop item (e)
 - Status detail (moved out of the heading 2026-11-01, WAIT-P67-2, so the heading carries one status word): stage 5 done 2026-11-01: GAP-1/2/3 answered, `CARD-mb80-gaps.answered.md`; fold `MB-80/fold.md`, re-validation `MB-80/fold-validation/`; ledger row `MB-80/ledger-draft.md` WAITS lane R after MB-78 commit 3 (it amends M-428, in commit 3). Update 2026-11-01 night (d) (M-246, prior text kept): the ledger row landed in `bf254d3f` as M-453 (with M-454), second seat PASS (`R-batch-aq/land-245/second-seat.md`). No status word changes.
 - Rules: `CARD-mb64-close.answered.md`; `CARD-o27-foot18.answered.md` (FOOT-18); MCPROOF-1 (coverage), M-414.
 - What (`MB-64/close.md`): (a) PERM-5 Basis wording "as quoted from the pinned file"; (b) FY-14: add the abutter as a dropped negative estimate with its distance within 15.0 m; (c) new SB-6, ring minimum 5 -> `not_evaluated:setting_out_of_bounds`, and the ring depth bounds 2..4; (d) FOOT-18 kept as a pending example outside the accuracy key until R3-10 has real bounds and a fitted factor (operator); (e) O-12 and O-13 (golden field names; lot inputs vs keyed golden facts), carried from MB-64; (f) a machine token for "ring not used".
@@ -485,6 +500,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, understandable.
 
 **MB-18 Layer 2 rule fixes and missing rules — RUNNING (stage 9, items landing: detail next line)** (M) · deepseek, claude for re-pins · absorbs v2 MB-20, MB-21, the ravine keying of MB-51, and MB-45e
+Status: RUNNING (unverified 2026-11-14) · since 2026-11-09 · expires when an increment names one of its open items (m, n or o) · next: List m, n, o status in the row; hold under freeze unless an increment needs them
 - Status detail 2026-11-01: stage 9, items landing. Landed in `50f45403` (pushed): c1 `254aecc2`, c2 `377ee8b3`, h follow-up `23b511d0` (item h `b2d80b89` and c3 `66631d28` earlier, over the items prereg `91e6de28`), each over its own prereg `prereg-MB-18-1..3` (`991b90bb`, `a22aad45`, `e1d8062c`, R-MA 124a:1039) and with its R-LZ revert round record 02, 03, 04; panel record `de951e4d`; lock notes `11237204`. d+i is split: item d in landing alone (lane M); item i returns to stages 1–2 for the M-406 build (M-406 69a:543, "Build OWED MB-18 with a re-registered prereg"; R-KG 124a:1015). Open: a (also waits the MB-79 (f) door), e1, e2, i, j, k, l, m, n. Update 2026-11-01 night (d) (M-246, prior text kept): e1 is routed to MB-79 (t) · lane G (the R-KR `exc-lit-scope.json` exemption build); the ruling is drafted in batch ar (`R-batch-ar/drafts.md`, `#CHAT-219.RKR-EXCLIT`), whose recording is STOPPED on the Spec 131 byte budget and WAITS the operator (`~/Buildo-scratch/p2close/CARD-spec131-budget.md`, O-31). Update 2026-11-02 (e) (M-246, prior text kept): MB-18 · lane M · stage 9: see the lane row; item d is landed and pushed (`d81c7ced`, `e42b0176`, `79bcfe2b`), item i is at stage 3 with its rulings answered (O-34), and the record update for re-check 2 on d is owed. No status word changes. Update 2026-11-03 (M-246, prior text kept): MB-18 (j) and (i) · lane M · stage 9: both landed and pushed 2026-11-03. (j) `front_setback_fallback_m`: commit j0 `ae1d97aba` over prereg-MB-18-6 `dd336f939`, code `34567ff62` over prereg-MB-18-7 `5b8ead294`; (j) lands without its three `scripts/resolve-bylaws.notes.json` lines (queue note `01478b01c`, under MB-26; the hunk is at `~/Buildo-scratch/mcbylaws/MB-26/night-adds/resolve-bylaws-notes-54.patch` for the MB-26 night). (i) the 2013-lot frontage assumption (M-406): code `ff601b393` over prereg-MB-18-8 `b436e01ca`, after MB-79 (x) `ca00fa904`. Lane J full suite on `ff601b393`: 1,020 files, 23,026 tests passed, 0 failed; golden-25 29 of 29. The increment-1 list of the O-40 note, (k), (j) and (i), is landed. Still open: (a), e1, e2, (l), (m), (n), (o), so MB-18's "Done when" (its section) is not met; the heading stays RUNNING and no DONE line is written.
 - Update 2026-11-03 (M-246, prior text kept): MB-18 (l) · lane M · stage 5 (decided): the operator answered every (l) card (`~/Buildo-scratch/mcbylaws/inc2/open-questions.md`).
   - O-l5 "0-15 a": (l) rides the roof-axis night (lane R lock note, oracle-only commit l0 in its own push, prereg-MB-18-n with every move under M-435, the code commit, then the reload).
@@ -525,6 +541,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 ### (3) The step
 
 **MB-31 The Layer 3 step: tables + the evaluator extension — RUNNING (stage 6: detail next line)** (O-3 blocks only the houseplex increment, M-397; G-1 ruled by LC-69 + M-413; corrected 2026-11-01) (E) · deepseek; claude for settings seeds, migration 287, registry entries · absorbs v2 MB-22, MB-23, MB-25 (CoA status), MB-65
+Status: RUNNING · since 2026-11-12 · expires 2026-11-19 · next: G2 #4 · Land headline row with MB-31 fixtures; refresh heading
 - Status detail 2026-11-01: operator answered R1-R3, "start MB-31" (`CARD-mb31-start.answered.md`; map `MB-31/build-waits-map.md`). After the stage 6 prereg, the build runs on the briefs that touch neither `evaluate.mjs` nor `vocab.json`: B1-B4, B6-B13, C2, and B0 minus the Layer 2 digest test. B5 and C1's vocab part WAIT MB-18 (a), (j), (k) and the MB-26 night's MB-45d commits to those files. The MB-26 night gates only the row edit that reads `averaging_distance_m` and the green increment-1 run (MB-18 K08), not the whole build. Update 2026-11-01 night (d) (M-246, prior text kept): MB-31 · lane E · the stage 2 return (`MB-31/stage2-return-1101n.md`) and the stage 3 PLAN panel REVISE (`MB-31/panel-1101n/adjudication.md`) are folded (`MB-31/fold-1101n-f2.md`) and validated: fold validation f2 FIX, re-check 1 FIX, re-check 2 PASS (same file). The answered cards are folded: `CARD-mb31-plan-conflicts.answered.md` and `CARD-table-version-scope.answered.md`. The (b) choice (reads 5 and 6; card option 1 recommended), Q3 (`no-retired-import` 23 → 22) and Q4 (the b0c fixture fix) WAIT the operator (`~/Buildo-scratch/p2close/CARD-mb31-reads-binding.md`, O-33). No status word changes. Update 2026-11-02 (e) (M-246, prior text kept): MB-31 · lane E · stage 8: re-check 2 PASS; the six pins are built (patch v3 678616df…, pin 6 derived from converted.json, R-AN); O-33 and O-37 answered; prereg-MB-31-2 drafted, not committed. Reads 1-4 also bind population, so their real runs WAIT the R-EH (a) note and the runner build. Registering the step moves 17 assertions in other lanes' tests (Process 1): mapped by the panel; the six literal pins are ruled by O-37, the rest are fixed by data or generators under rules already RULED. The witness-adoption test is required by an existing rule (`sql-witness-fixture.logic.test.ts:519`, `_witness-guard.ts:91-97`). No status word changes. Update 2026-11-03 (M-246, prior text kept): MB-31 · lane E · stage 9: increment 1 is landed and pushed (2026-11-03): prereg-MB-31-4 `c221dffb9`, code `b6778f0df`, prereg-MB-31-5 `663232fe5`, fix `35c4751e8`; full suite on `35c4751e8`: 1,017 files, 22,916 tests passed, 0 failed. The nine seed key names in the control-panel expected sets are the operator's ruling ("approve 9 keys if complaint", `~/Buildo-scratch/p2close/CARD-mb31-fullsuite-pins.answered.md`, registered in prereg-MB-31-5). The increment-1 done-condition (queue :85 dated note: the 25-case fixture test green) is met. No DONE line is written: MB-31's own "Done when" (its section, "(3) The step") also needs `step-validate --step=compute_maxbld_scenarios --fast` to print the five words, and on `ff601b393` (2026-11-03) it prints STANDARDIZED:PASS OBSERVABLE:FAIL SCALABLE:PASS UNDERSTANDABLE:PASS ACCURATE:FAIL (#44 UNWITNESSED, #30 emits drift, #38 and #40 capture); and item (e), the runner batch_binds build, is at stage 1. The heading stays RUNNING; stage 10 waits those, or an operator ruling that sets MB-31's done-condition to increment 1.
 - Rules:
   - **M-61** (69a:121) and **M-72** (69a:132), with their dated notes;
@@ -554,6 +571,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 ### (4) The loop
 
 **MB-27 Expand in the loop, increment by increment, to the MB-13 thresholds — WAITS MB-31, MB-26, OPERATOR (O-14)** (E, T) · deepseek for row edits, claude for harness runs
+Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: G2 #0 · Finish INC5-NIGHT rehearsal, then dev night under conditional GO
 - Dated note 2026-11-03 (M-246, prior text kept): MB-27 (sqrt) · lane E · stage 9: the M-72 sqrt item is landed and pushed as `404653635`: the Layer 3 grammar gains sqrt for unitless arguments only (M-466), with the vertical roof thickness of M-463. Its lock `src/tests/bylaw-m72-sqrt.logic.test.ts` was named first, in the lane R lock-naming notes on M-463 and M-466 (`cb361d7af`, the 6cff7d86 form; operator "Op-2 approved", "Q-slope confirmed"). RP-5, the catalogue sha, was applied under its named approval (`~/Buildo-scratch/mcbylaws/inc2/open-questions.md`, "Rp- 5 and RP-6 approved").
 - Dated note 2026-11-03 (M-246, prior text kept): MB-27 · increment 3 · lane R · stage 1: all 14 increment-3 questions are answered (operator, 2026-11-03, Q1-Q14, verbatim in `~/Buildo-scratch/mcbylaws/inc3/open-questions.md`); rows are authored when increment 2 closes, at increment-3 stage 1. Q5 b (M-344 to the sixplex increment) is recorded as a dated note on the increment table's row 3.
 - Rules: the dated note on M-61 (3); M-362 (69a:498); M-325; M-330 (69a:464); M-372..M-374; M-307; M-380.
@@ -591,12 +609,14 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 ### (5) DB nights and the proof set
 
 **MB-30 Night tools, rebuilt through the path — DONE 2026-11-01 (MB-30@a23aca09, panel record `f64eca7a`; pushed to origin/wf1/mb-rulings `3fde1015`; stage 10 not run by the checker: MB-73 is not wired, so a person wrote this line, a deviation from stage 10)** (D; R only for the register rows) · claude (DB tooling, reason logged)
+Status: DONE · since 2026-11-01 · expires none · next: none
 - Rules: M-368 (133:1554); R-KM.
 - What: rebuild through the full process (58610707 is reference only); wire into `n3db.cjs` (re-freeze NIGHT3.sha256). Permit work stays out.
 - Done when: landed with its panel record; one night proven on the dev DB (DISABLED and RE-ENABLED in the logs; `|1` count = table count).
 - Serves: observable, accurate.
 
 **MB-26 The first Layer 2 night (later Layer 2 nights for MB-27.L2 follow this same procedure) — WAITS MB-18 landed (MB-30 merged and pushed 2026-11-01) (operator go given, `CARD-mb26-go.answered.md`)** (D) · absorbs v2 MB-53, MB-54, MB-55, MB-56, MB-45d and MB-45f as sub-items MB-26a–f
+Status: DONE · since 2026-11-04 · expires none · next: Drift: heading to DONE
 - Dated note 2026-11-02 night (g) (M-246, prior text kept; operator O-40): MB-26 (WAITS) · lane D · stage 1: "MB-18 landed" in the heading above now means MB-18 items (k), (i) and (j) for the increment-1 night (the measurement: (k) affects 25 of 25 golden cases, (i) 2, (j) 1). MB-18 (a), e1, e2, (l), (m) and (n) stay in MB-18 (not LATER) and no longer gate MB-26 or increment 1. The heading's status word is not changed.
 - Dated note 2026-11-03 (M-246, prior text kept; operator answer ~/Buildo-scratch/p2close/CARD-mb18j-notes-hunk.answered.md, option 1): MB-18 (j) · lane J · stage 8: (j) lands without its three scripts/resolve-bylaws.notes.json lines ("53 slots" to "54 slots" in two places, pairs 53 to 54). That file is in resolve_bylaws' source fingerprint and the stored #44 witness trace carries the old one, so the edit hard-stops the hook. The MB-26 night reruns resolve_bylaws, recaptures docs/reports/witness/resolve_bylaws/post/standalone.trace.json and lands the three lines with it. The excluded hunk is saved at ~/Buildo-scratch/mcbylaws/MB-26/night-adds/resolve-bylaws-notes-54.patch. Until then the notes file says 53 while migration 293 says 54.
 - Dated note 2026-11-03 (M-246, prior text kept): MB-26 · lane D · stage 1: MB-18 (k), (j) and (i) are landed and pushed (`ac3f96d0c`, `34567ff62`, `ff601b393`), so "MB-18 landed" as the O-40 note reads it is met. The night also lands the three notes.json lines of the note above. No status word is changed here (READY is derived, Process 10).
@@ -635,6 +655,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, observable.
 
 **MB-35 DB night: load the scenarios — WAITS MB-27, MB-30; operator go** (D) · claude
+Status: DONE · since 2026-11-12 · expires none · next: Drift: heading to DONE; M14 tracked under McIncrement
 - Rules: LC-15 (131:58); R-DK net-new evidence set (Spec 132 §x-stages.3).
 - What: take a DB dump first (F-44); apply migration 287 (written fresh in MB-31) and the settings seed migration; run the step; capture the R-DK evidence set; land any patch dropped from MB-26.
 - Done when: loaded count = computed count; step gates green; `standard=V3` printed.
@@ -644,6 +665,8 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-35 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): the close note above records the DB part of MB-35 done (MB35-RECAP landed on dev at 008e95c60, `standard=V3`). After INC5-NIGHT re-stamps Layer 2, the cohort's Layer 3 rows are recomputed by an MB-35-form job (increment 5 done-condition), which also clears `phase2_disclosures_not_current`. McStorage Q7: cohort form (309 long) by McStorage strategy ST-5; room check sized by ST-3; renovation rows none without input (ST-4). The heading and its WAITS are unchanged.
 
 **MB-93 Internal preview producer: stored Layer 2/3 rows to the declared v21 page payload, admin only (a slice of MB-44 pulled forward for INTERNAL use; the MB-44 dated note 2026-11-11) — BUILT on fixtures; real numbers WAIT MB-35** (P, E) · claude
+Status: RUNNING · since 2026-11-13 · expires 2026-11-20 · next: G1 #7a · File the read-only mismatches check over the 25; then MF-73
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: none owned in the catalogue; covered through the MF-22 golden-25 run and the INV-* rows. G1 is done when MF-22 (McTest product proof run) passes on the test stack.
 - Rules: M-384 (Phase 3 is tables: the producer reads the stored rows, never recomputes); FE-05 (the server formats; no maths in the report folders); FE-34 (the one v21 page contract). Operator 2026-11-11, verbatim: "D-1 b and D-2 to D-8 a" (record `~/Buildo-scratch/mcfrontend/PREVIEW/DECISIONS.md`; plan `~/Buildo-scratch/mcfrontend/PREVIEW/plan.md`, section 9 folds win).
 - What: `src/lib/admin/report-preview-live/` (outside the four no-maths directories): the FE-05 formatter of the five page rules; the pure projection (bindings read from `report-page.json` and the declared `source` of each `report-v2.decl.json` field; option states from `report-presentation.json`; `not_modelled` shown as not evaluated, D-4 a; a gated lot shows every option not evaluated; freshness current / out of date naming what moved and what is lost / not stored / gated; the implausible lot-size flag); the DB read (id validated with the admin lookup contract, the switch `maxbld_internal_preview_enabled` read strictly, parcel_id resolved to parcels.id once, the stored rows read by that id, the absent table refusing cleanly). The switch: seed entry, admin group "MaxBLD Internal Preview", migration 308 (written, not applied; orchestrator DB job). First commit: `requireAdminPage()` at the top of `/admin/report-preview`.
 - Done when: the golden-25 key equals the producer's payload wherever the key states a bound Layer 3 value; every payload passes `buildPage`; the switch, id, import-fence and state locks are red then green; after MB-35, a read-only check over the 25 ids returns `mismatches = 0` (filed with the date).
@@ -651,6 +674,8 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: observable, accurate, understandable.
 - Dated note 2026-11-12 (M-246, prior text kept; MB-93 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): the cohort is loaded, so real numbers exist for 1,921 lots; the admin page that shows them is MF-73 (McFrontend queue row added by this commit), built after MB-94 (c) in the same lane.
 **MB-94 Engine inputs bind: the report and its producer read the final Layer 3 and MB-86 fields; legacy values are unbound from every customer surface, server first — RUNNING (part a in build; parts b-f follow the plan §10 order)** (P, E) · claude
+Status: RUNNING · since 2026-11-13 · expires 2026-11-20 · next: G1 #7 · Build (c) then MF-73; (d) settings DB job after M14
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: none owned in the catalogue; covered through the MF-22 golden-25 run and the INV-* rows. G1 is done when MF-22 (McTest product proof run) passes on the test stack.
 - Rules: M-367 (dated note 2026-11-12, R-1); M-71 (dated note 2026-11-12, R-3); M-67 (dated notes 2026-11-09 and 2026-11-12, R-4, R-7); FE-05; FE-06; R3-01; Spec 135 FE-38 (EI-D1) and FE-39 (EI-D2..EI-D8); Spec 126 §11a.3 and §11b.7 dated notes 2026-11-12 (R-2, R-5); Spec 100 and Spec 88 dated notes 2026-11-12. Operator 2026-11-12, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions" (record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2: reality check PASS-WITH-FINDINGS, regression guardian and compliance folds, §9).
 - What:
   - (a) EI-D1 first, alone, under R-1. `/api/parcels/lookup` stops sending the legacy cost menu, the 12 cost scalars and the legacy size headlines (Spec 100 §3.2 dated note). Then the mobile parcel screen and the tracked-lots list hide them: a slot that must stay reads "Not yet evaluated". The W-0 lock case 2 is reversed, and the O-7 label lock and the tracked-lots lock are added. This is a stopgap for MB-37, not its discharge.
@@ -674,6 +699,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-94 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): part (a) has landed (EI-D1 `8863ba9ac`; the "1 b 2 a" widening `660158167`; McTest J-API meter rule `7d5ae0550`). Order of the rest: (b) with the MB-86 house-with-secondary-suite cost line in one lane (the same cost step); (c) then MF-73 in one lane (the same preview directory); (d) the reach settings migration written now (number claimed in the id ledger at build) and applied in one batched settings DB job after the increment-5 cohort job; (e) after MF-48 Stage B lands (shared report declarations); (f) after (b), (c) and an answer on MB-90. Part (f) is MF-48's tester feed (Stage B ruling B-3). The heading is unchanged.
 
 **MB-28 Proof set and the oracles — WAITS MB-27, MB-35, OPERATOR (O-15)** (O, A) · absorbs v2 MB-29
+Status: WAITS · since 2026-10-30 · expires when increment 8 closes · next: G2 #10 · Hold until increment 9; confirm O-15 default (waits: MB-27 increments 5-9; operator O-15)
 - Rules: M-362 (69a:498); M-357 (133:806); Spec 78 §6.9 oracle row (78:582, the list of oracle kinds).
 - What:
   - At least 25 fresh cases and 130 rows; manifest and denominator hashed before the run.
@@ -684,6 +710,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate.
 
 **MB-46 Record Phase 3 CLOSED — WAITS MB-28, MB-73** (R) · absorbs v2 MB-45a
+Status: WAITS · since 2026-10-30 · expires when increment 8 closes · next: G2 #11 · Hold (waits: MB-28, MB-73)
 - Rules: M-362 (69a:498); SC-5.
 - Done when: the MB-13 thresholds on the proof set are recorded in 69a, with evidence checked by `mcbylaws-queue-check.mjs`. Nothing else is part of the exit (F-46).
 - Serves: observable, accurate.
@@ -692,6 +719,9 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 ## FOLLOW-ON (after the exit) — 7 tasks
 
 **MB-38 Shadow and switch-over, groups 1–4 — WAITS MB-46** (P, E) · absorbs v2 MB-32, MB-33, MB-36, MB-39, MB-40, MB-41
+Status: WAITS · since 2026-11-12 · expires 2026-11-19 · next: G1 #12a · Hold until exit recorded (waits: MB-46)
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: L-FSI-OVER-ZONE (catalogue owner MB-38). G1 is done when MF-22 (McTest product proof run) passes on the test stack.
+- McStorage note 2026-11-14 (M-246; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): ST-5 and ST-6 (the headline storage rulings) are G1 work at MB-38.
 - Rules: M-71 (69a:131); M-348 (1); M-352 (133:1506); M-329 (133:1426); lc.50 (133:1738); M-371 (69a:507); LC-31.
 - What:
   - Build the shadow classifier fresh (the old one is reference only).
@@ -703,24 +733,30 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-38 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section; McStorage alignment Q4, Q5): "all-lot Layer 3 persists the headline record per (parcel, option) only; detail and trace on demand (ST-5); the headline field set is the one list of ST-6. The shadow on the 20,000-lot sample streams computed rows into the classifier and stores verdicts, headline records and findings only (a 309 store of 20,000 lots is about 5 GiB). 'Recapture derived stores' reads the headline record". The headline field set is card CARD-ST6-HEADLINE-SET (McStorage Q5: seeded from ENGINE-INPUTS-PLAN §4.0, MB-38 group fields, MB-76 bounds, confidence m.481 when it exists), decided together with CARD-headline-catalogue-row (the same question).
 
 **MB-37 Hide the old numbers until switched, rebuilt through the path — WAITS MB-67, MB-68, OPERATOR (O-7)** (P)
+Status: OPERATOR · since 2026-11-12 · expires 2026-11-19 · next: G1 #12 · Operator: rule O-7 (label "being recalculated")
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: none owned in the catalogue; covered through the MF-22 golden-25 run and the INV-* rows. G1 is done when MF-22 (McTest product proof run) passes on the test stack.
 - Rules: M-367 (133:1550); R-KM.
 - What: ba2d8ee6 is reference only.
 - Done when: landed with its panel record; no number changes value.
 - Serves: understandable.
 
 **MB-42 Product inputs — WAITS MB-38** (P)
+Status: WAITS · since 2026-10-30 · expires when MB-38 starts · next: Hold (waits: MB-38)
 - Rules: the "What we calculate" table (the inputs its rows read); M-312, M-326. (Spec 78 P5.3 / P5.6 are reference only.)
 - What: the user inputs the catalogue reads. The app reads the same catalogue rows.
 - Done when: each input changes the result in a test.
 - Serves: accurate, understandable.
 
 **MB-43 Retire the old calculation — WAITS MB-38, operator OK** (P)
+Status: WAITS · since 2026-11-12 · expires when MB-38 is done and the operator says OK · next: Hold; operator OK at the time (waits: MB-38, operator OK)
 - Rules: M-371 (69a:507); Spec 78 O-11 (78:705); card P3-DATA-MODEL ruling 2.
 - What: delete `scripts/lib/max-build.js` paths, the MB-07 consumers and the reference-only Phase 3 code (audit §7).
 - Done when: the MB-07 search and the retired-reference list find 0 files.
 - Serves: standardized, understandable.
 
 **MB-44 The Phase 3 report, with in-force basis — WAITS MB-38** (P) · absorbs v2 MB-34
+Status: WAITS · since 2026-11-12 · expires 2026-11-19 · next: G1 #12b · Hold (waits: MB-38)
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: L-HERITAGE, L-RAVINE, L-EXCEPTION, L-NOT-EVALUATED, L-AMBIGUOUS-ZONE, L-FOOTPRINT-OVER-LOT, L-FOOTPRINT-OVER-COVERAGE, INV-FSI, INV-COVERAGE, INV-ENVELOPE, INV-LOT, INV-GFA (catalogue owner MB-44). G1 is done when MF-22 (McTest product proof run) passes on the test stack.
 - Rules: P-1 (69:102); M-320 (133:1394); M-324; LC-60.
 - What: per lot and type, the maximum building, formula rows, settings, switches, by-laws with clause and in-force status, and the CoA tier status.
 - Done when: the P-1 report test is green; in-force basis is verified for catalogue clauses, or a card goes out if more than 10 % are unverifiable.
@@ -730,6 +766,9 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-94 part (f) · McBylaws queue · engine-inputs lane; EI-D2 = plan D-2 (b), R-6; M-71 dated note 2026-11-12; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §4.1): beside the admin preview, a tester-only preview is allowed before MB-38. It covers the golden 25 + the MB-35 cohort only, behind its own switch, with a "Preview — test figures, not for decisions" banner, no charge and no lead flow. Paying customers are still unchanged: they see no engine value until MB-38's shadow passes for that group. The migration 309 header ("No consumer reads these tables for customers (admin-only internal preview, MB-93)") and lock L1 (`src/tests/admin-report-preview-live.logic.test.ts`, "no customer route or mobile file imports the producer") take their dated notes in the MB-94 part (f) build commit, together with a second, tester-scoped import fence; both are code files the gate judges with that build.
 
 **MB-86 Per-scenario construction cost for the increment 1-3 scenarios (M-67 dated note 2026-11-09): Spec 88 prices the stored Layer 3 areas, one menu line per scenario with status and reason; houseplex priced at its cited rate; cost key on the 25 with real numbers — data WAITS MB-35** (P) · claude
+Status: RUNNING · since 2026-11-13 · expires 2026-11-20 · next: G1 #6 · Rehearse and run cost capture job (needs its own GO)
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: none owned in the catalogue; covered through the MF-22 golden-25 run and the INV-* rows. G1 is done when MF-22 (McTest product proof run) passes on the test stack.
+- ST-3 note 2026-11-14 (M-246; McStorage alignment, operator, verbatim: "ensure the McStorage is aligned"): the cost capture job is sized under ST-3 (exact G-STOR plus a measured test write) before its GO.
 - Rules: M-67 (69a:127, dated note 2026-11-09 in §1a); Spec 88 §2.3, §2.4, §2.11 (dated notes 2026-11-09).
 - What: `compute_parcel_cost_estimates` reads `parcel_maxbld_scenarios` (a declared read that refuses cleanly while the table is absent) and writes `scenario:<building_type>/<field_id>` lines (headline, flat, pitched, houseplex) with status, reason, flags, the area row's `content_sha` and the rate-input stamp; migration 298 (a FILE: the `HOUSEPLEX` rate and four `parcel_cost_lines` rows) is an operator DB job. Plan `~/Buildo-scratch/mcfrontend/COST/plan.v2.md` (D-2, D-3, D-5, D-8, D-10..D-13; D-4 and D-9 lapse); operator "1. b 2. ii 3.yes" and "1. accept 2. b" (`~/Buildo-scratch/mcbylaws/inc3/open-questions.md`, 2026-11-09).
 - Done when: the cost answer key and COST examples are green; after MB-35 and a cost run, the operator's Q5 returns `mismatches = 0` (filed with the date); `scenario_cost_stale` and the "GFA computed but cost not" WARN are counted in `records_meta`; the cost goldens are green on 4 targets (McFrontend, MF-12/MF-13).
@@ -737,12 +776,14 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-94 · McBylaws queue · engine-inputs lane; operator, verbatim: "D all as recommended - please ensure this is addedd to the McFrontend decisions"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §4b, §7): increment 4 is closed, so the `house_with_secondary_suite` cost line (one `SCENARIO_COST_LINES` entry plus one `parcel_cost_lines` row) is owed now (plan §10 step 6). Later scenarios (garden / laneway, renovation) get their line when their increment closes, never before their rows exist. The report binds the generic `scenario:<type>/<field>` pattern (FE-02), so it needs no change per scenario. Two legacy leaks are fixed under MB-94 part (b): L-1 (`area_confidence` no longer reads `max_build_confidence` on scenario lines) and L-2 (option A, `l3_envelope_exceeds_old_coa` stays admin-only). The customer figure drops the income premium (EI-D3; Spec 88 §2.6 dated note 2026-11-12).
 
 **MB-57 Lot data not held: TRCA line, map layers, lane length — OPERATOR (O-5)** (D, O) · absorbs the source half of v2 MB-51
+Status: OPERATOR · since 2026-11-12 · expires 2026-11-19 · next: Operator: answer O-5
 - Rules: M-371; SC-Q4; M-224; MB-57-LANE.
 - What: if a regression or proof case rests on one of these facts, MB-27 raises it as a loop finding.
 - Done when: each layer is acquired as a source step or disclosed as not held.
 - Serves: accurate, observable.
 
 **MB-11 Save and clean worktrees; process debts — WAITS MB-67** (A, O) · absorbs v2 MB-47
+Status: OPERATOR · since 2026-11-13 · expires 2026-11-20 · next: Operator: keep/push/archive per listed worktree; force-remove approvals
 - Rules: R-KL; the v2 MB-11 removal rule; `tasks/lessons.md:222`.
 - Done when: the pre-push summary shows 0 unsaved McBylaws worktrees; the four local-only branches are pushed by the operator or saved as patches.
 - Decided 2026-11-01 (operator, `CARD-withdraw-five.answered.md`: "withdraw the five from done and keep the branch but with only MB-15"): then, second answer, "(b) we only need MB-15's six files for reference". Done 2026-11-01: MB-15's six files of `ab659a9a` are on the local branch `ref/mb15-blind-run` (`53ec4de4`, under `reference/mb15/` with a `.ref` suffix); `wf1/p3-engine` (tip `92f6e82f`) and its worktree `~/Buildo-wt-p3engine` were removed by the orchestrator on 2026-11-01, under the operator's "(b)"; before removal, `git status --short` showed five untracked entries and no tracked edits (`mobile/node_modules` and the 4 files now in the tgz), so the save the v2 MB-11 removal rule asks for is the verified bundle plus that tgz; the full branch is archived in `~/Buildo-scratch/archive/wf1-p3-engine-92f6e82f.bundle` (all five commits: MB-14 `949879c2`, MB-15 `ab659a9a`, MB-16 `93feac54`, MB-50 `b425074b` (50a) and `93feac54` (50b), MB-60 `2131f09d`), and the worktree's 4 untracked files in `~/Buildo-scratch/archive/p3engine-untracked-20261101.tgz`. The p3-engine item of MB-11 is done.
@@ -750,6 +791,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-11 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): the count has moved: 91 worktrees on 2026-11-12, 38 of them with 0 commits ahead of origin and 17 detached (the lane board row's "12 McBylaws worktrees" is from 2026-11-01). The clean worktrees with 0 commits ahead are removed after each lane (disk rule); `~/Buildo-wt-mf76` needs a forced remove and waits the operator's word.
 
 **MB-87 Street View photo removed from the public permit page; browser Maps key retired — DONE 2026-11-09 (MB-87@41a1246e5; local, goes out with the next operator push)** (SEC) · claude
+Status: DONE · since 2026-11-09 · expires none · next: none
 - Status detail 2026-11-09: added (operator 2026-11-09, verbatim: "Drop it (Recommended)" for the public permit-page photo; "1 but we may have different subscription tiers but for the basic plan 15-20" for MaxBLD report photos; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "MaxBLD report quota and Street View photos"). MB-87 · McBylaws queue · lane SEC · stage 9.
 - Rules: the operator ruling above; D-a..D-f taken as recommended (D-15, `~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md`); M-246 (prior text kept on every spec note).
 - What: (1) this registration; (2) one code commit: remove `PropertyPhoto` from `src/app/permits/[id]/page.tsx`, delete `src/components/permits/PropertyPhoto.tsx` and the two copy-of-logic test blocks, retire `NEXT_PUBLIC_GOOGLE_MAPS_KEY` from `scripts/verify-vercel-env.js`, its test and `.env.example`, add the lock `src/tests/streetview-key.infra.test.ts`, dated notes on Specs 06, 77, 91, 113 and archive 70, 74; (3) the DONE line. Scope: the public permit page only; Q-9 and Q-MF8 stand for the MaxBLD report (MF-39).
@@ -757,6 +799,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: observable, simple.
 
 **MB-88 Five size-panel pass-through catalogue rows from `bylaw_resolution_results`: lot coverage, FSI, rear setback, side setback, main wall height — LATER (after increment 4)** (E)
+Status: WAITS · since 2026-11-12 · expires when increment 5 Part B lands · next: Schedule after inc 5 Part B lands (waits: lane E single writer busy on inc 5)
 - Status detail 2026-11-11: added (operator, verbatim: "push complete 1.a 2. a 3. ..." (item 1 (a)); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, that entry: "Brief v4: item 1 (a) keep the five rows pending; McBylaws pass-through catalogue rows queued after increment 4"). MB-88 · McBylaws queue · lane E · stage 1.
 - Rules: FE-05 (no maths in the UI; `docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:27`); M-377 (the formula catalogue is the registry); brief v4 Open item 1 (`~/Buildo-scratch/mcfrontend/fields/REPORT-LAYOUT-BRIEF-v4.md:1475`: B9.12, B9.13, B9.15, B9.16, B9.18 have no catalogue row or column on origin).
 - What: five catalogue rows that pass the stored Layer 2 values through per scenario, with their clause; no new formula. The five report rows stay pending until then. Placed after increment 4 as ruled; it pulls no increment forward.
@@ -764,6 +807,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, understandable.
 
 **MB-89 One-lot re-evaluation and the stamp on its results (MF-19 D-8) — OPERATOR (placement in increment order)** (E)
+Status: OPERATOR · since 2026-11-11 · expires 2026-11-18 · next: Operator: place in the increment order
 - Status detail 2026-11-11: added (operator, verbatim: "all as recommmended"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, that entry: "D-8 one McBylaws LATER row for one-lot re-evaluation, placed in increment order by the operator"; `~/Buildo-scratch/mcfrontend/MF-19/DECISIONS.md` D-8). MB-89 · McBylaws queue · lane E · stage 1.
 - Rules: MF-19 D-8; Q-MF4; Spec 126 §11a.9; the increments table above (no row owns it: increment 6 is renovations, MB-42 waits on MB-38).
 - What: re-evaluate one lot after a user input (MF-19) and stamp its results with the input used. MF-19 builds now with its entry switch off; the switch stays off until MB-42 and this row exist.
@@ -771,6 +815,8 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, observable.
 
 **MB-90 Cost rates past `cost_rates_stale_months`: a card naming the owner and the refresh process for `archetype_cost_rates` — LATER** (R)
+Status: WAITS · since 2026-11-13 · expires 2026-11-16 · next: G1 #6a · start: Plan the Spec 88 refresh as a rehearsed DB job; needs its own GO
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: none owned in the catalogue; covered through the MF-22 golden-25 run and the INV-* rows. G1 is done when MF-22 (McTest product proof run) passes on the test stack.
 - Status detail 2026-11-11: added (owed by the MF-62 research, accepted with the operator's "Mf-62 - yes"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, that entry; `~/Buildo-scratch/mcfrontend/MF-62/RESEARCH.md:23, :26`: 12 of the 13 rates are dated 2026-06-30 (houseplex 2026-10-31), older than `cost_rates_stale_months` = 3, so no screen may say "updated" or "latest"). MB-90 · McBylaws queue · lane R · stage 1.
 - Rules: Spec 88 §2.9 (freshness thresholds; `docs/specs/01-pipeline/88_parcel_cost_model.md:148`); M-67.
 - What: one card: who refreshes the rates, from which source, how often. The refresh itself is an operator DB job once ruled.
@@ -780,6 +826,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-13 (M-246, prior text kept; MB-90 · McBylaws queue · lane R; operator, verbatim: "C: 1 update 2. not a priority" on CARD-cost-rates-stale-and-premium, and "all recommendations accepted. proceed with the plan"; card `~/Buildo-scratch/mcbylaws/CARD-cost-rates-stale-and-premium.md`): (1) the rate refresh is one Spec 88 task: re-check the cited sources, update `cost_escalation_index` from the StatCan Toronto residential index, re-date `archetype_cost_rates` (all as_of 2026-06-30). It is a data change and migration, run as a rehearsed DB job with the operator's GO (MCINC-7), ordered BEFORE MB-94 (f) shows any cost to testers. (2) The premium-tier review is not a priority and stays carded (scenario costs already carry premium 1.0 under EI-D3).
 
 **MB-91 Pre-existing test failures (D-39): pgTAP `rls_class_a` 4 `admin_watchlist` / `admin_audit_log` cases; test:db pricing-tables (3), media-assets (1), compute-parcel-cost-estimates-violations (1) — LATER** (T)
+Status: LATER · since 2026-11-12 · expires 2026-11-19 · next: Hold; refresh pgTAP/test:db failure count first
 - Status detail 2026-11-11: added (operator, verbatim: "2 y" (D-37, D-38, D-39 "with the two owed cards for the pre-existing pgTAP and test:db failures"); record `~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md` D-39; evidence `~/Buildo-scratch/mcfrontend/MF-45/db-1111/tip-pgtap.out`, `tip-testdb3.out`: the same failures on the tip without MF-45). MB-91 · McBylaws queue · lane T · stage 1.
 - Rules: the Ready rule (no new failure; hooks and suite on the tip); D-39.
 - What: two cards, one per set (the 4 admin-scope pgTAP cases; the 5 test:db cases); each failure fixed in the test or the code, or ruled.
@@ -787,6 +834,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: observable.
 
 **MB-92 Building-types count reconcile: 5 classes in `bylaw_resolution_lots.class_results` against 2 types in `building-types.json` — LATER** (E)
+Status: LATER · since 2026-11-12 · expires when its increment starts · next: Hold
 - Status detail 2026-11-11: added (owed by the MF-62 plan, accepted with the operator's "Mf-62 - yes"; `~/Buildo-scratch/mcfrontend/MF-62/plan.md:69` "Reconcile before any 'types tested' line or the landing types line"; `MF-62/RESEARCH.md:46-49`: the DB evaluates detached house, detached houseplex, house with secondary suite, semi-detached house, semi-detached houseplex; `building-types.json` lists detached_house and detached_houseplex). MB-92 · McBylaws queue · lane E · stage 1.
 - Rules: FE-05 (every number from McBylaws); the increments table (each type joins `building-types.json` in its own increment; this row pulls none forward).
 - What: one named count of building types and its source; each class in `class_results` without a `building-types.json` row is named with the increment that adds it.
@@ -795,6 +843,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Dated note 2026-11-12 (M-246, prior text kept; MB-88..MB-92 · McBylaws queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): these five rows are re-cut unchanged from `c941c7761` (never landed; ids held since 2026-11-11, now claimed in the id ledger). MB-89's placement in increment order stays the operator's.
 
 **MB-95 Storeys data checks (CARD-storeys-data-checks): the dead `permits.storeys` column, a storeys/attic WARN, a height-band bound on the 25 — LATER (after the increment-5 night)** (T)
+Status: LATER · since 2026-11-13 · expires when INC5-NIGHT is done · next: After INC5-NIGHT; operator to say whether to queue the loader fix and data job
 - Status detail 2026-11-12: added (operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section; card `~/Buildo-scratch/mcbylaws/CARD-storeys-data-checks.md`, from the 2026-11-12 storeys reality check). MB-95 · McBylaws queue · lane T · stage 1.
 - Rules: the increments table (an increment-1 audit leftover, the MB-80 form; it pulls no increment forward); the W-4 (a) WARN-with-count form (D-59).
 - What: (1) `permits.storeys` is 0 on every row and raw_json has no STOREYS key: flag it as a dead column in the data-quality audit and stop any consumer reading it; (2) WARN with count when storeys_above_wall ≥ 1 and the counted attic is small, so a storeys label never silently overstates; (3) a storeys_max-by-height-band sanity bound on the golden 25 (11 m → ≤ 4, 8.5 m → ≤ 3); (4) the pitched-form storeys_max = 4 data check against permits and CoA (report ruling R-IMG1 B a).
@@ -802,6 +851,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, observable.
 
 **MB-96 Switch state fails closed: the switchboard validation rejects a state outside {on, off} — LATER (after increment 5 C2 lands)** (E)
+Status: WAITS · since 2026-11-12 · expires when increment 5 C2b lands · next: Build red-first after C2b lands (waits: inc 5 C2b Layer 3 landing)
 - Status detail 2026-11-12: added (operator on the card, verbatim: "1. I accept your reco" (option a); operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section; card `~/Buildo-scratch/mcbylaws/CARD-switch-state-default-on.md`, opened 2026-11-09). MB-96 · McBylaws queue · lane E · stage 1.
 - Rules: Spec 124 §2 fail closed; Spec 122 §1.2 closed values; the no-exception-paths rule.
 - What: `scripts/lib/compute/maxbld/rows.js:43` returns "on" for any state that is not "on" or "off"; the catalogue validators reject such a state at load, so the engine never sees one and the engine and the McFrontend generator (GEN-ROW-BAD-STATE) agree. Red first. Built after increment 5 C2 lands (it shares files with lane B5B).
@@ -809,6 +859,9 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, observable.
 
 **MB-97 Semi detection (Spec 78 O-4) and the one-question page — BUILDING (lane wf1/semi-1113)** (E, P)
+Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: G1 #4 · Finish SEMI-B2, rerun 50-lot imagery check, then operator reviews result
+- Dated note 2026-11-14 (M-246, prior text kept; McTest and McStorage fold of the triage rulings; operator, verbatim: "Mctesting needs to be part of the soultion"; `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`): McTest checks that cover this row: none owned in the catalogue; covered through the MF-22 golden-25 run and the INV-* rows. G1 is done when MF-22 (McTest product proof run) passes on the test stack.
+- ST-3 note 2026-11-14 (M-246; McStorage alignment, operator, verbatim: "ensure the McStorage is aligned"): migration 323 (semi) is sized under ST-3 (exact G-STOR plus a measured test write) before its GO.
 - Status detail 2026-11-13: added (operator, verbatim: "semi y", "semi ask a - and we need a new mini page similar to the \"choose your lot\" excpet it just asks one question", "semi all y", and "all recommendations accepted. proceed with the plan" (holistic K1); plan and rulings `~/Buildo-scratch/mcbylaws/SEMI-O4/plan.md`, "Operator rulings 2026-11-13"; `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` K1). Not launch-urgent (operator: "this isnt launching right now - but whatever is most efficient"). MB-97 · McBylaws queue · lane R · stage 1.
 - Rules: Spec 78 O-4 (:714) and the `lot_form_detected` OWED row (:1148); Spec 78 ML-4; `report-presentation.json` `lot_form_rules.semi_half` (Q-1/Q-2/Q-3); the build-with-existing-components rule (MF-53 "choose your lot" pattern); DB fields are the key.
 - What: (1) one shared view `parcel_lot_form` (no stored column; derived on read) over `parcel_buildings` and `parcel_abutments`: strict O-4 plus the 3-parcel doubt rule, with admin settings `semi_doubt_enabled`, `semi_doubt_max_link_parcels` (3), `semi_doubt_min_shared_len_m`; (2) the lookup route and the step's `flags.semiHalf` read the same view; (3) the one-question page on MF-53's pattern, asked only in the doubt band: "Is this house one half of a semi-detached pair?" (yes: semi view, renovations only; no: full report; not sure: semi view, with "This isn't a semi — it's detached" still offered in the report), writing the existing `lot_form_user_override`; (4) a read-only correction counter; L-SEMI McTest cases; (5) the 50-lot imagery check by the operator, 90 % precision bar on the main strata. No Layer 3 semi classes; `semi_party_wall` only on `semi_half` lots. Any `compute-maxbld-scenarios.js` edit rides the single D-78 recapture commit (it is one of the four #44-fingerprinted files), never a separate commit.
@@ -816,6 +869,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, observable, understandable.
 
 **MB-98 Report honesty, data-only bundle (holistic K2) — LATER (before MB-44 customer data)** (E, P)
+Status: MERGED into MF-85 · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 8: the 26 merges, one batch); pointer: the work is tracked in MF-85
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` K2 and Q1/Q2 rulings). MB-98 · McBylaws queue · lane R · stage 1.
 - Rules: Spec 78 O-17 (kept: no label downgrade; the method goes in See details); the report-face-minimal rule (label and number only; caveats in See details); Spec 135 §6.6 rule 5; M-496 (formula unchanged); the existing L3-DISC lock (no second lock).
 - What: data and text only, one landing set (seed edits move `table_version` once): bind the heritage, ravine, corner and confidence parts; text and the lock for the roughly 12 owner-facing "our setting" flag words (reconciled with the L3-DISC lock); the houseplex FSI-release caveat with 848-2025 confidence; the unit tile explains "includes basement" in See details; a not-evaluated figure shows "—" on the face with the reason in See details; "(by-law allows)" is reserved for figures with no setting or estimate behind them (operator Q2).
@@ -823,6 +877,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, understandable, standardized.
 
 **MB-99 Literal gate: correct the zero-match globs, shrink-only baseline, scan the bylaw-validation tools (holistic K3, Q3) — LATER (owner task of MB-67; edit of `mcbylaws/protected-paths.json` only with the operator's OK)** (G)
+Status: DONE · since 2026-11-13 · expires none · next: Drift: heading to DONE
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; Q3 scan `scripts/analysis/bylaw-validation/**`; `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` K3; seat 1 finding F2, `seat1-phase12.md`). Owner task of MB-67 (the commit gate). MB-99 · McBylaws queue · lane R · stage 1.
 - Rules: R-KR and R-LA (the literal gate covers all Layer 2/3 code and data modules); R-LU (the baseline is burned down over time); Spec 124a R-IV (zone to Chapter 900 map is vocab data); M-170 (2); the data-driven-by-law-validation rule.
 - What: (1) replace the two zero-match pending globs in `literal_scope` and `layer23` with the real ones; (2) add `scripts/analysis/bylaw-validation/**` to the scan; (3) baseline what the first scan finds, shrink-only (no rewrite of the CoA scorer); (4) move only the runtime law numbers: front-averaging 15.0 / 6.0, zone defaults, the chapterZone map, the 4-point-ring rule (data, or brought as a ruling with a golden lot); evaluate.mjs fixtures move to `src/tests/fixtures`. The evaluator edits are batched into a planned night after INC5-NIGHT. Dead libs are removed under MB-43.
@@ -830,6 +885,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: observable, standardized.
 
 **MB-100 Coverage card: 39,267 lots gated whole-lot as `exception_not_authored` (holistic K4) — LATER (card)** (P)
+Status: LATER · since 2026-11-13 · expires 2026-11-20 · next: Hold
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; `HOLISTIC-RECOMMENDATION.md` K4; seat 1 finding 7). MB-100 · McBylaws queue · lane R · stage 1.
 - Rules: M-231 / M-232 (fail closed on an unauthored exception, implemented as ruled); MCINC-6 (every owed item has a card and a lock).
 - What: one card. 39,267 of 440,093 lots (8.9 %) are gated `exception_not_authored` (also 1,108 `lot_metric_missing`, 449 `ambiguous_zone`, 79 `label_exception_mismatch`, 5 `label_unparsed`). The behaviour is as ruled; the gap is coverage. A limit or WARN on the INFO check `exception_gated_lots` (a descriptor change: check first whether the `resolve_bylaws` step is fingerprinted). No code on this card until ruled.
@@ -837,6 +893,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: accurate, observable.
 
 **MB-101 Coverage card: warn settings that never fire (holistic K4) — LATER (card; retighten at the first POST capture)** (O)
+Status: LATER · since 2026-11-13 · expires when the first POST capture happens · next: Check whether the trigger has fired; then retighten
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; `HOLISTIC-RECOMMENDATION.md` K4). MB-101 · McBylaws queue · lane R · stage 1.
 - Rules: Spec 124 R-H (retighten to measured plus margin).
 - What: one card. `not_evaluated_warn_pct` (100) and `every_nth` (2000) never fire; `inputs_defaulted` is always 0. Retighten to measured plus margin at the first POST capture after INC5-NIGHT; invent no values before the data exists; delete `inputs_defaulted` or make it real.
@@ -844,6 +901,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: observable, accurate.
 
 **MB-102 Coverage card: 935 OWED todos relabelled (holistic K4) — LATER (card; text only)** (S)
+Status: LATER · since 2026-11-13 · expires 2026-11-20 · next: Hold
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; `HOLISTIC-RECOMMENDATION.md` K4; seat 1, `bylaw-golden-lots.logic.test.ts:12-17, 112-131`). MB-102 · McBylaws queue · lane R · stage 1.
 - Rules: MCINC-6 (every owed item has a card and a lock).
 - What: one card for the group of 935 OWED `it.todo` cases that cite "compute_maxbld_scenarios (Spec 78 Phase 5, not built)" (Layer 3 is built) and the todo on "legacy constant 60 m^2". Relabel them to this card, or retire them; text only, no per-todo card.
@@ -851,6 +909,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: understandable, accurate.
 
 **MB-103 Coverage card: owner-entry and neighbour inputs, placed at their increment (holistic K4) — LATER (card)** (P)
+Status: LATER · since 2026-11-13 · expires when its increment starts · next: Hold
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; `HOLISTIC-RECOMMENDATION.md` K4; holistic A R4d). MB-103 · McBylaws queue · lane R · stage 1.
 - Rules: the check-increment-order rule (renovations and owner input are increment 6 and later, queue row 6); build-with-existing-components.
 - What: one card naming the owner-entry inputs (footprint, storeys, basement, "empty lot"; D-71 card) and the neighbour inputs, each placed on its own increment's row (increment 6 and later; MB-38), not pulled into increment 5. The two unused fact ids are dropped until built.
@@ -858,6 +917,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: standardized, accurate.
 
 **MB-104 Increment 3 carried follow-ups (holistic K5; MCINC-6) — LATER (card)** (R)
+Status: LATER · since 2026-11-13 · expires 2026-11-20 · next: Hold
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; `HOLISTIC-RECOMMENDATION.md` K5; seat 4 F2, `seat4-process.md`). MB-104 · McBylaws queue · lane R · stage 1.
 - Rules: MCINC-6 (every owed item has a card and a lock); queue Process 10.
 - What: one card listing the follow-ups that row 3 carries as prose: the G-1 x253 reading check for the operator (356 RM x253 lots: the houseplex `height_m` is 12 m by base (B) beside the detached house's 11 m by x253(C)); card C1 concurrency (no guard against a concurrent C1 before its snapshot step); card D2 `evidence_ref` (D2 cells carry the unit id where other clause cells carry the regulation id); the held notes figures for the next Layer 2 recapture.
@@ -865,6 +925,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: observable, standardized.
 
 **MB-105 Increment 4 carried follow-ups (holistic K5; MCINC-6) — LATER (card)** (R)
+Status: LATER · since 2026-11-13 · expires 2026-11-20 · next: Hold
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; `HOLISTIC-RECOMMENDATION.md` K5; seat 4 F2). MB-105 · McBylaws queue · lane R · stage 1.
 - Rules: MCINC-6; queue Process 10.
 - What: one card listing the follow-ups that row 4 carries as prose: the equal-value option-entry storage card; the dblock long-read and TRUNCATE `lock_timeout` card; the G-STOR record re-measure commit (operator); the cohort table, backup and dump (kept until the operator word); the held notes figures. The four existing cards (CARD-D3-SUITE-SIZE, CARD-D4-E8-FAMILY-B, CARD-E7-UCAP, CARD-A0179-CARRIAGE) keep their own files.
@@ -872,11 +933,28 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 - Serves: observable, standardized.
 
 **MB-106 Loop-gate e2e and ingest flake notes (holistic K5) — LATER (notes; no code on this card)** (G)
+Status: LATER · since 2026-11-13 · expires 2026-11-20 · next: Update notes with landed fixes
 - Status detail 2026-11-13: added (operator, verbatim: "all recommendations accepted. proceed with the plan"; seat 5 item 6, `~/Buildo-scratch/review-20261113/seat5-policies.md`). MB-106 · McBylaws queue · lane R · stage 1.
 - Rules: Spec 124a lib-fingerprint gate (#39); Spec 08 §11.8 (full suite on the tip before "ready").
 - What: record two flaky push-suite tests. (a) `ingest-prereq-0q` T4: the assertion was stricter than the invariant (8 and 19 bad of 300 under CPU load); fixed by checking content, not existence; the real code fix (a per-attempt path in `acquire.fixed.js`, proven 0/300 in `~/Buildo-scratch/flk/RED-EVIDENCE.txt`) is parked because any edit under `scripts/lib/step/**` trips gate #39 for 89 captures: it waits for the next planned `scripts/lib/step` re-freeze, with `acquire.fixed.js` as the first entry of a standing list. (b) The loop-gate e2e `verify --json` spawned git 2,353 times (39.6 s of a 60 s budget) and timed out once under load; fixed by `c90b56342` (batched `blobIdsAt`).
 - Done when: the standing re-freeze list exists with its first entry; (b) is closed by `c90b56342`.
 - Serves: observable, accurate.
+
+**MB-107 Existing house plus garden or laneway suite, a later feature (moved out of increment 6) — LATER (expiry 2027-01-14, set by the operator)** (E, P)
+Status: LATER · since 2026-11-14 · expires 2027-01-14 · next: Land the queue row in the next docs commit; bump next free id to MB-108
+- Status detail 2026-11-14: added (operator, verbatim: "With regard to adding the garden suite/ laneway suite to the renvoations - lets add this as a feature later - add teh task but put a lengthy expiry - 2Months"; card `~/Buildo-scratch/mcbylaws/CARD-MB-107-existing-house-suite.md`; record `~/Buildo-scratch/mcbylaws/inc6/DECISIONS-v2.md` line 423; `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` line 280). MB-107 · McBylaws queue · lane R · stage 1.
+- Rules: MB-85 E7 (the 7-day expiry; the operator may set another date, here 2 months); Spec 78 P5.2 suite region; 150.7.60.30(1)/40(1), 150.7.60.50(2), 150.7.20.1(2) (carried over from the card unchanged); M-176(1) (the house reach is not assumed).
+- What: keep the existing house and add a garden or laneway suite on a renovation lot. Taken OUT of increment 6 (increment 6 returns to the renovation rows alone; item 8a stands in full). Laneway suites are in scope by this ruling, with their own rules (150.8) checked at plan time. Owed at build: McProof cases, an impact map, the house-reach input field, a register row and dated notes, cost lines.
+- Done when: the card's owed list is built and the feature is green in the loop at its increment. Nothing is built before then.
+- Serves: accurate, understandable.
+
+**MB-108 McQueue: Spec 137 (the queue policy page) and its clean-up docs commits — RUNNING** (R)
+Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: Operator reviews Spec 137 and this clean-up; the operator pushes
+- Status detail 2026-11-14: added (operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location" and "y"; `~/Buildo-scratch/mcqueue/DECISIONS.md`; triage rulings `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`). MB-108 · McBylaws queue · lane MQ · stage 7 (draft for operator review). Id claimed in the id ledger.
+- Rules: Spec 137 (this page's own rules 1-6); M-246 (prior text kept); Spec 08 §11.8 MCINC-8 (one id ledger).
+- What: Spec 137 and the pointers to it (Spec 08 and the head of each queue file); a status line on every queue row from the 2026-11-14 audit and the ruled triage; the Airtight V3 queue tracked. The commit check is deferred to the infra-freeze lift (Spec 137 §6) and is built inside MB-73.
+- Done when: the operator has reviewed and pushed the set, and the first weekly snapshot (Spec 137 §5) has run.
+- Serves: understandable, observable.
 
 ---
 ## DONE (commit checked to exist, 2026-10-30: 56 of 56)
@@ -905,6 +983,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 6. Follow-on: MB-38 (increment 10, all lots, by field group) → MB-42, MB-43, MB-44; MB-37 after O-7; MB-57, MB-11 any time.
 
 **MB-74 Take the rule map out of the Layer 2 version hash — WAITS MB-18 items a, c, d, e, h, i and k; card ANSWERED 2026-10-30 (option A, `CARD-mb74.answered.md`) (R, then M)** · found 2026-10-30 on the first wf1/mb-rulings push
+Status: WAITS (unverified 2026-11-14) · since 2026-11-01 · expires when INC5-NIGHT is done · next: Operator: build now (freeze exception) or hold with new date
 - Status: Update 2026-11-01 night (d) (M-246, prior text kept): MB-74 · lane M · fold 1101n done (`MB-74/fold-1101n.md`: the T3 closure assertion; four closure files join `INPUT_FILES`, `input_files` = parent +3). Validation FIX, re-check 1 FIX, re-check 2 PASS (`MB-74/fold-validation-1101n.md`). No status word changes: the build still WAITS MB-18 items a, c, d, e, h, i and k.
 - Problem (executed): `table_version` hashes every file under `scripts/analysis/bylaw/`, including `_schema/bylaw-rule-map.json`, which every ruling batch regenerates. So a docs-only batch moves Layer 2 version, the CoA pins go from PINNED to informational (coa-scorecard.logic red), and the amendment index stamp drifts. Fixed once by operator-approved re-pins (CARD-push-fixes, `cf5e707c`).
 - Proposed: exclude `_schema/bylaw-rule-map.json` (generated metadata, not a Layer 1 input) from the `table_version` recipe (Spec 134 §2 / R-IW). This is a code and recipe change, so it needs a card, then the full Spec 08 path.
@@ -915,6 +994,7 @@ Every row is recorded by **MB-66** in one decision-log batch, with a compliance 
 Operator, 2026-10-30: "a final section in the plan to make sure we did everything we said we did and it didn't become a mess - airtight enforcement" (`CARD-plan-1030-approval.answered.md`).
 
 **MB-73 The promises check, run from the first increment until Phase 3 closes — RUNNING (wiring: next line)** (G, then R at close) · deepseek for the checker; independent seat at close
+Status: WAITS · since 2026-11-14 · expires when increment 8 starts · next: G2 #9 · start at increment 8, when the exit needs it · ruling: "1-11 y" (operator 2026-11-14, decision 2: the freeze is lifted by name; work starts at increment 8)
 - Status detail (moved out of the heading 2026-11-01, WAIT-P67-2, so the heading carries one status word): the build is RUNNING. WAIT-P67-2 committed 2026-11-01 (`2b25c035`, `c2cbe171`); its "every historical DONE line stamped" (MB-73 plan §0 item 1) was open for five lines (MB-14, MB-15, MB-16, MB-50, MB-60), and those five were withdrawn from DONE 2026-11-01 (operator, `CARD-withdraw-five.answered.md`; R-KK, 124a:1019), so queue check Q3 is 0. Next: the arm Q wiring. MB-79 (q) (Q1 ancestry) lands before the wiring. Update 2026-11-01 night (d) (M-246, prior text kept): MB-79 (q) is landed locally, stage 10 waits the MB-73 wiring (`2faaa651`). MB-73 (wiring) · lane G: the plan `MB-73/wire-q/plan.md` is through stage 5: panel REVISE (`MB-73/wire-q/panel/adjudication.md`, F1-F7), fold 1 (`MB-73/wire-q/fold1.md`), fold validation 1 PASS. The build WAITS the operator (`~/Buildo-scratch/p2close/CARD-mb73-q2-row75.md`, O-32: row :75 of `mcbylaws-queue.logic.test.ts` becomes stricter, Process 1). The panel residuals are item (f) at stage 1. Update 2026-11-02 (e) (M-246, prior text kept): MB-73 (wiring) · lane G · stage 9: the build WAIT is lifted (O-32 answered). Prereg-MB-73-2 `86588d44`, then code `83368b5a` directly on it (R-MA), then panel record `51b76ffe`. Clean full suite 981 of 983 files, 22,395 tests, 0 failed; stage 8 PASS. Stage 10 is not written here: only the checker sets it.
 - Rules: R-KK (status is checked, not hand-kept); R-BF "generated or witnessed, never hand-kept" (124a:243); Spec 08 §11.1 (no claim that could be executed but wasn't, 08:442); 68 §5 (no row typed by hand).
 - What:
@@ -1058,3 +1138,96 @@ Held items and cards: `q1r-*` → MB-18; `mb26/held/*` → MB-26a–e; `mb64/hel
 - REJECT and MOOT findings are not applied.
 
 This file is tracked on wf1/mb-rulings and pushed with the repo (R-KW, 124a:1041; operator 2026-11-01, `CARD-queue-tracking-1101.answered.md`: "track in the repo which is public"; the tracked copy is the queue, every edit is a commit).
+
+## Status lines for rows kept in tables and lists (added 2026-11-14; McQueue, Spec 137)
+Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · McBylaws queue · lane MQ; operator, verbatim: "y" on the low-infrastructure proposal, rule 1 and rule 2 (`~/Buildo-scratch/mcqueue/DECISIONS.md`), and "1-11 y" on the triage (`~/Buildo-scratch/queues-20261114/triage/RULINGS.md`); audit `~/Buildo-scratch/queues-20261114/mcbylaws-rows.json`). Every row that has a bold heading above carries its own `Status:` line directly under the heading. A row that lives in a table or a list cannot carry one inside the table, so its `Status:` line is here, and the table or list above is not edited. The status word here is current as of 2026-11-14; where it differs from an older word in a heading or table, the `Status:` line is the current one and the older text is kept as it was. G1 and G2 are the two goals of the triage (G1 a usable product on web and mobile; G2 the increments to the Phase 3 exit at MB-46); "G1 #n" and "G2 #n" are the order in `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`'s triage list. The form is in Spec 137 §3.
+
+### Increments table (the table under "Increments: start small, expand through the loop")
+- Row INC-1 · Detached house, core numbers (25 golden cases) · increments table row 1
+  Status: DONE · since 2026-11-03 · expires none · next: none
+- Row INC-2 · Clause-required refinements (main-wall shares, roof forms) · increments table row 2
+  Status: DONE · since 2026-11-06 · expires none · next: none
+- Row INC-3 · Detached houseplex · increments table row 3
+  Status: DONE · since 2026-11-10 · expires none · next: none
+- Row INC-4 · House with a secondary suite · increments table row 4
+  Status: DONE · since 2026-11-11 · expires none · next: none
+- Row INC-5 · Rear-suite add-on (garden suite), fitted house · increments table row 5
+  Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: G2 #5 · Complete INC5-NIGHT, M14, Part B landing, loop green
+- Row INC-6 · Renovations (addition, interior, basement) · increments table row 6
+  Status: WAITS · since 2026-11-14 · expires 2026-11-21 · next: G2 #6 · Start the build after inc 5 is green; re-run key on landed inc-5 row (waits: increment 5 green)
+  Record 2026-11-14: the existing house plus a garden or laneway suite moved OUT of increment 6 to MB-107 (row MB-107, LATER, expiry 2027-01-14). Operator, verbatim: "With regard to adding the garden suite/ laneway suite to the renvoations - lets add this as a feature later - add teh task but put a lengthy expiry - 2Months" (`~/Buildo-scratch/mcbylaws/inc6/DECISIONS-v2.md` line 423; `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` line 280). Increment 6 is the renovation rows alone.
+- Row INC-6b · Attic floor area and roof forms · increments table row 6b
+  Status: DONE · since 2026-11-03 · expires none · next: none
+- Row INC-7 · Primary measure and catch rate on the 25 · increments table row 7
+  Status: LATER · since 2026-10-30 · expires when increment 6 is green · next: G2 #7 · Hold
+- Row INC-8 · Wider case set (CoA 172, 4d, cumulative) · increments table row 8
+  Status: LATER · since 2026-10-30 · expires when increment 7 is green · next: G2 #8 · Hold
+- Row INC-9 · The proof set (MB-28) · increments table row 9
+  Status: MERGED into MB-28 · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 8: the 26 merges, one batch); pointer: the work is tracked in MB-28
+- Row INC-10 · All lots: shadow and switch-over · increments table row 10
+  Status: MERGED into MB-38 · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 8: the 26 merges, one batch); pointer: the work is tracked in MB-38
+
+### Increment 5 jobs and records of 2026-11-14 (rows that had no place in the queue)
+- Row INC5-NIGHT · Increment 5 Layer 2 dev night (migrations 315+321, reload) · McIncrement · increment 5 · DB job (rehearsed on the test stack first, Spec 08 §11.8 MCINC-7)
+  Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: G2 #1 · Rehearsal pass, fill TEST_MIB, then dev night under conditional GO
+  Record 2026-11-14: operator, verbatim: "pushing OPERATOR-GO INC5-NIGHT,". The GO is conditional: valid only after the rehearsal PASSES on the test stack at the final tip (origin tip, table version and hooks rc 0). Any failure stops and waits for the operator (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` lines 207-209). Rehearsal at tip 827ea5acc was running (lane B5A8) when the audit was written (lines 221, 244).
+  ST-3 note 2026-11-14 (M-246; McStorage alignment): the night is sized under ST-3 before its GO (ST-1, ST-3, ST-7 apply at this night).
+- Row INC5-M14 · Inc 5 Layer 3 cohort recapture (single D-78 job) · McIncrement · increment 5 · DB job, the single D-78 recapture of the Layer 3 cohort
+  Status: WAITS · since 2026-11-14 · expires 2026-11-21 · next: G2 #3 · Rehearse after the night; storage STOP goes to the operator (waits: INC5-NIGHT pass on dev, then M14 rehearsal)
+  Record 2026-11-14: operator, verbatim: "M14 recapture is also approved GO" and "OPERATOR-GO M14." Same conditions: only after INC5-NIGHT passes on dev and only after its own test-stack rehearsal at the then-current tip; its output is the single D-78 recapture commit, which the operator pushes (`MORNING-DECISIONS.md` lines 210-219). Job folder `~/Buildo-scratch/mcbylaws/inc5/m14/`; storage may exceed the 1,300 MiB room line, in which case the job STOPS for the operator.
+  ST-3 note 2026-11-14 (M-246; McStorage alignment): the recapture is sized under ST-3 before its GO.
+- Row INC5-PARTB · Increment 5 Part B rest (addon rows, P2/P3, pitched-B) · McIncrement · increment 5 · Part B rest
+  Status: BUILT · since 2026-11-14 · expires 2026-11-21 · next: G2 #2 · Commit with M14 recapture; McFrontend labels for addon rows; A0553 pitch cap ruling
+
+### SEMI-O4 (the semi imagery check, MB-97 item 5)
+- Row SEMI-O4 · Semi imagery check (50-lot) · MB-97 item 5 · results `~/Buildo-scratch/mcbylaws/SEMI-O4/RESULTS-20261114.md`
+  Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: G1 #4a · Operator checks the fresh 50-lot imagery sample against the 90% bar
+  Result 2026-11-14: FAIL. S1-S3 clear semis: 19 of 24 answered = 79 % against the 90 % bar (`MORNING-DECISIONS.md` line 278). Pattern: RD zone, non-residential zones, shared wall above 60 m. Controls: 10 of 10 detached.
+  Ruling 2026-11-14: operator, verbatim: "a" (`MORNING-DECISIONS.md` line 279): residential zones only; RD asked; above 60 m asked; all settings. A fresh 50-lot draw with a new seed is next (lane SEMI-B2); the earlier 95 % figure is fitted to the sample that found the pattern and is not proof.
+
+### Database jobs landed 2026-11-13
+- Row MB94-317 · DB job: migration 317 (suite-house cost line) · MB-94 part (c) · migration 317
+  Status: DONE · since 2026-11-13 · expires none · next: none
+- Row SEMI-320 · DB job: migration 320 (parcel_lot_form view) · MB-97 · migration 320
+  Status: DONE · since 2026-11-13 · expires none · next: none
+
+### Lane board rows
+- Row R-batch-as · Ruling batch as (R-LZ, M-406, FOOT-15/GFA-8 rows) · lane board row "R-batch-as ruling batch"
+  Status: DONE · since 2026-11-14 · expires none · next: none · note: closed by decision 5 after one read-only check 2026-11-14
+  Check 2026-11-14 (read-only, decision 5): the R-EH (a) note is at `docs/specs/01-pipeline/124a_step_standard_policy_appendix.md` line 216; M-406 is in `69a_mcbylaw_register.md` (row M-406 and the M-455 wording note). The FOOT-15 and GFA-8 ledger row was not found as its own row by id; the row is closed on the operator ruling (decision 5) and this gap is listed in the McQueue review file.
+- Row MB-31-row135 · Spec 47 lock registry row 135 (lane-board row) · lane board row (Spec 47 lock registry row 135)
+  Status: DONE · since 2026-11-03 · expires none · next: none
+
+### Withdrawn or merged (rows in the "Withdrawn or merged" table)
+- Row MB-14 · Restore max-build engine and lock (old engine) · Withdrawn or merged table
+  Status: DROPPED · since 2026-11-01 · expires none · next: none · ruling: "withdraw the five from done and keep the branch but with only MB-15" (operator, CARD-withdraw-five 2026-11-01)
+- Row MB-15 · Blind-run harness (old engine) · Withdrawn or merged table
+  Status: DROPPED · since 2026-11-01 · expires none · next: none · ruling: "withdraw the five from done and keep the branch but with only MB-15" (operator, CARD-withdraw-five 2026-11-01)
+- Row MB-16 · Max building for every permitted type (old engine) · Withdrawn or merged table
+  Status: DROPPED · since 2026-11-01 · expires none · next: none · ruling: "withdraw the five from done and keep the branch but with only MB-15" (operator, CARD-withdraw-five 2026-11-01)
+- Row MB-50 · Rear suite sized jointly (50a, 50b; old engine) · Withdrawn or merged table
+  Status: DROPPED · since 2026-11-01 · expires none · next: none · ruling: "withdraw the five from done and keep the branch but with only MB-15" (operator, CARD-withdraw-five 2026-11-01)
+- Row MB-60 · 29 assessment scorecards over MB-14 hand edits · Withdrawn or merged table
+  Status: DROPPED · since 2026-11-01 · expires none · next: none · ruling: "withdraw the five from done and keep the branch but with only MB-15" (operator, CARD-withdraw-five 2026-11-01)
+- Row MB-17 · Q1/Q2/Q3 reversal task · Withdrawn or merged table
+  Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "MB-17 | withdrawn" (queue Withdrawn or merged table, approved with this queue at O-1 2026-10-30; no separate operator line found)
+- Row MB-61-70-71-72 · Draft MB-61, MB-70, MB-71, MB-72 (old-engine rebuilds) · Withdrawn or merged table
+  Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "no old code" (queue Withdrawn or merged table, approved at O-1 2026-10-30; no separate operator line found)
+- Row MB-27-E2b2 · X812 split into whole-building and portion units · sub-item of MB-27 (queue note)
+  Status: DROPPED · since 2026-11-08 · expires none · next: none · ruling: "E2b2 dropped" (queue MB-27 note under the operator ruling of 2026-11-08: "I approve all the recommendations on the condition you are highly confident in each")
+- Row MB-27-E8-1b · E8 per-floor-sum construct (1b) · sub-item of MB-27 (queue note)
+  Status: DROPPED · since 2026-11-08 · expires none · next: none · ruling: "supersedes the E8 1b construct; existing grammar only" (queue MB-27 note under the same 2026-11-08 operator ruling)
+
+### Not doing (the "Not doing" list; closed by the O-1 approval of this queue, 2026-10-30)
+- Row NOT-DOING-permit-step-conversion · Permit step conversion · Not doing list
+  Status: FROZEN · since 2026-10-29 · expires none · next: Unfreeze only after a state audit (operator) · ruling: "the work with the permits was so disorganized and error prone that we froze that work" (operator 2026-10-29)
+- Row NOT-DOING-semis-townhouses · Semis and townhouses as building types · Not doing list
+  Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "Semis and townhouses: M-376 SC-Q1." (queue Not doing list, approved with this queue at O-1 2026-10-30; semi detection only since operator 2026-11-13 "semi y" (MB-97))
+- Row NOT-DOING-garage-axis · Garage / K axis · Not doing list
+  Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "The garage / K axis: not a first-release building type (78:496)." (queue Not doing list, approved with this queue at O-1 2026-10-30)
+- Row NOT-DOING-coa-ufit · CoA u-fit (LC-60) · Not doing list
+  Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "The CoA u-fit: LC-60." (queue Not doing list, approved with this queue at O-1 2026-10-30)
+- Row NOT-DOING-family-map-arm · Family-map blocking arm · Not doing list
+  Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "The family-map blocking arm: not needed for the exit." (queue Not doing list, approved with this queue at O-1 2026-10-30)
+- Row NOT-DOING-plausibility-bounds · Numeric plausibility bounds · Not doing list
+  Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "Numeric plausibility bounds: no ruled source; INV-7/8/10 are the gates." (queue Not doing list, approved with this queue at O-1 2026-10-30)
