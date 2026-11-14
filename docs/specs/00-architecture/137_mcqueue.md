@@ -44,17 +44,17 @@ Operator, 2026-11-14, verbatim: "y" (on the low-infrastructure proposal; rule 1 
 
 Form:
 
-`Status: <WORD> · since <date> · expires <date> · next: <step> · ruling: "<verbatim>"`
+`Status: <WORD> · since <date> · expires <date or "when <event>"> · next: <step> · ruling: "<verbatim>"`
 
 - `since` is the date of the last real change to the row (`YYYY-MM-DD`).
-- `expires` is the date the row comes back to the operator (rule 7 of §4). `none` for DONE, FROZEN and DROPPED.
+- `expires` is the date the row comes back to the operator (rule 7 of §4), or `when <event>` for a row that waits on a named event (rule 12 of §4). `none` for DONE, FROZEN, DROPPED and MERGED.
 - `next` is one step, in plain words. `none` when nothing is owed.
 - `ruling` appears on FROZEN and DROPPED rows and quotes the operator's words. It is optional on other rows.
 - A WAITS row names what it waits on inside `next`. An OPERATOR row names its O-id or its card inside `next` (the source: "OPERATOR (named O-id)").
 - `opened` is not a field of the line. It is `expires` minus 7 days, unless the operator set the expiry (rule 7).
 - A row not yet verified against what landed reads `<WORD> (unverified <date>)`.
 
-Word list (closed):
+Word list (closed; nine words):
 
 | Word | Meaning |
 |---|---|
@@ -66,6 +66,7 @@ Word list (closed):
 | LATER | Accepted, not started, no lane yet. |
 | FROZEN | Held by an operator ruling. The ruling is quoted. No expiry. |
 | DROPPED | Closed by an operator ruling. The ruling is quoted. No expiry. |
+| MERGED | The row is the same task as another row. The line reads `MERGED into <id>` and points to it; the work is tracked there. No expiry. Source: operator, 2026-11-14, "1-11 y", decision 8 (the 26 merges, one batch) in `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`. |
 
 Source of the word list: the status-word form line in `.cursor/MCFRONTEND-QUEUE.md` (the "Form copied from" paragraph, :5 at 827ea5acc: DONE, RUNNING, WAITS, OPERATOR, HELD, LATER) and the McBylaws queue "Status words" line (section "Lanes"). The 2026-11-14 ruling adds BUILT, FROZEN and DROPPED. HELD is replaced by FROZEN; an older HELD in a row's prose is prior text.
 
@@ -109,6 +110,9 @@ Source: M-246 (prior text kept), as used in `.cursor/MCBYLAWS-QUEUE.md` and Spec
 **Rule 11. Permit step conversion stays frozen.** The queue rows for it read FROZEN with the ruling quoted.
 Source: operator, 2026-10-29, verbatim: "the work with the permits was so disorganized and error prone that we froze that work" (`.cursor/QUEUE.md`, CURRENT STATUS 2026-10-27, DB lane item 6).
 
+**Rule 12. A row that waits on a named event takes that event as its expiry.** The `expires` field reads `when <event>`, not a date 7 days out. The row is resurfaced when the event happens, or at the operator's next decision list after it. This is an operator-set exception to rule 7, written on the row.
+Source: operator, 2026-11-14, verbatim: "Just a question about G1 - we still need to McTest and ensure the McStorage is aligned. Mctesting needs to be part of the soultion.  I like the focus for G2 and G1. Thoughts. 1-11 y", decision 10 of the triage list: "Expiry: a row that waits on a named event takes that event as its expiry, not 7 days." (`~/Buildo-scratch/queues-20261114/triage/RULINGS.md`). The 7-day default of rule 7 stands for every other open row.
+
 ## 5. The weekly snapshot
 
 A procedure. No tool and no code.
@@ -118,7 +122,7 @@ A procedure. No tool and no code.
 3. It lists every row. A claimed id with no row, and a card with no row, are listed as "no row" (rule 2).
 4. For each row it checks the `Status:` line against what landed. Evidence: the commit on the origin tip (`git show`, `git merge-base --is-ancestor`), the dated notes, the card answers.
 5. It marks DRIFT where the line and the evidence disagree. It marks UNVERIFIED where it cannot tell, and does not guess.
-6. It lists rows whose `expires` date is on or before the check date. A row with no `expires` that is not DONE, FROZEN or DROPPED is listed as "no expiry".
+6. It lists rows whose `expires` date is on or before the check date. A row with no `expires` that is not DONE, FROZEN, DROPPED or MERGED is listed as "no expiry". A `when <event>` row is listed when its event has happened.
 7. It checks that every FROZEN or DROPPED row has a quoted ruling, and that each "next free id" number is greater than every claimed id of its kind in the ID ledger.
 8. It returns one list to the operator: expired (keep with a new date, drop, or answer), drift (the row to correct), no-row items, no-expiry items, and the UNVERIFIED rows it could not judge. It changes nothing.
 9. The orchestrator makes the corrections in the next docs commit (rule 3, rule 4).
