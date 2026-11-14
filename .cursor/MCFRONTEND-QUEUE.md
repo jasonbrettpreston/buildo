@@ -611,17 +611,17 @@ Status: LATER · since 2026-11-14 · expires when MF-47 is pushed · next: Add t
 ## Later: convert-on-touch
 
 **MF-30 `/admin/surfaces` generated from the descriptor set (P2b): convert-on-touch, no fixed admin pilot (operator "Q-Mf6 a") — LATER** (E)
-Status: DROPPED · since 2026-11-09 · expires none · next: Keep as convert-on-touch · ruling: "1-11 y" (operator 2026-11-14, decision 4: drop MF-30, MF-31 and MF-32)
+Status: DROPPED · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 4: drop MF-30, MF-31 and MF-32)
   - Lane E. Status cell (kept): LATER. Waits on: a product reason, MF-22. Done-condition: per-surface scorecard.
   - Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): in McFrontend Phase 2, narrowed to `admin_surface_registry` and `admin_drift_status` first (then orphan, fan-out, role matrix), on the web library's table and cards (Spec 126 §11b.3). It keeps "a product reason, MF-22". Waits on: a product reason, MF-22, MF-42. Size M. The heading word is not changed here.
   - FE rows owned: none.
 
 **MF-31 Move R-01..R-34 into 135; reconcile and generate counts (Spec 126 §2 dated note) — LATER** (R)
-Status: DROPPED · since 2026-11-09 · expires none · next: Keep deferred · ruling: "1-11 y" (operator 2026-11-14, decision 4: drop MF-30, MF-31 and MF-32)
+Status: DROPPED · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 4: drop MF-30, MF-31 and MF-32)
   - Lane R. Status cell (kept): LATER. Waits on: a product reason. Done-condition: line-set diff clean.
 
 **MF-32 Convert any other screen when touched, by the Spec 127 ladder; market-metrics is DASHBOARD (FE-12) — LATER** (E)
-Status: DROPPED · since 2026-11-09 · expires none · next: Convert on touch · ruling: "1-11 y" (operator 2026-11-14, decision 4: drop MF-30, MF-31 and MF-32)
+Status: DROPPED · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 4: drop MF-30, MF-31 and MF-32)
   - Lane E. Status cell (kept): LATER. Waits on: a product reason. Done-condition: scorecard green.
   - Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note, "Owners of the other OWED FE rows"): MF-32 owns FE-12. `admin_market_metrics` is scope D (`estate_other/F92`); its DASHBOARD lock lands at its conversion. The heading word is not changed here.
   - FE rows owned: FE-12.
