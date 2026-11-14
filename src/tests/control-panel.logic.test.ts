@@ -227,6 +227,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // MF-45 the monthly report allowance (operator rulings 2026-11-10, plan 20 and trial 20; 2026-11-11 "change ... in the amdin"): admin group "MaxBLD Plan", migration 303
   'parcel_tool_report_limit_plan',
   'parcel_tool_report_limit_trial',
+  // MF-47 the checkout row (RULED 2026-11-14): Pro allowance, trial months, tax switch, overage switch + default cap, meter time limit: group "MaxBLD Plan", migration 322
+  'parcel_tool_report_limit_pro',
+  'parcel_tool_trial_months',
+  'stripe_tax_enabled',
+  'parcel_tool_overage_enabled',
+  'parcel_tool_overage_cap_default',
+  'parcel_tool_meter_statement_timeout_ms',
   // MF-62 the report loading state pace (operator 2026-11-11 "Mf-62 - yes", D-2 a: minimum 6 s, skip after 2 s): admin group "MaxBLD Report", migration 306
   'report_check_min_ms',
   'report_check_skip_after_ms',

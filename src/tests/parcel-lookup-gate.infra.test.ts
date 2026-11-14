@@ -78,14 +78,21 @@ function meter(o: { status?: string | null; used?: number; already?: boolean; pl
   const status = o.status === undefined ? 'active' : o.status;
   txQuery.mockImplementation(async (text: string) => {
     if (/FROM entitlements[\s\S]*FOR UPDATE/.test(text)) {
-      return status ? { rows: [{ status, current_period_end: PERIOD_END, created_at: new Date('2026-01-01T00:00:00Z'), now: NOW }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      return status ? { rows: [{ status, plan_key: 'basic', current_period_end: PERIOD_END, created_at: new Date('2026-01-01T00:00:00Z'), now: NOW }], rowCount: 1 } : { rows: [], rowCount: 0 };
+    }
+    // MF-47: the meter first reads its statement time limit (a setting) and sets it transaction-local, before the row lock.
+    if (/set_config\('statement_timeout'/.test(text)) return { rows: [], rowCount: 1 };
+    if (/FROM logic_variables WHERE variable_key = \$1/.test(text)) {
+      if (o.limitsThrow) throw new Error('db down');
+      return { rows: [{ variable_value: '5000' }], rowCount: 1 };
     }
     if (/FROM logic_variables/.test(text)) {
       if (o.limitsThrow) throw new Error('db down');
       return { rows: [
         { variable_key: REPORT_LIMIT_KEYS.plan, variable_value: o.plan === undefined ? '3' : o.plan },
         { variable_key: REPORT_LIMIT_KEYS.trial, variable_value: o.trial === undefined ? '2' : o.trial },
-      ], rowCount: 2 };
+        { variable_key: REPORT_LIMIT_KEYS.pro, variable_value: '25' },
+      ], rowCount: 3 };
     }
     if (/FROM usage_events/.test(text)) return { rows: [{ used: o.used ?? 0, already: o.already ?? false }], rowCount: 1 };
     if (/INSERT INTO usage_events/.test(text)) {
@@ -179,13 +186,13 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
 
 describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
   beforeEach(() => { ctx(null); parcelTool('active'); });
-  it('a hit writes one row: parcel_tool / property_view / parcel_ref, keyed on the matched parcels.parcel_id, meta {} and the transaction clock', async () => {
+  it('a hit writes one row: parcel_tool / property_view / parcel_ref, keyed on the matched parcels.parcel_id, meta {"extra": false} (MF-47 C-5: the flag is decided at insert) and the transaction clock', async () => {
     vi.mocked(resolveAddress).mockResolvedValue({ match: { parcelId: 'TYPED-ID', matchType: 'exact', address: '5 Elm St' }, candidates: [], truncated: false } as never);
     const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
     expect(r.status).toBe(200);
     const ins = inserts();
     expect(ins).toHaveLength(1);
-    expect(String(ins[0]![0])).toMatch(/INSERT INTO usage_events \(user_id, product, event, subject_kind, subject_key, occurred_at, meta\)\s+VALUES \(\$1, 'parcel_tool', 'property_view', 'parcel_ref', \$2, \$3, '\{\}'::jsonb\)/);
+    expect(String(ins[0]![0])).toMatch(/INSERT INTO usage_events \(user_id, product, event, subject_kind, subject_key, occurred_at, meta\)\s+VALUES \(\$1, 'parcel_tool', 'property_view', 'parcel_ref', \$2, \$3, '\{"extra": false\}'::jsonb\)/);
     // subject_key is the fetched row's parcel_id, not the resolver's or the request's text (fold 5); occurred_at = the DB clock (fold 2).
     expect(ins[0]![1]).toEqual([UID, 'P-45', NOW]);
     expect(JSON.stringify(txQuery.mock.calls)).not.toContain(RAW_Q);

@@ -95,20 +95,22 @@ const SEED = JSON.parse(read('scripts/seeds/logic_variables.json')) as Record<st
 const GROUPS = JSON.parse(read('src/features/admin-controls/generated/logic-variable-groups.json')) as Array<{ label: string; keys: string[] }>;
 
 describe('(d) the two allowances: seed truth, migration rows, and the existing Admin Control Panel listing', () => {
-  const keys = Object.values(REPORT_LIMIT_KEYS);
-  it('the migration inserts both keys with the seed default, ON CONFLICT (variable_key) DO NOTHING', () => {
+  // MF-47 (dated 2026-11-14, migration 322): migration 303 stays as written (it inserts the two keys at 20); the seed default of both is 10 since 322
+  // re-set them where still 20, and REPORT_LIMIT_KEYS gained the Pro key (303 knows only these two).
+  const keys = [REPORT_LIMIT_KEYS.plan, REPORT_LIMIT_KEYS.trial];
+  it('the migration inserts both keys at 20 (its own value), ON CONFLICT (variable_key) DO NOTHING', () => {
     const up = upOf(sql());
     const m = /INSERT INTO logic_variables \(variable_key, variable_value, variable_value_json, description\) VALUES([\s\S]*?)ON CONFLICT \(variable_key\) DO NOTHING;/.exec(up);
     expect(m).not.toBeNull();
     const rows = [...(m![1] ?? '').matchAll(/\('([a-z_]+)',\s*(\d+),\s*NULL,/g)].map((r) => [r[1], Number(r[2])]);
-    expect(rows).toEqual(keys.map((k) => [k, SEED[k]?.default]));
+    expect(rows).toEqual(keys.map((k) => [k, 20]));
   });
-  it('the seed declares each key numeric, 20, bounds 1..1000, admin group "MaxBLD Plan"', () => {
-    for (const k of keys) expect(SEED[k], k).toMatchObject({ default: 20, type: 'number', min: 1, max: 1000, admin: { group: 'MaxBLD Plan' } });
+  it('the seed declares each key numeric, 10 (re-set by migration 322), bounds 1..1000, admin group "MaxBLD Plan"', () => {
+    for (const k of keys) expect(SEED[k], k).toMatchObject({ default: 10, type: 'number', min: 1, max: 1000, admin: { group: 'MaxBLD Plan' } });
   });
   it('the Admin Control Panel lists both keys under "MaxBLD Plan" (the generated groups GlobalConfigCard renders) with their defaults', () => {
-    expect(GROUPS.find((g) => g.label === 'MaxBLD Plan')?.keys).toEqual(keys);
-    for (const k of keys) expect(LOGIC_VAR_DEFAULTS[k]).toBe(20);
+    expect(GROUPS.find((g) => g.label === 'MaxBLD Plan')?.keys.slice(0, keys.length)).toEqual(keys);
+    for (const k of keys) expect(LOGIC_VAR_DEFAULTS[k]).toBe(10);
   });
 });
 

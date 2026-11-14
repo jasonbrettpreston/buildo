@@ -1,0 +1,40 @@
+⎯⎯⎯⎯⎯⎯ Failed Tests 23 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > the three keys exist in the seed with bounds 1..1000 and the ruled defaults (MF-47 RULED 2026-11-14: trial 10, Basic 10, Pro 25)
+AssertionError: expected [ 'plan', 'trial' ] to deeply equal [ 'plan', 'pro', 'trial' ]
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > reads plan, pro and trial from the rows (pg returns NUMERIC as text)
+AssertionError: expected { plan: 10, trial: 7 } to deeply equal { plan: 10, trial: 7, pro: 25 }
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > T7 readReportLimits (operator: every number is a setting; fail closed) > the pro key fails closed like the others (missing, out of bounds)
+AssertionError: promise resolved "{ plan: 10, trial: 10 }" instead of rejecting
+- [Error: rejected promise]
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > trial + basic -> 10
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > trial + pro -> 10
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > active + basic -> 10
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > active + pro -> 25
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > past_due + pro -> 25
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > admin_managed + pro -> 25
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > admin_managed + basic -> 10
+TypeError: allowanceFor is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch) > an unknown plan key throws (fail closed; never falls back to Basic)
+AssertionError: expected [Function] to throw error matching /plan_key/ but got 'allowanceFor is…'
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed) > reads the value (pg NUMERIC text)
+TypeError: readMeterStatementTimeoutMs is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed) > throws when missing
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed) > throws when null
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed) > throws when NaN
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed) > throws when below min
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed) > throws when above max
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed) > throws when fraction
+TypeError: readMeterStatementTimeoutMs is not a function
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 openReport (fake db): the time limit is set first, transaction-local; the extra flag is stored at insert (C-5) > the first statements are the limit read and set_config(statement_timeout, <ms>, true), before the row lock
+AssertionError: expected -1 to be greater than or equal to 0
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 openReport (fake db): the time limit is set first, transaction-local; the extra flag is stored at insert (C-5) > Basic at 10 used is refused; Pro at 10 used is counted (the plan key picks the allowance)
+AssertionError: expected { kind: 'limit_reached', …(3) } to match object { kind: 'counted', reportsLimit: 25 }
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 openReport (fake db): the time limit is set first, transaction-local; the extra flag is stored at insert (C-5) > the ledger insert stores meta.extra = false (decided at insert, never recomputed; cap 0 has no extras)
+AssertionError: expected 'INSERT INTO usage_events (user_id, pr…' to match /"extra":\s*false/
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > MF-47 openReport (fake db): the time limit is set first, transaction-local; the extra flag is stored at insert (C-5) > an unknown plan key fails the meter closed (throws, nothing inserted)
+AssertionError: promise resolved "{ kind: 'counted', …(3) }" instead of rejecting
+- [Error: rejected promise]
+ FAIL  src/tests/parcel-tool-meter.logic.test.ts > the read-contract values (readParcelToolUsage): server-computed, FE-05; a display, never a gate > MF-47: a Pro holder reads the Pro allowance (25); Basic reads the plan key allowance
+AssertionError: expected { status: 'active', …(5) } to match object { reportsLimit: 25, reportsLeft: 20 }
+ Test Files  1 failed (1)
+      Tests  23 failed | 29 passed (52)

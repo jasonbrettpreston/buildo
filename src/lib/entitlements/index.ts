@@ -143,7 +143,7 @@ export async function getEntitlementStatusForUpdate(
 export interface StripeEventUpsertArgs {
   userId: string;
   product: Product;
-  status: 'active' | 'past_due' | 'expired';
+  status: 'trial' | 'active' | 'past_due' | 'expired';
   stripeSubscriptionId: string | null;
   currentPeriodEnd: Date | null;
   /** Stripe's OWN event.created timestamp — NEVER wall clock (plan fold 17). */
@@ -186,7 +186,10 @@ export async function upsertEntitlementFromStripeEvent(
      ON CONFLICT (user_id, product) DO UPDATE
        SET status = EXCLUDED.status,
            stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, entitlements.stripe_subscription_id),
-           current_period_end = EXCLUDED.current_period_end,
+           current_period_end = CASE WHEN EXCLUDED.stripe_subscription_id IS NOT DISTINCT FROM entitlements.stripe_subscription_id
+                                       OR EXCLUDED.stripe_subscription_id IS NULL
+                                     THEN COALESCE(EXCLUDED.current_period_end, entitlements.current_period_end)
+                                     ELSE EXCLUDED.current_period_end END,
            last_stripe_event_at = EXCLUDED.last_stripe_event_at,
            updated_at = NOW()
        WHERE (entitlements.last_stripe_event_at IS NULL OR entitlements.last_stripe_event_at < EXCLUDED.last_stripe_event_at)
@@ -200,6 +203,27 @@ export async function upsertEntitlementFromStripeEvent(
       args.currentPeriodEnd,
       args.eventCreatedAt,
     ],
+  );
+  return res.rowCount ?? 0;
+}
+
+/**
+ * MF-47: writes the plan the subscription's price resolved to, AFTER an applied upsert of the same event (so a stale or fenced event never writes it:
+ * the caller runs it only when the upsert returned a row). Guarded to the subscription the row tracks, so a plan seen on another subscription never
+ * moves it. A separate statement keeps the upsert's text static and lets the INSERT take the column DEFAULT (no literal plan here, C-2).
+ */
+export async function setPlanKeyFromStripeEvent(
+  db: Queryable,
+  userId: string,
+  product: Product,
+  planKey: PlanKey,
+  stripeSubscriptionId: string | null,
+): Promise<number> {
+  if (!isUuid(userId) || stripeSubscriptionId === null) return 0;
+  const res = await db.query(
+    `UPDATE entitlements SET plan_key = $3, updated_at = NOW()
+     WHERE user_id = $1 AND product = $2 AND stripe_subscription_id = $4`,
+    [userId, product, planKey, stripeSubscriptionId],
   );
   return res.rowCount ?? 0;
 }
@@ -246,6 +270,36 @@ export async function upsertEntitlementStatus(
      ON CONFLICT (user_id, product) DO UPDATE
        SET status = EXCLUDED.status, updated_at = NOW()`,
     [uid, product, status],
+  );
+  return res.rowCount ?? 0;
+}
+
+/**
+ * MF-47: the parcel_tool row's status and plan key, row-locked (the admin set_plan path reads it FOR UPDATE inside its transaction, like the
+ * other admin subscription mutations). Null when the user has no parcel_tool row or the uid is not a uuid.
+ */
+export async function getParcelToolPlanForUpdate(
+  db: Queryable,
+  uid: string,
+): Promise<{ status: EntitlementStatus; plan_key: string } | null> {
+  if (!isUuid(uid)) return null;
+  const res = await db.query<{ status: EntitlementStatus; plan_key: string }>(
+    `SELECT status, plan_key FROM entitlements WHERE user_id = $1 AND product = 'parcel_tool' FOR UPDATE`,
+    [uid],
+  );
+  return res.rows[0] ?? null;
+}
+
+/**
+ * MF-47 (RULED 2026-11-14): the admin path to change plan_key. Guarded to admin_managed rows in the statement itself: on a Stripe-managed row the
+ * webhook owns plan_key (it rewrites it from the subscription's price), so an admin write there would be silently reverted. Returns the row count.
+ */
+export async function setAdminManagedPlanKey(db: Queryable, uid: string, plan: PlanKey): Promise<number> {
+  if (!isUuid(uid)) return 0;
+  const res = await db.query(
+    `UPDATE entitlements SET plan_key = $2, updated_at = NOW()
+     WHERE user_id = $1 AND product = 'parcel_tool' AND status = 'admin_managed'`,
+    [uid, plan],
   );
   return res.rowCount ?? 0;
 }
@@ -371,14 +425,37 @@ export const USAGE_EVENTS = [
 ] as const;
 export const USAGE_SUBJECT_KINDS = ['parcel_ref', 'parcel_pk', 'permit_rev', 'offer_id'] as const;
 
-/** The two monthly allowances (operator-editable in the Admin Control Panel, seed group "MaxBLD Plan"). */
+/**
+ * The monthly allowances (operator-editable in the Admin Control Panel, seed group "MaxBLD Plan"). MF-47 (RULED 2026-11-14):
+ * `plan` is the BASIC allowance, `pro` the Pro one, `trial` one allowance for both plans.
+ */
 export const REPORT_LIMIT_KEYS = {
   plan: 'parcel_tool_report_limit_plan',
   trial: 'parcel_tool_report_limit_trial',
+  pro: 'parcel_tool_report_limit_pro',
 } as const;
 export interface ReportLimits {
   plan: number;
   trial: number;
+  pro: number;
+}
+
+/** The tier stored on the entitlement (migration 322, NOT NULL DEFAULT 'basic'; a closed set, never null). */
+export const PLAN_KEYS = ['basic', 'pro'] as const;
+export type PlanKey = (typeof PLAN_KEYS)[number];
+
+/** The closed map from plan key to its allowance key in ReportLimits (C-1: one source, no second map). */
+const PLAN_LIMIT: Record<PlanKey, keyof ReportLimits> = { basic: 'plan', pro: 'pro' };
+
+/**
+ * The monthly allowance of one holder: a trial is one allowance for both plans; otherwise the plan key picks Basic or Pro.
+ * An unknown plan key throws (fail closed: the meter never falls back to Basic).
+ */
+export function allowanceFor(status: EntitlementStatus, planKey: string, limits: ReportLimits): number {
+  if (status === 'trial') return limits.trial;
+  const key = (PLAN_LIMIT as Record<string, keyof ReportLimits | undefined>)[planKey];
+  if (key === undefined) throw new Error(`entitlements.plan_key is not one of ${PLAN_KEYS.join(', ')}: ${String(planKey)}`);
+  return limits[key];
 }
 
 /** The seed's declared bounds of the two keys (scripts/seeds/logic_variables.json min/max; the seed is the truth). */
@@ -422,13 +499,30 @@ export async function readReportLimits(db: Queryable): Promise<ReportLimits> {
     }
     return v;
   };
-  const out = { plan: read(REPORT_LIMIT_KEYS.plan), trial: read(REPORT_LIMIT_KEYS.trial) };
+  const out = { plan: read(REPORT_LIMIT_KEYS.plan), trial: read(REPORT_LIMIT_KEYS.trial), pro: read(REPORT_LIMIT_KEYS.pro) };
   if (bad.length > 0) throw new ReportLimitsMissingError(bad);
   return out;
 }
 
+/** The meter-transaction statement time limit key (migration 322; RULED 2026-11-14: a setting, not a pool-wide env value). */
+export const METER_STATEMENT_TIMEOUT_KEY = 'parcel_tool_meter_statement_timeout_ms';
+
+/** Reads the meter's statement time limit in ms from its setting; fails closed (missing, not an integer, outside the seed bounds). */
+export async function readMeterStatementTimeoutMs(db: Queryable): Promise<number> {
+  const b = (seedJson as Record<string, { min?: number; max?: number }>)[METER_STATEMENT_TIMEOUT_KEY];
+  if (!b || typeof b.min !== 'number' || typeof b.max !== 'number') throw new Error(`logic_variables seed has no bounds for ${METER_STATEMENT_TIMEOUT_KEY}`);
+  const res = await db.query<{ variable_value: string | number | null }>(
+    `SELECT variable_value FROM logic_variables WHERE variable_key = $1`,
+    [METER_STATEMENT_TIMEOUT_KEY],
+  );
+  const raw = res.rows[0]?.variable_value;
+  const v = raw === undefined || raw === null ? Number.NaN : Number(raw);
+  if (!Number.isInteger(v) || v < b.min || v > b.max) throw new ReportLimitsMissingError([METER_STATEMENT_TIMEOUT_KEY]);
+  return v;
+}
+
 /** anchor + k whole months, UTC, the day clamped to the target month's end (Postgres `+ interval 'k months'`). */
-function addMonthsClamped(anchor: Date, k: number): Date {
+export function addMonthsClamped(anchor: Date, k: number): Date {
   const m = anchor.getUTCMonth() + k;
   const y = anchor.getUTCFullYear() + Math.floor(m / 12);
   const mm = ((m % 12) + 12) % 12;
@@ -454,6 +548,7 @@ export function reportPeriod(anchor: Date, now: Date): { start: Date; end: Date 
 
 interface ParcelToolRow {
   status: EntitlementStatus;
+  plan_key: string;
   current_period_end: Date | string | null;
   created_at: Date | string;
   now: Date | string;
@@ -463,7 +558,7 @@ interface ParcelToolRow {
 async function usageFor(db: Queryable, uid: string, row: ParcelToolRow, limits: ReportLimits, subjectKey: string | null) {
   const now = new Date(row.now);
   const { end, start } = reportPeriod(new Date(row.current_period_end ?? row.created_at), now);
-  const reportsLimit = row.status === 'trial' ? limits.trial : limits.plan;
+  const reportsLimit = allowanceFor(row.status, row.plan_key, limits);
   const res = await db.query<{ used: number; already: boolean }>(
     `SELECT COUNT(DISTINCT subject_key)::int AS used, COALESCE(bool_or(subject_key = $4), false) AS already
      FROM usage_events
@@ -493,8 +588,12 @@ export type ReportMeterResult =
  */
 export async function openReport(db: Queryable, uid: string, parcelRef: string): Promise<ReportMeterResult> {
   if (!isUuid(uid)) return { kind: 'not_entitled' };
+  // MF-47 (RULED 2026-11-14): the time limit is transaction-local (set_config is_local = true) and set BEFORE the row lock, so a stuck
+  // query or lock wait cannot hold the connection; the value is a setting and a bad one fails the meter closed (no literal here).
+  const timeoutMs = await readMeterStatementTimeoutMs(db);
+  await db.query(`SELECT set_config('statement_timeout', $1, true)`, [`${timeoutMs}ms`]);
   const res = await db.query<ParcelToolRow>(
-    `SELECT status, current_period_end, created_at, now() AS now
+    `SELECT status, plan_key, current_period_end, created_at, now() AS now
      FROM entitlements WHERE user_id = $1 AND product = 'parcel_tool' FOR UPDATE`,
     [uid],
   );
@@ -507,7 +606,7 @@ export async function openReport(db: Queryable, uid: string, parcelRef: string):
   if (u.reportsUsed >= u.reportsLimit) return { kind: 'limit_reached', reportsUsed: u.reportsUsed, ...base };
   await db.query(
     `INSERT INTO usage_events (user_id, product, event, subject_kind, subject_key, occurred_at, meta)
-     VALUES ($1, 'parcel_tool', 'property_view', 'parcel_ref', $2, $3, '{}'::jsonb)`,
+     VALUES ($1, 'parcel_tool', 'property_view', 'parcel_ref', $2, $3, '{"extra": false}'::jsonb)`,
     [uid, parcelRef, u.now],
   );
   return { kind: 'counted', reportsUsed: u.reportsUsed + 1, ...base };
@@ -533,7 +632,7 @@ export async function readParcelToolUsage(db: Queryable, uid: string): Promise<P
   const empty = { reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null };
   if (!isUuid(uid)) return { status: null, ...empty };
   const res = await db.query<ParcelToolRow>(
-    `SELECT status, current_period_end, created_at, now() AS now
+    `SELECT status, plan_key, current_period_end, created_at, now() AS now
      FROM entitlements WHERE user_id = $1 AND product = 'parcel_tool'`,
     [uid],
   );

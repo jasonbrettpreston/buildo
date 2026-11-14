@@ -1,0 +1,30 @@
+{
+  "task": "MF-47",
+  "item": "The MaxBLD checkout row as ruled 2026-11-14 under the operator's acceptance: migration 322 (written, not applied), Basic and Pro plans (plan_key), trial 10 on both, Stripe checkout and Customer Portal as server actions, the webhook trial writer, the admin plan path, the five-second meter limit, Stripe Tax behind a setting, empty Stripe id settings. No overage, no sweep, no pages.",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-14",
+  "cards": [
+    "Operator 2026-11-14 (verbatim): \"I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded\"",
+    "DECISIONS.md \"Ruled 2026-11-14 under the operator's acceptance (taken from the seat's recommendations)\" and the build-row obligations C-2..C-11"
+  ],
+  "plan": "~/Buildo-scratch/mcfrontend/MF-47/build-plan.md (sections 0-6); the reality-check seat ~/Buildo-scratch/mcfrontend/MF-47/reality-check-1114.md governs where plan-v2 differs; v1 plan.md section 12 folds apply where both are silent. DeepSeek four-lens plan review (spec, security, idempotency, error paths) with every claim graded by the lane: build-plan.md section 7 (9 kept and folded, 15 rejected with a reason); raw output in ~/Buildo-scratch/mcfrontend/MF-47/review/.",
+  "output": "Lane-grounded review of the lane's own diff (build-report.md): executed claims only. Tests were written red first (docs/reports/red-evidence/MF-47/): migration 322 text locks, the meter (plan key, Pro, timeout, extra flag), the shared status mapping, the webhook trial writer and plan write, the checkout and portal logic, the trial-end maths, the server actions and the admin set_plan path.",
+  "seats": [
+    "DeepSeek four-lens plan review (deepseek-reasoner), lane-graded",
+    "Lane grounded output check (build-report.md)"
+  ],
+  "verdict": "PASS with follow-ups",
+  "blockers": [],
+  "followups": [
+    "Migration 322 applied by the orchestrator DB job (rehearsed on the test stack with the real hooks); the job prints the admin_managed count and the trial/plan re-set counts; then recapture the witness catalog (the lane added entitlements.overage_cap and plan_key by hand; it must come out identical) and regenerate src/lib/db/generated/schema.ts.",
+    "Operator values still open: the Stripe price ids (Basic, Pro, later overage) and the portal configuration id; the cap maximum (no setting yet); the final consent sentence (versioned PLACEHOLDER).",
+    "Free-text string settings (the Stripe ids) are not editable in the admin panel today (applyConfigUpdate accepts a string only for a closed enum): needs a ruling or SQL.",
+    "The plans, success and cancel pages are a separate ruled row (descriptor, content, goldens); the server actions are ready for them.",
+    "Overage row: extras band, reporter and its telemetry, consent page and cap write, the Stripe mechanism decision (meter vs pending invoice items)."
+  ],
+  "evidence": [
+    "docs/reports/red-evidence/MF-47/"
+  ],
+  "notes": "Migration 322 touches the protected seed scripts/seeds/logic_variables.json (owner y at push). The McTest edits (stress.mjs allowance, Pro persona) are in the McTest commit."
+}

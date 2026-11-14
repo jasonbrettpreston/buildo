@@ -38,9 +38,9 @@ function db(o: { status?: string | null; used?: number; throws?: boolean } = {})
   poolQuery.mockImplementation(async (text: string) => {
     if (o.throws) throw new Error('db down');
     if (/FROM entitlements/.test(text)) {
-      return o.status ? { rows: [{ status: o.status, current_period_end: '2026-12-05T10:00:00.000Z', created_at: '2026-01-01T00:00:00.000Z', now: '2026-11-20T12:00:00.000Z' }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      return o.status ? { rows: [{ status: o.status, plan_key: 'basic', current_period_end: '2026-12-05T10:00:00.000Z', created_at: '2026-01-01T00:00:00.000Z', now: '2026-11-20T12:00:00.000Z' }], rowCount: 1 } : { rows: [], rowCount: 0 };
     }
-    if (/FROM logic_variables/.test(text)) return { rows: [{ variable_key: REPORT_LIMIT_KEYS.plan, variable_value: '20' }, { variable_key: REPORT_LIMIT_KEYS.trial, variable_value: '20' }] };
+    if (/FROM logic_variables/.test(text)) return { rows: [{ variable_key: REPORT_LIMIT_KEYS.plan, variable_value: '20' }, { variable_key: REPORT_LIMIT_KEYS.trial, variable_value: '20' }, { variable_key: REPORT_LIMIT_KEYS.pro, variable_value: '25' }] };
     if (/FROM usage_events/.test(text)) return { rows: [{ used: o.used ?? 0, already: false }] };
     throw new Error(`unexpected query: ${text}`);
   });

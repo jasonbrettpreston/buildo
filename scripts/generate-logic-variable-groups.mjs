@@ -1283,7 +1283,13 @@ const GROUP_ORDER = [
     "label": "MaxBLD Plan",
     "keys": [
       "parcel_tool_report_limit_plan",
-      "parcel_tool_report_limit_trial"
+      "parcel_tool_report_limit_trial",
+      "parcel_tool_report_limit_pro",
+      "parcel_tool_trial_months",
+      "stripe_tax_enabled",
+      "parcel_tool_overage_enabled",
+      "parcel_tool_overage_cap_default",
+      "parcel_tool_meter_statement_timeout_ms"
     ]
   },
   {

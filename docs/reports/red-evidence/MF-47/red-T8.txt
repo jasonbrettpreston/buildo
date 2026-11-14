@@ -1,0 +1,14 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/admin-set-plan.infra.test.ts > set_plan: the security spine > a target that is an admin account -> 403, no write
+AssertionError: expected 400 to be 403 // Object.is equality
+ FAIL  src/tests/admin-set-plan.infra.test.ts > set_plan: the write > moves an admin_managed row: the row is read FOR UPDATE first, the UPDATE is guarded to admin_managed, ONE audit row carries the previous plan
+AssertionError: expected 400 to be 200 // Object.is equality
+ FAIL  src/tests/admin-set-plan.infra.test.ts > set_plan: the write > no parcel_tool row -> 404, no write, no audit
+AssertionError: expected 400 to be 404 // Object.is equality
+ FAIL  src/tests/admin-set-plan.infra.test.ts > set_plan: the write > a Stripe-managed row (trial) -> 409, no write, no audit (the webhook owns plan_key there)
+ FAIL  src/tests/admin-set-plan.infra.test.ts > set_plan: the write > a Stripe-managed row (active) -> 409, no write, no audit (the webhook owns plan_key there)
+ FAIL  src/tests/admin-set-plan.infra.test.ts > set_plan: the write > a Stripe-managed row (past_due) -> 409, no write, no audit (the webhook owns plan_key there)
+ FAIL  src/tests/admin-set-plan.infra.test.ts > set_plan: the write > a Stripe-managed row (expired) -> 409, no write, no audit (the webhook owns plan_key there)
+AssertionError: expected 400 to be 409 // Object.is equality
+ Test Files  1 failed (1)
+      Tests  7 failed | 6 passed (13)

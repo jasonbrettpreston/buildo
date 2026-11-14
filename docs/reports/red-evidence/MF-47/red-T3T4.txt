@@ -1,0 +1,35 @@
+⎯⎯⎯⎯⎯⎯ Failed Tests 16 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: one trial writer > subscription.created trialing -> status trial, product parcel_tool from the subscription metadata, period end = the trial end
+TypeError: Cannot read properties of null (reading 'params')
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: one trial writer > checkout.session.completed with metadata.trial = 1 writes nothing (the trialing subscription event is the writer)
+AssertionError: expected { …(2) } to be null
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: one trial writer > the $0 subscription_create invoice writes nothing
+AssertionError: expected { …(2) } to be null
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: one trial writer > a $0 RENEWAL invoice (any other billing_reason) still writes active
+AssertionError: expected [ …(3) ] to deeply equal [ …(3) ]
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: one trial writer > a paid subscription_create invoice (no trial) writes active
+AssertionError: expected [ …(3) ] to deeply equal [ …(3) ]
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: one trial writer > RED plant: an invoice-first MaxBLD event never resolves to lead_gen and never looks the product up by subscription
+AssertionError: expected 'lead_gen' to be 'parcel_tool' // Object.is equality
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: plan_key from the price (C-1, K5) > the Pro price -> plan_key pro is written; the Basic price -> basic
+AssertionError: expected 'INSERT INTO entitlements (user_id, pr…' to match /plan_key/
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: plan_key from the price (C-1, K5) > the licensed item is found by price, not items[0] (a later metered item may come first)
+AssertionError: expected [ …(6) ] to include 'pro'
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: plan_key from the price (C-1, K5) > a price in neither setting (settings set) leaves plan_key out and logs an ERROR line
+AssertionError: expected "spy" to be called with arguments: [ '[stripe-webhook]', Anything, …(1) ]
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: plan_key from the price (C-1, K5) > both settings empty -> plan_key left out, an INFO line (no error flood), the status still written
+AssertionError: expected "spy" to be called with arguments: [ '[stripe-webhook]', …(2) ]
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: plan_key from the price (C-1, K5) > the same id in both settings is refused as ambiguous: plan_key left out, an ERROR line
+AssertionError: expected "spy" to be called with arguments: [ '[stripe-webhook]', Anything, …(1) ]
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: the upsert fences (row-claim unchanged; period end never nulled; new subscription never inherits) > the row-claim clause is exactly the shipped one; the period end is protected
+AssertionError: expected 'INSERT INTO entitlements (user_id, pr…' to match /current_period_end = CASE WHEN EXCLUD…/
+ FAIL  src/tests/parcel-webhook.infra.test.ts > MF-47 webhook: the upsert fences (row-claim unchanged; period end never nulled; new subscription never inherits) > no trial_started_at write (the in-app 14-day expiry can never touch a Stripe trial)
+TypeError: Cannot read properties of null (reading 'sql')
+ FAIL  src/tests/subscription-ops.logic.test.ts > mapStripeSubStatus > maps access-affecting statuses; everything else → null
+AssertionError: expected null to be 'trial' // Object.is equality
+ FAIL  src/tests/subscription-ops.logic.test.ts > deriveEffectiveStripeStatus (priority active > trial > past_due > expired; MF-47 adds trial) > a trialing-only customer derives trial, never expired (reconcile must not expire a paying trial user)
+AssertionError: expected 'expired' to be 'trial' // Object.is equality
+ FAIL  src/tests/subscription-ops.logic.test.ts > deriveEffectiveStripeStatus (priority active > trial > past_due > expired; MF-47 adds trial) > active beats trial; trial beats past_due
+AssertionError: expected 'past_due' to be 'trial' // Object.is equality
+ Test Files  2 failed (2)
+      Tests  16 failed | 22 passed (38)

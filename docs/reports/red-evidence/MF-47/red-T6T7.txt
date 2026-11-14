@@ -1,0 +1,6 @@
+ FAIL  src/tests/parcel-checkout.infra.test.ts [ src/tests/parcel-checkout.infra.test.ts ]
+Error: Cannot find module '@/lib/stripe/parcel-checkout' imported from '/Users/brettpreston_macmini/Buildo-wt-mf47b/src/tests/parcel-checkout.infra.test.ts'.
+ FAIL  src/tests/parcel-trial-end.logic.test.ts [ src/tests/parcel-trial-end.logic.test.ts ]
+Error: Cannot find module '@/lib/stripe/parcel-checkout' imported from '/Users/brettpreston_macmini/Buildo-wt-mf47b/src/tests/parcel-trial-end.logic.test.ts'.
+ Test Files  2 failed (2)
+      Tests  no tests

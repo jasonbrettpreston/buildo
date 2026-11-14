@@ -1,0 +1,5 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/parcel-checkout-actions.infra.test.ts > startParcelCheckout > passes the cookie uid and the plan key (coerced to a string) and redirects to the returned url, outside the try/catch
+AssertionError: promise resolved "{ error: 'TRY_AGAIN' }" instead of rejecting
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)

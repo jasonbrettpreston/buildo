@@ -17,6 +17,9 @@ import os from 'node:os';
 import {
   reportPeriod,
   readReportLimits,
+  readMeterStatementTimeoutMs,
+  allowanceFor,
+  openReport,
   ReportLimitsMissingError,
   REPORT_LIMIT_KEYS,
   readParcelToolUsage,
@@ -75,13 +78,14 @@ const seeded = (over: Record<string, unknown> = {}) =>
   Object.values(REPORT_LIMIT_KEYS).map((k) => ({ variable_key: k, variable_value: k in over ? over[k] : String(SEED[k]?.default) }));
 
 describe('T7 readReportLimits (operator: every number is a setting; fail closed)', () => {
-  it('the two keys exist in the seed with default 20 and bounds 1..1000 (oq rulings: plan 20, trial 20)', () => {
-    for (const k of Object.values(REPORT_LIMIT_KEYS)) {
-      expect(SEED[k], k).toMatchObject({ default: 20, min: 1, max: 1000 });
-    }
+  it('the three keys exist in the seed with bounds 1..1000 and the ruled defaults (MF-47 RULED 2026-11-14: trial 10, Basic 10, Pro 25)', () => {
+    expect(Object.keys(REPORT_LIMIT_KEYS).sort()).toEqual(['plan', 'pro', 'trial']);
+    expect(SEED[REPORT_LIMIT_KEYS.trial]).toMatchObject({ default: 10, min: 1, max: 1000 });
+    expect(SEED[REPORT_LIMIT_KEYS.plan]).toMatchObject({ default: 10, min: 1, max: 1000 });
+    expect(SEED[REPORT_LIMIT_KEYS.pro]).toMatchObject({ default: 25, min: 1, max: 1000 });
   });
-  it('reads plan and trial from the rows (pg returns NUMERIC as text)', async () => {
-    await expect(readReportLimits(fakeDb(seeded({ [REPORT_LIMIT_KEYS.trial]: '7' })))).resolves.toEqual({ plan: 20, trial: 7 });
+  it('reads plan, pro and trial from the rows (pg returns NUMERIC as text)', async () => {
+    await expect(readReportLimits(fakeDb(seeded({ [REPORT_LIMIT_KEYS.trial]: '7' })))).resolves.toEqual({ plan: 10, trial: 7, pro: 25 });
   });
   it.each([
     ['missing', undefined],
@@ -96,13 +100,97 @@ describe('T7 readReportLimits (operator: every number is a setting; fail closed)
     await expect(readReportLimits(fakeDb(rows))).rejects.toBeInstanceOf(ReportLimitsMissingError);
   });
   it('RED plant: a reader with a literal 20 fallback would serve on a missing row; the real one refuses', async () => {
-    const planted = async (db: Queryable) => { try { return await readReportLimits(db); } catch { return { plan: 20, trial: 20 }; } };
-    await expect(planted(fakeDb([]))).resolves.toEqual({ plan: 20, trial: 20 });
+    const planted = async (db: Queryable) => { try { return await readReportLimits(db); } catch { return { plan: 10, trial: 10, pro: 25 }; } };
+    await expect(planted(fakeDb([]))).resolves.toEqual({ plan: 10, trial: 10, pro: 25 });
     await expect(readReportLimits(fakeDb([]))).rejects.toBeInstanceOf(ReportLimitsMissingError);
   });
   it('the lib carries no literal allowance (the number lives only in the seed and migration)', () => {
     const src = fs.readFileSync(path.join(ROOT, 'src/lib/entitlements/index.ts'), 'utf8');
-    expect(src).not.toMatch(/\?\?\s*20\b|\|\|\s*20\b|=\s*20\s*;/);
+    expect(src).not.toMatch(/\?\?\s*(10|20|25)\b|\|\|\s*(10|20|25)\b|=\s*(10|20|25)\s*;/);
+  });
+  it('the pro key fails closed like the others (missing, out of bounds)', async () => {
+    for (const v of [undefined, '0', '1001', '2.5']) {
+      const rows = seeded().filter((r) => !(v === undefined && r.variable_key === REPORT_LIMIT_KEYS.pro))
+        .map((r) => (r.variable_key === REPORT_LIMIT_KEYS.pro && v !== undefined ? { ...r, variable_value: v } : r));
+      await expect(readReportLimits(fakeDb(rows))).rejects.toBeInstanceOf(ReportLimitsMissingError);
+    }
+  });
+});
+
+describe('MF-47 allowanceFor: trial is one allowance for both plans; the plan key picks Basic or Pro (closed map, no null branch)', () => {
+  const L = { plan: 10, trial: 10, pro: 25 };
+  it.each([
+    ['trial', 'basic', 10], ['trial', 'pro', 10],
+    ['active', 'basic', 10], ['active', 'pro', 25],
+    ['past_due', 'pro', 25], ['admin_managed', 'pro', 25], ['admin_managed', 'basic', 10],
+  ])('%s + %s -> %i', (status, plan, want) => {
+    expect(allowanceFor(status as never, plan, L)).toBe(want);
+  });
+  it('an unknown plan key throws (fail closed; never falls back to Basic)', () => {
+    expect(() => allowanceFor('active' as never, 'gold', L)).toThrow(/plan_key/);
+    expect(() => allowanceFor('active' as never, null as never, L)).toThrow(/plan_key/);
+  });
+});
+
+describe('MF-47 readMeterStatementTimeoutMs (RULED 2026-11-14: the 5 s limit is a setting, fail closed)', () => {
+  const db = (v: unknown, missing = false): Queryable =>
+    ({ query: async () => ({ rows: missing ? [] : [{ variable_value: v }], rowCount: missing ? 0 : 1 }) }) as unknown as Queryable;
+  it('the seed holds 5000 with bounds 500..60000', () => {
+    expect(SEED['parcel_tool_meter_statement_timeout_ms']).toMatchObject({ default: 5000, min: 500, max: 60000 });
+  });
+  it('reads the value (pg NUMERIC text)', async () => { await expect(readMeterStatementTimeoutMs(db('5000'))).resolves.toBe(5000); });
+  it.each([['missing', undefined, true], ['null', null, false], ['NaN', 'abc', false], ['below min', '499', false], ['above max', '60001', false], ['fraction', '5000.5', false]])(
+    'throws when %s', async (_l, v, missing) => { await expect(readMeterStatementTimeoutMs(db(v, missing as boolean))).rejects.toBeInstanceOf(ReportLimitsMissingError); });
+});
+
+describe('MF-47 openReport (fake db): the time limit is set first, transaction-local; the extra flag is stored at insert (C-5)', () => {
+  const mk = (status: string, planKey: string, used: number) => {
+    const calls: Array<{ text: string; values: unknown[] | undefined }> = [];
+    const db = {
+      calls,
+      query: async (text: string, values?: unknown[]) => {
+        calls.push({ text, values });
+        if (/set_config/.test(text)) return { rows: [], rowCount: 1 };
+        if (/FROM entitlements/.test(text)) return { rows: [{ status, plan_key: planKey, current_period_end: '2026-12-05T10:00:00.000Z', created_at: '2026-01-01T00:00:00.000Z', now: '2026-11-20T12:00:00.000Z' }], rowCount: 1 };
+        if (/variable_key = ANY/.test(text)) return { rows: [
+          { variable_key: REPORT_LIMIT_KEYS.plan, variable_value: '10' }, { variable_key: REPORT_LIMIT_KEYS.trial, variable_value: '10' }, { variable_key: REPORT_LIMIT_KEYS.pro, variable_value: '25' },
+        ], rowCount: 3 };
+        if (/FROM logic_variables/.test(text)) return { rows: [{ variable_value: '5000' }], rowCount: 1 };
+        if (/FROM usage_events/.test(text)) return { rows: [{ used, already: false }], rowCount: 1 };
+        if (/INSERT INTO usage_events/.test(text)) return { rows: [], rowCount: 1 };
+        throw new Error('unexpected ' + text);
+      },
+    };
+    return db as unknown as Queryable & { calls: typeof calls };
+  };
+  it('the first statements are the limit read and set_config(statement_timeout, <ms>, true), before the row lock', async () => {
+    const db = mk('active', 'basic', 0);
+    await openReport(db, UID, 'P1');
+    const texts = db.calls.map((c) => c.text);
+    const iSet = texts.findIndex((x) => /set_config\('statement_timeout'/.test(x));
+    const iLock = texts.findIndex((x) => /FOR UPDATE/.test(x));
+    expect(iSet).toBeGreaterThanOrEqual(0);
+    expect(iSet).toBeLessThan(iLock);
+    expect(db.calls[iSet]!.values).toEqual(['5000ms']);
+    expect(texts[iSet]).toMatch(/,\s*true\)/);
+  });
+  it('Basic at 10 used is refused; Pro at 10 used is counted (the plan key picks the allowance)', async () => {
+    await expect(openReport(mk('active', 'basic', 10), UID, 'P2')).resolves.toMatchObject({ kind: 'limit_reached', reportsLimit: 10 });
+    await expect(openReport(mk('active', 'pro', 10), UID, 'P2')).resolves.toMatchObject({ kind: 'counted', reportsLimit: 25 });
+  });
+  it('a trial holder is capped at the trial allowance whatever the plan key', async () => {
+    await expect(openReport(mk('trial', 'pro', 10), UID, 'P3')).resolves.toMatchObject({ kind: 'limit_reached', reportsLimit: 10 });
+  });
+  it('the ledger insert stores meta.extra = false (decided at insert, never recomputed; cap 0 has no extras)', async () => {
+    const db = mk('active', 'basic', 0);
+    await openReport(db, UID, 'P4');
+    const ins = db.calls.find((c) => /INSERT INTO usage_events/.test(c.text))!;
+    expect(ins.text).toMatch(/"extra":\s*false/);
+  });
+  it('an unknown plan key fails the meter closed (throws, nothing inserted)', async () => {
+    const db = mk('active', 'gold', 0);
+    await expect(openReport(db, UID, 'P5')).rejects.toThrow(/plan_key/);
+    expect(db.calls.some((c) => /INSERT INTO usage_events/.test(c.text))).toBe(false);
   });
 });
 
@@ -195,6 +283,7 @@ const usageDb = (o: { row?: Record<string, unknown> | null; plan?: unknown; tria
         return { rows: [
           { variable_key: REPORT_LIMIT_KEYS.plan, variable_value: o.plan === undefined ? '20' : o.plan },
           { variable_key: REPORT_LIMIT_KEYS.trial, variable_value: o.trial === undefined ? '10' : o.trial },
+          { variable_key: REPORT_LIMIT_KEYS.pro, variable_value: '25' },
         ] };
       }
       if (/FROM usage_events/.test(text)) return { rows: [{ used: o.used ?? 0, already: false }] };
@@ -203,7 +292,7 @@ const usageDb = (o: { row?: Record<string, unknown> | null; plan?: unknown; tria
   } as unknown as Queryable & { texts: string[] };
 };
 const UID = '00000000-0000-0000-0000-0000000045b1';
-const row = (status: string) => ({ status, current_period_end: '2026-12-05T10:00:00.000Z', created_at: '2026-01-01T00:00:00.000Z', now: '2026-11-20T12:00:00.000Z' });
+const row = (status: string, plan_key = 'basic') => ({ status, plan_key, current_period_end: '2026-12-05T10:00:00.000Z', created_at: '2026-01-01T00:00:00.000Z', now: '2026-11-20T12:00:00.000Z' });
 
 describe('the read-contract values (readParcelToolUsage): server-computed, FE-05; a display, never a gate', () => {
   it('no parcel_tool row -> every field null (a zero-entitlement user is a legal state)', async () => {
@@ -218,6 +307,10 @@ describe('the read-contract values (readParcelToolUsage): server-computed, FE-05
     const db = usageDb({ row: row('active'), used: 5 });
     await expect(readParcelToolUsage(db, UID)).resolves.toEqual({ status: 'active', reportsUsed: 5, reportsLimit: 20, reportsLeft: 15, reportsLimitReached: false, resetsOn: '2026-12-05T10:00:00.000Z' });
     expect(db.texts.some((t) => /FOR UPDATE/.test(t))).toBe(false);
+  });
+  it('MF-47: a Pro holder reads the Pro allowance (25); Basic reads the plan key allowance', async () => {
+    await expect(readParcelToolUsage(usageDb({ row: row('active', 'pro'), used: 5 }), UID)).resolves.toMatchObject({ reportsLimit: 25, reportsLeft: 20 });
+    await expect(readParcelToolUsage(usageDb({ row: row('active', 'basic'), used: 5 }), UID)).resolves.toMatchObject({ reportsLimit: 20, reportsLeft: 15 });
   });
   it('trial takes the trial allowance; used at the limit -> 0 left, reached (D-5 a)', async () => {
     await expect(readParcelToolUsage(usageDb({ row: row('trial'), used: 10 }), UID)).resolves.toMatchObject({ reportsLimit: 10, reportsLeft: 0, reportsLimitReached: true });

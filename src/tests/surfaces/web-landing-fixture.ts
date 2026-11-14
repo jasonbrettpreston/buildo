@@ -13,7 +13,7 @@ export const FIXTURE_ROW = {
   parcels_total: 496536, building_footprints_total: 512300, permits_active_distinct: 41200, coa_total: 17800, map_areas_total: 9120,
   zoning_layer_version: '2026-10-01', permits_last_seen_at: '2026-11-10', coa_last_seen_at: '2026-11-09',
 };
-export const FIXTURE_LIMITS = { parcel_tool_report_limit_trial: 20, parcel_tool_report_limit_plan: 25 };
+export const FIXTURE_LIMITS = { parcel_tool_report_limit_trial: 20, parcel_tool_report_limit_plan: 25, parcel_tool_report_limit_pro: 40 };
 export const FIXTURE_PACE = { [REPORT_CHECK_KEYS.minMs]: 23000, [REPORT_CHECK_KEYS.skipAfterMs]: 0, [REPORT_CHECK_KEYS.readyHoldMs]: 1500 };
 
 /** A Queryable over the fixture; `calls` records each SQL text (the read count of T14). */
