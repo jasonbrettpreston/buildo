@@ -119,7 +119,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=307 |
+| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=308 |
 | 2 | compute_maxbld_scenarios | PASS | 28 declared, missing from seeds: none |
 | 3 | compute_maxbld_scenarios | PASS | retired=22 overlap-with-declared=none |
 | 7 | compute_maxbld_scenarios | PASS | SPEC LINK header present=true |
