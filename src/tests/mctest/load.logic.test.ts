@@ -5,6 +5,7 @@
 // targets a loopback app (never production or Vercel); the app it starts gets only the test stack (inherited DB, Upstash and secret
 // variables blanked); a user never passes its allowance of lots; the runner refuses the dev stack before any connection.
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { createHistogram } from "node:perf_hooks";
 import { describe, expect, it } from "vitest";
@@ -13,8 +14,10 @@ import {
   errorRate,
   loadTarget,
   pickKind,
+  readCatalogue,
   ROOT,
   statusClass,
+  stressVerdict,
   summarize,
   userLots,
 } from "../../../scripts/mctest/lib.cjs";
@@ -183,5 +186,107 @@ describe("the stress runner refuses before any connection (D-1 a, D-2 a)", () =>
       "S-500",
     ]);
     expect(plan.users).toBe(500);
+  });
+});
+
+// MF-81 / MF81-10 (a): the stress verdict against the ruled LOCAL thresholds (operator 2026-11-13, "thresholds y"; the MF-33 pattern).
+// The numbers are catalogue DATA; these tests read them from the catalogue and step either side of each one.
+describe("the stress verdict against the catalogue thresholds", () => {
+  const cat = readCatalogue();
+  const profile = (id: string) =>
+    cat.stress_profiles.find((p: { id: string }) => p.id === id);
+  const answers = (p95: number, counts: Record<string, number>) => ({
+    overall: {
+      count: Object.values(counts).reduce((a, b) => a + b, 0),
+      p95_ms: p95,
+    },
+    classes: counts,
+    error_rate: errorRate(counts),
+  });
+  it("carries the ruled thresholds as data, active rows, no waits", () => {
+    expect(
+      cat.stress_profiles.map(
+        (p: { id: string; thresholds: unknown; status: string }) => [
+          p.id,
+          p.thresholds,
+          p.status,
+        ],
+      ),
+    ).toEqual([
+      ["S-50", { p95_ms: 250, error_rate: 0.001, max_5xx: 0 }, "active"],
+      ["S-200", { p95_ms: 250, error_rate: 0.001, max_5xx: 0 }, "active"],
+      ["S-500", { p95_ms: 500, error_rate: 0.001, max_5xx: 0 }, "active"],
+    ]);
+  });
+  it.each(["S-50", "S-200", "S-500"])(
+    "%s: p95 below, at and above the threshold",
+    (id) => {
+      const p = profile(id);
+      const t = p.thresholds.p95_ms;
+      const ok = { "2xx": 1000 };
+      expect(stressVerdict(p, answers(t - 1, ok)).status).toBe("PASS");
+      expect(stressVerdict(p, answers(t, ok)).status).toBe("PASS");
+      const over = stressVerdict(p, answers(t + 0.5, ok));
+      expect(over.status).toBe("FAIL");
+      expect(over.detail).toMatch(/p95/);
+    },
+  );
+  it.each(["S-50", "S-200", "S-500"])(
+    "%s: error rate below, at and above the threshold",
+    (id) => {
+      const p = profile(id);
+      // 0.1 % of 10 000 answers = 10 errors (a 4xx_other, not a 5xx)
+      expect(
+        stressVerdict(p, answers(5, { "2xx": 9991, "4xx_other": 9 })).status,
+      ).toBe("PASS");
+      expect(
+        stressVerdict(p, answers(5, { "2xx": 9990, "4xx_other": 10 })).status,
+      ).toBe("PASS");
+      const over = stressVerdict(
+        p,
+        answers(5, { "2xx": 9989, "4xx_other": 11 }),
+      );
+      expect(over.status).toBe("FAIL");
+      expect(over.detail).toMatch(/error rate/);
+    },
+  );
+  it("a single 5xx fails even when the error rate is under its threshold", () => {
+    const v = stressVerdict(
+      profile("S-50"),
+      answers(5, { "2xx": 100000, "5xx": 1 }),
+    );
+    expect(v.status).toBe("FAIL");
+    expect(v.detail).toMatch(/5xx/);
+  });
+  it("429 and 403 REPORT_LIMIT_REACHED are reported as their own classes and never fail the run", () => {
+    const v = stressVerdict(
+      profile("S-50"),
+      answers(5, { "2xx": 100, "429": 50, "403_REPORT_LIMIT_REACHED": 50 }),
+    );
+    expect(v.status).toBe("PASS");
+    expect(v.detail).toMatch(/429 50/);
+    expect(v.detail).toMatch(/403 REPORT_LIMIT_REACHED 50/);
+  });
+  it("no answered request is a FAIL; a profile with no threshold throws (no literal in code)", () => {
+    expect(stressVerdict(profile("S-50"), answers(0, {})).status).toBe("FAIL");
+    expect(() =>
+      stressVerdict(
+        { id: "X", thresholds: { p95_ms: null, error_rate: null } },
+        answers(1, { "2xx": 1 }),
+      ),
+    ).toThrow(/threshold/);
+  });
+  it("S-50 is the only nightly stress profile and the nightly runner runs the nightly ones from the catalogue", () => {
+    expect(
+      cat.stress_profiles
+        .filter((p: { schedule: string }) => p.schedule === "nightly")
+        .map((p: { id: string }) => p.id),
+    ).toEqual(["S-50"]);
+    const src = fs.readFileSync(
+      path.join(ROOT, "scripts/mctest/nightly.mjs"),
+      "utf8",
+    );
+    expect(src).toMatch(/tests\/load\/stress\.mjs/);
+    expect(src).toMatch(/--schedule=nightly/);
   });
 });

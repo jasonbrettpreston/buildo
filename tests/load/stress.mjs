@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-40; McTest PLAN Layer 4; DECISIONS D-1 (a), D-2 (a),
 //            D-3 (a), D-6 (load a), D-12 (a).
 //
-// MF-81 · usage: npm run mctest:load [-- --profiles=S-50,S-200] [--target=http://127.0.0.1:3110] [--plan]
+// MF-81 · usage: npm run mctest:load [-- --profiles=S-50,S-200] [--schedule=nightly] [--target=http://127.0.0.1:3110] [--plan]
 // Stress on a production build against the TEST STACK only, every number labelled LOCAL. Plain Node: built-in fetch and the Node
 // timing histogram (D-6 load a, no new package). Refuses before any connection unless the test-stack guard passes and the target is a
 // loopback app (never production, Vercel or a remote host). --plan prints the plan after the guard and stops (no connection).
@@ -23,6 +23,7 @@ import {
   pickKind,
   readCatalogue,
   statusClass,
+  stressVerdict,
   summarize,
   testStack,
   userLots,
@@ -60,8 +61,11 @@ async function main() {
   if (!t.ok) return refuse(t.reason);
   const cat = readCatalogue();
   const wanted = arg("profiles")?.split(",");
+  const schedule = arg("schedule"); // --schedule=nightly: the catalogue's own nightly profiles (MF81-10 a)
   const profiles = cat.stress_profiles.filter(
-    (p) => !wanted || wanted.includes(p.id),
+    (p) =>
+      (!wanted || wanted.includes(p.id)) &&
+      (!schedule || p.schedule === schedule),
   );
   const unknown = (wanted ?? []).filter(
     (id) => !cat.stress_profiles.some((p) => p.id === id),
@@ -117,15 +121,11 @@ async function main() {
         label: LABEL,
         budget: BUDGET,
       });
-      const answered = out.overall.count;
       line({
         row: `stress_profiles/${p.id}`,
         owner: p.owner,
         kase: `${p.concurrent_users} users`,
-        status: answered ? "WAITS" : "FAIL",
-        detail: answered
-          ? `measured LOCAL, thresholds not ruled: p95 ${Math.round(out.overall.p95_ms)} ms, error rate ${out.error_rate.toFixed(4)}, 429 ${out.classes["429"] ?? 0}, 403 REPORT_LIMIT_REACHED ${out.classes["403_REPORT_LIMIT_REACHED"] ?? 0}`
-          : "no request was answered in the hold window",
+        ...stressVerdict(p, out),
         label: "LOCAL",
         replay: `MCTEST_SEED=${seed} npm run mctest:load -- --profiles=${p.id}`,
       });

@@ -3,7 +3,7 @@
 // MF-79 · usage: node scripts/mctest/nightly.mjs   (npm run mctest:nightly; scheduled by the operator's launchd job)
 // One run folder ~/Buildo-scratch/mctest/runs/<YYYYMMDD-HHMM>/. It never waits on a lock and never takes one: a held
 // SUITE.lock, a running vitest or a running pipeline chain, or less than 60 GB free, records SKIP with the reason and stops.
-// Order: one Playwright run (crawler, journeys, then the lot sweep on the test stack only) → the results page and cards.
+// Order: one Playwright run (crawler, journeys, then the lot sweep on the test stack only) → the nightly stress profile(s) (S-50, test stack only) → the results page and cards.
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -85,6 +85,30 @@ if (skip) {
         detail: stack.reason,
       }),
     );
+  else {
+    // MF81-10 (a): the catalogue's nightly stress profiles (S-50) against the ruled thresholds; the verdict line is written by the runner.
+    const readLines = () =>
+      fs.existsSync(path.join(runDir, "results.jsonl"))
+        ? fs.readFileSync(path.join(runDir, "results.jsonl"), "utf8")
+        : "";
+    const before = readLines().length;
+    const st = spawnSync(
+      "node",
+      ["tests/load/stress.mjs", "--schedule=nightly"],
+      { stdio: "inherit", env },
+    );
+    const after = readLines();
+    if (st.status !== 0 && !after.slice(before).includes('"status":"FAIL"'))
+      write(
+        result({
+          row: "nightly",
+          owner: "MF-81",
+          kase: "stress",
+          status: "FAIL",
+          detail: `stress_exit: status ${st.status} with no failure line`,
+        }),
+      );
+  }
 }
 spawnSync("node", ["scripts/mctest/report.mjs", runDir], {
   stdio: "inherit",

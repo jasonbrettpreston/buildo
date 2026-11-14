@@ -1019,15 +1019,16 @@
         "403_REPORT_LIMIT_REACHED"
       ],
       "thresholds": {
-        "p95_ms": null,
-        "error_rate": null
+        "p95_ms": 250,
+        "error_rate": 0.001,
+        "max_5xx": 0
       },
       "schedule": "nightly",
-      "status": "waits",
+      "status": "active",
       "owner": "MF-45",
-      "waits_on": "MF-81: the seed go (MF-79), then the first LOCAL run; thresholds not ruled (operator, MF-33 pattern)",
       "interval_s": 4,
-      "runner": "tests/load/stress.mjs"
+      "runner": "tests/load/stress.mjs",
+      "thresholds_ruling": "operator 2026-11-13, verbatim \"thresholds y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md): p95 <= 250 ms at S-50 and S-200, <= 500 ms at S-500; error rate <= 0.1 %; zero 5xx; 429 and 403 REPORT_LIMIT_REACHED their own classes, never errors. LOCAL numbers only."
     },
     {
       "id": "S-200",
@@ -1040,15 +1041,16 @@
         "entitlement": 0.1
       },
       "thresholds": {
-        "p95_ms": null,
-        "error_rate": null
+        "p95_ms": 250,
+        "error_rate": 0.001,
+        "max_5xx": 0
       },
       "schedule": "weekly",
-      "status": "waits",
+      "status": "active",
       "owner": "MF-45",
-      "waits_on": "MF-81: the seed go (MF-79), then the first LOCAL run; thresholds not ruled (operator, MF-33 pattern)",
       "interval_s": 4,
-      "runner": "tests/load/stress.mjs"
+      "runner": "tests/load/stress.mjs",
+      "thresholds_ruling": "operator 2026-11-13, verbatim \"thresholds y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md): p95 <= 250 ms at S-50 and S-200, <= 500 ms at S-500; error rate <= 0.1 %; zero 5xx; 429 and 403 REPORT_LIMIT_REACHED their own classes, never errors. LOCAL numbers only."
     },
     {
       "id": "S-500",
@@ -1061,15 +1063,16 @@
         "entitlement": 0.1
       },
       "thresholds": {
-        "p95_ms": null,
-        "error_rate": null
+        "p95_ms": 500,
+        "error_rate": 0.001,
+        "max_5xx": 0
       },
       "schedule": "weekly",
-      "status": "waits",
+      "status": "active",
       "owner": "MF-45",
-      "waits_on": "MF-81: the seed go (MF-79), then the first LOCAL run; thresholds not ruled (operator, MF-33 pattern)",
       "interval_s": 4,
-      "runner": "tests/load/stress.mjs"
+      "runner": "tests/load/stress.mjs",
+      "thresholds_ruling": "operator 2026-11-13, verbatim \"thresholds y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md): p95 <= 250 ms at S-50 and S-200, <= 500 ms at S-500; error rate <= 0.1 %; zero 5xx; 429 and 403 REPORT_LIMIT_REACHED their own classes, never errors. LOCAL numbers only."
     }
   ],
   "failure_drills": [

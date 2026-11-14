@@ -377,6 +377,33 @@ function errorRate(counts) {
   return ERROR_CLASSES.reduce((a, k) => a + (counts[k] ?? 0), 0) / total;
 }
 
+/**
+ * The stress verdict (MF81-10 a; operator 2026-11-13 "thresholds y", the MF-33 pattern). Every limit is the profile row's catalogue
+ * data (thresholds.p95_ms, thresholds.error_rate, thresholds.max_5xx); a missing one throws, never a default in code. FAIL on no
+ * answer, any 5xx above max_5xx, error rate above its limit, or p95 above its limit (a value AT a limit passes). 429 and 403
+ * REPORT_LIMIT_REACHED are shown as their own classes and never counted as errors.
+ */
+function stressVerdict(profile, out) {
+  const t = profile.thresholds ?? {};
+  for (const k of ["p95_ms", "error_rate", "max_5xx"])
+    if (typeof t[k] !== "number")
+      throw new Error(
+        `stress profile ${profile.id}: threshold ${k} is not set in the catalogue`,
+      );
+  const c = out.classes ?? {};
+  const seen = `p95 ${Math.round(out.overall.p95_ms ?? 0)} ms, error rate ${out.error_rate.toFixed(4)}, 5xx ${c["5xx"] ?? 0}, 429 ${c["429"] ?? 0}, 403 REPORT_LIMIT_REACHED ${c["403_REPORT_LIMIT_REACHED"] ?? 0}`;
+  const limits = `limits p95 ${t.p95_ms} ms, error rate ${t.error_rate}, 5xx ${t.max_5xx}`;
+  if (!out.overall.count)
+    return verdict(false, "no request was answered in the hold window");
+  const why = [];
+  if ((c["5xx"] ?? 0) > t.max_5xx) why.push("5xx above its limit");
+  if (out.error_rate > t.error_rate) why.push("error rate above its limit");
+  if (out.overall.p95_ms > t.p95_ms) why.push("p95 above its limit");
+  return why.length
+    ? verdict(false, `${why.join("; ")} (LOCAL): ${seen}; ${limits}`)
+    : verdict(true, `within the ruled thresholds (LOCAL): ${seen}; ${limits}`);
+}
+
 /** The app under load must be a loopback http app: never production, Vercel or any remote host (D-2 a). */
 function loadTarget(url) {
   let u;
@@ -616,6 +643,7 @@ function relayUrl(dbUrl, port) {
 }
 
 module.exports = {
+  stressVerdict,
   HANG_MS,
   sanitisedError,
   slowVerdict,
