@@ -15,7 +15,7 @@
 - input `scripts/lib/parcel-cost.js` sha256 `88d27d0a94f1dcbc`
 - input `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - input `scripts/seeds/bylaw/external.json` sha256 `23ab08b99383271d`
-- input `scripts/seeds/bylaw/vocab.json` sha256 `cfea7ffa4aff9072`
+- input `scripts/seeds/bylaw/vocab.json` sha256 `93c77aeac9e31a07`
 - input `scripts/seeds/logic_variables.json` sha256 `61cf5f92b04b7666`
 - input `src/lib/db/generated/schema.ts` sha256 `0d919f4ea43a4629`
 

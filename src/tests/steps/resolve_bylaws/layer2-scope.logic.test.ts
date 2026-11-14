@@ -30,6 +30,9 @@ const sorted = (xs: Iterable<string>): string[] => [...new Set(xs)].sort();
 const keyedBy = (pick: (field: string) => boolean): string[] =>
   sorted(fields.filter((f) => pick(String(f.field)) && f.keyed && Array.isArray(f.keyed.layer2_targets)).flatMap((f) => f.keyed.layer2_targets as string[]));
 const SUITE = (f: string): boolean => f.startsWith('suite_');
+// MB-27 increment 5 Part B (named re-pin, P1 b; migration 321; operator 2026-11-13): a garden-suite-only target with no maxbld field of its own, the 150.7.60.20(6)(C)
+// corner street-side floor, read by Layer 3 beside the house's yard (Spec 69a M-198(2)); the laneway suite has no such clause, so it is in the garden_suite list only.
+const GARDEN_ONLY = ['rear_setback_through_floor_m', 'side_setback_street_floor_m']; // P2 a (Part B, B5B-5): the through-lot rear floor, 150.7.60.20(3)(B), read by Layer 3 beside the lot's own front setback (M-198(1))
 
 describe('R-IS: the v1 scope seed', () => {
   it('declares the three v1 structures (Spec 134 §6; M-233)', () => {
@@ -50,7 +53,7 @@ describe('R-IS: the v1 scope seed', () => {
     const deferred = new Set(Object.keys(s.deferred || {}));
     const live = (xs: string[]): string[] => xs.filter((t) => !deferred.has(t));
     expect(s.targets.principal).toEqual(live(keyedBy((f) => !SUITE(f))));
-    expect(s.targets.garden_suite).toEqual(live(keyedBy(SUITE)));
+    expect(s.targets.garden_suite).toEqual(sorted([...live(keyedBy(SUITE)), ...GARDEN_ONLY]));
     expect(s.targets.laneway_suite).toEqual(live(keyedBy(SUITE)));
   });
 
@@ -59,7 +62,8 @@ describe('R-IS: the v1 scope seed', () => {
     const lineage = keyedBy(() => true);
     expect(lineage.length).toBeGreaterThan(0);
     const listed = sorted([...(Object.values(s.targets) as string[][]).flat(), ...Object.keys(s.deferred || {})]);
-    expect(listed).toEqual(lineage);
+    expect(listed.filter((t) => !GARDEN_ONLY.includes(t))).toEqual(lineage);
+    for (const t of GARDEN_ONLY) expect(s.targets.garden_suite, t).toContain(t);
     for (const [t, why] of Object.entries(s.deferred || {})) expect(typeof why === 'string' && (why as string).length > 0, t).toBe(true);
   });
 });

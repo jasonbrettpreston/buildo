@@ -1,41 +1,30 @@
 {
   "task": "MB-27",
-  "item": "increment 5 C2b sub-lane 1 (lane B5B-1): the fitted house on the row alone (FIT-a; FD-1..FD-6 a with C1-C21; AR-7 b): six Layer 3 rows on the flat card, asserted bounds that refuse and are counted, the storey-rule reading row, the declared audit counts",
+  "item": "increment 5 Part B lane B5B-5, Layer 2 slice: the garden suite corner street-side floor (P1 b) and through-lot rear floor (P2 a, generated unit) targets, migration 321 width 70 -> 72",
   "class": "D",
   "stage": 4,
-  "date": "2026-11-12",
-  "head": "008e95c60",
+  "date": "2026-11-13",
+  "head": "d1451c668",
   "commits_reviewed": [
-    "the C2b build commit over prereg-MB-27-50.json (the working tree reviewed before commit, staged diff against 008e95c60)"
+    "the B5B-5 Layer 2 build commit over prereg-MB-27-55.json (working tree reviewed before commit)"
   ],
   "cards": [
     "~/Buildo-scratch/mcbylaws/inc5/fitted/CONDITIONS-FD1-6.md",
     "~/Buildo-scratch/mcbylaws/inc5/FITTED-MEASURE.md",
     "~/Buildo-scratch/mcbylaws/inc5/ADDON-ALL-ROWS.md AR-7"
   ],
-  "plan": "~/Buildo-scratch/mcbylaws/inc5/BUILD-PLAN.md section 1 C2 (Layer 3, fitted rows) and ~/Buildo-scratch/mcbylaws/inc5/BUILD-COORD.md (lane B5B-1); oracle McProof key v2.1; prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-50.json",
-  "output": "OUTPUT panel over the staged diff: one DeepSeek bulk pass (deepseek-reasoner via the dotenv preload, review of the diff against CONDITIONS-FD1-6 and FITTED-MEASURE 1.1) and two Claude seats (Sonnet, read-only: grounded code reviewer, regression guardian). No HIGH stands. Folded: audit keys present at 0 on an empty page; a unit test of auditCountsOf on both branches; validateCatalogue refuses a dead or shadowing audit entry; auditCountsOf skips a core or object key at run time; descriptor emit formatting. Rejected with evidence: the DeepSeek HIGHs on height_m vs height_max_m (height_max_m is l2(height_m) in the same run), the units_fit extra plate (it is the basement, units_flat form, key unitsOf), storeys_above_wall in units_fit (the approved key counts S - ws storeys), and the files it did not see (excluded from its bundle: layer2 input, report artefacts, fixture); C2 (min with a not_evaluated wall_storeys is not_evaluated, evaluate-l3 minMax; the six lots compute on the flat run cell, as the key); flag carriage (asserted on every fitted row by the test). The G-STOR and expected-172/4d re-pins follow the a39f91ae5 version-only form.",
+  "plan": "BUILD-COORD.md (B5B-4 position, operator P1 b / P2 a); prereg scripts/analysis/bylaw-validation/coa-expected/prereg-MB-27-55.json",
+  "output": "OUTPUT panel: one grounded reviewer (code-reviewer-grounded, read-only, executed): migration 321 views and CHECKs checked against rb.scopePairs / rb.optionPairs, the generated unit leaves rear_setback_m unchanged on the golden 25 (0 diffs; 15 intended street-side diffs on 3 corner lots), re-pins move only named numbers, 319 tests green. No HIGH or MEDIUM. Sub-threshold stale comments noted.",
   "seats": [
     {
-      "seat": "ds-bulk (deepseek-reasoner)",
-      "verdict": "findings adjudicated: accepted the core-key guard; the rest rejected with evidence"
-    },
-    {
       "seat": "code-reviewer-grounded (Sonnet)",
-      "verdict": "no HIGH; 2 MEDIUM folded (audit keys at 0, auditCountsOf unit test); 3 LOW (1 folded)"
-    },
-    {
-      "seat": "regression-guardian (Sonnet)",
-      "verdict": "no HIGH; 0 of 3,725 golden rows move except content shas (seed hashes); MEDIUM increment3 house lock is length-only (pre-existing gap, carded); LOW audit shape validation folded"
+      "verdict": "PASS, no HIGH or MEDIUM; stale comments only"
     }
   ],
   "verdict": "PASS",
   "blockers": [],
   "followups": [
-    "card: increment3-building-type \"the house never moves\" asserts length only since 9441861ae; add an id and value lock",
-    "C3 3.0 m audit entries after migration 316 (lane B5A)",
-    "operator: the A0553 houseplex / suite-house flat card draws a set-back storey 2.69 m deep (the stored gfa_flat_m2 stack already counts it); C3 says the stepped floor meets 3.0 m: count only, or refuse?",
-    "operator: units_fit counts storeys_max storeys on the fitted footprint (the approved key), not the fitted storeys; equal on the 25 (capped at units_max)"
+    "DeepSeek lens not run in this lane (grounded reviewer only)"
   ],
   "evidence": "~/Buildo-scratch/mcbylaws/inc5/b5b1/ds-review.md"
 }

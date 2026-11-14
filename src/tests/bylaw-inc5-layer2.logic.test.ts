@@ -56,11 +56,11 @@ describe('item 1 (D-1 a) + item 7 (D-4 a): the suite_height design option', () =
   it('the row is 70 wide: 55 base pairs, roof_form 56-62, suite_height 63-70 (low then tall), the option run sets the token and `sets`', () => {
     const rb = req(path.join(ROOT, 'scripts/lib/bylaw-resolution.js'));
     const base = rb.scopePairs(SCOPE); const opts = rb.optionPairs(SCOPE, VOCAB.design_options);
-    expect([base.length, base.length + opts.length]).toEqual([55, 70]);
+    expect([base.length, base.length + opts.length]).toEqual([57, 72]); // Part B, P2 a (named re-pin; migration 321, width 72: the through-lot rear floor joins at base 37, the corner floor moves to 41, the option slots to 58-72); P1 b: (named re-pin; migration 321): the corner floor joins the base pairs at 40; the option slots move to 57-71 (the roof_form threshold 63, suite_height 64-71); the suite_height base positions 31-38 are before it and do not move
     const sh = opts.filter((p: Json) => p.option_name === 'suite_height');
     expect(sh.map((p: Json) => `${p.target}:${p.option}:${p.base_index + 1}`)).toEqual([
       'gfa_m2:suite_low:31', 'gfa_m2:suite_tall:31', 'height_m:suite_low:32', 'height_m:suite_tall:32',
-      'rear_setback_m:suite_low:36', 'rear_setback_m:suite_tall:36', 'separation_m:suite_low:38', 'separation_m:suite_tall:38']);
+      'rear_setback_m:suite_low:36', 'rear_setback_m:suite_tall:36', 'separation_m:suite_low:39', 'separation_m:suite_tall:39']); // P2 a (named re-pin): separation_m base position 38 -> 39 (the through-lot rear floor joins at 37)
     expect(rb.optionLot({ flags: { suite_one_storey: false } }, sh[0]).flags).toEqual({ suite_one_storey: true, suite_height_over_4m: false });
     expect(rb.optionInputPaths(opts)).toEqual(['flags.flat_or_shallow_roof', 'flags.suite_height_over_4m', 'flags.suite_one_storey']);
   });
@@ -133,15 +133,16 @@ describe('D-77: the (6) heading licenses the street-side target for 150.7.60.20(
     const norm = (s: string): string => s.toLowerCase().replace(/\s+/g, ' ');
     const hits = fs.readdirSync(dir).filter((n) => n.endsWith('.txt')).flatMap((n) => { const t = norm(fs.readFileSync(path.join(dir, n), 'utf8')); const out: string[] = []; let i = t.indexOf(P); while (i >= 0) { out.push(n + ':' + t.slice(Math.max(0, i - 40), i).trim().split(' ').slice(-1)[0]); i = t.indexOf(P, i + 1); } return out; });
     expect(hits).toEqual(['ch150_7.txt:(6)']);
-    expect(unit('150.7.60.20(6)#(6)(C)').numeric_expression).toEqual(['side_setback_street_m = max(principal_side_setback_m; 1.5 m) @(6)(C)']);
+    expect(unit('150.7.60.20(6)#(6)(C)').numeric_expression).toEqual(['side_setback_street_floor_m = 1.5 m @(6)(C)']); // Part B, P1 b (named re-pin): the floor is its own target; the heading pattern now licenses only (6)(A) and (6)(B) on side_setback_street_m
   });
 });
 
 describe('item 6 reading 2 and D-6 a (B5A-2 a): the corner and through-lot suite yards', () => {
   it('(6)(C) is keyed to the suite\'s street-side target; the interior side takes (5)(B); the street cell waits for the step (P5.13)', () => {
-    expect(unit('150.7.60.20(6)#(6)(C)').target).toBe('side_setback_street_m');
+    expect(unit('150.7.60.20(6)#(6)(C)').target).toBe('side_setback_street_floor_m'); // Part B, P1 b (named re-pin): the floor is its own target (the by-law table stores the 1.5 m); Layer 3 takes the larger of it and the house's yard
     expect(cell('A0578', 'garden_suite', 'side_setback_m', 'detached_house')).toBe('number:0.94@150.7.60.20(5)#(5)(B)');
-    expect(cell('A0578', 'garden_suite', 'side_setback_street_m', 'detached_house')).toBe('not_evaluated:missing_input:principal_side_setback_m');
+    expect(cell('A0578', 'garden_suite', 'side_setback_street_m', 'detached_house')).toBe('not_evaluated:condition_unknown:adjacent_lot_fronts_flanking_street'); // Part B, P1 b (named re-pin): (6)(A) / (6)(B) only; (6)(C) no longer reads the house's yard input
+    expect(cell('A0578', 'garden_suite', 'side_setback_street_floor_m', 'detached_house')).toBe('number:1.5@150.7.60.20(6)#(6)(C)');
   });
   it('(3)(A) is the M-198(1) proxy with the 1.5 m floor, disclosed "may understate"; the step supplies the front (P5.13)', () => {
     const u = unit('150.7.60.20(3)#(3)(A)');
@@ -175,8 +176,8 @@ describe('migration 315 (written, not applied)', () => {
     const s = m315();
     const v = (name: string): string => (new RegExp(`CREATE OR REPLACE VIEW ${name} AS([\\s\\S]*?);\\n`).exec(s) as RegExpExecArray)[1] as string;
     const base = [...v('bylaw_resolution_results').matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
-    expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).map((p, i) => ({ i: i + 1, ...p })));
+    expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m').map((p, i) => ({ i: i + 1, ...p }))); // Part B, P1 b (named re-pin): 315's text is the 55-pair era; migration 321 is locked by bylaw-inc5-corner-floor.logic.test.ts
     const opt = [...v('bylaw_resolution_option_results').matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)', (NULL|'[a-z_]+'), (NULL|\d+)\)/g)].map((m) => [Number(m[1]), m[3], m[4] === 'NULL' ? null : m[4]!.slice(1, -1), m[5] === 'NULL' ? null : Number(m[5])]);
-    expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : p.base_index + 1]));
+    expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : (rb.scopePairs(SCOPE) as Json[]).filter((q) => q.target !== 'side_setback_street_floor_m' && q.target !== 'rear_setback_through_floor_m').findIndex((q) => q.structure === p.structure && q.target === p.target) + 1])); // P2 a (named re-pin): base positions in 315's own 55-pair text
   });
 });

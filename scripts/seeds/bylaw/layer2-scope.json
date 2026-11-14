@@ -55,9 +55,11 @@
       "lane_centreline_setback_m",
       "lot_coverage_pct",
       "rear_setback_m",
+      "rear_setback_through_floor_m",
       "rear_soft_landscaping_pct",
       "separation_m",
       "side_setback_m",
+      "side_setback_street_floor_m",
       "side_setback_street_m",
       "upper_side_setback_m"
     ],

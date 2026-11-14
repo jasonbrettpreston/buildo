@@ -32,13 +32,13 @@ const lr = (): Json => require(path.join(ROOT, 'scripts/lib/bylaw-lot-row.js')) 
 const PAIRS = (SCOPE.structures as string[]).flatMap((structure) => (SCOPE.targets[structure] as string[]).map((target) => ({ structure, target })));
 const MIG_FB = 'migrations/293_resolve_bylaws_fallback_slot.sql';
 const sqlFb = (): string => read(MIG_FB);
-// MB-27 increment 5 (named re-pin): migration 315 is now the latest writer of the width CHECKs and of bylaw_resolution_results (55 base pairs,
-// width 70 = the base pairs + the option slots of rb.optionPairs); 293 keeps its own 54-pair text (the scope before principal_coverage_path_b_pct).
-const MIG_LATEST = 'migrations/315_resolve_bylaws_suite_height_option.sql';
+// MB-27 increment 5 (named re-pin): migration 315 was the writer of the width CHECKs and of bylaw_resolution_results at 55 base pairs / width 70;
+// MB-27 increment 5 Part B (named re-pin, P1 b; migration 321): migration 321 is now the latest writer (56 base pairs, width 71 = the base pairs + the option slots of rb.optionPairs); 293 keeps its own 54-pair text (the scope before principal_coverage_path_b_pct and the corner floor).
+const MIG_LATEST = 'migrations/321_resolve_bylaws_corner_floor_slot.sql';
 const sqlLatest = (): string => read(MIG_LATEST);
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const WIDTH = PAIRS.length + ((require(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')) as Json).optionPairs(SCOPE, readJson('scripts/seeds/bylaw/vocab.json').design_options) as unknown[]).length;
-const PAIRS_293 = PAIRS.filter((p) => p.target !== 'principal_coverage_path_b_pct');
+const PAIRS_293 = PAIRS.filter((p) => p.target !== 'principal_coverage_path_b_pct' && p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m');
 
 let sql = '';
 let tree: Json[] = [];

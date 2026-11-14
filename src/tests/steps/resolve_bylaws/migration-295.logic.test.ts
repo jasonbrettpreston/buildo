@@ -44,9 +44,9 @@ const liveWidth = (): number => rb().scopePairs(SCOPE).length + rb().optionPairs
 // MB-27 increment 5 (named re-pin): migration 315 widens the row to 70 (principal_coverage_path_b_pct joins the base pairs; the suite_height
 // option slots follow roof_form). This file is 295's own text, so its anchors are the 295 era: the 54 base pairs without the new target and the
 // roof_form slots only (both ways against the live scope, filtered); migration 315 is locked by src/tests/bylaw-inc5-layer2.logic.test.ts.
-const ERA_PAIRS = (): Json[] => (rb().scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'principal_coverage_path_b_pct');
+const ERA_PAIRS = (): Json[] => (rb().scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'principal_coverage_path_b_pct' && p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m');
 const ERA_OPTIONS = (): Json[] => {
-  const live = rb().scopePairs(SCOPE) as Json[]; const era = live.filter((p) => p.target !== 'principal_coverage_path_b_pct');
+  const live = rb().scopePairs(SCOPE) as Json[]; const era = live.filter((p) => p.target !== 'principal_coverage_path_b_pct' && p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m');
   return (rb().optionPairs(SCOPE, VOCAB.design_options) as Json[]).filter((p) => p.option_name === 'roof_form')
     .map((p) => ({ ...p, base_index: p.base_index === null ? null : era.indexOf(live[p.base_index] as Json) }));
 };
@@ -70,7 +70,7 @@ describe('M-465 (1)-(4): width 61, the closed code shared, the base view unchang
   it('the lot row is 61 wide: the 54 base pairs plus the 7 option slots (a literal anchor, as profiles.logic.test.ts does for 54)', () => {
     expect(ERA_PAIRS()).toHaveLength(54);
     expect(width()).toBe(61);
-    expect(liveWidth()).toBe(70); // migration 315 (MB-27 increment 5)
+    expect(liveWidth()).toBe(72); // migration 315 (MB-27 increment 5) then 321 (Part B, P1 b: the corner floor, named re-pin)
   });
   it('codes: width 61 and closed to the result codes plus storage code shared (layer2-map.json), NOT VALID', () => {
     const m = /bylaw_resolution_lots_codes_closed CHECK \(cardinality\(codes\) = (\d+) AND codes <@ ARRAY\[([0-9, ]+)\]::smallint\[\]\) NOT VALID;/.exec(bare);

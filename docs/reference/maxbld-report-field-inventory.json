@@ -221,7 +221,7 @@
     },
     {
       "path": "scripts/seeds/bylaw/vocab.json",
-      "sha256": "cfea7ffa4aff9072"
+      "sha256": "cb0bfda38e3696c0"
     },
     {
       "path": "scripts/seeds/lineage-meta-snapshot.json",

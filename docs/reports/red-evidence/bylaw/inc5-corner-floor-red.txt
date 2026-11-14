@@ -1,0 +1,20 @@
+   × P1 (b): the corner street-side floor is its own garden_suite target > vocab declares the target (metres, envelope, a minimum) and the scope lists it for the garden suite only, in its sorted place 2ms
+   × P1 (b): the corner street-side floor is its own garden_suite target > the row is 71 wide: 56 base pairs, the option slots after them (roof_form, suite_height), the floor at base position 40 3ms
+   × P1 (b): the corner street-side floor is its own garden_suite target > 150.7.60.20(6)(C) states the floor on its own target, 1.5 m, and no longer reads the principal side yard input 2ms
+   × P1 (b): the corner street-side floor is its own garden_suite target > A0578 (corner lot): the stored floor cell is 1.5 m from (6)(C); a lot that is not a corner lot stores no floor 22ms
+   × migration 321 (written, not applied) > 321: width 71, the shared code refused at the 56 base slots and the threshold slot 63, both views at 71 1ms
+   × migration 321 (written, not applied) > 321: both views name every position both ways against rb.scopePairs / rb.optionPairs 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/bylaw-inc5-corner-floor.logic.test.ts > P1 (b): the corner street-side floor is its own garden_suite target > vocab declares the target (metres, envelope, a minimum) and the scope lists it for the garden suite only, in its sorted place
+TypeError: Cannot read properties of undefined (reading 'unit')
+ FAIL  src/tests/bylaw-inc5-corner-floor.logic.test.ts > P1 (b): the corner street-side floor is its own garden_suite target > the row is 71 wide: 56 base pairs, the option slots after them (roof_form, suite_height), the floor at base position 40
+AssertionError: expected [ 55, 70 ] to deeply equal [ 56, 71 ]
+ FAIL  src/tests/bylaw-inc5-corner-floor.logic.test.ts > P1 (b): the corner street-side floor is its own garden_suite target > 150.7.60.20(6)(C) states the floor on its own target, 1.5 m, and no longer reads the principal side yard input
+AssertionError: expected 'side_setback_street_m' to be 'side_setback_street_floor_m' // Object.is equality
+ FAIL  src/tests/bylaw-inc5-corner-floor.logic.test.ts > P1 (b): the corner street-side floor is its own garden_suite target > A0578 (corner lot): the stored floor cell is 1.5 m from (6)(C); a lot that is not a corner lot stores no floor
+AssertionError: expected 'not_evaluated:no_candidate' to be 'number:1.5@150.7.60.20(6)#(6)(C)' // Object.is equality
+ FAIL  src/tests/bylaw-inc5-corner-floor.logic.test.ts > migration 321 (written, not applied) > 321: width 71, the shared code refused at the 56 base slots and the threshold slot 63, both views at 71
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc5b4/migrations/321_resolve_bylaws_corner_floor_slot.sql'
+ FAIL  src/tests/bylaw-inc5-corner-floor.logic.test.ts > migration 321 (written, not applied) > 321: both views name every position both ways against rb.scopePairs / rb.optionPairs
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc5b4/migrations/321_resolve_bylaws_corner_floor_slot.sql'
+      Tests  6 failed (6)

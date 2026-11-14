@@ -18,7 +18,7 @@ const SQL = file ? fs.readFileSync(path.join(ROOT, 'migrations', file), 'utf8') 
 const SQL297 = fs.readFileSync(path.join(ROOT, 'migrations', fs.readdirSync(path.join(ROOT, 'migrations')).find((f) => /^297_.*\.sql$/.test(f)) as string), 'utf8');
 // MB-27 increment 5 (named re-pin): migration 315 widens the encoder to 70; this file's text is the 61-wide era (54 base pairs + the 7 roof_form
 // slots), so the encoder width is read with the increment-5 additions taken out (the new principal target and the suite_height slots).
-const width = (RB.tailPairs ? RB.tailPairs(SCOPE).length : 0) + RB.scopePairs(SCOPE).filter((p: { target: string }) => p.target !== 'principal_coverage_path_b_pct').length + RB.optionPairs(SCOPE, VOCAB.design_options).filter((p: { option_name: string }) => p.option_name === 'roof_form').length;
+const width = (RB.tailPairs ? RB.tailPairs(SCOPE).length : 0) + RB.scopePairs(SCOPE).filter((p: { target: string }) => p.target !== 'principal_coverage_path_b_pct' && p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m').length + RB.optionPairs(SCOPE, VOCAB.design_options).filter((p: { option_name: string }) => p.option_name === 'roof_form').length;
 const classesOf = (sql: string) => {
   const m = /bylaw_resolution_option_results[\s\S]*?CROSS JOIN \(VALUES ([^)]*\)(?:, \([^)]*\))*)\) AS c \(class\)/.exec(sql);
   return m ? [...String(m[1]).matchAll(/'([a-z_]+)'/g)].map((x) => String(x[1])) : [];

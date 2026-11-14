@@ -26,11 +26,11 @@
     "rows_out_of_line": 68257,
     "toast_payload_bytes": 45707869
   },
-  "table_version": "84132253a074801a37d5b65b6075e2762aacd05ec4fafdd03038637d351a1dcf",
+  "table_version": "dc2e0e0dc1a3e53d417091444ec491aecb9a42947bff887f2e619be3da0b3d60",
   "evaluator_version": "9b46954c9a0380c6225cea653c510a4769a6c1ee296a738c3838d8b8e94ae716",
   "parent_sha": "6c22252af77ff547d21f406fe62e3eedd7ef3036",
   "measured": "2026-11-12",
   "toast_tuple_target": 1624,
   "width": 70,
-  "rebound": "2026-11-13 re-cut on origin 33af0759a (wf1/inc5a-1113): table_version moved b65aa721278d -> fe54cdb5986b by the landed Layer 2 seed edits (B5B-1, E-COST); re-bound by regeneration, not re-measured: the stored cells and model rows are Layer 2 only and unchanged (21,053,617 moved cells, P_up 699.24 MiB); the night re-measures P_up from the test write (ST-3) | 2026-11-13 re-bound again on origin 3dc51a394 (wf1/laner-1113, the register batch): table_version moved fe54cdb5986b -> 84132253a074 by the new Spec 69a row for the ST-3 sizing rule (a rule-map row; no seed, stored cell or model row moved); re-bound by regeneration, not re-measured (P_up 699.24 MiB unchanged); standard G-STOR re-bind flow on a table_version move"
+  "rebound": "2026-11-13 re-cut on origin 33af0759a (wf1/inc5a-1113): table_version moved b65aa721278d -> fe54cdb5986b by the landed Layer 2 seed edits (B5B-1, E-COST); re-bound by regeneration, not re-measured: the stored cells and model rows are Layer 2 only and unchanged (21,053,617 moved cells, P_up 699.24 MiB); the night re-measures P_up from the test write (ST-3) | 2026-11-13 re-bound again on origin 3dc51a394 (wf1/laner-1113, the register batch): table_version moved fe54cdb5986b -> 84132253a074 by the new Spec 69a row for the ST-3 sizing rule (a rule-map row; no seed, stored cell or model row moved); re-bound by regeneration, not re-measured (P_up 699.24 MiB unchanged); standard G-STOR re-bind flow on a table_version move | 2026-11-13 (B5B-5): table_version re-bound to the P1 b + P2 a tree (migration 321: width 72, two garden_suite floor targets); by regeneration, not re-measured (one more slot at width 72, the D-81 re-run re-measures)"
 }

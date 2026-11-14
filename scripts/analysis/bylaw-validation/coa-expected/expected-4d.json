@@ -1,5 +1,5 @@
 {
- "commit": "95615f00",
+ "commit": "2e9533d8",
  "notices": 123,
  "variances": 496,
  "totals": {
@@ -7,14 +7,14 @@
   "MATCH": 283,
   "DIFFER": 23,
   "NOT MODELLED": 73,
-  "NO ANSWER": 27,
-  "OWED": 50,
+  "NO ANSWER": 28,
+  "OWED": 49,
   "DATA": 22,
   "NOT SCORABLE": 12,
   "BY-LAW CHANGED": 4
  },
  "inputs": {
-  "table_version": "84132253a074801a37d5b65b6075e2762aacd05ec4fafdd03038637d351a1dcf",
+  "table_version": "dc2e0e0dc1a3e53d417091444ec491aecb9a42947bff887f2e619be3da0b3d60",
   "evaluator_version": "9b46954c9a0380c6225cea653c510a4769a6c1ee296a738c3838d8b8e94ae716",
   "scorer_sha": "35a51e208e2cf945"
  },

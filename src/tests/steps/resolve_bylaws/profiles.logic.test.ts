@@ -33,11 +33,12 @@ describe('R-JA: scopePairs — the pointer order is the scope seed order', () =>
   // NPAIRS and PAIRS are both computed from layer2-scope.json, so the check above cannot see a slot added or dropped there.
   // 54 = the width after MB-18 (j) (migration 293). A later slot change edits this literal as a named, ruled edit.
   // 55 = MB-27 increment 5 (migration 315): principal_coverage_path_b_pct joins (build Q3 a as ruled B5A-1 c, operator 2026-11-12).
-  it('the scope holds exactly 55 (structure, target) pairs, a literal that a scope edit alone cannot move', () => {
-    expect(NPAIRS).toBe(55);
+  // 56 = MB-27 increment 5 Part B (migration 321): the garden suite's side_setback_street_floor_m, the 150.7.60.20(6)(C) corner floor, joins (operator 2026-11-13 P1 b).
+  it('the scope holds exactly 57 (structure, target) pairs, a literal that a scope edit alone cannot move', () => {
+    expect(NPAIRS).toBe(57); // P2 a (B5B-5, named re-pin): the through-lot rear floor rear_setback_through_floor_m joins (migration 321, operator 2026-11-13 P2 a)
   });
 
-  it('the literal is not computed from the scope: a 54-pair or a 56-pair copy of the scope counts differently', () => {
+  it('the literal is not computed from the scope: a 56-pair or a 58-pair copy of the scope counts differently', () => {
     const count = (scope: Json): number => (scope.structures as string[]).reduce((n: number, s: string) => n + (scope.targets[s] as string[]).length, 0);
     const copy = (): Json => JSON.parse(JSON.stringify(SCOPE)) as Json;
     const fewer = copy();
@@ -45,10 +46,10 @@ describe('R-JA: scopePairs — the pointer order is the scope seed order', () =>
     const more = copy();
     more.targets.principal = [...(more.targets.principal as string[]), 'zz_extra_target_m'];
     expect(count(SCOPE)).toBe(NPAIRS);
-    expect(count(fewer)).toBe(54);
-    expect(count(more)).toBe(56);
-    expect(rb().scopePairs(fewer)).toHaveLength(54);
-    expect(rb().scopePairs(more)).toHaveLength(56);
+    expect(count(fewer)).toBe(56);
+    expect(count(more)).toBe(58);
+    expect(rb().scopePairs(fewer)).toHaveLength(56);
+    expect(rb().scopePairs(more)).toHaveLength(58);
   });
 });
 
