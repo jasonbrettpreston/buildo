@@ -1,5 +1,7 @@
 # McBylaws queue v3 (the ONLY McBylaws job list) — approved 2026-10-30
 
+Pointer 2026-11-14 (M-246, prior text kept; McQueue · McBylaws queue · lane MQ; operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location"): the homes of every queue, the status line form and the queue rules are in Spec 137 (`docs/specs/00-architecture/137_mcqueue.md`). This file stays the home of its own rows.
+
 ## How Phase 3 works (plain language)
 - **Phase 1 is the by-law table**: every rule of By-law 569-2013 we rely on, double-keyed. Done.
 - **Phase 2 is the application table**: for each lot, which rules apply and what limits they give, with the clause behind each one (the `resolve_bylaws` step). Closed.
