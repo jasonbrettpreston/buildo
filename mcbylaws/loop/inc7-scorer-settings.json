@@ -1,0 +1,69 @@
+{
+  "schema": "mcbylaws-inc7-scorer-settings/1",
+  "$comment": "Increment-7 scorer settings (MB-27 increment 7, pulled forward by operator ruling 2026-11-15, verbatim: \"y inc7 early\"). Data, no code. Every value marked provisional below is the reading in ~/Buildo-scratch/mcbylaws/inc7/RESEARCH-20261115.md and waits for the operator's ruling (decision lane drafting); a ruling changes this file, never the scorer. Sources: 69a = docs/specs/01-pipeline/69a_mcbylaw_register.md (M-362 at 498), 68 = docs/specs/01-pipeline/68_mcbylaw_standard.md (SC-19 at 84), CARD = mcbylaws/sources/cards/CARDS-2026-10-29.answered.md (MB-13, CARD-HR), REF = ref/mb15-blind-run reference/mb15/blind-score.mjs.ref (rules read, code not reused). Closeness threshold stays null: it is set from this increment's data and recorded before the proof set is keyed (69a:498).",
+  "provisional": {
+    "direction.gate_measures": "RESEARCH section 1: gate measures are GFA/FSI, height, storeys (CARD:10); footprint and units compared only (68:84 names all five). Open: Q3.",
+    "direction.threshold_pct": "69a:498, 90 percent correct per measure per set. Ruled figure; the denominator choice is provisional.",
+    "direction.count_rounding": "ceil: 90 percent of 25 is 22.5, so 23 of 25 (RESEARCH section 3). Not defined in 69a/68. Open: Q3.",
+    "direction.denominator": "all_cases: not-evaluated counts as missed (69a:498). Open: Q2.",
+    "direction.tolerance": "REF tolerances: gfa 0.05 m2, height 0.05 m, storeys 0. Provisional.",
+    "direction.variance_granted_values": "REF counts yes and modified as a variance. Open: Q6.",
+    "closeness.spread": "iqr: DeepSeek flagged the spread undefined; the text names no statistic. Open: Q3.",
+    "closeness.population": "69a:498: new-build cases with no GFA variance.",
+    "catch.class_rules": "Class definitions are not in a ruled spec; REF and CARD-HR only. Open: Q4.",
+    "catch.limit_match": "REF tolerance max(0.011, 0.6 percent). Provisional.",
+    "catch.not_evaluated": "69a:498: not-evaluated counts as missed (class MISSED in the table, in the denominator).",
+    "catch.thresholds": "69a:498 and 68:84 (CAUGHT+CAUGHT-ESTIMATE >= 70, CAUGHT >= 50, false <= 10, soft <= 15, wrong limit <= 3; 0 on existing-lot minimums and existing/party walls)."
+  },
+  "layer3": {
+    "usable_status": ["computed"],
+    "field_by_measure": {
+      "gfa": "gfa_max_m2",
+      "height": "height_max_m",
+      "storeys": "storeys_max",
+      "footprint": "footprint_max_m2",
+      "units": "units_max"
+    }
+  },
+  "direction": {
+    "measures": ["gfa", "height", "storeys", "footprint", "units"],
+    "gate_measures": ["gfa", "height", "storeys"],
+    "threshold_pct": 90,
+    "count_rounding": "ceil",
+    "denominator": "all_cases",
+    "tolerance": { "gfa": 0.05, "height": 0.05, "storeys": 0, "footprint": 0.05, "units": 0 },
+    "variance_granted_values": ["yes", "modified"]
+  },
+  "closeness": {
+    "measure": "gfa",
+    "population": { "new_build": true, "variance_on_measure": false },
+    "spread": "iqr",
+    "threshold": null
+  },
+  "catch": {
+    "verdicts": ["EXCEEDS", "MAY EXCEED", "COMPLIES", "NOT EVALUATED"],
+    "verdict_roles": { "exceeds": "EXCEEDS", "may_exceed": "MAY EXCEED", "complies": "COMPLIES", "not_evaluated": "NOT EVALUATED" },
+    "limit_match": { "abs": 0.011, "rel_pct": 0.6 },
+    "class_rules": [
+      { "class": "CAUGHT", "city_row": true, "our_verdict": ["EXCEEDS"], "limit_match": true },
+      { "class": "WRONG LIMIT", "city_row": true, "our_verdict": ["EXCEEDS"], "limit_match": false },
+      { "class": "CAUGHT-ESTIMATE", "city_row": true, "our_verdict": ["MAY EXCEED"] },
+      { "class": "MISSED", "city_row": true, "our_verdict": ["COMPLIES", "NOT EVALUATED"] },
+      { "class": "FALSE ALARM", "city_row": false, "our_verdict": ["EXCEEDS"] },
+      { "class": "SOFT ALARM", "city_row": false, "our_verdict": ["MAY EXCEED"] }
+    ],
+    "unclassified_class": "NOT SCORED",
+    "denominator_classes": ["CAUGHT", "CAUGHT-ESTIMATE", "WRONG LIMIT", "MISSED"],
+    "false_alarm_categories": ["existing-lot minimum", "existing/party wall", "other"],
+    "false_alarm_fallback_category": "other",
+    "thresholds": [
+      { "id": "caught_plus_estimate_pct_min", "classes": ["CAUGHT", "CAUGHT-ESTIMATE"], "kind": "pct_min", "value": 70 },
+      { "id": "caught_pct_min", "classes": ["CAUGHT"], "kind": "pct_min", "value": 50 },
+      { "id": "false_alarm_max", "classes": ["FALSE ALARM"], "kind": "count_max", "value": 10 },
+      { "id": "soft_alarm_max", "classes": ["SOFT ALARM"], "kind": "count_max", "value": 15 },
+      { "id": "wrong_limit_max", "classes": ["WRONG LIMIT"], "kind": "count_max", "value": 3 },
+      { "id": "false_alarm_existing_lot_minimum_max", "classes": ["FALSE ALARM"], "category": "existing-lot minimum", "kind": "count_max", "value": 0 },
+      { "id": "false_alarm_existing_party_wall_max", "classes": ["FALSE ALARM"], "category": "existing/party wall", "kind": "count_max", "value": 0 }
+    ]
+  }
+}
