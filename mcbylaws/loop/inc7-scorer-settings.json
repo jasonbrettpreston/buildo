@@ -2,21 +2,26 @@
   "schema": "mcbylaws-inc7-scorer-settings/1",
   "$comment": "Increment-7 scorer settings (MB-27 increment 7, pulled forward by operator ruling 2026-11-15, verbatim: \"y inc7 early\"). Data, no code. Every value marked provisional below is the reading in ~/Buildo-scratch/mcbylaws/inc7/RESEARCH-20261115.md and waits for the operator's ruling (decision lane drafting); a ruling changes this file, never the scorer. Sources: 69a = docs/specs/01-pipeline/69a_mcbylaw_register.md (M-362 at 498), 68 = docs/specs/01-pipeline/68_mcbylaw_standard.md (SC-19 at 84), CARD = mcbylaws/sources/cards/CARDS-2026-10-29.answered.md (MB-13, CARD-HR), REF = ref/mb15-blind-run reference/mb15/blind-score.mjs.ref (rules read, code not reused). Closeness threshold stays null: it is set from this increment's data and recorded before the proof set is keyed (69a:498).",
   "provisional": {
-    "direction.gate_measures": "RESEARCH section 1: gate measures are GFA/FSI, height, storeys (CARD:10); footprint and units compared only (68:84 names all five). Open: Q3.",
-    "direction.threshold_pct": "69a:498, 90 percent correct per measure per set. Ruled figure; the denominator choice is provisional.",
-    "direction.count_rounding": "ceil: 90 percent of 25 is 22.5, so 23 of 25 (RESEARCH section 3). Not defined in 69a/68. Open: Q3.",
-    "direction.denominator": "all_cases: not-evaluated counts as missed (69a:498). Open: Q2.",
+    "direction.gate_measures": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-1: gate = gfa, height, storeys; footprint and units compared and reported, each wrong case a numbered finding.",
+    "direction.threshold_pct": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-2: needed = ceil(0.90 x denominator), written correct*10 >= 9*denominator, each measure separately; 69a:498.",
+    "direction.count_rounding": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-2: ceil, tested as the exact ratio (no printed-precision comparison).",
+    "direction.denominator": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-2: our not-evaluated counts as wrong; a measure is excluded for a case iff the keyed applicant figure is null (a data rule); the excluded list is an output frozen in the manifest.",
     "direction.tolerance": "REF tolerances: gfa 0.05 m2, height 0.05 m, storeys 0. Provisional.",
     "direction.variance_granted_values": "REF counts yes and modified as a variance. Open: Q6.",
-    "closeness.spread": "iqr: DeepSeek flagged the spread undefined; the text names no statistic. Open: Q3.",
+    "closeness.spread": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-3: median plus p25 to p75 by the oracle-compare.mjs:24 quant (index floor(q*(n-1))); closeness is GFA only.",
     "closeness.population": "69a:498: new-build cases with no GFA variance.",
-    "catch.class_rules": "Class definitions are not in a ruled spec; REF and CARD-HR only. Open: Q4.",
+    "catch.class_rules": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-4: the six rules (M-364) and the class meanings as data, incl. the second CAUGHT-ESTIMATE trigger, relative limits, off-scope rows (bicycle parking etc.) as data, false-alarm categories, SC-19 wrong limits 0 with complete inputs.",
     "catch.limit_match": "REF tolerance max(0.011, 0.6 percent). Provisional.",
     "catch.not_evaluated": "69a:498: not-evaluated counts as missed (class MISSED in the table, in the denominator).",
-    "catch.thresholds": "69a:498 and 68:84 (CAUGHT+CAUGHT-ESTIMATE >= 70, CAUGHT >= 50, false <= 10, soft <= 15, wrong limit <= 3; 0 on existing-lot minimums and existing/party walls)."
+    "catch.thresholds": "69a:498 and 68:84 (CAUGHT+CAUGHT-ESTIMATE >= 70, CAUGHT >= 50, false <= 10, soft <= 15, wrong limit <= 3; 0 on existing-lot minimums and existing/party walls).",
+    "buildings": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 1, BUILDING-MAP.md section 6) and Operator ruling 2026-11-15, verbatim \"3 y\" (item 3, by building). The clause-family table, displaced_by rows, duplicate rule and the by-building scoring rules are data in the buildings block.",
+    "catch.wrong_limits": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-4: SC-19 wrong limits 0 with complete inputs; complete inputs defined by catch.complete_inputs; wrong limits <= 3 with named causes (a row cause).",
+    "buildings.class_map": "PROVISIONAL: the applicant type map is not frozen (M-364 rule 6); only golden_p_type values that name a Layer 3 class are mapped, the rest score as not evaluated. Open for the operator at the key step."
   },
   "layer3": {
-    "usable_status": ["computed"],
+    "usable_status": [
+      "computed"
+    ],
     "field_by_measure": {
       "gfa": "gfa_max_m2",
       "height": "height_max_m",
@@ -26,44 +31,529 @@
     }
   },
   "direction": {
-    "measures": ["gfa", "height", "storeys", "footprint", "units"],
-    "gate_measures": ["gfa", "height", "storeys"],
+    "measures": [
+      "gfa",
+      "height",
+      "storeys",
+      "footprint",
+      "units"
+    ],
+    "gate_measures": [
+      "gfa",
+      "height",
+      "storeys"
+    ],
     "threshold_pct": 90,
     "count_rounding": "ceil",
     "denominator": "all_cases",
-    "tolerance": { "gfa": 0.05, "height": 0.05, "storeys": 0, "footprint": 0.05, "units": 0 },
-    "variance_granted_values": ["yes", "modified"]
+    "tolerance": {
+      "gfa": 0.05,
+      "height": 0.05,
+      "storeys": 0,
+      "footprint": 0.05,
+      "units": 0
+    },
+    "variance_granted_values": [
+      "yes",
+      "modified"
+    ],
+    "excluded_when": "applicant_figure_null"
   },
   "closeness": {
     "measure": "gfa",
-    "population": { "new_build": true, "variance_on_measure": false },
+    "population": {
+      "new_build": true,
+      "variance_on_measure": false
+    },
     "spread": "iqr",
-    "threshold": null
+    "threshold": null,
+    "quantile_method": "floor_index"
   },
   "catch": {
-    "verdicts": ["EXCEEDS", "MAY EXCEED", "COMPLIES", "NOT EVALUATED"],
-    "verdict_roles": { "exceeds": "EXCEEDS", "may_exceed": "MAY EXCEED", "complies": "COMPLIES", "not_evaluated": "NOT EVALUATED" },
-    "limit_match": { "abs": 0.011, "rel_pct": 0.6 },
+    "verdicts": [
+      "EXCEEDS",
+      "MAY EXCEED",
+      "COMPLIES",
+      "NOT EVALUATED"
+    ],
+    "verdict_roles": {
+      "exceeds": "EXCEEDS",
+      "may_exceed": "MAY EXCEED",
+      "complies": "COMPLIES",
+      "not_evaluated": "NOT EVALUATED"
+    },
+    "limit_match": {
+      "abs": 0.011,
+      "rel_pct": 0.6
+    },
     "class_rules": [
-      { "class": "CAUGHT", "city_row": true, "our_verdict": ["EXCEEDS"], "limit_match": true },
-      { "class": "WRONG LIMIT", "city_row": true, "our_verdict": ["EXCEEDS"], "limit_match": false },
-      { "class": "CAUGHT-ESTIMATE", "city_row": true, "our_verdict": ["MAY EXCEED"] },
-      { "class": "MISSED", "city_row": true, "our_verdict": ["COMPLIES", "NOT EVALUATED"] },
-      { "class": "FALSE ALARM", "city_row": false, "our_verdict": ["EXCEEDS"] },
-      { "class": "SOFT ALARM", "city_row": false, "our_verdict": ["MAY EXCEED"] }
+      {
+        "class": "MISSED",
+        "city_row": true,
+        "off_scope": true,
+        "cause": "off scope by data"
+      },
+      {
+        "class": "CAUGHT",
+        "city_row": true,
+        "our_verdict": [
+          "EXCEEDS"
+        ],
+        "relative": true
+      },
+      {
+        "class": "CAUGHT",
+        "city_row": true,
+        "our_verdict": [
+          "EXCEEDS"
+        ],
+        "limit_match": true
+      },
+      {
+        "class": "WRONG LIMIT",
+        "city_row": true,
+        "our_verdict": [
+          "EXCEEDS"
+        ],
+        "limit_match": false
+      },
+      {
+        "class": "CAUGHT-ESTIMATE",
+        "city_row": true,
+        "our_verdict": [
+          "MAY EXCEED"
+        ]
+      },
+      {
+        "class": "MISSED",
+        "city_row": true,
+        "our_verdict": [
+          "COMPLIES",
+          "NOT EVALUATED"
+        ]
+      },
+      {
+        "class": "FALSE ALARM",
+        "city_row": false,
+        "our_verdict": [
+          "EXCEEDS"
+        ]
+      },
+      {
+        "class": "SOFT ALARM",
+        "city_row": false,
+        "our_verdict": [
+          "MAY EXCEED"
+        ]
+      }
     ],
     "unclassified_class": "NOT SCORED",
-    "denominator_classes": ["CAUGHT", "CAUGHT-ESTIMATE", "WRONG LIMIT", "MISSED"],
-    "false_alarm_categories": ["existing-lot minimum", "existing/party wall", "other"],
+    "denominator_classes": [
+      "CAUGHT",
+      "CAUGHT-ESTIMATE",
+      "WRONG LIMIT",
+      "MISSED"
+    ],
+    "false_alarm_categories": [
+      "existing-lot minimum",
+      "existing/party wall",
+      "other"
+    ],
     "false_alarm_fallback_category": "other",
     "thresholds": [
-      { "id": "caught_plus_estimate_pct_min", "classes": ["CAUGHT", "CAUGHT-ESTIMATE"], "kind": "pct_min", "value": 70 },
-      { "id": "caught_pct_min", "classes": ["CAUGHT"], "kind": "pct_min", "value": 50 },
-      { "id": "false_alarm_max", "classes": ["FALSE ALARM"], "kind": "count_max", "value": 10 },
-      { "id": "soft_alarm_max", "classes": ["SOFT ALARM"], "kind": "count_max", "value": 15 },
-      { "id": "wrong_limit_max", "classes": ["WRONG LIMIT"], "kind": "count_max", "value": 3 },
-      { "id": "false_alarm_existing_lot_minimum_max", "classes": ["FALSE ALARM"], "category": "existing-lot minimum", "kind": "count_max", "value": 0 },
-      { "id": "false_alarm_existing_party_wall_max", "classes": ["FALSE ALARM"], "category": "existing/party wall", "kind": "count_max", "value": 0 }
-    ]
+      {
+        "id": "caught_plus_estimate_pct_min",
+        "classes": [
+          "CAUGHT",
+          "CAUGHT-ESTIMATE"
+        ],
+        "kind": "pct_min",
+        "value": 70
+      },
+      {
+        "id": "caught_pct_min",
+        "classes": [
+          "CAUGHT"
+        ],
+        "kind": "pct_min",
+        "value": 50
+      },
+      {
+        "id": "false_alarm_max",
+        "classes": [
+          "FALSE ALARM"
+        ],
+        "kind": "count_max",
+        "value": 10
+      },
+      {
+        "id": "soft_alarm_max",
+        "classes": [
+          "SOFT ALARM"
+        ],
+        "kind": "count_max",
+        "value": 15
+      },
+      {
+        "id": "wrong_limit_max",
+        "classes": [
+          "WRONG LIMIT"
+        ],
+        "kind": "count_max",
+        "value": 3
+      },
+      {
+        "id": "false_alarm_existing_lot_minimum_max",
+        "classes": [
+          "FALSE ALARM"
+        ],
+        "category": "existing-lot minimum",
+        "kind": "count_max",
+        "value": 0
+      },
+      {
+        "id": "false_alarm_existing_party_wall_max",
+        "classes": [
+          "FALSE ALARM"
+        ],
+        "category": "existing/party wall",
+        "kind": "count_max",
+        "value": 0
+      },
+      {
+        "id": "wrong_limit_complete_inputs_max",
+        "classes": [
+          "WRONG LIMIT"
+        ],
+        "kind": "count_max",
+        "value": 0,
+        "complete_inputs": true
+      },
+      {
+        "id": "wrong_limit_named_cause_max",
+        "classes": [
+          "WRONG LIMIT"
+        ],
+        "kind": "count_max",
+        "value": 0,
+        "named_cause": false
+      }
+    ],
+    "off_scope": [
+      {
+        "id": "bicycle_parking",
+        "clause_prefixes": [
+          "230."
+        ],
+        "text_patterns": [
+          "bicycle"
+        ],
+        "cause": "bicycle parking not modelled (REF target bicycle_parking_spaces)"
+      },
+      {
+        "id": "major_street_abutment",
+        "clause_prefixes": [],
+        "text_patterns": [
+          "abuts major street"
+        ],
+        "cause": "six-unit major-street abutment rule not modelled"
+      },
+      {
+        "id": "parking_spaces",
+        "clause_prefixes": [
+          "200.5.10."
+        ],
+        "text_patterns": [
+          "parking spots"
+        ],
+        "cause": "parking space count not modelled"
+      },
+      {
+        "id": "shoreline",
+        "clause_prefixes": [
+          "5.10."
+        ],
+        "text_patterns": [
+          "shoreline",
+          "conservation authority"
+        ],
+        "cause": "shoreline setback not modelled"
+      }
+    ],
+    "relative_rules": [
+      {
+        "id": "suite_gfa_relative",
+        "clause_prefixes": [
+          "150.7.60.50",
+          "150.8.60.50"
+        ]
+      }
+    ],
+    "complete_inputs": {
+      "measures": [
+        "gfa",
+        "height",
+        "storeys"
+      ],
+      "require_class": true
+    }
+  },
+  "rulings": {
+    "building_rule": "Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 1, BUILDING-MAP.md section 6)",
+    "d1_d4": "Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md)",
+    "primary_measure_by_building": "Operator ruling 2026-11-15, verbatim \"3 y\" (item 3, by building)",
+    "laneway": "Operator ruling 2026-11-15: laneway suite held (MB-57); laneway-suite figures score as not evaluated with the disclosure"
+  },
+  "buildings": {
+    "list": [
+      "main",
+      "garden_suite",
+      "laneway_suite",
+      "other_ancillary",
+      "lot_wide",
+      "unknown"
+    ],
+    "suite_roles": [
+      "garden_suite",
+      "laneway_suite"
+    ],
+    "held": [
+      "laneway_suite"
+    ],
+    "default_building": "unknown",
+    "no_clause_building": "lot_wide",
+    "clause_rules": [
+      {
+        "id": "R10a",
+        "clause_prefixes": [
+          "900.6.10(252)"
+        ],
+        "building": "lot_wide",
+        "source": "BUILDING-MAP section 1 R10a: minimum lot frontage, a lot attribute"
+      },
+      {
+        "id": "R1",
+        "clause_prefixes": [
+          "150.7."
+        ],
+        "building": "garden_suite",
+        "source": "Provisions 150.7.1(1)"
+      },
+      {
+        "id": "R2",
+        "clause_prefixes": [
+          "150.8."
+        ],
+        "building": "laneway_suite",
+        "source": "Provisions 150.8.1(1)"
+      },
+      {
+        "id": "R3",
+        "clause_prefixes": [
+          "10.5.60.",
+          "10.10.60."
+        ],
+        "building": "other_ancillary",
+        "source": "Provisions 10.5.60.1(1)"
+      },
+      {
+        "id": "R4",
+        "clause_prefixes": [
+          "10.20.30.40",
+          "10.10.30.40",
+          "10.80.30.40"
+        ],
+        "building": "lot_wide",
+        "source": "Provisions 800.50(435) lot coverage"
+      },
+      {
+        "id": "R5",
+        "clause_prefixes": [
+          "10.5.50.10"
+        ],
+        "building": "lot_wide",
+        "source": "Provisions 10.5.50.10(1),(3)"
+      },
+      {
+        "id": "R6",
+        "clause_prefixes": [
+          "10.5.100.1"
+        ],
+        "building": "lot_wide",
+        "source": "Provisions 10.5.100.1 driveway"
+      },
+      {
+        "id": "R7",
+        "clause_prefixes": [
+          "200.5."
+        ],
+        "building": "lot_wide",
+        "source": "authored 200.5.* building_types=[any]"
+      },
+      {
+        "id": "R7b",
+        "clause_prefixes": [
+          "230.5.1.10"
+        ],
+        "building": "main",
+        "source": "bicycle parking: decided by the notice subject text; default main when the case has no suite (BUILDING-MAP R7b)"
+      },
+      {
+        "id": "R11",
+        "clause_prefixes": [
+          "5.10.40.70"
+        ],
+        "building": "main",
+        "source": "shoreline setback: decided by the notice subject text; default main (BUILDING-MAP R11)"
+      },
+      {
+        "id": "R8-R10",
+        "clause_prefixes": [
+          "10.20.40.",
+          "10.10.40.",
+          "10.80.40.",
+          "10.5.40.",
+          "10.20.20.40",
+          "900.3.10(",
+          "900.6.10("
+        ],
+        "building": "main",
+        "source": "Provisions 10.20.40.1(1), 10.10.40.1(1), 10.5.40.1(1); Chapter 900 exceptions amend them"
+      }
+    ],
+    "displaced": [
+      {
+        "id": "R12",
+        "clause_prefix": "10.5.50.10(3)",
+        "displaced_by": "150.7.50.10(1)",
+        "when_case_has": "garden_suite",
+        "building": "garden_suite",
+        "source": "Provisions 150.7.50.10(1) 'Despite regulation 10.5.50.10(3)'"
+      },
+      {
+        "id": "R15",
+        "clause_prefix": "10.20.30.40(1)(A)",
+        "displaced_by": "150.7.60.70(1)",
+        "when_case_has": "garden_suite",
+        "building": "lot_wide",
+        "source": "Provisions 150.7.60.70(1) 'Despite ... 10.20.30.40(1)(A)'"
+      }
+    ],
+    "duplicate_rule": {
+      "same": [
+        "case",
+        "building",
+        "city_limit",
+        "applicant_figure"
+      ],
+      "keep": "displacing_clause",
+      "skipped_reason": "duplicate_displaced"
+    },
+    "row_scores_against": {
+      "main": "main",
+      "lot_wide": "main",
+      "garden_suite": "garden_suite",
+      "laneway_suite": "laneway_suite",
+      "other_ancillary": null,
+      "unknown": null
+    },
+    "variance_buildings": {
+      "main": [
+        "main",
+        "lot_wide"
+      ],
+      "garden_suite": [
+        "garden_suite"
+      ],
+      "laneway_suite": [
+        "laneway_suite"
+      ]
+    },
+    "measure_rules": [
+      {
+        "measure": "gfa",
+        "clause_prefixes": [
+          "900.3.10(21)",
+          "900.3.10(38)",
+          "900.3.10(1462)",
+          "900.3.10(1397)",
+          "10.20.40.40(1)",
+          "10.10.40.40(1)",
+          "10.80.40.40(1)",
+          "150.7.60.50(2)"
+        ]
+      },
+      {
+        "measure": "height",
+        "clause_prefixes": [
+          "10.20.40.10(1)",
+          "10.10.40.10(1)",
+          "900.6.10(23)(C)",
+          "150.7.60.40(1)",
+          "150.8.60.40(1)",
+          "10.5.60.40(2)"
+        ]
+      },
+      {
+        "measure": "storeys",
+        "clause_prefixes": [
+          "10.5.60.40(3)"
+        ]
+      },
+      {
+        "measure": "footprint",
+        "clause_prefixes": [
+          "10.20.30.40",
+          "10.10.30.40",
+          "10.80.30.40",
+          "10.10.60.70(1)",
+          "150.7.60.70"
+        ]
+      }
+    ],
+    "main_status": {
+      "new_text_patterns": [
+        "^new (detached|semi|houseplex|duplex|triplex|apartment)"
+      ],
+      "default": "existing"
+    },
+    "suite_status_when_present": "new",
+    "scoring": [
+      {
+        "when": {
+          "suite_new": true,
+          "main_status": [
+            "existing"
+          ]
+        },
+        "score": [
+          "suite"
+        ]
+      },
+      {
+        "when": {
+          "suite_new": true,
+          "main_status": [
+            "new"
+          ]
+        },
+        "score": [
+          "main",
+          "suite"
+        ]
+      },
+      {
+        "when": {},
+        "score": [
+          "main"
+        ]
+      }
+    ],
+    "class_map": {
+      "detached_house": "detached_house",
+      "detached_houseplex": "detached_houseplex",
+      "garden": "garden_suite",
+      "laneway": "laneway_suite"
+    }
   }
 }

@@ -446,7 +446,7 @@ describe('F. classifyRow and limitMatch (the catch table)', () => {
   });
   it('F2 a changed table via cfg: NOT EVALUATED moved to NOT SCORED leaves the denominator', () => {
     const changed = cfg((s) => {
-      const miss = s.catch.class_rules.find((r: Dict) => r.class === 'MISSED') as Dict;
+      const miss = s.catch.class_rules.find((r: Dict) => r.class === 'MISSED' && Array.isArray(r.our_verdict) && r.our_verdict.includes('NOT EVALUATED')) as Dict;
       miss.our_verdict = ['COMPLIES'];
       s.catch.class_rules.push({ class: 'NOT SCORED', city_row: true, our_verdict: ['NOT EVALUATED'] });
     });
@@ -768,7 +768,7 @@ describe('J. provisional-defaults lock: the shipped settings are the research re
     expect(S.closeness.spread).toBe('iqr');
     expect(S.closeness.threshold).toBeNull();
   });
-  it('J3 catch thresholds are 70 / 50 / 10 / 15 / 3 with the two zero-category lines', () => {
+  it('J3 catch thresholds are 70 / 50 / 10 / 15 / 3, the two zero-category lines and the two SC-19 wrong-limit lines', () => {
     const list = S.catch.thresholds.map((t: Dict) => [t.id, t.kind, t.value, t.classes, t.category ?? null]);
     expect(list).toEqual([
       ['caught_plus_estimate_pct_min', 'pct_min', 70, ['CAUGHT', 'CAUGHT-ESTIMATE'], null],
@@ -778,7 +778,16 @@ describe('J. provisional-defaults lock: the shipped settings are the research re
       ['wrong_limit_max', 'count_max', 3, ['WRONG LIMIT'], null],
       ['false_alarm_existing_lot_minimum_max', 'count_max', 0, ['FALSE ALARM'], 'existing-lot minimum'],
       ['false_alarm_existing_party_wall_max', 'count_max', 0, ['FALSE ALARM'], 'existing/party wall'],
+      ['wrong_limit_complete_inputs_max', 'count_max', 0, ['WRONG LIMIT'], null],
+      ['wrong_limit_named_cause_max', 'count_max', 0, ['WRONG LIMIT'], null],
     ]);
+    // Operator ruling 2026-11-15, verbatim "1,2 and 4 y" (D-4, SC-19): zero wrong limits with complete inputs, and
+    // zero wrong limits without a named cause. Both are the same class, narrowed by one flag.
+    const complete = S.catch.thresholds.find((t: Dict) => t.id === 'wrong_limit_complete_inputs_max') as Dict;
+    expect(complete.complete_inputs).toBe(true);
+    expect((S.catch.thresholds.find((t: Dict) => t.id === 'wrong_limit_max') as Dict).complete_inputs).toBeUndefined();
+    const named = S.catch.thresholds.find((t: Dict) => t.id === 'wrong_limit_named_cause_max') as Dict;
+    expect(named.named_cause).toBe(false);
   });
   it('J4 layer 3 and catch basics: one usable status, five measure fields, denominator classes, NOT SCORED', () => {
     expect(S.layer3.usable_status).toEqual(['computed']);
