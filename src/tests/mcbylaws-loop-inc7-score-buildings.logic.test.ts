@@ -481,6 +481,8 @@ describe('Q. adaptBuildingFile: the INC-7 input shape -> cases and variance rows
         city_limit: 10,
         applicant_figure: 9,
         text: '10 metres 9 metres',
+        permitted_text: '10 metres',
+        requested_text: '9 metres',
         measure: 'height',
       },
     ]);

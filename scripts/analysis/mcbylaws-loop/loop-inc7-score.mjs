@@ -17,6 +17,10 @@ const DENOMINATORS = new Set(['all_cases', 'evaluated_cases']);
 const THRESHOLD_KINDS = new Set(['pct_min', 'count_max']);
 // The four verdict roles a catch derivation needs; the words themselves are settings.
 const VERDICT_ROLES = ['exceeds', 'may_exceed', 'complies', 'not_evaluated'];
+// The only keys a buildings.scoring "when" block may carry: the two facts unitsOf reads.
+const SCORING_WHEN_KEYS = ['suite_new', 'main_status'];
+// The numeric tokens of a text, in order: the duplicate text rule compares these sequences.
+const NUMERIC_TOKEN = /\d+(?:\.\d+)?/g;
 const RATIO_DP = 3;
 const DIGEST_CHARS = 12;
 const QUANTILE_METHODS = new Set(['floor_index', 'linear']);
@@ -35,6 +39,23 @@ const roundDp = (x, dp) => {
 };
 const invalidates = (detail) => new Error(`${SETTINGS_INVALID}:${detail}`);
 const rejects = (detail) => new Error(`${INPUT_INVALID}:${detail}`);
+const entryId = (entry) => (isObj(entry) && isStr(entry.id) && entry.id !== '' ? entry.id : 'unknown');
+// A text pattern list compiles when every entry is a string that builds a case-insensitive RegExp.
+const allPatternsCompile = (patterns) =>
+  arr(patterns).every((p) => {
+    if (!isStr(p)) return false;
+    try {
+      void new RegExp(p, 'i');
+      return true;
+    } catch {
+      return false;
+    }
+  });
+// The numeric tokens of a text, in order (empty when the text holds none).
+const numericTokens = (text) => (isStr(text) ? (text.match(NUMERIC_TOKEN) ?? []) : []);
+// Two numeric-token sequences are the same reading of the numbers, order included.
+const sameTokens = (a, b) => a.length === b.length && a.every((token, i) => token === b[i]);
+
 
 // The percent threshold as an exact fraction (numerator over denominator) of an INTEGER percent: 90 -> 90/100.
 // A decimal percent is read at 1e-6, so the arithmetic below stays on integers (n is an integer count).
@@ -65,6 +86,9 @@ export function validateSettings(s) {
   if (!l3) out.push('layer3_missing');
   else {
     if (!Array.isArray(l3.usable_status)) out.push('usable_status_missing');
+    if (hasOwn(l3, 'ambiguity_tolerance') && (!isNum(l3.ambiguity_tolerance) || l3.ambiguity_tolerance < 0)) {
+      out.push('ambiguity_tolerance_invalid');
+    }
     const fields = isObj(l3.field_by_measure) ? l3.field_by_measure : null;
     if (!fields) out.push('field_by_measure_missing');
     else {
@@ -123,8 +147,18 @@ export function validateSettings(s) {
       for (const rule of b.scoring) {
         if (!isObj(rule) || !Array.isArray(rule.score) || rule.score.length === 0) out.push('scoring_rule_missing');
         else if (rule.score.some((word) => !SUITE_WORDS.includes(word) && !arr(b.list).includes(word))) out.push('scoring_rule_missing');
+        // The "when" block: only the two keys the scorer reads, each of the type it reads (a bad entry, not a crash).
+        if (!isObj(rule) || !isObj(rule.when)) continue;
+        for (const key of Object.keys(rule.when)) {
+          if (!SCORING_WHEN_KEYS.includes(key)) out.push(`when_key_unknown:${key}`);
+        }
+        if (hasOwn(rule.when, 'main_status') && !Array.isArray(rule.when.main_status)) out.push('when_main_status_not_array');
+        if (hasOwn(rule.when, 'suite_new') && typeof rule.when.suite_new !== 'boolean') out.push('when_suite_new_not_boolean');
       }
     }
+    // The status text patterns are compiled at adapt time: an entry that does not compile is a violation, not a crash.
+    const statusPatterns = isObj(b.main_status) ? b.main_status.new_text_patterns : null;
+    if (statusPatterns !== null && !allPatternsCompile(statusPatterns)) out.push('text_pattern_invalid:main_status');
   }
 
   const k = isObj(s.catch) ? s.catch : null;
@@ -146,6 +180,12 @@ export function validateSettings(s) {
       out.push('fallback_category_invalid');
     }
     if (!isObj(k.limit_match) || !isNum(k.limit_match.abs) || !isNum(k.limit_match.rel_pct)) out.push('limit_match_invalid');
+    else if (hasOwn(k.limit_match, 'epsilon') && (!isNum(k.limit_match.epsilon) || k.limit_match.epsilon < 0)) out.push('limit_epsilon_invalid');
+    // Every off-scope text pattern must compile; an entry that does not is named by its own id.
+    for (const entry of arr(k.off_scope)) {
+      if (!isObj(entry) || !hasOwn(entry, 'text_patterns')) continue;
+      if (!allPatternsCompile(entry.text_patterns)) out.push(`text_pattern_invalid:${entryId(entry)}`);
+    }
 
     const rules = Array.isArray(k.class_rules) ? k.class_rules : null;
     if (!rules) out.push('class_rules_missing');
@@ -333,58 +373,96 @@ function derivationBuilding(rowBuilding, settings) {
   return target === 'suite' ? null : target;
 }
 
-// The applicant figure the alignment check reads: the row's own figure, else the figure of the building it scores against.
-function alignFigure(vr, caseObj, measure, settings) {
-  const own = toNum(vr.applicant_figure);
-  if (own !== null) return own;
-  if (!isObj(caseObj)) return null;
-  const target = derivationBuilding(settings?.buildings?.row_scores_against?.[vr.building], settings);
-  if (target === null) return null;
-  const area = buildingsOf(caseObj, settings)[target];
-  return isObj(area) ? figureOf(area.applicant, measure) : null;
-}
-
 // One duplicate fact per (case, building, city limit, applicant figure): all but the first row are skipped.
+// With buildings.duplicate_rule.text_match 'numeric_tokens' a second rule joins: two rows of one case linked by
+// displaced_by whose permitted and requested texts carry the same numeric tokens are one fact too.
 function dropDuplicates(rows, settings) {
   const rule = isObj(settings?.buildings?.duplicate_rule) ? settings.buildings.duplicate_rule : {};
   const reason = isStr(rule.skipped_reason) ? rule.skipped_reason : 'duplicate';
   const same = arr(rule.same);
   // The keep rule is data: keeping the DISPLACING clause means the row with displaced_by set survives.
   const displacing = rule.keep === 'displacing_clause';
+  const textRule = rule.text_match === 'numeric_tokens';
   const kept = [];
   const skipped = [];
   const seen = new Map();
   for (const row of rows) {
-    if (row.duplicate_exempt) {
-      kept.push(row);
-      continue;
-    }
-    const key = same.map((field) => `${field}:${String(row[field])}`).join('\u0000');
-    const keptIndex = seen.get(key);
-    if (keptIndex === undefined) {
-      seen.set(key, kept.length);
-      kept.push(row);
-      continue;
-    }
-    if (displacing) {
-      const prior = kept[keptIndex];
-      const priorDisplaced = !isNothing(prior.displaced_by);
-      const rowDisplaced = !isNothing(row.displaced_by);
-      // The displacing row (the one whose clause is not itself displaced) wins; two rows of the same kind keep the first.
-      if (rowDisplaced !== priorDisplaced) {
-        if (!rowDisplaced) {
-          kept[keptIndex] = row;
-          skipped.push({ case: prior.case, ordinal: prior.ordinal, reason });
-        } else {
-          skipped.push({ case: row.case, ordinal: row.ordinal, reason });
-        }
+    // The numeric key is built from the PARSED numbers, so "69.15" and 69.15 are one fact.
+    // Rows without both figures as numbers are never numeric duplicates.
+    const numericOk = isNum(toNum(row.city_limit)) && isNum(toNum(row.applicant_figure));
+    const numericKey = same.map((field) => `${field}:${String(toNum(row[field]) ?? String(row[field]))}`).join('\u0000');
+    const textMatch = textRule ? kept.find((prior) => sameTextFact(prior, row)) : undefined;
+    if (textMatch === undefined) {
+      const keptIndex = numericOk ? seen.get(numericKey) : undefined;
+      if (keptIndex === undefined) {
+        if (numericOk) seen.set(numericKey, kept.length);
+        kept.push(row);
         continue;
       }
+      // Two rows with the same figures are one fact only when one is displaced by the other's clause (two real side yards stay two rows).
+      if (displacementLink(kept[keptIndex], row) === null) {
+        kept.push(row);
+        continue;
+      }
+      if (displacing) {
+        const prior = kept[keptIndex];
+        const priorDisplaced = !isNothing(prior.displaced_by);
+        const rowDisplaced = !isNothing(row.displaced_by);
+        // The displacing row (the one whose clause is not itself displaced) wins; two rows of the same kind keep the first.
+        if (rowDisplaced !== priorDisplaced) {
+          if (!rowDisplaced) {
+            kept[keptIndex] = row;
+            skipped.push({ case: prior.case, ordinal: prior.ordinal, reason });
+          } else {
+            skipped.push({ case: row.case, ordinal: row.ordinal, reason });
+          }
+          continue;
+        }
+      }
+      skipped.push({ case: row.case, ordinal: row.ordinal, reason });
+      continue;
     }
-    skipped.push({ case: row.case, ordinal: row.ordinal, reason });
+    // The text rule: the row whose displaced_by names the other's clause is the displacing one and is kept.
+    const link = displacementLink(textMatch, row);
+    if (link === null) {
+      kept.push(row);
+      continue;
+    }
+    const keepRow = link === 'kept_is_displacing' ? textMatch : row;
+    const dropRow = keepRow === textMatch ? row : textMatch;
+    if (keepRow !== textMatch) {
+      kept[kept.indexOf(textMatch)] = row;
+    }
+    skipped.push({ case: dropRow.case, ordinal: dropRow.ordinal, reason });
   }
   return { rows: kept, skipped };
 }
+
+// Which of two rows is the displacing one: the row whose displaced_by is a prefix of the other's clause key.
+// 'kept_is_displacing' / 'row_is_displacing', or null when neither (or both) name the other: no link, no rule.
+function displacementLink(keptRow, row) {
+  const keptNamesRow = isStr(keptRow.displaced_by) && keptRow.displaced_by !== '' && isStr(row.clause_key) && row.clause_key.startsWith(keptRow.displaced_by);
+  const rowNamesKept = isStr(row.displaced_by) && row.displaced_by !== '' && isStr(keptRow.clause_key) && keptRow.clause_key.startsWith(row.displaced_by);
+  if (keptNamesRow === rowNamesKept) return null;
+  // a row whose displaced_by names the other row's clause is the DISPLACED one
+  return keptNamesRow ? 'row_is_displacing' : 'kept_is_displacing';
+}
+
+// The text rule: same case and building, a displacement link, both texts present, and identical non-empty token sequences.
+function sameTextFact(keptRow, row) {
+  if (keptRow.case !== row.case || keptRow.building !== row.building) return false;
+  const keptPermitted = isStr(keptRow.permitted_text) ? keptRow.permitted_text : '';
+  const keptRequested = isStr(keptRow.requested_text) ? keptRow.requested_text : '';
+  const permitted = isStr(row.permitted_text) ? row.permitted_text : '';
+  const requested = isStr(row.requested_text) ? row.requested_text : '';
+  if (keptPermitted === '' || keptRequested === '' || permitted === '' || requested === '') return false;
+  if (displacementLink(keptRow, row) === null) return false;
+  const keptPermittedTokens = numericTokens(keptPermitted);
+  const keptRequestedTokens = numericTokens(keptRequested);
+  if (keptPermittedTokens.length === 0 || keptRequestedTokens.length === 0) return false;
+  return sameTokens(keptPermittedTokens, numericTokens(permitted)) && sameTokens(keptRequestedTokens, numericTokens(requested));
+}
+
 
 /** Every variance row prepared: building, rule, measure, clause key, off-scope and relative facts; duplicates skipped (as reported). PURE. */
 export function prepareRows(cases, varianceRows, settings) {
@@ -393,7 +471,6 @@ export function prepareRows(cases, varianceRows, settings) {
   for (const c of arr(cases)) {
     if (isObj(c)) byCase.set(String(c.case), c);
   }
-  const measures = arr(settings?.direction?.measures);
   const offScopeRules = arr(k.off_scope);
   const relativeRules = arr(k.relative_rules);
   const prepared = [];
@@ -435,7 +512,6 @@ export function prepareRows(cases, varianceRows, settings) {
       off_scope: offScope === null ? null : offScope.id,
       relative,
       cause,
-      duplicate_exempt: !(measures.includes(measure) && isNum(toNum(vr.city_limit)) && isNum(alignFigure(vr, byCase.get(caseId), measure, settings))),
     });
   }
   return dropDuplicates(prepared, settings);
@@ -494,6 +570,9 @@ export function adaptBuildingFile(file, settings) {
         city_limit: field('permitted'),
         applicant_figure: field('requested'),
         text: `${printed} ${requested}`.trim(),
+        // The two texts apart and lower-cased: the duplicate text rule compares their numeric tokens.
+        permitted_text: printed.toLowerCase(),
+        requested_text: requested.toLowerCase(),
         measure: v.measure,
       });
     }
@@ -511,23 +590,30 @@ export function maxFor(layer3Rows, parcelId, buildingType, measure, settings) {
     (r) => isObj(r) && r.parcel_id === parcelId && r.field_id === fieldId && r.building_type === buildingType,
   );
   if (rows.length === 0) return { value: null, reason: 'no_row' };
+  const tolerance = isNum(settings?.layer3?.ambiguity_tolerance) ? settings.layer3.ambiguity_tolerance : 0;
   let reason = null;
-  let found = null;
-  // Two usable rows that disagree are not resolved by input order: no maximum. A row repeating the same figure is fine.
+  const found = [];
+  // Usable rows within layer3.ambiguity_tolerance of each other are one figure, and the smallest is returned (so the
+  // answer does not depend on input order); a larger gap is ambiguous. A row repeating the same figure is fine.
   for (const r of rows) {
     if (!usable.has(r.status)) {
-      if (reason === null || reason === 'ok') reason = `status:${String(r.status)}`;
+      if (reason === null) reason = `status:${String(r.status)}`;
       continue;
     }
     const v = typeof r.value === 'string' ? toNum(r.value) : r.value;
     if (!isNum(v)) {
-      if (reason === null || reason === 'ok') reason = `status:${String(r.status)}`;
+      // A usable status with a value that is not a number is named for what it is: the value, not the status.
+      if (reason === null) reason = `value_not_numeric:${String(r.status)}`;
       continue;
     }
-    if (found === null) found = v;
-    else if (found !== v) return { value: null, reason: 'ambiguous' };
+    found.push(v);
   }
-  if (found !== null) return { value: found, reason: 'ok' };
+  if (found.length > 0) {
+    const low = Math.min(...found);
+    const high = Math.max(...found);
+    if (high - low > tolerance) return { value: null, reason: 'ambiguous' };
+    return { value: low, reason: 'ok' };
+  }
   return { value: null, reason: reason === null ? 'no_row' : reason };
 }
 
@@ -559,11 +645,10 @@ export function directionCase(args) {
   return { status: within ? 'correct' : 'wrong' };
 }
 
-// (caseId, measure) -> the PREPARED rows of that pair, in input order (an ordinary variance row is prepared as is).
+// (caseId, measure) -> the PREPARED rows of that pair, in input order: prepareRows is idempotent on its own output,
+// so a prepared row fed back in is re-derived from its clause and measure and comes out the same.
 function varianceIndex(varianceRows, cases, settings) {
-  const prepared = arr(varianceRows).some((r) => isObj(r) && r.duplicate_exempt !== undefined)
-    ? arr(varianceRows)
-    : prepareRows(cases, varianceRows, settings).rows;
+  const prepared = prepareRows(cases, varianceRows, settings).rows;
   const map = new Map();
   for (const r of prepared) {
     if (!isObj(r)) continue;
@@ -609,12 +694,36 @@ function buildManifest(cases, layer3Rows, varianceRows, settings, direction) {
       disclosures.push({ unit: unit.id, building: unit.building, measure, reason: heldReason(unit.building) });
     }
   }
+  // A variance row whose derivation building is held is disclosed by ROW (never scored), in row order.
+  const heldBuildings = new Set(arr(settings?.buildings?.held).filter(isStr));
+  const suiteRoles = arr(settings?.buildings?.suite_roles).filter(isStr);
+  const caseById = new Map(arr(cases).filter(isObj).map((c) => [String(c.case), c]));
+  const heldRows = [];
+  const gaps = new Map();
+  for (const row of prepared.rows) {
+    const building = isStr(row.building) ? row.building : null;
+    if (building !== null && heldBuildings.has(building)) {
+      heldRows.push({ case: row.case, ordinal: row.ordinal, building, reason: heldReason(building) });
+    }
+    // A row of a suite building the case does not key is a data gap, named once per (case, building) in first-row order.
+    if (building === null || !suiteRoles.includes(building)) continue;
+    const gapKey = `${String(row.case)}\u0000${building}`;
+    if (gaps.has(gapKey)) {
+      gaps.get(gapKey).rows.push(row.ordinal);
+      continue;
+    }
+    const caseObj = caseById.get(String(row.case));
+    const present = isObj(buildingsOf(caseObj, settings)[building]);
+    if (!present) gaps.set(gapKey, { case: row.case, building, reason: 'suite_type_missing', rows: [row.ordinal] });
+  }
   const bare = {
     excluded,
     denominators,
     units: units.map((u) => u.id),
     skipped_rows: prepared.skipped,
     disclosures,
+    held_rows: heldRows,
+    data_gaps: [...gaps.values()],
   };
   return { ...bare, digest: createHash('sha256').update(canonical(bare), 'utf8').digest('hex').slice(0, DIGEST_CHARS) };
 }
@@ -782,16 +891,16 @@ export function classifyRow(facts, settings) {
   return k.unclassified_class;
 }
 
-/** Whether the City's limit and ours agree inside the settings window (abs OR rel), or null when either is not a number. PURE. */
+/** Whether the City's limit and ours agree inside the settings window (max(abs, rel) plus the epsilon), or null when either is not a number. PURE. */
 export function limitMatch(cityLimit, ourLimit, settings) {
   const lm = isObj(settings?.catch?.limit_match) ? settings.catch.limit_match : null;
   if (lm === null) return null;
   if (!isNum(cityLimit) || !isNum(ourLimit)) return null;
+  const epsilon = isNum(lm.epsilon) && lm.epsilon >= 0 ? lm.epsilon : 0;
   const diff = Math.abs(cityLimit - ourLimit);
-  if (diff <= lm.abs) return true;
-  const rel = (Math.abs(cityLimit) * lm.rel_pct) / 100;
-  if (diff <= rel) return true;
-  return false;
+  const abs = isNum(lm.abs) ? lm.abs : 0;
+  const rel = isNum(lm.rel_pct) ? (Math.abs(cityLimit) * lm.rel_pct) / 100 : 0;
+  return diff <= Math.max(abs, rel) + epsilon;
 }
 
 function verdictOf(vrow, derived) {
@@ -825,7 +934,8 @@ export function scoreCatch(cases, layer3Rows, varianceRows, settings) {
   const requireClass = complete.require_class === true;
   const held = new Set(arr(settings?.buildings?.held));
 
-  // The row's own building reads the unit the settings send it to; a held unit or no building is NOT EVALUATED.
+  // The row's own building reads the unit the settings send it to; a held unit, or one the case does not have, is NOT
+  // EVALUATED: its maximum is never borrowed from another building (the row's building always decides).
   const deriveFor = (prepared, c, measure) => {
     const target = derivationBuilding(prepared.building, settings);
     if (target === null) return { max: null, applicant: null, class: null, held: false };
@@ -877,6 +987,7 @@ export function scoreCatch(cases, layer3Rows, varianceRows, settings) {
       class: cls,
       off_scope: offScope,
       relative,
+      held: derived.held === true,
       cause: isStr(vr.cause) && vr.cause !== '' ? vr.cause : null,
       complete_inputs: completeInputs,
     });
@@ -900,7 +1011,8 @@ export function scoreCatch(cases, layer3Rows, varianceRows, settings) {
     const numerator = hit.length;
     if (t.kind === 'pct_min') {
       // The comparison is against the EXACT percentage: 1749 of 2500 is 69.96 and must fail a 70 minimum,
-      // which a 1-dp rounded actual (70.0) would wrongly pass. display carries the rounded value for reports.
+      // which a 1-dp rounded actual (70.0) would wrongly pass. It is made by cross multiplication
+      // (numerator * 100 >= value * denominator), so no division enters the test. display carries the rounded value.
       const pct = denominator === 0 ? null : (numerator * 100) / denominator;
       rates[t.id] = {
         id: t.id,
@@ -910,7 +1022,7 @@ export function scoreCatch(cases, layer3Rows, varianceRows, settings) {
         display: pct === null ? null : roundDp(pct, 1),
         numerator,
         denominator,
-        pass: pct !== null && isNum(t.value) && pct >= t.value,
+        pass: denominator > 0 && isNum(t.value) && numerator * 100 >= t.value * denominator,
       };
     } else {
       rates[t.id] = {

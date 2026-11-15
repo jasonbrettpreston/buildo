@@ -1,0 +1,382 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-inc7s
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts (29 tests | 17 failed) 15ms
+   × S. validateSettings: the panel-close keys are checked, never crashed on > S1 an off_scope text pattern that is not a valid regex is a violation naming the entry; the shipped file stays clean 4ms
+     → expected [] to include 'text_pattern_invalid:bicycle_parking'
+   × S. validateSettings: the panel-close keys are checked, never crashed on > S2 the scoring "when" block: an unknown key, a non-array main_status and a non-boolean suite_new 0ms
+     → expected [] to include 'when_key_unknown:main_statuss'
+   × S. validateSettings: the panel-close keys are checked, never crashed on > S3 the two numeric keys: a negative epsilon and a non-numeric ambiguity tolerance 0ms
+     → expected [] to include 'limit_epsilon_invalid'
+   × S. validateSettings: the panel-close keys are checked, never crashed on > S4 scoring with a bad settings object throws inc7_settings_invalid before any work 1ms
+     → expected [Function] to throw an error
+   × T. no sniff: prepared rows are ordinary rows, and a field on an input row is never trusted > T1 prepareRows rows carry no duplicate_exempt key 1ms
+     → expected true to be false // Object.is equality
+   × U. maxFor: an unreadable value is named, and one figure within layer3.ambiguity_tolerance is one figure > U1 a usable status with a non-numeric value is value_not_numeric:<status>, not a status reason 1ms
+     → expected { value: null, …(1) } to deeply equal { value: null, …(1) }
+   × U. maxFor: an unreadable value is named, and one figure within layer3.ambiguity_tolerance is one figure > U3 two usable maxima within the tolerance are the smaller figure, in either order; a larger gap is ambiguous 0ms
+     → expected { value: null, reason: 'ambiguous' } to deeply equal { value: 100, reason: 'ok' }
+   × V. limitMatch: catch.limit_match.epsilon absorbs float noise > V1 a diff of 1e-17 matches with epsilon 1e-9 and fails with epsilon 0 0ms
+     → expected false to be true // Object.is equality
+   × W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W2 scoreCatch: both rows are NOT EVALUATED with no limit, class MISSED and held true 0ms
+     → expected undefined to be true // Object.is equality
+   × W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W4 the manifest: held_rows in row order and one data gap for the missing suite 0ms
+     → expected undefined to deeply equal [ { case: 'A0375', …(3) }, …(1) ]
+   × W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W5 with the laneway suite keyed the data gap is gone and the held rows stay 0ms
+     → expected undefined to deeply equal []
+   × W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W6 a garden-suite clause row in a house-only case: not evaluated, a data gap, and not held 1ms
+     → expected undefined to deeply equal [ { case: 'A0375', …(3) } ]
+   × W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W7 rows on main and lot_wide never make a data gap 0ms
+     → expected undefined to deeply equal []
+   × W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W8 the digest changes when a data gap is added, and with buildings.held [] the gap stays and held_rows empties 1ms
+     → expected undefined to deeply equal []
+   × X. text-valued duplicates: a displaced row with the same numbers is one fact > X2 same numbers: the displacing row is kept, the displaced one skipped as duplicate_displaced 0ms
+     → expected [ 2, 3 ] to deeply equal [ 3 ]
+   × X. text-valued duplicates: a displaced row with the same numbers is one fact > X7 adaptBuildingFile rows carry the lower-cased permitted_text and requested_text beside text 0ms
+     → expected undefined to be 'a minimum of 50% (69.15 m2) of the re…' // Object.is equality
+   × Y. real shape: the adapted A0461 file skips the same displaced row > Y1 adaptBuildingFile then prepareRows: one skip, ordinal 2, duplicate_displaced 0ms
+     → expected [ 2, 3 ] to deeply equal [ 3 ]
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > S. validateSettings: the panel-close keys are checked, never crashed on > S1 an off_scope text pattern that is not a valid regex is a violation naming the entry; the shipped file stays clean
+AssertionError: expected [] to include 'text_pattern_invalid:bicycle_parking'
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:142:37
+    140|   it('S1 an off_scope text pattern that is not a valid regex is a viol…
+    141|     const bad = cfg((s) => { s.catch.off_scope[0].text_patterns = ['('…
+    142|     expect(M.validateSettings(bad)).toContain('text_pattern_invalid:bi…
+       |                                     ^
+    143|     expect(M.validateSettings(S)).toEqual([]);
+    144|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > S. validateSettings: the panel-close keys are checked, never crashed on > S2 the scoring "when" block: an unknown key, a non-array main_status and a non-boolean suite_new
+AssertionError: expected [] to include 'when_key_unknown:main_statuss'
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:146:106
+    144|   });
+    145|   it('S2 the scoring "when" block: an unknown key, a non-array main_st…
+    146|     expect(M.validateSettings(cfg((s) => { s.buildings.scoring[0].when…
+       |                                                                                                          ^
+    147|     expect(M.validateSettings(cfg((s) => { s.buildings.scoring[0].when…
+    148|     expect(M.validateSettings(cfg((s) => { s.buildings.scoring[0].when…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > S. validateSettings: the panel-close keys are checked, never crashed on > S3 the two numeric keys: a negative epsilon and a non-numeric ambiguity tolerance
+AssertionError: expected [] to include 'limit_epsilon_invalid'
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:151:83
+    149|   });
+    150|   it('S3 the two numeric keys: a negative epsilon and a non-numeric am…
+    151|     expect(M.validateSettings(cfg((s) => { s.catch.limit_match.epsilon…
+       |                                                                                   ^
+    152|     expect(M.validateSettings(cfg((s) => { s.layer3.ambiguity_toleranc…
+    153|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > S. validateSettings: the panel-close keys are checked, never crashed on > S4 scoring with a bad settings object throws inc7_settings_invalid before any work
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:156:95
+    154|   it('S4 scoring with a bad settings object throws inc7_settings_inval…
+    155|     const bad = cfg((s) => { s.catch.limit_match.epsilon = -1; });
+    156|     expect(() => M.scoreInc7({ cases: [], layer3Rows: [], varianceRows…
+       |                                                                                               ^
+    157|   });
+    158| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > T. no sniff: prepared rows are ordinary rows, and a field on an input row is never trusted > T1 prepareRows rows carry no duplicate_exempt key
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:166:99
+    164|     const out = M.prepareRows(f.cs, f.vs, S);
+    165|     expect(out.rows.length).toBeGreaterThan(0);
+    166|     for (const r of out.rows) expect(Object.prototype.hasOwnProperty.c…
+       |                                                                                                   ^
+    167|   });
+    168|   it('T2 feeding prepared rows back through prepareRows changes nothin…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > U. maxFor: an unreadable value is named, and one figure within layer3.ambiguity_tolerance is one figure > U1 a usable status with a non-numeric value is value_not_numeric:<status>, not a status reason
+AssertionError: expected { value: null, …(1) } to deeply equal { value: null, …(1) }
+
+- Expected
++ Received
+
+  Object {
+-   "reason": "value_not_numeric:computed",
++   "reason": "status:computed",
+    "value": null,
+  }
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:204:102
+    202| describe('U. maxFor: an unreadable value is named, and one figure with…
+    203|   it('U1 a usable status with a non-numeric value is value_not_numeric…
+    204|     expect(M.maxFor([row('p1', FIELD('gfa'), 'n/a', 'computed')], 'p1'…
+       |                                                                                                      ^
+    205|       value: null,
+    206|       reason: 'value_not_numeric:computed',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > U. maxFor: an unreadable value is named, and one figure within layer3.ambiguity_tolerance is one figure > U3 two usable maxima within the tolerance are the smaller figure, in either order; a larger gap is ambiguous
+AssertionError: expected { value: null, reason: 'ambiguous' } to deeply equal { value: 100, reason: 'ok' }
+
+- Expected
++ Received
+
+  Object {
+-   "reason": "ok",
+-   "value": 100,
++   "reason": "ambiguous",
++   "value": null,
+  }
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:218:62
+    216|     const pair = (a: number, b: number): Dict[] => [row('p1', FIELD('g…
+    217|     const near = pair(100, 100.0000000001);
+    218|     expect(M.maxFor(near, 'p1', 'detached_house', 'gfa', S)).toEqual({…
+       |                                                              ^
+    219|     expect(M.maxFor(pair(100.0000000001, 100), 'p1', 'detached_house',…
+    220|     expect(M.maxFor(pair(100, 100.5), 'p1', 'detached_house', 'gfa', S…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > V. limitMatch: catch.limit_match.epsilon absorbs float noise > V1 a diff of 1e-17 matches with epsilon 1e-9 and fails with epsilon 0
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:234:49
+    232|   it('V1 a diff of 1e-17 matches with epsilon 1e-9 and fails with epsi…
+    233|     const tight = cfg((s) => { s.catch.limit_match = { abs: 0, rel_pct…
+    234|     expect(M.limitMatch(0.1 + 0.2, 0.3, tight)).toBe(true);
+       |                                                 ^
+    235|     expect(M.limitMatch(0.3, 0.31, tight)).toBe(false);
+    236|     const none = cfg((s) => { s.catch.limit_match = { abs: 0, rel_pct:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W2 scoreCatch: both rows are NOT EVALUATED with no limit, class MISSED and held true
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:277:22
+    275|       expect(r.our_limit).toBeNull();
+    276|       expect(r.class).toBe('MISSED');
+    277|       expect(r.held).toBe(true);
+       |                      ^
+    278|     }
+    279|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W4 the manifest: held_rows in row order and one data gap for the missing suite
+AssertionError: expected undefined to deeply equal [ { case: 'A0375', …(3) }, …(1) ]
+
+- Expected: 
+Array [
+  Object {
+    "building": "laneway_suite",
+    "case": "A0375",
+    "ordinal": 5,
+    "reason": "held:laneway_suite",
+  },
+  Object {
+    "building": "laneway_suite",
+    "case": "A0375",
+    "ordinal": 1,
+    "reason": "held:laneway_suite",
+  },
+]
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:293:27
+    291|     const f = a0375();
+    292|     const man = M.scoreInc7({ cases: f.cs, layer3Rows: f.rows, varianc…
+    293|     expect(man.held_rows).toEqual([
+       |                           ^
+    294|       { case: 'A0375', ordinal: 5, building: HELD, reason: `held:${HEL…
+    295|       { case: 'A0375', ordinal: 1, building: HELD, reason: `held:${HEL…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W5 with the laneway suite keyed the data gap is gone and the held rows stay
+AssertionError: expected undefined to deeply equal []
+
+- Expected: 
+Array []
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:302:27
+    300|     const f = a0375();
+    301|     const man = M.scoreInc7({ cases: withSuite(), layer3Rows: f.rows, …
+    302|     expect(man.data_gaps).toEqual([]);
+       |                           ^
+    303|     expect(man.held_rows).toEqual([
+    304|       { case: 'A0375', ordinal: 5, building: HELD, reason: `held:${HEL…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W6 a garden-suite clause row in a house-only case: not evaluated, a data gap, and not held
+AssertionError: expected undefined to deeply equal [ { case: 'A0375', …(3) } ]
+
+- Expected: 
+Array [
+  Object {
+    "building": "garden_suite",
+    "case": "A0375",
+    "reason": "suite_type_missing",
+    "rows": Array [
+      7,
+    ],
+  },
+]
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:317:27
+    315|     expect(r.our_limit).toBeNull();
+    316|     const man = M.scoreInc7({ cases: cs, layer3Rows: rows, varianceRow…
+    317|     expect(man.data_gaps).toEqual([{ case: 'A0375', building: 'garden_…
+       |                           ^
+    318|     expect(man.held_rows).toEqual([]);
+    319|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W7 rows on main and lot_wide never make a data gap
+AssertionError: expected undefined to deeply equal []
+
+- Expected: 
+Array []
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:328:27
+    326|     ];
+    327|     const man = M.scoreInc7({ cases: cs, layer3Rows: rows, varianceRow…
+    328|     expect(man.data_gaps).toEqual([]);
+       |                           ^
+    329|   });
+    330|   it('W8 the digest changes when a data gap is added, and with buildin…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > W. A0375: the row's building decides, held rows are disclosed, a missing suite is a data gap > W8 the digest changes when a data gap is added, and with buildings.held [] the gap stays and held_rows empties
+AssertionError: expected undefined to deeply equal []
+
+- Expected: 
+Array []
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:335:29
+    333|     const noGap = M.scoreInc7({ cases: suite, layer3Rows: f.rows, vari…
+    334|     const gap = M.scoreInc7({ cases: f.cs, layer3Rows: f.rows, varianc…
+    335|     expect(noGap.data_gaps).toEqual([]);
+       |                             ^
+    336|     expect(gap.data_gaps).toHaveLength(1);
+    337|     expect(gap.digest).not.toBe(noGap.digest);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > X. text-valued duplicates: a displaced row with the same numbers is one fact > X2 same numbers: the displacing row is kept, the displaced one skipped as duplicate_displaced
+AssertionError: expected [ 2, 3 ] to deeply equal [ 3 ]
+
+- Expected
++ Received
+
+  Array [
++   2,
+    3,
+  ]
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:368:44
+    366|   it('X2 same numbers: the displacing row is kept, the displaced one s…
+    367|     const out = M.prepareRows(withGarden(), texts(), S);
+    368|     expect(out.rows.map((r) => r.ordinal)).toEqual([3]);
+       |                                            ^
+    369|     expect(out.skipped).toEqual([{ case: 'A0461', ordinal: 2, reason: …
+    370|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > X. text-valued duplicates: a displaced row with the same numbers is one fact > X7 adaptBuildingFile rows carry the lower-cased permitted_text and requested_text beside text
+AssertionError: expected undefined to be 'a minimum of 50% (69.15 m2) of the re…' // Object.is equality
+
+- Expected: 
+"a minimum of 50% (69.15 m2) of the rear yard containing a garden suite must be maintained as soft landscaping"
+
++ Received: 
+undefined
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:422:30
+    420|     const v = out.varianceRows[0] as Dict;
+    421|     expect(v.text).toBe(`${T3_PERMIT} ${T3_REQUEST}`);
+    422|     expect(v.permitted_text).toBe(T3_PERMIT.toLowerCase());
+       |                              ^
+    423|     expect(v.requested_text).toBe(T3_REQUEST.toLowerCase());
+    424|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts > Y. real shape: the adapted A0461 file skips the same displaced row > Y1 adaptBuildingFile then prepareRows: one skip, ordinal 2, duplicate_displaced
+AssertionError: expected [ 2, 3 ] to deeply equal [ 3 ]
+
+- Expected
++ Received
+
+  Array [
++   2,
+    3,
+  ]
+
+ ❯ src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts:466:44
+    464|     const adapted = deepFreeze(M.adaptBuildingFile(file, S));
+    465|     const out = M.prepareRows(adapted.cases, adapted.varianceRows, S);
+    466|     expect(out.rows.map((r) => r.ordinal)).toEqual([3]);
+       |                                            ^
+    467|     expect(out.skipped).toEqual([{ case: 'A0461', ordinal: 2, reason: …
+    468|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+ Test Files  1 failed (1)
+      Tests  17 failed | 12 passed (29)
+   Start at  11:31:26
+   Duration  303ms (transform 63ms, setup 12ms, collect 27ms, tests 15ms, environment 0ms, prepare 35ms)
+

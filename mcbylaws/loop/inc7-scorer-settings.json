@@ -16,7 +16,10 @@
     "catch.thresholds": "69a:498 and 68:84 (CAUGHT+CAUGHT-ESTIMATE >= 70, CAUGHT >= 50, false <= 10, soft <= 15, wrong limit <= 3; 0 on existing-lot minimums and existing/party walls).",
     "buildings": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 1, BUILDING-MAP.md section 6) and Operator ruling 2026-11-15, verbatim \"3 y\" (item 3, by building). The clause-family table, displaced_by rows, duplicate rule and the by-building scoring rules are data in the buildings block.",
     "catch.wrong_limits": "RULED: Operator ruling 2026-11-15, verbatim \"1,2 and 4 y\" (item 2, D-1..D-4 with the grounded review fixes, REVIEW-grounded.md), D-4: SC-19 wrong limits 0 with complete inputs; complete inputs defined by catch.complete_inputs; wrong limits <= 3 with named causes (a row cause).",
-    "buildings.class_map": "PROVISIONAL: the applicant type map is not frozen (M-364 rule 6); only golden_p_type values that name a Layer 3 class are mapped, the rest score as not evaluated. Open for the operator at the key step."
+    "buildings.class_map": "PROVISIONAL: the applicant type map is not frozen (M-364 rule 6); only golden_p_type values that name a Layer 3 class are mapped, the rest score as not evaluated. Open for the operator at the key step.",
+    "layer3.ambiguity_tolerance": "PROVISIONAL (panel record INC7-S 2026-11-15): two usable maxima within this absolute tolerance are one figure; a larger gap is ambiguous.",
+    "catch.limit_match.epsilon": "PROVISIONAL (panel record INC7-S 2026-11-15): float noise allowance added to the limit-match window.",
+    "buildings.duplicate_rule.text_match": "Operator rulings 2026-11-15 \"1,2 and 4 y\" (duplicate rows not scored twice) read for text-valued rows: displaced_by link plus identical numeric tokens. Coordinator instruction 2026-11-15."
   },
   "layer3": {
     "usable_status": [
@@ -28,7 +31,8 @@
       "storeys": "storeys_max",
       "footprint": "footprint_max_m2",
       "units": "units_max"
-    }
+    },
+    "ambiguity_tolerance": 1e-9
   },
   "direction": {
     "measures": [
@@ -84,7 +88,8 @@
     },
     "limit_match": {
       "abs": 0.011,
-      "rel_pct": 0.6
+      "rel_pct": 0.6,
+      "epsilon": 1e-9
     },
     "class_rules": [
       {
@@ -447,7 +452,9 @@
         "applicant_figure"
       ],
       "keep": "displacing_clause",
-      "skipped_reason": "duplicate_displaced"
+      "skipped_reason": "duplicate_displaced",
+      "text_match": "numeric_tokens",
+      "text_match_note": "Rows linked by displaced_by (the displaced row's displaced_by is a prefix of the other row's clause) with identical numeric tokens in the permitted text and in the requested text are one fact (A0461, text-valued rows). Setting none disables."
     },
     "row_scores_against": {
       "main": "main",

@@ -795,7 +795,7 @@ describe('J. provisional-defaults lock: the shipped settings are the research re
     expect(S.catch.denominator_classes).toEqual(['CAUGHT', 'CAUGHT-ESTIMATE', 'WRONG LIMIT', 'MISSED']);
     expect(S.catch.unclassified_class).toBe('NOT SCORED');
     expect(S.catch.false_alarm_categories).toEqual(['existing-lot minimum', 'existing/party wall', 'other']);
-    expect(S.catch.limit_match).toEqual({ abs: 0.011, rel_pct: 0.6 });
+    expect(S.catch.limit_match).toEqual({ abs: 0.011, rel_pct: 0.6, epsilon: 1e-9 });
   });
   it('J5 the shipped file still validates clean after the lock (a silent change fails both)', () => {
     expect(M.validateSettings(S)).toEqual([]);
