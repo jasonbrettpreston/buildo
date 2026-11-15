@@ -1306,10 +1306,10 @@ Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · Airtight V3 q
 
 Dated note 2026-11-15 (M-246, prior text kept; McQueue fold · McBylaws queue · lane MQ-SIMPLE; operator, verbatim: "y fold + simplify - the focus is getting the increments done -"): each open McBylaws card that is not MERGED or DONE has one row here; its card file is its notes. No new MB id was claimed.
 
-**CARD-headline-catalogue-row: the REPORT schema has no headline field because no catalogue row exists**
+**CARD-HEADLINE-CATALOGUE-ROW: the REPORT schema has no headline field because no catalogue row exists**
 Status: OPERATOR · since 2026-11-06 · expires 2026-11-13 · next: EXPIRED, resurface in the next decision list: number the row (MB id) or merge it into MB-31
 - Notes: `~/Buildo-scratch/mcbylaws/CARD-headline-catalogue-row.md`
 
-**CARD-rehearse-after-pass: re-rehearse after a passing test-stack rehearsal (after increment 5)**
+**CARD-REHEARSE-AFTER-PASS: re-rehearse after a passing test-stack rehearsal (after increment 5)**
 Status: LATER · since 2026-11-14 · expires when increment 5 closes · next: draft the r-release move-aside fix (cap*.out, capture worktree) for operator ruling
 - Notes: `~/Buildo-scratch/mcbylaws/CARD-rehearse-after-pass.md`

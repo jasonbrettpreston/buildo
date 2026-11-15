@@ -707,10 +707,10 @@ Dated note 2026-11-12 (M-246, prior text kept; MF-72 · McFrontend queue · lane
 
 Dated note 2026-11-15 (M-246, prior text kept; McQueue fold · McFrontend queue · lane MQ-SIMPLE; operator, verbatim: "y fold + simplify - the focus is getting the increments done -"): each open McFrontend card that is not MERGED or DONE has one row here; its card file is its notes. No new MF id was claimed.
 
-**CARD-red-evidence-nonempty: RED-EVIDENCE-NONEMPTY (gate accepts an empty red-evidence file)**
+**CARD-RED-EVIDENCE-NONEMPTY: RED-EVIDENCE-NONEMPTY (gate accepts an empty red-evidence file)**
 Status: OPERATOR · since 2026-11-09 · expires 2026-11-16 · next: operator rules the gate fix (lockLands non-empty red evidence) or holds it under the infra freeze
 - Notes: `~/Buildo-scratch/mcfrontend/CARD-red-evidence-nonempty.md`
 
-**CARD-report-cost-images-photo: report COST table, scenario IMAGES carousel, house PHOTO, admin media upload**
+**CARD-REPORT-COST-IMAGES-PHOTO: report COST table, scenario IMAGES carousel, house PHOTO, admin media upload**
 Status: DONE (unverified 2026-11-15) · since 2026-11-10 · expires none · next: verify the cost-table half has a row; images and media are rows MF-38 and MF-37, Street View MF-39 DROPPED
 - Notes: `~/Buildo-scratch/mcfrontend/CARD-report-cost-images-photo.md`
