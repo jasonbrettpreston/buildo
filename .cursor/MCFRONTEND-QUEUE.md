@@ -605,14 +605,15 @@ Status: OPERATOR · since 2026-11-15 · expires 2026-11-22 · next: G1 #2 · Ope
   - Done-condition: set by the plan (nothing is built before the plan is ruled).
   - Dated note 2026-11-14 (M-246; McQueue clean-up · McFrontend queue · lane MQ): row added by this commit; the id was claimed in the id ledger and had no row.
 
+## Later: convert-on-touch
+
 **MF-87 Free-text admin setting card: the Stripe price ids and portal id the admin panel cannot save — LATER** (E)
 Status: LATER · since 2026-11-14 · expires when MF-47 is pushed · next: Add the queue row; decide build timing with MF-47
   - Lane E. Source: operator 2026-11-13, verbatim: "approved as long as they are ocmplaint and you add the ruling if required" (MF-47 item 2; `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` line 271). Id claimed in the id ledger (`~/Buildo-scratch/ids/MF-87`). Waits on: MF-47 timing (decided with the checkout row).
   - What: the price ids and the portal id are free text that the admin panel cannot save today (SQL only, like `stripe_price_id_default`). The row owes an admin card that can save them.
   - Done-condition: set when the card is planned (nothing is built before the plan is ruled).
   - Dated note 2026-11-14 (M-246; McQueue clean-up · McFrontend queue · lane MQ): row added by this commit; the id was claimed in the id ledger and had no row.
-
-## Later: convert-on-touch
+  - Placement (FE-11, Spec 135:33, "the admin converts on touch, with no fixed admin pilot"; the Phase 2 admin list MF-30, MF-37, MF-40 is closed and not extended here): an admin change, so this row sits under convert-on-touch, owned by the product task that touches it (MF-47 checkout). Dated note 2026-11-15 (M-246, prior text kept; MF-87 · McFrontend queue · lane R): moved here from Phase 2, where the 2026-11-14 clean-up commit placed it; the FE-11 queue lock (`src/tests/surfaces/mcfrontend-queue.infra.test.ts`) refused it there. No other change.
 
 **MF-30 `/admin/surfaces` generated from the descriptor set (P2b): convert-on-touch, no fixed admin pilot (operator "Q-Mf6 a") — LATER** (E)
 Status: DROPPED · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 4: drop MF-30, MF-31 and MF-32)
