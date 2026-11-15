@@ -949,7 +949,8 @@ Status: LATER · since 2026-11-14 · expires 2027-01-14 · next: Land the queue 
 - Serves: accurate, understandable.
 
 **MB-108 McQueue: Spec 137 (the queue policy page) and its clean-up docs commits — RUNNING** (R)
-Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: Operator reviews Spec 137 and this clean-up; the operator pushes
+Status: RUNNING · since 2026-11-15 · expires 2026-11-21 · next: The operator pushes branch mcqueue-137-cleanup
+- Dated note 2026-11-15 (M-246, prior text kept; MB-108 · McBylaws queue · lane R; operator, verbatim: "y 2 3 4 add merged"): the MERGED status word stays in Spec 137 §3 as committed in d60806115; REVIEW.md item 1 is closed. Operator, verbatim: "follow the McQueue policy" and "that is part of the McQueue process" (2026-11-15, on lane briefs following Spec 08: DeepSeek bulk pass, one Sonnet grounder): every lane brief carries rule 3 and the Spec 08 substrate.
 - Status detail 2026-11-14: added (operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location" and "y"; `~/Buildo-scratch/mcqueue/DECISIONS.md`; triage rulings `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`). MB-108 · McBylaws queue · lane MQ · stage 7 (draft for operator review). Id claimed in the id ledger.
 - Rules: Spec 137 (this page's own rules 1-6); M-246 (prior text kept); Spec 08 §11.8 MCINC-8 (one id ledger).
 - What: Spec 137 and the pointers to it (Spec 08 and the head of each queue file); a status line on every queue row from the 2026-11-14 audit and the ruled triage; the Airtight V3 queue tracked. The commit check is deferred to the infra-freeze lift (Spec 137 §6) and is built inside MB-73.
@@ -1152,7 +1153,8 @@ Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · McBylaws queu
 - Row INC-4 · House with a secondary suite · increments table row 4
   Status: DONE · since 2026-11-11 · expires none · next: none
 - Row INC-5 · Rear-suite add-on (garden suite), fitted house · increments table row 5
-  Status: RUNNING · since 2026-11-14 · expires 2026-11-21 · next: G2 #5 · Complete INC5-NIGHT, M14, Part B landing, loop green
+  Status: RUNNING · since 2026-11-15 · expires 2026-11-21 · next: G2 #5 · Operator pushes the INC5 recapture commit (lane INC5-REC); then the M14 rehearsal at the new tip; then the operator types the M14 GO; then the D-78 commit (lane M14-PREP prepares it)
+  Record 2026-11-15 (M-246, prior text kept; INC-5 · McBylaws queue · lane R): INC5-NIGHT ran on dev on the operator's own typed go, b1..b6 PASS (2026-11-14 22:19 to 2026-11-15 00:27), 440,093 lots, width 72, storage 688.83 MiB (test stack 688.16; ST-3 stop 780); night log `~/Buildo-scratch/mcbylaws/inc5/night/dev/night.log`. Operator, verbatim, on the order: "y order" (push the INC5 recapture, then the M14 rehearsal at the new tip, then the M14 dev GO); "y 2 3 4 add merged" (start the plan lanes and the M14 commit prep). Record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`.
 - Row INC-6 · Renovations (addition, interior, basement) · increments table row 6
   Status: WAITS · since 2026-11-14 · expires 2026-11-21 · next: G2 #6 · Start the build after inc 5 is green; re-run key on landed inc-5 row (waits: increment 5 green)
   Record 2026-11-14: the existing house plus a garden or laneway suite moved OUT of increment 6 to MB-107 (row MB-107, LATER, expiry 2027-01-14). Operator, verbatim: "With regard to adding the garden suite/ laneway suite to the renvoations - lets add this as a feature later - add teh task but put a lengthy expiry - 2Months" (`~/Buildo-scratch/mcbylaws/inc6/DECISIONS-v2.md` line 423; `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` line 280). Increment 6 is the renovation rows alone.
