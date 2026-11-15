@@ -308,6 +308,25 @@
       "table_version",
       "winner_ids"
     ],
+    "bylaw_resolution_lots_cohort_bak_20261115t0424z": [
+      "chain_run_id",
+      "class_results",
+      "codes",
+      "evaluator_version",
+      "evidence_kinds",
+      "evidence_ref_ids",
+      "inputs_defaulted",
+      "lot_gate",
+      "numbers",
+      "parcel_id",
+      "permitted",
+      "permitted_text_ids",
+      "reason_ids",
+      "resolved_at",
+      "row_sha",
+      "table_version",
+      "winner_ids"
+    ],
     "bylaw_resolution_option_results": [
       "class",
       "evidence_kind",
@@ -1097,6 +1116,14 @@
       "fit_permitted_values",
       "id",
       "updated_at"
+    ],
+    "parcel_lot_form": [
+      "best_shared_len_m",
+      "linked_parcel_count",
+      "lot_form_basis",
+      "lot_form_detected",
+      "parcel_id",
+      "unsure"
     ],
     "parcel_maxbld_population": [
       "added_at",

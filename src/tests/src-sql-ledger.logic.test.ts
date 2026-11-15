@@ -340,7 +340,8 @@ describe('src-sql-ledger — committed ledger (live)', () => {
     // parcel_user_inputs and parcel_maxbld_scenarios are catalogued and the matview is again the only uncatalogued name (the precedent above).
     // SEMI-B (2026-11-13, operator "semi all y"): src/lib/parcels/lot-form.ts reads the view parcel_lot_form (migration 320, written, not applied), so it is
     // uncatalogued until the orchestrator DB job SEMI-320 applies 320 and the witness catalog is recaptured; then this list returns to the matview alone.
-    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats', 'parcel_lot_form']);
+    // INC5-NIGHT recapture (2026-11-15): the witness catalog now lists parcel_lot_form (migration 320 applied, catalog recaptured), so this list is the matview alone again.
+    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats']);
   });
 
   it('exit criterion: every SQL-bearing src/ file is classified', async () => {
