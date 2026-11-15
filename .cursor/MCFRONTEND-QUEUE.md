@@ -702,3 +702,15 @@ No second gate, queue checker, decision log or panel engine. No conversion of an
 Dated note 2026-11-09 (M-246, prior text kept; McFrontend Phase 2 · McFrontend queue · lane R-MF41; operator rulings as quoted in the section "Phase 2" dated note): "No conversion of any screen but the report in Phase 1" still holds for Phase 1. Phase 2 converts only the pages listed in Spec 126 §11b.3 (the MaxBLD pages); every other screen stays convert-on-touch. Not doing in Phase 2: scope D (R-03); Buildo's onboarding, auth, paywall, tab shells and settings; anonymous teaser; advertiser self-serve; PDF send; `usage_events`; `app_outputs`; a hand-built standard component.
 
 Dated note 2026-11-12 (M-246, prior text kept; MF-72 · McFrontend queue · lane R; operator, verbatim: "queue y - discard the layer review 0-1 recap a 0-6 reseed y night y"; record `~/Buildo-scratch/queues-20261112/QUEUE-REVIEW.md` §6 and its "Operator ruling 2026-11-12" section): MF-72 (Terms and Privacy lawyer review, from the 2026-11-11 owed rows) is discarded by the operator; the row is not added and the id stays retired, never reused.
+
+## Cards (folded 2026-11-15)
+
+Dated note 2026-11-15 (M-246, prior text kept; McQueue fold · McFrontend queue · lane MQ-SIMPLE; operator, verbatim: "y fold + simplify - the focus is getting the increments done -"): each open McFrontend card that is not MERGED or DONE has one row here; its card file is its notes. No new MF id was claimed.
+
+**CARD-red-evidence-nonempty: RED-EVIDENCE-NONEMPTY (gate accepts an empty red-evidence file)**
+Status: OPERATOR · since 2026-11-09 · expires 2026-11-16 · next: operator rules the gate fix (lockLands non-empty red evidence) or holds it under the infra freeze
+- Notes: `~/Buildo-scratch/mcfrontend/CARD-red-evidence-nonempty.md`
+
+**CARD-report-cost-images-photo: report COST table, scenario IMAGES carousel, house PHOTO, admin media upload**
+Status: DONE (unverified 2026-11-15) · since 2026-11-10 · expires none · next: verify the cost-table half has a row; images and media are rows MF-38 and MF-37, Street View MF-39 DROPPED
+- Notes: `~/Buildo-scratch/mcfrontend/CARD-report-cost-images-photo.md`

@@ -1237,3 +1237,79 @@ Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · McBylaws queu
   Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "The family-map blocking arm: not needed for the exit." (queue Not doing list, approved with this queue at O-1 2026-10-30)
 - Row NOT-DOING-plausibility-bounds · Numeric plausibility bounds · Not doing list
   Status: DROPPED · since 2026-10-30 · expires none · next: none · ruling: "Numeric plausibility bounds: no ruled source; INV-7/8/10 are the gates." (queue Not doing list, approved with this queue at O-1 2026-10-30)
+
+## Airtight V3 (pipeline steps, folded 2026-11-15)
+
+Dated note 2026-11-15 (M-246, prior text kept; McQueue fold · McBylaws queue · lane MQ-SIMPLE; operator, verbatim: "y fold + simplify - the focus is getting the increments done -"): the 25 Airtight V3 rows and their status lines moved here from `.cursor/QUEUE.md` unchanged; the older history of that file stays in git (commit 61e74ae1f and the commit before it).
+
+Dated note 2026-11-14 (M-246, prior text kept; McQueue clean-up · Airtight V3 queue · lane MQ; operator, verbatim: "y" on the low-infrastructure proposal, rules 1, 2 and 5 (`~/Buildo-scratch/mcqueue/DECISIONS.md`), and "1-11 y" on the triage (`~/Buildo-scratch/queues-20261114/triage/RULINGS.md`, decisions 7, 8 and 9); audit `~/Buildo-scratch/queues-20261114/mcbylaws-rows.json`). This file was local only and is now tracked, so every home is on origin (rule 5). It holds no row headings, so each Airtight V3 row has its `Status:` line here, once; the text below is not edited. The `Status:` line is the current word as of 2026-11-14; older words below ("PARKED", "NEXT") are prior text. The V3-CoA rows stay parked, now until after MB-46 (decision 9). The form is in Spec 137 §3.
+
+### DB lane, in order (CURRENT STATUS 2026-10-27, "DB lane, in order (one at a time)")
+- Row AV3-DB1 · Night-3 re-freeze (catalog fix, T4 landing fix) · DB lane item 1
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-DB2 · Use-scope USO-Q1 round · DB lane item 2
+  Status: DONE · since 2026-10-29 · expires none · next: none
+- Row AV3-DB3 · Layer 2 night D (use permission) · DB lane item 3
+  Status: DONE · since 2026-10-29 · expires none · next: none
+- Row AV3-DB4 · Night 4 runner patch (permits fold, D-P1, CLP derive arm) · DB lane item 4
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-DB5 · Cost-cite slot CCC-Q6 · DB lane item 5
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-DB6 · Permits W1-a / W1-b · DB lane item 6
+  Status: FROZEN · since 2026-10-29 · expires none · next: Operator: state audit before any unfreeze · ruling: "the work with the permits was so disorganized and error prone that we froze that work" (operator 2026-10-29)
+- Row AV3-DB7 · V3-CoA W2 to W4 chain, refresh_snapshot, coa chain run · DB lane item 7
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+
+### V3-CoA conversion pieces (CURRENT STATUS 2026-10-27, "V3-CoA conversion: where each piece is")
+- Row AV3-CLP2 · CLP step 2 build (derive arm, PLAN v3 ruled) · V3-CoA piece
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-PERMITS2 · Permits step 2 build (PLAN v12 ruled) · V3-CoA piece
+  Status: FROZEN · since 2026-10-29 · expires none · next: Operator: state audit before unfreeze · ruling: "the work with the permits was so disorganized and error prone that we froze that work" (operator 2026-10-29)
+- Row AV3-RUNNER-T4 · Runner T4 landing (R-JX/R-JZ/R-JY patches) · V3-CoA piece
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-LEDGER · CoA ledger lane (OPEN 29 to 9) · V3-CoA piece: ledger DONE
+  Status: DONE · since 2026-11-03 · expires none · next: none
+
+### Follow-on lanes (queued, not started)
+- Row AV3-F-CCC-Q4 · Follow-on: CCC-Q4 ACF timezone · follow-on lane (queued, not started)
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-F-AGC · Follow-on: CL-Q9/Q10 AGC · follow-on lane
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-F-CKAN-RETRY · Follow-on: CKAN acquire retry (RE-FREEZE) · follow-on lane
+  Status: WAITS · since 2026-11-03 · expires when the next scripts/lib/step re-freeze night runs · next: Follows the next re-freeze
+- Row AV3-F-NIGHTTOOLS · Follow-on: generalised night-tools gate set · follow-on lane
+  Status: MERGED into MB-79 · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 8: the 26 merges, one batch); pointer: the work is tracked in MB-79
+- Row AV3-F-ACCOUNT-PATH · Follow-on: account-path scrub (445 older files) · follow-on lane
+  Status: MERGED into CARD-account-path-scrub · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 8: the 26 merges, one batch); pointer: the work is tracked in CARD-account-path-scrub
+- Row AV3-F-ORACLE-B · Follow-on: Oracle-B permission scope (USO-Q6) · follow-on lane
+  Status: DROPPED · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 7)
+- Row AV3-F-SPEC08-28 · Follow-on: Spec 08 line 28 / rule 9 PLANNED correction card · follow-on lane
+  Status: LATER · since 2026-10-27 · expires when the Spec 137 docs commit lands · next: Hold or drop
+- Row AV3-F-ORCH1 · Follow-on: 122a:566-573 stale row (ORCH-1) · follow-on lane
+  Status: MERGED into CARD-permits-w1-orchestrator · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 8: the 26 merges, one batch); pointer: the work is tracked in CARD-permits-w1-orchestrator
+- Row AV3-F-LESSONS · Follow-on: lessons.md GIT_* leak entry · follow-on lane
+  Status: DROPPED · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 7)
+
+### Not pushed list
+- Row AV3-NP-rulrec3 · Branch rulrec3 (decisions 495), not pushed · Not pushed list
+  Status: DONE · since 2026-10-30 · expires none · next: none
+- Row AV3-NP-b10fix · Branch b10fix, not pushed · Not pushed list
+  Status: DONE · since 2026-10-30 · expires none · next: none
+- Row AV3-NP-l2-use-scope · Branch l2-use-scope, not pushed · Not pushed list
+  Status: DONE · since 2026-10-30 · expires none · next: none
+- Row AV3-NP-rfx4 · Branch rfx4 (staged), not pushed · Not pushed list
+  Status: FROZEN · since 2026-11-14 · expires none · next: unpark after MB-46 (decision 9) · ruling: "1-11 y" (operator 2026-11-14, decision 9: the V3-CoA rows stay parked, now until after MB-46; first ruled "Q-COA A", operator 2026-11-03)
+- Row AV3-NP-hookfix · Branch hookfix (hook-fix-a), not pushed · Not pushed list
+  Status: DROPPED · since 2026-11-14 · expires none · next: none · ruling: "1-11 y" (operator 2026-11-14, decision 9: AV3-NP-hookfix is DROPPED)
+
+## Cards (folded 2026-11-15)
+
+Dated note 2026-11-15 (M-246, prior text kept; McQueue fold · McBylaws queue · lane MQ-SIMPLE; operator, verbatim: "y fold + simplify - the focus is getting the increments done -"): each open McBylaws card that is not MERGED or DONE has one row here; its card file is its notes. No new MB id was claimed.
+
+**CARD-headline-catalogue-row: the REPORT schema has no headline field because no catalogue row exists**
+Status: OPERATOR · since 2026-11-06 · expires 2026-11-13 · next: EXPIRED, resurface in the next decision list: number the row (MB id) or merge it into MB-31
+- Notes: `~/Buildo-scratch/mcbylaws/CARD-headline-catalogue-row.md`
+
+**CARD-rehearse-after-pass: re-rehearse after a passing test-stack rehearsal (after increment 5)**
+Status: LATER · since 2026-11-14 · expires when increment 5 closes · next: draft the r-release move-aside fix (cap*.out, capture worktree) for operator ruling
+- Notes: `~/Buildo-scratch/mcbylaws/CARD-rehearse-after-pass.md`
