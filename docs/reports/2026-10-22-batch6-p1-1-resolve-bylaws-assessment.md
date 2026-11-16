@@ -141,7 +141,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=308 |
+| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=309 |
 | 2 | resolve_bylaws | PASS | 8 declared, missing from seeds: none |
 | 3 | resolve_bylaws | PASS | retired=0 overlap-with-declared=none |
 | 7 | resolve_bylaws | PASS | SPEC LINK header present=true |
@@ -179,14 +179,14 @@ the measured run budget, the storage check, and the replacement of notes `expect
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
 | 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 49 converted/pending step(s) admin-verifiable (7 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
-| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 218 take effect at cutover, 19 not read; admin badges current |
+| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 222 take effect at cutover, 19 not read; admin badges current |
 | 54 | (registry) | PASS | SWAP-ORDER (R-EQ): every swapped pending step's declared upstreams are converted or swapped (R-EQ) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 84 · unexplained: 0
+- compare ran: true · diffs found: 0 · unexplained: 0
 
 ### Test suite (item iii)
 - SKIPPED or failed to run: --fast: vitest spawn skipped
@@ -208,7 +208,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=49514B notes=9407B checks=19 rows records_meta=4734B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=49514B notes=9407B checks=19 rows records_meta=4735B (newest post/ capture) |
 
 **Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 

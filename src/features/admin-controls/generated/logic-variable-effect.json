@@ -1482,6 +1482,27 @@
       "legacy_name": null,
       "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
     },
+    "compute_maxbld_scenarios_min_main_dwelling_gfa_m2": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_min_suite_gfa_m2": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_plate_min_dimension_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
     "compute_maxbld_scenarios_rafter_span_1_m": {
       "badge": "takes_effect_at_cutover",
       "label": "Takes effect at cutover",
@@ -1532,6 +1553,13 @@
       "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
     },
     "compute_maxbld_scenarios_roof_assembly_depth_4_m": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_maxbld_scenarios",
+      "legacy_name": null,
+      "reason": "compute_maxbld_scenarios still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm": {
       "badge": "takes_effect_at_cutover",
       "label": "Takes effect at cutover",
       "step": "compute_maxbld_scenarios",

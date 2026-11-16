@@ -253,6 +253,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'fya_placeholder_ring_min_n',
   'compute_maxbld_scenarios_bbox_degree_divisor', // MB-31 (e) / MB-35 D-4 (operator "a yes" 2026-11-11): the zone-pool bbox divisor, migration 310
   'compute_maxbld_scenarios_batch_size',
+  'compute_maxbld_scenarios_min_main_dwelling_gfa_m2', // MB-27 increment 5 Part B (migration 316): the four settings the garden-suite engine reads
+  'compute_maxbld_scenarios_min_suite_gfa_m2',
+  'compute_maxbld_scenarios_plate_min_dimension_m',
+  'compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm',
   'fya_porch_allowance_m', // front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) note; Spec 131 LC-58)
   'abut_parcels_with_abutments_warn_pct', // H6 QA ruling 2026-10-16 item 2 — the abutment-share WARN floor
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
