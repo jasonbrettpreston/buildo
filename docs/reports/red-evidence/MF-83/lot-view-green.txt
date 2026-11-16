@@ -1,0 +1,6 @@
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf83g3
+ ✓ src/tests/parcel-lot-view.logic.test.ts (37 tests) 7ms
+ Test Files  1 passed (1)
+      Tests  37 passed (37)
+   Start at  09:03:02
+   Duration  1.17s (transform 225ms, setup 20ms, collect 348ms, tests 7ms, environment 0ms, prepare 142ms)

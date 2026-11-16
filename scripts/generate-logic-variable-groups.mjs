@@ -1308,7 +1308,14 @@ const GROUP_ORDER = [
       "semi_doubt_enabled",
       "semi_doubt_max_link_parcels",
       "semi_doubt_min_shared_len_m",
-      "semi_auto_max_shared_len_m"
+      "semi_auto_max_shared_len_m",
+      "lotview_require_convex",
+      "lotview_convex_tol",
+      "lotview_min_rectangularity",
+      "lotview_front_max_angle_deg",
+      "lotview_front_dist_tol_m",
+      "lotview_rear_max_angle_deg",
+      "lotview_run_max_turn_deg"
     ]
   },
   {

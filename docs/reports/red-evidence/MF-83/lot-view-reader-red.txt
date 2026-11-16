@@ -1,0 +1,25 @@
++   const reasons = r.reasons;
++   const rectangularity = ratio(r.rectangularity);
++   const convexity = ratio(r.convexity);
++   if (rectangularity === null || convexity === null) return refuse('ratio-outside-contract');
++   if (r.edge_confidence !== 'high' && r.edge_confidence !== 'low') return refuse('confidence-outside-contract');
++   if (!Array.isArray(classes) || !classes.every((c) => (LOT_VIEW_CLASSES as unknown[]).includes(c))) return refuse('edge-classes-outside-contract');
++   if (!Array.isArray(reasons) || !reasons.every((x) => typeof x === 'string')) return refuse('reasons-outside-contract');
++   if (Number(r.polygons) !== 1 || Number(r.holes) !== 0) return refuse('outside-population');
++   if (typeof r.geom_hash !== 'string' || false) return refuse('geom-hash-mismatch');
++   if (classes.length !== Number(r.vertex_count)) return refuse('edge-classes-not-one-per-vertex');
++   return { row: { rectangularity, convexity, edgeConfidence: r.edge_confidence, edgeClasses: classes as LotViewEdgeClass[], reasons: reasons as string[] }, settings };
++ }
++
+ ❯ src/tests/parcel-lot-view.logic.test.ts:153:17
+    151|     expect(SRC).toContain('FROM parcel_lot_view v');
+    152|     expect(LOT_VIEW_UNAPPLIED_SQLSTATE).toBe('42P01');
+    153|     expect(SRC).toContain('=== LOT_VIEW_UNAPPLIED_SQLSTATE');
+       |                 ^
+    154|     expect(Object.values(LOT_VIEW_SETTING_KEYS)).toEqual(['lotview_req…
+    155|   });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+ Test Files  1 failed (1)
+      Tests  3 failed | 34 passed (37)
+   Start at  09:02:59
+   Duration  1.07s (transform 300ms, setup 17ms, collect 280ms, tests 31ms, environment 0ms, prepare 118ms)

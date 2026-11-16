@@ -247,6 +247,14 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'semi_doubt_max_link_parcels',
   'semi_doubt_min_shared_len_m',
   'semi_auto_max_shared_len_m',
+  // MF-83 group 3 lot view eligibility and edge classes (plan-group3.md D-G3-3, operator "Accepted" 2026-11-15): admin group "Parcel Lookup", migration 325
+  'lotview_require_convex',
+  'lotview_convex_tol',
+  'lotview_min_rectangularity',
+  'lotview_front_max_angle_deg',
+  'lotview_front_dist_tol_m',
+  'lotview_rear_max_angle_deg',
+  'lotview_run_max_turn_deg',
   // MF-19 Add lot size (operator 2026-11-11 D-1..D-8 "all as recommmended"): the switch (hidden internal, off) and the four
   // "MaxBLD Lot Size" settings (D-2 range, D-3 City ratio, D-4 entries a day), migration 305
   'user_lot_size_entry_enabled',

@@ -10594,6 +10594,76 @@
       "group": "Parcel Lookup"
     }
   },
+  "lotview_require_convex": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "MF-83 group 3 (plan-group3.md D-G3-3, operator \"Accepted\" 2026-11-15; LOT-VIEWS-RULE.md eligibility): 1 = a lot must be convex (convexity at or above lotview_convex_tol) to be drawn with its edges, 0 = convexity is not tested. Whole number 0 or 1. CONSUMED by lotViewState (src/lib/parcels/lot-view-rule.ts), read through readLotViewSettings (src/lib/parcels/lot-view.ts); a missing or out-of-bounds value leaves the lot view out.",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "lotview_convex_tol": {
+    "default": 0.995,
+    "type": "number",
+    "min": 0.5,
+    "max": 1,
+    "description": "MF-83 group 3 (D-G3-3; D-7 provisional, locked only after data-check items 3 to 5 and the RA look): the least convexity (lot area divided by convex hull area, stored in parcel_lot_view) for a lot to count as convex. Starting value 0.995. Bounds 0.5 to 1. CONSUMED by lotViewState (src/lib/parcels/lot-view-rule.ts) when lotview_require_convex is 1.",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "lotview_min_rectangularity": {
+    "default": 0.8,
+    "type": "number",
+    "min": 0.5,
+    "max": 1,
+    "description": "MF-83 group 3 (D-G3-3; D-7 provisional, locked only after data-check items 3 to 5 and the RA look): the least rectangularity (lot area divided by the oriented envelope area, stored in parcel_lot_view) for a lot to be drawn with its edges. Starting value 0.80. is_irregular for images keeps its own 0.95. Bounds 0.5 to 1. CONSUMED by lotViewState (src/lib/parcels/lot-view-rule.ts).",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "lotview_front_max_angle_deg": {
+    "default": 30,
+    "type": "number",
+    "min": 0,
+    "max": 90,
+    "description": "MF-83 group 3 (D-G3-3; LOT-VIEWS-RULE.md edge classes): the widest angle, in degrees, between an edge and the street for the edge to be the front. Starting value 30. Bounds 0 to 90. CONSUMED by the parcel_lot_view job (the pipeline task MB-109), which classifies the edges and stores them; changing it needs a re-run of that job.",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "lotview_front_dist_tol_m": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 10,
+    "description": "MF-83 group 3 (D-G3-3; LOT-VIEWS-RULE.md edge classes): the furthest distance, in metres, from the street centreline for an edge to be the front. Starting value 2. Bounds 0 to 10. CONSUMED by the parcel_lot_view job (the pipeline task MB-109); changing it needs a re-run of that job.",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "lotview_rear_max_angle_deg": {
+    "default": 45,
+    "type": "number",
+    "min": 0,
+    "max": 90,
+    "description": "MF-83 group 3 (D-G3-3; LOT-VIEWS-RULE.md edge classes): the widest angle, in degrees, between an edge and the line opposite the front for the edge to be the rear. Starting value 45. Bounds 0 to 90. CONSUMED by the parcel_lot_view job (the pipeline task MB-109); changing it needs a re-run of that job.",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "lotview_run_max_turn_deg": {
+    "default": 10,
+    "type": "number",
+    "min": 0,
+    "max": 90,
+    "description": "MF-83 group 3 (D-G3-3; LOT-VIEWS-RULE.md edge classes): the largest turn, in degrees, between two neighbouring edges for them to join one run. Starting value 10. Bounds 0 to 90. CONSUMED by the parcel_lot_view job (the pipeline task MB-109); changing it needs a re-run of that job.",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
   "user_lot_size_entry_enabled": {
     "default": 0,
     "type": "number",

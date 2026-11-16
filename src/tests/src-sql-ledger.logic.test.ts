@@ -341,7 +341,9 @@ describe('src-sql-ledger — committed ledger (live)', () => {
     // SEMI-B (2026-11-13, operator "semi all y"): src/lib/parcels/lot-form.ts reads the view parcel_lot_form (migration 320, written, not applied), so it is
     // uncatalogued until the orchestrator DB job SEMI-320 applies 320 and the witness catalog is recaptured; then this list returns to the matview alone.
     // INC5-NIGHT recapture (2026-11-15): the witness catalog now lists parcel_lot_form (migration 320 applied, catalog recaptured), so this list is the matview alone again.
-    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats']);
+    // MF-83 group 3 (2026-11-15, operator "Accepted"): src/lib/parcels/lot-view.ts reads the table parcel_lot_view (the pipeline task MB-109's job, not yet written), so it is
+    // uncatalogued until that job applies its migration and the witness catalog is recaptured, the same precedent as parcel_lot_form above.
+    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats', 'parcel_lot_view']);
   });
 
   it('exit criterion: every SQL-bearing src/ file is classified', async () => {

@@ -1,0 +1,25 @@
+Received: "outline_shape"
+ ❯ src/tests/parcel-lot-view.logic.test.ts:52:67
+     50|   });
+     51|   it('convexity: exactly the tolerance passes, a hair under is outline…
+     52|     expect(lotViewState(row({ convexity: 0.995 }), S, ALL, true)).toBe…
+       |                                                                   ^
+     53|     expect(lotViewState(row({ convexity: 0.9949999 }), S, ALL, true)).…
+     54|   });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  src/tests/parcel-lot-view.logic.test.ts > lotViewState (the pure eligibility rule) > low edge confidence is outline_edges, checked before the evaluated gate
+AssertionError: expected 'outline_unevaluated' to be 'outline_edges' // Object.is equality
+Expected: "outline_edges"
+Received: "outline_unevaluated"
+ ❯ src/tests/parcel-lot-view.logic.test.ts:64:111
+     62|   });
+     63|   it('low edge confidence is outline_edges, checked before the evaluat…
+     64|     expect(lotViewState(row({ edgeConfidence: 'low' }), S, { front: fa…
+       |                                                                                                               ^
+     65|   });
+     66|   it('every class the lot has needs an evaluated setback; a class the …
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+ Test Files  1 failed (1)
+      Tests  2 failed | 35 passed (37)
+   Start at  09:02:56
+   Duration  1.13s (transform 270ms, setup 21ms, collect 350ms, tests 11ms, environment 0ms, prepare 157ms)

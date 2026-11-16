@@ -2686,6 +2686,34 @@
         ]
       }
     },
+    "src/lib/parcels/lot-view.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "b5a1b0d462a3ba3c",
+        "d31865dc51aa87bf"
+      ],
+      "reads": {
+        "parcel_lot_view": [
+          "convexity",
+          "edge_classes",
+          "edge_confidence",
+          "geom_hash",
+          "parcel_id",
+          "reasons",
+          "rectangularity"
+        ],
+        "parcels": [
+          "geom",
+          "parcel_id"
+        ]
+      },
+      "writes": {}
+    },
     "src/lib/parcels/report-check-pace.ts": {
       "class": "static",
       "statements": 1,
