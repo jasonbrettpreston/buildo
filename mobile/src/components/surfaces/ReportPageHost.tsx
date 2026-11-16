@@ -27,6 +27,8 @@ const NO_DATA = { contract: {}, derived: {} };
 export const REPORT_UI = {
   togglePanel: (u: ReportUi, option: string, panel: 'size' | 'cost'): ReportUi => ({ ...u, panel: { ...u.panel, [option]: u.panel[option] === panel ? null : panel } }),
   toggleHow: (u: ReportUi, option: string): ReportUi => ({ ...u, how: { ...u.how, [option]: u.how[option] !== true } }),
+  /** MF-83 (FE-43): closing the See details sheet closes every panel and How?. */
+  closeDetail: (u: ReportUi): ReportUi => ({ ...u, panel: {}, how: {} }),
 };
 
 export function ReportPageHost({ view, lifecycle, content, onRetry, onBack }: {
@@ -44,14 +46,16 @@ export function ReportPageHost({ view, lifecycle, content, onRetry, onBack }: {
     toggle_how: (option) => setUi((u) => REPORT_UI.toggleHow(u, option)),
     open_sheet: () => setSheetOpen(true),
     close_sheet: () => setSheetOpen(false),
+    close_detail: () => setUi((u) => REPORT_UI.closeDetail(u)),
     retry: onRetry,
     back: onBack,
   };
+  const detailOpen = view?.layout.details_view === 'sheet' && (Object.values(ui.panel).some((p) => p !== null) || Object.values(ui.how).some((h) => h));
   React.useEffect(() => {
-    if (!sheetOpen) return undefined;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => { setSheetOpen(false); return true; });
+    if (!sheetOpen && !detailOpen) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { if (sheetOpen) setSheetOpen(false); else setUi((u) => REPORT_UI.closeDetail(u)); return true; });
     return () => sub.remove();
-  }, [sheetOpen]);
+  }, [sheetOpen, detailOpen]);
   const backdrop = React.useCallback((p: BottomSheetBackdropProps) => <Backdrop {...p} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />, [Backdrop]);
   const top = <Renderer tree={backProps() as SurfaceTree} content={content} data={NO_DATA} actions={actions} />;
   if (view === null) {
@@ -68,6 +72,20 @@ export function ReportPageHost({ view, lifecycle, content, onRetry, onBack }: {
     <Box className={L.host} testID="report-host">
       {top}
       <Renderer tree={trees.page as SurfaceTree} content={content} data={data} actions={actions} />
+      {trees.detail ? (
+        <Sheet
+          index={0}
+          enablePanDownToClose
+          onClose={actions.close_detail}
+          backdropComponent={backdrop}
+          backgroundStyle={{ backgroundColor: H.inner }}
+          handleIndicatorStyle={{ backgroundColor: H.buttonBorder }}
+        >
+          <SheetBody>
+            <Renderer tree={trees.detail as SurfaceTree} content={content} data={data} actions={actions} />
+          </SheetBody>
+        </Sheet>
+      ) : null}
       {trees.sheet ? (
         <Sheet
           index={sheetOpen ? 0 : -1}

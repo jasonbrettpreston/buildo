@@ -39,6 +39,39 @@ const closeSheet = (dlg: HTMLDialogElement): void => {
   dlg.dispatchEvent(new Event('close'));
 };
 
+// MF-83 (FE-43, FE-36): a See details sheet is a dialog with its own address (data-route = the hash, #<option>/<panel>). The route is the one source of truth:
+// the hash opens the dialog whose data-route equals it and closes every other (Back, a link, a deep link on load); any close (Back link, Escape, the backdrop)
+// puts the hash on the option and returns focus to the opener link. Native showModal contains focus and makes the rest of the page inert.
+const syncRoute = (root: Element): void => {
+  const hash = root.ownerDocument.defaultView?.location.hash ?? '';
+  for (const d of root.querySelectorAll<HTMLDialogElement>('dialog[data-route]')) {
+    const route = d.getAttribute('data-route') ?? '';
+    const isOpen = d.open || d.hasAttribute('open');
+    if (route === hash && !isOpen) {
+      d.addEventListener('close', () => {
+        const win = root.ownerDocument.defaultView;
+        if (win && win.location.hash === route) win.history.replaceState(null, '', `#${route.slice(1).split('/')[0]}`);
+        (root.querySelector(`a[data-detail="open"][href="${route}"]`) as HTMLElement | null)?.focus();
+      }, { once: true });
+      if (typeof d.showModal === 'function') d.showModal();
+      else d.setAttribute('open', '');
+    } else if (route !== hash && isOpen) {
+      if (typeof d.close === 'function') d.close();
+      else { d.removeAttribute('open'); d.dispatchEvent(new Event('close')); }
+    }
+  }
+};
+
+// A ref callback with cleanup (React 19), not an effect: it attaches the hashchange listener when the page mounts and removes it on unmount; the first sync opens a deep-linked sheet.
+const attachRoute = (root: HTMLDivElement | null): (() => void) | undefined => {
+  const win = root?.ownerDocument.defaultView;
+  if (!root || !win) return undefined;
+  const on = (): void => syncRoute(root);
+  win.addEventListener('hashchange', on);
+  on();
+  return () => win.removeEventListener('hashchange', on);
+};
+
 export function ReportPageToggles({ children }: { children: ReactNode }): ReactElement {
   const onClick = (e: MouseEvent<HTMLDivElement>): void => {
     const root = e.currentTarget;
@@ -71,5 +104,5 @@ export function ReportPageToggles({ children }: { children: ReactNode }): ReactE
     if (d && (d.open || d.hasAttribute('open'))) { e.preventDefault(); closeSheet(d); }
   };
   // The handlers only delegate clicks of the buttons inside (keyboard activation of a button fires click) and Escape in the sheet; the wrapper itself is not interactive.
-  return <div onClick={onClick} onKeyDown={onKeyDown}>{children}</div>;
+  return <div ref={attachRoute} onClick={onClick} onKeyDown={onKeyDown}>{children}</div>;
 }

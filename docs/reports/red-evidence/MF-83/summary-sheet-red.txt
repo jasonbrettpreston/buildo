@@ -1,0 +1,20 @@
+   × P1 the page table covers the brief and binds only what exists > every brief v4 element id is placed, a frame, or listed owed; nothing else 4ms
+   × P1 the page table covers the brief and binds only what exists > the sections follow the brief screen order 0ms
+   × P2 buildPage: the capture, the throw and Q-G4 a > a hidden option is left out; the lot-size box follows the first SHOWN option; a scenario ad follows its own option (no fixed positions) 1ms
+   × P2 buildPage: the capture, the throw and Q-G4 a > MF-20 D-7 in the page path: no scenario ad beside a hidden or not_evaluated option 1ms
+   × P3a MF-83 (FE-41) the summary: references to built option parts, never copies > the summary is the third section on every target and its size texts equal the option tiles exactly (a reference, no
+   × P3a MF-83 (FE-41) the summary: references to built option parts, never copies > a hidden option has no item and is not counted 0ms
+   × P3a MF-83 (FE-41) the summary: references to built option parts, never copies > a not-evaluated option is listed with the not-evaluated text and no size, no "Max build:" and no unit (FE-06) 0ms
+   × P3a MF-83 (FE-41) the summary: references to built option parts, never copies > RED (planted): a ref to a role the option kind lacks, to an unknown option, a ref outside a summary, and a binding 
+   × P3a MF-83 (FE-41) the summary: references to built option parts, never copies > assertPage RED: a ref part outside a summary, and a summary ref with no option, are refused 0ms
+   × P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 picture > D-K: expanded rows (admin, pdf) leave out the lot-size box and the sheet; collapsed rows (mobile, web) keep them; no t
+   × the v21 page, four layout rows > mobile: details panels follow the layout row (collapsed) 13ms
+   × the v21 page, four layout rows > web: details panels follow the layout row (collapsed) 10ms
+   × MF-83 (FE-43) See details as a sheet with its own address > web and mobile: the tile opener and How? are links to #<option>/<panel>; no toggle buttons; every sheet starts closed 9ms
+   × MF-83 (FE-43) See details as a sheet with its own address > the address opens exactly that sheet; Back (the hash leaves it) closes it; another address replaces it 9ms
+   × MF-83 (FE-43) See details as a sheet with its own address > a deep link on load opens that sheet 6ms
+   × MF-83 (FE-43) See details as a sheet with its own address > Escape (the dialog close event) puts the address back on the option and returns focus to the opener link 5ms
+   × MF-83 (FE-43) See details as a sheet with its own address > the sheet shows the same panel parts as the inline panel, and a Back link to the option 5ms
+   × MF-83 (FE-41) the summary on the page > every target: items link to their option anchors, each text is the option's own part 5ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  18 failed | 68 passed (86)

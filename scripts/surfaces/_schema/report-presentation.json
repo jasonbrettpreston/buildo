@@ -355,7 +355,10 @@
     "sheet.err_dims_area_m2": "Those numbers give a lot size of {area}, outside {lo} to {hi} m². Check the numbers and the unit.",
     "sheet.err_ratio": "This is far from the City lot record of {city}. Check the number and the unit.",
     "pending.estimated": "not yet estimated",
-    "pending.classified": "not yet classified"
+    "pending.classified": "not yet classified",
+    "summary.heading": "{count} options",
+    "summary.max": "Max build:",
+    "summary.not_evaluated": "Not yet evaluated"
   },
   "illustrations": {
     "ruling": "Q-10",

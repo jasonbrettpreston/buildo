@@ -18,10 +18,10 @@ import slice from '@/generated/surfaces/mobile_parcel_detail.json';
 /** MF-48 Stage B: the generated content slice of S-001 (emit-mobile-surfaces.mjs: the approved lifecycle texts and Retry, Back), the MF-35 form. */
 export const REPORT_SLICE = slice;
 
-export type PagePart = { role: string; brief: string; kind: 'value' | 'content' | 'pending'; text: string };
+export type PagePart = { role: string; brief: string; kind: 'value' | 'content' | 'pending' | 'ref'; option?: string; ref?: string; text: string };
 export type PageAd = { field: string; slot: string; value: string; disclosure: string };
 export type PageSection = { kind: string; id: string; scenario?: string; ad?: PageAd; parts: PagePart[] };
-export type PageView = { target: string; layout: { details: string }; sections: PageSection[] };
+export type PageView = { target: string; layout: { details: string; details_view?: string }; sections: PageSection[] };
 export type PanelName = 'size' | 'cost';
 /** Screen-local UI state (Spec 99: ephemeral, never persisted; every visit starts closed). Keyed by option section id. */
 export type ReportUi = { panel: Record<string, PanelName | null>; how: Record<string, boolean> };
@@ -32,6 +32,7 @@ export type PropsNode = { component: string; props: Record<string, unknown>; chi
 export const REPORT_UI_CLOSED: ReportUi = { panel: {}, how: {} };
 const EXPANDED = 'expanded';
 const DETAILS = [EXPANDED, 'collapsed']; // report-layout.json closed.details
+const DETAIL_VIEWS = ['inline', 'sheet']; // report-layout.json closed.details_view (MF-83, FE-43)
 /** Parts the v21 page does not show, by section kind and role, with when (web parity, ReportPage.tsx): the count chip while its count is pending;
  * the sheet's input error until the input exists (MF-19). */
 export const UNSHOWN: Record<string, { role: string; whenPending: boolean }[]> = {
@@ -101,7 +102,8 @@ const tile = (s: PageSection, P: ReturnType<typeof picker>, pre: PanelName | 'un
     ...toggle,
   ]);
 
-function option(s: PageSection, ui: ReportUi, expanded: boolean): PropsNode {
+/** MF-83 (FE-43): with details_view: sheet the open panel (or the open How? steps) is returned as `detail` for the host's bottom sheet and is NOT in the page; inline keeps today's in-place path. */
+function option(s: PageSection, ui: ReportUi, expanded: boolean, sheetMode: boolean): { node: PropsNode; detail: PropsNode | null } {
   const P = picker(s);
   const id = s.id;
   const openPanel = ui.panel[id] ?? null;
@@ -156,6 +158,7 @@ function option(s: PageSection, ui: ReportUi, expanded: boolean): PropsNode {
 
   const howOpen = expanded || ui.how[id] === true;
   const how = P.part('bigger.how');
+  const steps = how && howOpen ? node('View', { key: `${id}-how-steps`, testID: `report-${id}-how-steps` }, P.text('bigger.how.steps', `${id}-how-steps-text`, L.howSteps)) : null;
   const qa: PropsNode[] = [node('View', { key: `${id}-bigger`, testID: `report-${id}-bigger`, className: L.qa }, [
     ...P.text('bigger.q', `${id}-bigger-q`, L.qaQ, { role: 'header' }),
     node('View', { key: `${id}-bigger-row`, className: L.qaRow }, [
@@ -165,7 +168,7 @@ function option(s: PageSection, ui: ReportUi, expanded: boolean): PropsNode {
         accessibilityState: { expanded: howOpen }, onPress: { action: 'toggle_how', option: id },
       }, P.text('bigger.how', `${id}-how-label`, L.pillText))] : []),
     ]),
-    ...(how && howOpen ? [node('View', { key: `${id}-how-steps`, testID: `report-${id}-how-steps` }, P.text('bigger.how.steps', `${id}-how-steps-text`, L.howSteps))] : []),
+    ...(steps && !sheetMode ? [steps] : []),
   ])];
   if (how && expanded) P.mark('bigger.how');
   if (how && !howOpen) P.mark('bigger.how.steps');
@@ -193,26 +196,47 @@ function option(s: PageSection, ui: ReportUi, expanded: boolean): PropsNode {
       ]),
       ...P.text('spec_label', `${id}-spec`, L.specLabel),
       node('View', { key: `${id}-tiles`, className: L.tiles }, tiles),
-      ...panels,
+      ...(sheetMode ? [] : panels),
     ]),
     node('View', { key: `${id}-vars`, className: L.vars }, [...P.text('var_label', `${id}-var`, L.varLabel), ...qa]),
   ]);
   P.done();
-  return out;
+  return { node: out, detail: sheetMode ? (panels[0] ?? steps) : null };
 }
 
-function section(s: PageSection, ui: ReportUi, expanded: boolean): PropsNode {
+function section(s: PageSection, ui: ReportUi, expanded: boolean, sheetMode: boolean, details: PropsNode[]): PropsNode {
   const P = picker(s);
   let out: PropsNode;
   switch (s.kind) {
-    case 'option':
-      return option(s, ui, expanded);
+    case 'option': {
+      const o = option(s, ui, expanded, sheetMode);
+      if (o.detail) details.push(o.detail);
+      return o.node;
+    }
     case 'title':
       out = node('View', { key: s.id }, P.text('title', `${s.id}-title`, L.title, { role: 'header' }));
       break;
     case 'address':
       out = node('View', { key: s.id }, P.text('address', `${s.id}-address`, L.address));
       break;
+    case 'summary': {
+      // MF-83 (FE-41): options at a glance; every text is a part ref (the option's own built part). Mobile shows text only: no jump yet (no scroll host).
+      const ids = [...new Set(s.parts.flatMap((p) => (p.option === undefined ? [] : [p.option])))];
+      const cell = (o: string, role: string, cls: string): PropsNode[] => {
+        const i = s.parts.findIndex((p) => p.option === o && p.role === role);
+        if (i < 0) return [];
+        P.used.add(i);
+        return [node('Text', { key: `${s.id}-${o}-${role}`, className: isPending(s.parts[i]) ? `${cls} ${REPORT_PENDING}` : cls }, [P.ref(i)])];
+      };
+      out = node('View', { key: s.id, testID: `report-${s.id}`, className: L.summary }, [
+        ...P.text('heading', `${s.id}-heading`, L.summaryHeading, { role: 'header' }),
+        ...ids.map((o) => node('View', { key: `${s.id}-${o}`, testID: `report-${s.id}-${o}`, className: L.summaryItem }, [
+          ...cell(o, 'item.label', L.summaryLabel), ...cell(o, 'item.title', L.summaryTitle),
+          node('View', { key: `${s.id}-${o}-size`, className: L.summarySize }, [...cell(o, 'item.max', L.summaryMax), ...cell(o, 'item.value', L.summaryValue), ...cell(o, 'item.unit', L.summaryMax)]),
+        ])),
+      ]);
+      break;
+    }
     case 'lot_size':
       out = node('View', { key: s.id, testID: `report-${s.id}`, className: L.box }, [
         ...P.text('title', `${s.id}-title`, L.boxTitle, { role: 'header' }),
@@ -302,15 +326,18 @@ function sheetBody(s: PageSection): PropsNode {
 }
 
 /** The page tree and the sheet body tree of one view, for the given UI state. */
-export function reportProps(view: PageView, ui: ReportUi = REPORT_UI_CLOSED): { page: PropsNode; sheet: PropsNode | null } {
+export function reportProps(view: PageView, ui: ReportUi = REPORT_UI_CLOSED): { page: PropsNode; sheet: PropsNode | null; detail: PropsNode | null } {
   if (!DETAILS.includes(view.layout.details)) throw new Error(`ReportBinding: unknown layout details ${String(view.layout.details)}`); // OUTPUT fold CR LOW-1
+  if (view.layout.details_view !== undefined && !DETAIL_VIEWS.includes(view.layout.details_view)) throw new Error(`ReportBinding: unknown layout details_view ${String(view.layout.details_view)}`);
   const expanded = view.layout.details === EXPANDED;
+  const sheetMode = view.layout.details_view === 'sheet' && !expanded;
+  const details: PropsNode[] = [];
   const sheets = view.sections.filter((s) => s.kind === 'sheet');
   if (sheets.length > 1) throw new Error('ReportBinding: more than one sheet section');
   const page = node('ScrollView', { key: 'report', testID: 'report-page', className: L.scroll }, [
-    node('View', { key: 'report-column', className: L.column }, view.sections.filter((s) => s.kind !== 'sheet').map((s) => section(s, ui, expanded))),
+    node('View', { key: 'report-column', className: L.column }, view.sections.filter((s) => s.kind !== 'sheet').map((s) => section(s, ui, expanded, sheetMode, details))),
   ]);
-  return { page, sheet: sheets[0] ? sheetBody(sheets[0]) : null };
+  return { page, sheet: sheets[0] ? sheetBody(sheets[0]) : null, detail: details[0] ?? null };
 }
 
 /** A lifecycle state (no page view): the approved text, never a blank or the dash; loading adds a spinner. No new copy (D-6).

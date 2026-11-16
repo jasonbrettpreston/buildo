@@ -410,7 +410,8 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
 // { page, synthetic?, values: { <part key>: <server-formatted string> | null } }. Every shown text is a value the producer sent (R17, FE-05: a string,
 // never a number, shown as sent), a content text (report-presentation.json `page`) or a ruled pending text (Q-G4 a: never a value).
 // The contract is report-page.schema.json (it reuses the node contract's slot by $ref). Accumulates every problem, then throws once.
-export interface PagePart { role: string; brief: string; kind: 'value' | 'content' | 'pending'; field?: string; key?: string; rule?: string; content?: string; pending?: string; text: string }
+// MF-83 (FE-41): `ref` parts exist only in a summary section: `option` is the option section id, `ref` the role of that option's BUILT part whose text is shown.
+export interface PagePart { role: string; brief: string; kind: 'value' | 'content' | 'pending' | 'ref'; field?: string; key?: string; rule?: string; content?: string; pending?: string; option?: string; ref?: string; text: string }
 export interface PageSection { kind: string; id: string; brief?: string; scenario?: string; ad?: ReportSlot; parts: PagePart[] }
 export interface PageTree { page: string; sections: PageSection[] }
 // MF-38 follow-up (operator 2026-11-11, "y to all as built"): `images` maps a scenario key to that option's one image (the MF-38 view image, its URL
@@ -486,6 +487,14 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
       partsShown.push(on(p.when, at));
       if (Array.isArray(vocab) && !vocab.includes(p.role)) out.push(`RR-PAGE ${at}: role not in the ${String(s.kind)} vocabulary`);
       const base = { role: p.role, brief: p.brief };
+      // MF-83 (FE-41): a summary part names its option and may be a reference to that option's built part (resolved below, after the options are built).
+      if (p.option !== undefined && s.kind !== 'summary') out.push(`RR-PAGE ${at}: option is only for a summary part`);
+      if (p.ref !== undefined) {
+        if (s.kind !== 'summary') out.push(`RR-PAGE ${at}: a ref part is only in a summary section`);
+        if (typeof p.option !== 'string' || !(T.sections as Json[]).some((x) => x.id === p.option && x.kind === 'option')) out.push(`RR-PAGE ${at}: a ref part names an option section id`);
+        if (!(Array.isArray(T.kinds?.option) && T.kinds.option.includes(p.ref))) out.push(`RR-PAGE ${at}: ref ${String(p.ref)} is not a role of the option kind`);
+        return { ...base, kind: 'ref', option: p.option, ref: p.ref, text: '' };
+      }
       if (p.field !== undefined) {
         const f = oneField(fields, p.field, at, out);
         if (f && kindOf(f) === AD_KIND) out.push(`RR-FIELD ${String(p.field)}: an ad_slot field is a section, never a part (R-34)`);
@@ -500,7 +509,7 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
       if (p.content !== undefined) {
         const t = texts[p.content];
         if (typeof t !== 'string' || t === '') out.push(`RR-CONTENT ${String(p.content)}: no page text`);
-        return { ...base, kind: 'content', content: p.content, text: String(t) };
+        return { ...base, kind: 'content', content: p.content, ...(p.option !== undefined ? { option: p.option } : {}), text: String(t) };
       }
       const key = T.pending_texts?.[p.pending];
       const t = typeof key === 'string' ? texts[key] : undefined;
@@ -525,6 +534,33 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
   };
   const hidden = listOf('hidden');
   const notEvaluated = listOf('not_evaluated');
+  // MF-83 (FE-41): the summary is resolved here, from the BUILT option parts (never a copied value, FE-18). A hidden or undrawn option has no item; a not-evaluated
+  // option shows the table's `ne` content text instead of a size, or no part when `ne` is false (FE-06); the `{count}` of a `fill: count` part is the number of items.
+  const drawn = new Map<string, Json>(built.flatMap(([t, x]) => (t.kind === 'option' && x && !hidden.includes(t.id) ? [[String(t.id), x] as [string, Json]] : [])));
+  for (const b of built) {
+    const [t, x] = b;
+    if (t.kind !== 'summary' || !x) continue;
+    const tp = t.parts as Json[];
+    const count = new Set((x.parts as Json[]).flatMap((p) => (typeof p.option === 'string' && drawn.has(p.option) ? [p.option] : []))).size;
+    const parts: Json[] = [];
+    (x.parts as Json[]).forEach((p) => {
+      const spec = (tp.find((q) => q.role === p.role && q.option === p.option) ?? {}) as Json;
+      if (p.option === undefined) { parts.push(spec.fill === 'count' ? { ...p, text: String(p.text).replace('{count}', String(count)) } : p); return; }
+      const o = drawn.get(p.option);
+      if (!o) return;
+      if (notEvaluated.includes(p.option) && spec.ne !== undefined) {
+        if (spec.ne === false) return;
+        const ne = texts[spec.ne];
+        if (typeof ne !== 'string' || ne === '') out.push(`RR-CONTENT ${String(t.id)}.${String(p.role)}: no page text ${String(spec.ne)}`);
+        parts.push({ role: p.role, brief: p.brief, kind: 'content', content: spec.ne, option: p.option, text: String(ne) });
+        return;
+      }
+      if (p.kind !== 'ref') { parts.push(p); return; }
+      const src = (o.parts as Json[]).find((q) => q.role === p.ref);
+      if (src) parts.push({ ...p, text: src.text }); else out.push(`RR-PAGE ${String(t.id)}.${String(p.role)}: option ${String(p.option)} has no built part ${String(p.ref)}`);
+    });
+    b[1] = count === 0 ? null : { ...x, parts }; // no drawn option, no summary (never an empty "0 options" box)
+  }
   if (out.length) throw new ReportRenderError(out);
   const scenarioOf = (b: [Json, Json | null]): unknown => b[1]?.ad?.scenario;
   let lastOption = -1;
@@ -578,6 +614,7 @@ export const assertPage = (tree: Json, ctx: ReportCtx): void => {
       const at = `${String(s?.id)}.${String(p?.role)}`;
       if (Array.isArray(vocab) && !vocab.includes(p?.role)) out.push(`RR-PAGE ${at}: role not in the ${String(s?.kind)} vocabulary`);
       if (p?.kind === 'value' && fields.filter((x) => x.name === p.field).length !== 1) out.push(`RR-FIELD ${String(p?.field)}: not one declared field (${at})`);
+      if (p?.kind === 'ref' && (s?.kind !== 'summary' || typeof p.ref !== 'string' || typeof p.option !== 'string')) out.push(`RR-PAGE ${at}: a ref part is only in a summary section and names its option and role (FE-41)`);
       if (p?.kind === 'pending' && !pend.has(p.text)) out.push(`RR-CONTENT ${at}: a pending part shows only a ruled pending text (Q-G4 a)`);
     }
   }

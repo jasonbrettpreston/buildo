@@ -79,6 +79,139 @@
         ]
       },
       {
+        "kind": "summary",
+        "id": "summary",
+        "parts": [
+          {
+            "role": "heading",
+            "brief": "A3",
+            "kind": "content",
+            "content": "summary.heading",
+            "text": "3 options"
+          },
+          {
+            "role": "item.label",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "label",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.title",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "title",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.max",
+            "brief": "A4",
+            "kind": "content",
+            "content": "summary.max",
+            "option": "o1",
+            "text": "Max build:"
+          },
+          {
+            "role": "item.value",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "size.value",
+            "text": "2,670"
+          },
+          {
+            "role": "item.unit",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "size.unit",
+            "text": "sq ft"
+          },
+          {
+            "role": "item.label",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "label",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.title",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "title",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.max",
+            "brief": "A4",
+            "kind": "content",
+            "content": "summary.max",
+            "option": "o2",
+            "text": "Max build:"
+          },
+          {
+            "role": "item.value",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "size.value",
+            "text": "2,885"
+          },
+          {
+            "role": "item.unit",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "size.unit",
+            "text": "sq ft"
+          },
+          {
+            "role": "item.label",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "label",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.title",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "title",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.max",
+            "brief": "A4",
+            "kind": "content",
+            "content": "summary.max",
+            "option": "o3",
+            "text": "Max build:"
+          },
+          {
+            "role": "item.value",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "size.value",
+            "text": "4,435"
+          },
+          {
+            "role": "item.unit",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "size.unit",
+            "text": "sq ft"
+          }
+        ]
+      },
+      {
         "kind": "option",
         "id": "o1",
         "scenario": "detached_house/pitched",
@@ -2066,6 +2199,266 @@
             {
               "component": "View",
               "props": {
+                "key": "summary",
+                "testID": "report-summary",
+                "className": "gap-[8px]"
+              },
+              "children": [
+                {
+                  "component": "Text",
+                  "props": {
+                    "key": "summary-heading",
+                    "className": "text-[17px] leading-[24px] font-semibold text-report-ink",
+                    "role": "header"
+                  },
+                  "children": [
+                    {
+                      "part": "summary.0.heading"
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "summary-o1",
+                    "testID": "report-summary-o1",
+                    "className": "gap-[2px] rounded-[12px] border border-report-line bg-report-card px-[16px] py-[12px]"
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "summary-o1-item.label",
+                        "className": "text-[12px] leading-[16px] font-bold uppercase tracking-widest text-report-option-label"
+                      },
+                      "children": [
+                        {
+                          "part": "summary.1.item.label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "summary-o1-item.title",
+                        "className": "text-[16px] leading-[22px] font-semibold text-report-ink"
+                      },
+                      "children": [
+                        {
+                          "part": "summary.2.item.title"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "summary-o1-size",
+                        "className": "flex-row items-baseline gap-[4px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o1-item.max",
+                            "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.3.item.max"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o1-item.value",
+                            "className": "text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.4.item.value"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o1-item.unit",
+                            "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.5.item.unit"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "summary-o2",
+                    "testID": "report-summary-o2",
+                    "className": "gap-[2px] rounded-[12px] border border-report-line bg-report-card px-[16px] py-[12px]"
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "summary-o2-item.label",
+                        "className": "text-[12px] leading-[16px] font-bold uppercase tracking-widest text-report-option-label"
+                      },
+                      "children": [
+                        {
+                          "part": "summary.6.item.label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "summary-o2-item.title",
+                        "className": "text-[16px] leading-[22px] font-semibold text-report-ink"
+                      },
+                      "children": [
+                        {
+                          "part": "summary.7.item.title"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "summary-o2-size",
+                        "className": "flex-row items-baseline gap-[4px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o2-item.max",
+                            "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.8.item.max"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o2-item.value",
+                            "className": "text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.9.item.value"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o2-item.unit",
+                            "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.10.item.unit"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "component": "View",
+                  "props": {
+                    "key": "summary-o3",
+                    "testID": "report-summary-o3",
+                    "className": "gap-[2px] rounded-[12px] border border-report-line bg-report-card px-[16px] py-[12px]"
+                  },
+                  "children": [
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "summary-o3-item.label",
+                        "className": "text-[12px] leading-[16px] font-bold uppercase tracking-widest text-report-option-label"
+                      },
+                      "children": [
+                        {
+                          "part": "summary.11.item.label"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "Text",
+                      "props": {
+                        "key": "summary-o3-item.title",
+                        "className": "text-[16px] leading-[22px] font-semibold text-report-ink"
+                      },
+                      "children": [
+                        {
+                          "part": "summary.12.item.title"
+                        }
+                      ]
+                    },
+                    {
+                      "component": "View",
+                      "props": {
+                        "key": "summary-o3-size",
+                        "className": "flex-row items-baseline gap-[4px]"
+                      },
+                      "children": [
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o3-item.max",
+                            "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.13.item.max"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o3-item.value",
+                            "className": "text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.14.item.value"
+                            }
+                          ]
+                        },
+                        {
+                          "component": "Text",
+                          "props": {
+                            "key": "summary-o3-item.unit",
+                            "className": "text-[14px] leading-[20px] font-normal text-report-muted"
+                          },
+                          "children": [
+                            {
+                              "part": "summary.15.item.unit"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "View",
+              "props": {
                 "key": "o1",
                 "testID": "report-o1",
                 "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]"
@@ -2160,7 +2553,7 @@
                               "component": "Text",
                               "props": {
                                 "key": "o1-size-badge",
-                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim"
                               },
                               "children": [
                                 {
@@ -2181,18 +2574,6 @@
                               ]
                             },
                             {
-                              "component": "Text",
-                              "props": {
-                                "key": "o1-size-sub",
-                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet"
-                              },
-                              "children": [
-                                {
-                                  "part": "o1.5.size.sub"
-                                }
-                              ]
-                            },
-                            {
                               "component": "View",
                               "props": {
                                 "key": "o1-size-value-row",
@@ -2207,7 +2588,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o1.6.size.value"
+                                      "part": "o1.5.size.value"
                                     }
                                   ]
                                 },
@@ -2219,7 +2600,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o1.7.size.unit"
+                                      "part": "o1.6.size.unit"
                                     }
                                   ]
                                 }
@@ -2233,7 +2614,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.8.size.m2"
+                                  "part": "o1.7.size.m2"
                                 }
                               ]
                             },
@@ -2262,7 +2643,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o1.9.size.button"
+                                      "part": "o1.8.size.button"
                                     }
                                   ]
                                 }
@@ -2286,7 +2667,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.11.cost.badge"
+                                  "part": "o1.10.cost.badge"
                                 }
                               ]
                             },
@@ -2298,7 +2679,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.12.cost.label"
+                                  "part": "o1.11.cost.label"
                                 }
                               ]
                             },
@@ -2310,7 +2691,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.13.cost.sub"
+                                  "part": "o1.12.cost.sub"
                                 }
                               ]
                             },
@@ -2329,7 +2710,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o1.14.cost.value"
+                                      "part": "o1.13.cost.value"
                                     }
                                   ]
                                 }
@@ -2343,7 +2724,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.15.cost.rate"
+                                  "part": "o1.14.cost.rate"
                                 }
                               ]
                             },
@@ -2372,7 +2753,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o1.16.cost.button"
+                                      "part": "o1.15.cost.button"
                                     }
                                   ]
                                 }
@@ -2399,7 +2780,7 @@
                       },
                       "children": [
                         {
-                          "part": "o1.64.var_label"
+                          "part": "o1.63.var_label"
                         }
                       ]
                     },
@@ -2420,7 +2801,7 @@
                           },
                           "children": [
                             {
-                              "part": "o1.65.bigger.q"
+                              "part": "o1.64.bigger.q"
                             }
                           ]
                         },
@@ -2439,7 +2820,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.66.bigger.answer"
+                                  "part": "o1.65.bigger.answer"
                                 }
                               ]
                             },
@@ -2467,7 +2848,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o1.67.bigger.how"
+                                      "part": "o1.66.bigger.how"
                                     }
                                   ]
                                 }
@@ -2494,7 +2875,7 @@
                           },
                           "children": [
                             {
-                              "part": "o1.69.nbr.q"
+                              "part": "o1.68.nbr.q"
                             }
                           ]
                         },
@@ -2506,7 +2887,7 @@
                           },
                           "children": [
                             {
-                              "part": "o1.70.nbr.answer"
+                              "part": "o1.69.nbr.answer"
                             }
                           ]
                         },
@@ -2525,7 +2906,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.71.nbr.recent"
+                                  "part": "o1.70.nbr.recent"
                                 }
                               ]
                             },
@@ -2537,7 +2918,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o1.72.nbr.swipe"
+                                  "part": "o1.71.nbr.swipe"
                                 }
                               ]
                             }
@@ -2551,7 +2932,7 @@
                           },
                           "children": [
                             {
-                              "part": "o1.73.nbr.projects"
+                              "part": "o1.72.nbr.projects"
                             }
                           ]
                         }
@@ -2731,7 +3112,7 @@
                               "component": "Text",
                               "props": {
                                 "key": "o2-size-badge",
-                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim"
                               },
                               "children": [
                                 {
@@ -2752,18 +3133,6 @@
                               ]
                             },
                             {
-                              "component": "Text",
-                              "props": {
-                                "key": "o2-size-sub",
-                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet"
-                              },
-                              "children": [
-                                {
-                                  "part": "o2.6.size.sub"
-                                }
-                              ]
-                            },
-                            {
                               "component": "View",
                               "props": {
                                 "key": "o2-size-value-row",
@@ -2778,7 +3147,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o2.7.size.value"
+                                      "part": "o2.6.size.value"
                                     }
                                   ]
                                 },
@@ -2790,7 +3159,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o2.8.size.unit"
+                                      "part": "o2.7.size.unit"
                                     }
                                   ]
                                 }
@@ -2804,7 +3173,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o2.9.size.m2"
+                                  "part": "o2.8.size.m2"
                                 }
                               ]
                             },
@@ -2833,7 +3202,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o2.10.size.button"
+                                      "part": "o2.9.size.button"
                                     }
                                   ]
                                 }
@@ -2857,7 +3226,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o2.12.cost.badge"
+                                  "part": "o2.11.cost.badge"
                                 }
                               ]
                             },
@@ -2869,7 +3238,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o2.13.cost.label"
+                                  "part": "o2.12.cost.label"
                                 }
                               ]
                             },
@@ -2881,7 +3250,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o2.14.cost.sub"
+                                  "part": "o2.13.cost.sub"
                                 }
                               ]
                             },
@@ -2900,7 +3269,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o2.15.cost.value"
+                                      "part": "o2.14.cost.value"
                                     }
                                   ]
                                 }
@@ -2914,7 +3283,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o2.16.cost.rate"
+                                  "part": "o2.15.cost.rate"
                                 }
                               ]
                             },
@@ -2943,7 +3312,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o2.17.cost.button"
+                                      "part": "o2.16.cost.button"
                                     }
                                   ]
                                 }
@@ -2970,7 +3339,7 @@
                       },
                       "children": [
                         {
-                          "part": "o2.65.var_label"
+                          "part": "o2.64.var_label"
                         }
                       ]
                     },
@@ -2991,7 +3360,7 @@
                           },
                           "children": [
                             {
-                              "part": "o2.66.bigger.q"
+                              "part": "o2.65.bigger.q"
                             }
                           ]
                         },
@@ -3010,7 +3379,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o2.67.bigger.answer"
+                                  "part": "o2.66.bigger.answer"
                                 }
                               ]
                             },
@@ -3038,7 +3407,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o2.68.bigger.how"
+                                      "part": "o2.67.bigger.how"
                                     }
                                   ]
                                 }
@@ -3065,7 +3434,7 @@
                           },
                           "children": [
                             {
-                              "part": "o2.70.nbr.q"
+                              "part": "o2.69.nbr.q"
                             }
                           ]
                         },
@@ -3077,7 +3446,7 @@
                           },
                           "children": [
                             {
-                              "part": "o2.71.nbr.answer"
+                              "part": "o2.70.nbr.answer"
                             }
                           ]
                         },
@@ -3089,7 +3458,7 @@
                           },
                           "children": [
                             {
-                              "part": "o2.72.nbr.pointer"
+                              "part": "o2.71.nbr.pointer"
                             }
                           ]
                         }
@@ -3233,7 +3602,7 @@
                               "component": "Text",
                               "props": {
                                 "key": "o3-size-badge",
-                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim"
                               },
                               "children": [
                                 {
@@ -3254,18 +3623,6 @@
                               ]
                             },
                             {
-                              "component": "Text",
-                              "props": {
-                                "key": "o3-size-sub",
-                                "className": "text-center text-[12px] leading-[16px] font-normal text-report-quiet"
-                              },
-                              "children": [
-                                {
-                                  "part": "o3.5.size.sub"
-                                }
-                              ]
-                            },
-                            {
                               "component": "View",
                               "props": {
                                 "key": "o3-size-value-row",
@@ -3280,7 +3637,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o3.6.size.value"
+                                      "part": "o3.5.size.value"
                                     }
                                   ]
                                 },
@@ -3292,7 +3649,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o3.7.size.unit"
+                                      "part": "o3.6.size.unit"
                                     }
                                   ]
                                 }
@@ -3306,7 +3663,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.8.size.m2"
+                                  "part": "o3.7.size.m2"
                                 }
                               ]
                             },
@@ -3335,7 +3692,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o3.9.size.button"
+                                      "part": "o3.8.size.button"
                                     }
                                   ]
                                 }
@@ -3359,7 +3716,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.11.cost.badge"
+                                  "part": "o3.10.cost.badge"
                                 }
                               ]
                             },
@@ -3371,7 +3728,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.12.cost.label"
+                                  "part": "o3.11.cost.label"
                                 }
                               ]
                             },
@@ -3383,7 +3740,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.13.cost.sub"
+                                  "part": "o3.12.cost.sub"
                                 }
                               ]
                             },
@@ -3402,7 +3759,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o3.14.cost.value"
+                                      "part": "o3.13.cost.value"
                                     }
                                   ]
                                 }
@@ -3416,7 +3773,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.15.cost.rate"
+                                  "part": "o3.14.cost.rate"
                                 }
                               ]
                             },
@@ -3445,7 +3802,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o3.16.cost.button"
+                                      "part": "o3.15.cost.button"
                                     }
                                   ]
                                 }
@@ -3465,11 +3822,11 @@
                               "component": "Text",
                               "props": {
                                 "key": "o3-unit-badge",
-                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                                "className": "absolute -top-[11px] self-center overflow-hidden border border-report-line rounded-full bg-report-tile px-[8px] py-[2px] text-[11px] leading-[16px] font-semibold text-report-dim"
                               },
                               "children": [
                                 {
-                                  "part": "o3.17.unit.badge"
+                                  "part": "o3.16.unit.badge"
                                 }
                               ]
                             },
@@ -3481,7 +3838,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.18.unit.label"
+                                  "part": "o3.17.unit.label"
                                 }
                               ]
                             },
@@ -3493,7 +3850,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.19.unit.sub"
+                                  "part": "o3.18.unit.sub"
                                 }
                               ]
                             },
@@ -3512,7 +3869,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o3.20.unit.value"
+                                      "part": "o3.19.unit.value"
                                     }
                                   ]
                                 },
@@ -3524,7 +3881,7 @@
                                   },
                                   "children": [
                                     {
-                                      "part": "o3.21.unit.unit"
+                                      "part": "o3.20.unit.unit"
                                     }
                                   ]
                                 }
@@ -3538,7 +3895,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.22.unit.m2"
+                                  "part": "o3.21.unit.m2"
                                 }
                               ]
                             }
@@ -3563,7 +3920,7 @@
                       },
                       "children": [
                         {
-                          "part": "o3.66.var_label"
+                          "part": "o3.67.var_label"
                         }
                       ]
                     },
@@ -3584,7 +3941,7 @@
                           },
                           "children": [
                             {
-                              "part": "o3.67.bigger.q"
+                              "part": "o3.68.bigger.q"
                             }
                           ]
                         },
@@ -3603,7 +3960,7 @@
                               },
                               "children": [
                                 {
-                                  "part": "o3.68.bigger.answer"
+                                  "part": "o3.69.bigger.answer"
                                 }
                               ]
                             }
@@ -3807,7 +4164,7 @@
                           "component": "Text",
                           "props": {
                             "key": "lot-row-v-8",
-                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums"
                           },
                           "children": [
                             {
@@ -3840,7 +4197,7 @@
                           "component": "Text",
                           "props": {
                             "key": "lot-row-v-10",
-                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums"
                           },
                           "children": [
                             {
@@ -3873,7 +4230,7 @@
                           "component": "Text",
                           "props": {
                             "key": "lot-row-v-12",
-                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums text-[14px] leading-[20px] font-normal text-report-quiet normal-case tracking-normal"
+                            "className": "text-right text-[16px] leading-[24px] font-semibold text-report-ink tabular-nums"
                           },
                           "children": [
                             {
@@ -4226,6 +4583,7 @@
           ]
         }
       ]
-    }
+    },
+    "detail": null
   }
 }

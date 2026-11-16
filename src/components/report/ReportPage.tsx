@@ -60,7 +60,29 @@ const PanelButton = ({ panelId, see, hide, count, open }: { panelId: string; see
   );
 };
 
-const Tile = ({ s, pre, panelId, open, wide = false }: { s: PageSection; pre: string; panelId?: string; open: boolean; wide?: boolean }): ReactElement => (
+// MF-83 (FE-43, FE-36): with details_view: sheet the See details control is a ROUTE (a link to #<option>/<panel>), not a toggle; the island opens the dialog of that address.
+const PanelLink = ({ route, see, count }: { route: string; see: Part; count: Part }): ReactElement => (
+  <a
+    href={route} data-detail="open" aria-haspopup="dialog"
+    className="mt-[10px] inline-flex min-h-11 items-center justify-center gap-1 self-end justify-self-stretch whitespace-nowrap rounded-full border border-report-button-border bg-report-button px-2 text-[13px]/[18px] font-semibold text-report-ink no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber"
+  >
+    <span data-label>{see?.text}</span>
+    {count && !pending(count) ? <span data-part={count.role} className="inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-report-amber px-1 text-[11px]/[18px] font-bold text-report-count-ink">{count.text}</span> : null}
+  </a>
+);
+
+// One detail dialog (MF-83): the existing panel parts in the existing sheet look, its own address, Back (a link to the option) closes it.
+const Detail = ({ route, optionId, title, back, children }: { route: string; optionId: string; title: string; back: Part; children: ReactElement }): ReactElement => (
+  <dialog data-detail="sheet" data-route={route} aria-labelledby={`${title}`} className="mx-auto mb-0 mt-auto max-h-[100dvh] overflow-y-auto w-full max-w-[430px] rounded-t-[20px] border border-b-0 border-report-outer-border bg-report-inner p-0 text-report-ink backdrop:bg-report-scrim">
+    <div className="grid gap-3 px-4 pb-6 pt-3">
+      <div aria-hidden="true" className="h-1 w-10 justify-self-center rounded-sm bg-report-button-border" />
+      {children}
+      <a href={`#${optionId}`} data-detail="close" className="grid min-h-11 place-items-center rounded-xl border border-report-line text-[15px]/[20px] font-semibold text-report-ink no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">{back?.text}</a>
+    </div>
+  </dialog>
+);
+
+const Tile = ({ s, pre, panelId, open, wide = false, sheet = false }: { s: PageSection; pre: string; panelId?: string; open: boolean; wide?: boolean; sheet?: boolean }): ReactElement => (
   <div data-tile={pre} className={`relative grid content-start justify-items-center gap-[2px] rounded-xl border border-report-tile-border bg-report-tile px-3 pb-3 pt-[18px] text-center ${wide ? 'col-span-2 mt-3' : ''}`}>
     <Badge p={one(s, `${pre}.badge`)} />
     <div className="grid min-h-[38px] text-[14px]/[20px] font-semibold text-report-ink">
@@ -73,7 +95,7 @@ const Tile = ({ s, pre, panelId, open, wide = false }: { s: PageSection; pre: st
       {one(s, `${pre}.unit`) ? <>{' '}<T p={one(s, `${pre}.unit`)} className="text-[13px]/[18px] font-semibold tracking-normal text-report-dim" /></> : null}
     </div>
     <T p={one(s, `${pre}.m2`) ?? one(s, `${pre}.rate`)} as="div" className="text-[12px]/[16px] text-report-quiet" />
-    {panelId ? <PanelButton panelId={panelId} see={one(s, `${pre}.button`)} hide={one(s, `${pre}.panel.hide`)} count={one(s, `${pre}.count`)} open={open} /> : null}
+    {panelId && sheet ? <PanelLink route={`#${s.id}/${pre}`} see={one(s, `${pre}.button`)} count={one(s, `${pre}.count`)} /> : panelId ? <PanelButton panelId={panelId} see={one(s, `${pre}.button`)} hide={one(s, `${pre}.panel.hide`)} count={one(s, `${pre}.count`)} open={open} /> : null}
   </div>
 );
 
@@ -113,11 +135,11 @@ const QA = ({ children, labelId }: { children: ReactElement[]; labelId: string }
   <section aria-labelledby={labelId} className="relative grid gap-[10px] rounded-xl border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]">{children}</section>
 );
 
-const Option = ({ s, open, image }: { s: PageSection; open: boolean; image: ViewImage | undefined }): ReactElement => {
+const Option = ({ s, open, image, sheet }: { s: PageSection; open: boolean; image: ViewImage | undefined; sheet: boolean }): ReactElement => {
   const id = (x: string): string => `${s.id}-${x}`;
   const how = one(s, 'bigger.how');
   return (
-    <article data-section="option" data-scenario={s.scenario} aria-labelledby={id('t')} className="grid gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-3">
+    <article id={s.id} data-section="option" data-scenario={s.scenario} aria-labelledby={id('t')} className="grid gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-3">
       <div className="grid gap-3 pb-[14px]">
         {/* MF-38 follow-up (operator 2026-11-11): the option's one image is the reused ReportView figure filling this box; with no signed URL yet
             (MF-44 / MF-22) nothing is drawn in it: no figure, no caption (the ruled empty state). */}
@@ -132,12 +154,21 @@ const Option = ({ s, open, image }: { s: PageSection; open: boolean; image: View
         </div>
         <T p={one(s, 'spec_label')} as="div" className="mx-[2px] mb-2 mt-[2px] text-[11px]/[14px] font-semibold uppercase tracking-[.08em] text-report-soft" />
         <div className="mx-[2px] grid grid-cols-[repeat(2,minmax(0,1fr))] gap-[10px] px-[2px]">
-          <Tile s={s} pre="size" panelId={id('size')} open={open} />
-          <Tile s={s} pre="cost" panelId={id('cost')} open={open} />
+          <Tile s={s} pre="size" panelId={id('size')} open={open} sheet={sheet} />
+          <Tile s={s} pre="cost" panelId={id('cost')} open={open} sheet={sheet} />
           {one(s, 'unit.value') ? <Tile s={s} pre="unit" open={open} wide /> : null}
         </div>
-        <SizePanel s={s} id={id('size')} open={open} />
-        <CostPanel s={s} id={id('cost')} open={open} />
+        {sheet ? (
+          <>
+            <Detail route={`#${s.id}/size`} optionId={s.id} title={id('t')} back={one(s, 'size.panel.hide')}><SizePanel s={s} id={id('size')} open /></Detail>
+            <Detail route={`#${s.id}/cost`} optionId={s.id} title={id('t')} back={one(s, 'cost.panel.hide')}><CostPanel s={s} id={id('cost')} open /></Detail>
+          </>
+        ) : (
+          <>
+            <SizePanel s={s} id={id('size')} open={open} />
+            <CostPanel s={s} id={id('cost')} open={open} />
+          </>
+        )}
       </div>
       <div className="grid gap-5 border-t border-report-outer-border px-[2px] pb-[2px] pt-4">
         <T p={one(s, 'var_label')} as="div" className="mb-1 text-[11px]/[14px] font-semibold uppercase tracking-[.08em] text-report-soft" />
@@ -145,13 +176,15 @@ const Option = ({ s, open, image }: { s: PageSection; open: boolean; image: View
           <T p={one(s, 'bigger.q')} as="h3" id={id('q')} className="m-0 text-[16px]/[22px] font-bold" />
           <div className="flex items-center justify-between gap-2 text-[15px]/[22px]">
             <T p={one(s, 'bigger.answer')} />
-            {how && !open ? (
+            {how && sheet ? (
+              <a href={`#${s.id}/how`} data-detail="open" aria-haspopup="dialog" className="inline-grid min-h-11 flex-none place-items-center rounded-full border border-report-button-border bg-report-button px-[18px] text-[13px]/[18px] font-semibold text-report-ink no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">{how.text}</a>
+            ) : how && !open ? (
               <button type="button" data-toggle="how" aria-expanded="false" aria-controls={id('how')} className="min-h-11 flex-none rounded-full border border-report-button-border bg-report-button px-[18px] text-[13px]/[18px] font-semibold text-report-ink aria-expanded:bg-report-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">
                 {how.text}
               </button>
             ) : null}
           </div>
-          {how ? <div id={id('how')} hidden={!open} data-how><T p={one(s, 'bigger.how.steps')} as="p" className="m-0 text-[14px]/[20px] text-report-muted" /></div> : <></>}
+          {how && sheet ? <Detail route={`#${s.id}/how`} optionId={s.id} title={id('q')} back={one(s, 'size.panel.hide')}><div id={id('how')} data-how><T p={one(s, 'bigger.how.steps')} as="p" className="m-0 text-[14px]/[20px] text-report-muted" /></div></Detail> : how ? <div id={id('how')} hidden={!open} data-how><T p={one(s, 'bigger.how.steps')} as="p" className="m-0 text-[14px]/[20px] text-report-muted" /></div> : <></>}
         </QA>
         {one(s, 'nbr.q') ? (
           <QA labelId={id('n')}>
@@ -173,14 +206,39 @@ const Option = ({ s, open, image }: { s: PageSection; open: boolean; image: View
 
 const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2" id={id} className="mb-[10px] mt-0 text-[20px]/[26px] font-bold" />;
 
-const Section = ({ s, open, images }: { s: PageSection; open: boolean; images: PageView['images'] }): ReactElement | null => {
+const Section = ({ s, open, images, sheet }: { s: PageSection; open: boolean; images: PageView['images']; sheet: boolean }): ReactElement | null => {
   switch (s.kind) {
     case 'title':
       return <header data-section="title"><T p={one(s, 'title')} as="h1" className="m-0 text-[28px]/[34px] font-bold tracking-[-0.02em]" /></header>;
     case 'address':
       return <div data-section="address" className="-mt-4"><T p={one(s, 'address')} as="div" className="text-[18px]/[24px] font-semibold" /></div>;
+    case 'summary': {
+      // MF-83 (FE-41): options at a glance. Every text is a built part (a reference to the option's own part); an item is a route link to its option (FE-36).
+      const ids = [...new Set(s.parts.flatMap((p) => (p.option ? [p.option] : [])))];
+      return (
+        <nav data-section="summary" aria-labelledby="report-sum-t" className="grid gap-2">
+          <T p={one(s, 'heading')} as="h2" id="report-sum-t" className="m-0 text-[17px]/[24px] font-semibold" />
+          <ol className="m-0 grid list-none gap-2 p-0">
+            {ids.map((o) => {
+              const at = (role: string): Part => s.parts.find((p) => p.option === o && p.role === role);
+              return (
+                <li key={o}>
+                  <a href={`#${o}`} data-item={o} className="grid gap-[2px] rounded-xl border border-report-line bg-report-card px-4 py-3 text-report-ink no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">
+                    <T p={at('item.label')} as="span" className="text-[12px]/[16px] font-bold uppercase tracking-[.1em] text-report-option-label" />
+                    <T p={at('item.title')} as="span" className="text-[16px]/[22px] font-semibold" />
+                    <span className="text-[14px]/[20px] text-report-muted">
+                      <T p={at('item.max')} />{at('item.max') ? ' ' : ''}<T p={at('item.value')} className="font-semibold text-report-ink tabular-nums" />{at('item.unit') ? ' ' : ''}<T p={at('item.unit')} />
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+      );
+    }
     case 'option':
-      return <Option s={s} open={open} image={s.scenario !== undefined ? images?.[s.scenario] : undefined} />;
+      return <Option s={s} open={open} image={s.scenario !== undefined ? images?.[s.scenario] : undefined} sheet={sheet} />;
     case 'lot_size':
       return (
         <section data-section="lot_size" aria-labelledby="report-ls-t" className="grid gap-[10px] rounded-[14px] bg-report-card px-6 py-4">
@@ -286,10 +344,11 @@ const Section = ({ s, open, images }: { s: PageSection; open: boolean; images: P
 
 export function ReportPage({ view }: { view: PageView }): ReactElement {
   const open = view.layout.details === 'expanded';
+  const sheet = view.layout.details_view === 'sheet' && !open; // MF-83 (FE-43): the layout row decides; an expanded row prints every panel open
   return (
     <ReportPageToggles>
       <div data-report-page data-target={view.target} data-details={view.layout.details} className="mx-auto grid max-w-[430px] gap-6 bg-report-page px-4 pb-14 pt-4 font-sans text-[16px]/[24px] text-report-ink">
-        {view.sections.map((s) => <Section key={s.id} s={s} open={open} images={view.images} />)}
+        {view.sections.map((s) => <Section key={s.id} s={s} open={open} images={view.images} sheet={sheet} />)}
       </div>
     </ReportPageToggles>
   );

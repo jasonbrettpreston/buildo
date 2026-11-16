@@ -151,6 +151,8 @@
       "pending",
       "key",
       "rule",
+      "option",
+      "ref",
       "slot",
       "source",
       "label",

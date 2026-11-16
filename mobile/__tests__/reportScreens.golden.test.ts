@@ -38,7 +38,7 @@ const refs = (v: unknown, kind: string): string[] => {
   if (Object.keys(o).length === 1 && kind in o) return [String(o[kind])];
   return Object.values(o).flatMap((x) => refs(x, kind));
 };
-const both = (r: { page: PropsNode; sheet: PropsNode | null }): PropsNode[] => [r.page, ...(r.sheet ? [r.sheet] : [])];
+const both = (r: { page: PropsNode; sheet: PropsNode | null; detail?: PropsNode | null }): PropsNode[] => [r.page, ...(r.sheet ? [r.sheet] : []), ...(r.detail ? [r.detail] : [])]; // MF-83: + the See details sheet tree
 const optionIds = (v: PageView): string[] => v.sections.filter((s) => s.kind === 'option').map((s) => s.id);
 const uiAll = (v: PageView, panel: 'size' | 'cost' | null, how: boolean): ReportUi => ({
   panel: Object.fromEntries(optionIds(v).map((id) => [id, panel])), how: Object.fromEntries(optionIds(v).map((id) => [id, how])),
@@ -114,7 +114,10 @@ describe('MF-48 mobile REPORT props goldens', () => {
   it('T1 totality: every part of every view is shown in some UI state (closed, a panel open, How? open) or is a declared unshown role', () => {
     for (const n of PAGE_STATES) {
       const v = viewOf(n);
-      const shown = new Set([REPORT_UI_CLOSED, uiAll(v, 'size', true), uiAll(v, 'cost', false)].flatMap((ui) => both(reportProps(v, ui)).flatMap((t) => refs(t, 'part'))));
+      // MF-83: the sheet shows one panel at a time, so each option is opened on its own (size, How?, cost) as well as all at once
+      const one = (id: string, panel: 'size' | 'cost' | null, how: boolean): ReportUi => ({ panel: { [id]: panel }, how: { [id]: how } });
+      const uis = [REPORT_UI_CLOSED, uiAll(v, 'size', true), uiAll(v, 'cost', false), ...optionIds(v).flatMap((id) => [one(id, 'size', false), one(id, 'cost', false), one(id, null, true)])];
+      const shown = new Set(uis.flatMap((ui) => both(reportProps(v, ui)).flatMap((t) => refs(t, 'part'))));
       for (const s of v.sections) s.parts.forEach((p, i) => {
         const r = `${s.id}.${i}.${p.role}`;
         const unshown = (UNSHOWN[s.kind] ?? []).some((u) => u.role === p.role && (!u.whenPending || p.kind === 'pending'));
@@ -144,7 +147,7 @@ describe('MF-48 mobile REPORT props goldens', () => {
     title.props.className = String(title.props.className).replace(REPORT_PENDING, '').trim();
     const value = nodes(t).find((x) => x.props.key === 'o1-size-value')!;
     value.props.className = `${String(value.props.className)} ${REPORT_PENDING}`;
-    expect(pendingProblems(t, v)).toEqual(['o1-title: pending part o1.1.title without the pending style last', 'o1-size-value: value part o1.6.size.value in the pending style']);
+    expect(pendingProblems(t, v)).toEqual(['o1-title: pending part o1.1.title without the pending style last', 'o1-size-value: value part o1.5.size.value in the pending style']);
   });
   it('T3: no literal display text in any tree; every ref kind is declared; every part ref resolves through SurfaceRenderer', () => {
     for (const n of Object.keys(goldens)) {
@@ -168,10 +171,10 @@ describe('MF-48 mobile REPORT props goldens', () => {
   it('T3 the part ref: a wrong index, a wrong role, ad.label, an unknown section and no page each throw', () => {
     const v = viewOf('page_v21');
     const c = ctxOf(v);
-    expect(resolveValue({ part: 'o1.6.size.value' }, c)).toBe('2,670'); // MF-57 D-J: the unit is its own part
-    expect(resolveValue({ part: 'o1.7.size.unit' }, c)).toBe('sq ft');
+    expect(resolveValue({ part: 'o1.5.size.value' }, c)).toBe('2,670'); // MF-57 D-J: the unit is its own part
+    expect(resolveValue({ part: 'o1.6.size.unit' }, c)).toBe('sq ft');
     expect(resolveValue({ part: 'ad_o2.ad.disclosure' }, c)).toBe('Sponsored');
-    for (const bad of ['o1.7.size.value', 'o1.6.cost.value', 'ad_o2.ad.label', 'zz.0.title', 'o1.06.size.value', 'o1.x.size.value']) {
+    for (const bad of ['o1.6.size.value', 'o1.5.cost.value', 'ad_o2.ad.label', 'zz.0.title', 'o1.06.size.value', 'o1.x.size.value']) {
       expect(() => resolveValue({ part: bad }, c)).toThrow(`unresolved ref {"part":"${bad}"}`);
     }
     expect(() => resolveValue({ part: 'title.0.title' }, { ...c, data: { contract: {}, derived: {} } })).toThrow('unresolved ref');
@@ -222,8 +225,9 @@ describe('MF-48 mobile REPORT props goldens', () => {
     delete ad.sections.find((s) => s.kind === 'ad')!.ad;
     expect(() => reportProps(ad)).toThrow('ReportBinding: ad section ad_o2 has no ad');
   });
-  it('UI state: a size panel opens alone in its option; the opener label flips to the hide text; the expanded layout row opens all with no toggles', () => {
-    const v = viewOf('page_v21');
+  it('UI state (details_view inline, the in-place path): a size panel opens alone in its option; the opener label flips to the hide text; the expanded layout row opens all with no toggles', () => {
+    const v0 = viewOf('page_v21');
+    const v = { ...v0, layout: { ...v0.layout, details_view: 'inline' } };
     const keys = (ui: ReportUi): string[] => nodes(reportProps(v, ui).page).map((x) => String(x.props.key));
     const closed = keys(REPORT_UI_CLOSED);
     expect(closed.filter((k) => k.endsWith('-panel'))).toEqual([]);
@@ -236,6 +240,18 @@ describe('MF-48 mobile REPORT props goldens', () => {
     const ex = nodes(reportProps(wide).page).map((x) => String(x.props.key));
     expect(ex.filter((k) => k.endsWith('-panel')).sort()).toEqual(['o1-cost-panel', 'o1-size-panel', 'o2-cost-panel', 'o2-size-panel', 'o3-cost-panel', 'o3-size-panel']);
     expect(ex.filter((k) => /^o[0-9]+-.*(open|hide|how)$/.test(k))).toEqual([]); // the lot-size button stays (MF-57 D-K open)
+  });
+  it('MF-83 (FE-43) details_view sheet: the open panel or How? is the `detail` tree, never in the page; closed is null; the close action is close_detail', () => {
+    const v = viewOf('page_v21');
+    expect(v.layout.details_view).toBe('sheet');
+    expect(reportProps(v).detail).toBeNull();
+    const r = reportProps(v, { panel: { o1: 'size' }, how: {} });
+    expect(nodes(r.page).map((x) => String(x.props.key)).filter((k) => k.endsWith('-panel'))).toEqual([]);
+    expect(r.detail!.props.key).toBe('o1-size-panel');
+    const h = reportProps(v, { panel: {}, how: { o1: true } });
+    expect(h.detail!.props.key).toBe('o1-how-steps');
+    expect(nodes(h.page).map((x) => String(x.props.key))).not.toContain('o1-how-steps');
+    expect(() => reportProps({ ...v, layout: { ...v.layout, details_view: 'drawer' } })).toThrow('ReportBinding: unknown layout details_view drawer');
   });
   it('OUTPUT fold CR MED-1 / LOW-1: a served (not pending) notes count shows its chip when collapsed and none when expanded, without a throw; an unknown details value throws', () => {
     const v = clone(viewOf('page_v21'));

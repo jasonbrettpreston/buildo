@@ -175,7 +175,7 @@ describe('MF-48 lifecycle states and the action table', () => {
   });
   it('each REPORT action calls its callback with exactly its arguments; an unknown panel and an unknown action throw', () => {
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    const a: jest.Mocked<ReportActions> = { toggle_panel: jest.fn(), toggle_how: jest.fn(), open_sheet: jest.fn(), close_sheet: jest.fn(), retry: jest.fn(), back: jest.fn() };
+    const a: jest.Mocked<ReportActions> = { toggle_panel: jest.fn(), toggle_how: jest.fn(), open_sheet: jest.fn(), close_sheet: jest.fn(), close_detail: jest.fn(), retry: jest.fn(), back: jest.fn() };
     const data = { contract: {}, derived: {} };
     const btn = (onPress: Json, id: string): SurfaceTree => ({ component: 'Button', props: { key: id, testID: id, onPress }, children: [] });
     const tree: SurfaceTree = { component: 'View', props: {}, children: [

@@ -7,7 +7,7 @@
 // text included), the details panels honour the layout row (collapsed: closed with a toggle; expanded: open), the ad sits between options and
 // carries "Sponsored", the sheet is a dialog. The component source names no field and no target. Structure is asserted, not copy.
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pageViewOf, type PageView, type ViewImage } from '../../lib/surfaces/report/core';
@@ -20,6 +20,8 @@ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-ex
 const tree = (t: string): Json => JSON.parse(fs.readFileSync(path.join(process.cwd(), PAGE_GOLDEN_DIR, `v21.${t}.json`), 'utf8')).rendered_tree;
 const view = (target: string): PageView => pageViewOf(tree(target), { target }, reportCtx) as PageView;
 const mount = (target: string) => render(<ReportPage view={view(target)} />);
+// MF-83 (FE-43): the in-place (inline) disclosure is the admin/pdf path and any row naming details_view: inline; mounted here with the row overridden (data, not a target name).
+const mountInline = (target: string) => render(<ReportPage view={{ ...view(target), layout: { ...(view(target).layout as Json), details_view: 'inline' } } as PageView} />);
 const L = (reportCtx.layout as Json).targets as Json;
 // The parts that are toggle labels only (See details, Hide details, How?): drawn on collapsed rows, not on expanded rows.
 const TOGGLE_ROLES = ['size.button', 'cost.button', 'size.panel.hide', 'cost.panel.hide', 'bigger.how'];
@@ -43,12 +45,14 @@ describe('the v21 page, four layout rows', () => {
       const panels = [...container.querySelectorAll('[data-panel]')] as HTMLElement[];
       expect(panels.length).toBe(6);
       const open = L[target].details === 'expanded';
-      for (const p of panels) expect(p.hidden).toBe(!open);
-      expect(container.querySelectorAll('button[data-toggle="panel"]').length > 0).toBe(!open);
+      const sheet = L[target].details_view === 'sheet' && !open;
+      for (const p of panels) expect(p.hidden).toBe(sheet ? false : !open); // a sheet panel is not hidden: its dialog is closed until its address is opened
+      expect(container.querySelectorAll('button[data-toggle="panel"]').length > 0).toBe(!open && !sheet);
+      expect(container.querySelectorAll('dialog[data-detail]').length).toBe(sheet ? 8 : 0); // size and cost for each of three options, How? for the two options that have it
     });
   }
-  it('collapsed: See details opens one panel per option at a time, Hide details closes it', () => {
-    const { container } = mount('mobile');
+  it('details_view inline: See details opens one panel per option at a time, Hide details closes it (the in-place path is unchanged)', () => {
+    const { container } = mountInline('mobile');
     const opt = container.querySelector('[data-section="option"]') as HTMLElement;
     const [size, cost] = [...opt.querySelectorAll('button[data-toggle="panel"]')] as HTMLButtonElement[];
     fireEvent.click(size as HTMLButtonElement);
@@ -100,6 +104,70 @@ const token = (name: string): string => {
 };
 const ratio = (a: string, b: string): number => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p) as [number, number]; return (x + 0.05) / (y + 0.05); };
 const IMAGE: ViewImage = { field: 'card_image', label: 'Illustration', asset_id: 'synthetic-asset-1', alt: 'Synthetic illustration of a pitched-roof house', caption: String(reportCtx.content.illustrations.caption_default), src: 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22/%3E' };
+
+describe('MF-83 (FE-43) See details as a sheet with its own address', () => {
+  const hashTo = (h: string): void => { window.location.hash = h; act(() => { window.dispatchEvent(new HashChangeEvent('hashchange')); }); };
+  const dlg = (c: HTMLElement, route: string): HTMLDialogElement => c.querySelector(`dialog[data-route="${route}"]`) as HTMLDialogElement;
+  const isOpen = (d: HTMLDialogElement): boolean => d.open || d.hasAttribute('open');
+  afterEach(() => { window.location.hash = ''; });
+  it('web and mobile: the tile opener and How? are links to #<option>/<panel>; no toggle buttons; every sheet starts closed', () => {
+    for (const t of ['web', 'mobile']) {
+      const { container, unmount } = mount(t);
+      const hrefs = [...container.querySelectorAll('a[data-detail="open"]')].map((a) => a.getAttribute('href'));
+      expect(hrefs, t).toEqual(['#o1/size', '#o1/cost', '#o1/how', '#o2/size', '#o2/cost', '#o2/how', '#o3/size', '#o3/cost']);
+      expect(container.querySelector('button[data-toggle="panel"], button[data-toggle="how"]'), t).toBeNull();
+      for (const d of container.querySelectorAll('dialog[data-detail]')) expect(isOpen(d as HTMLDialogElement)).toBe(false);
+      unmount();
+    }
+  });
+  it('the address opens exactly that sheet; Back (the hash leaves it) closes it; another address replaces it', () => {
+    const { container } = mount('web');
+    hashTo('#o1/size');
+    expect(isOpen(dlg(container, '#o1/size'))).toBe(true);
+    hashTo('#o1/cost');
+    expect([isOpen(dlg(container, '#o1/size')), isOpen(dlg(container, '#o1/cost'))]).toEqual([false, true]);
+    hashTo('#o1');
+    expect(isOpen(dlg(container, '#o1/cost'))).toBe(false);
+  });
+  it('a deep link on load opens that sheet', () => {
+    window.location.hash = '#o2/how';
+    const { container } = mount('mobile');
+    expect(isOpen(dlg(container, '#o2/how'))).toBe(true);
+  });
+  it('Escape (the dialog close event) puts the address back on the option and returns focus to the opener link', () => {
+    const { container } = mount('web');
+    hashTo('#o3/size');
+    const d = dlg(container, '#o3/size');
+    d.removeAttribute('open');
+    act(() => { d.dispatchEvent(new Event('close')); });
+    expect(window.location.hash).toBe('#o3');
+    expect(document.activeElement).toBe(container.querySelector('a[data-detail="open"][href="#o3/size"]'));
+  });
+  it('the sheet shows the same panel parts as the inline panel, and a Back link to the option', () => {
+    const { container } = mount('web');
+    const d = dlg(container, '#o1/size');
+    expect(d.querySelector('[data-part="size.panel.h"]')).not.toBeNull();
+    expect(d.querySelector('a[data-detail="close"]')?.getAttribute('href')).toBe('#o1');
+  });
+  it('an unknown address opens nothing', () => {
+    const { container } = mount('web');
+    hashTo('#o9/size');
+    for (const d of container.querySelectorAll('dialog[data-detail]')) expect(isOpen(d as HTMLDialogElement)).toBe(false);
+  });
+});
+
+describe('MF-83 (FE-41) the summary on the page', () => {
+  it('every target: items link to their option anchors, each text is the option\'s own part', () => {
+    for (const t of TARGETS as string[]) {
+      const { container, unmount } = mount(t);
+      const links = [...container.querySelectorAll('[data-section="summary"] a[data-item]')] as HTMLAnchorElement[];
+      expect(links.map((a) => a.getAttribute('href')), t).toEqual(['#o1', '#o2', '#o3']);
+      for (const a of links) expect(container.querySelector(a.getAttribute('href') as string)?.getAttribute('data-section'), t).toBe('option');
+      expect(container.querySelector('[data-section="summary"] h2')?.textContent, t).toBe('3 options');
+      unmount();
+    }
+  });
+});
 
 describe('the 2026-11-11 rulings on the v21 page', () => {
   for (const target of TARGETS as string[]) {

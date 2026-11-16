@@ -74,6 +74,139 @@
         ]
       },
       {
+        "kind": "summary",
+        "id": "summary",
+        "parts": [
+          {
+            "role": "heading",
+            "brief": "A3",
+            "kind": "content",
+            "content": "summary.heading",
+            "text": "3 options"
+          },
+          {
+            "role": "item.label",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "label",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.title",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "title",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.max",
+            "brief": "A4",
+            "kind": "content",
+            "content": "summary.max",
+            "option": "o1",
+            "text": "Max build:"
+          },
+          {
+            "role": "item.value",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "size.value",
+            "text": "2,670"
+          },
+          {
+            "role": "item.unit",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o1",
+            "ref": "size.unit",
+            "text": "sq ft"
+          },
+          {
+            "role": "item.label",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "label",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.title",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "title",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.max",
+            "brief": "A4",
+            "kind": "content",
+            "content": "summary.max",
+            "option": "o2",
+            "text": "Max build:"
+          },
+          {
+            "role": "item.value",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "size.value",
+            "text": "2,885"
+          },
+          {
+            "role": "item.unit",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o2",
+            "ref": "size.unit",
+            "text": "sq ft"
+          },
+          {
+            "role": "item.label",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "label",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.title",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "title",
+            "text": "not yet estimated"
+          },
+          {
+            "role": "item.max",
+            "brief": "A4",
+            "kind": "content",
+            "content": "summary.max",
+            "option": "o3",
+            "text": "Max build:"
+          },
+          {
+            "role": "item.value",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "size.value",
+            "text": "4,435"
+          },
+          {
+            "role": "item.unit",
+            "brief": "A4",
+            "kind": "ref",
+            "option": "o3",
+            "ref": "size.unit",
+            "text": "sq ft"
+          }
+        ]
+      },
+      {
         "kind": "option",
         "id": "o1",
         "scenario": "detached_house/pitched",
@@ -1866,11 +1999,11 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
-      "scripts/surfaces/_schema/report-presentation.json": "f1b52be5add0fb36",
+      "scripts/surfaces/_schema/report-presentation.json": "dcc0b61807aac4d3",
       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
-      "scripts/surfaces/_schema/report-v2.decl.json": "4d2448974a8f4ed2",
-      "scripts/surfaces/_schema/report-page.json": "b586e664f20438b1",
-      "scripts/surfaces/_schema/report-page.schema.json": "f79e00423cc3e519"
+      "scripts/surfaces/_schema/report-v2.decl.json": "ba993dff60894d5a",
+      "scripts/surfaces/_schema/report-page.json": "de49f2d08a640de1",
+      "scripts/surfaces/_schema/report-page.schema.json": "ff3c85e4deacd5d6"
     }
   }
 }

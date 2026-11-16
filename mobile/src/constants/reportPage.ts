@@ -32,6 +32,15 @@ export const REPORT_PAGE_LAYOUT = {
   // page top
   title: 'text-[28px] leading-[34px] font-bold tracking-tight text-report-ink',
   address: 'text-[18px] leading-[24px] font-semibold text-report-ink -mt-[16px]',
+  // options at a glance (MF-83, FE-41): existing report-* colour names only
+  summary: 'gap-[8px]',
+  summaryHeading: 'text-[17px] leading-[24px] font-semibold text-report-ink',
+  summaryItem: 'gap-[2px] rounded-[12px] border border-report-line bg-report-card px-[16px] py-[12px]',
+  summaryLabel: 'text-[12px] leading-[16px] font-bold uppercase tracking-widest text-report-option-label',
+  summaryTitle: 'text-[16px] leading-[22px] font-semibold text-report-ink',
+  summarySize: 'flex-row items-baseline gap-[4px]',
+  summaryMax: 'text-[14px] leading-[20px] font-normal text-report-muted',
+  summaryValue: 'text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums',
   // option card
   option: 'gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]',
   optionTop: 'gap-[12px] pb-[14px]',

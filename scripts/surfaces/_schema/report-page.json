@@ -151,6 +151,14 @@
       "note",
       "submit",
       "cancel"
+    ],
+    "summary": [
+      "heading",
+      "item.label",
+      "item.title",
+      "item.max",
+      "item.value",
+      "item.unit"
     ]
   },
   "sections": [
@@ -174,6 +182,117 @@
           "brief": "A2",
           "pending": "estimated",
           "why": "no report field declared (brief: undeclared): match.address retired by MF-10; open item 21"
+        }
+      ]
+    },
+    {
+      "kind": "summary",
+      "id": "summary",
+      "parts": [
+        {
+          "role": "heading",
+          "brief": "A3",
+          "content": "summary.heading",
+          "fill": "count"
+        },
+        {
+          "role": "item.label",
+          "brief": "A4",
+          "option": "o1",
+          "ref": "label"
+        },
+        {
+          "role": "item.title",
+          "brief": "A4",
+          "option": "o1",
+          "ref": "title"
+        },
+        {
+          "role": "item.max",
+          "brief": "A4",
+          "option": "o1",
+          "content": "summary.max",
+          "ne": false
+        },
+        {
+          "role": "item.value",
+          "brief": "A4",
+          "option": "o1",
+          "ref": "size.value",
+          "ne": "summary.not_evaluated"
+        },
+        {
+          "role": "item.unit",
+          "brief": "A4",
+          "option": "o1",
+          "ref": "size.unit",
+          "ne": false
+        },
+        {
+          "role": "item.label",
+          "brief": "A4",
+          "option": "o2",
+          "ref": "label"
+        },
+        {
+          "role": "item.title",
+          "brief": "A4",
+          "option": "o2",
+          "ref": "title"
+        },
+        {
+          "role": "item.max",
+          "brief": "A4",
+          "option": "o2",
+          "content": "summary.max",
+          "ne": false
+        },
+        {
+          "role": "item.value",
+          "brief": "A4",
+          "option": "o2",
+          "ref": "size.value",
+          "ne": "summary.not_evaluated"
+        },
+        {
+          "role": "item.unit",
+          "brief": "A4",
+          "option": "o2",
+          "ref": "size.unit",
+          "ne": false
+        },
+        {
+          "role": "item.label",
+          "brief": "A4",
+          "option": "o3",
+          "ref": "label"
+        },
+        {
+          "role": "item.title",
+          "brief": "A4",
+          "option": "o3",
+          "ref": "title"
+        },
+        {
+          "role": "item.max",
+          "brief": "A4",
+          "option": "o3",
+          "content": "summary.max",
+          "ne": false
+        },
+        {
+          "role": "item.value",
+          "brief": "A4",
+          "option": "o3",
+          "ref": "size.value",
+          "ne": "summary.not_evaluated"
+        },
+        {
+          "role": "item.unit",
+          "brief": "A4",
+          "option": "o3",
+          "ref": "size.unit",
+          "ne": false
         }
       ]
     },

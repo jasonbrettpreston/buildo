@@ -28,12 +28,12 @@ const table = (): Json => reportCtx.page as Json;
 const parts = (t: Json): Json[] => (t.sections as Json[]).flatMap((s) => s.parts as Json[]);
 const response = (): Json => golden('web').response_fixture;
 // The 63 element ids of fields/REPORT-LAYOUT-BRIEF-v4.md (A0..H0), copied as a closed list: the brief is outside the repo.
-const BRIEF_IDS = ['A0', 'A1', 'A2', 'B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B9.1', 'B9.2', 'B9.3', 'B9.4', 'B9.5', 'B9.6', 'B9.7', 'B9.8', 'B9.9', 'B9.10',
+const BRIEF_IDS = ['A0', 'A1', 'A2', 'A3', 'A4', 'B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B9.1', 'B9.2', 'B9.3', 'B9.4', 'B9.5', 'B9.6', 'B9.7', 'B9.8', 'B9.9', 'B9.10',
   'B9.11', 'B9.12', 'B9.13', 'B9.14', 'B9.15', 'B9.16', 'B9.17', 'B9.18', 'B9.19', 'B10', 'B10.1', 'B10.2', 'B10.3', 'B10.4', 'B10.5', 'B10.6', 'B11', 'B12', 'B13',
   'B14', 'B15', 'B16', 'C1', 'C2', 'D1', 'D2', 'E1', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'G1', 'G2', 'G3', 'G4', 'H0'];
 // The brief's screen order: A page top, Option 1, the lot-size box, Option 2, ad, Option 3, (ad D2 owed), Coming soon, About this lot, legal, footer; H is the sheet.
 // MF-19 (D-5): the after-entry line (C2) follows the lot-size box in the table; the page flags decide which of the two is built.
-const SCREEN_ORDER = ['title', 'address', 'option', 'lot_size', 'lot_size_entered', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
+const SCREEN_ORDER = ['title', 'address', 'summary', 'option', 'lot_size', 'lot_size_entered', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
 
 describe('P1 the page table covers the brief and binds only what exists', () => {
   it('every brief v4 element id is placed, a frame, or listed owed; nothing else', () => {
@@ -58,7 +58,7 @@ describe('P1 the page table covers the brief and binds only what exists', () => 
   });
   it('every part has exactly one binding, and every pending part says why', () => {
     for (const p of parts(table())) {
-      expect(['field', 'content', 'pending'].filter((k) => p[k] !== undefined).length, JSON.stringify(p)).toBe(1);
+      expect(['field', 'content', 'pending', 'ref'].filter((k) => p[k] !== undefined).length, JSON.stringify(p)).toBe(1);
       if (p.pending !== undefined) expect(String(p.why ?? '').length, JSON.stringify(p)).toBeGreaterThan(0);
     }
   });
@@ -169,19 +169,19 @@ describe('P2 buildPage: the capture, the throw and Q-G4 a', () => {
   it('a hidden option is left out; the lot-size box follows the first SHOWN option; a scenario ad follows its own option (no fixed positions)', () => {
     const order = (patch: Json): string[] => (buildPage({ ...clone(response()), ...patch }, reportCtx).sections as Json[]).map((s) => s.id);
     const tail = ['soon', 'lot', 'legal', 'footer', 'sheet'];
-    expect(order({ hidden: ['o1'] })).toEqual(['title', 'address', 'o2', 'lot_size', 'ad_o2', 'o3', ...tail]);
-    expect(order({ hidden: ['o3'] })).toEqual(['title', 'address', 'o1', 'lot_size', 'o2', 'ad_o2', ...tail]);
-    expect(order({ hidden: ['o1', 'o3'] })).toEqual(['title', 'address', 'o2', 'lot_size', 'ad_o2', ...tail]);
+    expect(order({ hidden: ['o1'] })).toEqual(['title', 'address', 'summary', 'o2', 'lot_size', 'ad_o2', 'o3', ...tail]);
+    expect(order({ hidden: ['o3'] })).toEqual(['title', 'address', 'summary', 'o1', 'lot_size', 'o2', 'ad_o2', ...tail]);
+    expect(order({ hidden: ['o1', 'o3'] })).toEqual(['title', 'address', 'summary', 'o2', 'lot_size', 'ad_o2', ...tail]);
     expect(order({ hidden: ['o1', 'o2', 'o3'] })).toEqual(['title', 'address', 'lot_size', ...tail]);
     const r = clone(response());
     r.values.ad_scenario_detached_house_flat_or_shallow_roof = null;
     r.hidden = ['o1'];
-    expect((buildPage(r, reportCtx).sections as Json[]).map((s) => s.id)).toEqual(['title', 'address', 'o2', 'lot_size', 'o3', ...tail]);
+    expect((buildPage(r, reportCtx).sections as Json[]).map((s) => s.id)).toEqual(['title', 'address', 'summary', 'o2', 'lot_size', 'o3', ...tail]);
   });
   it('MF-20 D-7 in the page path: no scenario ad beside a hidden or not_evaluated option', () => {
     const order = (patch: Json): string[] => (buildPage({ ...clone(response()), ...patch }, reportCtx).sections as Json[]).map((s) => s.id);
     expect(order({ hidden: ['o2'] })).not.toContain('ad_o2');
-    expect(order({ not_evaluated: ['o2'] })).toEqual(['title', 'address', 'o1', 'lot_size', 'o2', 'o3', 'soon', 'lot', 'legal', 'footer', 'sheet']);
+    expect(order({ not_evaluated: ['o2'] })).toEqual(['title', 'address', 'summary', 'o1', 'lot_size', 'o2', 'o3', 'soon', 'lot', 'legal', 'footer', 'sheet']);
     expect(order({ not_evaluated: ['o1'] })).toContain('ad_o2');
   });
   it('the shown-option lists are option ids in a list', () => {
@@ -225,6 +225,60 @@ describe('P2 buildPage: the capture, the throw and Q-G4 a', () => {
     const tree = clone(golden('web').rendered_tree);
     tree.sections[0].kind = 'invented_kind';
     expect(has(problemsOf(() => assertPage(tree, reportCtx)), 'RR-SCHEMA')).toBe(true);
+  });
+});
+
+describe('P3a MF-83 (FE-41) the summary: references to built option parts, never copies', () => {
+  const T = (): Json => clone(reportCtx.page as Json);
+  const withPage = (page: Json): typeof reportCtx => ({ ...reportCtx, page }) as typeof reportCtx;
+  const sum = (resp: Json): Json => (buildPage(resp, reportCtx).sections as Json[]).find((s) => s.kind === 'summary') as Json;
+  const texts = (s: Json, role: string): string[] => (s.parts as Json[]).filter((p) => p.role === role).map((p) => p.text);
+  it('the summary is the third section on every target and its size texts equal the option tiles exactly (a reference, not a second value)', () => {
+    for (const t of TARGETS as string[]) {
+      const tree = golden(t).rendered_tree as Json;
+      const secs = tree.sections as Json[];
+      const s = secs[2] as Json;
+      expect(s.kind, t).toBe('summary');
+      const opts = secs.filter((s) => s.kind === 'option');
+      expect(texts(s, 'item.value'), t).toEqual(opts.map((o) => (o.parts as Json[]).find((p) => p.role === 'size.value')!.text));
+      expect(texts(s, 'item.title'), t).toEqual(opts.map((o) => (o.parts as Json[]).find((p) => p.role === 'title')!.text));
+      expect(texts(s, 'heading'), t).toEqual([`${opts.length} options`]);
+    }
+  });
+  it('a hidden option has no item and is not counted', () => {
+    const s = sum({ ...response(), hidden: ['o2'] });
+    expect([...new Set((s.parts as Json[]).filter((p) => p.option).map((p) => p.option))]).toEqual(['o1', 'o3']);
+    expect(texts(s, 'heading')).toEqual(['2 options']);
+  });
+  it('a not-evaluated option is listed with the not-evaluated text and no size, no "Max build:" and no unit (FE-06)', () => {
+    const s = sum({ ...response(), not_evaluated: ['o2'] });
+    const of = (role: string): Json[] => (s.parts as Json[]).filter((p) => p.option === 'o2' && p.role === role);
+    expect(of('item.value').map((p) => p.text)).toEqual(['Not yet evaluated']);
+    expect(of('item.max')).toEqual([]);
+    expect(of('item.unit')).toEqual([]);
+    expect(texts(s, 'heading')).toEqual(['3 options']);
+  });
+  it('with no drawn option the summary is left out (no empty "0 options" box)', () => {
+    expect((buildPage({ ...response(), hidden: ['o1', 'o2', 'o3'] }, reportCtx).sections as Json[]).some((s) => s.kind === 'summary')).toBe(false);
+  });
+  it('RED (planted): a ref to a role the option kind lacks, to an unknown option, a ref outside a summary, and a binding on a value part each throw RR-PAGE', () => {
+    const a = T();
+    (a.sections as Json[]).find((s) => s.kind === 'summary')!.parts.push({ role: 'item.value', brief: 'A4', option: 'o1', ref: 'no.such.role' });
+    expect(has(problemsOf(() => buildPage(response(), withPage(a))), 'RR-PAGE summary.item.value: ref no.such.role is not a role')).toBe(true);
+    const b = T();
+    (b.sections as Json[]).find((s) => s.kind === 'summary')!.parts.push({ role: 'item.value', brief: 'A4', option: 'o9', ref: 'size.value' });
+    expect(has(problemsOf(() => buildPage(response(), withPage(b))), 'RR-PAGE summary.item.value: a ref part names an option section id')).toBe(true);
+    const c = T();
+    (c.sections as Json[]).find((s) => s.id === 'o1')!.parts.push({ role: 'label', brief: 'B1', option: 'o1', ref: 'label' });
+    expect(has(problemsOf(() => buildPage(response(), withPage(c))), 'RR-PAGE o1.label: a ref part is only in a summary section')).toBe(true);
+  });
+  it('assertPage RED: a ref part outside a summary, and a summary ref with no option, are refused', () => {
+    const tree = clone(golden('web').rendered_tree) as Json;
+    (tree.sections as Json[]).find((s) => s.kind === 'summary')!.parts.find((p: Json) => p.kind === 'ref').option = undefined;
+    expect(problemsOf(() => assertPage(tree, reportCtx)).length).toBeGreaterThan(0);
+    const t2 = clone(golden('web').rendered_tree) as Json;
+    (t2.sections as Json[]).find((s) => s.kind === 'title')!.parts.push({ role: 'title', brief: 'A1', kind: 'ref', option: 'o1', ref: 'title', text: 'x' });
+    expect(has(problemsOf(() => assertPage(t2, reportCtx)), 'RR-PAGE title.title: a ref part is only in a summary')).toBe(true);
   });
 });
 
@@ -305,7 +359,7 @@ describe('P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 pic
       expect(kinds.includes('sheet'), t).toBe(!expanded);
     }
     // Exact kinds per row (panel fold B: an independent count, not the filter re-implemented).
-    const KINDS = ['title', 'address', 'option', 'lot_size', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
+    const KINDS = ['title', 'address', 'summary', 'option', 'lot_size', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
     for (const t of TARGETS as string[]) {
       const v = pageViewOf(golden(t).rendered_tree, { target: t }, reportCtx) as Json;
       const expanded = (reportCtx.layout as Json).targets[t].details === 'expanded';

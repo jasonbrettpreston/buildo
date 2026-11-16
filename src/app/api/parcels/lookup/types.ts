@@ -144,13 +144,15 @@ const PagePartSchema = z
   .object({
     role: z.string(),
     brief: z.string(),
-    kind: z.enum(['value', 'content', 'pending']),
+    kind: z.enum(['value', 'content', 'pending', 'ref']),
     text: z.string(),
     field: z.string().optional(),
     content: z.string().optional(),
     pending: z.string().optional(),
     key: z.string().optional(),
     rule: z.string().optional(),
+    option: z.string().optional(), // MF-83 (FE-41): a summary part's option section id
+    ref: z.string().optional(), // MF-83: the role of the option part a summary part shows
   })
   .strict();
 const PageAdSchema = z

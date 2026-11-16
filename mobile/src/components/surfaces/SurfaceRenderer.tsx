@@ -49,6 +49,8 @@ export type ReportActions = {
   toggle_how: (option: string) => void;
   open_sheet: () => void;
   close_sheet: () => void;
+  /** MF-83 (FE-43): the See details sheet's close (swipe, backdrop, Android Back): every panel and How? closes. */
+  close_detail: () => void;
   /** MF-48 Stage B: the error state's Retry (refetch) and the screen's Back (the same action names and cases as SEARCH and LIST). */
   retry: () => void;
   back: () => void;
@@ -136,6 +138,8 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
       return () => act.open_sheet();
     case 'close_sheet':
       return () => act.close_sheet();
+    case 'close_detail':
+      return () => act.close_detail();
     default: {
       const unhandled: never = name;
       throw new Error(`SurfaceRenderer: no case for action "${String(unhandled)}"`);
