@@ -1611,6 +1611,26 @@
       "label": "Not read — scheduled for retirement",
       "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
     },
+    "lotview_front_dist_tol_m": {
+      "badge": "not_read_scheduled_for_retirement",
+      "label": "Not read — scheduled for retirement",
+      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
+    "lotview_front_max_angle_deg": {
+      "badge": "not_read_scheduled_for_retirement",
+      "label": "Not read — scheduled for retirement",
+      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
+    "lotview_rear_max_angle_deg": {
+      "badge": "not_read_scheduled_for_retirement",
+      "label": "Not read — scheduled for retirement",
+      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
+    "lotview_run_max_turn_deg": {
+      "badge": "not_read_scheduled_for_retirement",
+      "label": "Not read — scheduled for retirement",
+      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
     "parcel_tool_overage_cap_default": {
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
