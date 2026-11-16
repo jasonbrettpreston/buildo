@@ -45,7 +45,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { withTransaction } from '@/lib/db/client';
-import { logError, logWarn } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 // getStripeClient extracted to the shared module (P26-26B) so the
 // checkout-session, portal, and delete-cancel paths construct the SDK
 // identically. The API-version-pinning note lives there.
@@ -55,13 +55,17 @@ import {
   subscriptionPriceId,
   subscriptionCurrentPeriodEnd,
   stripeRefId,
+  type StripeManagedStatus,
 } from '@/lib/stripe/client';
+import { readPlanPriceIds, resolvePlanFromPrices } from '@/lib/stripe/parcel-plans';
 import {
   resolvePriceProduct,
   upsertEntitlementFromStripeEvent,
+  setPlanKeyFromStripeEvent,
   isUuid,
   DEFAULT_PRODUCT,
   PRODUCTS,
+  type PlanKey,
   type Product,
 } from '@/lib/entitlements';
 
@@ -89,7 +93,7 @@ function getWebhookSecret(): string {
 }
 
 interface WebhookOutcome {
-  newStatus: 'active' | 'past_due' | 'expired' | null;
+  newStatus: StripeManagedStatus | null;
   stripeCustomerId: string | null;
   /**
    * Internal Buildo user_id, when the Stripe object carries it in metadata.
@@ -104,6 +108,11 @@ interface WebhookOutcome {
   userId: string | null;
   /** items.data[0].price.id on subscription.* events; null elsewhere. */
   priceId: string | null;
+  /**
+   * MF-47: EVERY item price id of a subscription.created/updated event (the plan is found by matching these against the two plan price
+   * settings, never by items[0]); empty elsewhere (deleted, checkout, invoice events never write plan_key).
+   */
+  itemPriceIds: string[];
   /**
    * [P1-F6 fold — Gemini MED race] `session.metadata.product` on
    * checkout.session.completed — stamped by /api/subscribe/exchange at
@@ -134,7 +143,7 @@ function userIdFromMetadata(metadata: Stripe.Metadata | null | undefined): strin
 }
 
 // Maps Stripe subscription.status to our internal status. Returns null for
-// statuses we don't act on (`incomplete`, `incomplete_expired`, `trialing`,
+// statuses we don't act on (`incomplete`, `incomplete_expired`,
 // `paused`, `canceled` — none of which should mutate our own entitlement
 // status). The single source of truth for access revocation is
 // `customer.subscription.deleted` (handled in classifyEvent), not any
@@ -145,6 +154,17 @@ function userIdFromMetadata(metadata: Stripe.Metadata | null | undefined): strin
 // mapStripeSubStatus lives in @/lib/stripe/client as the single source of
 // truth, shared with the admin reconcile route so the drift-detector can
 // never drift from what the webhook actually writes.
+
+/** MF-47 (v1 fold 4): the product a subscription / invoice carries in its own metadata, or null. Validated against PRODUCTS at the use site. */
+function metadataProductOf(metadata: Stripe.Metadata | null | undefined): string | null {
+  const v = metadata?.product;
+  return typeof v === 'string' && v.length > 0 ? v : null;
+}
+
+/** MF-47: every item price id of a subscription (the licensed plan item is found by id; the overage row adds a metered item). */
+function itemPriceIdsOf(sub: Stripe.Subscription): string[] {
+  return (sub.items?.data ?? []).map((i) => i.price?.id).filter((id): id is string => typeof id === 'string' && id.length > 0);
+}
 
 function clientReferenceIdOf(session: Stripe.Checkout.Session): string | null {
   const value = session.client_reference_id;
@@ -188,11 +208,16 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
       // third-party sessions), with subscription.created as corrector.
       const session = event.data.object as Stripe.Checkout.Session;
       const metadataProduct = session.metadata?.product;
+      // MF-47 (v1 fold 3): a session that offered a Stripe trial carries metadata.trial = '1' (server-set only). The trialing
+      // customer.subscription.created event is then the ONE trial writer (status trial, the real period end); this event writes nothing, so the
+      // same-second watermark can never drop the trial row in favour of an 'active' write. Without the flag: today's behaviour.
+      const trialSession = session.metadata?.trial === '1';
       return {
-        newStatus: 'active',
+        newStatus: trialSession ? null : 'active',
         stripeCustomerId: customerIdFromUnknown(session.customer),
         userId: clientReferenceIdOf(session) ?? userIdFromMetadata(session.metadata),
         priceId: null,
+        itemPriceIds: [],
         metadataProduct:
           typeof metadataProduct === 'string' && metadataProduct.length > 0 ? metadataProduct : null,
         subscriptionId: stripeRefId(session.subscription),
@@ -215,7 +240,8 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         stripeCustomerId: customerIdFromUnknown(sub.customer),
         userId: userIdFromMetadata(sub.metadata),
         priceId: subscriptionPriceId(sub),
-        metadataProduct: null,
+        itemPriceIds: itemPriceIdsOf(sub),
+        metadataProduct: metadataProductOf(sub.metadata),
         subscriptionId: sub.id,
         currentPeriodEnd: subscriptionCurrentPeriodEnd(sub),
         resolveProductViaSubscription: false,
@@ -227,12 +253,16 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
       // metadata.user_id, so identity resolves via the stripe_customer_id
       // fallback branch (userId null). Flips past_due → active.
       const invoice = event.data.object as Stripe.Invoice;
+      // MF-47 (v1 fold 3): the $0 trial-start invoice (billing_reason subscription_create AND total 0) is not a payment: it writes nothing. A $0
+      // renewal (any other reason) and every paid invoice still write 'active' (trial conversion, renewals, past_due recovery).
+      const trialStartInvoice = invoice.billing_reason === 'subscription_create' && invoice.total === 0;
       return {
-        newStatus: 'active',
+        newStatus: trialStartInvoice ? null : 'active',
         stripeCustomerId: customerIdFromUnknown(invoice.customer),
         userId: userIdFromMetadata(invoice.metadata),
         priceId: null,
-        metadataProduct: null,
+        itemPriceIds: [],
+        metadataProduct: metadataProductOf(invoice.parent?.subscription_details?.metadata),
         subscriptionId: invoiceSubscriptionId(invoice),
         currentPeriodEnd: null,
         resolveProductViaSubscription: true,
@@ -245,7 +275,8 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         stripeCustomerId: customerIdFromUnknown(invoice.customer),
         userId: userIdFromMetadata(invoice.metadata),
         priceId: null,
-        metadataProduct: null,
+        itemPriceIds: [],
+        metadataProduct: metadataProductOf(invoice.parent?.subscription_details?.metadata),
         subscriptionId: invoiceSubscriptionId(invoice),
         currentPeriodEnd: null,
         resolveProductViaSubscription: true,
@@ -259,7 +290,8 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         stripeCustomerId: customerIdFromUnknown(sub.customer),
         userId: userIdFromMetadata(sub.metadata),
         priceId: subscriptionPriceId(sub),
-        metadataProduct: null,
+        itemPriceIds: [],
+        metadataProduct: metadataProductOf(sub.metadata),
         subscriptionId: sub.id,
         currentPeriodEnd: subscriptionCurrentPeriodEnd(sub),
         resolveProductViaSubscription: false,
@@ -271,6 +303,7 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         stripeCustomerId: null,
         userId: null,
         priceId: null,
+        itemPriceIds: [],
         metadataProduct: null,
         subscriptionId: null,
         currentPeriodEnd: null,
@@ -450,6 +483,26 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         product = await resolvePriceProduct(client, outcome.priceId);
       }
 
+      // MF-47 (C-1): the plan of a parcel_tool subscription is found by matching its item prices against the two admin price settings (no
+      // second map). Only subscription.created/updated carry items; unset settings are an info line (the operator has not configured MaxBLD
+      // yet), a set-but-unmatched or ambiguous price is an error line; either way plan_key is left as it is (the column default on insert).
+      let planKey: PlanKey | null = null;
+      if (product === 'parcel_tool' && outcome.itemPriceIds.length > 0) {
+        const resolution = resolvePlanFromPrices(await readPlanPriceIds(client), outcome.itemPriceIds);
+        if (resolution.kind === 'matched') {
+          planKey = resolution.plan;
+        } else if (resolution.kind === 'unset') {
+          logInfo('[stripe-webhook]', 'plan price settings are unset, plan_key not written', { event_id: event.id, subscription_id: outcome.subscriptionId });
+        } else {
+          safeLogError('[stripe-webhook]', new Error(`parcel_tool subscription price does not resolve to one plan (${resolution.kind})`), {
+            event: resolution.kind === 'ambiguous' ? 'plan_price_ambiguous' : 'plan_price_unmatched',
+            event_id: event.id,
+            subscription_id: outcome.subscriptionId,
+            price_ids: outcome.itemPriceIds,
+          });
+        }
+      }
+
       // Per-product entitlement upsert — all three legacy fences preserved
       // (out-of-order watermark keyed on event.created [fold 17], deletion
       // fence, superseded-subscription fence now keyed on
@@ -463,6 +516,11 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         currentPeriodEnd: outcome.currentPeriodEnd,
         eventCreatedAt,
       });
+      if (planKey !== null) {
+        // Only after an applied upsert (a stale or fenced event never writes the plan), on the subscription the row tracks.
+        const planRows = rowCount > 0 ? await setPlanKeyFromStripeEvent(client, userId, product, planKey, outcome.subscriptionId) : 0;
+        logInfo('[stripe-webhook]', 'tier write', { event_id: event.id, user_id: userId, product, plan_key: planKey, status: outcome.newStatus, applied: planRows > 0 });
+      }
 
       if (rowCount === 0) {
         // No row applied. Three possible causes, distinguishable only by a

@@ -3037,6 +3037,19 @@
         ]
       }
     },
+    "src/lib/stripe/parcel-plans.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "4553f87079c4c7b5"
+      ],
+      "reads": {},
+      "writes": {}
+    },
     "src/lib/subscription/expiration.ts": {
       "class": "static",
       "statements": 2,

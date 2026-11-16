@@ -17,6 +17,7 @@
 // — the 26-FOLDS §R5-style env-presence guard.
 
 import Stripe from 'stripe';
+import { MAXBLD_ORIGIN } from '@/lib/auth/host-policy';
 import { resolvePriceProduct, type Product, type Queryable } from '@/lib/entitlements';
 
 export function getStripeClient(): Stripe {
@@ -44,21 +45,30 @@ export class StripeNotConfiguredError extends Error {
 // cancel_at_period_end update on these, so we skip them.
 const TERMINAL_STRIPE_STATUSES: ReadonlySet<string> = new Set(['canceled', 'incomplete_expired']);
 
+/**
+ * The internal statuses a Stripe subscription can produce. MF-47 (RULED 2026-11-14) adds 'trial': a MaxBLD card-up-front trial is a Stripe
+ * `trialing` subscription (v1 D-6 a: the one shared mapping, no product special case). One type, used by every writer and reader of it.
+ */
+export type StripeManagedStatus = 'trial' | 'active' | 'past_due' | 'expired';
+
 /** Our internal subscription_status values that a Stripe event can produce. */
-export type MappedSubscriptionStatus = 'active' | 'past_due' | 'expired' | null;
+export type MappedSubscriptionStatus = StripeManagedStatus | null;
 
 /**
  * Map ONE Stripe subscription status to our internal subscription_status.
  * Single source of truth — consumed by the webhook (per-event) AND the admin
  * reconcile route (over the customer's whole list). 'unpaid' maps to 'expired'
  * because Stripe sets it only after dunning is exhausted (access already lost);
- * everything not access-affecting (trialing/incomplete/canceled/paused) maps to
+ * 'trialing' maps to 'trial' (MF-47);
+ * everything not access-affecting (incomplete/canceled/paused) maps to
  * null = "no managed status change".
  */
 export function mapStripeSubStatus(status: Stripe.Subscription.Status): MappedSubscriptionStatus {
   switch (status) {
     case 'active':
       return 'active';
+    case 'trialing':
+      return 'trial';
     case 'past_due':
       return 'past_due';
     case 'unpaid':
@@ -70,20 +80,21 @@ export function mapStripeSubStatus(status: Stripe.Subscription.Status): MappedSu
 
 /**
  * The effective internal status for a customer given ALL their subscriptions
- * (admin reconcile). Priority active > past_due > expired: a customer with any
- * access-granting sub is 'active'; any past_due sub (no active) is 'past_due';
- * otherwise 'expired' (including the no-subscriptions case). Never returns the
- * operator-only states (trial/admin_managed/cancelled_pending_deletion) — those
- * are not Stripe-derivable and are protected from reconcile-apply by the route.
+ * (admin reconcile). Priority active > trial > past_due > expired: a customer with
+ * any paying sub is 'active'; a trialing sub (no active) is 'trial' (MF-47: a
+ * trialing-only customer must never derive 'expired'); any past_due sub (no
+ * active, no trial) is 'past_due'; otherwise 'expired' (including the
+ * no-subscriptions case). Never returns the operator-only states
+ * (admin_managed/cancelled_pending_deletion) — those are not Stripe-derivable
+ * and are protected from reconcile-apply by the route.
  */
-export function deriveEffectiveStripeStatus(
-  subs: Stripe.Subscription[],
-): 'active' | 'past_due' | 'expired' {
-  let best: 'active' | 'past_due' | 'expired' = 'expired';
+export function deriveEffectiveStripeStatus(subs: Stripe.Subscription[]): StripeManagedStatus {
+  let best: StripeManagedStatus = 'expired';
   for (const sub of subs) {
     const mapped = mapStripeSubStatus(sub.status);
     if (mapped === 'active') return 'active';
-    if (mapped === 'past_due') best = 'past_due';
+    if (mapped === 'trial') best = 'trial';
+    else if (mapped === 'past_due' && best !== 'trial') best = 'past_due';
   }
   return best;
 }
@@ -124,13 +135,13 @@ export function stripeRefId(input: unknown): string | null {
 export async function deriveEffectiveStripeStatusByProduct(
   db: Queryable,
   subs: Stripe.Subscription[],
-): Promise<Map<Product, 'active' | 'past_due' | 'expired'>> {
+): Promise<Map<Product, StripeManagedStatus>> {
   const byProduct = new Map<Product, Stripe.Subscription[]>();
   for (const sub of subs) {
     const product = await resolvePriceProduct(db, subscriptionPriceId(sub));
     byProduct.set(product, [...(byProduct.get(product) ?? []), sub]);
   }
-  const result = new Map<Product, 'active' | 'past_due' | 'expired'>();
+  const result = new Map<Product, StripeManagedStatus>();
   for (const [product, prodSubs] of byProduct) {
     result.set(product, deriveEffectiveStripeStatus(prodSubs));
   }
@@ -176,5 +187,20 @@ export function resolveSubscribeBaseUrl(): string {
   throw new Error(
     'SUBSCRIBE_CHECKOUT_BASE_URL is required in non-production environments. ' +
       'Set it in .env to your environment-specific checkout host.',
+  );
+}
+
+/**
+ * Base URL (an origin) the MaxBLD checkout and portal return to (MF-47, v1 plan 3.3). Keyed by product, never by the request Host header, so no
+ * request value picks a redirect target. MAXBLD_CHECKOUT_BASE_URL must be set explicitly in any non-production environment (the same fail-loud
+ * rule as resolveSubscribeBaseUrl); production uses the one MaxBLD origin constant of the host table.
+ */
+export function resolveMaxbldCheckoutBaseUrl(): string {
+  const fromEnv = process.env.MAXBLD_CHECKOUT_BASE_URL;
+  if (fromEnv && fromEnv.length > 0) return fromEnv.replace(/\/$/, '');
+  if (process.env.NODE_ENV === 'production') return MAXBLD_ORIGIN;
+  throw new Error(
+    'MAXBLD_CHECKOUT_BASE_URL is required in non-production environments. ' +
+      'Set it in .env to your environment-specific MaxBLD origin.',
   );
 }

@@ -12,7 +12,7 @@ import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { query, pool, withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
-import { getStripeClient, deriveEffectiveStripeStatusByProduct } from '@/lib/stripe/client';
+import { getStripeClient, deriveEffectiveStripeStatusByProduct, type StripeManagedStatus } from '@/lib/stripe/client';
 import { CLIENT_SAFE_JOINED_SELECT } from '@/lib/userProfile.schema';
 import {
   LEAD_GEN_ENTITLEMENT_JOIN,
@@ -88,7 +88,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     //    account is restored either way; a subsequent webhook or admin
     //    reconcile corrects the status. (Stripe I/O happens BEFORE the
     //    transaction — §R9, never hold a txn across network calls.)
-    let restoredByProduct = new Map<Product, 'active' | 'past_due' | 'expired'>();
+    let restoredByProduct = new Map<Product, StripeManagedStatus>();
     const isManufacturer = account_preset === 'manufacturer';
     if (!isManufacturer && stripe_customer_id) {
       try {

@@ -35,6 +35,7 @@ import {
   getStripeClient,
   deriveEffectiveStripeStatusByProduct,
   StripeNotConfiguredError,
+  type StripeManagedStatus,
 } from '@/lib/stripe/client';
 import { isUuid, type Product } from '@/lib/entitlements';
 import {
@@ -91,7 +92,7 @@ async function loadStoredEntitlements(uid: string): Promise<StoredEntitlementRow
 /** Live-derive the customer's per-product effective Stripe statuses. */
 async function stripeStatusesFor(
   customerId: string,
-): Promise<Map<Product, 'active' | 'past_due' | 'expired'>> {
+): Promise<Map<Product, StripeManagedStatus>> {
   const stripe = getStripeClient();
   const subs = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 });
   return deriveEffectiveStripeStatusByProduct(pool, subs.data);
@@ -100,7 +101,7 @@ async function stripeStatusesFor(
 interface ProductDriftRow {
   product: Product;
   stored_status: string | null;
-  stripe_status: 'active' | 'past_due' | 'expired';
+  stripe_status: StripeManagedStatus;
   drift: boolean;
   protected: boolean;
 }
@@ -114,7 +115,7 @@ interface ProductDriftRow {
  */
 function crossReference(
   stored: StoredEntitlementRow[],
-  live: Map<Product, 'active' | 'past_due' | 'expired'>,
+  live: Map<Product, StripeManagedStatus>,
 ): ProductDriftRow[] {
   const storedByProduct = new Map(stored.map((r) => [r.product, r.status]));
   const products = [...new Set<Product>([...storedByProduct.keys(), ...live.keys()])].sort();

@@ -43,13 +43,24 @@ describe('mapStripeSubStatus', () => {
     expect(mapStripeSubStatus('active')).toBe('active');
     expect(mapStripeSubStatus('past_due')).toBe('past_due');
     expect(mapStripeSubStatus('unpaid')).toBe('expired'); // dunning exhausted
-    for (const s of ['trialing', 'incomplete', 'incomplete_expired', 'canceled', 'paused'] as const) {
+    // MF-47 (RULED 2026-11-14, v1 D-6 a): trialing is access-affecting now (a MaxBLD card-up-front trial); the old null mapping existed
+    // because no Stripe trial was sold (Buildo's trial is in-app, initTrialEntitlement, untouched).
+    expect(mapStripeSubStatus('trialing')).toBe('trial');
+    for (const s of ['incomplete', 'incomplete_expired', 'canceled', 'paused'] as const) {
       expect(mapStripeSubStatus(s)).toBeNull();
     }
   });
 });
 
-describe('deriveEffectiveStripeStatus (priority active > past_due > expired)', () => {
+describe('deriveEffectiveStripeStatus (priority active > trial > past_due > expired; MF-47 adds trial)', () => {
+  it('a trialing-only customer derives trial, never expired (reconcile must not expire a paying trial user)', () => {
+    expect(deriveEffectiveStripeStatus([sub('trialing')])).toBe('trial');
+    expect(deriveEffectiveStripeStatus([sub('canceled'), sub('trialing')])).toBe('trial');
+  });
+  it('active beats trial; trial beats past_due', () => {
+    expect(deriveEffectiveStripeStatus([sub('trialing'), sub('active')])).toBe('active');
+    expect(deriveEffectiveStripeStatus([sub('past_due'), sub('trialing')])).toBe('trial');
+  });
   it('any active sub → active', () => {
     expect(deriveEffectiveStripeStatus([sub('past_due'), sub('active'), sub('canceled')])).toBe('active');
   });
