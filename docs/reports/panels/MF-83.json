@@ -1,0 +1,21 @@
+{
+  "task": "MF-83",
+  "item": "Report Daylight B layout, web and mobile: group 1 (details_view, summary, See-details sheets), group 2 (lot-view panel, fail closed). Group 3 (stored per-lot read) is a separate gated McBylaws DB job and is not in this record.",
+  "class": "G",
+  "stage": 8,
+  "date": "2026-11-14",
+  "head": "docs commit",
+  "cards": [
+    "Operator 2026-11-14, verbatim: \"I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded\"; reality-check seat ~/Buildo-scratch/mcfrontend/MF-83/reality-check-1114.md."
+  ],
+  "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-83/build-plan.md. Tests first with red evidence under docs/reports/red-evidence/MF-83/; page table, schema, layout table as data; goldens restamped by their generators only. DeepSeek four-lens review of the plan run on 2026-11-14 and folded (recorded in ~/Buildo-scratch/mcfrontend/MF-83/build-report.md).",
+  "output": "OUTPUT panel: filed on the built diff before the lane reports ready; this record is updated in the group commit that completes the build. Until then: pending.",
+  "seats": ["DeepSeek four-lens plan review (folded)"],
+  "verdict": "PENDING the OUTPUT panel on the built diff; push waits on the operator.",
+  "blockers": [],
+  "followups": [
+    "Group 3: the stored per-lot read, the ten admin settings and the eligibility rule (gated McBylaws DB job, own OPERATOR-GO).",
+    "Units toggle (FE-44): producer rules and fields outside groups 1 and 2."
+  ],
+  "evidence": "docs/reports/red-evidence/MF-83/"
+}
