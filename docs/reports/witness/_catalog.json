@@ -1152,6 +1152,7 @@
       "value"
     ],
     "parcel_user_inputs": [
+      "depth_m",
       "entered_at",
       "entered_by",
       "id",
@@ -1161,9 +1162,12 @@
       "reverted_by",
       "source",
       "status",
+      "typed_depth",
       "typed_unit",
       "typed_value",
-      "value_sqm"
+      "typed_width",
+      "value_sqm",
+      "width_m"
     ],
     "parcels": [
       "abuts_laneway",

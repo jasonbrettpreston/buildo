@@ -1,0 +1,31 @@
+# MF-19 plan v3 red evidence: migration 324 lock with the migration file absent (the state before it was written)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-mf19b
+ ❯ src/tests/parcel-user-inputs-324.logic.test.ts (8 tests | 8 failed) 7ms
+   × migration 324 (MF-19 plan v3): the file > has no problems 3ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+   × migration 324 (MF-19 plan v3): the file > RED: a bare "> 0" shape CHECK (NULL passes a CHECK) is caught 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+   × migration 324 (MF-19 plan v3): the file > RED: a non-idempotent ADD COLUMN is caught 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+   × migration 324 (MF-19 plan v3): the file > RED: an uncommented DOWN line is caught 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+   × migration 324 (MF-19 plan v3): the file > RED: the unit CHECK without ft and m is caught 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+   × migration 324: the two settings equal the seed > exactly the two keys, each value = the seed default, each in the group "MaxBLD Lot Size", seed bounds 1-20 and 100-1000 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+   × migration 324: the two settings equal the seed > RED: a migration value that differs from the seed is caught 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+   × migration 324: the two settings equal the seed > the entry switch and the other four MF-19 settings are untouched (the switch stays 0-0, OFF) 1ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/parcel-user-inputs-324.logic.test.ts > migration 324 (MF-19 plan v3): the file > has no problems
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-mf19b/migrations/324_parcel_user_inputs_width_depth.sql'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ read src/tests/parcel-user-inputs-324.logic.test.ts:19:40

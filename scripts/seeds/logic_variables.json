@@ -10644,6 +10644,26 @@
       "group": "MaxBLD Lot Size"
     }
   },
+  "user_lot_size_side_min_m": {
+    "default": 2,
+    "type": "number",
+    "min": 1,
+    "max": 20,
+    "description": "MF-19 plan v3 (Spec 126 section 11a.9 dated note 2026-11-15; operator 2026-11-15 \"R-1 thru R-6 recommendations approved\", R-5 a; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v3.md): the shortest lot width or depth a user may enter, in metres (2 m = 6.6 ft; the City width p1 is 3.06 m, so under 2 m are slivers). The shown bound in each unit is this value at the unit display precision (feet to 1 decimal, metres to 2 decimals) and the typed value is checked against the shown bound in its own unit. Edited in the Admin Control Panel. Inserted by migration 324. CONSUMED by the lot-size entry library (src/lib/parcels/lot-size-entry.ts: readLotSizeSettings, lotSizeSideProblem: a missing or out-of-bounds value refuses the entry, 500).",
+    "admin": {
+      "group": "MaxBLD Lot Size"
+    }
+  },
+  "user_lot_size_side_max_m": {
+    "default": 450,
+    "type": "number",
+    "min": 100,
+    "max": 1000,
+    "description": "MF-19 plan v3 (Spec 126 section 11a.9 dated note 2026-11-15; operator 2026-11-15 \"R-1 thru R-6 recommendations approved\", R-5 a; plan ~/Buildo-scratch/mcfrontend/MF-19/plan.v3.md): the longest lot width or depth a user may enter, in metres (450 m = 1,476 ft; the City depth p99.9 is 448 m). The area range and the City ratio do the real guarding. Edited in the Admin Control Panel. Inserted by migration 324. CONSUMED by the lot-size entry library (src/lib/parcels/lot-size-entry.ts: readLotSizeSettings, lotSizeSideProblem: a missing or out-of-bounds value refuses the entry, 500).",
+    "admin": {
+      "group": "MaxBLD Lot Size"
+    }
+  },
   "maxbld_internal_preview_enabled": {
     "default": 0,
     "type": "number",
