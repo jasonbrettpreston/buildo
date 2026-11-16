@@ -197,7 +197,7 @@ First clause cited: 10.40.40.10, 10.60.40.10, x.40.10, 10.10.40.10, 10.80.40.10,
 First clause cited: 10.20.40.20, 10.40.40.20, 10.10.40.20.
 
 - **m.206** The one-storey 2.0 m extension is applied to renovations only.
-  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +2 dated notes
 
 - **m.230** RS 10.40.40.20(4): "Despite regulation 10.20.40.20(1)" is read as RS's own 10.40.40.20(1).
   Status: RULED 2026-10-20 · Enforced by: bylaw-evaluator-fixes.logic.test.ts › "M-230 — …" (red first: 2 of 3); bylaw-golden-lots.logic.test.ts…
@@ -483,7 +483,7 @@ First clause cited: 10.5.40.71.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vector frontage 12.0 vs 13.0 m (OWED, step commit ①); keying of 10.5.40.71(3) (OWED, keying… · +3 dated notes
 
 - **m.211** Renovation corrections. (1) Up room: 10.5.40.71(3) relieves setbacks only; the up-storey plate still meets the depth / length caps (additions must comply, 10.5.40.21(2), 10.5.40.31(2)) and, where FSI applies, also fsi × lot − existing GFA; the smaller cap binds.
-  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +3 dated notes
 
 - **m.372** OWED to Phase 3: cumulative 10.5.40 accuracy.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
@@ -592,7 +592,7 @@ First clause cited: 150.15, 150.7, 150.50, 150.48, 150.10, 150.8.
   Status: RATIFIED 2026-10-18 · Enforced by: lot-line classification (OWED, Spec 130 lane); P5.13 (OWED, ①) · +4 dated notes
 
 - **m.199** A secondary suite may be up to 45 % of the interior floor area of the WHOLE house it sits in; the stricter reading is disclosed.
-  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.10 suite_interior_sqm, INV-13 (OWED, step commit ①) · +1 dated note
+  Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.10 suite_interior_sqm, INV-13 (OWED, step commit ①) · +2 dated notes
 
 - **m.208** Suite soft landscaping is disclosed, not binding.
   Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①)
@@ -1648,7 +1648,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-11-12 · Enforced by: the ledger check ~/Buildo-scratch/ids/check.mjs (scratch tooling, node only): exit 1 when an MF, FE or MB… · +10 dated notes
 
 - **m.516** McStorage strategy ST-3: every Layer 2 night and every Layer 3 write night sizes storage twice on the final tree before the go: the exact G-STOR plus a measured test write. Text home: this row; pointers in Spec 08 §11.8 step 5 and M-492 follow with the build.
-  Status: RULED 2026-11-12 · Enforced by: the night tooling (gstor-final.zsh, pgsize.mjs, scratch) and the G-STOR record… · +5 dated notes
+  Status: RULED 2026-11-12 · Enforced by: the night tooling (gstor-final.zsh, pgsize.mjs, scratch) and the G-STOR record… · +6 dated notes
 
 - **lc.15** The step is born V3, with McBylaws Airtight inputs.
   Status: RULED · OWED · Enforced by: Spec 78 P5.11 V3 plan: step-validate V3, admin-step-registration.logic, step-validate-net-new.logic
