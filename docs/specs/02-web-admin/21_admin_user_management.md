@@ -47,8 +47,11 @@ A discriminated union on `action`. **Every mutation requires a mandatory `reason
 | `extend_trial` | `subscription_status='trial'`, `trial_started_at` set so the trial expires in exactly `days` days (default 14). |
 | `revoke` | Revoke subscription → `subscription_status='expired'`. |
 | `suspend` | Suspend access → `subscription_status='expired'` (audit action distinguishes intent; a dedicated `'suspended'` status is a future enum addition — see §Known Failure Modes). |
+| `set_plan` | MF-47 (dated note 2026-11-14): sets `plan_key` (`basic` | `pro`) on the user's `parcel_tool` entitlement row, only when that row is `admin_managed` (a comp); 409 on a Stripe-managed row (the webhook owns `plan_key` there), 404 with no row. The audit row records the previous and the new plan. |
 | `delete` | Firebase `deleteUser` (best-effort) + **inline Stripe cancel** (`cancelAllStripeSubscriptions`, loud-non-fatal → `stripe_cancel_failed_at` marker on failure) + PII nullify + `account_deleted_at=NOW()` + `cancelled_pending_deletion`, then the RTBF audit scrub (§3.4). The PII-nullify UPDATE + the audit row are written in ONE transaction (network calls stay outside it). |
 | `admin_managed`/comp | via `set_preset`/subscription mutation (§6). |
+
+> Dated note 2026-11-14 (M-246, prior text kept; MF-47 · McFrontend queue · lane B1; operator, verbatim: "I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded" (2026-11-14); record `~/Buildo-scratch/mcfrontend/MF-47/DECISIONS.md`, "Ruled 2026-11-14 under the operator's acceptance", and the seat `~/Buildo-scratch/mcfrontend/MF-47/reality-check-1114.md`; build plan `~/Buildo-scratch/mcfrontend/MF-47/build-plan.md`): §3 gains the `set_plan` action (table above): the audited admin path to move an `admin_managed` `parcel_tool` comp between Basic and Pro (migration 322 sets existing admin_managed parcel_tool rows to `pro`). Lock `src/tests/admin-set-plan.infra.test.ts`.
 
 **Mutation guards:**
 - Targeting an `ADMIN_USER_IDS` allowlist member → 403 (ALL actions — an admin account is never mutable through this tool).

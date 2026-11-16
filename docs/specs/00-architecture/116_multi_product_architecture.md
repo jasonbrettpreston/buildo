@@ -32,6 +32,8 @@
 > | `agent_reports` | agent PDF reports | none yet | none | not built (Spec 128 R-09) | 128 R-09, 126 §6.5 |
 > | shared platform | auth, profile, subscription and Stripe, entitlements, notifications, navigation shells | both apps and the web | none | none | 13, 93, 95, 20, 21, 86, 99, 113, 114 |
 
+> Dated note 2026-11-14 (M-246, prior text kept; MF-47 · McFrontend queue · lane B1; operator, verbatim: "I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded" (2026-11-14); record `~/Buildo-scratch/mcfrontend/MF-47/DECISIONS.md`, "Ruled 2026-11-14 under the operator's acceptance", and the seat `~/Buildo-scratch/mcfrontend/MF-47/reality-check-1114.md`; build plan `~/Buildo-scratch/mcfrontend/MF-47/build-plan.md`): OD4 (lot-opt monetization) is ruled for MaxBLD as a `parcel_tool` subscription with two plans. The entitlement row gains `plan_key` (`basic` | `pro`, NOT NULL DEFAULT `basic`) and `overage_cap` (NOT NULL DEFAULT 0 = the hard stop) by migration 322 (written, not applied; DB job by the orchestrator). The plan allowances are three admin settings: Basic `parcel_tool_report_limit_plan` (10), Pro `parcel_tool_report_limit_pro` (25), one trial allowance `parcel_tool_report_limit_trial` (10) for both plans (operator pricing rulings 2026-11-11/12, `~/Buildo-scratch/mcfrontend/phase1/open-questions.md` :1103-1106). Basic and Pro are two separate Stripe Products, each price id an admin setting (empty until set); the plan of a subscription is found by matching its price id against those two settings (no second map). Extra reports (overage) are a later row; until then cap 0 keeps the hard stop. The 116 :91 `DEFAULT_PRODUCT` ruling is unchanged.
+
 </requirements>
 
 <architecture>
