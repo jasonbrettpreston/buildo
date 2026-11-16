@@ -1,8 +1,13 @@
 {
-  "$comment": "Arm L (MB-67): the ONLY literals a by-law file may hold besides the four number sentinels 0, 1, 2, 100. SHRINK-ONLY baseline (R-LA): a listed file may keep the literals counted at the base, never add one; the reviewer lowers it, nothing here raises it. Edited by MB-67's lane only. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT; operator \"all recommendations accepted\", review-20261113 K3 + Q3): baseline entries added for the by-law code paths and scripts/analysis/bylaw-validation scripts newly in literal_scope, set to the literals on the tip at 33af0759a. Shrink-only: they move out of code in the planned evaluator change after INC5-NIGHT, never grow. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT, after increment 5 Part A landed at 3dc51a394): baseline entries for the literals the landed inc-5 files hold (assembly.mjs, coa-scorecard.mjs, golden-lots-cases.mjs, bylaw-resolution.js), set at that tip. Shrink-only; no code changed.",
+  "$comment": "Arm L (MB-67): the ONLY literals a by-law file may hold besides the four number sentinels 0, 1, 2, 100. SHRINK-ONLY baseline (R-LA): a listed file may keep the literals counted at the base, never add one; the reviewer lowers it, nothing here raises it. Edited by MB-67's lane only. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT; operator \"all recommendations accepted\", review-20261113 K3 + Q3): baseline entries added for the by-law code paths and scripts/analysis/bylaw-validation scripts newly in literal_scope, set to the literals on the tip at 33af0759a. Shrink-only: they move out of code in the planned evaluator change after INC5-NIGHT, never grow. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT, after increment 5 Part A landed at 3dc51a394): baseline entries for the literals the landed inc-5 files hold (assembly.mjs, coa-scorecard.mjs, golden-lots-cases.mjs, bylaw-resolution.js), set at that tip. Shrink-only; no code changed. Dated note 2026-11-16 (MB-67 owner commit, lane MB67-LIT; operator \"1. just to understand we get rid of the 51 errors and save teh rest.  Approved\", panel ~/Buildo-scratch/mcbylaws/inc5/m14/PANEL-LITERALS-20261116.md): status_words gain the evaluator closed status words computed, permitted, missing_input:permitted, missing_input:absent_target, missing_input:gate; the scanner no longer flags a require() source, 'use strict', a typeof operand or an Error message argument (literal-scan.mjs, L11). New files still get no baseline; no baseline entry added or raised; spec note in 124a R-LA.",
   "numbers": [],
   "status_words": [
-    "not_evaluated"
+    "not_evaluated",
+    "computed",
+    "permitted",
+    "missing_input:permitted",
+    "missing_input:absent_target",
+    "missing_input:gate"
   ],
   "field_names": [
     "side_yard_m"

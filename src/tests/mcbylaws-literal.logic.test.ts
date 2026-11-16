@@ -141,3 +141,46 @@ describe('arm L — allow set and dead scope', () => {
     expect(sets.numbers.has(0.45)).toBe(false);
   });
 });
+
+describe('arm L — MB-67 literal classes that are not by-law values (operator 2026-11-16)', () => {
+  // Operator ruling 2026-11-16: "1. just to understand we get rid of the 51 errors and save teh rest.  Approved"
+  // (~/Buildo-scratch/mcbylaws/inc5/m14/PANEL-LITERALS-20261116.md). Positions and the evaluator's status words are not by-law values.
+  it('require() sources are not reported (same family as L9)', () => {
+    const f = write(`${SCOPE}/req.mjs`, "const rows = require('./rows.js');\nconst c = require(\"./catalogue.js\");\n");
+    expect(lines([f])).toEqual([]);
+  });
+
+  it("the 'use strict' directive is not reported, the same text as a value is", () => {
+    expect(lines([write(`${SCOPE}/strict.mjs`, "'use strict';\nconst k = 0;\n")])).toEqual([]);
+    expect(lines([write(`${SCOPE}/strict2.mjs`, "const k = 'use strict';\n")])).toContain('FAIL:L:string:use strict');
+  });
+
+  it('typeof operands are not reported, in either order; a non-type word beside typeof still is', () => {
+    const ok = write(`${SCOPE}/typeof.mjs`, "const a = typeof x === 'object';\nconst b = typeof x.y !== 'string';\nconst c = 'number' === typeof z;\n");
+    expect(lines([ok])).toEqual([]);
+    expect(lines([write(`${SCOPE}/typeof2.mjs`, "const a = typeof x === 'crossing';\n")])).toContain('FAIL:L:string:crossing');
+  });
+
+  it('Error constructor message arguments are not reported; a by-law id after the call still is', () => {
+    const ok = write(`${SCOPE}/err.mjs`, "throw new Error('two-structure: ' + what + ' collision on ' + k);\nthrow new TypeError(`runRow: unknown row ${id}`);\n");
+    expect(lines([ok])).toEqual([]);
+    expect(lines([write(`${SCOPE}/err2.mjs`, "const e = new Error('x'); const k = 'range_end';\n")])).toContain('FAIL:L:string:range_end');
+  });
+
+  it('the evaluator closed status words come from status_words', () => {
+    const sets = allowSet(realAllow);
+    for (const w of ['computed', 'permitted', 'missing_input:permitted', 'missing_input:absent_target', 'missing_input:gate']) expect(sets.strings.has(w), w).toBe(true);
+    expect(lines([write(`${SCOPE}/status.mjs`, "const s = r.status === 'computed';\n")])).toEqual([]);
+  });
+
+  it('by-law ids and epsilons of split.js are still reported (nothing else loosened)', () => {
+    const f = write(`${SCOPE}/split-like.mjs`, "const kinds = ['row', 'crossing', 'range_end', 'min'];\nconst r = (x) => Math.round(x * 1e9) / 1e9;\nconst ids = ['suite_gfa_lt_main', 'A', 'B'];\n");
+    const got = lines([f]);
+    for (const s of ['row', 'crossing', 'range_end', 'min', 'suite_gfa_lt_main', 'A', 'B']) expect(got, s).toContain(`FAIL:L:string:${s}`);
+    expect(got).toContain('FAIL:L:number:1e9');
+  });
+
+  it('new files still get no baseline: the allow file lists none of the D-78 files', () => {
+    for (const k of Object.keys(realAllow.baseline)) expect(k).not.toMatch(/maxbld\/(split|two-structure)\.js$/);
+  });
+});

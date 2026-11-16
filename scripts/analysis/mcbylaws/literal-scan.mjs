@@ -33,6 +33,28 @@ export function allowSet(allowJson) {
 const isModuleSource = (line) => /^\s*import\s/.test(line) || /\bfrom\s+['"]/.test(line);
 
 /**
+ * L11 (operator 2026-11-16, PANEL-LITERALS-20261116): a string in one of four SYNTACTIC positions is never a by-law value:
+ * a require() source (L9's CommonJS twin), the 'use strict' directive, a typeof operand (a JS type name) and the message
+ * argument of an Error constructor. Judged on the hit's own line and 0-based column; anything else stays a finding (fails closed).
+ */
+const TYPE_NAMES = new Set(['object', 'string', 'number', 'boolean', 'function', 'undefined', 'symbol', 'bigint']);
+const stripStrings = (t) => t.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, '');
+export function isSyntacticPosition(line, column, text) {
+  if (typeof column !== 'number' || column < 1) return false;
+  const pre = line.slice(0, column);
+  const post = line.slice(column + text.length);
+  if (/\brequire\(\s*['"]$/.test(pre)) return true;
+  if (text === 'use strict' && /^\s*['"]$/.test(pre) && /^['"]\s*;?\s*$/.test(post)) return true;
+  if (TYPE_NAMES.has(text) && (/\btypeof\s+[^=!]+?\s*[!=]==?\s*['"]$/.test(pre) || /^['"]\s*[!=]==?\s*typeof\b/.test(post))) return true;
+  const call = [...pre.matchAll(/\bnew\s+\w*Error\(/g)].pop();
+  if (call) {
+    const inner = stripStrings(pre.slice(call.index + call[0].length));
+    if ((inner.match(/\)/g) || []).length <= (inner.match(/\(/g) || []).length) return true;
+  }
+  return false;
+}
+
+/**
  * Run the two rules over ONE file. `ok:false` ONLY when the binary cannot spawn, stdout is not valid JSON,
  * or the exit status is neither 0 nor 1 (L7: a finding is exit 1, never a scanner failure).
  */
@@ -52,10 +74,15 @@ export function scanFile({ root, rel, astGrepBin, ruleFile }) {
     if (text === '') continue;
     const range = m.range && m.range.start ? m.range.start : {};
     const lines = typeof range.line === 'number' ? lineText(root, rel, range.line) : '';
+    const raw = typeof range.line === 'number' ? rawLine(root, rel, range.line) : '';
     if (m.ruleId === NUMBER_RULE) numbers.push(text);
-    else if (m.ruleId === STRING_RULE) { if (!isModuleSource(lines)) strings.push(text); }
+    else if (m.ruleId === STRING_RULE) { if (!isModuleSource(lines) && !isSyntacticPosition(raw, range.column, text)) strings.push(text); }
   }
   return { ok: true, numbers, strings };
+}
+
+function rawLine(root, rel, idx) {
+  try { return fs.readFileSync(path.join(root, rel), 'utf8').split('\n')[idx] || ''; } catch { return ''; }
 }
 
 function lineText(root, rel, idx) {
