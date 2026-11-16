@@ -6,6 +6,8 @@
 
 **Governance:** these rows ARE Spec 131's rulings. Cite them as before — `Spec 131 LC-n`. New rows are added to Spec 131, never here.
 
+> *Dated note 2026-11-16 (M-246, prior text kept; MB-27 increment 6 C0 re-check · McBylaws queue · lane R; operator, verbatim: "y on the 131a appendix placement"; record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, "2026-11-16 operator literal ruling"):* The Governance line above ("New rows are added to Spec 131, never here") is unchanged. The dated notes of 2026-11-16 on Spec 131 LC-16, LC-25, LC-26, LC-40 and LC-62 stay in Appendix §D3 of this file, with the one-line pointer in Spec 131, because Spec 131 is at its byte budget. They are notes, not rows.
+
 ## Operating Boundaries
 
 - This file carries no rule of its own beyond the moved rows.
