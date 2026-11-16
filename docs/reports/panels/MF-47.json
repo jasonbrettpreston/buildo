@@ -9,7 +9,7 @@
     "DECISIONS.md \"Ruled 2026-11-14 under the operator's acceptance (taken from the seat's recommendations)\" and the build-row obligations C-2..C-11"
   ],
   "plan": "~/Buildo-scratch/mcfrontend/MF-47/build-plan.md (sections 0-6); the reality-check seat ~/Buildo-scratch/mcfrontend/MF-47/reality-check-1114.md governs where plan-v2 differs; v1 plan.md section 12 folds apply where both are silent. DeepSeek four-lens plan review (spec, security, idempotency, error paths) with every claim graded by the lane: build-plan.md section 7 (9 kept and folded, 15 rejected with a reason); raw output in ~/Buildo-scratch/mcfrontend/MF-47/review/.",
-  "output": "Lane-grounded review of the lane's own diff (build-report.md): executed claims only. Tests were written red first (docs/reports/red-evidence/MF-47/): migration 322 text locks, the meter (plan key, Pro, timeout, extra flag), the shared status mapping, the webhook trial writer and plan write, the checkout and portal logic, the trial-end maths, the server actions and the admin set_plan path.",
+  "output": "Lane-grounded review of the lane own diff, executed claims only (build-report.md). Tests were written red first (docs/reports/red-evidence/MF-47/): migration 322 text locks, the meter (plan key, Pro, timeout, extra flag), the shared status mapping, the webhook trial writer and plan write, the checkout and portal logic, the trial-end maths, the server actions and the admin set_plan path. Real-DB proof on the repo disposable testcontainer (every migration through 322 applied): the first run FAILED at migration 322 (a JS String.replace in a fold edit had collapsed the DO block double dollar quote to one; red-9), fixed with a text lock, then src/tests/db/mf47-checkout.db.test.ts (5 tests) and the updated parcel-tool-meter.db.test.ts (4) pass, including a statement timeout that really aborts (57014) and the two DO blocks run for real. Targeted suites (314 files, 5607 tests: stripe, subscription, entitlement, parcel, admin, control-panel, logic-var, maxbld, contracts, descriptor, registry, system-map, hooks, migration, mctest, surfaces) and tsc pass; the full suite waits on SUITE.lock (held by the INC5 night DB job).",
   "seats": [
     "DeepSeek four-lens plan review (deepseek-reasoner), lane-graded",
     "Lane grounded output check (build-report.md)"
@@ -21,7 +21,9 @@
     "Operator values still open: the Stripe price ids (Basic, Pro, later overage) and the portal configuration id; the cap maximum (no setting yet); the final consent sentence (versioned PLACEHOLDER).",
     "Free-text string settings (the Stripe ids) are not editable in the admin panel today (applyConfigUpdate accepts a string only for a closed enum): needs a ruling or SQL.",
     "The plans, success and cancel pages are a separate ruled row (descriptor, content, goldens); the server actions are ready for them.",
-    "Overage row: extras band, reporter and its telemetry, consent page and cap write, the Stripe mechanism decision (meter vs pending invoice items)."
+    "Overage row: extras band, reporter and its telemetry, consent page and cap write, the Stripe mechanism decision (meter vs pending invoice items).",
+    "The commit gate checks code SQL against docs/reports/witness/_catalog.json: the lane added entitlements.overage_cap and plan_key by hand; the DB job must re-capture the catalog and the result must be identical.",
+    "parcel_tool_overage_enabled and parcel_tool_overage_cap_default are read by no code yet, so the admin panel badges them not-read until the overage row lands (generated badge file committed)."
   ],
   "evidence": [
     "docs/reports/red-evidence/MF-47/"
