@@ -1,0 +1,12 @@
+Running 321_resolve_bylaws_corner_floor_slot.sql...
+  OK (4ms)
+Running 322_mf47_checkout_plans.sql...
+  FAILED: syntax error at or near "$"
+
+ Test Files  no tests
+      Tests  no tests
+   Start at  14:29:51
+   Duration  3.80s (transform 22ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 0ms)
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯

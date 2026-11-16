@@ -141,7 +141,8 @@ describe.skipIf(!dbAvailable())('migration 303: parcel_tool entitlement, usage_e
 
   it('(d) the allowance rows equal the seed; the Admin Control Panel loader returns both', async () => {
     arms += 1;
-    const keys = Object.values(REPORT_LIMIT_KEYS);
+    // MF-47 (2026-11-14): three keys now (plan = Basic, trial, pro); the SELECT orders by key, so the expectation does too.
+    const keys = Object.values(REPORT_LIMIT_KEYS).sort();
     const r = await pool.query<{ variable_key: string; variable_value: string }>(
       'SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1::text[]) ORDER BY 1', [keys]);
     expect(r.rows.map((x) => [x.variable_key, Number(x.variable_value)])).toEqual(keys.map((k) => [k, SEED[k]?.default]));

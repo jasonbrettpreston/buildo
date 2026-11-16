@@ -1,0 +1,11 @@
+{
+  "version": "PLACEHOLDER-v0",
+  "status": "PLACEHOLDER: not approved wording. Drafted by the reality-check seat from the rulings only (reality-check-1114.md section 4.3). The final sentence is an open operator value and the whole text goes to the lawyer list (MF-72). The overage row reads this file; nothing in MF-47 does. Values in [brackets] are read from settings or the Stripe price at render, never typed here.",
+  "text": "Your plan includes [plan allowance] reports a month. After that, extra reports are [extra price] each plus tax, added automatically to your next invoice. Extra reports are not available during your free trial, and unused reports do not carry over. Your monthly limit on extra reports is [cap] ([cap x extra price]); you can change it in Account. [OPERATOR: final sentence]",
+  "open_for_lawyer_list": [
+    "whether the text may say the cap can be switched off (cap 0 is allowed by the bounds, so \"change it\" is accurate; \"turn off\" would be a new statement)",
+    "refund and cancellation consequences",
+    "tax wording: HST in the pricing ruling, tax in the draft because Stripe Tax computes GST, HST and PST",
+    "the required-checkbox label and the consent record shown to the customer"
+  ]
+}

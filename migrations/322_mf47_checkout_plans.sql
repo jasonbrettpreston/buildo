@@ -41,7 +41,7 @@ END $$;
 
 -- Re-set only where the value is still the shipped default 20 (a value an operator set to anything else is left alone). Each count and the
 -- resulting values are printed: a count of 0 with a value other than 10 means "operator-set, check it", never silent.
-DO $
+DO $$
 DECLARE
   moved_trial integer;
   moved_plan  integer;
@@ -55,7 +55,7 @@ BEGIN
   RAISE NOTICE 'MF-47 322: trial re-set rows %, plan re-set rows %', moved_trial, moved_plan;
   RAISE NOTICE 'MF-47 322: values now: %', (SELECT string_agg(variable_key || '=' || variable_value::text, ', ' ORDER BY variable_key)
     FROM logic_variables WHERE variable_key IN ('parcel_tool_report_limit_trial', 'parcel_tool_report_limit_plan'));
-END $;
+END $$;
 
 INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description) VALUES
   ('parcel_tool_report_limit_pro', 25, NULL, 'MF-47: new reports a parcel_tool Pro plan holder (plan_key pro; active, past_due, admin_managed) may open per billing month; operator ruling 2026-11-12 (Pro 25). Bounds 1-1000; outside them the meter refuses to serve (fail closed). CONSUMED by src/lib/entitlements/index.ts (readReportLimits, PLAN_LIMIT).'),

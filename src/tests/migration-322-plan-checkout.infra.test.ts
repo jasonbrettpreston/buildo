@@ -93,6 +93,20 @@ describe('(c) the settings mirror the seed; the Stripe ids are empty and migrati
   });
 });
 
+describe('(e) the DO blocks are well formed (a JS replace once collapsed the double dollar quote to one; scripts/migrate.js then failed with a syntax error)', () => {
+  it('two DO blocks, each opened and closed with a double dollar quote, and no lone dollar quote', () => {
+    const up = upOf(sql());
+    expect([...up.matchAll(/^DO \$\$[\s\S]*?^END \$\$;/gm)]).toHaveLength(2);
+    expect((up.match(/\$\$/g) ?? []).length % 2).toBe(0);
+    expect(up).not.toMatch(/(^|[^$])\$(?![$A-Za-z0-9_])/m);
+  });
+  it('RED plant: a collapsed quote is caught', () => {
+    const planted = upOf(sql()).replace('DO $$', () => 'DO $');
+    expect([...planted.matchAll(/^DO \$\$[\s\S]*?^END \$\$;/gm)]).toHaveLength(1);
+    expect(planted).toMatch(/(^|[^$])\$(?![$A-Za-z0-9_])/m);
+  });
+});
+
 describe('(d) the DOWN is comment-only', () => {
   it('no uncommented line after -- DOWN', () => {
     expect(downOf(sql()).split('\n').filter((l) => l.trim() !== '' && !/^\s*--/.test(l))).toEqual([]);
