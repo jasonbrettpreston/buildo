@@ -7019,7 +7019,8 @@
         "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City"
       ],
       "surfaces": [
-        "report_lot_size_entry"
+        "report_lot_size_entry",
+        "report_lot_size_entry_area"
       ],
       "varies_by_surface": "The user form enters a lot size once; this admin form reverts it."
     },

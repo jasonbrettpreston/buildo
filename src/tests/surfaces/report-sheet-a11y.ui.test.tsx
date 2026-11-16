@@ -77,7 +77,7 @@ describe('A12 (3) the entry error is announced (3.3.1, 4.1.3)', () => {
     const { container } = mount();
     const err = container.querySelector('#report-sheet-err') as HTMLElement;
     expect(err.getAttribute('role')).toBe('alert');
-    expect(container.querySelector('#report-sheet-in')?.getAttribute('aria-describedby')).toBe('report-sheet-err');
+    for (const side of ['width', 'depth']) expect(container.querySelector(`#report-sheet-in-${side}`)?.getAttribute('aria-describedby')).toBe('report-sheet-err'); // MF-19 plan v3: width and depth inputs
   });
 });
 
@@ -91,13 +91,13 @@ const token = (name: string): string => {
 };
 
 describe('A12 (4) the unit selector is a real radio group with a visible selected state (1.4.11, 4.1.2)', () => {
-  it('two native radios in one group (one tab stop, arrow keys by the browser), sq ft checked first; no ARIA radio buttons', () => {
+  it('two native radios in one group (one tab stop, arrow keys by the browser), ft checked first (MF-19 plan v3: ft / m); no ARIA radio buttons', () => {
     const { container } = mount();
     const group = container.querySelector('dialog [role="radiogroup"]') as HTMLElement;
     const radios = [...group.querySelectorAll('input[type="radio"]')] as HTMLInputElement[];
-    expect(radios.map((r) => [r.name, r.value, r.checked])).toEqual([['report-sheet-unit', 'sqft', true], ['report-sheet-unit', 'm2', false]]);
+    expect(radios.map((r) => [r.name, r.value, r.checked])).toEqual([['report-sheet-unit', 'ft', true], ['report-sheet-unit', 'm', false]]);
     expect(group.querySelectorAll('[role="radio"], button').length).toBe(0);
-    expect(group.getAttribute('aria-labelledby')).toBe('report-sheet-lbl');
+    expect(group.getAttribute('aria-labelledby')).toBe('report-sheet-lbl-width report-sheet-lbl-depth');
     for (const r of radios) expect(r.closest('label')?.textContent).toBeTruthy();
     fireEvent.click(radios[1]!.closest('label') as HTMLElement);
     expect(radios.map((r) => r.checked)).toEqual([false, true]);

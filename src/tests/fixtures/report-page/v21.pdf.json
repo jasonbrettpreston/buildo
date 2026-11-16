@@ -1900,7 +1900,7 @@
             "brief": "H0",
             "kind": "content",
             "content": "sheet.p",
-            "text": "Use the lot area from your survey. It replaces the City lot record for this report, and every option is recalculated."
+            "text": "Use the lot width and depth from your survey. They replace the City lot record for this report, and every option is recalculated."
           },
           {
             "role": "record.label",
@@ -1922,29 +1922,43 @@
             "role": "input.label",
             "brief": "H0",
             "kind": "content",
-            "content": "sheet.label",
-            "text": "Lot size from your survey"
+            "content": "sheet.width_label",
+            "text": "Lot width (frontage)"
           },
           {
             "role": "input.placeholder",
             "brief": "H0",
             "kind": "content",
-            "content": "sheet.placeholder",
-            "text": "e.g. 3,120"
+            "content": "sheet.width_placeholder",
+            "text": "e.g. 50"
           },
           {
-            "role": "unit.sqft",
+            "role": "input.label",
             "brief": "H0",
             "kind": "content",
-            "content": "sheet.unit_sqft",
-            "text": "sq ft"
+            "content": "sheet.depth_label",
+            "text": "Lot depth"
           },
           {
-            "role": "unit.m2",
+            "role": "input.placeholder",
             "brief": "H0",
             "kind": "content",
-            "content": "sheet.unit_m2",
-            "text": "m²"
+            "content": "sheet.depth_placeholder",
+            "text": "e.g. 120"
+          },
+          {
+            "role": "unit.ft",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.unit_ft",
+            "text": "ft"
+          },
+          {
+            "role": "unit.m",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.unit_m",
+            "text": "m"
           },
           {
             "role": "error",
@@ -1952,6 +1966,13 @@
             "kind": "pending",
             "pending": "estimated",
             "text": "not yet estimated"
+          },
+          {
+            "role": "link",
+            "brief": "H0",
+            "kind": "content",
+            "content": "sheet.link_area",
+            "text": "My lot isn't a rectangle — enter the area instead"
           },
           {
             "role": "note",
@@ -1983,10 +2004,10 @@
     "files": {
       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
       "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
-      "scripts/surfaces/_schema/report-presentation.json": "79634f1a37d70cb3",
+      "scripts/surfaces/_schema/report-presentation.json": "f1b52be5add0fb36",
       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
-      "scripts/surfaces/_schema/report-v2.decl.json": "a6ecb47552eed5e6",
-      "scripts/surfaces/_schema/report-page.json": "dbe4401973af421d",
+      "scripts/surfaces/_schema/report-v2.decl.json": "4d2448974a8f4ed2",
+      "scripts/surfaces/_schema/report-page.json": "b586e664f20438b1",
       "scripts/surfaces/_schema/report-page.schema.json": "f79e00423cc3e519"
     }
   }

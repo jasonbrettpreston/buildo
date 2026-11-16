@@ -1,0 +1,107 @@
+{
+  "surface": "report_lot_size_entry_area",
+  "state": "hit",
+  "target": "web",
+  "covers": [
+    "hit"
+  ],
+  "props": {
+    "component": "Form",
+    "props": {
+      "name": "report_lot_size_entry_area",
+      "errors": {
+        "required": {
+          "content": "report_lot_size_entry_area.errors.required"
+        },
+        "type": {
+          "content": "report_lot_size_entry_area.errors.type"
+        },
+        "enum": {
+          "content": "report_lot_size_entry_area.errors.enum"
+        },
+        "const": {
+          "content": "report_lot_size_entry_area.errors.const"
+        },
+        "minimum": {
+          "content": "report_lot_size_entry_area.errors.minimum"
+        },
+        "maximum": {
+          "content": "report_lot_size_entry_area.errors.maximum"
+        },
+        "additional_properties": {
+          "content": "report_lot_size_entry_area.errors.additional_properties"
+        }
+      }
+    },
+    "children": [
+      {
+        "component": "Alert",
+        "props": {
+          "color": "green"
+        },
+        "children": [
+          {
+            "content": "report_lot_size_entry_area.state.hit"
+          }
+        ]
+      },
+      {
+        "component": "NumberInput",
+        "props": {
+          "name": "lot_area_value",
+          "size": "lg",
+          "label": {
+            "content": "report_lot_size_entry_area.field.lot_area_value"
+          },
+          "placeholder": {
+            "content": "report_lot_size_entry_area.placeholder.lot_area_value"
+          }
+        }
+      },
+      {
+        "component": "Select",
+        "props": {
+          "name": "lot_area_unit",
+          "size": "lg",
+          "label": {
+            "content": "report_lot_size_entry_area.field.lot_area_unit"
+          },
+          "data": [
+            {
+              "value": "sqft",
+              "label": {
+                "content": "report_lot_size_entry_area.field.lot_area_unit.option.sqft"
+              }
+            },
+            {
+              "value": "m2",
+              "label": {
+                "content": "report_lot_size_entry_area.field.lot_area_unit.option.m2"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "component": "Button",
+        "props": {
+          "type": "submit",
+          "size": "lg",
+          "loading": false
+        },
+        "children": [
+          {
+            "content": "report_lot_size_entry_area.submit"
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/_schema/lot-size-entry-contract.json": "bf97f8241cad3348",
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry_area.content.json": "3af58a5d02b86d72",
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry_area.descriptor.json": "d6366866fe5e0026"
+    }
+  }
+}

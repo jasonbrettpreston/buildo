@@ -97,6 +97,11 @@
    "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
   },
   {
+   "finding": "R-18 P-1 SURFACE report_lot_size_entry_area: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"
+  },
+  {
    "finding": "R-18 P-1 SURFACE overlay_sponsor_slot: declares no auth_class_parity check",
    "owner": "MF-77",
    "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"

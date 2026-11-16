@@ -2,6 +2,8 @@
 //   docs/specs/00-architecture/114_rls_policy_catalog.md §2 (dated note 2026-11-11: parcel_user_inputs Class B), §4, §10;
 //   docs/specs/00-architecture/115_scheduling.md offboarding_sweep_30day (dated note 2026-11-11).
 //
+// MF-19 plan v3 (2026-11-15): the same file also proves migration 324 (width and depth columns, the shape CHECK, the two side settings): arms (a),
+// (b), (h) re-cut and (i) the shape CHECK both paths, (j) the UP body applied twice, (k) the seeds twice give exactly two rows. Written, not run.
 // MF-19 · live-DB proof of migration 305 (applied by the operator's DB job; every write here is inside BEGIN ... ROLLBACK). WRITTEN, NOT RUN in
 // the build lane (no DB there): it runs under npm run test:db.
 //   (a) columns, types and nullability (exact list);
@@ -12,7 +14,7 @@
 //   (e) two concurrent inserts for one lot: exactly one row (the partial unique index decides; the loser is 23505 -> 409 in the route);
 //   (f) D-7 erasure: deleting the author's auth.users row keeps the entry and sets entered_by to NULL;
 //   (g) RLS on, zero policies (Class B); as authenticated: zero rows read and INSERT refused;
-//   (h) the five logic_variables rows equal the seed (the switch 0).
+//   (h) the seven logic_variables rows equal the seed (the switch 0).
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Pool, PoolClient } from 'pg';
@@ -25,7 +27,7 @@ const USER = '00000000-0000-0000-0000-00000000c019';
 const ADMIN = '00000000-0000-0000-0000-00000000a019';
 const PARCEL_REF = 'MF19-TEST-1';
 const SEED = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: number }>;
-const ON: LotSizeSettings = { enabled: true, min_sqm: 46.45, max_sqm: 4645.15, ratio_max: 3, per_day: 5 };
+const ON: LotSizeSettings = { enabled: true, min_sqm: 46.45, max_sqm: 4645.15, ratio_max: 3, per_day: 5, side_min_m: 2, side_max_m: 450 };
 let arms = 0;
 
 /** A transaction that always rolls back, with the two users and one lot (City value 290 m²); returns the lot's pk. */
@@ -52,17 +54,18 @@ const row = (pk: number, over: Record<string, unknown> = {}): [string, unknown[]
   return [`INSERT INTO parcel_user_inputs (${cols.join(', ')}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(', ')})`, cols.map((k) => (r as Record<string, unknown>)[k])];
 };
 
-describe.skipIf(!dbAvailable())('migration 305: parcel_user_inputs and the MF-19 settings (live DB)', () => {
+describe.skipIf(!dbAvailable())('migrations 305 and 324: parcel_user_inputs and the MF-19 settings (live DB)', () => {
   let pool: Pool;
   beforeAll(() => { pool = getTestPool() as Pool; });
-  afterAll(() => { expect(arms).toBe(8); });
+  afterAll(() => { expect(arms).toBe(11); });
 
   it('(a) columns, types and nullability', async () => {
     const cols = (await pool.query<{ c: string }>(
       "SELECT column_name || ' ' || data_type || ' ' || is_nullable AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'parcel_user_inputs' ORDER BY ordinal_position")).rows.map((r) => r.c);
     expect(cols).toEqual([
-      'id bigint NO', 'parcel_id integer NO', 'input_key text NO', 'value_sqm numeric NO', 'typed_value numeric NO', 'typed_unit text NO', 'source text NO',
+      'id bigint NO', 'parcel_id integer NO', 'input_key text NO', 'value_sqm numeric NO', 'typed_value numeric YES', 'typed_unit text NO', 'source text NO',
       'entered_at timestamp with time zone NO', 'entered_by uuid YES', 'status text NO', 'reverted_at timestamp with time zone YES', 'reverted_by uuid YES',
+      'width_m numeric YES', 'depth_m numeric YES', 'typed_width numeric YES', 'typed_depth numeric YES', // migration 324
     ]);
     arms++;
   });
@@ -156,6 +159,57 @@ describe.skipIf(!dbAvailable())('migration 305: parcel_user_inputs and the MF-19
     const r = await pool.query<{ variable_key: string; v: number }>('SELECT variable_key, variable_value::float8 AS v FROM logic_variables WHERE variable_key = ANY($1::text[]) ORDER BY variable_key', [keys]);
     expect(Object.fromEntries(r.rows.map((x) => [x.variable_key, x.v]))).toEqual(Object.fromEntries([...keys].sort().map((k) => [k, SEED[k]!.default])));
     expect(SEED[LOT_SIZE_SETTING_KEYS.enabled]!.default).toBe(0);
+    arms++;
+  });
+  const dimsRow = (pk: number, over: Record<string, unknown> = {}): [string, unknown[]] =>
+    row(pk, { value_sqm: 929.03, typed_value: null, typed_unit: 'ft', width_m: 15.24, depth_m: 60.96, typed_width: 50, typed_depth: 200, ...over });
+
+  it('(i) migration 324 shape CHECK, both paths: good rows pass; wrong unit, zero side, NULL side, area path with a width, width path with typed_value all 23514', async () => {
+    await inTxn(pool, async (c, pk) => {
+      expect(await code(c, ...dimsRow(pk))).toBeNull();                                   // width path, ft
+      await c.query("UPDATE parcel_user_inputs SET status = 'reverted', reverted_at = NOW() WHERE parcel_id = $1", [pk]);
+      expect(await code(c, ...dimsRow(pk, { typed_unit: 'm', typed_width: 15.24, typed_depth: 60.96 }))).toBeNull(); // width path, m
+      await c.query("UPDATE parcel_user_inputs SET status = 'reverted', reverted_at = NOW() WHERE parcel_id = $1", [pk]);
+      expect(await code(c, ...row(pk))).toBeNull();                                       // area path (the 305 shape)
+      await c.query("UPDATE parcel_user_inputs SET status = 'reverted', reverted_at = NOW() WHERE parcel_id = $1", [pk]);
+      expect(await code(c, ...dimsRow(pk, { typed_unit: 'sqft' }))).toBe('23514');        // wrong unit for the width path
+      expect(await code(c, ...dimsRow(pk, { typed_unit: 'acres' }))).toBe('23514');
+      expect(await code(c, ...dimsRow(pk, { width_m: 0 }))).toBe('23514');                // zero side
+      expect(await code(c, ...dimsRow(pk, { typed_depth: 0 }))).toBe('23514');
+      expect(await code(c, ...dimsRow(pk, { width_m: null }))).toBe('23514');             // NULL side (the IS NOT NULL form)
+      expect(await code(c, ...dimsRow(pk, { typed_width: null }))).toBe('23514');
+      expect(await code(c, ...dimsRow(pk, { typed_value: 3120 }))).toBe('23514');         // width path with typed_value
+      expect(await code(c, ...row(pk, { width_m: 15.24 }))).toBe('23514');               // area path with a width
+      expect(await code(c, ...row(pk, { typed_unit: 'ft' }))).toBe('23514');              // area path with a width-path unit
+      expect(await code(c, ...row(pk, { typed_value: null }))).toBe('23514');             // area path without its number
+    });
+    arms++;
+  });
+
+  it('(j) migration 324 UP body applied twice: no error, same columns and constraints, the rows kept', async () => {
+    const sql = fs.readFileSync(path.join(process.cwd(), 'migrations/324_parcel_user_inputs_width_depth.sql'), 'utf8');
+    const body = sql.slice(sql.indexOf('-- UP'), sql.indexOf('-- DOWN')).replace(/^BEGIN;$/m, '').replace(/^COMMIT;$/m, '');
+    await inTxn(pool, async (c, pk) => {
+      await c.query(...row(pk));
+      const shape = async () => (await c.query("SELECT conname || ' ' || pg_get_constraintdef(oid) AS d FROM pg_constraint WHERE conrelid = 'parcel_user_inputs'::regclass ORDER BY conname")).rows.map((r) => r.d);
+      const before = await shape();
+      await c.query(body);
+      await c.query(body);
+      expect(await shape()).toEqual(before);
+      expect((await c.query('SELECT count(*)::int AS n FROM parcel_user_inputs WHERE parcel_id = $1', [pk])).rows[0].n).toBe(1);
+    });
+    arms++;
+  });
+
+  it('(k) the two 324 seeds applied twice give exactly two rows (ON CONFLICT DO NOTHING), values equal the seed', async () => {
+    const sql = fs.readFileSync(path.join(process.cwd(), 'migrations/324_parcel_user_inputs_width_depth.sql'), 'utf8');
+    const ins = /INSERT INTO logic_variables[\s\S]*?ON CONFLICT \(variable_key\) DO NOTHING;/.exec(sql)![0];
+    await inTxn(pool, async (c) => {
+      await c.query(ins);
+      await c.query(ins);
+      const r = await c.query("SELECT variable_key, variable_value::float8 AS v FROM logic_variables WHERE variable_key IN ('user_lot_size_side_min_m', 'user_lot_size_side_max_m') ORDER BY variable_key");
+      expect(r.rows).toEqual([{ variable_key: 'user_lot_size_side_max_m', v: SEED['user_lot_size_side_max_m']!.default }, { variable_key: 'user_lot_size_side_min_m', v: SEED['user_lot_size_side_min_m']!.default }]);
+    });
     arms++;
   });
 });

@@ -1,0 +1,57 @@
+# MF-19 plan v3 red evidence: src/tests/parcels-lot-size-route.infra.test.ts (width and depth path, keys-first body, side and area ranges, two-sided ratio, store shape, contract pins) against the tree before the server, contract and settings changes
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts (99 tests | 37 failed) 73ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 37 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 400 no body (null): before the rate limit, no parcel read, no write,
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 400 {}: before the rate limit, no parcel read, no write, the one key
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 400 an array: before the rate limit, no parcel read, no write, the o
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 400 a string: before the rate limit, no parcel read, no write, the o
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 400 both key sets: before the rate limit, no parcel read, no write, 
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 400 depth and unit without width_value: before the rate limit, no pa
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:286:51
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 200 stores width, depth, what was typed and the area computed from t
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:301:22
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > the area is computed on the UNROUNDED sides, never from the stored 2
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:312:24
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > metres: the sides store as typed, the area is width x depth
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:319:21
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 6.6 ft (the shown low edge) -> 200
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 1476.4 ft (the shown high edge) -> 200
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 2 m (the low edge) -> 200
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 450 m (the high edge) -> 200
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:342:24
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 6.5 ft -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: depth 6.5 ft -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 1476.5 ft -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: depth 1476.5 ft -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 1.99 m -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: depth 1.99 m -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: width 450.01 m -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: depth 450.01 m -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > side range: both sides out: the width is named first -> 400
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:344:36
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 20 x 25 ft = 500 sq ft (the edge) -> 200
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 100 x 500 ft = 50,000 sq ft (the edge) -> 200
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 6.8 x 6.85 m = 46.58 m² -> 200
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 100 x 46.45 m = 4,645 m² -> 200
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:367:24
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 20 x 24.99 ft -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 100 x 500.01 ft -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 6.8 x 6.83 m = 46.44 m² -> 400
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > computed area: 100 x 46.46 m = 4,646 m² -> 400
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:369:36
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > the City ratio on the computed area is two-sided: metres typed as fe
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:379:54
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > no City record: City NULL and City <= 0 apply only the side and area
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:393:91
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 404 PARCEL_NOT_FOUND, 409 LOT_SIZE_ALREADY_ENTERED (with the stored 
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:399:40
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > 429 on the same bucket for the width path; 403 for a lapsed plan bef
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:413:44
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > the settings read: a missing side setting, an out-of-bounds one, or 
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:430:46
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > MF-19 plan v3: the width and depth path (default) and the keys-first body > the two new settings are hidden from nobody: the seed carries them i
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:438:27
+ FAIL  src/tests/parcels-lot-size-route.infra.test.ts > contract and boundary pins > fold F5 (plan v3): each route schema = its form schema + parcel_id (the width form and the area form); revert_reque
+ ❯ src/tests/parcels-lot-size-route.infra.test.ts:500:16
+ Test Files  1 failed (1)
+      Tests  37 failed | 62 passed (99)

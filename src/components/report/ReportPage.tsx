@@ -251,23 +251,28 @@ const Section = ({ s, open, images }: { s: PageSection; open: boolean; images: P
               <T p={one(s, 'record.label')} className="text-report-quiet" />
               <T p={one(s, 'record.value')} className="font-semibold tabular-nums" />
             </div>
-            <label id="report-sheet-lbl" htmlFor="report-sheet-in" className="text-[14px]/[20px] font-semibold">{one(s, 'input.label')?.text}</label>
-            <div className="flex gap-2">
-              <input id="report-sheet-in" readOnly inputMode="decimal" autoComplete="off" placeholder={one(s, 'input.placeholder')?.text} data-part="input.placeholder" aria-describedby="report-sheet-err" className="min-h-12 min-w-0 flex-1 rounded-xl border border-report-button-border bg-report-tile px-[14px] text-[18px]/[24px] font-semibold text-report-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-report-amber" />
-              {/* MF-19 A12 (WCAG 1.4.11, 4.1.2): a native radio pair (one tab stop, arrow keys, checked state from the browser); the selected segment draws a report-ink border. */}
-              <div role="radiogroup" aria-labelledby="report-sheet-lbl" className="flex overflow-hidden rounded-xl border border-report-button-border">
-                <label className="cursor-pointer">
-                  <input type="radio" name="report-sheet-unit" value="sqft" defaultChecked className="peer sr-only" />
-                  <span className="flex min-h-12 min-w-14 items-center justify-center rounded-xl border border-transparent px-2 text-[14px]/[20px] font-semibold text-report-dim peer-checked:border-report-ink peer-checked:bg-report-button peer-checked:text-report-ink peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-report-amber">{one(s, 'unit.sqft')?.text}</span>
-                </label>
-                <label className="cursor-pointer">
-                  <input type="radio" name="report-sheet-unit" value="m2" className="peer sr-only" />
-                  <span className="flex min-h-12 min-w-14 items-center justify-center rounded-xl border border-transparent px-2 text-[14px]/[20px] font-semibold text-report-dim peer-checked:border-report-ink peer-checked:bg-report-button peer-checked:text-report-ink peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-report-amber">{one(s, 'unit.m2')?.text}</span>
-                </label>
+            {/* MF-19 plan v3 (operator 2026-11-15, amendment "b"): the lot width (frontage) and depth, one ft / m switch; the 1st label and placeholder are the width's, the 2nd the depth's. */}
+            {['width', 'depth'].map((side, i) => (
+              <div key={side} className="grid gap-1">
+                <label id={`report-sheet-lbl-${side}`} htmlFor={`report-sheet-in-${side}`} className="text-[14px]/[20px] font-semibold">{all(s, 'input.label')[i]?.text}</label>
+                <input id={`report-sheet-in-${side}`} readOnly inputMode="decimal" autoComplete="off" placeholder={all(s, 'input.placeholder')[i]?.text} data-part="input.placeholder" aria-describedby="report-sheet-err" className="min-h-12 min-w-0 flex-1 rounded-xl border border-report-button-border bg-report-tile px-[14px] text-[18px]/[24px] font-semibold text-report-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-report-amber" />
               </div>
+            ))}
+            {/* MF-19 A12 (WCAG 1.4.11, 4.1.2): a native radio pair (one tab stop, arrow keys, checked state from the browser); the selected segment draws a report-ink border. */}
+            <div role="radiogroup" aria-labelledby="report-sheet-lbl-width report-sheet-lbl-depth" className="flex justify-self-start overflow-hidden rounded-xl border border-report-button-border">
+              <label className="cursor-pointer">
+                <input type="radio" name="report-sheet-unit" value="ft" defaultChecked className="peer sr-only" />
+                <span className="flex min-h-12 min-w-14 items-center justify-center rounded-xl border border-transparent px-2 text-[14px]/[20px] font-semibold text-report-dim peer-checked:border-report-ink peer-checked:bg-report-button peer-checked:text-report-ink peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-report-amber">{one(s, 'unit.ft')?.text}</span>
+              </label>
+              <label className="cursor-pointer">
+                <input type="radio" name="report-sheet-unit" value="m" className="peer sr-only" />
+                <span className="flex min-h-12 min-w-14 items-center justify-center rounded-xl border border-transparent px-2 text-[14px]/[20px] font-semibold text-report-dim peer-checked:border-report-ink peer-checked:bg-report-button peer-checked:text-report-ink peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-report-amber">{one(s, 'unit.m')?.text}</span>
+              </label>
             </div>
             {/* A12 (WCAG 3.3.1, 4.1.3): the refusal text the server sends is announced when it appears. */}
             <div id="report-sheet-err" role="alert" hidden><T p={one(s, 'error')} as="p" className="m-0 text-[13px]/[18px] text-report-refused" /></div>
+            {/* plan v3 (Spec 128 section 4 dated note 2026-11-15): the closed role link is a text part; no href, no action until the sheet mounts the form (MF-44, MF-48). */}
+            <button type="button" disabled data-part="link" className="min-h-11 justify-self-start rounded-xl border-0 bg-transparent px-0 text-left text-[14px]/[20px] font-semibold text-report-dim underline">{one(s, 'link')?.text}</button>
             <T p={one(s, 'note')} as="p" className="m-0 text-[13px]/[20px] text-report-quiet" />
             <button type="submit" disabled className="min-h-12 rounded-xl border-0 bg-report-amber text-[16px]/[24px] font-bold text-report-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-ink">{one(s, 'submit')?.text}</button>
             <button type="button" data-toggle="sheet-close" className="min-h-11 rounded-xl border-0 bg-transparent text-[15px]/[20px] font-semibold text-report-dim focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-ink">{one(s, 'cancel')?.text}</button>

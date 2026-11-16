@@ -1,5 +1,5 @@
 {
-  "$comment": "MF-57 · THE v21 report page table (approved mock v21, oq:866-869; binding brief fields/REPORT-LAYOUT-BRIEF-v4.md). Sections in the brief screen order; each part is ONE shown text with ONE binding: `field` (a declared report-v2.decl.json field; the producer sends its server-formatted text under `key`, R17/FE-05), `content` (a key of report-presentation.json `page`), or `pending` (Q-G4 a: the ruled text, no value; `why` names the brief status or the open item that blocks it). Read by src/lib/surfaces/report/core.ts buildPage; locked by src/tests/surfaces/report-page.logic.test.ts. No field is invented; an undeclared field is pending and listed. Dated 2026-11-11 (operator \"y to all as built\"): D-J a tile area value is two value parts, the number (`<tile>.value`) and its unit (`<tile>.unit`), both server-formatted under their own keys; D-K a section with `details` is drawn only on layout rows (report-layout.json) whose `details` equals it (the lot-size box and the sheet: collapsed rows only); MF-38 the picture is the reused figure, B4 listed owed. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"; D-5, D-6): `flags` is the closed list of page flags the server sends in the response (`flags: {name: boolean}`, src/lib/parcels/lot-size-entry.ts lotSizePageFlags); a section or part with `when` shows only when the server sends that flag true, and is left out otherwise (fail closed: no flag, no section). The lot-size box (C1) and the sheet (H0) show only while the entry switch is on and nothing is entered (D-6: hidden while off; R-BTN: gone once entered); the after-entry line (C2, prior status owed) shows once a lot size is entered, with the neutral words of D-5, and its recalculated sentence only when the stored results used the entry.",
+  "$comment": "MF-57 · THE v21 report page table (approved mock v21, oq:866-869; binding brief fields/REPORT-LAYOUT-BRIEF-v4.md). Sections in the brief screen order; each part is ONE shown text with ONE binding: `field` (a declared report-v2.decl.json field; the producer sends its server-formatted text under `key`, R17/FE-05), `content` (a key of report-presentation.json `page`), or `pending` (Q-G4 a: the ruled text, no value; `why` names the brief status or the open item that blocks it). Read by src/lib/surfaces/report/core.ts buildPage; locked by src/tests/surfaces/report-page.logic.test.ts. No field is invented; an undeclared field is pending and listed. Dated 2026-11-11 (operator \"y to all as built\"): D-J a tile area value is two value parts, the number (`<tile>.value`) and its unit (`<tile>.unit`), both server-formatted under their own keys; D-K a section with `details` is drawn only on layout rows (report-layout.json) whose `details` equals it (the lot-size box and the sheet: collapsed rows only); MF-38 the picture is the reused figure, B4 listed owed. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"; D-5, D-6): `flags` is the closed list of page flags the server sends in the response (`flags: {name: boolean}`, src/lib/parcels/lot-size-entry.ts lotSizePageFlags); a section or part with `when` shows only when the server sends that flag true, and is left out otherwise (fail closed: no flag, no section). The lot-size box (C1) and the sheet (H0) show only while the entry switch is on and nothing is entered (D-6: hidden while off; R-BTN: gone once entered); the after-entry line (C2, prior status owed) shows once a lot size is entered, with the neutral words of D-5, and its recalculated sentence only when the stored results used the entry. Dated note 2026-11-15 (MF-19 plan v3; operator \"R-1 thru R-6 recommendations approved\", R-2 a, R-3 a; Spec 128 section 4 dated note 2026-11-15): the sheet takes the lot width (frontage) and depth with one ft / m switch: input.label and input.placeholder each appear twice (width first, then depth), the unit roles are unit.ft and unit.m (were unit.sqft, unit.m2), and the closed role link (a text part, no href, no action) carries the ruled link \"My lot isn't a rectangle - enter the area instead\" (the area form is the FORM report_lot_size_entry_area; the swap is the sheet client island's, built at mount, MF-44 web and MF-48 mobile). The back link text sheet.link_dims is a page key the island reads; the area form keeps its own labels in its descriptor content.",
   "layout": "v21",
   "pending_texts": {
     "estimated": "pending.estimated",
@@ -144,9 +144,10 @@
       "record.value",
       "input.label",
       "input.placeholder",
-      "unit.sqft",
-      "unit.m2",
+      "unit.ft",
+      "unit.m",
       "error",
+      "link",
       "note",
       "submit",
       "cancel"
@@ -1670,28 +1671,43 @@
         {
           "role": "input.label",
           "brief": "H0",
-          "content": "sheet.label"
+          "content": "sheet.width_label"
         },
         {
           "role": "input.placeholder",
           "brief": "H0",
-          "content": "sheet.placeholder"
+          "content": "sheet.width_placeholder"
         },
         {
-          "role": "unit.sqft",
+          "role": "input.label",
           "brief": "H0",
-          "content": "sheet.unit_sqft"
+          "content": "sheet.depth_label"
         },
         {
-          "role": "unit.m2",
+          "role": "input.placeholder",
           "brief": "H0",
-          "content": "sheet.unit_m2"
+          "content": "sheet.depth_placeholder"
+        },
+        {
+          "role": "unit.ft",
+          "brief": "H0",
+          "content": "sheet.unit_ft"
+        },
+        {
+          "role": "unit.m",
+          "brief": "H0",
+          "content": "sheet.unit_m"
         },
         {
           "role": "error",
           "brief": "H0",
           "pending": "estimated",
           "why": "MF-19: the server sends the refusal text in the entry response (D-2 range in the typed unit, D-3 City ratio); the page carries no value; prior why: lot_range_error FE-05 FLAG; bounds have no field (MB-42); open item 22"
+        },
+        {
+          "role": "link",
+          "brief": "H0",
+          "content": "sheet.link_area"
         },
         {
           "role": "note",

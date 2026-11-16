@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **93 surfaces, 71 contracts and 6 jobs** in it today.
+There are **94 surfaces, 71 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 93 |
+| SURFACE | 94 |
 | CONTRACT | 71 |
 | JOB | 6 |
-| **Total** | **170** |
+| **Total** | **171** |
 
 ### 2.1 By archetype
 
@@ -217,7 +217,7 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `COMMAND` | CONTRACT | 8 | 0 | 0 | 8 |
 | `DASHBOARD` | SURFACE | 3 | 2 | 0 | 5 |
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
-| `FORM` | SURFACE | 6 | 1 | 6 | 13 |
+| `FORM` | SURFACE | 6 | 1 | 7 | 14 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
 | `LIST` | SURFACE | 9 | 7 | 4 | 20 |
 | `MUTATION` | CONTRACT | 20 | 7 | 0 | 27 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**31 of 170 rows fully researched · 139 still open · 439 unresearched fields in total.**
+**32 of 171 rows fully researched · 139 still open · 439 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
 | `mobile-product.json` | 41 | 11 | 30 | 63 |
-| `web-product.json` | 20 | 10 | 10 | 88 |
+| `web-product.json` | 21 | 11 | 10 | 88 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 17 | 9 | 8 | 15 |
 | `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **170** | **31** | **139** | **439** |
+| **total** | **171** | **32** | **139** | **439** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -266,7 +266,7 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 |---|---:|---|
 | exists | 127 | the code is in the tree today |
 | new | 27 | specified, not built |
-| generated | 16 | will be rendered from descriptors, not hand-written |
+| generated | 17 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 18 | 15 (83%) | 12 | yes |
+| **A** | `parcel_product` | 19 | 16 (84%) | 12 | yes |
 | **B** | `parcel_admin` | 26 | 9 (35%) | 20 | yes |
 | **C** | `platform_shared` | 79 | 7 (9%) | 43 | yes |
 | **D** | `estate_other` | 47 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
-| | **total** | **170** | **31** | | |
+| | **total** | **171** | **32** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -320,7 +320,7 @@ The path from a customer tapping a screen to the pipeline step that built what t
 
 One line per entry in scopes A, B and C, organised **scope → type → build order**. `build_order` is derived, not chosen: scope rank × 1000 + feature rank × 10 + kind rank, where the kind rank puts **tables before contracts before surfaces before admin** — it answers *"what must exist before this can be built"*. Follow an id to its detail in §3.
 
-**§A `parcel_product` (18)**
+**§A `parcel_product` (19)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -341,6 +341,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`C-062`](#c-062) | contract | `contract_parcels_tracked` | `MUTATION` | `F17` tracked-lots | 1172 | 100% | [detail](#c-062) |
 | [`S-072`](#s-072) | surface | `mobile_tracked_lots` | `LIST` | `F17` tracked-lots | 1173 | 100% | [detail](#s-072) |
 | [`S-086`](#s-086) | surface | `report_lot_size_entry` | `FORM` | `F02` parcel-report | 2047 | 100% | [detail](#s-086) |
+| [`S-094`](#s-094) | surface | `report_lot_size_entry_area` | `FORM` | `F02` parcel-report | 2048 | 100% | [detail](#s-094) |
 | [`C-070`](#c-070) | contract | `contract_parcels_lot_size_entry` | `MUTATION` | `F02` parcel-report | 2049 | 97% | [detail](#c-070) |
 
 **§B `parcel_admin` (26)**
@@ -521,7 +522,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 | Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |
 |---|---|---|---:|---:|---|
 | **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) · [`S-093`](#s-093) | 0 | 4 | 5 descriptor(s), and would orphan 1 table(s): `parcel_lot_form` |
-| **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-086`](#s-086) · [`C-070`](#c-070) | 3 | 9 | 5 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
+| **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-086`](#s-086) · [`S-094`](#s-094) · [`C-070`](#c-070) | 3 | 9 | 6 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
 | **F05** metering-entitlement | `parcel_product` | — | 0 | 0 | **nothing — the feature is specified and nothing implements it yet.** That is the finding, not an error. |
@@ -595,7 +596,7 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 
 The estate shares one repository; it does not share one programme. Sections A–C are what **Spec 126 governs**. Section D is the other product — inventoried so a shared contract or an orphan is visible, and deliberately rendered in one line each rather than in full (Spec 126 §2; the fence is Spec 128 R-03).
 
-### §A `parcel_product` — the MaxBLD parcel cost tool (18)
+### §A `parcel_product` — the MaxBLD parcel cost tool (19)
 
 **This is the programme.** The surfaces, contracts and jobs a customer of the parcel tool touches, plus the five business requirements that hang off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; batched first by Spec 127 §4.4.
 
@@ -1818,9 +1819,9 @@ THE THREE FIGURES. Max Build = `parcels.max_buildable_gfa_sqm` (real). MAX COA B
 
 **Programme.** `S-086` · scope `parcel_product` · feature `F02` · build order 2047 · batch `B2` · review `unreviewed` — The user lot-size input of the report (MF-19).
 
-**What it is.** The Add lot size form of the report sheet: one number and its unit (sq ft or m²), entered once per lot (D-1 a). Declared now; it is mounted in the report sheet when the entry switch flips (the sheet is hidden while off, D-6).
+**What it is.** The Add lot size form of the report sheet: the lot width (frontage) and depth with one ft / m switch, entered once per lot (D-1 a). The link "My lot isn't a rectangle - enter the area instead" swaps to report_lot_size_entry_area. Declared now; it is mounted in the report sheet when the entry switch flips (the sheet is hidden while off, D-6).
 
-**What it reads and writes.** It posts the lot area to the entry contract, which stores one parcel_user_inputs row (source user, entered_at) that wins over the City value for every viewer; the page re-reads and shows the after-entry line.
+**What it reads and writes.** It posts the width and depth to the entry contract; the server computes the area (Spec 128 Rule 16, FE-05) and stores one parcel_user_inputs row (width, depth, what was typed, the area, source user, entered_at) that wins over the City value for every viewer; the page re-reads and shows the after-entry line with the area.
 
 **Under Spec 126.** **GENERATED.** Rendered by the web FORM binding from render.form and entry_request in lot-size-entry-contract.json.
 
@@ -1842,9 +1843,9 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md (B7) and DECISIONS.md D-1..D-6` |
+| `files` | `~/Buildo-scratch/mcfrontend/MF-19/plan.v3.md (C1, C2) and DECISIONS.md D-1..D-6; plan.v2.md (B7)` |
 | `contracts` | `contract_parcels_lot_size_entry` |
-| `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables` |
+| `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables; migrations/324_parcel_user_inputs_width_depth.sql — the width and depth columns, the shape CHECK and the two side settings (written, applied by the DB job)` |
 | `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, then the MF-45 parcel_tool gate (getEntitlementStatus + ACTIVE_SUBSCRIPTION_STATUSES, the transitional lead_gen arm)` |
 | `states` | `src/components/surfaces/web/FormBinding.tsx — the six FORM states` |
 | `emits` | `src/app/api/parcels/lot-size/route.ts — logInfo outcome lines` |
@@ -1855,7 +1856,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `contract` | The two fields come from entry_request in lot-size-entry-contract.json; the route schema adds parcel_id from the page. — `scripts/surfaces/_schema/lot-size-entry-contract.json — entry_request, route_request` |
+| 2 | `inputs` | `contract` | The three fields come from entry_request in lot-size-entry-contract.json; the route schema adds parcel_id from the page. — `scripts/surfaces/_schema/lot-size-entry-contract.json — entry_request, route_request` |
 | 3 | `outputs` | `contract_only` | The write goes through a declared MUTATION contract; the page re-reads after success (no optimistic write). — `src/app/api/parcels/lot-size/route.ts` |
 | 4 | `state` | `server_only` | The entry is a shared server fact (FE-19); nothing persists on the device. — `src/app/api/parcels/lot-size/route.ts` |
 | 5 | `staleness` | `live` | Submitted per request. — `src/app/api/parcels/lot-size/route.ts` |
@@ -1869,7 +1870,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 13 | `emits` | `none` | The entry row is its own record (who, when); no analytics or ledger event is declared. — `src/app/api/parcels/lot-size/route.ts` |
 | 14 | `offers` | `none` | An admin correction form; it renders no sponsored placement. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
 | 15 | `metering` | `none` | An operator act, not a metered product action. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
-| 16 | `config` | `logic_variables` | The switch, the range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
+| 16 | `config` | `logic_variables` | The switch, the range, the side range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
 | 17 | `sharing` | `shared` | parcel_user_inputs is read by the report (the after-entry line) and reverted by the admin form. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -1880,7 +1881,77 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
 
-> ⚠️ MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record "sq ft first"). The bounds are the server's (plan fold F2): the form checks the type only. Dated note 2026-11-11 (MF-19 restack onto MF-53; orchestrator id assignment): the census ref is S-086. MF-53 lands first and keeps S-083 (binding_mobile_list); S-084 stays admin_lot_size_revert (MF-19); S-085 is MF-48's binding_mobile_report on origin; so report_lot_size_entry takes the next free id (it read S-083 before this note).
+> ⚠️ MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record "sq ft first"). The bounds are the server's (plan fold F2): the form checks the type only. Dated note 2026-11-11 (MF-19 restack onto MF-53; orchestrator id assignment): the census ref is S-086. MF-53 lands first and keeps S-083 (binding_mobile_list); S-084 stays admin_lot_size_revert (MF-19); S-085 is MF-48's binding_mobile_report on origin; so report_lot_size_entry takes the next free id (it read S-083 before this note). Dated note 2026-11-15 (MF-19 plan v3; operator "R-1 thru R-6 recommendations approved" and the amendment "b" 2026-11-14): the entry is width + depth with one ft / m switch (default ft: the page's "sq ft first" ruling carries over as feet first); the server computes the area; the area form is report_lot_size_entry_area.
+
+<a id="s-094"></a>
+
+###### `S-094` `report_lot_size_entry_area`
+
+**Programme.** `S-094` · scope `parcel_product` · feature `F02` · build order 2048 · batch `B2` · review `unreviewed` — The user lot-size input of the report (MF-19).
+
+**What it is.** The area form of the report sheet's link "My lot isn't a rectangle - enter the area instead": one number and its unit (sq ft or m²), entered once per lot (D-1 a). Declared and goldened now; it is mounted in the sheet when the entry switch flips (the sheet is hidden while off, D-6).
+
+**What it reads and writes.** It posts the lot area to the entry contract (the area body), which stores one parcel_user_inputs row (source user, entered_at, no width or depth) that wins over the City value for every viewer; the page re-reads and shows the after-entry line.
+
+**Under Spec 126.** **GENERATED.** Rendered by the web FORM binding from render.form and area_request in lot-size-entry-contract.json.
+
+**kind** SURFACE · **archetype** `FORM` · **platforms** `web` · **status** generated · **shard** `web-product` · **researched** ✅ every field
+
+**Gate.** auth class **authenticated** (The entry route calls getCurrentUserContext first and answers 401 without a signed-in user.) · role **consumer**
+
+**Calls.** `contract_parcels_lot_size_entry`
+
+**Components owned.** —
+
+**Emits.** —
+
+**Data lineage.**
+
+_No table is reached by this entry — every value it shows arrives through a contract, or it shows no server data at all._
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `~/Buildo-scratch/mcfrontend/MF-19/plan.v2.md (B7) and DECISIONS.md D-1..D-6` |
+| `contracts` | `contract_parcels_lot_size_entry` |
+| `tables` | `migrations/305_parcel_user_inputs.sql — parcel_user_inputs (Class B, one active entry per lot, history kept, author SET NULL on erasure) and the five MF-19 logic variables; migrations/324_parcel_user_inputs_width_depth.sql — the width and depth columns, the shape CHECK and the two side settings (written, applied by the DB job)` |
+| `gate` | `src/app/api/parcels/lot-size/route.ts — getCurrentUserContext first, the switch, then the MF-45 parcel_tool gate (getEntitlementStatus + ACTIVE_SUBSCRIPTION_STATUSES, the transitional lead_gen arm)` |
+| `states` | `src/components/surfaces/web/FormBinding.tsx — the six FORM states` |
+| `emits` | `src/app/api/parcels/lot-size/route.ts — logInfo outcome lines` |
+| `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` · `docs/specs/00-architecture/114_rls_policy_catalog.md §2 dated note 2026-11-11 — parcel_user_inputs Class B (RLS on, no policy)` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | The two fields come from area_request in lot-size-entry-contract.json; the route schema (route_area_request) adds parcel_id from the page. — `scripts/surfaces/_schema/lot-size-entry-contract.json — area_request, route_area_request` |
+| 3 | `outputs` | `contract_only` | The write goes through a declared MUTATION contract; the page re-reads after success (no optimistic write). — `src/app/api/parcels/lot-size/route.ts` |
+| 4 | `state` | `server_only` | The entry is a shared server fact (FE-19); nothing persists on the device. — `src/app/api/parcels/lot-size/route.ts` |
+| 5 | `staleness` | `live` | Submitted per request. — `src/app/api/parcels/lot-size/route.ts` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `envelope` | Every admin route handler is wrapped by withApiEnvelope, which returns { data, error, meta } with a sanitised code on any throw; the surface renders from that envelope. — `src/lib/api/with-api-envelope.ts:27 — withApiEnvelope always returns the { data, error, meta } envelope`, `src/lib/api/with-api-envelope.ts:40-45 — a PG SQLSTATE becomes DATABASE_ERROR; the raw message is never exposed` |
+| 13 | `emits` | `none` | The entry row is its own record (who, when); no analytics or ledger event is declared. — `src/app/api/parcels/lot-size/route.ts` |
+| 14 | `offers` | `none` | An admin correction form; it renders no sponsored placement. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 15 | `metering` | `none` | An operator act, not a metered product action. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 16 | `config` | `logic_variables` | The switch, the range, the side range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
+| 17 | `sharing` | `shared` | parcel_user_inputs is read by the report (the after-entry line) and reverted by the admin form. — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md)
+
+> ⚠️ MF-19 (queue row: declare the form, bind the input contract). sq ft first (the unit select default is the page's, record "sq ft first"). The bounds are the server's (plan fold F2): the form checks the type only. Dated note 2026-11-11 (MF-19 restack onto MF-53; orchestrator id assignment): the census ref is S-086. MF-53 lands first and keeps S-083 (binding_mobile_list); S-084 stays admin_lot_size_revert (MF-19); S-085 is MF-48's binding_mobile_report on origin; so report_lot_size_entry takes the next free id (it read S-083 before this note). Dated note 2026-11-15 (MF-19 plan v3; operator "R-1 thru R-6 recommendations approved" and the amendment "b" 2026-11-14): this is the v2 area form, kept as the sheet's link target; the default form is report_lot_size_entry (width and depth).
 
 <a id="c-070"></a>
 
@@ -1940,7 +2011,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 14 | `offers` | `none` | A write endpoint renders no sponsored placement. — `src/app/api/parcels/lot-size/route.ts` |
 | 15 | `metering` | `none` | An entry is not a metered report view; it is limited per day by the rate limit (D-4). — `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.4 and §11a.9 dated notes 2026-11-11 — user inputs: own record, provenance user, entered once, verified > user > City` |
 | 16 | `config` | `logic_variables` | The switch, the range, the City ratio and the entries a day are logic variables read by the route. — `scripts/seeds/logic_variables.json — user_lot_size_*` |
-| 17 | `sharing` | `sole` | Called by the Add lot size form only (mounted at the flip). — `scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json` |
+| 17 | `sharing` | `shared` | Called by the two Add lot size forms (width and depth; the area link), mounted at the flip. — `scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json`, `scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry_area.descriptor.json` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -9875,4 +9946,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 170 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 171 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

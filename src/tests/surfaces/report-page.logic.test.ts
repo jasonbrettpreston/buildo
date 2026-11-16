@@ -315,3 +315,38 @@ describe('P4 the 2026-11-11 rulings: D-J unit part, D-K expanded rows, MF-38 pic
     expect(String(reportCtx.content.illustrations.caption_default)).toBe('Illustrative — not this lot');
   });
 });
+
+describe('P5 MF-19 plan v3: the sheet takes width and depth and the closed role link (Spec 128 section 4 dated note 2026-11-15)', () => {
+  const sheet = (): Json => (table().sections as Json[]).find((s) => s.kind === 'sheet')!;
+  it('the closed sheet role list: ft / m replace the two area units, link joins; width then depth in the repeated label and placeholder roles', () => {
+    const roles = (table().kinds as Json).sheet as string[];
+    expect(roles).toEqual(['title', 'body', 'record.label', 'record.value', 'input.label', 'input.placeholder', 'unit.ft', 'unit.m', 'error', 'link', 'note', 'submit', 'cancel']);
+    expect(roles).not.toContain('unit.sqft');
+    const ps = sheet().parts as Json[];
+    expect(ps.map((p) => p.role).filter((r) => r === 'input.label' || r === 'input.placeholder')).toEqual(['input.label', 'input.placeholder', 'input.label', 'input.placeholder']);
+    expect(ps.filter((p) => p.role === 'input.label').map((p) => p.content)).toEqual(['sheet.width_label', 'sheet.depth_label']);
+  });
+  it('every sheet part role is in the closed list (a planted unknown role is not)', () => {
+    const roles = (table().kinds as Json).sheet as string[];
+    for (const p of sheet().parts as Json[]) expect(roles).toContain(p.role);
+    expect(roles).not.toContain('button');
+  });
+  it('the link part is a text part bound to the ruled words (no href, no action) and the page text carries the R-2 sheet words', () => {
+    const link = (sheet().parts as Json[]).find((p) => p.role === 'link')!;
+    expect(Object.keys(link).sort()).toEqual(['brief', 'content', 'role']);
+    const page = (JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/surfaces/_schema/report-presentation.json'), 'utf8')).page) as Record<string, string>;
+    expect(page[link.content]).toBe('My lot isn\'t a rectangle — enter the area instead');
+    expect(page['sheet.link_dims']).toBe('Enter width and depth instead');
+    expect([page['sheet.width_label'], page['sheet.width_placeholder'], page['sheet.depth_label'], page['sheet.depth_placeholder'], page['sheet.unit_ft'], page['sheet.unit_m']]).toEqual(['Lot width (frontage)', 'e.g. 50', 'Lot depth', 'e.g. 120', 'ft', 'm']);
+    expect(page['sheet.p']).toBe('Use the lot width and depth from your survey. They replace the City lot record for this report, and every option is recalculated.');
+    expect(page['sheet.err_side_ft']).toBe('Enter a {side} between {lo} and {hi} ft.');
+    expect(page['sheet.err_dims_area_sqft']).toBe('Those numbers give a lot size of {area}, outside {lo} to {hi} sq ft. Check the numbers and the unit.');
+    expect(page['sheet.err_range_sqft']).toBe('Enter a lot size between {lo} and {hi} sq ft.'); // the area link keeps the v2 messages
+  });
+  it('the collapsed web and mobile views carry the sheet with the link part; every one of its parts is placed (the mobile binding throws on a dropped part)', () => {
+    for (const t of ['web', 'mobile']) {
+      const sec = ((golden(t).tree ?? golden(t)) as Json).sections?.find?.((s: Json) => s.kind === 'sheet');
+      if (sec) expect((sec.parts as Json[]).some((p) => p.role === 'link')).toBe(true);
+    }
+  });
+});

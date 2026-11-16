@@ -8,6 +8,8 @@
 //   (2) shared, never private: the response and the page values carry the value and the stamp, never the author or the typed value; the page
 //       flags take no viewer (every viewer sees the same line), and the line is neutral ("from a survey", never "your");
 //   (3) the binding: the after-entry line binds two declared report fields to the user_input source, whose contract file has landed.
+// MF-19 plan v3 (operator 2026-11-15 "R-1 thru R-6 recommendations approved"): the entry is also width + depth; BOTH inserts (the width path and the area path)
+//   carry source 'user' and never set entered_at; the response never carries a width, a depth or a typed value; migration 324 keeps the source CHECK (305) and adds the shape CHECK.
 // Planted defects (each must fail): a payload with entered_by; a migration without the source CHECK; an insert without 'user'.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -27,9 +29,9 @@ const provenanceProblems = (sql: string, lib: string): string[] => {
   if (!/CONSTRAINT chk_parcel_user_inputs_source\s+CHECK \(source = 'user'\)/.test(sql)) out.push('no source = user CHECK');
   if (!/entered_at\s+TIMESTAMPTZ\s+NOT NULL DEFAULT NOW\(\)/.test(sql)) out.push('entered_at is not NOT NULL DEFAULT NOW()');
   if (!/entered_by\s+UUID\s+NULL REFERENCES auth\.users\(id\) ON DELETE SET NULL/.test(sql)) out.push('entered_by is not a nullable SET NULL author');
-  const ins = /INSERT INTO parcel_user_inputs \(([^)]*)\)\s*VALUES \(([^)]*)\)/.exec(lib);
-  if (!ins) out.push('no insert');
-  else {
+  const inserts = [...lib.matchAll(/INSERT INTO parcel_user_inputs \(([^)]*)\)\s*VALUES \(([^)]*)\)/g)];
+  if (inserts.length !== 2) out.push('expected exactly the two inserts (the width path and the area path)');
+  for (const ins of inserts) {
     if (/entered_at/.test(ins[1]!)) out.push('the insert sets entered_at (it must be the DB clock)');
     if (!/'user'/.test(ins[2]!)) out.push("the insert does not carry 'user'");
   }
@@ -52,12 +54,29 @@ describe('FE-19 (1) the record keeps provenance: source user and entered_at', ()
   });
 });
 
+describe('FE-19 (1b) plan v3: the width path keeps the same provenance', () => {
+  it('the width-path insert names width_m, depth_m, typed_width, typed_depth and carries user; migration 324 adds the shape CHECK and keeps 305\'s source CHECK', () => {
+    const lib = read(LIB);
+    const dims = [...lib.matchAll(/INSERT INTO parcel_user_inputs \(([^)]*)\)\s*VALUES \(([^)]*)\)/g)].find((m) => /width_m/.test(m[1]!))!;
+    expect(dims[1]!.split(',').map((s) => s.trim())).toEqual(['parcel_id', 'input_key', 'value_sqm', 'width_m', 'depth_m', 'typed_width', 'typed_depth', 'typed_unit', 'source', 'entered_by']);
+    expect(dims[2]).toMatch(/'lot_area'.*'user'/);
+    expect(read('migrations/324_parcel_user_inputs_width_depth.sql')).toMatch(/ADD CONSTRAINT chk_parcel_user_inputs_shape CHECK/);
+    expect(read(MIG)).toMatch(/CONSTRAINT chk_parcel_user_inputs_source\s+CHECK \(source = 'user'\)/);
+  });
+  it('planted: a width-path insert that sets entered_at, or drops user, is found', () => {
+    const lib = read(LIB);
+    expect(provenanceProblems(read(MIG), lib.replace("'lot_area', $2, $3, $4, $5, $6, $7, 'user', $8)", "'lot_area', $2, $3, $4, $5, $6, $7, $9, $8)"))).toEqual(["the insert does not carry 'user'"]);
+    expect(provenanceProblems(read(MIG), lib.replace('typed_depth, typed_unit, source, entered_by)', 'typed_depth, typed_unit, source, entered_at)'))).toEqual(['the insert sets entered_at (it must be the DB clock)']);
+  });
+});
+
 describe('FE-19 (2) shared, never private', () => {
   it('the response is the value and the stamp, source user; never the author or the typed value (planted entered_by fails)', () => {
     const lot_size = entryView(ENTRY);
     expect(LotSizeEntryResponseSchema.parse({ lot_size })).toEqual({ lot_size: { sqm: 289.86, display: '3,120 sq ft · 290 m²', entered_at: '2026-11-10T19:00:00.000Z', entered_at_display: '10 Nov 2026', source: 'user' } });
     expect(() => LotSizeEntryResponseSchema.parse({ lot_size: { ...lot_size, entered_by: 'u' } })).toThrow();
     expect(() => LotSizeEntryResponseSchema.parse({ lot_size: { ...lot_size, typed_value: 3120 } })).toThrow();
+    for (const k of ['width_m', 'depth_m', 'typed_width', 'typed_depth']) expect(() => LotSizeEntryResponseSchema.parse({ lot_size: { ...lot_size, [k]: 12 } })).toThrow(); // plan v3: never a side
   });
   it('every viewer gets the same flags and values: the functions take no viewer, and the page values carry no author', () => {
     // OUTPUT fold CR-4: the same read gives the same flags and values on every call (nothing per viewer can enter).

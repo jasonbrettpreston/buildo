@@ -1,0 +1,2 @@
+# MF-19 plan v3 red evidence: the FE-19 and FE-20 locks (width entry) against the HEAD lot-size-entry.ts (single insert)
+      Tests  no tests

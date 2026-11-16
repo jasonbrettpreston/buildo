@@ -35,7 +35,7 @@ describe('T7 (a) the committed goldens equal a fresh build', () => {
     const fresh = buildGoldens(ROOT);
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join. 56 -> 61 goldens.
     // MF-76 (dated 2026-11-11; plan v3 §12 fold 14): the landing's 2 web goldens (static, degraded) join (49 -> 51).
-    expect(fresh.size).toBe(63); // MF-76: + the landing's 2 web goldens
+    expect(fresh.size).toBe(69); // MF-19 plan v3 (2026-11-15): + the area form's 6 web goldens (63 -> 69); MF-76: + the landing's 2 web goldens
     for (const [p, text] of fresh) expect([p, fs.readFileSync(path.join(ROOT, p), 'utf8') === text]).toEqual([p, true]);
   });
   it('RED: a hand edit of one golden differs from the fresh build', () => {
@@ -64,7 +64,7 @@ describe('T7 (b) coverage', () => {
   it('each golden covers its state, every state of the three surfaces has one', () => {
     // MF-35 (dated 2026-11-10): mobile_parcel_search is converted too; its mobile goldens are built and checked by mobile jest
     // (mobile/__tests__/parcelScreens.golden.test.ts), so this web coverage case reads the web surfaces only.
-    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'admin_lot_size_revert', 'report_lot_size_entry',
+    expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'admin_lot_size_revert', 'report_lot_size_entry', 'report_lot_size_entry_area',
       // MF-46 stage C (dated 2026-11-11): the MaxBLD plain pages and their error page, the first web STATIC surfaces.
       // MF-76 (dated 2026-11-11): the MaxBLD landing.
       'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces

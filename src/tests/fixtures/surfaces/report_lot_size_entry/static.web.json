@@ -37,35 +37,48 @@
       {
         "component": "NumberInput",
         "props": {
-          "name": "lot_area_value",
+          "name": "width_value",
           "size": "lg",
           "label": {
-            "content": "report_lot_size_entry.field.lot_area_value"
+            "content": "report_lot_size_entry.field.width_value"
           },
           "placeholder": {
-            "content": "report_lot_size_entry.placeholder.lot_area_value"
+            "content": "report_lot_size_entry.placeholder.width_value"
+          }
+        }
+      },
+      {
+        "component": "NumberInput",
+        "props": {
+          "name": "depth_value",
+          "size": "lg",
+          "label": {
+            "content": "report_lot_size_entry.field.depth_value"
+          },
+          "placeholder": {
+            "content": "report_lot_size_entry.placeholder.depth_value"
           }
         }
       },
       {
         "component": "Select",
         "props": {
-          "name": "lot_area_unit",
+          "name": "dims_unit",
           "size": "lg",
           "label": {
-            "content": "report_lot_size_entry.field.lot_area_unit"
+            "content": "report_lot_size_entry.field.dims_unit"
           },
           "data": [
             {
-              "value": "sqft",
+              "value": "ft",
               "label": {
-                "content": "report_lot_size_entry.field.lot_area_unit.option.sqft"
+                "content": "report_lot_size_entry.field.dims_unit.option.ft"
               }
             },
             {
-              "value": "m2",
+              "value": "m",
               "label": {
-                "content": "report_lot_size_entry.field.lot_area_unit.option.m2"
+                "content": "report_lot_size_entry.field.dims_unit.option.m"
               }
             }
           ]
@@ -88,9 +101,9 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/_schema/lot-size-entry-contract.json": "6ba135c5f5dd94de",
-      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.content.json": "43f65cd37e33b232",
-      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json": "faab2d70c37c2721"
+      "scripts/surfaces/_schema/lot-size-entry-contract.json": "bf97f8241cad3348",
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.content.json": "715d4529a3107d38",
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json": "7f94f9865f44847d"
     }
   }
 }

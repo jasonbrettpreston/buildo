@@ -305,14 +305,17 @@
     "retired": []
   },
   "sharing": {
-    "answer": "sole",
-    "why": "Called by the Add lot size form only (mounted at the flip).",
+    "answer": "shared",
+    "why": "Called by the two Add lot size forms (width and depth; the area link), mounted at the flip.",
     "evidence": [
-      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json"
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json",
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry_area.descriptor.json"
     ],
     "surfaces": [
-      "report_lot_size_entry"
-    ]
+      "report_lot_size_entry",
+      "report_lot_size_entry_area"
+    ],
+    "varies_by_surface": "The width and depth form posts the width body; the area form posts the area body (the same route, the same stored record)."
   },
   "a11y": {
     "touch_target_min_px": "UNRESEARCHED",

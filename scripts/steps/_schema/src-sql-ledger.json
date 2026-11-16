@@ -2639,7 +2639,7 @@
     },
     "src/lib/parcels/lot-size-entry.ts": {
       "class": "static",
-      "statements": 4,
+      "statements": 5,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,
@@ -2648,7 +2648,8 @@
         "75f7a6538c81a5ee",
         "7d527c414a169b01",
         "8c8d88433aa1389c",
-        "b5a1b0d462a3ba3c"
+        "b5a1b0d462a3ba3c",
+        "eba8adcab77a1b5f"
       ],
       "reads": {
         "parcel_user_inputs": [
@@ -2668,6 +2669,7 @@
       },
       "writes": {
         "parcel_user_inputs": [
+          "depth_m",
           "entered_by",
           "input_key",
           "parcel_id",
@@ -2675,9 +2677,12 @@
           "reverted_by",
           "source",
           "status",
+          "typed_depth",
           "typed_unit",
           "typed_value",
-          "value_sqm"
+          "typed_width",
+          "value_sqm",
+          "width_m"
         ]
       }
     },

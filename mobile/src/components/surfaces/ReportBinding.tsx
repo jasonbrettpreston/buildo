@@ -254,11 +254,27 @@ function section(s: PageSection, ui: ReportUi, expanded: boolean): PropsNode {
   return out;
 }
 
-/** The Add lot size sheet body (H0). The input is read-only and Recalculate disabled until MF-19; Cancel closes the sheet. */
+/** The Add lot size sheet body (H0). MF-19 plan v3 (operator 2026-11-15, amendment "b"): the lot width (frontage) and depth, one ft / m switch and the link to the
+ * area form; the 1st input.label and input.placeholder are the width's, the 2nd the depth's. The inputs are read-only, Recalculate and the link are disabled
+ * until the sheet mounts the form (MF-48); Cancel closes the sheet. */
 function sheetBody(s: PageSection): PropsNode {
   const P = picker(s);
-  const ph = P.one('input.placeholder');
-  if (ph !== undefined) P.mark('input.placeholder');
+  const idx = (role: string): number[] => s.parts.flatMap((p, i) => (p.role === role ? [i] : []));
+  const labels = idx('input.label');
+  const phs = idx('input.placeholder');
+  const sides = ['width', 'depth'].flatMap((side, k) => {
+    const li = labels[k];
+    const pi = phs[k];
+    if (li !== undefined) P.used.add(li);
+    if (pi !== undefined) P.used.add(pi);
+    return [
+      ...(li === undefined ? [] : [node('Text', { key: `${s.id}-${side}-label`, className: L.inputLabel }, [P.ref(li)])]),
+      node('Input', {
+        key: `${s.id}-${side}-input`, testID: `report-sheet-${side}`, className: L.input, editable: false, inputMode: 'decimal',
+        accessibilityState: { disabled: true }, ...(pi === undefined ? {} : { placeholder: P.ref(pi) }),
+      }),
+    ];
+  });
   const out = node('View', { key: s.id, testID: 'report-sheet', className: L.sheet }, [
     ...P.text('title', `${s.id}-title`, L.sheetTitle, { role: 'header' }),
     ...P.text('body', `${s.id}-body`, L.sheetBody),
@@ -266,19 +282,15 @@ function sheetBody(s: PageSection): PropsNode {
       ...P.text('record.label', `${s.id}-record-label`, L.recordLabel),
       ...P.text('record.value', `${s.id}-record-value`, L.recordValue),
     ]),
-    ...P.text('input.label', `${s.id}-input-label`, L.inputLabel),
-    node('View', { key: `${s.id}-input-row`, className: L.inputRow }, [
-      node('Input', {
-        key: `${s.id}-input`, testID: 'report-sheet-input', className: L.input, editable: false, inputMode: 'decimal',
-        accessibilityState: { disabled: true }, ...(ph === undefined ? {} : { placeholder: P.ref(ph) }),
-      }),
-      node('View', { key: `${s.id}-units`, className: L.units }, [
-        node('Button', { key: `${s.id}-sqft`, testID: 'report-sheet-sqft', className: L.unitOn, accessibilityRole: 'radio', accessibilityState: { checked: true, disabled: true }, disabled: true },
-          P.text('unit.sqft', `${s.id}-sqft-label`, L.unitOnText)),
-        node('Button', { key: `${s.id}-m2`, testID: 'report-sheet-m2', className: L.unitOff, accessibilityRole: 'radio', accessibilityState: { checked: false, disabled: true }, disabled: true },
-          P.text('unit.m2', `${s.id}-m2-label`, L.unitOffText)),
-      ]),
+    ...sides,
+    node('View', { key: `${s.id}-units`, className: L.units }, [
+      node('Button', { key: `${s.id}-ft`, testID: 'report-sheet-ft', className: L.unitOn, accessibilityRole: 'radio', accessibilityState: { checked: true, disabled: true }, disabled: true },
+        P.text('unit.ft', `${s.id}-ft-label`, L.unitOnText)),
+      node('Button', { key: `${s.id}-m`, testID: 'report-sheet-m', className: L.unitOff, accessibilityRole: 'radio', accessibilityState: { checked: false, disabled: true }, disabled: true },
+        P.text('unit.m', `${s.id}-m-label`, L.unitOffText)),
     ]),
+    node('Button', { key: `${s.id}-link`, testID: 'report-sheet-link', className: L.cancel, accessibilityRole: 'link', accessibilityState: { disabled: true }, disabled: true },
+      P.text('link', `${s.id}-link-label`, L.cancelText)),
     ...P.text('note', `${s.id}-note`, L.sheetNote),
     node('Button', { key: `${s.id}-submit`, testID: 'report-sheet-submit', className: L.submit, accessibilityRole: 'button', accessibilityState: { disabled: true }, disabled: true },
       P.text('submit', `${s.id}-submit-label`, L.submitText)),

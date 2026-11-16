@@ -10,12 +10,14 @@
 //                        (FE-20): a verified source (none is declared, so the list is empty) > the active user entry > the City value.
 //   lotSizePageFlags     the report page flags (D-5, D-6): the box and sheet show only while the switch is on and nothing is entered; the
 //                        after-entry line shows once entered; "Every option is recalculated" only when the stored results carry the entry's stamp.
+//   MF-19 plan v3 (operator 2026-11-15 "R-1 thru R-6 recommendations approved"; amendment "b"): the entry is width + depth (one ft/m unit), the server computes
+//                        the area (Spec 128 Rule 16, FE-05); lotSizeSideProblem, lotSizeDimsProblems and the two-path insert below; the area path (the link) is the v2 entry.
 //   insertLotSizeEntry   the entry, once (the partial unique index; a 23505 is the 409 class, never a 500).
 //   revertLotSizeEntry   the admin revert (D-4): status flips, the row stays (history); it returns the audit row the route writes with
 //                        writeAdminAudit in the same transaction (Spec 128 R-12: the handler writes the audit row).
 import type { PoolClient } from 'pg';
 import type { Queryable } from '@/lib/entitlements';
-import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
+import { M_TO_FT, SQM_TO_SQFT } from '@/lib/parcels/geometry';
 import type { AdminAuditParams } from '@/lib/admin/admin-audit';
 import contractJson from '../../../scripts/surfaces/_schema/lot-size-entry-contract.json';
 import presentationJson from '../../../scripts/surfaces/_schema/report-presentation.json';
@@ -24,13 +26,15 @@ import seedJson from '../../../scripts/seeds/logic_variables.json';
 export const CONTRACT = contractJson;
 const PAGE = (presentationJson as unknown as { page: Record<string, string> }).page;
 
-/** The five keys, spelled out so the variable-effect scan sees them read here; they must equal the contract's settings. */
+/** The seven keys, spelled out so the variable-effect scan sees them read here; they must equal the contract's settings. */
 export const LOT_SIZE_SETTING_KEYS = {
   enabled: 'user_lot_size_entry_enabled',
   min_sqm: 'user_lot_size_min_sqm',
   max_sqm: 'user_lot_size_max_sqm',
   ratio_max: 'user_lot_size_city_ratio_max',
   per_day: 'user_lot_size_entries_per_day',
+  side_min_m: 'user_lot_size_side_min_m',
+  side_max_m: 'user_lot_size_side_max_m',
 } as const;
 if (JSON.stringify(LOT_SIZE_SETTING_KEYS) !== JSON.stringify(CONTRACT.settings)) {
   throw new Error('lot-size-entry-contract.json settings differ from LOT_SIZE_SETTING_KEYS in src/lib/parcels/lot-size-entry.ts');
@@ -40,8 +44,10 @@ if (JSON.stringify(LOT_SIZE_SETTING_KEYS) !== JSON.stringify(CONTRACT.settings))
 export const VERIFIED_LOT_AREA_SOURCES: readonly string[] = [];
 export const UNITS = ['sqft', 'm2'] as const;
 export type LotUnit = (typeof UNITS)[number];
+export const DIMS_UNITS = ['ft', 'm'] as const;
+export type DimsUnit = (typeof DIMS_UNITS)[number];
 
-export interface LotSizeSettings { enabled: boolean; min_sqm: number; max_sqm: number; ratio_max: number; per_day: number }
+export interface LotSizeSettings { enabled: boolean; min_sqm: number; max_sqm: number; ratio_max: number; per_day: number; side_min_m: number; side_max_m: number }
 
 class LotSizeSettingsError extends Error {
   constructor(readonly bad: string[]) {
@@ -61,7 +67,7 @@ const boundsOf = (k: string): { min: number; max: number } => {
 for (const k of Object.values(LOT_SIZE_SETTING_KEYS)) boundsOf(k); // fail at load on a seed without bounds
 
 /**
- * The five settings in ONE read. The switch never throws: anything but exactly 1 inside its seed bounds (0-0 today) reads OFF. The other four are
+ * The seven settings in ONE read. The switch never throws: anything but exactly 1 inside its seed bounds (0-0 today) reads OFF. The other six are
  * checked only when the switch is on (an entry depends on them): missing, non-numeric, outside the seed bounds or min >= max throws (fail closed, 500).
  */
 export async function readLotSizeSettings(db: Queryable): Promise<LotSizeSettings> {
@@ -80,16 +86,19 @@ export async function readLotSizeSettings(db: Queryable): Promise<LotSizeSetting
     max_sqm: num(LOT_SIZE_SETTING_KEYS.max_sqm),
     ratio_max: num(LOT_SIZE_SETTING_KEYS.ratio_max),
     per_day: num(LOT_SIZE_SETTING_KEYS.per_day),
+    side_min_m: num(LOT_SIZE_SETTING_KEYS.side_min_m),
+    side_max_m: num(LOT_SIZE_SETTING_KEYS.side_max_m),
   };
   if (!enabled) return out;
   const bad: string[] = [];
-  for (const k of [LOT_SIZE_SETTING_KEYS.min_sqm, LOT_SIZE_SETTING_KEYS.max_sqm, LOT_SIZE_SETTING_KEYS.ratio_max, LOT_SIZE_SETTING_KEYS.per_day]) {
+  for (const k of [LOT_SIZE_SETTING_KEYS.min_sqm, LOT_SIZE_SETTING_KEYS.max_sqm, LOT_SIZE_SETTING_KEYS.ratio_max, LOT_SIZE_SETTING_KEYS.per_day, LOT_SIZE_SETTING_KEYS.side_min_m, LOT_SIZE_SETTING_KEYS.side_max_m]) {
     const v = num(k);
     const b = boundsOf(k);
     if (!Number.isFinite(v) || v < b.min || v > b.max) bad.push(k);
   }
   if (!Number.isInteger(out.per_day)) bad.push(LOT_SIZE_SETTING_KEYS.per_day);
   if (bad.length === 0 && out.min_sqm >= out.max_sqm) bad.push(`${LOT_SIZE_SETTING_KEYS.min_sqm} >= ${LOT_SIZE_SETTING_KEYS.max_sqm}`);
+  if (bad.length === 0 && out.side_min_m >= out.side_max_m) bad.push(`${LOT_SIZE_SETTING_KEYS.side_min_m} >= ${LOT_SIZE_SETTING_KEYS.side_max_m}`);
   if (bad.length) throw new LotSizeSettingsError([...new Set(bad)]);
   return out;
 }
@@ -124,7 +133,18 @@ export const shownBounds = (s: Pick<LotSizeSettings, 'min_sqm' | 'max_sqm'>): Re
   m2: { lo: round2(s.min_sqm), hi: round2(s.max_sqm) },
 });
 
-export type LotSizeProblem = { code: 'OUT_OF_RANGE' | 'FAR_FROM_CITY_RECORD'; message: string };
+export type LotSizeProblem = { code: 'OUT_OF_RANGE' | 'SIDE_OUT_OF_RANGE' | 'DIMS_AREA_OUT_OF_RANGE' | 'FAR_FROM_CITY_RECORD'; message: string };
+
+const round1 = (n: number): number => Math.round(n * 10) / 10;
+const oneDp = (n: number): string => n.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+
+/** The City-record ratio (D-3), two-sided, on an UNROUNDED area in m². A City value of 0 or below counts as no record. */
+function ratioProblem(sqm: number, citySqm: number | null, s: Pick<LotSizeSettings, 'ratio_max'>): LotSizeProblem | null {
+  if (citySqm !== null && citySqm > 0 && (sqm > citySqm * s.ratio_max || sqm < citySqm / s.ratio_max)) {
+    return { code: 'FAR_FROM_CITY_RECORD', message: fill('sheet.err_ratio', { city: formatAreaSqftM2Dot(citySqm) }) };
+  }
+  return null;
+}
 
 /** null when the entry passes; else the refusal with the server-formatted message in the typed unit. */
 export function lotSizeProblems(value: number, unit: LotUnit, citySqm: number | null, s: LotSizeSettings): LotSizeProblem | null {
@@ -133,11 +153,47 @@ export function lotSizeProblems(value: number, unit: LotUnit, citySqm: number | 
     const fmt = unit === 'sqft' ? whole : twoDp;
     return { code: 'OUT_OF_RANGE', message: fill(unit === 'sqft' ? 'sheet.err_range_sqft' : 'sheet.err_range_m2', { lo: fmt(b.lo), hi: fmt(b.hi) }) };
   }
-  const sqm = toSqm(value, unit);
-  if (citySqm !== null && citySqm > 0 && (sqm > citySqm * s.ratio_max || sqm < citySqm / s.ratio_max)) {
-    return { code: 'FAR_FROM_CITY_RECORD', message: fill('sheet.err_ratio', { city: formatAreaSqftM2Dot(citySqm) }) };
+  return ratioProblem(toSqm(value, unit), citySqm, s);
+}
+
+// ---- the width and depth entry (plan v3; amendment "b") ---------------------------------------------------------------------------------------
+
+/** A typed side in metres, UNROUNDED (the checks and the area run on it; round2 is for storage only). */
+export const sideToM = (value: number, unit: DimsUnit): number => (unit === 'm' ? value : value / M_TO_FT);
+
+/** The shown side bounds per unit: the setting at the unit's display precision (feet to 1 decimal, metres to 2). The typed value is checked against these. */
+export const shownSideBounds = (s: Pick<LotSizeSettings, 'side_min_m' | 'side_max_m'>): Record<DimsUnit, { lo: number; hi: number }> => ({
+  ft: { lo: round1(s.side_min_m * M_TO_FT), hi: round1(s.side_max_m * M_TO_FT) },
+  m: { lo: round2(s.side_min_m), hi: round2(s.side_max_m) },
+});
+
+/** null when one side passes the side range; else the refusal (the typed unit, the shown bound, closed interval). */
+export function lotSizeSideProblem(side: 'width' | 'depth', value: number, unit: DimsUnit, s: LotSizeSettings): LotSizeProblem | null {
+  const b = shownSideBounds(s)[unit];
+  if (value >= b.lo && value <= b.hi) return null;
+  return { code: 'SIDE_OUT_OF_RANGE', message: fill(unit === 'ft' ? 'sheet.err_side_ft' : 'sheet.err_side_m', { side, lo: unit === 'ft' ? oneDp(b.lo) : twoDp(b.lo), hi: unit === 'ft' ? oneDp(b.hi) : twoDp(b.hi) }) };
+}
+
+/** The computed area in m², UNROUNDED: width x depth in metres. */
+export const dimsAreaSqm = (width: number, depth: number, unit: DimsUnit): number => sideToM(width, unit) * sideToM(depth, unit);
+
+/**
+ * The width and depth checks in order, all on the server: (a) each side inside the side range (width first), (b) the computed area inside the area range, in the
+ * typed unit against the SHOWN bound (feet x feet is compared in sq ft, metres x metres in m²), (c) the City ratio on the computed area. null when it passes.
+ */
+export function lotSizeDimsProblems(width: number, depth: number, unit: DimsUnit, citySqm: number | null, s: LotSizeSettings): LotSizeProblem | null {
+  const side = lotSizeSideProblem('width', width, unit, s) ?? lotSizeSideProblem('depth', depth, unit, s);
+  if (side) return side;
+  const area = width * depth; // in the typed unit's square (sq ft or m²)
+  const b = shownBounds(s)[unit === 'ft' ? 'sqft' : 'm2'];
+  if (!(area >= b.lo && area <= b.hi)) {
+    const ft = unit === 'ft';
+    return {
+      code: 'DIMS_AREA_OUT_OF_RANGE',
+      message: fill(ft ? 'sheet.err_dims_area_sqft' : 'sheet.err_dims_area_m2', { area: ft ? `${oneDp(area)} sq ft` : `${twoDp(area)} m²`, lo: ft ? whole(b.lo) : twoDp(b.lo), hi: ft ? whole(b.hi) : twoDp(b.hi) }),
+    };
   }
-  return null;
+  return ratioProblem(dimsAreaSqm(width, depth, unit), citySqm, s);
 }
 
 // ---- the read and the precedence (FE-20) ---------------------------------------------------------------------------------------------------
@@ -225,25 +281,40 @@ const isUniqueViolation = (e: unknown): boolean => typeof e === 'object' && e !=
  * The entry, once, inside the caller's transaction: 404 unknown lot, 409 already entered (also a lost race: the 23505 of the partial unique index),
  * 400 out of range or far from the City record; else one insert with source 'user' and entered_at from the DB clock.
  */
+export type LotSizeBody =
+  | { parcel_id: string; lot_area_value: number; lot_area_unit: LotUnit }
+  | { parcel_id: string; width_value: number; depth_value: number; dims_unit: DimsUnit };
+
 export async function insertLotSizeEntry(
   client: PoolClient,
-  body: { parcel_id: string; lot_area_value: number; lot_area_unit: LotUnit },
+  body: LotSizeBody,
   enteredBy: string,
   s: LotSizeSettings,
 ): Promise<ReturnType<typeof entryView>> {
   const read = await readLotSizeRead(client, body.parcel_id);
   if (!read) throw new LotSizeRefusal(404, 'PARCEL_NOT_FOUND', 'No lot has that parcel id');
   if (read.entry) throw new LotSizeRefusal(409, 'LOT_SIZE_ALREADY_ENTERED', 'A lot size is already entered for this lot', { lot_size: entryView(read.entry) });
-  const problem = lotSizeProblems(body.lot_area_value, body.lot_area_unit, read.city_sqm, s);
+  // Two paths, one record: the width and depth path stores both sides, what was typed and the area the server computed from the UNROUNDED sides (value_sqm is
+  // never recomputed from the stored 2-decimal sides); the area path (the link) stores the typed area. Both are one ACTIVE row per lot (input_key 'lot_area').
+  const dims = 'width_value' in body ? body : null;
+  const problem = dims
+    ? lotSizeDimsProblems(dims.width_value, dims.depth_value, dims.dims_unit, read.city_sqm, s)
+    : lotSizeProblems((body as { lot_area_value: number }).lot_area_value, (body as { lot_area_unit: LotUnit }).lot_area_unit, read.city_sqm, s);
   if (problem) throw new LotSizeRefusal(400, problem.code, problem.message);
-  const sqm = round2(toSqm(body.lot_area_value, body.lot_area_unit));
   try {
-    const ins = await client.query<{ value_sqm: string; entered_at: Date | string }>(
-      `INSERT INTO parcel_user_inputs (parcel_id, input_key, value_sqm, typed_value, typed_unit, source, entered_by)
-       VALUES ($1, 'lot_area', $2, $3, $4, 'user', $5)
-       RETURNING value_sqm, entered_at`,
-      [read.parcel_pk, sqm, body.lot_area_value, body.lot_area_unit, enteredBy],
-    );
+    const ins = dims
+      ? await client.query<{ value_sqm: string; entered_at: Date | string }>(
+        `INSERT INTO parcel_user_inputs (parcel_id, input_key, value_sqm, width_m, depth_m, typed_width, typed_depth, typed_unit, source, entered_by)
+         VALUES ($1, 'lot_area', $2, $3, $4, $5, $6, $7, 'user', $8)
+         RETURNING value_sqm, entered_at`,
+        [read.parcel_pk, round2(dimsAreaSqm(dims.width_value, dims.depth_value, dims.dims_unit)), round2(sideToM(dims.width_value, dims.dims_unit)), round2(sideToM(dims.depth_value, dims.dims_unit)), dims.width_value, dims.depth_value, dims.dims_unit, enteredBy],
+      )
+      : await client.query<{ value_sqm: string; entered_at: Date | string }>(
+        `INSERT INTO parcel_user_inputs (parcel_id, input_key, value_sqm, typed_value, typed_unit, source, entered_by)
+         VALUES ($1, 'lot_area', $2, $3, $4, 'user', $5)
+         RETURNING value_sqm, entered_at`,
+        [read.parcel_pk, round2(toSqm((body as { lot_area_value: number }).lot_area_value, (body as { lot_area_unit: LotUnit }).lot_area_unit)), (body as { lot_area_value: number }).lot_area_value, (body as { lot_area_unit: LotUnit }).lot_area_unit, enteredBy],
+      );
     const row = ins.rows[0]!;
     return entryView({ value_sqm: Number(row.value_sqm), entered_at: new Date(row.entered_at) });
   } catch (e) {

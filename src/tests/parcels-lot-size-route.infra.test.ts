@@ -11,6 +11,10 @@
 //     both units; D-3 the City ratio both ways; 200 stores m² rounded to 2 decimals (3,120 sq ft -> 289.86, shown "3,120 sq ft · 290 m²"); a 23:30
 //     Toronto entry shows that day; 500 sanitised with a whitelisted log context (never the body).
 //   The revert (D-4): verifyAdminAuth first, session only, 404 no entry, one UPDATE and one admin_audit_log row in the transaction.
+//   MF-19 plan v3 (operator 2026-11-15 "R-1 thru R-6 recommendations approved", amendment "b"): the WIDTH + DEPTH path (default) beside the area path (the link): keys-first
+//     body discrimination (no body, {}, both key sets, an unknown key, nulls, malformed JSON: each 400, one message, no DB read past the parse), the side range per unit
+//     at the shown edges, the computed-area range, the two-sided City ratio on the computed area (feet typed as metres and metres typed as feet), City NULL and <= 0,
+//     the unrounded-sides area, the store shape, 404/409/429/403 on both paths, the settings read (seven keys), and a log sentinel.
 //   Contract pins: route_request = entry_request + parcel_id (fold F5); the two m²/ft² constants agree (fold F8); the loader never writes the table.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -44,7 +48,7 @@ import { logError, logInfo } from '@/lib/logger';
 import { POST } from '@/app/api/parcels/lot-size/route';
 import { PUT } from '@/app/api/admin/parcels/lot-size/revert/route';
 import { CONTRACT, LOT_SIZE_SETTING_KEYS } from '@/lib/parcels/lot-size-entry';
-import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
+import { M_TO_FT, SQM_TO_SQFT } from '@/lib/parcels/geometry';
 
 const ROOT = path.resolve(__dirname, '../..');
 const UID = '00000000-0000-0000-0000-0000000019e1';
@@ -68,6 +72,8 @@ const SETTINGS = (enabled: number) => [
   { variable_key: LOT_SIZE_SETTING_KEYS.max_sqm, variable_value: '4645.15' },
   { variable_key: LOT_SIZE_SETTING_KEYS.ratio_max, variable_value: '3' },
   { variable_key: LOT_SIZE_SETTING_KEYS.per_day, variable_value: '5' },
+  { variable_key: LOT_SIZE_SETTING_KEYS.side_min_m, variable_value: '2' },
+  { variable_key: LOT_SIZE_SETTING_KEYS.side_max_m, variable_value: '450' },
 ];
 type Lot = { city?: number | null; entry?: { value_sqm: number; entered_at: string } | null; missing?: boolean };
 function db(o: { enabled?: number; lot?: Lot; insertThrows?: unknown; enteredAt?: string; updateRows?: number; parcelTool?: string | null } = {}) {
@@ -93,6 +99,10 @@ function db(o: { enabled?: number; lot?: Lot; insertThrows?: unknown; enteredAt?
 }
 const writes = () => clientQuery.mock.calls.filter(([t]) => /INSERT|UPDATE|DELETE/.test(String(t)));
 const OK = { parcel_id: 'P-1', lot_area_value: 3120, lot_area_unit: 'sqft' };
+const OKD = { parcel_id: 'P-1', width_value: 50, depth_value: 120, dims_unit: 'ft' };
+const dimsBody = (o: Record<string, unknown> = {}) => ({ ...OKD, ...o });
+const r2 = (n: number): number => Math.round(n * 100) / 100;
+const insertOf = () => clientQuery.mock.calls.find(([q]) => /INSERT INTO parcel_user_inputs/.test(String(q)));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -105,7 +115,7 @@ beforeEach(() => {
 });
 
 describe('THE LOCK (D-6): no write path is reachable while the switch is off', () => {
-  const bodies: unknown[] = [OK, { parcel_id: 'P-1', lot_area_value: 46.45, lot_area_unit: 'm2' }, { junk: true }, null];
+  const bodies: unknown[] = [OK, OKD, { parcel_id: 'P-1', lot_area_value: 46.45, lot_area_unit: 'm2' }, { junk: true }, null];
   for (const [label, enabled, max] of [['the DB value 0', 0, 1], ['the DB value 1 with the seed bound 0-0 (as committed)', 1, 0], ['a value other than 1', 2, 2]] as const) {
     it(`${label}: 403 ENTRY_OFF after one settings read; no parcel read, no transaction, no rate call, for every body`, async () => {
       seed.enabledMax = max;
@@ -254,6 +264,182 @@ describe('POST /api/parcels/lot-size with the switch on (test copy of the seed b
   });
 });
 
+describe('MF-19 plan v3: the width and depth path (default) and the keys-first body', () => {
+  const keysMessage = 'Send the width and depth (width_value, depth_value, dims_unit) or the area (lot_area_value, lot_area_unit), not both and not neither';
+  const badBodies: Array<[string, unknown, boolean]> = [
+    ['no body (null)', null, true], ['{}', {}, true], ['an array', [], true], ['a string', 'x', true],
+    ['both key sets', { ...OKD, lot_area_value: 3120, lot_area_unit: 'sqft' }, true],
+    ['depth and unit without width_value', { parcel_id: 'P-1', depth_value: 120, dims_unit: 'ft' }, true],
+    ['an unknown key beside the width path', dimsBody({ entered_by: UID }), false], ['an unknown key beside the area path', { ...OK, extra: 1 }, false],
+    ['width_value null', dimsBody({ width_value: null }), false], ['depth_value null', dimsBody({ depth_value: null }), false], ['dims_unit null', dimsBody({ dims_unit: null }), false],
+    ['lot_area_value null', { ...OK, lot_area_value: null }, false],
+    ['width as a string', dimsBody({ width_value: '50' }), false], ['depth zero', dimsBody({ depth_value: 0 }), false], ['width negative', dimsBody({ width_value: -1 }), false],
+    ['width NaN', dimsBody({ width_value: Number.NaN }), false], ['depth Infinity', dimsBody({ depth_value: Number.POSITIVE_INFINITY }), false],
+    ['width 3 decimals', dimsBody({ width_value: 50.123 }), false], ['depth 3 decimals', dimsBody({ depth_value: 120.005 }), false],
+    ['a bad dims unit', dimsBody({ dims_unit: 'sqft' }), false], ['no dims_unit', { parcel_id: 'P-1', width_value: 50, depth_value: 120 }, false], ['no depth_value', { parcel_id: 'P-1', width_value: 50, dims_unit: 'ft' }, false],
+    ['no parcel_id', { width_value: 50, depth_value: 120, dims_unit: 'ft' }, false],
+  ];
+  for (const [label, b, keysOnly] of badBodies) {
+    it(`400 ${label}: before the rate limit, no parcel read, no write${keysOnly ? ', the one keys message' : ''}`, async () => {
+      const r = await post(b);
+      expect(r.status).toBe(400);
+      if (keysOnly) expect(r.body.error?.message).toBe(keysMessage);
+      expect(withRateLimit).not.toHaveBeenCalled();
+      expect(clientQuery).not.toHaveBeenCalled();
+      expect(writes()).toEqual([]);
+    });
+  }
+  it('malformed JSON is 400 INVALID_JSON with nothing read past the parse', async () => {
+    const r = await post(null, true);
+    expect([r.status, r.body.error?.code]).toEqual([400, 'INVALID_JSON']);
+    expect(clientQuery).not.toHaveBeenCalled();
+  });
+
+  it('200 stores width, depth, what was typed and the area computed from the UNROUNDED sides; the response is the area only, never the author or the typed values', async () => {
+    const r = await post(OKD);
+    const sqm = r2((50 / M_TO_FT) * (120 / M_TO_FT));
+    expect(r.status).toBe(200);
+    const ins = insertOf()!;
+    expect(String(ins[0])).toMatch(/INSERT INTO parcel_user_inputs \(parcel_id, input_key, value_sqm, width_m, depth_m, typed_width, typed_depth, typed_unit, source, entered_by\)\s+VALUES \(\$1, 'lot_area', \$2, \$3, \$4, \$5, \$6, \$7, 'user', \$8\)/);
+    expect(ins[1]).toEqual([77, sqm, r2(50 / M_TO_FT), r2(120 / M_TO_FT), 50, 120, 'ft', UID]);
+    expect((r.body.data?.lot_size as Record<string, unknown>).sqm).toBe(sqm);
+    expect(JSON.stringify(r.body)).not.toMatch(/entered_by|typed_|width|depth|00000000-0000-0000-0000-0000000019e1/);
+    expect(JSON.stringify(vi.mocked(logInfo).mock.calls)).not.toMatch(/"?(50|120)"?[,}]|width_value|depth_value/); // log sentinel: never a body value
+    expect(vi.mocked(logInfo).mock.calls.at(-1)?.[2]).toMatchObject({ uid: UID, outcome: 'stored', parcel_id: 'P-1' });
+  });
+  it('the area is computed on the UNROUNDED sides, never from the stored 2-decimal sides (33.33 x 77.77 ft = 240.81, not 240.79)', async () => {
+    await post(dimsBody({ width_value: 33.33, depth_value: 77.77 }));
+    const p = insertOf()![1] as number[];
+    expect(p[1]).toBe(240.81);
+    expect(r2(p[2]! * p[3]!)).toBe(240.79);
+    expect(p[1]).not.toBe(r2(p[2]! * p[3]!));
+  });
+  it('metres: the sides store as typed, the area is width x depth', async () => {
+    await post(dimsBody({ width_value: 15.24, depth_value: 36.58, dims_unit: 'm' }));
+    expect(insertOf()![1]).toEqual([77, r2(15.24 * 36.58), 15.24, 36.58, 15.24, 36.58, 'm', UID]);
+  });
+
+  // The side range at the SHOWN bound in the typed unit (closed intervals). Settings 2 m and 450 m: 6.6 to 1,476.4 ft, 2 to 450 m.
+  const sides: Array<[string, Record<string, unknown>, number, string?]> = [
+    ['width 6.6 ft (the shown low edge)', { width_value: 6.6, depth_value: 100 }, 200],
+    ['width 6.5 ft', { width_value: 6.5, depth_value: 100 }, 400, 'Enter a width between 6.6 and 1,476.4 ft.'],
+    ['depth 6.5 ft', { width_value: 100, depth_value: 6.5 }, 400, 'Enter a depth between 6.6 and 1,476.4 ft.'],
+    ['width 1476.4 ft (the shown high edge)', { width_value: 1476.4, depth_value: 10 }, 200],
+    ['width 1476.5 ft', { width_value: 1476.5, depth_value: 10 }, 400, 'Enter a width between 6.6 and 1,476.4 ft.'],
+    ['depth 1476.5 ft', { width_value: 10, depth_value: 1476.5 }, 400, 'Enter a depth between 6.6 and 1,476.4 ft.'],
+    ['width 2 m (the low edge)', { width_value: 2, depth_value: 30, dims_unit: 'm' }, 200],
+    ['width 1.99 m', { width_value: 1.99, depth_value: 30, dims_unit: 'm' }, 400, 'Enter a width between 2 and 450 m.'],
+    ['depth 1.99 m', { width_value: 30, depth_value: 1.99, dims_unit: 'm' }, 400, 'Enter a depth between 2 and 450 m.'],
+    ['width 450 m (the high edge)', { width_value: 450, depth_value: 10, dims_unit: 'm' }, 200],
+    ['width 450.01 m', { width_value: 450.01, depth_value: 10, dims_unit: 'm' }, 400, 'Enter a width between 2 and 450 m.'],
+    ['depth 450.01 m', { width_value: 10, depth_value: 450.01, dims_unit: 'm' }, 400, 'Enter a depth between 2 and 450 m.'],
+    ['both sides out: the width is named first', { width_value: 1, depth_value: 1 }, 400, 'Enter a width between 6.6 and 1,476.4 ft.'],
+  ];
+  for (const [label, o, status, msg] of sides) {
+    it(`side range: ${label} -> ${status}`, async () => {
+      db({ lot: { city: null } }); // no City record: only the side and area ranges apply
+      const r = await post(dimsBody(o));
+      expect(r.status).toBe(status);
+      if (status === 400) {
+        expect(r.body.error?.code).toBe('SIDE_OUT_OF_RANGE');
+        expect(r.body.error?.message).toBe(msg);
+        expect(vi.mocked(logInfo).mock.calls.at(-1)?.[2]).toMatchObject({ outcome: 'side_out_of_range' });
+        expect(writes()).toEqual([]);
+      }
+    });
+  }
+
+  // The computed area inside the existing area range, in the typed unit against the shown bound (500 and 50,000 sq ft; 46.45 and 4,645.15 m²).
+  const areas: Array<[string, Record<string, unknown>, number, string?]> = [
+    ['20 x 25 ft = 500 sq ft (the edge)', { width_value: 20, depth_value: 25 }, 200],
+    ['20 x 24.99 ft', { width_value: 20, depth_value: 24.99 }, 400, 'Those numbers give a lot size of 499.8 sq ft, outside 500 to 50,000 sq ft. Check the numbers and the unit.'],
+    ['100 x 500 ft = 50,000 sq ft (the edge)', { width_value: 100, depth_value: 500 }, 200],
+    ['100 x 500.01 ft', { width_value: 100, depth_value: 500.01 }, 400, 'Those numbers give a lot size of 50,001 sq ft, outside 500 to 50,000 sq ft. Check the numbers and the unit.'],
+    ['6.8 x 6.85 m = 46.58 m²', { width_value: 6.8, depth_value: 6.85, dims_unit: 'm' }, 200],
+    ['6.8 x 6.83 m = 46.44 m²', { width_value: 6.8, depth_value: 6.83, dims_unit: 'm' }, 400, 'Those numbers give a lot size of 46.44 m², outside 46.45 to 4,645.15 m². Check the numbers and the unit.'],
+    ['100 x 46.45 m = 4,645 m²', { width_value: 100, depth_value: 46.45, dims_unit: 'm' }, 200],
+    ['100 x 46.46 m = 4,646 m²', { width_value: 100, depth_value: 46.46, dims_unit: 'm' }, 400, 'Those numbers give a lot size of 4,646 m², outside 46.45 to 4,645.15 m². Check the numbers and the unit.'],
+  ];
+  for (const [label, o, status, msg] of areas) {
+    it(`computed area: ${label} -> ${status}`, async () => {
+      db({ lot: { city: null } });
+      const r = await post(dimsBody(o));
+      expect(r.status).toBe(status);
+      if (status === 400) {
+        expect(r.body.error?.code).toBe('DIMS_AREA_OUT_OF_RANGE');
+        expect(r.body.error?.message).toBe(msg);
+        expect(writes()).toEqual([]);
+      }
+    });
+  }
+
+  it('the City ratio on the computed area is two-sided: metres typed as feet (1/10.76) and feet typed as metres (x10.76) are both refused; 3x and 1/3 pass', async () => {
+    db({ lot: { city: 1500 } }); // 16,146 sq ft
+    const slipFt = await post(dimsBody({ width_value: 35, depth_value: 40 })); // a 35 m x 40 m lot typed as feet: 1,400 sq ft = 130 m²
+    expect([slipFt.status, slipFt.body.error?.code]).toEqual([400, 'FAR_FROM_CITY_RECORD']);
+    expect(slipFt.body.error?.message).toBe('This is far from the City lot record of 16,146 sq ft · 1,500 m². Check the number and the unit.');
+    expect(vi.mocked(logInfo).mock.calls.at(-1)?.[2]).toMatchObject({ outcome: 'far_from_city_record' });
+    db({ lot: { city: 290 } });
+    const slipM = await post(dimsBody({ width_value: 50, depth_value: 60, dims_unit: 'm' })); // 50 ft x 60 ft typed as metres: 3,000 m² vs 290
+    expect([slipM.status, slipM.body.error?.code]).toEqual([400, 'FAR_FROM_CITY_RECORD']);
+    for (const [w, d, s] of [[29, 30, 200], [29, 30.1, 400], [10, 9.67, 200], [10, 9.66, 400]] as const) { // 870 m² = 3 x 290; 96.7 and 96.6 around 290 / 3
+      db({ lot: { city: 290 } });
+      expect([w, d, (await post(dimsBody({ width_value: w, depth_value: d, dims_unit: 'm' }))).status]).toEqual([w, d, s]);
+    }
+  });
+  it('no City record: City NULL and City <= 0 apply only the side and area ranges (a known, accepted limit, v2 D-3)', async () => {
+    for (const city of [null, 0, -5]) {
+      db({ lot: { city } });
+      expect([city, (await post(dimsBody({ width_value: 35, depth_value: 40 }))).status]).toEqual([city, 200]);
+    }
+  });
+
+  it('404 PARCEL_NOT_FOUND, 409 LOT_SIZE_ALREADY_ENTERED (with the stored entry), a lost race (23505) is 409: nothing written; the area link after a width entry is 409 too', async () => {
+    db({ lot: { missing: true } });
+    expect([(await post(OKD)).status]).toEqual([404]);
+    db({ lot: { city: 400, entry: { value_sqm: 557.42, entered_at: '2026-11-10T19:00:00.000Z' } } });
+    const r = await post(OKD);
+    expect([r.status, r.body.error?.code]).toEqual([409, 'LOT_SIZE_ALREADY_ENTERED']);
+    expect(r.body.error?.details).toEqual({ lot_size: { sqm: 557.42, display: '6,000 sq ft · 557 m²', entered_at: '2026-11-10T19:00:00.000Z', entered_at_display: '10 Nov 2026', source: 'user' } });
+    const area = await post(OK); // width entry exists, area attempt
+    expect([area.status, area.body.error?.code]).toEqual([409, 'LOT_SIZE_ALREADY_ENTERED']);
+    expect(writes()).toEqual([]);
+    db({ insertThrows: Object.assign(new Error('duplicate key'), { code: '23505' }) });
+    expect((await post(OKD)).status).toBe(409);
+  });
+  it('429 on the same bucket for the width path; 403 for a lapsed plan before the body; 401 first', async () => {
+    vi.mocked(withRateLimit).mockResolvedValueOnce({ allowed: false, remaining: 0 } as never);
+    const r = await post(OKD);
+    expect([r.status, r.body.error?.code]).toEqual([429, 'RATE_LIMITED']);
+    expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toEqual({ key: `parcels-lot-size:${UID}`, limit: 5, windowSec: 86_400 });
+    expect(clientQuery).not.toHaveBeenCalled();
+    vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: 'cancelled' } as never);
+    expect((await post(OKD)).body.error?.code).toBe('SUBSCRIPTION_REQUIRED');
+    vi.mocked(getCurrentUserContext).mockResolvedValue(null);
+    expect((await post(OKD)).status).toBe(401);
+  });
+  it('the settings read: a missing side setting or an out-of-bounds one (above or below its seed bound) while on is a sanitised 500 (fail closed); nothing is written', async () => {
+    for (const mod of [
+      (r: { variable_key: string; variable_value: string }) => (r.variable_key === LOT_SIZE_SETTING_KEYS.side_min_m ? null : r),
+      (r: { variable_key: string; variable_value: string }) => (r.variable_key === LOT_SIZE_SETTING_KEYS.side_max_m ? { ...r, variable_value: '5000' } : r),
+      (r: { variable_key: string; variable_value: string }) => (r.variable_key === LOT_SIZE_SETTING_KEYS.side_min_m ? { ...r, variable_value: '21' } : r), // above its seed bound 20
+    ]) {
+      poolQuery.mockImplementation(async () => ({ rows: SETTINGS(1).map(mod).filter(Boolean) }));
+      clientQuery.mockClear();
+      const r = await post(OKD);
+      expect([r.status, r.body.error?.code]).toEqual([500, 'INTERNAL_ERROR']);
+      expect(JSON.stringify(r.body)).not.toMatch(/user_lot_size/);
+      expect(clientQuery).not.toHaveBeenCalled();
+    }
+  });
+  it('the two new settings are in the seed: carried in the group "MaxBLD Lot Size" with bounds 1-20 and 100-1000', () => {
+    const seedJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/logic_variables.json'), 'utf8'));
+    for (const [k, min, max, def] of [[LOT_SIZE_SETTING_KEYS.side_min_m, 1, 20, 2], [LOT_SIZE_SETTING_KEYS.side_max_m, 100, 1000, 450]] as const) {
+      expect([seedJson[k].min, seedJson[k].max, seedJson[k].default, seedJson[k].admin]).toEqual([min, max, def, { group: 'MaxBLD Lot Size' }]);
+    }
+  });
+});
+
 describe('PUT /api/admin/parcels/lot-size/revert (D-4: the audited admin revert)', () => {
   it('no admin -> 401; a bearer admin -> 403 SESSION_REQUIRED; nothing read', async () => {
     vi.mocked(verifyAdminAuth).mockResolvedValueOnce(null as never);
@@ -307,11 +493,17 @@ describe('contract and boundary pins', () => {
     expect(types).not.toMatch(/from '@\/lib\/parcels\/lot-size-entry'/);
     expect(types).not.toMatch(/logic_variables\.json/);
   });
-  it('fold F5: route_request = entry_request + parcel_id; revert_request is parcel_id only', () => {
-    const e = CONTRACT.entry_request as { properties: Record<string, unknown>; required: string[] };
-    const r = CONTRACT.route_request as { properties: Record<string, unknown>; required: string[] };
-    expect(r.properties).toEqual({ parcel_id: CONTRACT.revert_request.properties.parcel_id, ...e.properties });
-    expect([...r.required].sort()).toEqual(['parcel_id', ...e.required].sort());
+  it('fold F5 (plan v3): each route schema = its form schema + parcel_id (the width form and the area form); revert_request is parcel_id only', () => {
+    for (const [form, route] of [['entry_request', 'route_request'], ['area_request', 'route_area_request']] as const) {
+      const e = (CONTRACT as unknown as Record<string, { properties: Record<string, unknown>; required: string[]; additionalProperties: boolean }>)[form]!;
+      const r = (CONTRACT as unknown as Record<string, { properties: Record<string, unknown>; required: string[]; additionalProperties: boolean }>)[route]!;
+      expect(r.properties).toEqual({ parcel_id: CONTRACT.revert_request.properties.parcel_id, ...e.properties });
+      expect([...r.required].sort()).toEqual(['parcel_id', ...e.required].sort());
+      expect([e.additionalProperties, r.additionalProperties]).toEqual([false, false]);
+    }
+    expect(Object.keys(CONTRACT.entry_request.properties)).toEqual(['width_value', 'depth_value', 'dims_unit']);
+    expect(Object.keys(CONTRACT.area_request.properties)).toEqual(['lot_area_value', 'lot_area_unit']);
+    expect(CONTRACT.members).toEqual(['lot_area', 'lot_width', 'lot_depth', 'entered_at']);
     expect(Object.keys(CONTRACT.revert_request.properties)).toEqual(['parcel_id']);
   });
   it('fold F8: the two m²/ft² constants agree (src/lib/parcels/geometry.ts and scripts/lib/units.js)', async () => {

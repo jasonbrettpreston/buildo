@@ -1,0 +1,5 @@
+# MF-19 plan v3 red evidence: report-page.logic.test.ts P5 (sheet roles, link role, ruled words) against the HEAD page table
+   × P5 MF-19 plan v3: the sheet takes width and depth and the closed role link (Spec 128 section 4 dated note 2026-11-15) > the closed sheet role list: ft / m replace the two area units, link joins; width then depth in 
+   × P5 MF-19 plan v3: the sheet takes width and depth and the closed role link (Spec 128 section 4 dated note 2026-11-15) > the link part is a text part bound to the ruled words (no href, no action) and the page text ca
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 2 passed | 43 skipped (47)

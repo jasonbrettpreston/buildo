@@ -9,6 +9,8 @@
 //       active row per lot and key, nothing deletes a row, and the revert is an UPDATE to reverted;
 //   (3) the page (D-5, D-6): the box and sheet show only while the switch is on and nothing is entered; the after-entry line once entered; the
 //       recalculated sentence only when the stored results carry the entry's stamp.
+// MF-19 plan v3 (operator 2026-11-15 "R-1 thru R-6 recommendations approved"): a WIDTH + DEPTH entry is the same record as an area entry (one active row per lot, the
+//   same input_key 'lot_area', the same read and precedence); the area link after a width entry cannot make a second active row; the revert is the same UPDATE.
 // Planted defects (each must fail): the order swapped (City first); 'stated' treated as verified; the read without the active filter.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -64,6 +66,25 @@ describe('FE-20 (2) one active entry, history kept, a bad entry reverted', () =>
     const hits = walk('src').filter((f) => /DELETE\s+FROM\s+parcel_user_inputs/i.test(read(f)));
     expect(hits).toEqual([]);
     expect(lib).toMatch(/UPDATE parcel_user_inputs SET status = 'reverted', reverted_at = NOW\(\), reverted_by = \$2\s+WHERE id = \$1::bigint AND status = 'active'/);
+  });
+});
+
+describe('FE-20 (2b) plan v3: a width and depth entry is the same one active record', () => {
+  const lib = read('src/lib/parcels/lot-size-entry.ts');
+  const m324 = read('migrations/324_parcel_user_inputs_width_depth.sql');
+  it('both inserts use input_key lot_area, so the one partial unique index (305) covers both paths; 324 does not touch it', () => {
+    const inserts = [...lib.matchAll(/INSERT INTO parcel_user_inputs \(([^)]*)\)\s*VALUES \(([^)]*)\)/g)];
+    expect(inserts.length).toBe(2);
+    for (const i of inserts) expect(i[2]).toMatch(/^\$1, 'lot_area'/);
+    expect(m324).not.toMatch(/uq_parcel_user_inputs_active|CREATE UNIQUE INDEX|DROP INDEX/);
+    expect(m324.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n')).not.toMatch(/input_key/);
+  });
+  it('a width entry wins over the City value exactly as an area entry does (the effective value is its stored area)', () => {
+    expect(effectiveLotSize(lot({ entry: { id: '11', value_sqm: 557.42, source: 'user', entered_at: AT } }))).toEqual({ sqm: 557.42, provenance: 'user', entered_at: AT });
+  });
+  it('the revert is one UPDATE whichever path made the row (it reads the active row, not a path)', () => {
+    expect(lib).toMatch(/UPDATE parcel_user_inputs SET status = 'reverted'[\s\S]*?WHERE id = \$1::bigint AND status = 'active'/);
+    expect(lib.slice(lib.indexOf('export async function revertLotSizeEntry'))).not.toMatch(/width_m|lot_area_value|width_value/);
   });
 });
 

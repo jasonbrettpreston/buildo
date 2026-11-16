@@ -1,8 +1,8 @@
 // 🔗 SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.9 (user inputs; dated note 2026-11-11), §11a.4 (provenance)
 // 🔗 SPEC LINK: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05, FE-19, FE-20; docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §5
 //
-// POST /api/parcels/lot-size — MF-19 (operator 2026-11-11, D-1..D-8 "all as recommmended"): a signed-in user enters the lot area of one lot,
-// once. The entry is its own record (parcel_user_inputs, D-1 a) that wins over the City value for every reader; the City value stays.
+// POST /api/parcels/lot-size — MF-19 (operator 2026-11-11, D-1..D-8 "all as recommmended"; plan v3 2026-11-15, amendment "b"): a signed-in user enters the
+// lot width and depth (the server computes the area) or, by the link, the lot area, of one lot, once. The entry is its own record (parcel_user_inputs, D-1 a) that wins over the City value for every reader; the City value stays.
 //
 // Order (the lookup route's pattern, Spec 90 §11):
 //   1. auth — getCurrentUserContext FIRST (401).
@@ -10,7 +10,8 @@
 //      It is OFF today (seed bounds 0-0): this route cannot write until the flip (MB-42 and the one-lot re-evaluation row, D-8).
 //   3. the entitlement gate (D-4: the MF-45 parcel_tool plan), the lookup gate's own form (MF-45, restacked onto fa4fff51d): a parcel_tool
 //      entitlement in ACTIVE_SUBSCRIPTION_STATUSES, else the transitional lead_gen status (MF-50 removes that arm), else 403.
-//   4. strict body parse (400; an extra key such as entered_by is refused) BEFORE the rate limit, so a mistyped form does not burn the bucket.
+//   4. body: the KEYS first (width_value = the width path, lot_area_value = the area path, both or neither = 400), then ONE strict parse (400; an extra key such as
+//      entered_by is refused) BEFORE the rate limit, so a mistyped form does not burn the bucket.
 //   5. rate — the existing withRateLimit, bucket parcels-lot-size:{uid}, window one day, limit from the admin setting (D-4: 5 a day) -> 429.
 //   6. one transaction — 404 unknown lot, 409 LOT_SIZE_ALREADY_ENTERED (with the stored entry), 400 OUT_OF_RANGE / FAR_FROM_CITY_RECORD with the
 //      server-formatted message (D-2, D-3), else the insert (source 'user', entered_at by the DB clock).
@@ -26,12 +27,12 @@ import { badRequestZod, forbiddenSubscription, internalError, rateLimited, unaut
 import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus } from '@/lib/entitlements';
 import { logInfo } from '@/lib/logger';
 import { insertLotSizeEntry, LotSizeRefusal, readLotSizeSettings } from '@/lib/parcels/lot-size-entry';
-import { LotSizeEntryRequestSchema, LotSizeEntryResponseSchema } from './types';
+import { LotSizeEntryResponseSchema, parseLotSizeBody } from './types';
 
 const TAG = '[api/parcel-lot-size]';
 const ROUTE = 'POST /api/parcels/lot-size';
 /** The log outcome per refusal code (OUTPUT fold CR-2: the D-3 refusal is its own outcome). */
-const OUTCOME: Record<string, string> = { LOT_SIZE_ALREADY_ENTERED: 'already_entered', PARCEL_NOT_FOUND: 'not_found', OUT_OF_RANGE: 'out_of_range', FAR_FROM_CITY_RECORD: 'far_from_city_record' };
+const OUTCOME: Record<string, string> = { LOT_SIZE_ALREADY_ENTERED: 'already_entered', PARCEL_NOT_FOUND: 'not_found', OUT_OF_RANGE: 'out_of_range', FAR_FROM_CITY_RECORD: 'far_from_city_record', SIDE_OUT_OF_RANGE: 'side_out_of_range', DIMS_AREA_OUT_OF_RANGE: 'dims_area_out_of_range' };
 const RATE_WINDOW_SEC = 86_400; // D-4: "a day"; the count is the admin setting user_lot_size_entries_per_day
 
 
@@ -67,12 +68,12 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       done('bad_request', null);
       return err('INVALID_JSON', 'Request body is not valid JSON', 400);
     }
-    const parsed = LotSizeEntryRequestSchema.safeParse(raw);
-    if (!parsed.success) {
+    const parsed = parseLotSizeBody(raw);
+    if (!parsed.ok) {
       done('bad_request', null); // never the body
-      return badRequestZod(parsed.error);
+      return parsed.zod ? badRequestZod(parsed.zod) : err('INVALID_BODY', parsed.message, 400);
     }
-    const body = parsed.data;
+    const body = parsed.body;
 
     // 5. Rate: the admin-editable entries a day, through the existing limiter.
     const rl = await withRateLimit(request, { key: `parcels-lot-size:${ctx.uid}`, limit: settings.per_day, windowSec: RATE_WINDOW_SEC });

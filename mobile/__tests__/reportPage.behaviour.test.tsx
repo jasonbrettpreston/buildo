@@ -102,16 +102,18 @@ describe('MF-48 behaviour (parity with the web ReportPageToggles)', () => {
     fireEvent.press(screen.getByTestId('report-o1-how'));
     expect(screen.queryByTestId('report-o1-how-steps')).toBeNull();
   });
-  it('Add lot size opens the sheet (index 0); Cancel closes it (index -1); the input is read-only and Recalculate and the unit radios are disabled', () => {
+  it('Add lot size opens the sheet (index 0); Cancel closes it (index -1); the width and depth inputs are read-only and Recalculate, the link and the ft / m radios are disabled', () => {
     show('page_v21');
     expect(sheetIndex()).toBe(-1);
     fireEvent.press(screen.getByTestId('report-lot-size-open'));
     expect(sheetIndex()).toBe(0);
     const sheet = screen.UNSAFE_getByType(BottomSheet).props;
     expect([sheet.enablePanDownToClose, typeof sheet.onClose, typeof sheet.backdropComponent]).toEqual([true, 'function', 'function']);
-    expect(screen.getByTestId('report-sheet-input').props.editable).toBe(false);
+    expect(screen.getByTestId('report-sheet-width').props.editable).toBe(false);
+    expect(screen.getByTestId('report-sheet-depth').props.editable).toBe(false);
+    expect(screen.getByTestId('report-sheet-link').props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.getByTestId('report-sheet-submit').props.accessibilityState).toMatchObject({ disabled: true });
-    expect(screen.getByTestId('report-sheet-sqft').props.accessibilityState).toMatchObject({ checked: true, disabled: true });
+    expect(screen.getByTestId('report-sheet-ft').props.accessibilityState).toMatchObject({ checked: true, disabled: true });
     fireEvent.press(screen.getByTestId('report-sheet-cancel'));
     expect(sheetIndex()).toBe(-1);
     fireEvent.press(screen.getByTestId('report-lot-size-open'));
