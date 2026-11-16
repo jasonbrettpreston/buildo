@@ -53,7 +53,12 @@ module.exports = {
         'report-amber-ink': '#9a4a07', // amber as text on light (MF-83)
         'report-amber-soft': '#fdf1d8', // pressed or selected fill (MF-83)
         'report-stage': '#efe9df', // picture stage (MF-83)
+        'report-field': '#8a8172', // control edges at 3:1 (mock --field; operator fix 4)
         'report-no-ring': '#b3261e59', // refused pill border .35
+      },
+      // MF-83 fix 5: the twin of --shadow-report-card (the mock --sh-2). React Native carries ONE shadow, so this is the middle layer of the three (offset, blur, colour at the same values); the web key holds all three.
+      boxShadow: {
+        'report-card': '0 10px 28px -6px rgba(70,50,20,0.10)',
       },
       fontFamily: {
         mono: ['SpaceMono', 'monospace'],

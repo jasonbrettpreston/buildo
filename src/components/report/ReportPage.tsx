@@ -52,7 +52,7 @@ const PanelButton = ({ panelId, see, hide, count, open }: { panelId: string; see
   return (
     <button
       type="button" data-toggle="panel" aria-expanded="false" aria-controls={panelId} data-closed-label={see?.text} data-open-label={hide?.text}
-      className="mt-[10px] inline-flex min-h-11 items-center justify-center gap-1 self-end justify-self-stretch whitespace-nowrap rounded-full border border-report-button-border bg-report-button px-2 text-[13px]/[18px] font-semibold text-report-ink aria-expanded:bg-report-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber"
+      className="mt-[10px] inline-flex min-h-11 items-center justify-center gap-1 self-end justify-self-stretch whitespace-nowrap rounded-full border border-report-button-border bg-report-button px-2 text-[13px]/[18px] font-semibold text-report-ink aria-expanded:border-report-amber-ink aria-expanded:bg-report-amber-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber"
     >
       <span data-label>{see?.text}</span>
       {count && !pending(count) ? <span data-part={count.role} className="inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-report-amber px-1 text-[11px]/[18px] font-bold text-report-count-ink">{count.text}</span> : null}
@@ -162,7 +162,7 @@ const Option = ({ s, open, image, sheet }: { s: PageSection; open: boolean; imag
   const id = (x: string): string => `${s.id}-${x}`;
   const how = one(s, 'bigger.how');
   return (
-    <article id={s.id} data-section="option" data-scenario={s.scenario} aria-labelledby={id('t')} className="grid gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-3">
+    <article id={s.id} data-section="option" data-scenario={s.scenario} aria-labelledby={id('t')} className="grid gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-3 shadow-report-card">
       <div className="grid gap-3 pb-[14px]">
         {/* MF-38 follow-up (operator 2026-11-11): the option's one image is the reused ReportView figure filling this box; with no signed URL yet
             (MF-44 / MF-22) nothing is drawn in it: no figure, no caption (the ruled empty state). */}
@@ -203,7 +203,7 @@ const Option = ({ s, open, image, sheet }: { s: PageSection; open: boolean; imag
             {how && sheet ? (
               <a href={`#${s.id}/how`} data-detail="open" aria-haspopup="dialog" className="inline-grid min-h-11 flex-none place-items-center rounded-full border border-report-button-border bg-report-button px-[18px] text-[13px]/[18px] font-semibold text-report-ink no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">{how.text}</a>
             ) : how && !open ? (
-              <button type="button" data-toggle="how" aria-expanded="false" aria-controls={id('how')} className="min-h-11 flex-none rounded-full border border-report-button-border bg-report-button px-[18px] text-[13px]/[18px] font-semibold text-report-ink aria-expanded:bg-report-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">
+              <button type="button" data-toggle="how" aria-expanded="false" aria-controls={id('how')} className="min-h-11 flex-none rounded-full border border-report-button-border bg-report-button px-[18px] text-[13px]/[18px] font-semibold text-report-ink aria-expanded:border-report-amber-ink aria-expanded:bg-report-amber-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">
                 {how.text}
               </button>
             ) : null}
@@ -265,10 +265,10 @@ const Section = ({ s, open, images, sheet }: { s: PageSection; open: boolean; im
       return <Option s={s} open={open} image={s.scenario !== undefined ? images?.[s.scenario] : undefined} sheet={sheet} />;
     case 'lot_size':
       return (
-        <section data-section="lot_size" aria-labelledby="report-ls-t" className="grid gap-[10px] rounded-[14px] bg-report-card px-6 py-4">
+        <section data-section="lot_size" aria-labelledby="report-ls-t" className="grid gap-[10px] rounded-[14px] bg-report-card px-6 py-4 shadow-report-card">
           <T p={one(s, 'title')} as="h2" id="report-ls-t" className="m-0 text-[17px]/[24px] font-semibold" />
           <T p={one(s, 'body')} as="p" className="m-0 text-[14px]/[20px] text-report-muted" />
-          <button type="button" data-toggle="sheet" aria-haspopup="dialog" aria-controls="report-sheet" className="min-h-12 rounded-xl border border-report-amber bg-transparent text-[16px]/[24px] font-semibold text-report-amber focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">
+          <button type="button" data-toggle="sheet" aria-haspopup="dialog" aria-controls="report-sheet" className="min-h-12 rounded-xl border-0 bg-report-amber text-[16px]/[24px] font-bold text-report-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber">
             {one(s, 'button')?.text}
           </button>
         </section>
@@ -337,11 +337,11 @@ const Section = ({ s, open, images, sheet }: { s: PageSection; open: boolean; im
             {['width', 'depth'].map((side, i) => (
               <div key={side} className="grid gap-1">
                 <label id={`report-sheet-lbl-${side}`} htmlFor={`report-sheet-in-${side}`} className="text-[14px]/[20px] font-semibold">{all(s, 'input.label')[i]?.text}</label>
-                <input id={`report-sheet-in-${side}`} readOnly inputMode="decimal" autoComplete="off" placeholder={all(s, 'input.placeholder')[i]?.text} data-part="input.placeholder" aria-describedby="report-sheet-err" className="min-h-12 min-w-0 flex-1 rounded-xl border border-report-button-border bg-report-tile px-[14px] text-[18px]/[24px] font-semibold text-report-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-report-amber" />
+                <input id={`report-sheet-in-${side}`} readOnly inputMode="decimal" autoComplete="off" placeholder={all(s, 'input.placeholder')[i]?.text} data-part="input.placeholder" aria-describedby="report-sheet-err" className="min-h-12 min-w-0 flex-1 rounded-xl border border-report-field bg-report-tile px-[14px] text-[18px]/[24px] font-semibold text-report-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-report-amber" />
               </div>
             ))}
             {/* MF-19 A12 (WCAG 1.4.11, 4.1.2): a native radio pair (one tab stop, arrow keys, checked state from the browser); the selected segment draws a report-ink border. */}
-            <div role="radiogroup" aria-labelledby="report-sheet-lbl-width report-sheet-lbl-depth" className="flex justify-self-start overflow-hidden rounded-xl border border-report-button-border">
+            <div role="radiogroup" aria-labelledby="report-sheet-lbl-width report-sheet-lbl-depth" className="flex justify-self-start overflow-hidden rounded-xl border border-report-field">
               <label className="cursor-pointer">
                 <input type="radio" name="report-sheet-unit" value="ft" defaultChecked className="peer sr-only" />
                 <span className="flex min-h-12 min-w-14 items-center justify-center rounded-xl border border-transparent px-2 text-[14px]/[20px] font-semibold text-report-dim peer-checked:border-report-ink peer-checked:bg-report-button peer-checked:text-report-ink peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-report-amber">{one(s, 'unit.ft')?.text}</span>
@@ -356,7 +356,7 @@ const Section = ({ s, open, images, sheet }: { s: PageSection; open: boolean; im
             {/* plan v3 (Spec 128 section 4 dated note 2026-11-15): the closed role link is a text part; no href, no action until the sheet mounts the form (MF-44, MF-48). */}
             <button type="button" disabled data-part="link" className="min-h-11 justify-self-start rounded-xl border-0 bg-transparent px-0 text-left text-[14px]/[20px] font-semibold text-report-dim underline">{one(s, 'link')?.text}</button>
             <T p={one(s, 'note')} as="p" className="m-0 text-[13px]/[20px] text-report-quiet" />
-            <button type="submit" disabled className="min-h-12 rounded-xl border-0 bg-report-amber text-[16px]/[24px] font-bold text-report-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-ink">{one(s, 'submit')?.text}</button>
+            <button type="submit" disabled className="min-h-12 rounded-xl border-0 bg-report-amber text-[16px]/[24px] font-bold text-report-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-ink">{one(s, 'submit')?.text}</button>
             <button type="button" data-toggle="sheet-close" className="min-h-11 rounded-xl border-0 bg-transparent text-[15px]/[20px] font-semibold text-report-dim focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-ink">{one(s, 'cancel')?.text}</button>
           </form>
         </dialog>

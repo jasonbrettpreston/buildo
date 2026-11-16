@@ -14,7 +14,7 @@ const web = (): Record<string, string> => Object.fromEntries([...read('src/app/g
 const mobile = (): Record<string, string> => Object.fromEntries([...read('mobile/tailwind.config.js').matchAll(/'report-([a-z0-9-]+)':\s*'(#[0-9a-fA-F]{6,8})'/g)].map((m) => [m[1]!, m[2]!.toLowerCase()]));
 
 // Daylight B :root (report-themes/pub/B.html), copied: the mock is outside the repo.
-const MOCK = { paper: '#f4f1eb', card: '#ffffff', well: '#faf8f4', stage: '#efe9df', line: '#e9e3d8', line2: '#d9d0c1', ink: '#1d1b18', t2: '#4d4841', t3: '#655f55', amber: '#f59e0b', 'amber-ink': '#9a4a07', 'amber-soft': '#fdf1d8', ok: '#1a7340', no: '#b3261e' } as const;
+const MOCK = { field: '#8a8172', paper: '#f4f1eb', card: '#ffffff', well: '#faf8f4', stage: '#efe9df', line: '#e9e3d8', line2: '#d9d0c1', ink: '#1d1b18', t2: '#4d4841', t3: '#655f55', amber: '#f59e0b', 'amber-ink': '#9a4a07', 'amber-soft': '#fdf1d8', ok: '#1a7340', no: '#b3261e' } as const;
 // key -> [value, source]: 'mock:<name>' is the mock's own value, 'derived:<why>' has no mock value.
 const MAP: Record<string, [string, string]> = {
   page: [MOCK.paper, 'mock:paper'], card: [MOCK.card, 'mock:card'], sky: [MOCK.stage, 'mock:stage'], line: [MOCK.line, 'mock:line'], ink: [MOCK.ink, 'mock:ink'], muted: [MOCK.t2, 'mock:t2'],
@@ -24,6 +24,7 @@ const MAP: Record<string, [string, string]> = {
   soft: [MOCK.t3, 'mock:t3'], quiet: [MOCK.t3, 'mock:t3'], dim: [MOCK.t2, 'mock:t2'], 'option-label': [MOCK['amber-ink'], 'mock:amber-ink'], refused: [MOCK.no, 'mock:no'],
   scrim: ['#1d1b1847', 'mock:rgba(29,27,24,.28) (.ds-scrim)'], shade: ['#ffffffb8', 'derived:white wash at the old .72 alpha so the ink title stays readable on a photo'], chip: ['#ffffffe0', 'mock:rgba(255,255,255,.88) (.slide figcaption)'],
   'ok-fill': ['#1a73401f', 'derived:mock ok at the old .12 alpha'], 'ok-ring': ['#1a734059', 'derived:mock ok at the old .35 alpha'], 'no-fill': ['#b3261e1f', 'derived:mock no at the old .12 alpha'], 'no-ring': ['#b3261e59', 'derived:mock no at the old .35 alpha'],
+  field: [MOCK.field, 'mock:field (new name; control edges, operator fix 4)'],
   'amber-ink': [MOCK['amber-ink'], 'mock:amber-ink (new name)'], 'amber-soft': [MOCK['amber-soft'], 'mock:amber-soft (new name)'], stage: [MOCK.stage, 'mock:stage (new name)'],
 };
 
@@ -31,7 +32,7 @@ const lum = (h: string): number => { const c = [1, 3, 5].map((i) => parseInt(h.s
 const ratio = (a: string, b: string): number => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p) as [number, number]; return (x + 0.05) / (y + 0.05); };
 
 describe('MF-83 1b the Daylight B report colours (D-1 a, "the same result")', () => {
-  it('the web keys are exactly the mapped keys (31 re-valued + 3 new), each at its mapped value', () => {
+  it('the web keys are exactly the mapped keys (31 re-valued + 4 new: amber-ink, amber-soft, stage, field), each at its mapped value', () => {
     const w = web();
     expect(Object.keys(w).sort()).toEqual(Object.keys(MAP).sort());
     for (const [k, [v]] of Object.entries(MAP)) expect([k, w[k]]).toEqual([k, v]);
@@ -58,13 +59,37 @@ describe('MF-83 1b the Daylight B report colours (D-1 a, "the same result")', ()
     expect(ratio(w['amber-ink']!, w['amber-soft']!), 'amber-ink on amber-soft').toBeGreaterThanOrEqual(4.5);
     expect(ratio(w.t3 ?? w.soft!, w.page!), 'text-3 on paper').toBeGreaterThanOrEqual(4.5);
   });
-  // Two component uses were written for the dark theme and are NOT fixed here (no component edit in this commit; coordinator brief). They are pinned as failing
-  // so the colour table can name them, and so this test flips red the day the component is edited (then move the pair into the list above).
-  it('FINDING (component edit owed, listed in colour-table.md): text-report-amber on the card (the Add lot size button) and text-report-page on amber (its Recalculate button)', () => {
+  // Operator 2026-11-14 ("1 y 2. yes, now 3. yes", and "with fixes" for the button and the sheet): the three dark-theme component uses are fixed.
+  it('the fixed pairs: ink on the solid amber button and on Recalculate (4.5:1), amber-ink on the amber-soft pressed fill, and the field edge on the surfaces it outlines (3:1, WCAG 1.4.11)', () => {
     const w = web();
-    expect(ratio(w.amber!, w.card!)).toBeLessThan(4.5);
-    expect(ratio(w.page!, w.amber!)).toBeLessThan(4.5);
-    expect(read('src/components/report/ReportPage.tsx')).toContain('text-report-amber focus-visible');
-    expect(read('src/components/report/ReportPage.tsx')).toContain('text-report-page focus-visible');
+    expect(ratio(w.ink!, w.amber!), 'ink on amber').toBeGreaterThanOrEqual(4.5);
+    expect(ratio(w['amber-ink']!, w['amber-soft']!), 'amber-ink on amber-soft').toBeGreaterThanOrEqual(4.5);
+    for (const surf of ['page', 'card', 'tile', 'inner']) expect(ratio(w.field!, w[surf]!), `field on ${surf}`).toBeGreaterThanOrEqual(3);
+  });
+  it('the components use the fixed names: solid amber Add lot size with ink text, ink Recalculate, amber-soft pressed state with an amber-ink edge, field edges on the sheet controls (web and mobile)', () => {
+    const w = read('src/components/report/ReportPage.tsx');
+    expect(w).not.toContain('text-report-amber focus-visible');
+    expect(w).not.toContain('text-report-page focus-visible');
+    expect(w).not.toContain('aria-expanded:bg-report-sky');
+    expect(w).toContain('bg-report-amber text-[16px]/[24px] font-bold text-report-ink');
+    expect(w).toContain('aria-expanded:border-report-amber-ink aria-expanded:bg-report-amber-soft');
+    expect(w).toContain('border-report-field');
+    const m = read('mobile/src/constants/reportPage.ts');
+    expect(m).toContain('border-report-field');
+    expect(m).not.toContain('text-report-page');
+    expect(m).toContain('bg-report-amber-soft');
+  });
+  // Fix 5 (operator: one card-shadow style from the mock --sh-2 as a NAMED key, on the option cards and the lot-size box only).
+  it('the card shadow is one named key equal to the mock --sh-2, used by the option card and the lot-size box only; no shadow literal beside them; mobile carries the nearest single shadow under the same name', () => {
+    const css = read('src/app/globals.css');
+    expect(/--shadow-report-card:\s*([^;]+);/.exec(css)?.[1]).toBe('0 1px 2px rgba(70,50,20,.05), 0 10px 28px -6px rgba(70,50,20,.10), 0 28px 60px -24px rgba(70,50,20,.14)');
+    const w = read('src/components/report/ReportPage.tsx');
+    expect(w.split('shadow-report-card').length - 1).toBe(2);
+    expect(/data-section="option"[^\n]*shadow-report-card/.test(w)).toBe(true);
+    expect(/data-section="lot_size"[^\n]*shadow-report-card/.test(w)).toBe(true);
+    const tw = read('mobile/tailwind.config.js');
+    expect(/'report-card':\s*'0 10px 28px -6px rgba\(70,50,20,0?\.10?\)'/.test(tw)).toBe(true); // the --sh-2 middle layer, the nearest single shadow React Native can carry
+    const m = read('mobile/src/constants/reportPage.ts');
+    expect(m.split('shadow-report-card').length - 1).toBe(2);
   });
 });

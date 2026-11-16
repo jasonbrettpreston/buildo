@@ -2461,7 +2461,7 @@
               "props": {
                 "key": "o1",
                 "testID": "report-o1",
-                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]"
+                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px] shadow-report-card"
               },
               "children": [
                 {
@@ -2947,7 +2947,7 @@
               "props": {
                 "key": "lot_size",
                 "testID": "report-lot_size",
-                "className": "gap-[10px] rounded-[14px] bg-report-card px-[24px] py-[16px]"
+                "className": "gap-[10px] rounded-[14px] bg-report-card px-[24px] py-[16px] shadow-report-card"
               },
               "children": [
                 {
@@ -2980,7 +2980,7 @@
                   "props": {
                     "key": "lot_size-open",
                     "testID": "report-lot-size-open",
-                    "className": "min-h-[44px] rounded-[12px] border border-report-amber bg-transparent h-auto shadow-none opacity-100 active:bg-report-card",
+                    "className": "min-h-[44px] rounded-[12px] border-0 bg-report-amber h-auto shadow-none opacity-100 active:bg-report-amber",
                     "accessibilityRole": "button",
                     "onPress": {
                       "action": "open_sheet"
@@ -2991,7 +2991,7 @@
                       "component": "Text",
                       "props": {
                         "key": "lot_size-button",
-                        "className": "text-[16px] leading-[24px] font-semibold text-report-amber"
+                        "className": "text-[16px] leading-[24px] font-bold text-report-ink"
                       },
                       "children": [
                         {
@@ -3008,7 +3008,7 @@
               "props": {
                 "key": "o2",
                 "testID": "report-o2",
-                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]"
+                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px] shadow-report-card"
               },
               "children": [
                 {
@@ -3510,7 +3510,7 @@
               "props": {
                 "key": "o3",
                 "testID": "report-o3",
-                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]"
+                "className": "gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px] shadow-report-card"
               },
               "children": [
                 {
@@ -4438,7 +4438,7 @@
               "props": {
                 "key": "sheet-input",
                 "testID": "report-sheet-input",
-                "className": "min-h-[44px] flex-1 rounded-[12px] border border-report-button-border bg-report-tile px-[14px] text-[18px] font-semibold text-report-ink",
+                "className": "min-h-[44px] flex-1 rounded-[12px] border border-report-field bg-report-tile px-[14px] text-[18px] font-semibold text-report-ink",
                 "editable": false,
                 "inputMode": "decimal",
                 "accessibilityState": {
@@ -4454,7 +4454,7 @@
               "component": "View",
               "props": {
                 "key": "sheet-units",
-                "className": "flex-row overflow-hidden rounded-[12px] border border-report-button-border"
+                "className": "flex-row overflow-hidden rounded-[12px] border border-report-field"
               },
               "children": [
                 {
@@ -4546,7 +4546,7 @@
               "component": "Text",
               "props": {
                 "key": "sheet-submit-label",
-                "className": "text-[16px] leading-[24px] font-bold text-report-page"
+                "className": "text-[16px] leading-[24px] font-bold text-report-ink"
               },
               "children": [
                 {

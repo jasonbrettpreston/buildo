@@ -253,7 +253,7 @@ describe('P3a MF-83 (FE-41) the summary: references to built option parts, never
   it('a not-evaluated option is listed with the not-evaluated text and no size, no "Max build:" and no unit (FE-06)', () => {
     const s = sum({ ...response(), not_evaluated: ['o2'] });
     const of = (role: string): Json[] => (s.parts as Json[]).filter((p) => p.option === 'o2' && p.role === role);
-    expect(of('item.value').map((p) => p.text)).toEqual(['Not yet evaluated']);
+    expect(of('item.value').map((p) => p.text)).toEqual(['Not yet estimated']);
     expect(of('item.max')).toEqual([]);
     expect(of('item.unit')).toEqual([]);
     expect(texts(s, 'heading')).toEqual(['3 options']);

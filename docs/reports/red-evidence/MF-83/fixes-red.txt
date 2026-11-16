@@ -1,0 +1,6 @@
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > the web keys are exactly the mapped keys (31 re-valued + 4 new: amber-ink, am
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > the fixed pairs: ink on the solid amber button and on Recalculate (4.5:1), am
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > the components use the fixed names: solid amber Add lot size with ink text, i
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > the card shadow is one named key equal to the mock --sh-2, used by the option
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 3 passed (7)

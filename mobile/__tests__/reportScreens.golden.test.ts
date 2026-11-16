@@ -26,8 +26,8 @@ const PAGE_STATES = ['page_all_null', 'page_no_ad', 'page_not_evaluated', 'page_
 const LIFE_STATES = ['error', 'loading', 'miss'];
 const viewOf = (n: string): PageView => goldens[n]!.view as PageView;
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
-/** The 34 report-* colour keys (MF-83: 31 re-valued + amber-ink, amber-soft, stage) of mobile/tailwind.config.js (membership, not a prefix). */
-const REPORT_COLOURS = [...fs.readFileSync(path.join(MOBILE, 'tailwind.config.js'), 'utf8').matchAll(/'(report-[a-z-]+)':/g)].map((m) => m[1]!);
+/** The 35 report-* colour keys (MF-83: 31 re-valued + amber-ink, amber-soft, stage, field) of mobile/tailwind.config.js (membership, not a prefix). */
+const REPORT_COLOURS = [...new Set([...fs.readFileSync(path.join(MOBILE, 'tailwind.config.js'), 'utf8').matchAll(/'(report-[a-z-]+)':/g)].map((m) => m[1]!))]; // a Set: boxShadow 'report-card' (MF-83 fix 5) shares a name with the colour
 
 const isNode = (v: unknown): v is PropsNode => typeof v === 'object' && v !== null && 'component' in v;
 const nodes = (t: PropsNode): PropsNode[] => [t, ...t.children.filter(isNode).flatMap(nodes)];
@@ -101,7 +101,7 @@ const ctxOf = (v: PageView) => ({ content: {}, data: { contract: {}, derived: {}
 describe('MF-48 mobile REPORT props goldens', () => {
   it('8 committed goldens: 5 page states and the 3 lifecycle states', () => {
     expect(Object.keys(goldens)).toEqual([...LIFE_STATES, ...PAGE_STATES].sort());
-    expect(REPORT_COLOURS).toHaveLength(34);
+    expect(REPORT_COLOURS).toHaveLength(35);
   });
   it('T1: reportProps(view) and lifecycleProps(state) equal the committed props exactly', () => {
     for (const n of PAGE_STATES) {

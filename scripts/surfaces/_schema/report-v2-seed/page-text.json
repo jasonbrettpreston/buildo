@@ -1,5 +1,5 @@
 {
-  "$comment": "MF-57 · authored INPUT of seed-report-v2.mjs: the fixed texts of the approved v21 report page (fields/REPORT-LAYOUT-BRIEF-v4.md, display-rules-v4.json `content`, verbatim) and the two ruled pending texts (Q-G4 a: \"not yet estimated\", \"not yet classified\"). A text named by an operator open item of the brief is NOT here: its part is pending (scripts/surfaces/_schema/report-page.json). Generated into report-presentation.json `page`; never read from here at run time. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"): the after-entry line (C2) texts, D-5 neutral wording \"from a survey\" (the mock read \"from your survey\"), the recalculated sentence shown only when the stored results used the entry, and the three server message templates of the sheet (D-2 range in the typed unit, display rules lot_range_error / lot_range_error_m2; D-3 City ratio), filled and sent by the server (src/lib/parcels/lot-size-entry.ts), never formatted on screen.",
+  "$comment": "MF-57 · authored INPUT of seed-report-v2.mjs: the fixed texts of the approved v21 report page (fields/REPORT-LAYOUT-BRIEF-v4.md, display-rules-v4.json `content`, verbatim) and the two ruled pending texts (Q-G4 a: \"not yet estimated\", \"not yet classified\"). A text named by an operator open item of the brief is NOT here: its part is pending (scripts/surfaces/_schema/report-page.json). Generated into report-presentation.json `page`; never read from here at run time. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"): the after-entry line (C2) texts, D-5 neutral wording \"from a survey\" (the mock read \"from your survey\"), the recalculated sentence shown only when the stored results used the entry, and the three server message templates of the sheet (D-2 range in the typed unit, display rules lot_range_error / lot_range_error_m2; D-3 City ratio), filled and sent by the server (src/lib/parcels/lot-size-entry.ts), never formatted on screen. Dated note 2026-11-14 (MF-83; operator, verbatim: \"1 y 2. yes, now 3. yes\", plan.md): the MF-83 wording is signed off: summary.heading \"{count} options\", summary.max \"Max build:\", summary.not_evaluated \"Not yet estimated\" (the page's existing wording), lotview.above \"From above\", lotview.caption \"Not from a survey. Illustrative.\". The three lot-view fallback lines (lotview.note.*) were accepted earlier under D-7.",
   "texts": {
     "page.title": "The Building Possibilities Report",
     "spec.label": "By-law specifications",
@@ -85,7 +85,7 @@
     "pending.classified": "not yet classified",
     "summary.heading": "{count} options",
     "summary.max": "Max build:",
-    "summary.not_evaluated": "Not yet evaluated",
+    "summary.not_evaluated": "Not yet estimated",
     "lotview.above.label": "From above",
     "lotview.caption": "Not from a survey. Illustrative.",
     "lotview.note.shape": "Irregular lot: setbacks listed in details",
