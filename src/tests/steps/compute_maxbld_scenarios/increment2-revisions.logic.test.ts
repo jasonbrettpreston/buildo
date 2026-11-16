@@ -61,7 +61,8 @@ describe('MB-27 increment 2: revisions and the switchboard (M-476, M-458)', () =
     for (const id of revised.filter((x: string) => ['buildable_width_m', 'gfa_max_m2'].includes(x))) {
       const row = SEEDS.catalogue.rows.find((r: Json) => r.id === id);
       expect(row.increment).toBe('1');
-      expect(row.revisions).toHaveLength(1);
+      // MB-27 increment 5 Part B (named re-pin, lane B5B-4, narrow lot): buildable_width_m carries a second revision, increment 5, behind formula:buildable_width_m:increment_5
+      expect(row.revisions).toHaveLength(id === 'buildable_width_m' ? 2 : 1);
       expect(row.revisions[0].increment).toBe('2');
       expect(row.revisions[0].switch).toBe(`formula:${id}:increment_2`);
       expect(SEEDS.switchboard.rows.map((s: Json) => s.id)).toContain(row.revisions[0].switch);
@@ -86,14 +87,14 @@ describe('MB-27 increment 2: revisions and the switchboard (M-476, M-458)', () =
   });
 
   it('STS-2 (M-458) the revision on: a corner lot whose street side is stored unregulated reads the side yard, 4.99 − 0.45 − 0.45 = 4.09 m', () => {
-    const out = R.runRow('buildable_width_m', { ...a0375(UNREG), seeds: SEEDS });
+    const out = R.runRow('buildable_width_m', { ...a0375(UNREG), seeds: SEEDS, switches: { 'formula:buildable_width_m:increment_5': 'off' } }); // named re-pin (B5B-4): the increment 5 revision supersedes this one, so it is off here
     expect(out.status).toBe('computed');
     expect(out.value).toBeCloseTo(4.09, 9);
     expect(out.switches).toContainEqual({ id: 'formula:buildable_width_m:increment_2', state: 'on' });
   });
 
   it('M-476 the revision off: the increment-1 formula is read (the street side itself, unregulated, so no width) and the switch is listed as off', () => {
-    const out = R.runRow('buildable_width_m', { ...a0375(UNREG), seeds: SEEDS, switches: { 'formula:buildable_width_m:increment_2': 'off' } });
+    const out = R.runRow('buildable_width_m', { ...a0375(UNREG), seeds: SEEDS, switches: { 'formula:buildable_width_m:increment_2': 'off', 'formula:buildable_width_m:increment_5': 'off' } }); // named re-pin (B5B-4): the increment 5 revision is off too, so the increment 1 formula is read
     expect(out.status).toBe('unregulated');
     expect(out.value).toBeNull();
     expect(out.switches).toContainEqual({ id: 'formula:buildable_width_m:increment_2', state: 'off' });
@@ -166,7 +167,7 @@ describe('MB-27 R1: design_option tags on the catalogue rows (plan-reader-and-me
 
   it('R1-1 the flat run rows are setback_plate_m2 and gfa_flat_m2; the pitched run rows are the arm, attic, pitched GFA and mechanical rows; the rest carry no option', () => {
     const tag = (id: string): string | null => { const r = SEEDS.catalogue.rows.find((x: Json) => x.id === id); return r && r.design_option ? r.design_option.roof_form : null; };
-    expect(SEEDS.catalogue.rows.filter((r: Json) => tag(r.id) === 'flat_or_shallow_roof').map((r: Json) => r.id)).toEqual(['setback_plate_m2', 'gfa_flat_m2', 'storeys_fit', 'footprint_fit_m2', 'depth_fit_m', 'upper_storey_depth_fit_m', 'height_fit_m', 'units_fit']); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): C7 tags the six fitted rows flat_or_shallow_roof; was [setback_plate_m2, gfa_flat_m2]
+    expect(SEEDS.catalogue.rows.filter((r: Json) => tag(r.id) === 'flat_or_shallow_roof').map((r: Json) => r.id)).toEqual(['setback_plate_m2', 'gfa_flat_m2', 'storeys_fit', 'footprint_fit_m2', 'depth_fit_m', 'upper_storey_depth_fit_m', 'height_fit_m', 'units_fit', 'addon_flat_stack_a', 'addon_flat_stack_b_m', 'addon_flat_stack_ratio']); // lane B5B-3: the flat-stack rows of the split pass (Q6 a) // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): C7 tags the six fitted rows flat_or_shallow_roof; was [setback_plate_m2, gfa_flat_m2]
     for (const id of ['roof_pitch_a', 'half_span_b_m', 'roof_assembly_depth_a_m', 'roof_vertical_thickness_b_m', 'attic_counted_floor_a_m2', 'gfa_pitched_a_m2', 'gfa_pitched_b_m2', 'gfa_pitched_m2', 'mechanical_attic_outside_gfa_b_m2', 'total_floor_area_pitched_a_m2']) expect(tag(id), id).toBe('pitched');
     for (const id of ['storeys_max', 'footprint_max_m2', 'wall_storeys', 'storeys_above_wall', 'attic_eave_clearance_m', 'front_rear_wall_width_m', 'gfa_max_m2', 'buildable_width_m']) expect(tag(id), id).toBeNull();
     for (const r of SEEDS.catalogue.rows) if (r.increment === '1') expect(r.design_option, r.id).toBeUndefined();

@@ -501,6 +501,22 @@ export function readRegulated(id, env) {
 }
 
 /**
+ * `exception(<id>)` as a three-valued test (MB-27 increment 5 Part B, P3 a): the stored cell is read as `regulated` reads it (a refusal, a
+ * missing or malformed cell passes through as ne), then true when a Chapter 900 exception unit won the cell (the view's winner_layer, carried
+ * on the cell as `layer`), false when the zone or an overlay did. A cell whose source layer is not carried is ne (fail closed, never a guess).
+ */
+export function readException(id, env) {
+  const v = readL2(id, env);
+  const entry = traceOf(env) ? traceOf(env)[traceOf(env).length - 1] : null;
+  if (entry && entry.id === id) entry.role = LEX.w.cond;
+  if (!v || v.k === LEX.w.ne || v.k === LEX.w.nb) return v;
+  const layer = env.cells[id] && env.cells[id].layer;
+  if (layer === LEX.w.exception) return true;
+  if (typeof layer === LEX.w.string) return false;
+  return ne(`${LEX.p.condition_unknown}${LEX.w.layer}:${id}`);
+}
+
+/**
  * Walk one Layer 3 expression AST (nodes from `parseExpr(src, { layer: 'l3' })`) into a Layer 3 value, using only the
  * algebra and the readers above. `if` is the ONE branching form: a decided condition returns the chosen branch, and an
  * ne / nb condition is returned as it stands (the walk holds no decision of its own). Any other node type is unknown.
@@ -540,6 +556,7 @@ export function evalExprL3(e, env) {
 export function evalCondL3(c, env) {
   if (c.type === LEX.w.cmp) return compare(c.cmp, evalExprL3(c.lhs, env), evalExprL3(c.rhs !== undefined ? c.rhs : c.lit, env), env);
   if (c.type === LEX.w.regulated) return readRegulated(c.id, env);
+  if (c.type === LEX.w.exception) return readException(c.id, env);
   if (c.type === LEX.w.holds) return readHolds(c.token, env);
   if (c.type === LEX.w.and) return and3(c.xs.map((x) => () => evalCondL3(x, env)));
   if (c.type === LEX.w.or) return or3(c.xs.map((x) => () => evalCondL3(x, env)));

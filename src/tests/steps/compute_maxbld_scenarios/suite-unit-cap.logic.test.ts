@@ -55,6 +55,8 @@ describe('E7 trigger vector: an exception one-unit cap inside the suite scope', 
     const rows = readJson('scripts/seeds/bylaw/building-types.json').rows as Json[];
     expect(rows.map((b) => [b.id, b.units, b.units_floor])).toEqual([
       ['detached_house', 1, 1], ['detached_houseplex', 4, 1], ['house_with_secondary_suite', 2, 2],
+      // MB-27 increment 5 (lane B5B-2, item 11 (b)): the three add-on types carry their principal type's units and floor
+      ['detached_house_garden_suite', 1, 1], ['detached_houseplex_garden_suite', 4, 1], ['house_with_secondary_suite_garden_suite', 2, 2],
     ]);
   });
 });

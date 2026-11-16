@@ -20,6 +20,8 @@
 const rows = require('./maxbld/rows.js');
 const cat = require('./maxbld/catalogue.js');
 const cellsLib = require('./maxbld/layer2-cells.js');
+const twoStructure = require('./maxbld/two-structure.js');
+const splitLib = require('./maxbld/split.js');
 const factsLib = require('./maxbld/neighbour-facts.js');
 // MB-27 R2 (operator "Q-r2 a"): ROOF-5's word is Layer 2's own rule, recomputed on read through its withNotAbove, never re-derived here
 const { withNotAbove, traceResult, permissionDisclosuresOf, makeEnv } = require('../bylaw-materialize.js');
@@ -49,11 +51,11 @@ const LAYER2_ZONE_LIST = 'resolve_bylaws_population_zone_classes';
  * street-scoped abutment rows (both lots on the subject's primary_frontage_street_name), and the compute walks the ring (ringLots).
  */
 const READ_SQL = Object.freeze({
-  cells: `SELECT r.parcel_id, r.lot_gate, r.class, r.structure, r.target, r.status, r.value_kind, r.value, r.reason, r.winner_unit_id
+  cells: `SELECT r.parcel_id, r.lot_gate, r.class, r.structure, r.target, r.status, r.value_kind, r.value, r.reason, r.winner_unit_id, r.winner_layer
   FROM bylaw_resolution_results r
  WHERE r.parcel_id = s.id`,
   // MB-27 R2 (M-400, M-465; plan-reader-and-mech.md 1.4 R2 (1)): the design-option slots and the threshold (option NULL), migration 295
-  options: `SELECT o.parcel_id, o.lot_gate, o.class, o.structure, o.target, o.option, o.status, o.value_kind, o.value, o.reason, o.winner_unit_id
+  options: `SELECT o.parcel_id, o.lot_gate, o.class, o.structure, o.target, o.option, o.status, o.value_kind, o.value, o.reason, o.winner_unit_id, o.winner_layer
   FROM bylaw_resolution_option_results o
  WHERE o.parcel_id = s.id`,
   // Q-STOR a (migration 295): the lot stamps are stored as bytea; Layer 3 reads them as hex through the view bylaw_resolution_lot_stamps
@@ -371,6 +373,14 @@ function oneParcel(source, lookups) {
   let unparseable = 0;
   const designOptions = L.vocab && L.vocab.design_options;
   for (const bt of toList(L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.rows)) {
+    if (twoStructure.isAddon(bt)) {
+      // MB-27 increment 5 (B5B-2, L3-2): an add-on type reads the class's principal cells and its garden-suite cells under the declared prefix
+      const two = twoStructure.decodeAddon(toList(source.cells), toList(source.options), bt, { buildingTypes: L.seeds && L.seeds.buildingTypes, designOptions, notAbove: withNotAbove });
+      decoded[bt.id] = two.l2;
+      options[bt.id] = two.l2Options;
+      unparseable += two.malformedSuite; // the principal cells are counted by the principal type
+      continue;
+    }
     const d = cellsLib.decodeCells(toList(source.cells), bt.class, bt.structure);
     decoded[bt.id] = d.cells;
     unparseable += d.malformed;
@@ -381,7 +391,7 @@ function oneParcel(source, lookups) {
   const meta = { settings_sha: L.settings_sha ?? null, layer2_table_version: source.lot ? source.lot.table_version : null };
   const out = [];
   const census = { layer2_cell_unparseable: unparseable, status_outside_closed_set: 0, numbers_without_trace: 0, not_buildable_with_value: 0, closure_violations: 0, flags_missing: 0, units_floor_refusals: 0 };
-  const U = cat.unitsFor(L.seeds && L.seeds.catalogue, L.vocab);
+  const U = cat.unitsFor(L.seeds && L.seeds.catalogue, L.vocab, L.seeds && L.seeds.buildingTypes);
   const perType = {};
   for (const bt of toList(L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.rows)) {
     const perm = l2Classes.includes(bt.class)
@@ -403,7 +413,7 @@ function oneParcel(source, lookups) {
         lot_area_m2: g.lot_size_sqm,
         is_corner_lot: g.is_corner_lot,
       },
-      flags: { corner_lot: g.is_corner_lot === true },
+      flags: { corner_lot: g.is_corner_lot === true, through_lot: g.is_through_lot === true }, // P2 (a): the lot-flag sources are catalogue lot_flags (parcels.is_corner_lot / is_through_lot)
       // D8-SHELL (MB-31 (e)): the reader's INPUT, not its facts: rows.js runs neighbourFacts itself with the run's own averaging cell
       // (rows.js cellsOfRun); handing it facts made every neighbour count read 0 on stored rows. bt_units is the building-types row's;
       // own and user stay empty: no declared read carries them (the golden-25 inputs carry none either).
@@ -415,6 +425,9 @@ function oneParcel(source, lookups) {
   }
   // D-2 a (M-379 dated note 2026-11-11): the one generic gain comparison, right after the per-type loop
   for (const r of gainRows(source.parcel_id, perType, L.seeds, meta)) out.push(r);
+  // MB-27 increment 5 (B5B-3; Spec 69a M-403 / M-390 dated notes 2026-11-13): the split of the garden-suite add-on, declared in data (building-types.json split, maxbld/split.js)
+  const splitShas = shas(L.seeds, meta);
+  for (const r of splitLib.splitResults(perType, L.seeds)) out.push(dbRow(source.parcel_id, r.building_type, r.increment, r.result, splitShas));
   const counted = censusOf(out, U, L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.units_floor_census);
   for (const k of ['status_outside_closed_set', 'numbers_without_trace', 'not_buildable_with_value', 'closure_violations', 'flags_missing', 'units_floor_refusals']) census[k] = counted[k];
   return { rows: out, census };
@@ -614,7 +627,7 @@ function sourceOf(r, L, depth) {
     options: toList(r.options),
     lot: r.lot,
     parcel: p,
-    geometry: { frontage_m: p.frontage_m, depth_m: p.depth_m, lot_size_sqm: p.lot_size_sqm, is_corner_lot: p.is_corner_lot },
+    geometry: { frontage_m: p.frontage_m, depth_m: p.depth_m, lot_size_sqm: p.lot_size_sqm, is_corner_lot: p.is_corner_lot, is_through_lot: p.is_through_lot },
     abutters: toList(r.abutters),
     street: toList(r.street),
     zone: toList(r.zone),

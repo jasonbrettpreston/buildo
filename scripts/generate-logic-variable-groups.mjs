@@ -663,6 +663,10 @@ const GROUP_ORDER = [
       "compute_maxbld_scenarios_roof_assembly_depth_3_m",
       "compute_maxbld_scenarios_rafter_span_4_m",
       "compute_maxbld_scenarios_roof_assembly_depth_4_m",
+      "compute_maxbld_scenarios_plate_min_dimension_m",
+      "compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm",
+      "compute_maxbld_scenarios_min_suite_gfa_m2",
+      "compute_maxbld_scenarios_min_main_dwelling_gfa_m2",
       "footprint_shape_factor",
       "compute_maxbld_scenarios_bbox_degree_divisor",
       "compute_maxbld_scenarios_batch_size"

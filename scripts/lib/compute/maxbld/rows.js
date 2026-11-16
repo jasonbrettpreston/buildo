@@ -3,10 +3,13 @@
 'use strict';
 
 const catalogueLib = require('./catalogue.js');
+const twoStructure = require('./two-structure.js');
 const factsLib = require('./neighbour-facts.js');
 const l3 = require('../../../analysis/bylaw/evaluate-l3.mjs');
 const evaluator = require('../../../analysis/bylaw/evaluate.mjs');
 
+// the evaluator contract: values are rounded at 9 places first; split.js reads this same function
+const round9 = (x) => Math.round(x * 1e9) / 1e9;
 const NOT_MODELLED_REASON = 'class not resolved in Phase 2 (MB-27.L2)';
 // R3-11 extended (M-465 (6), RC-1; plan-l3-forms.md §2b "Fail closed"): a design_option row of a class Phase 2 stores no option for
 const optionNotModelledReason = (cls) => `roof option not resolved for ${cls} (MB-27.L2)`;
@@ -291,6 +294,7 @@ function l3Env(seeds, row, inputs, state, memo, run, runName) {
   const targets = isObject(vocab.dsl_target) ? vocab.dsl_target : {};
   const targetUnits = {};
   for (const [id, entry] of Object.entries(targets)) targetUnits[id] = isObject(entry) ? entry.unit : entry;
+  Object.assign(targetUnits, twoStructure.suiteTargetUnits(seeds.buildingTypes, targets)); // MB-27 increment 5 (B5B-2, L3-2): the suite structure's names
   const geometryDecls = {};
   for (const g of toList(cat.geometry_inputs)) if (isObject(g)) geometryDecls[g.id] = { unit: g.unit };
   const factDecls = {};
@@ -322,7 +326,7 @@ function l3Env(seeds, row, inputs, state, memo, run, runName) {
     readRow: (id) => toValue(run(id)),
     inputFlags: inputFlagsOfRun(row, inputs, runName),
     // the evaluator contract (evaluate-l3.mjs compare, bestOf, applyInt): "Both values are rounded at 9 places first"
-    round9: (x) => Math.round(x * 1e9) / 1e9,
+    round9,
     eps: 0,
   });
 }
@@ -467,6 +471,27 @@ function runRowIn(rowId, runName, inputsIn) {
   return run(rowId, runFor(row, runName));
 }
 
+/**
+ * Several rows of one building type evaluated in one named run over ONE shared memo (MB-27 increment 5, B5B-3: the split pass
+ * reads the rows of one candidate depth together, so a row that several of them read is computed once). Same rules as runRowIn.
+ * @param {string[]} rowIds
+ * @param {string} runName `base` or an option value
+ * @param {object} inputsIn
+ * @returns {Object<string, object>} row id -> its result
+ */
+function runRowsIn(rowIds, runName, inputsIn) {
+  const inputs = isObject(inputsIn) ? inputsIn : {};
+  const { seeds, run } = makeRunner(inputs);
+  if (!declaredRuns(seeds).includes(runName)) throw new Error(`runRowsIn: unknown run ${runName}`);
+  const out = {};
+  for (const id of rowIds) {
+    const row = findById(isObject(seeds.catalogue) ? seeds.catalogue.rows : null, id);
+    if (!row) throw new Error(`runRow: unknown row ${id}`);
+    out[id] = run(id, runFor(row, runName));
+  }
+  return out;
+}
+
 /** Every catalogue row of one building type, in dependency order, over one shared memo; each from its own report run. */
 function runAllRows(inputsIn) {
   const inputs = isObject(inputsIn) ? inputsIn : {};
@@ -506,4 +531,4 @@ function runReadingRun(inputsIn, override) {
   return runAllRows({ ...inputs, l2: cells });
 }
 
-module.exports = { runRow, runRowIn, runAllRows, runReadingRun, toValue, cellsOfRun, NOT_MODELLED_REASON, BASE_RUN };
+module.exports = { round9, runRow, runRowIn, runRowsIn, runAllRows, runReadingRun, toValue, cellsOfRun, NOT_MODELLED_REASON, BASE_RUN };

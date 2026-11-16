@@ -73,8 +73,8 @@ describe('MB-31 determinism, G68-11 (waits B5)', () => {
   it('two calls on the same parcel give one hundred and sixty-five equal rows', () => {
     const a = S.buildParcelRows(makeParcel(false), SEEDS, META);
     const b = S.buildParcelRows(makeParcel(false), SEEDS, META);
-    expect(a).toHaveLength(165); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): +16 (5 fitted rows x 3 types + units_fit on the houseplex); was 149 // MB-27 increment 4 (D-8 a named move; Spec 69a M-379 dated note 2026-11-11): +47 house_with_secondary_suite rows (the 47 increment-1/2 rows list it); was 102 // MB-27 inc3 E8 (DL-21 a): 47 house rows plus 47 houseplex rows (every row lists both types) plus 8 houseplex-only rows; was 47 // MB-27 switch-on (operator D-5): the three GFA form rows are shown with their switches on; was 44 (D3 a), was 10
-    expect(b).toHaveLength(165);
+    expect(a).toHaveLength(303); // MB-27 increment 5 Part B (B5B-6, named re-pin): +27 rows per parcel (9 catalogue rows x the 3 add-on types: P2 a / P3 a rows addon_suite_rear_m, addon_total_cov_a_m2, addon_unit_cap_gate; D-65 rows addon_pitched_b_raw_m2, addon_main_footprint_min_pitched_b_a_m2, four rafter-span candidates); was 276 // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): +16 (5 fitted rows x 3 types + units_fit on the houseplex); was 149 // MB-27 increment 4 (D-8 a named move; Spec 69a M-379 dated note 2026-11-11): +47 house_with_secondary_suite rows (the 47 increment-1/2 rows list it); was 102 // MB-27 inc3 E8 (DL-21 a): 47 house rows plus 47 houseplex rows (every row lists both types) plus 8 houseplex-only rows; was 47 // MB-27 switch-on (operator D-5): the three GFA form rows are shown with their switches on; was 44 (D3 a), was 10
+    expect(b).toHaveLength(303);
     const pick = (rows: Json[]) => rows.map((r) => [r.field_id, r.status, r.value, r.reason, r.content_sha]);
     expect(pick(a)).toEqual(pick(b));
   });

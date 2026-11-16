@@ -4,8 +4,16 @@
   "rows": [
     {"id":"detached_house","class":"detached_house","structure":"principal","units":1,"units_floor":1,"increment":"1","switch":"building_type:detached_house","rules":["LC-16","M-377"]},
     {"id":"detached_houseplex","class":"detached_houseplex","structure":"principal","units":4,"units_floor":1,"increment":"3","switch":"building_type:detached_houseplex","rules":["LC-16","M-160","M-494","M-500","Q6 a"]},
-    {"id":"house_with_secondary_suite","class":"house_with_secondary_suite","structure":"principal","units":2,"units_floor":2,"increment":"4","switch":"building_type:house_with_secondary_suite","base_type":"detached_house","rules":["LC-16","LC-33","M-379","M-182","M-344"]}
+    {"id":"house_with_secondary_suite","class":"house_with_secondary_suite","structure":"principal","units":2,"units_floor":2,"increment":"4","switch":"building_type:house_with_secondary_suite","base_type":"detached_house","rules":["LC-16","LC-33","M-379","M-182","M-344"]},
+    {"id":"detached_house_garden_suite","class":"detached_house","structure":"garden_suite","addon_of":"detached_house","units":1,"units_floor":1,"increment":"5","switch":"building_type:detached_house_garden_suite","rules":["LC-16","M-403","M-415","L3-2","item 11 (b)"]},
+    {"id":"detached_houseplex_garden_suite","class":"detached_houseplex","structure":"garden_suite","addon_of":"detached_houseplex","units":4,"units_floor":1,"increment":"5","switch":"building_type:detached_houseplex_garden_suite","rules":["LC-16","M-403","M-415","L3-2","item 11 (b)"]},
+    {"id":"house_with_secondary_suite_garden_suite","class":"house_with_secondary_suite","structure":"garden_suite","addon_of":"house_with_secondary_suite","units":2,"units_floor":2,"increment":"5","switch":"building_type:house_with_secondary_suite_garden_suite","rules":["LC-16","M-403","M-415","L3-2","item 11 (b)"]}
   ],
+  "suite_read": {
+    "$comment": "MB-27 increment 5 (Part B, B5B-2 piece 1; BUILD-PLAN C2 two-structure read, L3-2): an add-on type (a row with addon_of) reads its class's principal cells under their own names and its class's `structure` cells under this one prefix, so a row writes l2(rear_setback_m) for the house and l2(suite_rear_setback_m) for the suite. scripts/lib/compute/maxbld/two-structure.js reads it; the units of the prefixed names are the vocab.dsl_target units of the unprefixed targets.",
+    "structure": "garden_suite",
+    "prefix": "suite_"
+  },
   "units_floor_census": {
     "$comment": "E7 (Spec 69a M-344 dated note 2026-11-11; card CARD-E7-UCAP lock item 2, OUTPUT panel fold): the step counts the rows the units_max increment-4 revision refuses, records_meta units_floor_refusals, so a night shows how many lots hold a dwelling-unit cap below a type's units_floor.",
     "row": "units_max",
@@ -25,6 +33,93 @@
     "reasons": [
       {"clause":"x.40.40(1)(C)","reason":"fsi_not_applicable","units":["10.10.40.40(1)#(1)(C)","10.20.40.40(1)#(1)(C)","10.40.40.40(1)#(1)(C)","10.60.40.40(1)#(1)(C)","10.80.40.40(1)#(1)(C)"]},
       {"clause":"x.30.40(1)(D)","reason":"coverage_45","units":["10.20.30.40(1)#(1)(D)","10.40.30.40(1)#(1)(D)","10.60.30.40(1)#(1)(D)","10.80.30.40(1)#(1)(D)"]}
+    ]
+  },
+  "split": {
+    "$comment": "MB-27 increment 5 (Part B, B5B-3; operator 2026-11-12 'Q1 a, Q2 a, Q3 a', 'Q5 a, Q6a'; D-65; Spec 69a M-403 / M-390 / M-415; FD-3 a): the split of the garden-suite add-on, declared in data and run by scripts/lib/compute/maxbld/split.js after the per-type loop. For each add-on type, each arm (the values of vocab design_options.arm_design_option), each coverage path and allocation, every CANDIDATE depth is evaluated through the M-415 seam (depth_inject; then footprint_inject = the allocation's footprint row) over the catalogue rows, and the best total of main + suite is kept. A candidate depth is one of three declared kinds, never a search: range_end (the two ends of the range), row (a catalogue row whose value is a depth: a closed-form straight-line kink, a pitched-B root, a D-65 stationary point) and crossing (the depth where two rows meet, solved on the straight line of each interval between the other candidates, which is exact where both rows are straight lines there; a crossing that meets on a curved row (a pitched roof attic floor) declares refine_steps, the fixed number of secant steps that refine the straight-line root, D-65). Tie (FD-3 a, ANSWER-KEY.md:48): equal total, then path B, then the larger main GFA, then the larger main footprint.",
+    "arm_design_option": "suite_height",
+    "depth_inject": "buildable_depth_m",
+    "footprint_inject": "footprint_max_m2",
+    "range": {"min_setting": "compute_maxbld_scenarios_plate_min_dimension_m", "max_row": "buildable_depth_m"},
+    "gate_rows": ["addon_unit_cap_gate"],
+    "width_row": "front_rear_wall_width_m",
+    "width_min_setting": "compute_maxbld_scenarios_plate_min_dimension_m",
+    "margin_setting": "compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm",
+    "main_gfa_row": "addon_main_gfa_m2",
+    "storeys_row": "addon_storeys",
+    "suite_width_row": "addon_suite_width_m",
+    "alone": {"permission_row": "permitted", "gfa_row": "gfa_max_m2"},
+    "tie_path": "B",
+    "row_nudge_m": 3e-9,
+    "tie_tolerance_m2": 1e-6,
+    "outputs": {
+      "suite_gfa": {"id": "suite_gfa_sqm", "unit": "m2"},
+      "suite_footprint": {"id": "suite_footprint_sqm", "unit": "m2"},
+      "depth": {"id": "main_depth_chosen_m", "unit": "m"},
+      "main_with": {"id": "main_gfa_with_suite_sqm", "unit": "m2"},
+      "main_without": {"id": "main_gfa_without_suite_sqm", "unit": "m2"},
+      "gain": {"id": "suite_total_gain_sqm", "unit": "m2"},
+      "arm_words": {"suite_low": "suite_arm_low", "suite_tall": "suite_arm_tall"},
+      "path_words": {"A": "suite_path_a", "B": "suite_path_b"},
+      "binding_words": {"suite_region": "suite_binds_region", "ancillary_coverage": "suite_binds_ancillary", "suite_gfa_cap": "suite_binds_gfa_cap", "lot_coverage": "suite_binds_lot_coverage", "suite_gfa_lt_main": "suite_binds_lt_main"},
+      "lower_option_word": "suite_lower_option",
+      "coverage_path_a_word": "main_coverage_path_a",
+      "ancillary_row": "addon_x_anc_m2",
+      "cap_row": "addon_x_cap_m2",
+      "region_row": "addon_suite_region_m2"
+    },
+    "no_room_reasons": {"width": "no_room_for_suite_3m_minimum", "area": "no_room_for_suite_livable_minimum"},
+    "common_candidates": [
+      {"kind": "range_end", "end": "min"},
+      {"kind": "range_end", "end": "max"},
+      {"kind": "row", "row": "addon_cand_region_min_m"},
+      {"kind": "row", "row": "addon_cand_region_min_suite_m"},
+      {"kind": "row", "row": "addon_cand_region_cap_m"},
+      {"kind": "row", "row": "addon_cand_stack_ceiling_m"},
+      {"kind": "row", "row": "addon_cand_rafter_span_1_b_m"},
+      {"kind": "row", "row": "addon_cand_rafter_span_2_b_m"},
+      {"kind": "row", "row": "addon_cand_rafter_span_3_b_m"},
+      {"kind": "row", "row": "addon_cand_rafter_span_4_b_m"},
+      {"kind": "crossing", "a": "addon_pitched_b_raw_m2", "b": "addon_ceiling_m2", "refine_steps": 12}
+    ],
+    "paths": [
+      {
+        "id": "B",
+        "suite_gfa_row": "addon_suite_gfa_b_m2",
+        "suite_footprint_row": "addon_suite_footprint_b_m2",
+        "allocations": [{"id": "house_at_its_figure", "footprint_row": "addon_main_footprint_b_m2"}],
+        "candidates": [
+          {"kind": "row", "row": "addon_cand_cov_b_m"},
+          {"kind": "row", "row": "addon_cand_width_b_m"},
+          {"kind": "row", "row": "addon_cand_region_anc_m"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_min_main_m2"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_min_suite_m2"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_cap_m2"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_anc_m2"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_region_m2"}
+        ]
+      },
+      {
+        "id": "A",
+        "suite_gfa_row": "addon_suite_gfa_a_m2",
+        "suite_footprint_row": "addon_suite_footprint_a_m2",
+        "allocations": [
+          {"id": "suite_first", "footprint_row": "addon_main_footprint_a_m2"},
+          {"id": "house_first", "footprint_row": "addon_main_footprint_min_a_m2", "$comment": "Q6 a: the smallest footprint that keeps the house GFA is a closed form per regime; until those rows land the house at full coverage stands in (the key's search changes no golden cell, measured B5B-1)"},
+          {"id": "house_first_pitched_b", "footprint_row": "addon_main_footprint_min_pitched_b_a_m2", "$comment": "Q6 a, D-65: the same allocation for the pitched-B form (one row per regime, each its own allocation, scored by the rows: a regime that does not hold is a lower total, never a wrong one)"}
+        ],
+        "candidates": [
+          {"kind": "row", "row": "addon_cand_cov_a_m"},
+          {"kind": "row", "row": "addon_cand_width_a_m"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_min_main_m2"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_min_suite_m2"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_cap_m2"},
+          {"kind": "crossing", "a": "addon_main_gfa_m2", "b": "addon_x_region_m2"},
+          {"kind": "crossing", "a": "addon_suite_region_m2", "b": "addon_x_room_a_m2"},
+          {"kind": "crossing", "a": "addon_x_cap_footprint_m2", "b": "addon_x_room_a_m2"},
+          {"kind": "crossing", "a": "addon_x_min_suite_footprint_m2", "b": "addon_x_room_a_m2"}
+        ]
+      }
     ]
   }
 }

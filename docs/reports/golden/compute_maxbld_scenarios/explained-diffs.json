@@ -1,4 +1,131 @@
 {
   "contract_version": 1,
-  "diffs": []
+  "step": "compute_maxbld_scenarios",
+  "source": "Spec 124 R-DA, McBylaws INC-5 M14 D-78 recapture: every entry is the measured PRE->POST diff of docs/reports/golden/compute_maxbld_scenarios/post/standalone.json (committed POST at the tip vs the teststack capture of tip + Part B patch, teststack/compare.out, 33 differences), explained from the cited code line in the capture tree, migration, setting key or measured teststack value.",
+  "diffs": [
+    {
+      "key": "meta[].reads.bylaw_resolution_option_results[]",
+      "why": "Part B patch adds the column winner_layer to the declared read of bylaw_resolution_option_results (scripts/compute-maxbld-scenarios.descriptor.json:38), and deriveMeta (scripts/lib/step/index.js:253) lists declared read columns in POST meta, so the list gains a 12th entry (index 11) \"winner_layer\"; the consumer is scripts/lib/compute/maxbld/layer2-cells.js:50-51 (cell carries the view's winner_layer for the exception(<id>) DSL reader). The view column already exists (migrations/295_resolve_bylaws_roof_option.sql:75)."
+    },
+    {
+      "key": "meta[].reads.bylaw_resolution_results[]",
+      "why": "Part B patch adds the column winner_layer to the declared read of bylaw_resolution_results (scripts/compute-maxbld-scenarios.descriptor.json:34), and deriveMeta (scripts/lib/step/index.js:253) lists declared read columns in POST meta, so the list gains an 11th entry (index 10) \"winner_layer\"; the consumer is scripts/lib/compute/maxbld/layer2-cells.js:50-51. The view column already exists (migrations/295_resolve_bylaws_roof_option.sql:49)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value",
+      "why": "Two audit rows share this normalised key. rows[0] (rows_emitted, catalogue.js:15; counted at scripts/lib/compute/compute-maxbld-scenarios.js:449) moves 293913 -> 624325: RUN.md End state: all six building types are now derived at 325 rows a lot (detached_house 52, detached_house_garden_suite 52, detached_houseplex 61, detached_houseplex_garden_suite 52, house_with_secondary_suite 56, house_with_secondary_suite_garden_suite 52) over 1,921 lots = 624,325 rows (teststack/c3-rowcheck.out PASS: old 293913 new 624325, missing 0, added 330412); the old table held 293,913 rows (47/55/51 a lot for the three non-suite types). rows[9] (vocabulary:parcel_maxbld_scenarios.status, scripts/lib/step/write.js:2461-2466) moves from \"within declared values (7 distinct)\" to \"(8 distinct)\": the SELECT DISTINCT of stored status now includes \"unlimited\", which exists only on the garden-suite types that were not derived before (teststack/c3-status.out: detached_house_garden_suite/unlimited:3788); all eight values are in the declared vocabulary (descriptor.json:89), so the row stays INFO."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "Two audit rows share this normalised key. rows[0] (rows_emitted, catalogue.js:15; counted at scripts/lib/compute/compute-maxbld-scenarios.js:449) moves 293913 -> 624325: RUN.md End state: all six building types are now derived at 325 rows a lot (detached_house 52, detached_house_garden_suite 52, detached_houseplex 61, detached_houseplex_garden_suite 52, house_with_secondary_suite 56, house_with_secondary_suite_garden_suite 52) over 1,921 lots = 624,325 rows (teststack/c3-rowcheck.out PASS: old 293913 new 624325, missing 0, added 330412); the old table held 293,913 rows (47/55/51 a lot for the three non-suite types). rows[9] (vocabulary:parcel_maxbld_scenarios.status, scripts/lib/step/write.js:2461-2466) moves from \"within declared values (7 distinct)\" to \"(8 distinct)\": the SELECT DISTINCT of stored status now includes \"unlimited\", which exists only on the garden-suite types that were not derived before (teststack/c3-status.out: detached_house_garden_suite/unlimited:3788); all eight values are in the declared vocabulary (descriptor.json:89), so the row stays INFO."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value.bylaw_resolution_option_results",
+      "why": "Measured count of the read-input table bylaw_resolution_option_results (inputs_nonempty row, scripts/lib/step/index.js:6670) 9241953 -> 19804185 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_option_results (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value.bylaw_resolution_option_results",
+      "why": "Measured count of the read-input table bylaw_resolution_option_results (inputs_nonempty row, scripts/lib/step/index.js:6670) 9241953 -> 19804185 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_option_results (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value.bylaw_resolution_results",
+      "why": "Measured count of the read-input table bylaw_resolution_results (inputs_nonempty row, scripts/lib/step/index.js:6670) 118825110 -> 125426505 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_results (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value.bylaw_resolution_results",
+      "why": "Measured count of the read-input table bylaw_resolution_results (inputs_nonempty row, scripts/lib/step/index.js:6670) 118825110 -> 125426505 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_results (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value.bylaw_resolution_texts",
+      "why": "Measured count of the read-input table bylaw_resolution_texts (inputs_nonempty row, scripts/lib/step/index.js:6670) 2868 -> 2873 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_texts (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value.bylaw_resolution_texts",
+      "why": "Measured count of the read-input table bylaw_resolution_texts (inputs_nonempty row, scripts/lib/step/index.js:6670) 2868 -> 2873 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_texts (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value.bylaw_resolution_units",
+      "why": "Measured count of the read-input table bylaw_resolution_units (inputs_nonempty row, scripts/lib/step/index.js:6670) 1014 -> 1024 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_units (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value.bylaw_resolution_units",
+      "why": "Measured count of the read-input table bylaw_resolution_units (inputs_nonempty row, scripts/lib/step/index.js:6670) 1014 -> 1024 (audit row 7 of POST); the Layer 2 read-input tables are not written by this step; the test stack is a dev copy whose Layer 2 state moved between the committed POST capture (migrations=301) and this capture (migrations=306, after INC5-NIGHT: RUN.md start state, migrations 309 310 311 313 315 321 applied, 316 applied by this job). Confirmed on the dev DB 2026-11-16 by a read-only select count(*) from bylaw_resolution_units (the live dev count equals the dev POST value; dev schema_migrations count 306 = the POST stdout banner), after the M14 dev run finished 2026-11-16 07:34:41."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.config.compute_maxbld_scenarios_min_main_dwelling_gfa_m2",
+      "why": "New setting, value 60: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:355, min = max = 60) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "summary.records_meta.config.compute_maxbld_scenarios_min_main_dwelling_gfa_m2",
+      "why": "New setting, value 60: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:355, min = max = 60) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.config.compute_maxbld_scenarios_min_suite_gfa_m2",
+      "why": "New setting, value 25: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:354, min = max = 25) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "summary.records_meta.config.compute_maxbld_scenarios_min_suite_gfa_m2",
+      "why": "New setting, value 25: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:354, min = max = 25) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.config.compute_maxbld_scenarios_plate_min_dimension_m",
+      "why": "New setting, value 3: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:352, min = max = 3) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "summary.records_meta.config.compute_maxbld_scenarios_plate_min_dimension_m",
+      "why": "New setting, value 3: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:352, min = max = 3) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.config.compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm",
+      "why": "New setting, value 0.01: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:353, min = max = 0.01) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "summary.records_meta.config.compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm",
+      "why": "New setting, value 0.01: declared in the descriptor (scripts/compute-maxbld-scenarios.descriptor.json:353, min = max = 0.01) and seeded by migrations/316_layer3_increment5_settings.sql (applied by this job); the config block records every declared setting, so the key is new in POST."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.gate.upstream_completed_with_changes",
+      "why": "Gate evidence of the test stack's own pipeline_runs ledger, not of this step's code: scripts/lib/step/staleness.js:757 reports the count of upstream runs that completed with changes since this step's last completed run (POST records own_last_completed_at 2026-11-12T21:35:11Z, reason upstream_activity_since_last_run); the committed POST saw 0 and this capture saw 2 because upstream steps ran on the dev-copy test stack in between. Run-scoped ledger state, differs every capture."
+    },
+    {
+      "key": "summary.records_meta.gate.upstream_completed_with_changes",
+      "why": "Gate evidence of the test stack's own pipeline_runs ledger, not of this step's code: scripts/lib/step/staleness.js:757 reports the count of upstream runs that completed with changes since this step's last completed run (POST records own_last_completed_at 2026-11-12T21:35:11Z, reason upstream_activity_since_last_run); the committed POST saw 0 and this capture saw 2 because upstream steps ran on the dev-copy test stack in between. Run-scoped ledger state, differs every capture."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.rows_emitted",
+      "why": "The step's own rows_emitted counter (scripts/lib/compute/compute-maxbld-scenarios.js:449, catalogue.js:15) 293913 -> 624325: RUN.md End state: all six building types are now derived at 325 rows a lot (detached_house 52, detached_house_garden_suite 52, detached_houseplex 61, detached_houseplex_garden_suite 52, house_with_secondary_suite 56, house_with_secondary_suite_garden_suite 52) over 1,921 lots = 624,325 rows (teststack/c3-rowcheck.out PASS: old 293913 new 624325, missing 0, added 330412); the old table held 293,913 rows (47/55/51 a lot for the three non-suite types)."
+    },
+    {
+      "key": "summary.records_meta.rows_emitted",
+      "why": "The step's own rows_emitted counter (scripts/lib/compute/compute-maxbld-scenarios.js:449, catalogue.js:15) 293913 -> 624325: RUN.md End state: all six building types are now derived at 325 rows a lot (detached_house 52, detached_house_garden_suite 52, detached_houseplex 61, detached_houseplex_garden_suite 52, house_with_secondary_suite 56, house_with_secondary_suite_garden_suite 52) over 1,921 lots = 624,325 rows (teststack/c3-rowcheck.out PASS: old 293913 new 624325, missing 0, added 330412); the old table held 293,913 rows (47/55/51 a lot for the three non-suite types)."
+    },
+    {
+      "key": "pipeline_runs[].records_new",
+      "why": "records_new is the run's inserted-row count (ledger write scripts/lib/step/ledger.js:276). Capture run 1 follows the unchanged recovery.reset (descriptor.json:302: DELETE the detached_house rows, then re-derive): it inserts 420,699 rows (= 624,325 minus the 203,626 kept rows) against the committed POST's 90,287 (the detached_house rows alone, which the old reset also deleted). Measured teststack/c3-runs.out: run 1 = 1921|420699|203626|completed; rerun = 1921|0|0|completed."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "records_new is the run's inserted-row count (ledger write scripts/lib/step/ledger.js:276). Capture run 1 follows the unchanged recovery.reset (descriptor.json:302: DELETE the detached_house rows, then re-derive): it inserts 420,699 rows (= 624,325 minus the 203,626 kept rows) against the committed POST's 90,287 (the detached_house rows alone, which the old reset also deleted). Measured teststack/c3-runs.out: run 1 = 1921|420699|203626|completed; rerun = 1921|0|0|completed."
+    },
+    {
+      "key": "pipeline_runs[].records_updated",
+      "why": "records_updated is the run's rewritten-row count (ledger write scripts/lib/step/ledger.js:276). Run 1 rewrites 203,626 existing non-detached rows whose content_sha moved under the Part B engine (guarded upsert on content_sha, descriptor.json recovery.interrupted_why), against 0 in the committed POST where the kept rows were unchanged. Measured teststack/c3-runs.out: 1921|420699|203626; rerun writes 0 (1921|0|0); c3-rowcheck.out records old rows changed: sha 293913, value/unit 210, status 237, flags 68."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "records_updated is the run's rewritten-row count (ledger write scripts/lib/step/ledger.js:276). Run 1 rewrites 203,626 existing non-detached rows whose content_sha moved under the Part B engine (guarded upsert on content_sha, descriptor.json recovery.interrupted_why), against 0 in the committed POST where the kept rows were unchanged. Measured teststack/c3-runs.out: 1921|420699|203626; rerun writes 0 (1921|0|0); c3-rowcheck.out records old rows changed: sha 293913, value/unit 210, status 237, flags 68."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout line 0 is the target banner (scripts/lib/resolve-db.js:285) naming the local DB's applied-migration count: migrations=301 in the committed POST capture, migrations=306 here. The test stack is a dev copy; the count moved with the migrations other lanes applied (INC5-NIGHT 309 310 311 313 315 321, RUN.md) and with 316 applied by this job (teststack/c2-mig.out). Environment text, not step behaviour."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "md5 over parcel_maxbld_scenarios ordered by (parcel_id, building_type, field_id) (scripts/analysis/capture-step-golden.js:31-32, :566); it moves from b5fb528b... to ebeb163b... because the table now holds 624,325 re-derived rows (all six types, 325 a lot) and 293,913 old rows' content_sha changed (c3-rowcheck.out: sha 293913)."
+    },
+    {
+      "key": "table_state[].row_count",
+      "why": "parcel_maxbld_scenarios row_count 293913 -> 624325 (the table_state row of POST): RUN.md End state: all six building types are now derived at 325 rows a lot (detached_house 52, detached_house_garden_suite 52, detached_houseplex 61, detached_houseplex_garden_suite 52, house_with_secondary_suite 56, house_with_secondary_suite_garden_suite 52) over 1,921 lots = 624,325 rows (teststack/c3-rowcheck.out PASS: old 293913 new 624325, missing 0, added 330412); the old table held 293,913 rows (47/55/51 a lot for the three non-suite types)."
+    }
+  ]
 }

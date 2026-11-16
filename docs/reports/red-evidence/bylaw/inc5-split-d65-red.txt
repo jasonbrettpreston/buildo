@@ -1,0 +1,14 @@
+RED FIRST: src/tests/steps/compute_maxbld_scenarios/increment5-split-d65.logic.test.ts on the tree without the D-65 seeds (split.js refine_steps, the refined crossing, four rafter-span rows, the pitched-B allocation row), 2026-11-13, lane B5B-6: 4 red of 4.
+   × D-65 candidate kinds are declared in data > names the refined crossing, the four rafter-span rows and the pitched-B allocation, and every row exists 2ms
+   × the refined crossing (A0553: the pitched-B house reaches its ceiling at d 3.5582) > A0553 detached low/A and low/B equal the key within 0.02 m2 (the engine was 192.8725 against 195.8669) 626ms
+   × the rafter-span edges (A0561: the pitched-B form is offered up to half span 7.66 m, depth 15.32 m) > the edge rows are twice the settings, and A0561 detached tall/A equals the key within 0.02 m2 (was 275.4101 against 277.2098) 1ms
+   × the path (A) house-first allocation for the pitched-B form (Q6 a) > A0561 detached low/A and tall/A choose the pitched-B allocation and equal the key within 0.02 m2 2264ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-split-d65.logic.test.ts > D-65 candidate kinds are declared in data > names the refined crossing, the four rafter-span rows and the pitched-B allocation, and every row exists
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-split-d65.logic.test.ts > the refined crossing (A0553: the pitched-B house reaches its ceiling at d 3.5582) > A0553 detached low/A and low/B equal the key within 0.02 m2 (the engine was 192.8725 agains
+AssertionError: low/A: expected 2.9944199071544233 to be less than 0.02
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-split-d65.logic.test.ts > the rafter-span edges (A0561: the pitched-B form is offered up to half span 7.66 m, depth 15.32 m) > the edge rows are twice the settings, and A0561 detached tall/A equals the
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-split-d65.logic.test.ts > the path (A) house-first allocation for the pitched-B form (Q6 a) > A0561 detached low/A and tall/A choose the pitched-B allocation and equal the key within 0.02 m2
+AssertionError: low/A: expected 1.2139460122699575 to be less than 0.02
+ Test Files  1 failed (1)
+      Tests  4 failed (4)

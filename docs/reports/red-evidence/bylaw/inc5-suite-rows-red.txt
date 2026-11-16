@@ -1,0 +1,6 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-suite-rows.logic.test.ts > the suite rows are catalogue rows on the three add-on types, each with its switch > declares the eleven rows on exactly the add-on types, each with a formula switch, and the four 316 settings
+AssertionError: addon_storeys: expected undefined to be truthy
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-suite-rows.logic.test.ts > the suite GFA at a key candidate (arm x path, the key house depth, footprint and GFA injected) equals the key suite GFA > reproduces every non-corner, non-through key option cell within the key grid (0.02 m2); corner lots refuse by the open word
+Error: runRow: unknown row addon_suite_gfa_a_m2
+      Tests  2 failed (2)

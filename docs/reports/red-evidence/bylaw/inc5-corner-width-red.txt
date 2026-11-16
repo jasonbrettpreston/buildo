@@ -1,0 +1,5 @@
+== MB-27 increment 5 Part B (B5B-4, P1 b) the corner branch of addon_suite_width_m: red on the tree with the stored Layer 2 floor (migration 321 data) and the row still refusing by the declared word suite_corner_street_side_open; green after the row reads max(the house's street-side yard; the floor).
+   × the suite GFA at a key candidate (arm x path, the key house depth, footprint and GFA injected) equals the key suite GFA > reproduces every key option cell the stored cells allow within the key grid (0.02 m2), corner lots included (P1 b) 1137ms
+     → A0578_26TEY detached_house tall/A: not_evaluated suite_corner_street_side_open
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 2 passed (3)

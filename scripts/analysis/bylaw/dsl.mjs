@@ -294,6 +294,8 @@ class Parser {
     if (this.l3 && this.isId(LEX.w.mapped) && this.isTok(LEX.p.open, 1)) throw new DslError(LEX.w.unknown_function, `${LEX.p.mapped_is_not_a_layer_3_form_in} ${this.src}`);
     if (this.l3 && this.isId(LEX.w.labelled) && this.isTok(LEX.p.open, 1)) throw new DslError(LEX.w.unknown_function, `${LEX.p.labelled_is_not_a_layer_3_form_in} ${this.src}`);
     if (this.l3 && this.isId(LEX.w.regulated) && this.isTok(LEX.p.open, 1)) { this.next(); this.next(); const id = this.expect(LEX.w.id).v; this.expect(LEX.p.close); return { type: LEX.w.regulated, id }; }
+    // MB-27 increment 5 Part B (P3 a, operator 2026-11-13): exception(<id>) reads the stored cell's source layer (the view's winner_layer): true when a Chapter 900 exception won it
+    if (this.l3 && this.isId(LEX.w.exception) && this.isTok(LEX.p.open, 1)) { this.next(); this.next(); const id = this.expect(LEX.w.id).v; this.expect(LEX.p.close); return { type: LEX.w.exception, id }; }
     if (this.isId('mapped') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'mapped', code: c }; }
     if (this.isId('labelled') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'labelled', letter: c }; }
     // M-241 (N-2, operator approved 2026-10-20): holds(<lot condition token>) — one statement's own condition when a clause
@@ -430,6 +432,7 @@ function canonCond0(c) {
     case 'holds': return `holds(${c.token})`;
     // MB-31 (M-72 Layer 3 forms, plan section 3 E1): enabled only by { layer: 'l3' }; Layer 1/2 parsing is unchanged.
     case LEX.w.regulated: return `${LEX.p.regulated}${c.id}${LEX.p.close}`;
+    case LEX.w.exception: return `${LEX.p.exception}${c.id}${LEX.p.close}`;
     case LEX.w.cmp: return c.rhs ? canonExpr(c.lhs) + c.cmp + canonExpr(c.rhs) : canonExpr(c.lhs) + c.cmp + canonExpr(c.lit);
     default: throw new DslError('syntax', `canonical: unknown condition ${c.type}`);
   }
@@ -662,7 +665,7 @@ function condUnitsL3(c, U, errs) {
       if (a && b && !unifyL3(a, b).ok) errs.push(`${LEX.p.unit_mismatch_condition} ${a} ${c.cmp} ${b}`);
       return;
     }
-    case LEX.w.regulated: if (!U.l2[c.id]) errs.push(`${LEX.p.unknown_target} ${c.id}`); return;
+    case LEX.w.regulated: case LEX.w.exception: if (!U.l2[c.id]) errs.push(`${LEX.p.unknown_target} ${c.id}`); return;
     case LEX.w.holds: if (!U.flags.includes(c.token)) errs.push(`${LEX.p.unknown_flag} ${c.token}`); return;
     case LEX.w.and: case LEX.w.or: for (const x of c.xs) condUnitsL3(x, U, errs); return;
     case LEX.w.not: condUnitsL3(c.x, U, errs); return;
@@ -812,7 +815,7 @@ export function l3RefsOf(node) {
   const walk = (n) => {
     if (!n || typeof n !== LEX.w.object) return;
     if (n.type === LEX.w.lv) lv.add(n.id);
-    else if (n.type === LEX.w.l2 || n.type === LEX.w.regulated) l2.add(n.id);
+    else if (n.type === LEX.w.l2 || n.type === LEX.w.regulated || n.type === LEX.w.exception) l2.add(n.id);
     else if (n.type === LEX.w.var) names.add(n.name);
     for (const k of Object.keys(n)) {
       const v = n[k];

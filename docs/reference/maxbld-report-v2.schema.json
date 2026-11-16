@@ -47,6 +47,52 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
+              "addon_cand_cov_a_m",
+              "addon_cand_cov_b_m",
+              "addon_cand_house_first_cap_m",
+              "addon_cand_rafter_span_1_b_m",
+              "addon_cand_rafter_span_2_b_m",
+              "addon_cand_rafter_span_3_b_m",
+              "addon_cand_rafter_span_4_b_m",
+              "addon_cand_region_anc_m",
+              "addon_cand_region_cap_m",
+              "addon_cand_region_min_m",
+              "addon_cand_region_min_suite_m",
+              "addon_cand_stack_ceiling_m",
+              "addon_cand_width_a_m",
+              "addon_cand_width_b_m",
+              "addon_ceiling_m2",
+              "addon_flat_stack_a",
+              "addon_flat_stack_b_m",
+              "addon_flat_stack_ratio",
+              "addon_main_depth_m",
+              "addon_main_footprint_a_full_m2",
+              "addon_main_footprint_a_m2",
+              "addon_main_footprint_b_m2",
+              "addon_main_footprint_m2",
+              "addon_main_footprint_min_a_m2",
+              "addon_main_footprint_min_pitched_b_a_m2",
+              "addon_main_gfa_m2",
+              "addon_pitched_b_raw_m2",
+              "addon_storeys",
+              "addon_suite_footprint_a_m2",
+              "addon_suite_footprint_b_m2",
+              "addon_suite_gfa_a_m2",
+              "addon_suite_gfa_b_m2",
+              "addon_suite_rear_m",
+              "addon_suite_region_depth_m",
+              "addon_suite_region_m2",
+              "addon_suite_width_m",
+              "addon_total_cov_a_m2",
+              "addon_unit_cap_gate",
+              "addon_x_anc_m2",
+              "addon_x_cap_footprint_m2",
+              "addon_x_cap_m2",
+              "addon_x_min_main_m2",
+              "addon_x_min_suite_footprint_m2",
+              "addon_x_min_suite_m2",
+              "addon_x_region_m2",
+              "addon_x_room_a_m2",
               "attic_counted_a_m2",
               "attic_counted_b_m2",
               "attic_counted_floor_a_m2",
@@ -116,6 +162,508 @@
               "wall_storeys"
             ],
             "properties": {
+              "addon_cand_cov_a_m": {
+                "description": "addon_cand_cov_a_m",
+                "x-source": "catalogue:addon_cand_cov_a_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_cov_b_m": {
+                "description": "addon_cand_cov_b_m",
+                "x-source": "catalogue:addon_cand_cov_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_house_first_cap_m": {
+                "description": "addon_cand_house_first_cap_m",
+                "x-source": "catalogue:addon_cand_house_first_cap_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_rafter_span_1_b_m": {
+                "description": "addon_cand_rafter_span_1_b_m",
+                "x-source": "catalogue:addon_cand_rafter_span_1_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_rafter_span_2_b_m": {
+                "description": "addon_cand_rafter_span_2_b_m",
+                "x-source": "catalogue:addon_cand_rafter_span_2_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_rafter_span_3_b_m": {
+                "description": "addon_cand_rafter_span_3_b_m",
+                "x-source": "catalogue:addon_cand_rafter_span_3_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_rafter_span_4_b_m": {
+                "description": "addon_cand_rafter_span_4_b_m",
+                "x-source": "catalogue:addon_cand_rafter_span_4_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_region_anc_m": {
+                "description": "addon_cand_region_anc_m",
+                "x-source": "catalogue:addon_cand_region_anc_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_region_cap_m": {
+                "description": "addon_cand_region_cap_m",
+                "x-source": "catalogue:addon_cand_region_cap_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_region_min_m": {
+                "description": "addon_cand_region_min_m",
+                "x-source": "catalogue:addon_cand_region_min_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_region_min_suite_m": {
+                "description": "addon_cand_region_min_suite_m",
+                "x-source": "catalogue:addon_cand_region_min_suite_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_stack_ceiling_m": {
+                "description": "addon_cand_stack_ceiling_m",
+                "x-source": "catalogue:addon_cand_stack_ceiling_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_width_a_m": {
+                "description": "addon_cand_width_a_m",
+                "x-source": "catalogue:addon_cand_width_a_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_cand_width_b_m": {
+                "description": "addon_cand_width_b_m",
+                "x-source": "catalogue:addon_cand_width_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_ceiling_m2": {
+                "description": "addon_ceiling_m2",
+                "x-source": "catalogue:addon_ceiling_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_flat_stack_a": {
+                "description": "addon_flat_stack_a",
+                "x-source": "catalogue:addon_flat_stack_a",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_flat_stack_b_m": {
+                "description": "addon_flat_stack_b_m",
+                "x-source": "catalogue:addon_flat_stack_b_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_flat_stack_ratio": {
+                "description": "addon_flat_stack_ratio",
+                "x-source": "catalogue:addon_flat_stack_ratio",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_depth_m": {
+                "description": "addon_main_depth_m",
+                "x-source": "catalogue:addon_main_depth_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_footprint_a_full_m2": {
+                "description": "addon_main_footprint_a_full_m2",
+                "x-source": "catalogue:addon_main_footprint_a_full_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_footprint_a_m2": {
+                "description": "addon_main_footprint_a_m2",
+                "x-source": "catalogue:addon_main_footprint_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_footprint_b_m2": {
+                "description": "addon_main_footprint_b_m2",
+                "x-source": "catalogue:addon_main_footprint_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_footprint_m2": {
+                "description": "addon_main_footprint_m2",
+                "x-source": "catalogue:addon_main_footprint_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_footprint_min_a_m2": {
+                "description": "addon_main_footprint_min_a_m2",
+                "x-source": "catalogue:addon_main_footprint_min_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_footprint_min_pitched_b_a_m2": {
+                "description": "addon_main_footprint_min_pitched_b_a_m2",
+                "x-source": "catalogue:addon_main_footprint_min_pitched_b_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_main_gfa_m2": {
+                "description": "addon_main_gfa_m2",
+                "x-source": "catalogue:addon_main_gfa_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_pitched_b_raw_m2": {
+                "description": "addon_pitched_b_raw_m2",
+                "x-source": "catalogue:addon_pitched_b_raw_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_storeys": {
+                "description": "addon_storeys",
+                "x-source": "catalogue:addon_storeys",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_footprint_a_m2": {
+                "description": "addon_suite_footprint_a_m2",
+                "x-source": "catalogue:addon_suite_footprint_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_footprint_b_m2": {
+                "description": "addon_suite_footprint_b_m2",
+                "x-source": "catalogue:addon_suite_footprint_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_gfa_a_m2": {
+                "description": "addon_suite_gfa_a_m2",
+                "x-source": "catalogue:addon_suite_gfa_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_gfa_b_m2": {
+                "description": "addon_suite_gfa_b_m2",
+                "x-source": "catalogue:addon_suite_gfa_b_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_rear_m": {
+                "description": "addon_suite_rear_m",
+                "x-source": "catalogue:addon_suite_rear_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_region_depth_m": {
+                "description": "addon_suite_region_depth_m",
+                "x-source": "catalogue:addon_suite_region_depth_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_region_m2": {
+                "description": "addon_suite_region_m2",
+                "x-source": "catalogue:addon_suite_region_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_suite_width_m": {
+                "description": "addon_suite_width_m",
+                "x-source": "catalogue:addon_suite_width_m",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_total_cov_a_m2": {
+                "description": "addon_total_cov_a_m2",
+                "x-source": "catalogue:addon_total_cov_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_unit_cap_gate": {
+                "description": "addon_unit_cap_gate",
+                "x-source": "catalogue:addon_unit_cap_gate",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_anc_m2": {
+                "description": "addon_x_anc_m2",
+                "x-source": "catalogue:addon_x_anc_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_cap_footprint_m2": {
+                "description": "addon_x_cap_footprint_m2",
+                "x-source": "catalogue:addon_x_cap_footprint_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_cap_m2": {
+                "description": "addon_x_cap_m2",
+                "x-source": "catalogue:addon_x_cap_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_min_main_m2": {
+                "description": "addon_x_min_main_m2",
+                "x-source": "catalogue:addon_x_min_main_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_min_suite_footprint_m2": {
+                "description": "addon_x_min_suite_footprint_m2",
+                "x-source": "catalogue:addon_x_min_suite_footprint_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_min_suite_m2": {
+                "description": "addon_x_min_suite_m2",
+                "x-source": "catalogue:addon_x_min_suite_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_region_m2": {
+                "description": "addon_x_region_m2",
+                "x-source": "catalogue:addon_x_region_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "addon_x_room_a_m2": {
+                "description": "addon_x_room_a_m2",
+                "x-source": "catalogue:addon_x_room_a_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "attic_counted_a_m2": {
                 "description": "attic_counted_a_m2",
                 "x-source": "catalogue:attic_counted_a_m2",

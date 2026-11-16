@@ -1,0 +1,14 @@
+# red evidence, parent 3dc51a394 (no add-on type, no suite_read, two-structure.js present but no seed rows): increment5-two-structure.logic.test.ts
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-two-structure.logic.test.ts > the add-on building types (BUILD-PLAN C2: three add-on types, one per row, item 11 (b)) > building-types.json declares one add-on type per row, naming its principal type and the class
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-two-structure.logic.test.ts > the add-on building types (BUILD-PLAN C2: three add-on types, one per row, item 11 (b)) > declares the one suite prefix once (suite_read)
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-two-structure.logic.test.ts > the two-structure read decodes the principal cells beside the garden_suite cells > reads the 25 lots x 3 classes: the principal cells keep their names, every suite cell is read under the prefix, nothing is lost or malformed
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-two-structure.logic.test.ts > the two-structure read decodes the principal cells beside the garden_suite cells > the suite option runs carry the prefixed suite cells; the roof runs keep the principal cells (A0578: 4.0 / 4.0 / 60 and 6.3 / 7.5 / 120)
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-two-structure.logic.test.ts > the two-structure read decodes the principal cells beside the garden_suite cells > refuses to read a type that is not an add-on, and a seed without the declaration
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-two-structure.logic.test.ts > a row reads the two structures under their names (rows.js units of the prefixed names) > l2(rear_setback_m) is the house, l2(suite_rear_setback_m) is the suite, and the suite option run overlays the suite cell
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+
+== review fold red run (guards removed): 2 failed | 8 passed ==
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-two-structure.logic.test.ts > no cell or unit is silently overwritten (DeepSeek review B5B-2a, CRITICAL/HIGH, folded) > throws when a prefixed name collides with a layer 2 target in the unit map
+      Tests  2 failed | 8 passed (10)

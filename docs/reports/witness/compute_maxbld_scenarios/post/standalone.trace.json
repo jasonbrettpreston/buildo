@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/compute-maxbld-scenarios.js",
   "chain": "none",
-  "source_fingerprint": "8d6d61988b1c290d5ee016e42b1d26a8150d580977c4f116edf6756081bf458a",
-  "git_head": "008e95c6094509197e8c5047cf15d8e606a6ca0a",
+  "source_fingerprint": "50068b919d304dd066641f2179543e9f2b4400b3f79950c2aac446831bdac165",
+  "git_head": "eda44dc7e73e4875d122d66184bb93583af58f1c",
   "header": {
     "processes": 1,
-    "calls": 117,
+    "calls": 205,
     "distinct": 27,
     "utility": 13,
-    "tracer_self_ms": 807.591,
-    "wall_ms": 87250
+    "tracer_self_ms": 1853.203,
+    "wall_ms": 16918194
   },
   "statements": [
     {
       "fingerprint": "024e5abf33946149",
       "kind": "read",
       "count": 1,
-      "rowCount": 1014,
+      "rowCount": 1024,
       "reads": {
         "bylaw_resolution_units": [
           "unit_id",
@@ -106,6 +106,85 @@
       "error": null
     },
     {
+      "fingerprint": "29133d0da9d8b8a2",
+      "kind": "read",
+      "count": 5,
+      "rowCount": 1921,
+      "reads": {
+        "bylaw_resolution_lot_stamps": [
+          "evaluator_version",
+          "lot_gate",
+          "parcel_id",
+          "permitted",
+          "permitted_text_ids",
+          "table_version"
+        ],
+        "bylaw_resolution_option_results": [
+          "class",
+          "lot_gate",
+          "option",
+          "parcel_id",
+          "reason",
+          "status",
+          "structure",
+          "target",
+          "value",
+          "value_kind",
+          "winner_layer",
+          "winner_unit_id"
+        ],
+        "bylaw_resolution_results": [
+          "class",
+          "lot_gate",
+          "parcel_id",
+          "reason",
+          "status",
+          "structure",
+          "target",
+          "value",
+          "value_kind",
+          "winner_layer",
+          "winner_unit_id"
+        ],
+        "parcel_abutments": [
+          "bldg_to_subject_m",
+          "est_status",
+          "front_setback_est_m",
+          "neighbour_id",
+          "neighbour_residential",
+          "parcel_id",
+          "same_frontage_street",
+          "shared_len_m"
+        ],
+        "parcel_maxbld_population": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "abuts_laneway",
+          "depth_m",
+          "exception_number",
+          "frontage_m",
+          "geom",
+          "id",
+          "in_sixplex_area",
+          "is_corner_lot",
+          "is_heritage_designated",
+          "is_through_lot",
+          "lot_size_sqm",
+          "on_policy_road",
+          "parcel_id",
+          "primary_frontage_street_name",
+          "zoning_class",
+          "zoning_is_ambiguous",
+          "zoning_overlays",
+          "zoning_zn_string"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "52422eca2f88a3e0",
       "kind": "read",
       "count": 1,
@@ -132,13 +211,13 @@
       "params": [
         [
           "completed",
-          86989,
+          16917941,
           null,
-          4447,
+          4453,
           1921,
-          90287,
-          0,
-          "{\"rows_emitted\":293913,\"layer2_cell_unparseable\":0,\"units_floor_refusals\":0,\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"sources:compute_maxbld_scenarios\",\"compute_maxbld_scenarios\",\"compute-maxbld-scenarios\"],\"upstream_slugs\":[\"sources:resolve_bylaws\",\"resolve_bylaws\",\"resolve-bylaws\",\"sources:link_parcel_abutments\",\"link_parcel_abutments\",\"link-parcel-abutments\",\"sources:parcels\",\"parcels\",\"sources:enrich_parcels\",\"enrich_parcels\",\"enrich-parcels\",\"sources:enrich_centreline\",\"enrich_centreline\",\"enrich-centreline\",\"sources:enrich_heritage\",\"enrich_heritage\",\"enrich-heritage\"],\"own_last_completed_at\":\"2026-11-12T19:52:35.171Z\",\"upstream_non_completed\":3,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":2},\"config\":{\"fya_porch_allowance_m\":1,\"fya_placeholder_street_radius_m\":200,\"fya_placeholder_street_min_n\":3,\"fya_placeholder_zone_radius_m\":500,\"fya_placeholder_zone_min_n\":5,\"fya_placeholder_ring_depth\":2,\"fya_placeholder_ring_min_n\":1,\"fya_est_min_m\":0,\"fya_est_max_m\":30,\"houseplex_circulation_share\":0.1,\"houseplex_unit_min_net_m2\":30,\"s1_ceiling_min_m\":2.3,\"s1_floor_assembly_m\":0.212,\"s1_parapet_m\":0.3,\"s2_first_floor_above_grade_m\":0,\"compute_maxbld_scenarios_rafter_span_1_m\":3.89,\"compute_maxbld_scenarios_roof_assembly_depth_1_m\":0.1622,\"compute_maxbld_scenarios_rafter_span_2_m\":5.11,\"compute_maxbld_scenarios_roof_assembly_depth_2_m\":0.2062,\"compute_maxbld_scenarios_rafter_span_3_m\":6.52,\"compute_maxbld_scenarios_roof_assembly_depth_3_m\":0.2572,\"compute_maxbld_scenarios_rafter_span_4_m\":7.66,\"compute_maxbld_scenarios_roof_assembly_depth_4_m\":0.3082,\"footprint_shape_factor\":1,\"compute_maxbld_scenarios_population_parcel_ids\":[\"6640\",\"30065\",\"30554\",\"33830\",\"119522\",\"120669\",\"122034\",\"153191\",\"159079\",\"169742\",\"170105\",\"173273\",\"205238\",\"216666\",\"258388\",\"274216\",\"283723\",\"304365\",\"313999\",\"403569\",\"410720\",\"427312\",\"428050\",\"442123\",\"461807\"],\"compute_maxbld_scenarios_bbox_degree_divisor\":78000,\"compute_maxbld_scenarios_batch_size\":500,\"resolve_bylaws_population_zone_classes\":[\"R\",\"RD\",\"RS\",\"RT\",\"RM\"]},\"terminal\":\"materialized_incremental\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"008e95c6094509197e8c5047cf15d8e606a6ca0a\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Compute Max-Build Scenarios (Layer 3)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"rows_written\",\"value\":293913,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"closure_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"status_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"numbers_without_trace\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"flags_missing\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"not_buildable_with_value\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"layer2_cell_unparseable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"bylaw_resolution_results\":118825110,\"bylaw_resolution_option_results\":9241953,\"bylaw_resolution_lot_stamps\":440093,\"bylaw_resolution_units\":1014,\"bylaw_resolution_texts\":2868,\"parcels\":496536,\"parcel_abutments\":1674346,\"parcel_maxbld_population\":1897},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"bylaw_resolution_lot_stamps\":440093},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_maxbld_scenarios.status\",\"value\":\"within declared values (7 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_basement_livable_share\",\"value\":\"\\\"compute_maxbld_scenarios_basement_livable_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_circulation_share\",\"value\":\"\\\"compute_maxbld_scenarios_circulation_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading\",\"value\":\"\\\"compute_maxbld_scenarios_coxwell_generous_reading\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m\",\"value\":\"\\\"compute_maxbld_scenarios_depth_search_step_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min\",\"value\":\"\\\"compute_maxbld_scenarios_existing_confidence_min\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty\",\"value\":\"\\\"compute_maxbld_scenarios_existing_shared_footprint_penalty\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m\",\"value\":\"\\\"compute_maxbld_scenarios_first_floor_elevation_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units\",\"value\":\"\\\"compute_maxbld_scenarios_houseplex_min_units\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m\",\"value\":\"\\\"compute_maxbld_scenarios_lane_buffer_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_max_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_min_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m\",\"value\":\"\\\"compute_maxbld_scenarios_lot_viability_margin_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_min_dimension_m\",\"value\":\"\\\"compute_maxbld_scenarios_min_dimension_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct\",\"value\":\"\\\"compute_maxbld_scenarios_not_evaluated_max_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m\",\"value\":\"\\\"compute_maxbld_scenarios_roof_assembly_depth_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_pitch\",\"value\":\"\\\"compute_maxbld_scenarios_roof_pitch\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_storey_height_m\",\"value\":\"\\\"compute_maxbld_scenarios_storey_height_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_weight\",\"value\":\"\\\"compute_maxbld_scenarios_suite_weight\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m\",\"value\":\"\\\"compute_maxbld_scenarios_triangle_simplify_tol_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct\",\"value\":\"\\\"compute_maxbld_scenarios_trust_high_min_pass_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_unit_min_interior_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":22.08,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":86989,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          420699,
+          203626,
+          "{\"rows_emitted\":624325,\"layer2_cell_unparseable\":0,\"units_floor_refusals\":0,\"gate\":{\"reason\":\"upstream_activity_since_last_run\",\"gated_skip\":false,\"own_slugs\":[\"sources:compute_maxbld_scenarios\",\"compute_maxbld_scenarios\",\"compute-maxbld-scenarios\"],\"upstream_slugs\":[\"sources:resolve_bylaws\",\"resolve_bylaws\",\"resolve-bylaws\",\"sources:link_parcel_abutments\",\"link_parcel_abutments\",\"link-parcel-abutments\",\"sources:parcels\",\"parcels\",\"sources:enrich_parcels\",\"enrich_parcels\",\"enrich-parcels\",\"sources:enrich_centreline\",\"enrich_centreline\",\"enrich-centreline\",\"sources:enrich_heritage\",\"enrich_heritage\",\"enrich-heritage\"],\"own_last_completed_at\":\"2026-11-12T21:54:49.490Z\",\"upstream_non_completed\":3,\"upstream_completed_with_changes\":2,\"upstream_stale_running\":2},\"config\":{\"fya_porch_allowance_m\":1,\"fya_placeholder_street_radius_m\":200,\"fya_placeholder_street_min_n\":3,\"fya_placeholder_zone_radius_m\":500,\"fya_placeholder_zone_min_n\":5,\"fya_placeholder_ring_depth\":2,\"fya_placeholder_ring_min_n\":1,\"fya_est_min_m\":0,\"fya_est_max_m\":30,\"houseplex_circulation_share\":0.1,\"houseplex_unit_min_net_m2\":30,\"s1_ceiling_min_m\":2.3,\"s1_floor_assembly_m\":0.212,\"s1_parapet_m\":0.3,\"s2_first_floor_above_grade_m\":0,\"compute_maxbld_scenarios_rafter_span_1_m\":3.89,\"compute_maxbld_scenarios_roof_assembly_depth_1_m\":0.1622,\"compute_maxbld_scenarios_rafter_span_2_m\":5.11,\"compute_maxbld_scenarios_roof_assembly_depth_2_m\":0.2062,\"compute_maxbld_scenarios_rafter_span_3_m\":6.52,\"compute_maxbld_scenarios_roof_assembly_depth_3_m\":0.2572,\"compute_maxbld_scenarios_rafter_span_4_m\":7.66,\"compute_maxbld_scenarios_roof_assembly_depth_4_m\":0.3082,\"compute_maxbld_scenarios_plate_min_dimension_m\":3,\"compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm\":0.01,\"compute_maxbld_scenarios_min_suite_gfa_m2\":25,\"compute_maxbld_scenarios_min_main_dwelling_gfa_m2\":60,\"footprint_shape_factor\":1,\"compute_maxbld_scenarios_population_parcel_ids\":[\"6640\",\"30065\",\"30554\",\"33830\",\"119522\",\"120669\",\"122034\",\"153191\",\"159079\",\"169742\",\"170105\",\"173273\",\"205238\",\"216666\",\"258388\",\"274216\",\"283723\",\"304365\",\"313999\",\"403569\",\"410720\",\"427312\",\"428050\",\"442123\",\"461807\"],\"compute_maxbld_scenarios_bbox_degree_divisor\":78000,\"compute_maxbld_scenarios_batch_size\":500,\"resolve_bylaws_population_zone_classes\":[\"R\",\"RD\",\"RS\",\"RT\",\"RM\"]},\"terminal\":\"materialized_incremental\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"eda44dc7e73e4875d122d66184bb93583af58f1c\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Compute Max-Build Scenarios (Layer 3)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"rows_written\",\"value\":624325,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"closure_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"status_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"numbers_without_trace\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"flags_missing\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"not_buildable_with_value\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"layer2_cell_unparseable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"bylaw_resolution_results\":125426505,\"bylaw_resolution_option_results\":19804185,\"bylaw_resolution_lot_stamps\":440093,\"bylaw_resolution_units\":1024,\"bylaw_resolution_texts\":2873,\"parcels\":496536,\"parcel_abutments\":1674346,\"parcel_maxbld_population\":1897},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"bylaw_resolution_lot_stamps\":440093},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_maxbld_scenarios.status\",\"value\":\"within declared values (8 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_basement_livable_share\",\"value\":\"\\\"compute_maxbld_scenarios_basement_livable_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_circulation_share\",\"value\":\"\\\"compute_maxbld_scenarios_circulation_share\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_coxwell_generous_reading\",\"value\":\"\\\"compute_maxbld_scenarios_coxwell_generous_reading\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_depth_search_step_m\",\"value\":\"\\\"compute_maxbld_scenarios_depth_search_step_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_confidence_min\",\"value\":\"\\\"compute_maxbld_scenarios_existing_confidence_min\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_existing_shared_footprint_penalty\",\"value\":\"\\\"compute_maxbld_scenarios_existing_shared_footprint_penalty\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_first_floor_elevation_m\",\"value\":\"\\\"compute_maxbld_scenarios_first_floor_elevation_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_houseplex_min_units\",\"value\":\"\\\"compute_maxbld_scenarios_houseplex_min_units\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lane_buffer_m\",\"value\":\"\\\"compute_maxbld_scenarios_lane_buffer_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_max_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_max_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_min_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_lot_min_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_lot_viability_margin_m\",\"value\":\"\\\"compute_maxbld_scenarios_lot_viability_margin_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_min_dimension_m\",\"value\":\"\\\"compute_maxbld_scenarios_min_dimension_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_not_evaluated_max_pct\",\"value\":\"\\\"compute_maxbld_scenarios_not_evaluated_max_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_assembly_depth_m\",\"value\":\"\\\"compute_maxbld_scenarios_roof_assembly_depth_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_roof_pitch\",\"value\":\"\\\"compute_maxbld_scenarios_roof_pitch\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_storey_height_m\",\"value\":\"\\\"compute_maxbld_scenarios_storey_height_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_suite_gfa_strict_margin_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_suite_weight\",\"value\":\"\\\"compute_maxbld_scenarios_suite_weight\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_triangle_simplify_tol_m\",\"value\":\"\\\"compute_maxbld_scenarios_triangle_simplify_tol_m\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_trust_high_min_pass_pct\",\"value\":\"\\\"compute_maxbld_scenarios_trust_high_min_pass_pct\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:compute_maxbld_scenarios_unit_min_interior_sqm\",\"value\":\"\\\"compute_maxbld_scenarios_unit_min_interior_sqm\\\" (retired 2026-11-01, L31-10 (MB-31 plan section 12)) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.11,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":16917940,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -146,7 +225,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 878,
+      "rowCount": 885,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -189,7 +268,7 @@
       "fingerprint": "6dcff3f0dca82930",
       "kind": "read",
       "count": 1,
-      "rowCount": 7,
+      "rowCount": 8,
       "reads": {
         "parcel_maxbld_scenarios": [
           "status"
@@ -203,7 +282,7 @@
       "fingerprint": "72ccf0f2c6f1c702",
       "kind": "read",
       "count": 1,
-      "rowCount": 2868,
+      "rowCount": 2873,
       "reads": {
         "bylaw_resolution_texts": [
           "text",
@@ -248,7 +327,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 39,
+      "rowCount": 43,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -337,87 +416,10 @@
       "error": null
     },
     {
-      "fingerprint": "ce17088cae0635bd",
-      "kind": "read",
-      "count": 5,
-      "rowCount": 1921,
-      "reads": {
-        "bylaw_resolution_lot_stamps": [
-          "evaluator_version",
-          "lot_gate",
-          "parcel_id",
-          "permitted",
-          "permitted_text_ids",
-          "table_version"
-        ],
-        "bylaw_resolution_option_results": [
-          "class",
-          "lot_gate",
-          "option",
-          "parcel_id",
-          "reason",
-          "status",
-          "structure",
-          "target",
-          "value",
-          "value_kind",
-          "winner_unit_id"
-        ],
-        "bylaw_resolution_results": [
-          "class",
-          "lot_gate",
-          "parcel_id",
-          "reason",
-          "status",
-          "structure",
-          "target",
-          "value",
-          "value_kind",
-          "winner_unit_id"
-        ],
-        "parcel_abutments": [
-          "bldg_to_subject_m",
-          "est_status",
-          "front_setback_est_m",
-          "neighbour_id",
-          "neighbour_residential",
-          "parcel_id",
-          "same_frontage_street",
-          "shared_len_m"
-        ],
-        "parcel_maxbld_population": [
-          "parcel_id"
-        ],
-        "parcels": [
-          "abuts_laneway",
-          "depth_m",
-          "exception_number",
-          "frontage_m",
-          "geom",
-          "id",
-          "in_sixplex_area",
-          "is_corner_lot",
-          "is_heritage_designated",
-          "is_through_lot",
-          "lot_size_sqm",
-          "on_policy_road",
-          "parcel_id",
-          "primary_frontage_street_name",
-          "zoning_class",
-          "zoning_is_ambiguous",
-          "zoning_overlays",
-          "zoning_zn_string"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "e007e3f4be40f911",
       "kind": "write",
-      "count": 77,
-      "rowCount": 90287,
+      "count": 165,
+      "rowCount": 624325,
       "reads": {
         "parcel_maxbld_scenarios": [
           "content_sha"
@@ -472,25 +474,25 @@
   ],
   "transactions": [
     {
-      "client": "59023:2",
+      "client": "99721:2",
       "write_fingerprints": [
         "e007e3f4be40f911"
       ]
     },
     {
-      "client": "59023:2",
+      "client": "99721:2",
       "write_fingerprints": [
         "e007e3f4be40f911"
       ]
     },
     {
-      "client": "59023:2",
+      "client": "99721:2",
       "write_fingerprints": [
         "e007e3f4be40f911"
       ]
     },
     {
-      "client": "59023:2",
+      "client": "99721:2",
       "write_fingerprints": [
         "e007e3f4be40f911"
       ]
@@ -521,6 +523,7 @@
         "target",
         "value",
         "value_kind",
+        "winner_layer",
         "winner_unit_id"
       ],
       "bylaw_resolution_results": [
@@ -533,6 +536,7 @@
         "target",
         "value",
         "value_kind",
+        "winner_layer",
         "winner_unit_id"
       ],
       "bylaw_resolution_texts": [

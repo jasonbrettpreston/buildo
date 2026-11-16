@@ -1,0 +1,155 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-inc5b2
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts (8 tests | 8 failed) 2033ms
+   × P2 (a): the declared pieces > the catalogue declares the through_lot lot flag (source parcels.is_through_lot) and the row addon_suite_rear_m on exactly the add-on types, with its switch 2ms
+     → lot flag through_lot: expected undefined to be truthy
+   × P2 (a): the declared pieces > every row that read the stored suite rear now reads addon_suite_rear_m 1ms
+     → expected [ 'addon_suite_region_depth_m', …(4) ] to deeply equal [ 'addon_suite_rear_m' ]
+   × P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > A0464 (a through lot): addon_suite_rear_m equals the key rear (2.01) on every option cell of the three types 2ms
+     → runRow: unknown row addon_suite_rear_m
+   × P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > A0464: the suite GFA now reproduces the key on every option cell (it refused on the stored cell before) 5ms
+     → detached_house tall/A: expected 'not_evaluated' to be 'computed' // Object.is equality
+   × P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > a lot that is not a through lot keeps its stored rear cell (A0094: the stored value, no floor) 1ms
+     → runRow: unknown row addon_suite_rear_m
+   × P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > synthetic: on a through lot the floor wins when the own front setback is under it, the front wins when over it 1ms
+     → runRow: unknown row addon_suite_rear_m
+   × P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > synthetic: with the flag false the stored rear cell is read as before, so A0464 as a non-through lot refuses (fail closed, no floor invented) 1ms
+     → runRow: unknown row addon_suite_rear_m
+   × P2 (a): the step passes the through-lot flag (the hashed loader edit) > materializeParcels on A0464 with the parcel geometry flag carries the through lot into the add-on rear row; without it the row refuses 555ms
+     → Cannot read properties of undefined (reading 'row')
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the declared pieces > the catalogue declares the through_lot lot flag (source parcels.is_through_lot) and the row addon_suite_rear_m on exactly the add-on types, with its switch
+AssertionError: lot flag through_lot: expected undefined to be truthy
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:75:39
+     73|     const cat = S.catalogue as Json;
+     74|     const f = (cat.lot_flags as Json[]).find((x) => x.id === 'through_…
+     75|     expect(f, 'lot flag through_lot').toBeTruthy();
+       |                                       ^
+     76|     expect(f.source).toBe('parcels.is_through_lot');
+     77|     const r = (cat.rows as Json[]).find((x) => x.id === 'addon_suite_r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the declared pieces > every row that read the stored suite rear now reads addon_suite_rear_m
+AssertionError: expected [ 'addon_suite_region_depth_m', …(4) ] to deeply equal [ 'addon_suite_rear_m' ]
+
+- Expected
++ Received
+
+  Array [
+-   "addon_suite_rear_m",
++   "addon_suite_region_depth_m",
++   "addon_cand_region_min_m",
++   "addon_cand_region_min_suite_m",
++   "addon_cand_region_cap_m",
++   "addon_cand_region_anc_m",
+  ]
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:87:38
+     85|   it('every row that read the stored suite rear now reads addon_suite_…
+     86|     const readers = (S.catalogue.rows as Json[]).filter((r) => /l2\(su…
+     87|     expect(readers.map((r) => r.id)).toEqual(['addon_suite_rear_m']);
+       |                                      ^
+     88|   });
+     89| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > A0464 (a through lot): addon_suite_rear_m equals the key rear (2.01) on every option cell of the three types
+Error: runRow: unknown row addon_suite_rear_m
+ ❯ Object.runRowIn scripts/lib/compute/maxbld/rows.js:468:19
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:96:24
+     94|     for (const k of KEY.filter((x) => String(x.case).startsWith('A0464…
+     95|       for (const [name, c] of Object.entries(k.options as Record<strin…
+     96|         const r = ROWS.runRowIn('addon_suite_rear_m', `suite_${c.arm}`…
+       |                        ^
+     97|         expect(r.status, `${k.type} ${name}`).toBe('computed');
+     98|         expect(Math.abs(r.value - c.rear), `${k.type} ${name}: engine …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > A0464: the suite GFA now reproduces the key on every option cell (it refused on the stored cell before)
+AssertionError: detached_house tall/A: expected 'not_evaluated' to be 'computed' // Object.is equality
+
+Expected: "computed"
+Received: "not_evaluated"
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:111:47
+    109|         const r = ROWS.runRowIn(`addon_suite_gfa_${c.path.toLowerCase(…
+    110|         if (r.status === 'not_evaluated' && r.reason === 'below_livabl…
+    111|         expect(r.status, `${k.type} ${name}`).toBe('computed');
+       |                                               ^
+    112|         expect(Math.abs(r.value - c.suite), `${k.type} ${name}: engine…
+    113|         n += 1;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > a lot that is not a through lot keeps its stored rear cell (A0094: the stored value, no floor)
+Error: runRow: unknown row addon_suite_rear_m
+ ❯ Object.runRowIn scripts/lib/compute/maxbld/rows.js:468:19
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:121:22
+    119|     const k = KEY.find((x) => String(x.case).startsWith('A0094') && x.…
+    120|     for (const [name, c] of Object.entries(k.options as Record<string,…
+    121|       const r = ROWS.runRowIn('addon_suite_rear_m', `suite_${c.arm}`, …
+       |                      ^
+    122|       expect(r.status, name).toBe('computed');
+    123|       expect(Math.abs(r.value - c.rear), name).toBeLessThan(0.02);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > synthetic: on a through lot the floor wins when the own front setback is under it, the front wins when over it
+Error: runRow: unknown row addon_suite_rear_m
+ ❯ Object.runRowIn scripts/lib/compute/maxbld/rows.js:468:19
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:127:27
+    125|   });
+    126|   it('synthetic: on a through lot the floor wins when the own front se…
+    127|     const lowFront = ROWS.runRowIn('addon_suite_rear_m', 'suite_low', …
+       |                           ^
+    128|     expect([lowFront.status, lowFront.value]).toEqual(['computed', 1.5…
+    129|     const highFront = ROWS.runRowIn('addon_suite_rear_m', 'suite_low',…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the through-lot rear is max(own front setback, the Layer 2 floor) > synthetic: with the flag false the stored rear cell is read as before, so A0464 as a non-through lot refuses (fail closed, no floor invented)
+Error: runRow: unknown row addon_suite_rear_m
+ ❯ Object.runRowIn scripts/lib/compute/maxbld/rows.js:468:19
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:133:20
+    131|   });
+    132|   it('synthetic: with the flag false the stored rear cell is read as b…
+    133|     const r = ROWS.runRowIn('addon_suite_rear_m', 'suite_low', inputsF…
+       |                    ^
+    134|     expect(r.status).toBe('not_evaluated');
+    135|     expect(r.reason).toBe('missing_input:abutting_front_setback_m');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts > P2 (a): the step passes the through-lot flag (the hashed loader edit) > materializeParcels on A0464 with the parcel geometry flag carries the through lot into the add-on rear row; without it the row refuses
+TypeError: Cannot read properties of undefined (reading 'row')
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:151:112
+    149|       return S2.materializeParcels([src], lookups).rows.e1 as Json[];
+    150|     };
+    151|     const find = (rows: Json[]): Json => rows.find((r) => r.building_t…
+       |                                                                                                                ^
+    152|     expect(find(run(true)).result.status).toBe('computed');
+    153|     expect(find(run(false)).result.status).toBe('not_evaluated');
+ ❯ find src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:151:47
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment5-through-lot.logic.test.ts:152:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  21:07:24
+   Duration  2.29s (transform 42ms, setup 9ms, collect 10ms, tests 2.03s, environment 0ms, prepare 25ms)
+

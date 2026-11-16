@@ -1,0 +1,9 @@
+== MB-27 increment 5 Part B (B5B-4) narrow-lot not_buildable: red on the tree without the buildable_width_m increment 5 revision and its switch
+   × narrow lot: buildable_width_m under 3.0 m is not_buildable (increment 5 revision, own switch) > the switchboard declares the formula switch, on, with its ruling, and the row carries the revision 4ms
+     → expected [ undefined, undefined ] to deeply equal [ 'formula', 'on' ]
+   × narrow lot: buildable_width_m under 3.0 m is not_buildable (increment 5 revision, own switch) > a 2.9 m width (3.8 m frontage, 0.45 m each side) is not_buildable and carries no value 3ms
+     → expected 'computed' to be 'not_buildable' // Object.is equality
+   × narrow lot: buildable_width_m under 3.0 m is not_buildable (increment 5 revision, own switch) > the revision off reverts to the increment 2 formula: the 2.9 m width is computed, the switch listed as off 1ms
+     → expected [ { …(2) } ] to deep equally contain { …(2) }
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 1 passed (4)

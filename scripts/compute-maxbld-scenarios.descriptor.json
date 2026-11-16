@@ -31,11 +31,11 @@
       "tables": [
         {
           "table": "bylaw_resolution_results",
-          "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "status", "value_kind", "value", "reason", "winner_unit_id"]
+          "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "status", "value_kind", "value", "reason", "winner_unit_id", "winner_layer"]
         },
         {
           "table": "bylaw_resolution_option_results",
-          "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "option", "status", "value_kind", "value", "reason", "winner_unit_id"]
+          "columns": ["parcel_id", "lot_gate", "class", "structure", "target", "option", "status", "value_kind", "value", "reason", "winner_unit_id", "winner_layer"]
         },
         {
           "table": "bylaw_resolution_lot_stamps",
@@ -349,6 +349,10 @@
       { "name": "compute_maxbld_scenarios_roof_assembly_depth_3_m", "min": 0.2572, "max": 0.2572, "on_invalid": "fail" },
       { "name": "compute_maxbld_scenarios_rafter_span_4_m", "min": 7.66, "max": 7.66, "on_invalid": "fail" },
       { "name": "compute_maxbld_scenarios_roof_assembly_depth_4_m", "min": 0.3082, "max": 0.3082, "on_invalid": "fail" },
+      { "name": "compute_maxbld_scenarios_plate_min_dimension_m", "min": 3, "max": 3, "on_invalid": "fail" },
+      { "name": "compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm", "min": 0.01, "max": 0.01, "on_invalid": "fail" },
+      { "name": "compute_maxbld_scenarios_min_suite_gfa_m2", "min": 25, "max": 25, "on_invalid": "fail" },
+      { "name": "compute_maxbld_scenarios_min_main_dwelling_gfa_m2", "min": 60, "max": 60, "on_invalid": "fail" },
       { "name": "footprint_shape_factor", "min": 1, "max": 1, "on_invalid": "fail" },
       { "name": "compute_maxbld_scenarios_population_parcel_ids", "min": "none", "max": "none", "on_invalid": "fail", "list_of": ["6640","30065","30554","33830","119522","120669","122034","153191","159079","169742","170105","173273","205238","216666","258388","274216","283723","304365","313999","403569","410720","427312","428050","442123","461807"] },
       { "name": "compute_maxbld_scenarios_bbox_degree_divisor", "min": 1000, "max": 80000, "on_invalid": "fail" },

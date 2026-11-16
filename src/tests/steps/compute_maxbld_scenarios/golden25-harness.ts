@@ -84,7 +84,7 @@ export function parcelInput(lot: Json, bt: Json): Json {
   return {
     parcel_id: lot.parcel_id, buildingType: bt.id, l2: c.l2, l2Options: c.l2Options,
     perm: { code: line.permitted_word.code, gate: line.permitted_word.gate },
-    geometry: { lot_frontage_m: p.frontage, lot_depth_m: p.depth, lot_area_m2: p.area }, flags: { corner_lot: p.corner },
+    geometry: { lot_frontage_m: p.frontage, lot_depth_m: p.depth, lot_area_m2: p.area }, flags: { corner_lot: p.corner, through_lot: p.through },
     neighbours: { user: [], neighbours, own: null, street, zone: [], ring: [], bt_units: bt.units, bt_units_floor: bt.units_floor },
   };
 }

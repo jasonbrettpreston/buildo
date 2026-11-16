@@ -1,0 +1,13 @@
+== MB-27 increment 5 Part B (B5B-3 test, evidence captured late by B5B-4): increment5-split.logic.test.ts run on the tree WITHOUT the split (1b98f0064 + piece2 + hashed patches, no split.js, no split declaration)
+   × the split is declared in data > names the rows, the settings and the three candidate kinds, and every row it names exists 2ms
+     → Cannot read properties of undefined (reading 'main_gfa_row')
+   × the split reproduces key v2.1 on every cell it covers (the key is not changed) > equal totals within 0.02 m2 on 238 cells; the 8 listed cells differ (both values listed); A0388, A0464 refuse by the stored cell 0ms
+     → Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc5b5/scripts/lib/compute/maxbld/split.js'
+   × FD-3 a: the tie rule (ANSWER-KEY.md:48) > the larger total wins; equal total: path B; then the larger main GFA; then the larger main footprint 0ms
+     → Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc5b5/scripts/lib/compute/maxbld/split.js'
+   × a lot with no room for a suite answers no candidate (AR-6 b, A0375) > A0375 (a corner lot) has no candidate: the corner street side (the stored floor, P1 b) leaves a suite width under the 3.0 m minimum 0ms
+     → Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc5b5/scripts/lib/compute/maxbld/split.js'
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-split.logic.test.ts > the split is declared in data > names the rows, the settings and the three candidate kinds, and every row it names exists
+TypeError: Cannot read properties of undefined (reading 'main_gfa_row')
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment5-split.logic.test.ts > the split reproduces key v2.1 on every cell it covers (the key is not changed) > equal totals within 0.02 m2 on 238 cells; the 8 listed cells differ (both valu

@@ -8,12 +8,12 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-132 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+178 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
 | `ad_slot` | 4 |
-| `catalogue` | 61 |
+| `catalogue` | 107 |
 | `content` | 35 |
 | `parcels` | 30 |
 | `user_input` | 2 |
@@ -146,6 +146,52 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | upper_storey_depth_fit_m | `scenarios.cards[].upper_storey_depth_fit_m` | number | m | planned | rendered | `catalogue:upper_storey_depth_fit_m` |  |
 | height_fit_m | `scenarios.cards[].height_fit_m` | number | m | planned | rendered | `catalogue:height_fit_m` |  |
 | units_fit | `scenarios.cards[].units_fit` | number |  | planned | rendered | `catalogue:units_fit` |  |
+| addon_storeys | `scenarios.cards[].addon_storeys` | number |  | planned | rendered | `catalogue:addon_storeys` |  |
+| addon_main_depth_m | `scenarios.cards[].addon_main_depth_m` | number | m | planned | rendered | `catalogue:addon_main_depth_m` |  |
+| addon_main_footprint_m2 | `scenarios.cards[].addon_main_footprint_m2` | number | m² | planned | rendered | `catalogue:addon_main_footprint_m2` |  |
+| addon_main_gfa_m2 | `scenarios.cards[].addon_main_gfa_m2` | number | m² | planned | rendered | `catalogue:addon_main_gfa_m2` |  |
+| addon_main_footprint_b_m2 | `scenarios.cards[].addon_main_footprint_b_m2` | number | m² | planned | rendered | `catalogue:addon_main_footprint_b_m2` |  |
+| addon_total_cov_a_m2 | `scenarios.cards[].addon_total_cov_a_m2` | number | m² | planned | rendered | `catalogue:addon_total_cov_a_m2` |  |
+| addon_unit_cap_gate | `scenarios.cards[].addon_unit_cap_gate` | number |  | planned | rendered | `catalogue:addon_unit_cap_gate` |  |
+| addon_suite_rear_m | `scenarios.cards[].addon_suite_rear_m` | number | m | planned | rendered | `catalogue:addon_suite_rear_m` |  |
+| addon_suite_width_m | `scenarios.cards[].addon_suite_width_m` | number | m | planned | rendered | `catalogue:addon_suite_width_m` |  |
+| addon_suite_region_depth_m | `scenarios.cards[].addon_suite_region_depth_m` | number | m | planned | rendered | `catalogue:addon_suite_region_depth_m` |  |
+| addon_suite_footprint_b_m2 | `scenarios.cards[].addon_suite_footprint_b_m2` | number | m² | planned | rendered | `catalogue:addon_suite_footprint_b_m2` |  |
+| addon_suite_footprint_a_m2 | `scenarios.cards[].addon_suite_footprint_a_m2` | number | m² | planned | rendered | `catalogue:addon_suite_footprint_a_m2` |  |
+| addon_suite_gfa_b_m2 | `scenarios.cards[].addon_suite_gfa_b_m2` | number | m² | planned | rendered | `catalogue:addon_suite_gfa_b_m2` |  |
+| addon_suite_gfa_a_m2 | `scenarios.cards[].addon_suite_gfa_a_m2` | number | m² | planned | rendered | `catalogue:addon_suite_gfa_a_m2` |  |
+| addon_x_min_suite_footprint_m2 | `scenarios.cards[].addon_x_min_suite_footprint_m2` | number | m² | planned | rendered | `catalogue:addon_x_min_suite_footprint_m2` |  |
+| addon_x_cap_footprint_m2 | `scenarios.cards[].addon_x_cap_footprint_m2` | number | m² | planned | rendered | `catalogue:addon_x_cap_footprint_m2` |  |
+| addon_flat_stack_a | `scenarios.cards[].addon_flat_stack_a` | number |  | planned | rendered | `catalogue:addon_flat_stack_a` |  |
+| addon_flat_stack_b_m | `scenarios.cards[].addon_flat_stack_b_m` | number | m | planned | rendered | `catalogue:addon_flat_stack_b_m` |  |
+| addon_ceiling_m2 | `scenarios.cards[].addon_ceiling_m2` | number | m² | planned | rendered | `catalogue:addon_ceiling_m2` |  |
+| addon_pitched_b_raw_m2 | `scenarios.cards[].addon_pitched_b_raw_m2` | number | m² | planned | rendered | `catalogue:addon_pitched_b_raw_m2` |  |
+| addon_main_footprint_min_pitched_b_a_m2 | `scenarios.cards[].addon_main_footprint_min_pitched_b_a_m2` | number | m² | planned | rendered | `catalogue:addon_main_footprint_min_pitched_b_a_m2` |  |
+| addon_flat_stack_ratio | `scenarios.cards[].addon_flat_stack_ratio` | number |  | planned | rendered | `catalogue:addon_flat_stack_ratio` |  |
+| addon_main_footprint_min_a_m2 | `scenarios.cards[].addon_main_footprint_min_a_m2` | number | m² | planned | rendered | `catalogue:addon_main_footprint_min_a_m2` |  |
+| addon_cand_house_first_cap_m | `scenarios.cards[].addon_cand_house_first_cap_m` | number | m | planned | rendered | `catalogue:addon_cand_house_first_cap_m` |  |
+| addon_main_footprint_a_full_m2 | `scenarios.cards[].addon_main_footprint_a_full_m2` | number | m² | planned | rendered | `catalogue:addon_main_footprint_a_full_m2` |  |
+| addon_suite_region_m2 | `scenarios.cards[].addon_suite_region_m2` | number | m² | planned | rendered | `catalogue:addon_suite_region_m2` |  |
+| addon_main_footprint_a_m2 | `scenarios.cards[].addon_main_footprint_a_m2` | number | m² | planned | rendered | `catalogue:addon_main_footprint_a_m2` |  |
+| addon_cand_cov_a_m | `scenarios.cards[].addon_cand_cov_a_m` | number | m | planned | rendered | `catalogue:addon_cand_cov_a_m` |  |
+| addon_cand_cov_b_m | `scenarios.cards[].addon_cand_cov_b_m` | number | m | planned | rendered | `catalogue:addon_cand_cov_b_m` |  |
+| addon_cand_width_a_m | `scenarios.cards[].addon_cand_width_a_m` | number | m | planned | rendered | `catalogue:addon_cand_width_a_m` |  |
+| addon_cand_width_b_m | `scenarios.cards[].addon_cand_width_b_m` | number | m | planned | rendered | `catalogue:addon_cand_width_b_m` |  |
+| addon_cand_region_min_m | `scenarios.cards[].addon_cand_region_min_m` | number | m | planned | rendered | `catalogue:addon_cand_region_min_m` |  |
+| addon_cand_region_min_suite_m | `scenarios.cards[].addon_cand_region_min_suite_m` | number | m | planned | rendered | `catalogue:addon_cand_region_min_suite_m` |  |
+| addon_cand_region_cap_m | `scenarios.cards[].addon_cand_region_cap_m` | number | m | planned | rendered | `catalogue:addon_cand_region_cap_m` |  |
+| addon_cand_region_anc_m | `scenarios.cards[].addon_cand_region_anc_m` | number | m | planned | rendered | `catalogue:addon_cand_region_anc_m` |  |
+| addon_cand_stack_ceiling_m | `scenarios.cards[].addon_cand_stack_ceiling_m` | number | m | planned | rendered | `catalogue:addon_cand_stack_ceiling_m` |  |
+| addon_cand_rafter_span_1_b_m | `scenarios.cards[].addon_cand_rafter_span_1_b_m` | number | m | planned | rendered | `catalogue:addon_cand_rafter_span_1_b_m` |  |
+| addon_cand_rafter_span_2_b_m | `scenarios.cards[].addon_cand_rafter_span_2_b_m` | number | m | planned | rendered | `catalogue:addon_cand_rafter_span_2_b_m` |  |
+| addon_cand_rafter_span_3_b_m | `scenarios.cards[].addon_cand_rafter_span_3_b_m` | number | m | planned | rendered | `catalogue:addon_cand_rafter_span_3_b_m` |  |
+| addon_cand_rafter_span_4_b_m | `scenarios.cards[].addon_cand_rafter_span_4_b_m` | number | m | planned | rendered | `catalogue:addon_cand_rafter_span_4_b_m` |  |
+| addon_x_min_main_m2 | `scenarios.cards[].addon_x_min_main_m2` | number | m² | planned | rendered | `catalogue:addon_x_min_main_m2` |  |
+| addon_x_min_suite_m2 | `scenarios.cards[].addon_x_min_suite_m2` | number | m² | planned | rendered | `catalogue:addon_x_min_suite_m2` |  |
+| addon_x_cap_m2 | `scenarios.cards[].addon_x_cap_m2` | number | m² | planned | rendered | `catalogue:addon_x_cap_m2` |  |
+| addon_x_anc_m2 | `scenarios.cards[].addon_x_anc_m2` | number | m² | planned | rendered | `catalogue:addon_x_anc_m2` |  |
+| addon_x_region_m2 | `scenarios.cards[].addon_x_region_m2` | number | m² | planned | rendered | `catalogue:addon_x_region_m2` |  |
+| addon_x_room_a_m2 | `scenarios.cards[].addon_x_room_a_m2` | number | m² | planned | rendered | `catalogue:addon_x_room_a_m2` |  |
 | Status reason (plain words) | `scenarios.cards[].status_text` | text |  | proposed | rendered | `content:status_text` | PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback |
 | Per-field trust tier | `scenarios.cards[].field_trust` | jsonb |  | proposed | payload_only | `content:field_trust` | per-field trust (O-17); not generated yet: the catalogue rows carry no trust tier |
 | Trust label (plain words) | `scenarios.cards[].trust_label` | text |  | proposed | rendered | `content:trust_label` | PRESENTATION: high → "By-law derived", disclosed → "By-law derived, see notes", low → "Estimate", CoA → "Precedent estimate" |

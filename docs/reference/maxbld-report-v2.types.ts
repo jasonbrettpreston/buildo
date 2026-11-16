@@ -82,6 +82,98 @@ export type DisclosureCode =
 
 export type ReportV2Scenarios = {
   cards: Array<{
+    /** addon_cand_cov_a_m — catalogue:addon_cand_cov_a_m (m) */
+    addon_cand_cov_a_m: number | null;
+    /** addon_cand_cov_b_m — catalogue:addon_cand_cov_b_m (m) */
+    addon_cand_cov_b_m: number | null;
+    /** addon_cand_house_first_cap_m — catalogue:addon_cand_house_first_cap_m (m) */
+    addon_cand_house_first_cap_m: number | null;
+    /** addon_cand_rafter_span_1_b_m — catalogue:addon_cand_rafter_span_1_b_m (m) */
+    addon_cand_rafter_span_1_b_m: number | null;
+    /** addon_cand_rafter_span_2_b_m — catalogue:addon_cand_rafter_span_2_b_m (m) */
+    addon_cand_rafter_span_2_b_m: number | null;
+    /** addon_cand_rafter_span_3_b_m — catalogue:addon_cand_rafter_span_3_b_m (m) */
+    addon_cand_rafter_span_3_b_m: number | null;
+    /** addon_cand_rafter_span_4_b_m — catalogue:addon_cand_rafter_span_4_b_m (m) */
+    addon_cand_rafter_span_4_b_m: number | null;
+    /** addon_cand_region_anc_m — catalogue:addon_cand_region_anc_m (m) */
+    addon_cand_region_anc_m: number | null;
+    /** addon_cand_region_cap_m — catalogue:addon_cand_region_cap_m (m) */
+    addon_cand_region_cap_m: number | null;
+    /** addon_cand_region_min_m — catalogue:addon_cand_region_min_m (m) */
+    addon_cand_region_min_m: number | null;
+    /** addon_cand_region_min_suite_m — catalogue:addon_cand_region_min_suite_m (m) */
+    addon_cand_region_min_suite_m: number | null;
+    /** addon_cand_stack_ceiling_m — catalogue:addon_cand_stack_ceiling_m (m) */
+    addon_cand_stack_ceiling_m: number | null;
+    /** addon_cand_width_a_m — catalogue:addon_cand_width_a_m (m) */
+    addon_cand_width_a_m: number | null;
+    /** addon_cand_width_b_m — catalogue:addon_cand_width_b_m (m) */
+    addon_cand_width_b_m: number | null;
+    /** addon_ceiling_m2 — catalogue:addon_ceiling_m2 (m²) */
+    addon_ceiling_m2: number | null;
+    /** addon_flat_stack_a — catalogue:addon_flat_stack_a */
+    addon_flat_stack_a: number | null;
+    /** addon_flat_stack_b_m — catalogue:addon_flat_stack_b_m (m) */
+    addon_flat_stack_b_m: number | null;
+    /** addon_flat_stack_ratio — catalogue:addon_flat_stack_ratio */
+    addon_flat_stack_ratio: number | null;
+    /** addon_main_depth_m — catalogue:addon_main_depth_m (m) */
+    addon_main_depth_m: number | null;
+    /** addon_main_footprint_a_full_m2 — catalogue:addon_main_footprint_a_full_m2 (m²) */
+    addon_main_footprint_a_full_m2: number | null;
+    /** addon_main_footprint_a_m2 — catalogue:addon_main_footprint_a_m2 (m²) */
+    addon_main_footprint_a_m2: number | null;
+    /** addon_main_footprint_b_m2 — catalogue:addon_main_footprint_b_m2 (m²) */
+    addon_main_footprint_b_m2: number | null;
+    /** addon_main_footprint_m2 — catalogue:addon_main_footprint_m2 (m²) */
+    addon_main_footprint_m2: number | null;
+    /** addon_main_footprint_min_a_m2 — catalogue:addon_main_footprint_min_a_m2 (m²) */
+    addon_main_footprint_min_a_m2: number | null;
+    /** addon_main_footprint_min_pitched_b_a_m2 — catalogue:addon_main_footprint_min_pitched_b_a_m2 (m²) */
+    addon_main_footprint_min_pitched_b_a_m2: number | null;
+    /** addon_main_gfa_m2 — catalogue:addon_main_gfa_m2 (m²) */
+    addon_main_gfa_m2: number | null;
+    /** addon_pitched_b_raw_m2 — catalogue:addon_pitched_b_raw_m2 (m²) */
+    addon_pitched_b_raw_m2: number | null;
+    /** addon_storeys — catalogue:addon_storeys */
+    addon_storeys: number | null;
+    /** addon_suite_footprint_a_m2 — catalogue:addon_suite_footprint_a_m2 (m²) */
+    addon_suite_footprint_a_m2: number | null;
+    /** addon_suite_footprint_b_m2 — catalogue:addon_suite_footprint_b_m2 (m²) */
+    addon_suite_footprint_b_m2: number | null;
+    /** addon_suite_gfa_a_m2 — catalogue:addon_suite_gfa_a_m2 (m²) */
+    addon_suite_gfa_a_m2: number | null;
+    /** addon_suite_gfa_b_m2 — catalogue:addon_suite_gfa_b_m2 (m²) */
+    addon_suite_gfa_b_m2: number | null;
+    /** addon_suite_rear_m — catalogue:addon_suite_rear_m (m) */
+    addon_suite_rear_m: number | null;
+    /** addon_suite_region_depth_m — catalogue:addon_suite_region_depth_m (m) */
+    addon_suite_region_depth_m: number | null;
+    /** addon_suite_region_m2 — catalogue:addon_suite_region_m2 (m²) */
+    addon_suite_region_m2: number | null;
+    /** addon_suite_width_m — catalogue:addon_suite_width_m (m) */
+    addon_suite_width_m: number | null;
+    /** addon_total_cov_a_m2 — catalogue:addon_total_cov_a_m2 (m²) */
+    addon_total_cov_a_m2: number | null;
+    /** addon_unit_cap_gate — catalogue:addon_unit_cap_gate */
+    addon_unit_cap_gate: number | null;
+    /** addon_x_anc_m2 — catalogue:addon_x_anc_m2 (m²) */
+    addon_x_anc_m2: number | null;
+    /** addon_x_cap_footprint_m2 — catalogue:addon_x_cap_footprint_m2 (m²) */
+    addon_x_cap_footprint_m2: number | null;
+    /** addon_x_cap_m2 — catalogue:addon_x_cap_m2 (m²) */
+    addon_x_cap_m2: number | null;
+    /** addon_x_min_main_m2 — catalogue:addon_x_min_main_m2 (m²) */
+    addon_x_min_main_m2: number | null;
+    /** addon_x_min_suite_footprint_m2 — catalogue:addon_x_min_suite_footprint_m2 (m²) */
+    addon_x_min_suite_footprint_m2: number | null;
+    /** addon_x_min_suite_m2 — catalogue:addon_x_min_suite_m2 (m²) */
+    addon_x_min_suite_m2: number | null;
+    /** addon_x_region_m2 — catalogue:addon_x_region_m2 (m²) */
+    addon_x_region_m2: number | null;
+    /** addon_x_room_a_m2 — catalogue:addon_x_room_a_m2 (m²) */
+    addon_x_room_a_m2: number | null;
     /** attic_counted_a_m2 — catalogue:attic_counted_a_m2 (m²) */
     attic_counted_a_m2: number | null;
     /** attic_counted_b_m2 — catalogue:attic_counted_b_m2 (m²) */

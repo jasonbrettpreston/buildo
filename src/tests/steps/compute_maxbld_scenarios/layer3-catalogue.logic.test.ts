@@ -38,17 +38,25 @@ const PINNED_SHA: Record<string, string> = {
   // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): house_with_secondary_suite joins the 47 increment-1/2 rows, the bt_units_floor fact and the units_max increment-4 revision (E7); was catalogue: '42f5329578224c4753da0aa19e7e82bb2585095998b782aef1892cadad7eab09'
   // re-pinned 2026-11-12 (MB-27 increment 5, lane B5B-1, hash fields only; FIT-a, FD-1..FD-6 a, AR-7 b): the six fitted rows, two refuse words, the fitted_shape_chosen flag word and the audit_counts declaration; was catalogue: 'd4d0e8f904e99951ae25960c9425ae38f0fb789d4dab97cbc18ea4647a5cfe9b'
   // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-1b, hash fields only; operator Q3 b, AR-7 b): the units_fit row counts units on the fitted storeys (storeys_fit), not storeys_max; was catalogue: '80907cbca12ed30202860f1f370666640db02d261f28cd28e6fdfca667de1915'
-  catalogue: 'c8e97b3a20141da5845fb9ee5ea7ec589f14b628052fc0d18f1448f973f33757',
+  // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-2b, hash fields only): the 11 addon_ suite rows (piece 2), the four 316 settings and two refuse words
+  // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-3, hash fields only; operator 'Q1 a, Q2 a, Q3 a' and 'Q5 a, Q6a', D-65): the split pass rows (candidate depths, crossing levels, footprint allocations) on the three add-on types, the path (B) footprint fixed to the principal figure, the 3 split-output / refuse / flag words
+  catalogue: '184354e28dd0a8f3c1bdaa5f01ba4869009d4fcce5f205c81b7725b81ad47ebb', // re-pinned 2026-11-13 (MB-27 increment 5 Part B, lane B5B-6, hash fields only; D-65, Q6 a): the refined pitched-B ceiling crossing, four rafter-span candidate rows, the pitched-B house-first row and its allocation (catalogue, switchboard, building-types split); was 8d8bd376…
   // re-pinned 2026-11-04 (MB-27 switchboard confidence, operator Q-CONF a 'Q CONF a' and 'RP-10 approved, switchboard pin approved, shape low yes'): schema switchboard-v2; every reading row gained confidence and evidence; the seven increment-2 register readings C1-C7 joined as reading rows (M-481).
   // re-pinned 2026-11-04 (MB-27 increment-2 rows, operator RP-K "pre approved ..." (inc2/open-questions.md:543), version and hash fields only): 39 formula switches (37 rows, 2 revisions; M-378, M-476), four off by "Q-default a".
   // re-pinned 2026-11-06 (MB-27 the switch-on, operator RP-SW "all recommended" (D-9) and RP-SW2 "a", version and hash fields only): the four Q-DEFAULT switches off -> on, their reason text; was 4aa44e44
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): the detached_houseplex switch and the six confidence readings; was switchboard:
   // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): the suite type switch, reading:suite_fsi_release_848 (D-1 b) and formula:units_max:increment_4 (E7); was switchboard: '3b812c786ab9b4cc93392097e629059ea458dc4492df4e6dc1dbc20caa131cfa'
   // re-pinned 2026-11-12 (MB-27 increment 5, lane B5B-1, hash fields only; FIT-a, FD-1..FD-6 a, AR-7 b): reading:fitted_house_storey_rule and six formula switches; was switchboard: 'd94a9268c73cdc96596ba99dffb75f3e6a491edc917973a97e977021a48ea371'
-  switchboard: 'cb1920acc8bb962569104927e81fcddcf70e32154d9d685e6c1a4289e5cd1f45',
+  // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-2, hash fields only; operator "848 a", D-82 and the three add-on type switches, item 11 (b)): the suite_fsi_release_848 reason and evidence widened to the houseplex, and building_type:<class>_garden_suite x3; was switchboard: 'cb1920acc8bb962569104927e81fcddcf70e32154d9d685e6c1a4289e5cd1f45'
+  // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-2b, hash fields only): the 11 formula switches of the addon_ suite rows
+  // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-3, hash fields only): the formula switches of the split pass rows
+  switchboard: '341ed1c0f3ebecb5b8809c27bd448d04d32d066339f932f7b887bba202b292ae', // re-pinned 2026-11-13 (MB-27 increment 5 Part B, lane B5B-6, hash fields only; D-65, Q6 a): the refined pitched-B ceiling crossing, four rafter-span candidate rows, the pitched-B house-first row and its allocation (catalogue, switchboard, building-types split); was 19b54942…
   // re-pinned 2026-11-08 (MB-27 inc3 E8, DL-21 a, E1C-S, hash fields only): the detached_houseplex type; was buildingType
   // re-pinned 2026-11-11 (MB-27 increment 4 (D-8 a named move, E1C-S, hash fields only; Spec 69a M-379 dated note 2026-11-11)): the house_with_secondary_suite type, units_floor per type and the units_floor_census declaration (E7) and the gain declaration (D-2 a); was buildingTypes: '05398a754244b841d7a49a4b6516e3e8bb0766ee71150946f63a6bcd29f9a936'
-  buildingTypes: 'cf6a21410bfac5044a5e842cfbb4cd57f0f55e386f088bdc52433e11a7568c19',
+  // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-2, hash fields only; BUILD-PLAN C2 two-structure read, item 11 (b)): the three add-on types (addon_of) and the suite_read declaration; was buildingTypes: 'cf6a21410bfac5044a5e842cfbb4cd57f0f55e386f088bdc52433e11a7568c19'
+  // re-pinned 2026-11-13 (MB-27 increment 5, lane B5B-3, hash fields only; operator 'Q2 a', 'Q6a', D-65, FD-3 a): the `split` declaration (candidate kinds, arms, paths, allocations, outputs)
+  // re-pinned 2026-11-13 (MB-27 increment 5 Part B, lane B5B-4, hash fields only; operator P1 b, item 6 reading 2, M-198(2)): the corner branch of addon_suite_width_m reads max(the stored floor; (front + the house street-side yard) / 2; the house street-side yard), and the refuse word suite_corner_street_side_open (no longer used) leaves, and the buildable_width_m increment 5 revision (narrow lot, own switch) is added; was catalogue: 'ed1280f973cfe0c349931c39965e4af1fd03457e74594ffc70acae284035c100'
+  buildingTypes: '912b8a2af9ed9eaeae3a17e7cb585c1527840d99e167d2f79fb3a0a3fc846fe7', // re-pinned 2026-11-13 (MB-27 increment 5 Part B, lane B5B-6, hash fields only; D-65, Q6 a): the refined pitched-B ceiling crossing, four rafter-span candidate rows, the pitched-B house-first row and its allocation (catalogue, switchboard, building-types split); was 81f9715f…
 };
 const ROW_IDS = [
   'permitted',
@@ -103,11 +111,11 @@ describe('MB-31 catalogue invariants (B8)', () => {
   // Q-K-ASSERT a (M-457): the ten increment-1 rows in their pinned order, then the 37 increment-2 rows
   it('schema + ten increment-1 rows in the pinned order, then the 37 increment-2 rows, all detached_house', () => {
     expect(CAT.schema).toBe('layer3-catalogue-v1');
-    expect(CAT.rows).toHaveLength(61); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): +6 increment-5 rows (5 on all three types, units_fit on the houseplex); was 55 // MB-27 inc3 E8 rows (operator 2026-11-08 E8 ruling): +8 houseplex rows (basement_livable_m2, basement_units, units_flat, units_pitched_a, units_pitched_b, unit_count, houseplex_bedrooms, unit_area_m2); was 47
+    expect(CAT.rows).toHaveLength(107); // B5B-6 (named re-pin): +9 rows (3 from P2 a / P3 a, 6 D-65 candidate and allocation rows); was 98 // MB-27 increment 5 (lane B5B-2b): +33 suite rows per parcel (11 addon_ rows x the 3 add-on types); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): +6 increment-5 rows (5 on all three types, units_fit on the houseplex); was 55 // MB-27 inc3 E8 rows (operator 2026-11-08 E8 ruling): +8 houseplex rows (basement_livable_m2, basement_units, units_flat, units_pitched_a, units_pitched_b, unit_count, houseplex_bedrooms, unit_area_m2); was 47
     expect(CAT.rows.slice(0, 10).map((r: Json) => r.id)).toEqual(ROW_IDS);
     for (const [i, row] of CAT.rows.entries()) {
       // MB-27 increment 4 (D-8 a named move; P-3, Q2 a): the 47 increment-1/2 rows list the suite house too; the 8 houseplex-only rows do not
-      expect(row.building_type).toEqual((i >= 47 && i < 55) || i === 60 ? ['detached_houseplex'] : ['detached_house', 'detached_houseplex', 'house_with_secondary_suite']); // DL-21 a move 1 (Q2 a): every row's building_type is a list; the houseplex-only increment-3 rows list the houseplex alone
+      expect(row.building_type).toEqual(i >= 61 ? ['detached_house_garden_suite', 'detached_houseplex_garden_suite', 'house_with_secondary_suite_garden_suite'] : (i >= 47 && i < 55) || i === 60 ? ['detached_houseplex'] : ['detached_house', 'detached_houseplex', 'house_with_secondary_suite']); // DL-21 a move 1 (Q2 a): every row's building_type is a list; the houseplex-only increment-3 rows list the houseplex alone
       expect(row.increment).toBe(i < 10 ? '1' : i < 47 ? '2' : i < 55 ? '3' : '5'); // MB-27 increment 5 (lane B5B-1, FIT-a / FD-1..FD-6 a, AR-7 b; the fitted rows on the row alone): the six increment-5 rows close the list
       expect(row.clauses.length).toBeGreaterThan(0);
       expect(row.rules.length).toBeGreaterThan(0);
@@ -147,12 +155,12 @@ describe('MB-31 catalogue invariants (B8)', () => {
   });
 
   it('names resolve: checkRowL3 is [] for every expression row but the front row', () => {
-    const U = C.unitsFor(CAT, SEEDS.vocab);
+    const U = C.unitsFor(CAT, SEEDS.vocab, SEEDS.buildingTypes);
     for (const row of exprRows(CAT)) expect(D.checkRowL3(row, U), row.id).toEqual([]);
   });
 
   it('front row: l2(front_setback_fallback_m) names a stored target, no violation', () => {
-    const U = C.unitsFor(CAT, SEEDS.vocab);
+    const U = C.unitsFor(CAT, SEEDS.vocab, SEEDS.buildingTypes);
     expect(D.checkRowL3(rowOf(CAT, 'front_setback_used_m'), U)).toEqual([]);
   });
 

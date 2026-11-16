@@ -10567,5 +10567,45 @@
     "admin": {
       "group": "MaxBLD Internal Preview"
     }
+  },
+  "compute_maxbld_scenarios_plate_min_dimension_m": {
+    "default": 3,
+    "type": "number",
+    "min": 3,
+    "max": 3,
+    "description": "Spec 78 P5.9 min_dimension_m re-seeded under the C18 name (MB-27 increment 5 item 10 B + FD-5 a, operator 2026-11-12 \"a\"; fitted/CONDITIONS-FD1-6.md C18): the least width or depth of a house or garden suite plate in the split and the fitted checks, in metres; a computed house narrower than it answers not_buildable (narrow lots, operator \"narrow y\"). Our minimum (D-57 wording), not a by-law value. Pinned: changes only by a ruling. CONSUMED by the increment-5 split and fitted catalogue rows.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm": {
+    "default": 0.01,
+    "type": "number",
+    "min": 0.01,
+    "max": 0.01,
+    "description": "Spec 78 P5.9 suite_gfa_strict_margin_sqm re-seeded under the D-66 name (MB-27 increment 5 FD-5 a; C18): 150.7.60.50(2) \"must be less than\" the house GFA is applied as suite GFA <= main GFA - this margin, in m2. Pinned: changes only by a ruling. CONSUMED by the increment-5 split rows (INV-2 suite_lt_main).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_min_suite_gfa_m2": {
+    "default": 25,
+    "type": "number",
+    "min": 25,
+    "max": 25,
+    "description": "M-451 LV-7 (MB-27 increment 5 item 9 (a), operator 2026-11-12 \"a\"; name D-64): a split whose garden suite is below this GFA, in m2, is dropped with its reason, worded \"below the livable minimum we apply\" (never \"not permitted\", never 150.7). Operator value, confidence medium. Pinned: changes only by a ruling. CONSUMED by the increment-5 split rows.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "compute_maxbld_scenarios_min_main_dwelling_gfa_m2": {
+    "default": 60,
+    "type": "number",
+    "min": 60,
+    "max": 60,
+    "description": "M-451 LV-8 (MB-27 increment 5 item 9 (a), operator 2026-11-12 \"a\"; name D-64): a split whose main dwelling is below this GFA, in m2, is dropped with its reason, worded \"below the livable minimum we apply\" (never \"not permitted\", never 150.7). Operator value, confidence medium. Pinned: changes only by a ruling. CONSUMED by the increment-5 split rows.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
   }
 }

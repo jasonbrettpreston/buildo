@@ -37,6 +37,8 @@ const EXPECTED_LOCAL = [
   'scripts/lib/compute/maxbld/layer2-cells.js',
   'scripts/lib/compute/maxbld/neighbour-facts.js',
   'scripts/lib/compute/maxbld/rows.js',
+  'scripts/lib/compute/maxbld/split.js', // MB-27 increment 5 (B5B-3, Q2 a): the split pass (pure; declared in building-types.json split)
+  'scripts/lib/compute/maxbld/two-structure.js', // MB-27 increment 5 (B5B-2, L3-2): the two-structure read (pure; reached through catalogue.js and rows.js)
   'scripts/seeds/bylaw/building-types.json', // MB-31 (e) D8-SHELL: the seeds the loader requires once (data)
   'scripts/seeds/bylaw/cell-key-whole.json', // read by cell-cache.mjs (MB-27 R2)
   'scripts/seeds/bylaw/layer2-map.json', // MB-31 (e) D8-SHELL
@@ -183,7 +185,7 @@ function cteNames(sql: string): string[] {
 const descriptor = (): Json => JSON.parse(read(DESCRIPTOR));
 
 describe('MB-31 compute closure, R-KF / R-KT', () => {
-  it('walks from the step entry to exactly the eleven Layer 3 files (MB-27 D-8: the disclosure carriage) and the five Layer 2 files of withNotAbove (MB-27 R2)', () => {
+  it('walks from the step entry to exactly the twelve Layer 3 files (MB-27 D-8: the disclosure carriage) and the five Layer 2 files of withNotAbove (MB-27 R2)', () => {
     const graph = walk(ENTRY);
     expect(graph.missing).toEqual([]);
     expect(graph.local).toEqual(EXPECTED_LOCAL);

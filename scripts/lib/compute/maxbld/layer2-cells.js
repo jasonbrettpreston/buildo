@@ -47,7 +47,8 @@ function decodeOne(row) {
   if (isMalformed(row)) return malformedCell();
   const kind = row.value_kind === undefined ? null : row.value_kind;
   const value = row.status === 'applies' && kind === 'number' ? row.value : null;
-  return { s: row.status, kind, value, clause, reason };
+  // MB-27 increment 5 Part B (P3 a): the view's winner_layer (base | overlay | exception) rides on the cell when the read carries it; the DSL reader exception(<id>) tests it
+  return typeof row.winner_layer === 'string' ? { s: row.status, kind, value, clause, reason, layer: row.winner_layer } : { s: row.status, kind, value, clause, reason };
 }
 
 // rows of the view bylaw_resolution_results -> one cell per target of this class and structure

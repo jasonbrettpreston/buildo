@@ -4,6 +4,7 @@
 
 const crypto = require('node:crypto');
 const dsl = require('../../../analysis/bylaw/dsl.mjs');
+const twoStructure = require('./two-structure.js');
 
 const SCHEMA = 'layer3-catalogue-v1';
 const LITERALS = [0, 1, 2];
@@ -44,13 +45,15 @@ function duplicateIds(list) {
 }
 
 /** C1 `U`: setting / target units, the row + fact + geometry name space, and the lot-flag tokens. */
-function unitsFor(catalogue, vocab) {
+function unitsFor(catalogue, vocab, buildingTypes) {
   const lv = {};
   const l2 = {};
   const names = {};
   for (const s of entities(catalogue, 'settings')) lv[s.id] = s.unit;
   const targets = isObject(vocab) && isObject(vocab.dsl_target) ? vocab.dsl_target : {};
   for (const [id, entry] of Object.entries(targets)) l2[id] = isObject(entry) ? entry.unit : entry;
+  // MB-27 increment 5 (B5B-2, L3-2): the suite structure's targets read under the declared prefix (building-types.json suite_read)
+  Object.assign(l2, twoStructure.suiteTargetUnits(buildingTypes, targets));
   for (const key of ['geometry_inputs', 'facts']) for (const e of entities(catalogue, key)) names[e.id] = e.unit;
   for (const r of rowsOf(catalogue)) if (r.form !== 'status') names[r.id] = r.unit;
   return { lv, l2, names, flags: idsOf(entities(catalogue, 'lot_flags')) };
@@ -170,7 +173,7 @@ function validateCatalogue(seeds, increments) {
   if (catalogue.schema !== SCHEMA) out.push(`schema: expected ${SCHEMA}, got ${catalogue.schema}`);
   const switches = new Set(idsOf(entities(s.switchboard, 'rows')));
   const targets = isObject(s.vocab) && isObject(s.vocab.dsl_target) ? s.vocab.dsl_target : {};
-  const U = unitsFor(catalogue, s.vocab);
+  const U = unitsFor(catalogue, s.vocab, s.buildingTypes);
   const rowIds = new Set(idsOf(rowsOf(catalogue)));
   // M-495 (Q2 a): a row's building_type is a non-empty list, each entry a building-types id
   const typeIds = new Set(idsOf(entities(s.buildingTypes, 'rows')));
@@ -187,7 +190,7 @@ function validateCatalogue(seeds, increments) {
   out.push(...confidenceViolations(s.switchboard));
   out.push(...auditViolations(catalogue, rowIds));
   out.push(...stateViolations(s.switchboard));
-  out.push(...nameSpaceViolations(catalogue, targets));
+  out.push(...nameSpaceViolations(catalogue, { ...targets, ...twoStructure.suiteTargetUnits(s.buildingTypes, targets) }));
   out.push(...designOptionViolations(catalogue, s.vocab));
   out.push(...rowViolations(catalogue, U, rowIds, increments));
   try {
