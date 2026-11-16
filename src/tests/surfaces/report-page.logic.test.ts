@@ -30,7 +30,7 @@ const response = (): Json => golden('web').response_fixture;
 // The 63 element ids of fields/REPORT-LAYOUT-BRIEF-v4.md (A0..H0), copied as a closed list: the brief is outside the repo.
 const BRIEF_IDS = ['A0', 'A1', 'A2', 'A3', 'A4', 'B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B9.1', 'B9.2', 'B9.3', 'B9.4', 'B9.5', 'B9.6', 'B9.7', 'B9.8', 'B9.9', 'B9.10',
   'B9.11', 'B9.12', 'B9.13', 'B9.14', 'B9.15', 'B9.16', 'B9.17', 'B9.18', 'B9.19', 'B10', 'B10.1', 'B10.2', 'B10.3', 'B10.4', 'B10.5', 'B10.6', 'B11', 'B12', 'B13',
-  'B14', 'B15', 'B16', 'C1', 'C2', 'D1', 'D2', 'E1', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'G1', 'G2', 'G3', 'G4', 'H0'];
+  'B14', 'B15', 'B16', 'B17', 'B18', 'C1', 'C2', 'D1', 'D2', 'E1', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'G1', 'G2', 'G3', 'G4', 'H0'];
 // The brief's screen order: A page top, Option 1, the lot-size box, Option 2, ad, Option 3, (ad D2 owed), Coming soon, About this lot, legal, footer; H is the sheet.
 // MF-19 (D-5): the after-entry line (C2) follows the lot-size box in the table; the page flags decide which of the two is built.
 const SCREEN_ORDER = ['title', 'address', 'summary', 'option', 'lot_size', 'lot_size_entered', 'option', 'ad', 'option', 'coming_soon', 'lot_facts', 'legal', 'footer', 'sheet'];
@@ -110,7 +110,7 @@ describe('P2 buildPage: the capture, the throw and Q-G4 a', () => {
     const a = capturePages(ROOT);
     const b = capturePages(ROOT);
     expect([...a.entries()]).toEqual([...b.entries()]);
-    expect(a.size).toBe(16); // MF-19: v21 plus the three entry states (entry_off, entered, entered_used) on four targets
+    expect(a.size).toBe(32); // MF-19: v21 plus the three entry states on four targets; MF-83: plus the four lot-view states
     for (const [file, text] of a) expect(fs.readFileSync(path.join(GOLD, file), 'utf8')).toBe(text);
   });
   it('a pending part shows one of the two ruled texts and never a value', () => {
@@ -279,6 +279,62 @@ describe('P3a MF-83 (FE-41) the summary: references to built option parts, never
     const t2 = clone(golden('web').rendered_tree) as Json;
     (t2.sections as Json[]).find((s) => s.kind === 'title')!.parts.push({ role: 'title', brief: 'A1', kind: 'ref', option: 'o1', ref: 'title', text: 'x' });
     expect(has(problemsOf(() => assertPage(t2, reportCtx)), 'RR-PAGE title.title: a ref part is only in a summary')).toBe(true);
+  });
+});
+
+describe('P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed', () => {
+  const DRAWN = {
+    state: 'drawn',
+    outline: [[100, 100], [900, 100], [900, 900], [100, 900]],
+    edges: [{ class: 'front', line: [[100, 900], [900, 900]] }, { class: 'side', line: [[900, 900], [900, 100]] }, { class: 'rear', line: [[900, 100], [100, 100]] }, { class: 'side', line: [[100, 100], [100, 900]] }],
+    envelope: [[200, 200], [800, 200], [800, 800], [200, 800]],
+  };
+  const lot = (resp: Json): Json[] => ((buildPage(resp, reportCtx).sections as Json[]).find((s) => s.id === 'o1') as Json).parts.filter((p: Json) => p.role.startsWith('lotview.'));
+  const roles = (resp: Json): string[] => lot(resp).map((p) => p.role);
+  const withD = (d: unknown): Json => ({ ...response(), drawings: { o1: d } });
+  it('data absent: no drawing, no label, no note, no caption on any option (the panel is left out)', () => {
+    for (const r of [response(), { ...response(), drawings: {} }, { ...response(), drawings: { o1: null } }]) expect(roles(r)).toEqual([]);
+  });
+  it('drawn: label+drawing, then the caption; the drawing part carries the geometry as sent and its text is the content label', () => {
+    const l = lot(withD(DRAWN));
+    expect(l.map((p) => p.role)).toEqual(['lotview.above', 'lotview.caption']);
+    expect(l[0]).toMatchObject({ kind: 'drawing', text: 'From above', drawing: DRAWN });
+    expect(l[1]).toMatchObject({ kind: 'content', text: 'Not from a survey. Illustrative.' });
+  });
+  it('each outline state shows its own ruled fallback line (shape, edges, unevaluated) and the one caption; never the other lines', () => {
+    const lines: Record<string, string> = { outline_shape: 'Irregular lot: setbacks listed in details', outline_edges: 'Lot edges unclear: setbacks listed in details', outline_unevaluated: 'Some setbacks not worked out yet: listed in details' };
+    for (const [state, text] of Object.entries(lines)) {
+      const l = lot(withD({ ...DRAWN, state, envelope: undefined }));
+      expect(l.map((p) => p.role), state).toEqual(['lotview.above', 'lotview.note', 'lotview.caption']);
+      expect(l[1]!.text, state).toBe(text);
+    }
+  });
+  it('fail closed: an unknown state, a coordinate outside 0..1000, a non-number, too few points, an unknown edge class, an edge/outline count mismatch or a bad envelope drops the WHOLE entry', () => {
+    const bad: unknown[] = [
+      { ...DRAWN, state: 'maybe' }, { ...DRAWN, outline: [[100, 100], [1001, 100], [900, 900], [100, 900]] }, { ...DRAWN, outline: [[100, 100], [-1, 100], [900, 900], [100, 900]] },
+      { ...DRAWN, outline: [[100, 100], ['9', 100], [900, 900], [100, 900]] }, { ...DRAWN, outline: [[100, 100], [900, 100]] }, { ...DRAWN, edges: [{ class: 'back', line: [[1, 1], [2, 2]] }, ...DRAWN.edges.slice(1)] },
+      { ...DRAWN, edges: DRAWN.edges.slice(1) }, { ...DRAWN, envelope: [[0, 0], [2000, 0], [5, 5]] }, 'drawn', [], 42,
+    ];
+    for (const d of bad) expect(roles(withD(d)), JSON.stringify(d).slice(0, 60)).toEqual([]);
+  });
+  it('a drawings key that is not an object, or names a section that is not an option, throws RR-PAGE (a stray key is a defect, not silent dead data)', () => {
+    expect(has(problemsOf(() => buildPage({ ...response(), drawings: [] }, reportCtx)), 'RR-PAGE response: drawings is not an object')).toBe(true);
+    expect(has(problemsOf(() => buildPage({ ...response(), drawings: { lot: DRAWN } }, reportCtx)), 'RR-PAGE drawings lot: not an option section id')).toBe(true);
+  });
+  it('assertPage: a drawing part with invalid geometry, or outside the option kind, is refused', () => {
+    const tree = clone(buildPage(withD(DRAWN), reportCtx)) as Json;
+    const o1 = (tree.sections as Json[]).find((s) => s.id === 'o1')!;
+    (o1.parts as Json[]).find((p) => p.kind === 'drawing')!.drawing.outline[1] = [5000, 5];
+    expect(has(problemsOf(() => assertPage(tree, reportCtx)), 'RR-PAGE o1.lotview.above: drawing geometry is not valid')).toBe(true);
+    const t2 = clone(buildPage(withD(DRAWN), reportCtx)) as Json;
+    (t2.sections as Json[]).find((s) => s.kind === 'title')!.parts.push({ role: 'title', brief: 'A1', kind: 'drawing', content: 'page.title', text: 'x', drawing: DRAWN });
+    expect(has(problemsOf(() => assertPage(t2, reportCtx)), 'RR-PAGE title.title: a drawing part is only in an option section')).toBe(true);
+  });
+  it('the table: drawing parts need a drawing state, the table names no coordinate, and the caption is one key for every state', () => {
+    const ps = ((table().sections as Json[]).find((s) => s.id === 'o1')!.parts as Json[]).filter((p) => p.role.startsWith('lotview.'));
+    expect(ps.length).toBeGreaterThan(0);
+    for (const p of ps) expect(Array.isArray(p.needs) && p.needs.length > 0, p.role).toBe(true);
+    expect(ps.filter((p) => p.role === 'lotview.caption').map((p) => p.needs.length)).toEqual([4]);
   });
 });
 

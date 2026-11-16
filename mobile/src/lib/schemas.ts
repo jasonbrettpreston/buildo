@@ -395,10 +395,12 @@ export type LotOutline = z.infer<typeof LotOutlineSchema>;
 // MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12; operator 2026-11-12 "Ball y", B-3 a): the report page VIEW the server builds through MF-57's
 // core (the app never builds or rebuilds it). OPTIONAL and plain (not .strict()), the MF-53 form above, so an older server or a server-added field
 // never raises ParcelLookupSchemaError on an installed build; the binding (ReportBinding.tsx) throws on any part or section it does not place.
-const ReportPagePartSchema = z.object({ role: z.string(), brief: z.string(), kind: z.enum(['value', 'content', 'pending']), text: z.string() });
+// MF-83 (FE-41, FE-42): + kinds ref and drawing, and the optional option / ref / drawing members (the summary item's option id and role; the server-built lot view). Plain, as above.
+const ReportDrawingSchema = z.object({ state: z.string(), outline: z.array(z.array(z.number())), edges: z.array(z.object({ class: z.string(), line: z.array(z.array(z.number())) })), envelope: z.array(z.array(z.number())).optional(), footprint: z.array(z.array(z.number())).optional() });
+const ReportPagePartSchema = z.object({ role: z.string(), brief: z.string(), kind: z.enum(['value', 'content', 'pending', 'ref', 'drawing']), text: z.string(), option: z.string().optional(), ref: z.string().optional(), drawing: ReportDrawingSchema.optional() });
 export const ReportPageViewSchema = z.object({
   target: z.string(),
-  layout: z.object({ details: z.string() }),
+  layout: z.object({ details: z.string(), details_view: z.string().optional() }), // MF-83 (FE-43)
   sections: z.array(
     z.object({
       kind: z.string(),

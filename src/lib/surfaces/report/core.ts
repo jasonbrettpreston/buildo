@@ -411,7 +411,7 @@ export const viewOf = (tree: Json, pick: Json, ctx: ReportCtx): Json => {
 // never a number, shown as sent), a content text (report-presentation.json `page`) or a ruled pending text (Q-G4 a: never a value).
 // The contract is report-page.schema.json (it reuses the node contract's slot by $ref). Accumulates every problem, then throws once.
 // MF-83 (FE-41): `ref` parts exist only in a summary section: `option` is the option section id, `ref` the role of that option's BUILT part whose text is shown.
-export interface PagePart { role: string; brief: string; kind: 'value' | 'content' | 'pending' | 'ref'; field?: string; key?: string; rule?: string; content?: string; pending?: string; option?: string; ref?: string; text: string }
+export interface PagePart { role: string; brief: string; kind: 'value' | 'content' | 'pending' | 'ref' | 'drawing'; field?: string; key?: string; rule?: string; content?: string; pending?: string; option?: string; ref?: string; drawing?: LotDrawing; text: string }
 export interface PageSection { kind: string; id: string; brief?: string; scenario?: string; ad?: ReportSlot; parts: PagePart[] }
 export interface PageTree { page: string; sections: PageSection[] }
 // MF-38 follow-up (operator 2026-11-11, "y to all as built"): `images` maps a scenario key to that option's one image (the MF-38 view image, its URL
@@ -419,7 +419,22 @@ export interface PageTree { page: string; sections: PageSection[] }
 export interface PageView { target: string; layout: Json; sections: PageSection[]; images?: Record<string, ViewImage> }
 
 const AD_KIND_SECTION = 'ad';
-const PAGE_RESPONSE_KEYS = ['page', 'synthetic', 'values', 'hidden', 'not_evaluated', 'flags'];
+const PAGE_RESPONSE_KEYS = ['page', 'synthetic', 'values', 'hidden', 'not_evaluated', 'flags', 'drawings'];
+
+// MF-83 group 2 (FE-42): the lot-view drawing, built by the server in a fixed 0..1000 frame. The client draws coordinates and does no geometry (Rule 16). The state is
+// closed; an entry that is not exactly valid is DROPPED WHOLE (fail closed: the panel is left out, never half drawn). Ruled fallback lines are content keys in the table.
+export interface LotDrawing { state: string; outline: number[][]; edges: { class: string; line: number[][] }[]; envelope?: number[][]; footprint?: number[][] }
+// The limits are DATA (report-page.json `drawing`: frame, point_dims, min_ring, edge_ends, states, classes), never literals here (FE-05).
+export const validDrawing = (d: unknown, cfg: Json): d is LotDrawing => {
+  const isPt = (p: unknown): boolean => Array.isArray(p) && p.length === cfg.point_dims && p.every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= cfg.frame);
+  const isRing = (r: unknown): boolean => Array.isArray(r) && r.length >= cfg.min_ring && r.every(isPt);
+  if (d === null || typeof d !== 'object' || Array.isArray(d)) return false;
+  const x = d as Json;
+  if (!(cfg.states as unknown[]).includes(x.state) || !isRing(x.outline)) return false;
+  if (!Array.isArray(x.edges) || x.edges.length !== (x.outline as unknown[]).length) return false;
+  if (!x.edges.every((e: Json) => e !== null && typeof e === 'object' && (cfg.classes as unknown[]).includes(e.class) && Array.isArray(e.line) && e.line.length === cfg.edge_ends && e.line.every(isPt))) return false;
+  return (x.envelope === undefined || isRing(x.envelope)) && (x.footprint === undefined || isRing(x.footprint));
+};
 const pageValidators = new WeakMap<object, any>();
 const pageValidatorOf = (pageSchema: Json, treeSchema: Json): any => {
   let v = pageValidators.get(pageSchema);
@@ -464,6 +479,14 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
     if (!declared.includes(w)) { out.push(`RR-PAGE ${at}: when ${String(w)} is not a flag of the page table`); return false; }
     return flags[w as string] === true;
   };
+  // MF-83 (FE-42): valid drawings by option section id; an invalid entry is dropped whole, a non-option key or a non-object is a defect.
+  const rawDrawings: unknown = response?.drawings;
+  const drawings = new Map<string, LotDrawing>();
+  if (rawDrawings !== undefined && (rawDrawings === null || typeof rawDrawings !== 'object' || Array.isArray(rawDrawings))) out.push('RR-PAGE response: drawings is not an object');
+  else for (const [k, d] of Object.entries((rawDrawings ?? {}) as Json)) {
+    if (!(T.sections as Json[]).some((x) => x.id === k && x.kind === 'option')) out.push(`RR-PAGE drawings ${k}: not an option section id`);
+    else if (validDrawing(d, T.drawing)) drawings.set(k, d);
+  }
   const keys = new Set<string>();
   const built: [Json, Json | null][] = []; // [table section, built section or null], in table order
   for (const s of T.sections as Json[]) {
@@ -484,7 +507,9 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
     const partsShown: boolean[] = [];
     const parts = (s.parts as Json[]).map((p): Json => {
       const at = `${String(s.id)}.${String(p.role)}`;
-      partsShown.push(on(p.when, at));
+      const need = p.needs === undefined || (Array.isArray(p.needs) && drawings.has(String(s.id)) && p.needs.includes(drawings.get(String(s.id))!.state));
+      partsShown.push(on(p.when, at) && need);
+      if (p.drawing === true && s.kind !== 'option') out.push(`RR-PAGE ${at}: a drawing part is only in an option section`);
       if (Array.isArray(vocab) && !vocab.includes(p.role)) out.push(`RR-PAGE ${at}: role not in the ${String(s.kind)} vocabulary`);
       const base = { role: p.role, brief: p.brief };
       // MF-83 (FE-41): a summary part names its option and may be a reference to that option's built part (resolved below, after the options are built).
@@ -509,6 +534,7 @@ export const buildPage = (response: Json, ctx: ReportCtx): Json => {
       if (p.content !== undefined) {
         const t = texts[p.content];
         if (typeof t !== 'string' || t === '') out.push(`RR-CONTENT ${String(p.content)}: no page text`);
+        if (p.drawing === true) return { ...base, kind: 'drawing', content: p.content, ...(drawings.has(String(s.id)) ? { drawing: drawings.get(String(s.id)) } : {}), text: String(t) };
         return { ...base, kind: 'content', content: p.content, ...(p.option !== undefined ? { option: p.option } : {}), text: String(t) };
       }
       const key = T.pending_texts?.[p.pending];
@@ -615,6 +641,8 @@ export const assertPage = (tree: Json, ctx: ReportCtx): void => {
       if (Array.isArray(vocab) && !vocab.includes(p?.role)) out.push(`RR-PAGE ${at}: role not in the ${String(s?.kind)} vocabulary`);
       if (p?.kind === 'value' && fields.filter((x) => x.name === p.field).length !== 1) out.push(`RR-FIELD ${String(p?.field)}: not one declared field (${at})`);
       if (p?.kind === 'ref' && (s?.kind !== 'summary' || typeof p.ref !== 'string' || typeof p.option !== 'string')) out.push(`RR-PAGE ${at}: a ref part is only in a summary section and names its option and role (FE-41)`);
+      if (p?.kind === 'drawing' && s?.kind !== 'option') out.push(`RR-PAGE ${at}: a drawing part is only in an option section (FE-42)`);
+      if (p?.kind === 'drawing' && !validDrawing(p.drawing, T.drawing)) out.push(`RR-PAGE ${at}: drawing geometry is not valid (FE-42)`);
       if (p?.kind === 'pending' && !pend.has(p.text)) out.push(`RR-CONTENT ${at}: a pending part shows only a ruled pending text (Q-G4 a)`);
     }
   }

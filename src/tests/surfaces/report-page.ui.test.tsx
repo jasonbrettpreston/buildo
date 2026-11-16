@@ -156,6 +156,37 @@ describe('MF-83 (FE-43) See details as a sheet with its own address', () => {
   });
 });
 
+describe('MF-83 group 2 (FE-42) the lot view on the page', () => {
+  const lotTree = (state: string, t: string): Json => JSON.parse(fs.readFileSync(path.join(process.cwd(), PAGE_GOLDEN_DIR, `${state}.${t}.json`), 'utf8')).rendered_tree;
+  const mountState = (state: string, t: string) => render(<ReportPage view={pageViewOf(lotTree(state, t), { target: t }, reportCtx) as PageView} />);
+  it('data absent (v21): no lot view anywhere', () => {
+    for (const t of TARGETS as string[]) { const { container, unmount } = mount(t); expect(container.querySelector('[data-lotview]'), t).toBeNull(); unmount(); }
+  });
+  it('drawn: the outline, the four edge lines in their classes and the envelope are drawn from the sent coordinates; label and caption shown', () => {
+    for (const t of TARGETS as string[]) {
+      const { container, unmount } = mountState('lot_view_drawn', t);
+      const fig = container.querySelector('[data-lotview="drawn"]') as HTMLElement;
+      expect(fig, t).not.toBeNull();
+      expect(fig.querySelector('polygon[data-part="lotview.outline"]')?.getAttribute('points')).toBe('100,100 900,100 900,900 100,900');
+      expect([...fig.querySelectorAll('line[data-edge]')].map((l) => l.getAttribute('data-edge'))).toEqual(['front', 'side', 'rear', 'side']);
+      expect(fig.querySelector('polygon[data-part="lotview.envelope"]')).not.toBeNull();
+      expect(fig.textContent).toContain('From above');
+      expect(fig.textContent).toContain('Not from a survey. Illustrative.');
+      unmount();
+    }
+  });
+  it('each outline-only state: the outline and edges, no envelope, its own fallback line and the same caption', () => {
+    for (const [st, text] of [['lot_view_shape', 'Irregular lot'], ['lot_view_edges', 'Lot edges unclear'], ['lot_view_unevaluated', 'Some setbacks not worked out yet']] as const) {
+      const { container, unmount } = mountState(st, 'web');
+      const fig = container.querySelector('[data-lotview]') as HTMLElement;
+      expect(fig.querySelector('polygon[data-part="lotview.envelope"]'), st).toBeNull();
+      expect(fig.textContent, st).toContain(text);
+      expect(fig.textContent, st).toContain('Not from a survey. Illustrative.');
+      unmount();
+    }
+  });
+});
+
 describe('MF-83 (FE-41) the summary on the page', () => {
   it('every target: items link to their option anchors, each text is the option\'s own part', () => {
     for (const t of TARGETS as string[]) {

@@ -140,11 +140,15 @@ export const MAP_RESOLUTIONS: readonly string[] = ['multi_parcel', 'unlinked'];
 // MF-57's core (pageViewOf(buildPage(response), {target: 'mobile'}), src/lib/parcels/report-page.ts) from the lot's producer response; null while no
 // producer has the lot (every customer lot until MB-44). Every level is .strict(): the keys are the core's own projection (core.ts pageViewOf), so a
 // stray key fails the boundary parse. The texts are server-formatted page parts; the app looks them up by section id, part index and role.
+const Pt = z.array(z.number());
+const LotDrawingSchema = z
+  .object({ state: z.string(), outline: z.array(Pt), edges: z.array(z.object({ class: z.string(), line: z.array(Pt) }).strict()), envelope: z.array(Pt).optional(), footprint: z.array(Pt).optional() })
+  .strict();
 const PagePartSchema = z
   .object({
     role: z.string(),
     brief: z.string(),
-    kind: z.enum(['value', 'content', 'pending', 'ref']),
+    kind: z.enum(['value', 'content', 'pending', 'ref', 'drawing']),
     text: z.string(),
     field: z.string().optional(),
     content: z.string().optional(),
@@ -153,6 +157,7 @@ const PagePartSchema = z
     rule: z.string().optional(),
     option: z.string().optional(), // MF-83 (FE-41): a summary part's option section id
     ref: z.string().optional(), // MF-83: the role of the option part a summary part shows
+    drawing: LotDrawingSchema.optional(), // MF-83 group 2 (FE-42): the server-built lot view, validated again by the core
   })
   .strict();
 const PageAdSchema = z

@@ -25,7 +25,8 @@ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-ex
 export const PAGE_GOLDEN_DIR = 'src/tests/fixtures/report-page';
 export const PAGE_FP_FILES = [...(FP_FILES as string[]), 'scripts/surfaces/_schema/report-page.json', 'scripts/surfaces/_schema/report-page.schema.json'];
 
-export const PAGE_STATES = ['v21', 'entry_off', 'entered', 'entered_used'] as const;
+// MF-83 group 2 (FE-42): + one state per closed lot-view state (the data-absent state is v21, which sends no drawings).
+export const PAGE_STATES = ['v21', 'entry_off', 'entered', 'entered_used', 'lot_view_drawn', 'lot_view_shape', 'lot_view_edges', 'lot_view_unevaluated'] as const;
 
 export const capturePages = (root: string): Map<string, string> => {
   const files: Record<string, string> = {};

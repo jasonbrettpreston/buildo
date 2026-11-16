@@ -135,6 +135,29 @@ const QA = ({ children, labelId }: { children: ReactElement[]; labelId: string }
   <section aria-labelledby={labelId} className="relative grid gap-[10px] rounded-xl border border-report-tile-border bg-report-tile px-[14px] pb-[14px] pt-[18px]">{children}</section>
 );
 
+// MF-83 group 2 (FE-42): the lot view, drawn from the server's coordinates (a 0..1000 frame) with no geometry of its own. The label, the one outline-state note and the one
+// caption are parts; an option with no drawing part (data absent, fail closed) draws nothing. Edge classes only choose a stroke class.
+const EDGE_STROKE: Record<string, string> = { front: 'stroke-report-amber-ink', side: 'stroke-report-ink', rear: 'stroke-report-muted' };
+const pts = (ring: number[][]): string => ring.map((p) => p.join(',')).join(' ');
+const LotView = ({ s }: { s: PageSection }): ReactElement | null => {
+  const d = one(s, 'lotview.above');
+  if (!d?.drawing) return null;
+  const g = d.drawing;
+  return (
+    <figure data-lotview={g.state} className="m-0 mx-[2px] grid gap-2 rounded-[14px] border border-report-tile-border bg-report-tile p-3">
+      <T p={d} as="div" className="text-[13px]/[18px] font-semibold text-report-muted" />
+      <svg viewBox="0 0 1000 1000" role="img" aria-label={d.text} className="h-auto w-full">
+        <polygon data-part="lotview.outline" points={pts(g.outline)} className="fill-report-card stroke-report-line" strokeWidth="4" />
+        {g.envelope ? <polygon data-part="lotview.envelope" points={pts(g.envelope)} className="fill-report-amber-soft stroke-report-amber-ink" strokeWidth="4" strokeDasharray="16 10" /> : null}
+        {g.footprint ? <polygon data-part="lotview.footprint" points={pts(g.footprint)} className="fill-report-sky stroke-report-ink" strokeWidth="4" /> : null}
+        {g.edges.map((e, i) => <line key={i} data-edge={e.class} x1={e.line[0]![0]} y1={e.line[0]![1]} x2={e.line[1]![0]} y2={e.line[1]![1]} className={EDGE_STROKE[e.class]} strokeWidth="8" />)}
+      </svg>
+      <T p={one(s, 'lotview.note')} as="p" className="m-0 text-[13px]/[18px] text-report-muted" />
+      <T p={one(s, 'lotview.caption')} as="p" className="m-0 text-[12px]/[16px] text-report-soft" />
+    </figure>
+  );
+};
+
 const Option = ({ s, open, image, sheet }: { s: PageSection; open: boolean; image: ViewImage | undefined; sheet: boolean }): ReactElement => {
   const id = (x: string): string => `${s.id}-${x}`;
   const how = one(s, 'bigger.how');
@@ -152,6 +175,7 @@ const Option = ({ s, open, image, sheet }: { s: PageSection; open: boolean; imag
           </div>
           <T p={one(s, 'tag')} className="absolute bottom-3 left-4 z-[2] rounded-full bg-report-sky px-2 py-[2px] text-[12px]/[18px] font-semibold text-report-ink shadow-[0_0_0_1px_var(--color-report-line)]" />
         </div>
+        <LotView s={s} />
         <T p={one(s, 'spec_label')} as="div" className="mx-[2px] mb-2 mt-[2px] text-[11px]/[14px] font-semibold uppercase tracking-[.08em] text-report-soft" />
         <div className="mx-[2px] grid grid-cols-[repeat(2,minmax(0,1fr))] gap-[10px] px-[2px]">
           <Tile s={s} pre="size" panelId={id('size')} open={open} sheet={sheet} />

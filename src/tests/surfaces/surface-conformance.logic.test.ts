@@ -727,7 +727,8 @@ describe('C-11m the generated mobile theme (MF-35; scripts/surfaces/emit-mobile-
 // react-native-safe-area-context (the layout parts plan v2 §2.2 names); no intrinsic tag, no createElement/jsx call, no other JSX tag.
 // MF-53 (dated 2026-11-11; plan v4 §8 item 1): + react-native-maps, whose own MapView, Polygon and Marker the renderer draws for the map
 // projection (S-071). It is a part source here, not a libraries.mobile entry (two Buildo-app files import it; the MF-48 L-1 precedent).
-const MOBILE_PARTS = ['react-native', 'react-native-safe-area-context', 'react-native-maps'];
+// MF-83 group 2 (dated 2026-11-14; FE-42): + react-native-svg, whose Svg, Polygon and Line the renderer draws for the REPORT lot view (the existing dependency of the Buildo app; the MF-53 precedent).
+const MOBILE_PARTS = ['react-native', 'react-native-safe-area-context', 'react-native-maps', 'react-native-svg'];
 // MF-48 (dated 2026-11-11; D-3 a, Spec 126 §11b.4 dated note 2026-11-11): the C-8m HOST LIST. A listed host module's COMPONENTS table equals
 // mapping.mobile.<archetype>_HOST, and its values may also come from the packages listed for it here: the app's existing bottom sheet and the one
 // shared renderer. Any other package still fails, and no other module may take a part from them.
@@ -798,7 +799,8 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
     expect(Object.keys(MOBILE_HOSTS).every((p) => mods.some((m: Json) => m.path === p))).toBe(true);
     expect(B.mapping.mobile.SEARCH).not.toContain('FlashList');
     // MF-48 OUTPUT fold RG R5: the renderer's REPORT list is a subset of its SEARCH parts (so its COMPONENTS table is unchanged), and no FlashList.
-    expect((B.mapping.mobile.REPORT as string[]).filter((c) => !B.mapping.mobile.SEARCH.includes(c))).toEqual([]);
+    // MF-83 group 2 (dated 2026-11-14; FE-42): the REPORT list adds exactly react-native-svg's three parts (the lot view); the table gains them.
+    expect((B.mapping.mobile.REPORT as string[]).filter((c) => !B.mapping.mobile.SEARCH.includes(c))).toEqual(['Svg', 'SvgPolygon', 'SvgLine']);
     expect(B.mapping.mobile.REPORT).not.toContain('FlashList');
     // MF-53: the LIST table adds exactly react-native-maps' three parts to the SEARCH parts it reuses, and no FlashList.
     expect((B.mapping.mobile.LIST as string[]).filter((c) => !B.mapping.mobile.SEARCH.includes(c))).toEqual(['MapView', 'Polygon', 'Marker']);

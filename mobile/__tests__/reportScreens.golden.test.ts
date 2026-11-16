@@ -26,7 +26,7 @@ const PAGE_STATES = ['page_all_null', 'page_no_ad', 'page_not_evaluated', 'page_
 const LIFE_STATES = ['error', 'loading', 'miss'];
 const viewOf = (n: string): PageView => goldens[n]!.view as PageView;
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
-/** The 31 report-* colour keys of mobile/tailwind.config.js (membership, not a prefix). */
+/** The 34 report-* colour keys (MF-83: 31 re-valued + amber-ink, amber-soft, stage) of mobile/tailwind.config.js (membership, not a prefix). */
 const REPORT_COLOURS = [...fs.readFileSync(path.join(MOBILE, 'tailwind.config.js'), 'utf8').matchAll(/'(report-[a-z-]+)':/g)].map((m) => m[1]!);
 
 const isNode = (v: unknown): v is PropsNode => typeof v === 'object' && v !== null && 'component' in v;
@@ -101,7 +101,7 @@ const ctxOf = (v: PageView) => ({ content: {}, data: { contract: {}, derived: {}
 describe('MF-48 mobile REPORT props goldens', () => {
   it('8 committed goldens: 5 page states and the 3 lifecycle states', () => {
     expect(Object.keys(goldens)).toEqual([...LIFE_STATES, ...PAGE_STATES].sort());
-    expect(REPORT_COLOURS).toHaveLength(31);
+    expect(REPORT_COLOURS).toHaveLength(34);
   });
   it('T1: reportProps(view) and lifecycleProps(state) equal the committed props exactly', () => {
     for (const n of PAGE_STATES) {
@@ -181,7 +181,7 @@ describe('MF-48 mobile REPORT props goldens', () => {
   });
   it('T4: the REPORT layout rules hold on every golden tree and every UI state', () => {
     // MF-48 Stage B (dated 2026-11-12): + SafeAreaView, the Back bar's top safe area (the SEARCH and LIST form, edges {top: additive}).
-    expect(bindings.mapping.mobile.REPORT).toEqual(['ScrollView', 'View', 'Text', 'Button', 'Input', 'ActivityIndicator', 'SafeAreaView']);
+    expect(bindings.mapping.mobile.REPORT).toEqual(['ScrollView', 'View', 'Text', 'Button', 'Input', 'ActivityIndicator', 'SafeAreaView', 'Svg', 'SvgPolygon', 'SvgLine']);
     expect(['back', reportLayoutProblems(backProps()), textProblems(backProps(), 'back')]).toEqual(['back', [], []]);
     for (const n of Object.keys(goldens)) {
       const p = goldens[n]!.props as Json;
@@ -252,6 +252,20 @@ describe('MF-48 mobile REPORT props goldens', () => {
     expect(h.detail!.props.key).toBe('o1-how-steps');
     expect(nodes(h.page).map((x) => String(x.props.key))).not.toContain('o1-how-steps');
     expect(() => reportProps({ ...v, layout: { ...v.layout, details_view: 'drawer' } })).toThrow('ReportBinding: unknown layout details_view drawer');
+  });
+  it('MF-83 group 2 (FE-42): a lot view in the view is drawn as Svg nodes from the sent coordinates (strings only, refs for texts); with no drawing nothing is drawn', () => {
+    const fixture = (st: string): PageView => {
+      const g = JSON.parse(fs.readFileSync(path.join(process.cwd(), '..', 'src/tests/fixtures/report-page', `${st}.mobile.json`), 'utf8'));
+      return { target: 'mobile', layout: { details: 'collapsed', details_view: 'sheet' }, sections: g.rendered_tree.sections } as PageView;
+    };
+    const drawn = fixture('lot_view_drawn');
+    const page = reportProps(drawn).page;
+    expect(nodes(page).filter((x) => x.component === 'Svg')).toHaveLength(1);
+    expect(nodes(page).filter((x) => x.component === 'SvgLine').map((x) => [x.props.stroke, x.props.x1])).toEqual([['#9a4a07', '100'], ['#1d1b18', '900'], ['#4d4841', '900'], ['#1d1b18', '100']]);
+    expect(nodes(page).filter((x) => x.component === 'SvgPolygon').map((x) => x.props.points)).toEqual(['100,100 900,100 900,900 100,900', '200,200 800,200 800,800 200,800']);
+    for (const r of refs(page, 'part')) expect(typeof resolveValue({ part: r }, ctxOf(drawn))).toBe('string');
+    expect(nodes(reportProps(fixture('lot_view_shape')).page).filter((x) => x.component === 'SvgPolygon')).toHaveLength(1);
+    expect(nodes(reportProps(viewOf('page_v21')).page).filter((x) => x.component === 'Svg')).toEqual([]);
   });
   it('OUTPUT fold CR MED-1 / LOW-1: a served (not pending) notes count shows its chip when collapsed and none when expanded, without a throw; an unknown details value throws', () => {
     const v = clone(viewOf('page_v21'));

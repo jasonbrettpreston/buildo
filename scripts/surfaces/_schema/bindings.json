@@ -59,7 +59,7 @@
     },
     "mobile": {
       "SEARCH": ["SafeAreaView", "ScrollView", "View", "Text", "Input", "Button", "Alert", "AlertDescription", "Icon", "ActivityIndicator"],
-      "REPORT": ["ScrollView", "View", "Text", "Button", "Input", "ActivityIndicator", "SafeAreaView"],
+      "REPORT": ["ScrollView", "View", "Text", "Button", "Input", "ActivityIndicator", "SafeAreaView", "Svg", "SvgPolygon", "SvgLine"],
       "LIST": ["SafeAreaView", "ScrollView", "View", "Text", "Button", "Alert", "AlertDescription", "Icon", "ActivityIndicator", "MapView", "Polygon", "Marker"],
       "REPORT_HOST": ["View", "SurfaceRenderer", "BottomSheet", "BottomSheetView", "BottomSheetBackdrop"]
     }
@@ -85,5 +85,5 @@
     "hidden": ["*"]
   },
   "ref_kinds": ["content", "contract", "derived", "part"],
-  "non_display_keys": ["id", "component", "widget", "variant", "size", "accessor", "idAccessor", "name", "type", "testID", "className", "href", "to", "key", "value", "defaultValue", "color", "radius", "textAlign", "role", "autoComplete", "inputMode", "orientation", "icon", "edges", "top", "navigate", "keyboardShouldPersistTaps", "contentContainerStyle", "style", "maxWidth", "paddingBottom", "alignItems", "returnKeyType", "autoCapitalize", "autoCorrect", "placeholderTextColor", "accessibilityRole", "accessibilityState", "checked", "disabled", "iconClassName", "action", "route", "parcelId", "onPress", "onChangeText", "option", "panel", "pressBehavior", "initialRegion", "coordinates", "holes", "coordinate", "fillColor", "strokeColor", "strokeWidth", "tappable", "pitchEnabled", "rotateEnabled", "toolbarEnabled", "userInterfaceStyle", "customMapStyle", "importantForAccessibility", "accessibilityElementsHidden", "tracksViewChanges", "pinColor", "numberOfLines", "height", "tabIndex", "topic"]
+  "non_display_keys": ["id", "component", "widget", "variant", "size", "accessor", "idAccessor", "name", "type", "testID", "className", "href", "to", "key", "value", "defaultValue", "color", "radius", "textAlign", "role", "autoComplete", "inputMode", "orientation", "icon", "edges", "top", "navigate", "keyboardShouldPersistTaps", "contentContainerStyle", "style", "maxWidth", "paddingBottom", "alignItems", "returnKeyType", "autoCapitalize", "autoCorrect", "placeholderTextColor", "accessibilityRole", "accessibilityState", "checked", "disabled", "iconClassName", "action", "route", "parcelId", "onPress", "onChangeText", "option", "panel", "pressBehavior", "initialRegion", "viewBox", "width", "points", "fill", "stroke", "strokeDasharray", "x1", "y1", "x2", "y2", "coordinates", "holes", "coordinate", "fillColor", "strokeColor", "strokeWidth", "tappable", "pitchEnabled", "rotateEnabled", "toolbarEnabled", "userInterfaceStyle", "customMapStyle", "importantForAccessibility", "accessibilityElementsHidden", "tracksViewChanges", "pinColor", "numberOfLines", "height", "tabIndex", "topic"]
 }

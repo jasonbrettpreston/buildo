@@ -15,6 +15,14 @@ export const REPORT_HEX = {
   amber: '#f59e0b',
   inner: '#f4f1eb',
   buttonBorder: '#d9d0c1',
+  // MF-83 group 2: stroke and fill values the lot-view svg needs as props (twins of the report-* keys)
+  card: '#ffffff',
+  line: '#e9e3d8',
+  ink: '#1d1b18',
+  muted: '#4d4841',
+  amberInk: '#9a4a07',
+  amberSoft: '#fdf1d8',
+  sky: '#efe9df',
 } as const;
 
 export const REPORT_PAGE_LAYOUT = {
@@ -41,6 +49,11 @@ export const REPORT_PAGE_LAYOUT = {
   summarySize: 'flex-row items-baseline gap-[4px]',
   summaryMax: 'text-[14px] leading-[20px] font-normal text-report-muted',
   summaryValue: 'text-[14px] leading-[20px] font-semibold text-report-ink tabular-nums',
+  // lot view (MF-83 group 2, FE-42)
+  lotView: 'mx-[2px] gap-[8px] rounded-[14px] border border-report-tile-border bg-report-tile p-[12px]',
+  lotViewLabel: 'text-[13px] leading-[18px] font-semibold text-report-muted',
+  lotViewNote: 'text-[13px] leading-[18px] font-normal text-report-muted',
+  lotViewCaption: 'text-[12px] leading-[16px] font-normal text-report-soft',
   // option card
   option: 'gap-[14px] rounded-[20px] border border-report-outer-border bg-report-outer p-[12px]',
   optionTop: 'gap-[12px] pb-[14px]',

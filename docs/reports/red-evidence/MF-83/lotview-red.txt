@@ -1,0 +1,7 @@
+   × P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed > data absent: no drawing, no label
+   × P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed > drawn: label+drawing, then the ca
+   × P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed > each outline state shows its own 
+   × P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed > fail closed: an unknown state, a 
+   × P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed > a drawings key that is not an obj
+   × P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed > assertPage: a drawing part with i
+   × P3c MF-83 (FE-42) the lot-view drawing part: server-built geometry, fail closed > the table: drawing parts need a d

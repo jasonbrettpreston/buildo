@@ -358,7 +358,12 @@
     "pending.classified": "not yet classified",
     "summary.heading": "{count} options",
     "summary.max": "Max build:",
-    "summary.not_evaluated": "Not yet evaluated"
+    "summary.not_evaluated": "Not yet evaluated",
+    "lotview.above.label": "From above",
+    "lotview.caption": "Not from a survey. Illustrative.",
+    "lotview.note.shape": "Irregular lot: setbacks listed in details",
+    "lotview.note.edges": "Lot edges unclear: setbacks listed in details",
+    "lotview.note.unevaluated": "Some setbacks not worked out yet: listed in details"
   },
   "illustrations": {
     "ruling": "Q-10",

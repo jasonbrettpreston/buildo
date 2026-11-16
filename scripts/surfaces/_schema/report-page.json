@@ -10,6 +10,23 @@
     "lot_size_entered",
     "lot_size_entry_used"
   ],
+  "drawing": {
+    "frame": 1000,
+    "point_dims": 2,
+    "min_ring": 3,
+    "edge_ends": 2,
+    "states": [
+      "drawn",
+      "outline_shape",
+      "outline_edges",
+      "outline_unevaluated"
+    ],
+    "classes": [
+      "front",
+      "side",
+      "rear"
+    ]
+  },
   "frames": [
     {
       "brief": "A0",
@@ -104,7 +121,10 @@
       "unit.sub",
       "unit.value",
       "unit.unit",
-      "unit.m2"
+      "unit.m2",
+      "lotview.above",
+      "lotview.note",
+      "lotview.caption"
     ],
     "lot_size": [
       "title",
@@ -312,6 +332,53 @@
           "brief": "B2",
           "pending": "estimated",
           "why": "display_label: declared slot, values owed"
+        },
+        {
+          "role": "lotview.above",
+          "brief": "B17",
+          "content": "lotview.above.label",
+          "drawing": true,
+          "needs": [
+            "drawn",
+            "outline_shape",
+            "outline_edges",
+            "outline_unevaluated"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.shape",
+          "needs": [
+            "outline_shape"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.edges",
+          "needs": [
+            "outline_edges"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.unevaluated",
+          "needs": [
+            "outline_unevaluated"
+          ]
+        },
+        {
+          "role": "lotview.caption",
+          "brief": "B18",
+          "content": "lotview.caption",
+          "needs": [
+            "drawn",
+            "outline_shape",
+            "outline_edges",
+            "outline_unevaluated"
+          ]
         },
         {
           "role": "spec_label",
@@ -807,6 +874,53 @@
           "why": "open item 19 (\"Most space\" wording, W6); a detached-only headline flag is owed from the server (is_headline can land on the houseplex; the ★ is for the detached roofs only, oq:741); never computed on screen"
         },
         {
+          "role": "lotview.above",
+          "brief": "B17",
+          "content": "lotview.above.label",
+          "drawing": true,
+          "needs": [
+            "drawn",
+            "outline_shape",
+            "outline_edges",
+            "outline_unevaluated"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.shape",
+          "needs": [
+            "outline_shape"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.edges",
+          "needs": [
+            "outline_edges"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.unevaluated",
+          "needs": [
+            "outline_unevaluated"
+          ]
+        },
+        {
+          "role": "lotview.caption",
+          "brief": "B18",
+          "content": "lotview.caption",
+          "needs": [
+            "drawn",
+            "outline_shape",
+            "outline_edges",
+            "outline_unevaluated"
+          ]
+        },
+        {
           "role": "spec_label",
           "brief": "B5",
           "content": "spec.label"
@@ -1221,6 +1335,53 @@
           "brief": "B2",
           "pending": "estimated",
           "why": "display_label values owed; open item 7; the count must be unit_count (units that fit), not units_max (brief v4 review HIGH b)"
+        },
+        {
+          "role": "lotview.above",
+          "brief": "B17",
+          "content": "lotview.above.label",
+          "drawing": true,
+          "needs": [
+            "drawn",
+            "outline_shape",
+            "outline_edges",
+            "outline_unevaluated"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.shape",
+          "needs": [
+            "outline_shape"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.edges",
+          "needs": [
+            "outline_edges"
+          ]
+        },
+        {
+          "role": "lotview.note",
+          "brief": "B18",
+          "content": "lotview.note.unevaluated",
+          "needs": [
+            "outline_unevaluated"
+          ]
+        },
+        {
+          "role": "lotview.caption",
+          "brief": "B18",
+          "content": "lotview.caption",
+          "needs": [
+            "drawn",
+            "outline_shape",
+            "outline_edges",
+            "outline_unevaluated"
+          ]
         },
         {
           "role": "spec_label",

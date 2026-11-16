@@ -18,7 +18,9 @@ import slice from '@/generated/surfaces/mobile_parcel_detail.json';
 /** MF-48 Stage B: the generated content slice of S-001 (emit-mobile-surfaces.mjs: the approved lifecycle texts and Retry, Back), the MF-35 form. */
 export const REPORT_SLICE = slice;
 
-export type PagePart = { role: string; brief: string; kind: 'value' | 'content' | 'pending' | 'ref'; option?: string; ref?: string; text: string };
+export type PagePart = { role: string; brief: string; kind: 'value' | 'content' | 'pending' | 'ref' | 'drawing'; option?: string; ref?: string; drawing?: LotDrawing; text: string };
+/** MF-83 group 2 (FE-42): the server-built lot view (a 0..1000 frame, already validated by the core); drawn as sent, never computed. */
+export type LotDrawing = { state: string; outline: number[][]; edges: { class: string; line: number[][] }[]; envelope?: number[][]; footprint?: number[][] };
 export type PageAd = { field: string; slot: string; value: string; disclosure: string };
 export type PageSection = { kind: string; id: string; scenario?: string; ad?: PageAd; parts: PagePart[] };
 export type PageView = { target: string; layout: { details: string; details_view?: string }; sections: PageSection[] };
@@ -103,6 +105,26 @@ const tile = (s: PageSection, P: ReturnType<typeof picker>, pre: PanelName | 'un
   ]);
 
 /** MF-83 (FE-43): with details_view: sheet the open panel (or the open How? steps) is returned as `detail` for the host's bottom sheet and is NOT in the page; inline keeps today's in-place path. */
+const ptsOf = (ring: number[][]): string => ring.map((p) => p.join(',')).join(' ');
+const EDGE_STROKE: Record<string, string> = { front: H.amberInk, side: H.ink, rear: H.muted };
+/** The lot view (FE-42): label, the drawing as react-native-svg nodes, the one outline-state note and the one caption; none when the view carries no drawing part. */
+function lotView(s: PageSection, P: ReturnType<typeof picker>): PropsNode[] {
+  const g = P.part('lotview.above')?.drawing;
+  if (!g) return [];
+  const id = s.id;
+  return [node('View', { key: `${id}-lotview`, testID: `report-${id}-lotview`, className: L.lotView }, [
+    ...P.text('lotview.above', `${id}-lotview-label`, L.lotViewLabel),
+    node('Svg', { key: `${id}-lotview-svg`, viewBox: '0 0 1000 1000', width: '100%', height: '200' }, [
+      node('SvgPolygon', { key: `${id}-lv-outline`, points: ptsOf(g.outline), fill: H.card, stroke: H.line, strokeWidth: '4' }),
+      ...(g.envelope ? [node('SvgPolygon', { key: `${id}-lv-envelope`, points: ptsOf(g.envelope), fill: H.amberSoft, stroke: H.amberInk, strokeWidth: '4', strokeDasharray: '16 10' })] : []),
+      ...(g.footprint ? [node('SvgPolygon', { key: `${id}-lv-footprint`, points: ptsOf(g.footprint), fill: H.sky, stroke: H.ink, strokeWidth: '4' })] : []),
+      ...g.edges.map((e, i) => node('SvgLine', { key: `${id}-lv-edge-${i}`, x1: String(e.line[0]![0]), y1: String(e.line[0]![1]), x2: String(e.line[1]![0]), y2: String(e.line[1]![1]), stroke: EDGE_STROKE[e.class], strokeWidth: '8' })),
+    ]),
+    ...P.text('lotview.note', `${id}-lotview-note`, L.lotViewNote),
+    ...P.text('lotview.caption', `${id}-lotview-caption`, L.lotViewCaption),
+  ])];
+}
+
 function option(s: PageSection, ui: ReportUi, expanded: boolean, sheetMode: boolean): { node: PropsNode; detail: PropsNode | null } {
   const P = picker(s);
   const id = s.id;
@@ -194,6 +216,7 @@ function option(s: PageSection, ui: ReportUi, expanded: boolean, sheetMode: bool
         ...P.text('tag', `${id}-tag`, L.tag),
         ...P.text('picture.caption', `${id}-caption`, L.caption),
       ]),
+      ...lotView(s, P),
       ...P.text('spec_label', `${id}-spec`, L.specLabel),
       node('View', { key: `${id}-tiles`, className: L.tiles }, tiles),
       ...(sheetMode ? [] : panels),
