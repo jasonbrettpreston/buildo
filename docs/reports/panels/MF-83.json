@@ -4,14 +4,17 @@
   "class": "G",
   "stage": 8,
   "date": "2026-11-14",
-  "head": "docs commit",
+  "head": "groups 1, 1a, 1b, 2",
   "cards": [
     "Operator 2026-11-14, verbatim: \"I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded\"; reality-check seat ~/Buildo-scratch/mcfrontend/MF-83/reality-check-1114.md."
   ],
   "plan": "PLAN: ~/Buildo-scratch/mcfrontend/MF-83/build-plan.md. Tests first with red evidence under docs/reports/red-evidence/MF-83/; page table, schema, layout table as data; goldens restamped by their generators only. DeepSeek four-lens review of the plan run on 2026-11-14 and folded (recorded in ~/Buildo-scratch/mcfrontend/MF-83/build-report.md).",
-  "output": "OUTPUT panel: filed on the built diff before the lane reports ready; this record is updated in the group commit that completes the build. Until then: pending.",
-  "seats": ["DeepSeek four-lens plan review (folded)"],
-  "verdict": "PENDING the OUTPUT panel on the built diff; push waits on the operator.",
+  "output": "OUTPUT review of the whole diff (827ea5acc..HEAD), by the lane, executed claims only. REGRESSION (git diff of tests, every deleted assertion traced): the layout key list, screen-order and kind lists, brief ids, part-binding keys, golden count (16 to 32), and the in-place See-details test (now run with details_view overridden to inline, so the inline path is still tested) changed only as the ruled additions require; the dark-theme caption contrast control is replaced by the Daylight values (light only); mobile jest part indices were stale at the tip and are corrected. Executed: root vitest over src/tests/surfaces, mctest, lookup and admin preview (1414 passed); mobile jest __tests__ (768 passed); tsc clean on root and mobile; generators --check clean (web theme, mobile surfaces, report-fields, report-schema). Found and fixed in review: the mobile app's own response schema (mobile/src/lib/schemas.ts) rejected the new part kinds and stripped the new members; updated. Risk, not fixable in code: an already-installed app build fails its schema or binding on the new kinds (summary, ref, drawing) - the server must serve the new view only after the app build (customers see no page until MB-44). COMPLIANCE: FE-05 (report-no-maths lock green: the drawing limits are data in the page table, no literals in core; the summary count is a server template fill); FE-18/FE-32 (summary items are references resolved from built option parts); FE-36 (See details is a route: links and hash dialogs, mobile host sheet); FE-41..43 rows and dated notes in Spec 126 and 128; FE-06 (not evaluated reads Not yet evaluated, a failed drawing is left out, never faked); FE-34 (page contract schema updated); D-6 one caption, D-7 states and the two accepted fallback lines as content keys. Colours: 1b is held for the operator; three component uses fail contrast and are pinned by a test finding, not edited. NOT BUILT (listed, no field invented): callouts and dimension lines and buildable width (by-law row parts pending, no field), the ten admin settings and eligibility rule (scripts/seeds/logic_variables.json is a protected McBylaws path and a DB seed: group 3), gallery swipe (no image data path), units toggle FE-44, mobile summary jump. Full suite not run (suite lock held, permission refused): ready except full suite.",
+  "seats": [
+    "DeepSeek four-lens plan review (folded)",
+    "lane grounded OUTPUT review (executed)"
+  ],
+  "verdict": "PASS-WITH-FOLDS: schema fold applied; group 1b held for the operator; push waits on the operator.",
   "blockers": [],
   "followups": [
     "Group 3: the stored per-lot read, the ten admin settings and the eligibility rule (gated McBylaws DB job, own OPERATOR-GO).",
