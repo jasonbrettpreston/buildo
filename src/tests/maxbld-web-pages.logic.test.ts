@@ -183,7 +183,9 @@ describe('L the live switch and the fences', () => {
     // MF-46 follow-up (dated 2026-11-12; Help & Support contact): 27 -> 29, the prefill island (static)/help/HelpPrefill.tsx (found by the walk) and
     // the inbox read src/lib/surfaces/maxbld-support.ts (added to the list: one setting read, never a lookup or a meter).
     all.push(path.join(ROOT, 'src/lib/surfaces/maxbld-support.ts'));
-    expect(all.length).toBe(29);
+    // MF-47 (dated 2026-11-14): 29 -> 30, the checkout and portal server actions parcel-tool/subscribe/actions.ts (found by the walk; they call the
+    // Stripe lib, never a lookup or a meter).
+    expect(all.length).toBe(30);
     for (const f of all) for (const [re, why] of BANNED) expect([path.relative(ROOT, f), why, re.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), why, false]);
   });
   it('RED: each banned form is caught in a planted text', () => {

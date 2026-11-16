@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 import { TRADES } from '@/lib/classification/trades';
-import { PRODUCTS } from '@/lib/entitlements';
+import { PLAN_KEYS, PRODUCTS } from '@/lib/entitlements';
 
 export const USER_DIRECTORY_PAGE_SIZE = 25;
 
@@ -104,6 +104,12 @@ export const AdminUserMutationSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('suspend'), // suspend account access → expired (audit-distinct)
     product: productField,
+    reason: reasonSchema,
+  }),
+  // MF-47 (RULED 2026-11-14): move an admin_managed parcel_tool comp between Basic and Pro (the webhook owns plan_key on Stripe-managed rows).
+  z.object({
+    action: z.literal('set_plan'),
+    plan_key: z.enum(PLAN_KEYS),
     reason: reasonSchema,
   }),
   z.object({

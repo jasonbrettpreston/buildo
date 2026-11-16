@@ -571,7 +571,7 @@
     "src/app/api/admin/users/[uid]/route.ts": {
       "class": "interpolated",
       "statements": 4,
-      "interpolated": 7,
+      "interpolated": 8,
       "unparsed": [],
       "skipped": 0,
       "resolve_errors": 0,
@@ -3034,6 +3034,37 @@
           "violation_future_issued_date",
           "violation_missing_status",
           "violations_total"
+        ]
+      }
+    },
+    "src/lib/stripe/parcel-checkout.ts": {
+      "class": "static",
+      "statements": 6,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "229beb993a3e10d4",
+        "23f0258255bbd311",
+        "298e448b85b09964",
+        "5a3a5e7865c273dc",
+        "b3922286641fbc73",
+        "f5730dce47400ed9"
+      ],
+      "reads": {
+        "user_profiles": [
+          "account_deleted_at",
+          "email",
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "user_profiles": [
+          "stripe_customer_id",
+          "updated_at",
+          "user_id"
         ]
       }
     },

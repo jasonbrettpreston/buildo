@@ -26,8 +26,8 @@ const TAG = '[auth/require-parcel-tool-page]';
 
 export type ParcelToolPageAccess = { uid: string; entitled: boolean };
 
-/** The signed-in user's uid from the session cookie (claims), or null when there is none; a thrown sign-in call is logged and re-thrown. */
-async function sessionUid(): Promise<string | null> {
+/** The signed-in user's uid from the session cookie (claims), or null when there is none; a thrown sign-in call is logged and re-thrown. Exported (MF-47) for the MaxBLD checkout and portal server actions. */
+export async function sessionUid(): Promise<string | null> {
   if (isDevMode()) return 'dev-user';
   try {
     const supabase = await createClient();

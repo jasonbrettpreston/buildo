@@ -6,7 +6,8 @@
 //   GET   — full profile + activity counts. A view of a deletion-window account
 //           is ALLOWED but annotated (deleted: true) AND audit-logged.
 //   PATCH — the mutation set (discriminated union on `action`): set_trades (the
-//           JOIN EDITOR), set_preset, extend_trial, revoke, suspend, delete.
+//           JOIN EDITOR), set_preset, extend_trial, revoke, suspend, set_plan
+//           (MF-47: moves an admin_managed parcel_tool comp between Basic and Pro), delete.
 //
 // Entitlements swap (`.cursor/phase1_plan.md` Item 4 W6 + R7/R8): the
 // subscription mutations (extend_trial / revoke / suspend) write per-product
@@ -40,6 +41,8 @@ import {
   LEAD_GEN_ENTITLEMENT_JOIN,
   DEFAULT_PRODUCT,
   getEntitlementStatusForUpdate,
+  getParcelToolPlanForUpdate,
+  setAdminManagedPlanKey,
   upsertEntitlementStatus,
   upsertTrialWindow,
   markAllEntitlementsCancelledPendingDeletion,
@@ -169,6 +172,14 @@ async function lockedOldSubscriptionValue(
   return { status: row?.status ?? null, trial_started_at: row?.trial_started_at ?? null };
 }
 
+/** MF-47: a set_plan request the row's state refuses (no row; not an admin_managed comp). Rolls the transaction back; the PATCH maps it to its status. */
+class PlanChangeRefused extends Error {
+  constructor(public readonly code: string, message: string, public readonly status: 404 | 409) {
+    super(message);
+    this.name = 'PlanChangeRefused';
+  }
+}
+
 export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, context?: unknown) {
   const adminCtx = await verifyAdminAuth(request);
   if (!adminCtx) return unauthorizedEnvelope();
@@ -218,6 +229,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, 
 
     return ok(result.row, { action: mutation.action, audited: true });
   } catch (cause) {
+    if (cause instanceof PlanChangeRefused) return err(cause.code, cause.message, cause.status);
     return internalError(cause, { route: 'PATCH /api/admin/users/[uid]', action: mutation.action });
   }
 
@@ -313,6 +325,28 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, 
             targetUid: tUid,
             oldValue: { product, subscription_status: oldValue.status },
             newValue: { product, subscription_status: 'expired' },
+            reason: m.reason,
+          }, client);
+          const updated = await client.query<Record<string, unknown>>(DETAIL_SELECT_SQL, [tUid]);
+          return { row: updated.rows[0]! };
+        });
+      }
+      case 'set_plan': {
+        // MF-47 (RULED 2026-11-14): move an admin_managed comp between Basic and Pro. The row is read FOR UPDATE; a Stripe-managed row is
+        // refused (409) because the webhook owns plan_key there; the audit row records the previous plan, in the same transaction.
+        return withTransaction(async (client) => {
+          const old = await getParcelToolPlanForUpdate(client, tUid);
+          if (!old) throw new PlanChangeRefused('NOT_FOUND', 'User has no parcel_tool entitlement', 404);
+          if (old.status !== 'admin_managed') {
+            throw new PlanChangeRefused('PLAN_NOT_ADMIN_MANAGED', 'plan_key can be set only on an admin_managed row; a subscriber\'s plan follows their Stripe price', 409);
+          }
+          await setAdminManagedPlanKey(client, tUid, m.plan_key);
+          await writeAdminAudit({
+            adminUid: adminCtx!.uid,
+            action: 'set_plan',
+            targetUid: tUid,
+            oldValue: { product: 'parcel_tool', plan_key: old.plan_key },
+            newValue: { product: 'parcel_tool', plan_key: m.plan_key },
             reason: m.reason,
           }, client);
           const updated = await client.query<Record<string, unknown>>(DETAIL_SELECT_SQL, [tUid]);
