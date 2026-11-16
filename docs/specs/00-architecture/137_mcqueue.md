@@ -13,6 +13,8 @@
 3. This page gathers the queue rules with their sources (§4) and gives the weekly check (§5).
 4. No rule here is new except where §3 and §4 say the operator ruled it on 2026-11-14.
 
+Dated note 2026-11-15 (M-246, prior text kept; MB-108 · McBylaws queue · lane R; operator, verbatim: "y auto board" and "y spec board"): McQueue still keeps no index in the repo. A read-only board outside the repo is generated from the status lines (§5a). It copies nothing back and is never the record.
+
 Operator, 2026-11-14, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location".
 
 ## 2. The homes
@@ -124,12 +126,35 @@ A procedure. No tool and no code.
 5. It marks DRIFT where the line and the evidence disagree. It marks UNVERIFIED where it cannot tell, and does not guess.
 6. It lists rows whose `expires` date is on or before the check date. A row with no `expires` that is not DONE, FROZEN, DROPPED or MERGED is listed as "no expiry". A `when <event>` row is listed when its event has happened.
 7. It checks that every FROZEN or DROPPED row has a quoted ruling, and that each "next free id" number is greater than every claimed id of its kind in the ID ledger.
+7a. It checks `BOARD-STATUS.txt`: the board was built from the current origin tip, and it has no `WARN` line. A stale or warned board is listed in the step-8 list.
 8. It returns one list to the operator: expired (keep with a new date, drop, or answer), drift (the row to correct), no-row items, no-expiry items, and the UNVERIFIED rows it could not judge. It changes nothing.
 9. The orchestrator makes the corrections in the next docs commit (rule 3, rule 4).
 
 Worked example: the 2026-11-14 audit (LOCAL `~/Buildo-scratch/queues-20261114/`: `mcbylaws-rows.json`, `mcfrontend-rows.json` and the two summary files).
 
+## 5a. The board (a read-only view)
+
+Operator, 2026-11-15, verbatim: "y auto board" (after "what is the point of backlog if we dont use it right away without a reminder"), and "y spec board".
+
+**Rule 13. The board is a view; the row is the record.** The board shows every `Status:` line of the repo queue files and of the cards (§3 "Where the line sits"). Nobody edits the board. A change on the board changes nothing; a status changes only on its row (rules 1, 3, 4).
+
+Dated note 2026-11-16 (M-246, prior text kept; MB-108 · McBylaws queue · lane SPEC137-BOARD; operator, verbatim: "can that be easily added without significant delay - if yes - then add and if not wait for the next push"): the amendment was drafted on 2026-11-15 as "the three repo queue files". The Airtight V3 rows were folded into the two queue files (`.cursor/MCBYLAWS-QUEUE.md` and the McFrontend queue) in faaf675d5 (operator 2026-11-15: "y fold + simplify"), so the board reads two queue files plus the cards. The board now builds from origin (`BOARD-STATUS.txt`: source "pushed (origin)"), not from the McQueue branch.
+
+What it is (LOCAL, outside the repo):
+- Tool: Backlog.md 1.55.3, installed in `~/Buildo-scratch/backlog-pilot` (pilot record `PILOT.md` there, 2026-11-14, operator "y step 1").
+- Rebuild: `auto-board.zsh` there, run by the scheduler on the Mac (launchd `com.maxbld.board-rebuild`) every 10 minutes. It fetches origin, and rebuilds only when a queue file or a card changed. Source: `origin/wf1/mb-rulings`. No model calls.
+- View: `http://127.0.0.1:6420` (launchd `com.maxbld.board-browser`, restarts itself), or `node_modules/.bin/backlog board` in the terminal.
+- Status: `BOARD-STATUS.txt` there: built time, source commit, counts, and a `WARN` line when a fetch or rebuild failed or a status line could not be read.
+
+**Rule 14. The orchestrator reads the board's status at the start of every session**, reports any `WARN` to the operator, and reads the board before giving any queue status or next step. A status line the board could not read is fixed on its row in the next docs commit.
+
+Limits: it runs only while the Mac is on and the operator is logged in; it shows what is pushed to origin, so unpushed lane commits appear after their push.
+
 ## 6. Deferred
 
 A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling. It is infrastructure work. It is carded for the infra-freeze lift and is not built now.
 Source: operator, 2026-11-14, verbatim: "y" (DECISIONS.md, "Deferred to the infra-freeze lift"). Also deferred by the same ruling: a generated index across all queues ("a generated index across all queues is infra work: carded for the freeze lift, not built now", DECISIONS.md, first ruling).
+
+Dated note 2026-11-15 (M-246, prior text kept; MB-108; operator, verbatim: "y auto board", "y spec board"): the generated index is built now as a read-only board outside the repo (§5a). The commit check above stays deferred.
+
+Also deferred: Backlog.md as the source of truth ("part 2"). Not adopted. It needs an operator amendment of this spec after the infra-freeze lift, because the queue gates read the queue rows, the row ids would be re-keyed, and Backlog.md has no expiry or landed-commit check (pilot record, "Fit verdict for step 2").

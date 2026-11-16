@@ -953,7 +953,8 @@ Status: LATER · since 2026-11-14 · expires 2027-01-14 · next: Land the queue 
 - Serves: accurate, understandable.
 
 **MB-108 McQueue: Spec 137 (the queue policy page) and its clean-up docs commits — RUNNING** (R)
-Status: RUNNING · since 2026-11-15 · expires 2026-11-21 · next: The operator pushes branch mcqueue-137-cleanup
+Status: DONE · since 2026-11-16 · expires none · next: none
+- Dated note 2026-11-16 (M-246, prior text kept; MB-108 · McBylaws queue · lane SPEC137-BOARD; operator, verbatim: "y auto board" and "y spec board"; "can that be easily added without significant delay - if yes - then add and if not wait for the next push"): Spec 137 amended in the commit that carries this line (docs(137_mcqueue) MB-108): dated notes in §1 and §6, new §5a (rules 13 and 14, the read-only board), step 7a in §5, Backlog.md part 2 deferred. The cleanup docs commits are on origin (the board builds from origin at 04de035bc).
 - Dated note 2026-11-15 (M-246, prior text kept; MB-108 · McBylaws queue · lane R; operator, verbatim: "y 2 3 4 add merged"): the MERGED status word stays in Spec 137 §3 as committed in d60806115; REVIEW.md item 1 is closed. Operator, verbatim: "follow the McQueue policy" and "that is part of the McQueue process" (2026-11-15, on lane briefs following Spec 08: DeepSeek bulk pass, one Sonnet grounder): every lane brief carries rule 3 and the Spec 08 substrate.
 - Status detail 2026-11-14: added (operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location" and "y"; `~/Buildo-scratch/mcqueue/DECISIONS.md`; triage rulings `~/Buildo-scratch/queues-20261114/triage/RULINGS.md`). MB-108 · McBylaws queue · lane MQ · stage 7 (draft for operator review). Id claimed in the id ledger.
 - Rules: Spec 137 (this page's own rules 1-6); M-246 (prior text kept); Spec 08 §11.8 MCINC-8 (one id ledger).
