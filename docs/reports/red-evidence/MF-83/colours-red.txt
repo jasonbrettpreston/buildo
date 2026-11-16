@@ -1,0 +1,6 @@
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > the web keys are exactly the mapped keys (31 re-valued + 3 new), each at its mapped value 3ms
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > the mobile twin carries the same keys at the same values, and the hex twins of the sheet chrome 1ms
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > contrast: every text colour on every surface it sits on is at least 4.5:1 (WCAG 1.4.3), the count-ink on amber too 1ms
+   × MF-83 1b the Daylight B report colours (D-1 a, "the same result") > FINDING (component edit owed, listed in colour-table.md): text-report-amber on the card (the Add lot size button) and text-report-page on amber (its Recalculate button) 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 1 passed (5)

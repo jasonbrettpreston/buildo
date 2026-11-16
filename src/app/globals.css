@@ -82,40 +82,43 @@
   --color-action-primary: #F59E0B;
   --color-action-secondary: #3B82F6;
 
-  /* MF-57 · report surface colours of the approved v21 report (open-questions.md "mock v21: APPROVED" ruling 1 a: Stitch shades become named
+  /* MF-83 (D-1 a, operator 2026-11-14 "a as long as we get the same result"): these keys now hold the Daylight B values (report-themes/pub/B.html :root, light only); the old dark values are in git history; source and derivation per key: src/tests/surfaces/report-colours.logic.test.ts. MF-57 · report surface colours of the approved v21 report (open-questions.md "mock v21: APPROVED" ruling 1 a: Stitch shades become named
      report colours in the app theme; ruling 2: grey captions #8f8f99). Twin of the report-* keys in mobile/tailwind.config.js. 8-digit values
      are the mock's translucent rgba() colours; emit-web-theme.mjs reads 6-digit values only. */
-  --color-report-page: #09090b; /* page background */
-  --color-report-card: #18181b; /* lot-size and lot-facts boxes */
-  --color-report-sky: #27272a; /* picture sky */
-  --color-report-line: #3f3f46; /* rules, frames, badge ring */
-  --color-report-ink: #f4f4f5; /* main text */
-  --color-report-muted: #a1a1aa; /* muted text */
+  --color-report-page: #f4f1eb; /* page background */
+  --color-report-card: #ffffff; /* lot-size and lot-facts boxes */
+  --color-report-sky: #efe9df; /* picture sky */
+  --color-report-line: #e9e3d8; /* rules, frames, badge ring */
+  --color-report-ink: #1d1b18; /* main text */
+  --color-report-muted: #4d4841; /* muted text */
   --color-report-amber: #f59e0b; /* accent */
-  --color-report-count-ink: #472a00; /* text on the amber notes chip (Spec 117 §3.2 on-primary) */
-  --color-report-ok: #22c55e; /* approved */
-  --color-report-no: #ef4444; /* refused, input error border */
-  --color-report-outer: #141417; /* option frame (Stitch outer) */
-  --color-report-outer-border: #28282e; /* option frame border, divider */
-  --color-report-inner: #19191d; /* sheet surface (Stitch inner) */
-  --color-report-tile: #1f1f25; /* tiles and panels */
-  --color-report-tile-border: #2d2d36; /* tile and panel border */
-  --color-report-mini: #212127; /* project mini cards */
-  --color-report-mini-border: #2c2c34; /* mini card border */
-  --color-report-button: #26262e; /* See details / How? fill */
-  --color-report-button-border: #3e3e48; /* button and input border */
-  --color-report-soft: #8f8f99; /* small grey captions (ruling 2) */
-  --color-report-quiet: #9c9ca5; /* secondary lines */
-  --color-report-dim: #b9b9c0; /* badges, unit words */
-  --color-report-option-label: #ffc174; /* OPTION N label */
-  --color-report-refused: #f87171; /* refused pill text, error text */
-  --color-report-scrim: #00000099; /* sheet backdrop rgba(0,0,0,.6) */
-  --color-report-shade: #000000b8; /* picture top shading rgba(0,0,0,.72) */
-  --color-report-chip: #00000080; /* Illustration chip rgba(0,0,0,.5) */
-  --color-report-ok-fill: #22c55e1f; /* approved pill fill .12 */
-  --color-report-ok-ring: #22c55e59; /* approved pill border .35 */
-  --color-report-no-fill: #ef44441f; /* refused pill fill .12 */
-  --color-report-no-ring: #ef444459; /* refused pill border .35 */
+  --color-report-count-ink: #1d1b18; /* text on the amber notes chip (Spec 117 §3.2 on-primary) */
+  --color-report-ok: #1a7340; /* approved */
+  --color-report-no: #b3261e; /* refused, input error border */
+  --color-report-outer: #ffffff; /* option frame (Stitch outer) */
+  --color-report-outer-border: #e9e3d8; /* option frame border, divider */
+  --color-report-inner: #f4f1eb; /* sheet surface (Stitch inner) */
+  --color-report-tile: #faf8f4; /* tiles and panels */
+  --color-report-tile-border: #e9e3d8; /* tile and panel border */
+  --color-report-mini: #faf8f4; /* project mini cards */
+  --color-report-mini-border: #e9e3d8; /* mini card border */
+  --color-report-button: #ffffff; /* See details / How? fill */
+  --color-report-button-border: #d9d0c1; /* button and input border */
+  --color-report-soft: #655f55; /* small grey captions (ruling 2) */
+  --color-report-quiet: #655f55; /* secondary lines */
+  --color-report-dim: #4d4841; /* badges, unit words */
+  --color-report-option-label: #9a4a07; /* OPTION N label */
+  --color-report-refused: #b3261e; /* refused pill text, error text */
+  --color-report-scrim: #1d1b1847; /* sheet backdrop rgba(0,0,0,.6) */
+  --color-report-shade: #ffffffb8; /* picture top shading rgba(0,0,0,.72) */
+  --color-report-chip: #ffffffe0; /* Illustration chip rgba(0,0,0,.5) */
+  --color-report-ok-fill: #1a73401f; /* approved pill fill .12 */
+  --color-report-ok-ring: #1a734059; /* approved pill border .35 */
+  --color-report-no-fill: #b3261e1f; /* refused pill fill .12 */
+  --color-report-amber-ink: #9a4a07; /* amber as text on light (MF-83, Daylight B) */
+  --color-report-amber-soft: #fdf1d8; /* pressed or selected fill (MF-83, Daylight B) */
+  --color-report-stage: #efe9df; /* picture stage (MF-83, Daylight B) */
+  --color-report-no-ring: #b3261e59; /* refused pill border .35 */
 
   /* Semantic token aliases (Procore-inspired construction material naming) */
   --color-amber-hardhat: #F59E0B;

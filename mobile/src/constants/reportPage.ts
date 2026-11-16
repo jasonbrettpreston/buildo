@@ -13,8 +13,8 @@ export const REPORT_PENDING = 'text-[14px] leading-[20px] font-normal text-repor
 /** Hex values a React Native prop needs as a value (not a class): the spinner and the sheet chrome. Twins of mobile/tailwind.config.js. */
 export const REPORT_HEX = {
   amber: '#f59e0b',
-  inner: '#19191d',
-  buttonBorder: '#3e3e48',
+  inner: '#f4f1eb',
+  buttonBorder: '#d9d0c1',
 } as const;
 
 export const REPORT_PAGE_LAYOUT = {

@@ -20,37 +20,40 @@ module.exports = {
         'red-alert': '#ef4444',     // red-500 — stalled/error
         'green-go': '#22c55e',      // green-500 — good/work window
         // MF-57 · report surface colours of the approved v21 report (ruling 1 a, oq "mock v21: APPROVED"; grey #8f8f99 ruling 2). Twin of --color-report-* in src/app/globals.css.
-        'report-page': '#09090b', // page background
-        'report-card': '#18181b', // lot-size and lot-facts boxes
-        'report-sky': '#27272a', // picture sky
-        'report-line': '#3f3f46', // rules, frames, badge ring
-        'report-ink': '#f4f4f5', // main text
-        'report-muted': '#a1a1aa', // muted text
+        'report-page': '#f4f1eb', // page background
+        'report-card': '#ffffff', // lot-size and lot-facts boxes
+        'report-sky': '#efe9df', // picture sky
+        'report-line': '#e9e3d8', // rules, frames, badge ring
+        'report-ink': '#1d1b18', // main text
+        'report-muted': '#4d4841', // muted text
         'report-amber': '#f59e0b', // accent
-        'report-count-ink': '#472a00', // text on the amber notes chip (Spec 117 §3.2 on-primary)
-        'report-ok': '#22c55e', // approved
-        'report-no': '#ef4444', // refused, input error border
-        'report-outer': '#141417', // option frame (Stitch outer)
-        'report-outer-border': '#28282e', // option frame border, divider
-        'report-inner': '#19191d', // sheet surface (Stitch inner)
-        'report-tile': '#1f1f25', // tiles and panels
-        'report-tile-border': '#2d2d36', // tile and panel border
-        'report-mini': '#212127', // project mini cards
-        'report-mini-border': '#2c2c34', // mini card border
-        'report-button': '#26262e', // See details / How? fill
-        'report-button-border': '#3e3e48', // button and input border
-        'report-soft': '#8f8f99', // small grey captions (ruling 2)
-        'report-quiet': '#9c9ca5', // secondary lines
-        'report-dim': '#b9b9c0', // badges, unit words
-        'report-option-label': '#ffc174', // OPTION N label
-        'report-refused': '#f87171', // refused pill text, error text
-        'report-scrim': '#00000099', // sheet backdrop rgba(0,0,0,.6)
-        'report-shade': '#000000b8', // picture top shading rgba(0,0,0,.72)
-        'report-chip': '#00000080', // Illustration chip rgba(0,0,0,.5)
-        'report-ok-fill': '#22c55e1f', // approved pill fill .12
-        'report-ok-ring': '#22c55e59', // approved pill border .35
-        'report-no-fill': '#ef44441f', // refused pill fill .12
-        'report-no-ring': '#ef444459', // refused pill border .35
+        'report-count-ink': '#1d1b18', // text on the amber notes chip (Spec 117 §3.2 on-primary)
+        'report-ok': '#1a7340', // approved
+        'report-no': '#b3261e', // refused, input error border
+        'report-outer': '#ffffff', // option frame (Stitch outer)
+        'report-outer-border': '#e9e3d8', // option frame border, divider
+        'report-inner': '#f4f1eb', // sheet surface (Stitch inner)
+        'report-tile': '#faf8f4', // tiles and panels
+        'report-tile-border': '#e9e3d8', // tile and panel border
+        'report-mini': '#faf8f4', // project mini cards
+        'report-mini-border': '#e9e3d8', // mini card border
+        'report-button': '#ffffff', // See details / How? fill
+        'report-button-border': '#d9d0c1', // button and input border
+        'report-soft': '#655f55', // small grey captions (ruling 2)
+        'report-quiet': '#655f55', // secondary lines
+        'report-dim': '#4d4841', // badges, unit words
+        'report-option-label': '#9a4a07', // OPTION N label
+        'report-refused': '#b3261e', // refused pill text, error text
+        'report-scrim': '#1d1b1847', // sheet backdrop rgba(0,0,0,.6)
+        'report-shade': '#ffffffb8', // picture top shading rgba(0,0,0,.72)
+        'report-chip': '#ffffffe0', // Illustration chip rgba(0,0,0,.5)
+        'report-ok-fill': '#1a73401f', // approved pill fill .12
+        'report-ok-ring': '#1a734059', // approved pill border .35
+        'report-no-fill': '#b3261e1f', // refused pill fill .12
+        'report-amber-ink': '#9a4a07', // amber as text on light (MF-83)
+        'report-amber-soft': '#fdf1d8', // pressed or selected fill (MF-83)
+        'report-stage': '#efe9df', // picture stage (MF-83)
+        'report-no-ring': '#b3261e59', // refused pill border .35
       },
       fontFamily: {
         mono: ['SpaceMono', 'monospace'],

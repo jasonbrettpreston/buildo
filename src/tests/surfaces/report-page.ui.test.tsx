@@ -215,13 +215,10 @@ describe('the 2026-11-11 rulings on the v21 page', () => {
     expect(cap.className).not.toMatch(/text-gray-/);
     expect(fig.className).toContain('bg-report-outer');
   });
-  it('MF-38 caption contrast: report-soft on the dark frame report-outer meets WCAG 2.1 SC 1.4.3 (4.5:1)', () => {
-    expect(token('report-soft').toLowerCase()).toBe('#8f8f99');
-    expect(token('report-outer').toLowerCase()).toBe('#141417');
+  it('MF-38 caption contrast (MF-83 Daylight B values): report-soft on the report-outer frame meets WCAG 2.1 SC 1.4.3 (4.5:1), and on the white admin card too', () => {
+    expect(token('report-soft').toLowerCase()).toBe('#655f55');
+    expect(token('report-outer').toLowerCase()).toBe('#ffffff');
     expect(ratio(token('report-soft'), token('report-outer'))).toBeGreaterThanOrEqual(4.5);
-    expect(ratio('#4b5563', token('report-outer'))).toBeLessThan(4.5); // the old text-gray-600 caption fails on the frame (control)
-    // Why the node card on the light admin preview keeps text-gray-600 (panel fold): report-soft on white fails, gray-600 on white passes.
-    expect(ratio(token('report-soft'), '#ffffff')).toBeLessThan(4.5);
-    expect(ratio('#4b5563', '#ffffff')).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(token('report-soft'), '#ffffff')).toBeGreaterThanOrEqual(4.5); // the earlier dark-theme control (soft fails on white) no longer holds: light only
   });
 });
