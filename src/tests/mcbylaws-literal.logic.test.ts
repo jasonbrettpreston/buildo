@@ -180,7 +180,20 @@ describe('arm L — MB-67 literal classes that are not by-law values (operator 2
     expect(got).toContain('FAIL:L:number:1e9');
   });
 
-  it('new files still get no baseline: the allow file lists none of the D-78 files', () => {
-    for (const k of Object.keys(realAllow.baseline)) expect(k).not.toMatch(/maxbld\/(split|two-structure)\.js$/);
+  it('the named INC-6 C2a exception is per-file, per-literal and exact (27 hits)', () => {
+    const b = realAllow.baseline;
+    const sum = (f: string) => [...Object.values(b[f].numbers), ...Object.values(b[f].strings)].reduce((a: number, n) => a + (n as number), 0);
+    expect(b['scripts/lib/compute/maxbld/split.js'].strings.crossing).toBe(1);
+    expect(b['scripts/lib/compute/maxbld/split.js'].strings.row).toBe(4);
+    expect(b['scripts/lib/compute/maxbld/split.js'].numbers['1e-7']).toBe(1);
+    expect(b['scripts/lib/compute/maxbld/two-structure.js'].strings.principal).toBe(2);
+    expect(sum('scripts/lib/compute/maxbld/split.js')).toBe(19);
+    expect(sum('scripts/lib/compute/maxbld/two-structure.js')).toBe(5);
+    expect(realAllow.$comment).toContain('increment 6 C2a');
+  });
+  it('one literal over a baseline entry is still red (shrink-only)', () => {
+    const f = write(`${SCOPE}/over.mjs`, "const a = 'crossing'; const b = 'crossing';\n");
+    const allow = { ...realAllow, baseline: { [`${SCOPE}/over.mjs`]: { numbers: {}, strings: { crossing: 1 } } } };
+    expect(lines([f], allow)).toEqual(['FAIL:L:string:crossing']);
   });
 });
