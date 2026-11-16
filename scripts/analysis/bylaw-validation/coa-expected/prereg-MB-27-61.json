@@ -1,0 +1,590 @@
+{
+  "$comment": "M-321 pre-registration, task MB-27, prereg 61 file name prereg-MB-27-61 (R-MA; round 189, claimed in the ID ledger before use; lane INC6-BUILD, McIncrement step 5): increment 6 (renovations), the INC6-NIGHT Layer 2 job: ONE new principal target suite_interior_share_pct (width 73). Restructured as increment 5 was (operator-delegated orchestrator ruling 2026-11-16, standardized): this prereg and the commit after it are the LAYER 2 part (C2-L2: the Layer 2 seeds, migration 329, G-STOR, CoA pins, the three re-pinned inc5 oracle tests, the loop record round 84); the Layer 3 part (renovation module, ST-4 hook, descriptor bounds, migration 330, catalogue, switchboard, registration, report fields) becomes the single increment-6 Part B commit AFTER the increment-6 recapture job, the D-78 form. The 12.2 m relief frontage is NOT a Layer 2 cell (operator \"1 y drop, 2 y, 3 y, 4 recommended\", 2026-11-16, PANEL-N2-M158-20261116): a clause-cited setting in Part B. The scorer expectation is carried from prereg 60 (no scorer move: the night adds cells, it moves none; the CoA pins re-pin only commit and table_version, MATCH 407 and 283). The key is pinned PRE-323 (A0553 keyed \"half, sure\"; \"asked\" once 323 is read, same numbers). File name prereg-MB-27-61 because prereg-MB-27-6.json already exists on origin (review F-1). Committed alone, directly before the C2-L2 commit.",
+  "disclosure": "Written 2026-11-16 after the dry loop run of round 83, because the 2026-11-14 plan's prereg was never written; the expectation is round 82's measured state, which predates the M14 recapture (operator, verbatim: \"y on pre-reigstration\").",
+  "schema": "coa-round-prereg-v1",
+  "round": 189,
+  "task": "MB-27",
+  "increment": "1",
+  "rules": [
+    "M-191",
+    "M-253",
+    "M-267",
+    "M-314",
+    "M-198",
+    "M-284",
+    "M-465",
+    "M-475",
+    "M-481",
+    "M-483",
+    "M-498",
+    "M-321",
+    "R-MA"
+  ],
+  "plan_ref": "~/Buildo-scratch/mcbylaws/inc6/BUILD-PLAN.md (sections 1, 4, 6, 12); ~/Buildo-scratch/mcbylaws/inc6/night/RUN.md; ~/Buildo-scratch/mcbylaws/inc6/BUILD-LOG-20261116.md",
+  "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+  "expected_moves": [],
+  "expected_totals": {
+    "ANSWERED": 7,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 30,
+    "MATCH": 407,
+    "NO ANSWER": 40,
+    "NOT MODELLED": 94,
+    "NOT SCORABLE": 25,
+    "OWED": 67
+  },
+  "expected_before_totals": {
+    "ANSWERED": 7,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 30,
+    "MATCH": 407,
+    "NO ANSWER": 40,
+    "NOT MODELLED": 94,
+    "NOT SCORABLE": 25,
+    "OWED": 67
+  },
+  "expected_figure_changes": [],
+  "expected_moves_4d": [],
+  "expected_totals_4d": {
+    "ANSWERED": 2,
+    "BY-LAW CHANGED": 4,
+    "DATA": 22,
+    "DIFFER": 23,
+    "MATCH": 283,
+    "NO ANSWER": 28,
+    "NOT MODELLED": 73,
+    "NOT SCORABLE": 12,
+    "OWED": 49
+  },
+  "expected_before_totals_4d": {
+    "ANSWERED": 2,
+    "BY-LAW CHANGED": 4,
+    "DATA": 22,
+    "DIFFER": 23,
+    "MATCH": 283,
+    "NO ANSWER": 28,
+    "NOT MODELLED": 73,
+    "NOT SCORABLE": 12,
+    "OWED": 49
+  },
+  "expected_figure_changes_4d": [],
+  "expected_moves_cumulative": [],
+  "expected_totals_cumulative": {
+    "ANSWERED": 9,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 34,
+    "MATCH": 459,
+    "NO ANSWER": 56,
+    "NOT MODELLED": 129,
+    "NOT SCORABLE": 34,
+    "OWED": 72
+  },
+  "expected_before_totals_cumulative": {
+    "ANSWERED": 9,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 34,
+    "MATCH": 459,
+    "NO ANSWER": 56,
+    "NOT MODELLED": 129,
+    "NOT SCORABLE": 34,
+    "OWED": 72
+  },
+  "expected_figure_changes_cumulative": [],
+  "expected_before_totals_source": "prereg-MB-27-59.json (round 183, the newest MB prereg carrying totals) and the round-82 loop record, equal to the scores of the parent tree",
+  "expected_floors": "no floor line moves; floors-172.json unchanged",
+  "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; no file of the tree moves with this commit",
+  "expected_repin": [],
+  "expected_assertion_changes": [],
+  "expected_value_changes": [
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect([base.length, base.length + opts.length]).toEqual([57, 72]); // Part B, P2 a (named re-pin; migration 321, width 72: the through-lot rear floor joins at base 37, the corner floor moves to 41, the option slots to 58-72); P1 b: (named re-pin; migration 321): the corner floor joins the base pairs at 40; the option slots move to 57-71 (the roof_form threshold 63, suite_height 64-71); the suite_height base positions 31-38 are before it and do not move",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect([base.length, base.length + opts.length]).toEqual([58, 73]); // MB-27 increment 6 named re-pin (migration 329: suite_interior_share_pct, width 73); was [57, 72]: Part B, P2 a (named re-pin; migration 321, width 72: the through-lot rear floor joins at base 37, the corner floor moves to 41, the option slots to 58-72); P1 b: (named re-pin; migration 321): the corner floor joins the base pairs at 40; the option slots move to 57-71 (the roof_form threshold 63, suite_height 64-71); the suite_height base positions 31-38 are before it and do not move"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "'gfa_m2:suite_low:31', 'gfa_m2:suite_tall:31', 'height_m:suite_low:32', 'height_m:suite_tall:32',",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "'rear_setback_m:suite_low:36', 'rear_setback_m:suite_tall:36', 'separation_m:suite_low:39', 'separation_m:suite_tall:39']); // P2 a (named re-pin): separation_m base position 38 -> 39 (the through-lot rear floor joins at 37)",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "'gfa_m2:suite_low:32', 'gfa_m2:suite_tall:32', 'height_m:suite_low:33', 'height_m:suite_tall:33',"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "'rear_setback_m:suite_low:37', 'rear_setback_m:suite_tall:37', 'separation_m:suite_low:40', 'separation_m:suite_tall:40']); // MB-27 increment 6 named re-pin (329): every garden_suite base position +1 (suite_interior_share_pct joins the principal pairs)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "// // P2 a (named re-pin): separation_m base position 38 -> 39 (the through-lot rear floor joins at 37)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m').map((p, i) => ({ i: i + 1, ...p }))); // Part B, P1 b (named re-pin): 315's text is the 55-pair era; migration 321 is locked by bylaw-inc5-corner-floor.logic.test.ts",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m' && p.target !== 'suite_interior_share_pct').map((p, i) => ({ i: i + 1, ...p }))); // Part B, P1 b (named re-pin): 315's text is the 55-pair era; migration 321 is locked by bylaw-inc5-corner-floor.logic.test.ts"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : (rb.scopePairs(SCOPE) as Json[]).filter((q) => q.target !== 'side_setback_street_floor_m' && q.target !== 'rear_setback_through_floor_m').findIndex((q) => q.structure === p.structure && q.target === p.target) + 1])); // P2 a (named re-pin): base positions in 315's own 55-pair text",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-layer2.logic.test.ts",
+      "case": "bylaw-inc5-layer2: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : (rb.scopePairs(SCOPE) as Json[]).filter((q) => q.target !== 'side_setback_street_floor_m' && q.target !== 'rear_setback_through_floor_m' && q.target !== 'suite_interior_share_pct').findIndex((q) => q.structure === p.structure && q.target === p.target) + 1])); // P2 a (named re-pin): base positions in 315's own 55-pair text"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "it('the row is 72 wide (P2 a: the through-lot rear floor joined at 37): 57 base pairs, the option slots after them (roof_form, suite_height), the corner floor at base position 41', () => {",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "it('the row was 72 wide at 321 (live 73 since inc 6) (P2 a: the through-lot rear floor joined at 37): 57 base pairs, the option slots after them (roof_form, suite_height), the corner floor at base position 41', () => {"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect([base.length, base.length + opts.length]).toEqual([57, 72]);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(base.findIndex((p) => p.structure === 'garden_suite' && p.target === FLOOR) + 1).toBe(41);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect([base.length, base.length + opts.length]).toEqual([58, 73]); // MB-27 increment 6 (named re-pin, migration 329): suite_interior_share_pct joins the base pairs (width 73)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(base.findIndex((p) => p.structure === 'garden_suite' && p.target === FLOOR) + 1).toBe(42); // +1: suite_interior_share_pct joins the principal pairs (increment 6)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).map((p, i) => ({ i: i + 1, ...p })));",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "const live = rb.scopePairs(SCOPE) as Json[]; const era = live.filter((p) => p.target !== 'suite_interior_share_pct'); // 321 is the 57-pair era (increment 6 named re-pin)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(base).toEqual(era.map((p, i) => ({ i: i + 1, ...p })));"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [58 + k, p.target, p.option, p.base_index === null ? null : p.base_index + 1]));",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-corner-floor.logic.test.ts",
+      "case": "bylaw-inc5-corner-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [58 + k, p.target, p.option, p.base_index === null ? null : era.indexOf(live[p.base_index] as Json) + 1]));"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "it('the row is 72 wide: 57 base pairs, the option slots after them, the floor at base position 37', () => {",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "it('the row was 72 wide at 321 (live 73 since inc 6): 57 base pairs, the option slots after them, the floor at base position 37', () => {"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect([base.length, base.length + opts.length]).toEqual([57, 72]);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(base.findIndex((p) => p.structure === 'garden_suite' && p.target === FLOOR) + 1).toBe(37);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect([base.length, base.length + opts.length]).toEqual([58, 73]); // MB-27 increment 6 (named re-pin, migration 329): suite_interior_share_pct joins the base pairs (width 73)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(base.findIndex((p) => p.structure === 'garden_suite' && p.target === FLOOR) + 1).toBe(38); // +1: suite_interior_share_pct joins the principal pairs (increment 6)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).map((p, i) => ({ i: i + 1, ...p })));",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "const live = rb.scopePairs(SCOPE) as Json[]; const era = live.filter((p) => p.target !== 'suite_interior_share_pct'); // 321 is the 57-pair era (increment 6 named re-pin)"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(base).toEqual(era.map((p, i) => ({ i: i + 1, ...p })));"
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [58 + k, p.target, p.option, p.base_index === null ? null : p.base_index + 1]));",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-inc5-through-floor.logic.test.ts",
+      "case": "bylaw-inc5-through-floor: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-465",
+      "ruling_ref": "CHAT-225.Q-ROOF",
+      "old": null,
+      "new": "expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [58 + k, p.target, p.option, p.base_index === null ? null : era.indexOf(live[p.base_index] as Json) + 1]));"
+    },
+    {
+      "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+      "case": "bylaw-eval-perf: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": "const NEW_TARGETS = new Set(['platform_side_setback_street_m']);",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+      "case": "bylaw-eval-perf: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": null,
+      "new": "const NEW_TARGETS = new Set(['platform_side_setback_street_m', 'suite_interior_share_pct']); // MB-27 increment 6: the 45 percent suite share target is left out of the left-out digest (its cells move no existing cell)"
+    },
+    {
+      "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+      "case": "bylaw-eval-perf: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": "expect(h.digest('hex')).toBe('7d438f651dcbcbedea3485e155fb7857635482de890e27d6a239b437632df888');",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+      "case": "bylaw-eval-perf: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": null,
+      "new": "// re-pinned 2026-11-16 (MB-27 increment 6, the Layer 2 part; migration 329): the new principal target suite_interior_share_pct (150.10.40.40(1), 45 percent) joins the corpus; before 7d438f65…, after fa3bba5c…."
+    },
+    {
+      "path": "src/tests/bylaw-eval-perf.logic.test.ts",
+      "case": "bylaw-eval-perf: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": null,
+      "new": "expect(h.digest('hex')).toBe('fa3bba5ce4e2bce86cc856671d07f5f1747a977b3e39ac3172dc26ebd8719f0f');"
+    },
+    {
+      "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+      "case": "bylaw-permission-disclosure: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": "const G5_PIN = '41e93eeac5ad2f2acd5a5f2717529b96c271ebab00bb0aa47b6f36a0a7a6801c';",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+      "case": "bylaw-permission-disclosure: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": null,
+      "new": "// re-pinned 2026-11-16 (MB-27 increment 6, the Layer 2 part; migration 329): the new principal target suite_interior_share_pct joins the corpus, as bylaw-eval-perf; before 41e93eea…, after b6db53b7…."
+    },
+    {
+      "path": "src/tests/bylaw-permission-disclosure.logic.test.ts",
+      "case": "bylaw-permission-disclosure: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-229",
+      "ruling_ref": "CHAT-228.Q-M1",
+      "old": null,
+      "new": "const G5_PIN = 'b6db53b7fe6f8ad639aa6492de8fa59b573c2ccfb9a7b42c5e1e1da0b88761f6';"
+    },
+    {
+      "path": "src/tests/bylaw-suite-owed.logic.test.ts",
+      "case": "bylaw-suite-owed: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-235",
+      "ruling_ref": "CHAT-6",
+      "old": "it('M-199: 150.10.40.40(1) states the whole-house reading and keeps 45 percent as a clause literal (keying owed)', () => {",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-suite-owed.logic.test.ts",
+      "case": "bylaw-suite-owed: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-235",
+      "ruling_ref": "CHAT-6",
+      "old": null,
+      "new": "it('M-199: 150.10.40.40(1) states the whole-house reading and states 45 percent as the principal cell suite_interior_share_pct (MB-27 increment 6: keyed LIMIT max, named re-pin; was a clause literal, keying owed)', () => {"
+    },
+    {
+      "path": "src/tests/bylaw-suite-owed.logic.test.ts",
+      "case": "bylaw-suite-owed: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-235",
+      "ruling_ref": "CHAT-6",
+      "old": "expect(u.literals_not_expressed).toContainEqual({ clause: '(1)', literal: '45 percent', reason: 'limit_not_modelled' });",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-suite-owed.logic.test.ts",
+      "case": "bylaw-suite-owed: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-235",
+      "ruling_ref": "CHAT-6",
+      "old": null,
+      "new": "expect(u.literals_not_expressed).not.toContainEqual({ clause: '(1)', literal: '45 percent', reason: 'limit_not_modelled' });"
+    },
+    {
+      "path": "src/tests/bylaw-suite-owed.logic.test.ts",
+      "case": "bylaw-suite-owed: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-235",
+      "ruling_ref": "CHAT-6",
+      "old": null,
+      "new": "expect([u.archetype, u.target, u.bound, u.numeric_expression]).toEqual(['LIMIT', 'suite_interior_share_pct', 'max', ['suite_interior_share_pct = 45 pct @(1)']]);"
+    },
+    {
+      "path": "src/tests/bylaw-validation-fixes.logic.test.ts",
+      "case": "bylaw-validation-fixes: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-255",
+      "ruling_ref": "CHAT-29.F-SC-13.14",
+      "old": "it('the sweep of every chapter: exactly these 14 valueless PERMIT / UNUSUAL units are optional variations that keep a numeric base limit', () => {",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-validation-fixes.logic.test.ts",
+      "case": "bylaw-validation-fixes: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-255",
+      "ruling_ref": "CHAT-29.F-SC-13.14",
+      "old": null,
+      "new": "it('the sweep of every chapter: exactly these 15 valueless PERMIT / UNUSUAL units are optional variations that keep a numeric base limit', () => {"
+    },
+    {
+      "path": "src/tests/bylaw-validation-fixes.logic.test.ts",
+      "case": "bylaw-validation-fixes: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-255",
+      "ruling_ref": "CHAT-29.F-SC-13.14",
+      "old": null,
+      "new": "'150.10.40.40(2)#whole', // MB-27 increment 6 (named re-pin, migration 329): 150.10.40.40(1) is keyed LIMIT on suite_interior_share_pct, so the valueless 150.10.40.40(2) permission now displaces a numeric base limit"
+    },
+    {
+      "path": "src/tests/bylaw-mb18j.logic.test.ts",
+      "case": "bylaw-mb18j: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-410",
+      "ruling_ref": "CHAT-213.MB18-RL-5",
+      "old": "expect(principal.length).toBe(27); // MB-27 increment 5 (named re-pin): principal_coverage_path_b_pct joins after it (Q3 a as ruled B5A-1 c)",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-mb18j.logic.test.ts",
+      "case": "bylaw-mb18j: MB-27 increment 6 named re-pin, migration 329 (the new principal Layer 2 target suite_interior_share_pct: width 72 -> 73, principal 27 -> 28, the corpus and keyed-unit moves it causes)",
+      "ruling": "M-410",
+      "ruling_ref": "CHAT-213.MB18-RL-5",
+      "old": null,
+      "new": "expect(principal.length).toBe(28); // MB-27 increment 6 (named re-pin, migration 329): suite_interior_share_pct joins the principal list; was 27: // MB-27 increment 5 (named re-pin): principal_coverage_path_b_pct joins after it (Q3 a as ruled B5A-1 c)"
+    }
+  ],
+  "layer2_night": {
+    "$comment": "Every figure is copied from the dry-run files named in dry_files, the migration file and the tree, never typed. Dry run 2026-11-16, read-only on dev, lane INC6-BUILD.",
+    "night_id": "INC6-NIGHT",
+    "go": "the operator go typed for this night id, recorded in the night record: OPERATOR-GO INC6-NIGHT",
+    "storage_form": "b",
+    "final_tree": "the C2-L2 commit that follows this prereg on wf1/mb-rulings (parent 3d04affc3 + this commit)",
+    "before_tree": "b1bdee676 (D-78 on origin; width-72 decoder)",
+    "dry_files": "~/Buildo-scratch/mcbylaws/inc6/night/dry-inc6-final/ (full run with sizes, width 73, read-only on dev, 2026-11-16; table_version of that tree 3e0f16fb35d4 then f67734e74b13: the cell results do not depend on the stamp)",
+    "harness_sha256_file": "3a3b080c155f6a04c5c9e3961e49ab9477c175385000cb3ecaa4e474043466fe (dryrun.mjs, DRYRUN.sha256)",
+    "dry_command": "node --max-old-space-size=4096 dryrun.mjs compute --root ~/Buildo-wt-inc6build --before-root ~/Buildo-wt-m14cap --out $OUT --stamps bytea --no-sizes (night/run-dry-inc6-w73.zsh)",
+    "lots": 440093,
+    "width": 73,
+    "pairs_new": {
+      "base": 58,
+      "option": 15,
+      "option_by_name": {
+        "roof_form": 7,
+        "suite_height": 8
+      },
+      "tail": 0,
+      "option_classes": [
+        "detached_house",
+        "detached_houseplex",
+        "house_with_secondary_suite"
+      ]
+    },
+    "migration": {
+      "file": "329_resolve_bylaws_reno_targets.sql",
+      "blob": "cc81b77f4c4b75f88f0ef335be7d7556782fa6f9",
+      "blob_from": "git rev-parse <increment-6 commit>:migrations/<file>",
+      "form": "width 72 -> 73 (base 57 -> 58: principal suite_interior_share_pct after side_setback_street_m; option slots 59-73: roof_form 59-65, suite_height 66-73); both views re-created; three CHECKs re-added NOT VALID, VALIDATE commented at the foot",
+      "applied_alone_with": "--only=329 --dry-run first"
+    },
+    "rows_added": 0,
+    "rows_removed": 0,
+    "versions_new": {
+      "table_version": "07bc0ba7b615547edd66d7ed60c6af9acc6a0687ea8b45cf2e9ff14bfe7b7830",
+      "evaluator_version": "1c29ca3f7e131f077cff6502089324454411a46148bbdc39a2c1f359676d2586",
+      "note": "read from docs/reference/bylaw-layer2-input.json of the C2-L2 tree (generated last); the Part B commit moves table_version again (its Layer 3 seed edits), the D-78 form"
+    },
+    "versions_old": {
+      "table_version": "dc2e0e0dc1a3e53d417091444ec491aecb9a42947bff887f2e619be3da0b3d60",
+      "evaluator_version": "9b46954c9a0380c6225cea653c510a4769a6c1ee296a738c3838d8b8e94ae716",
+      "note": "the one stored pair on all 440,093 lots (summary.json before_versions)"
+    },
+    "items": {
+      "N1_suite_interior_share_45_new_cells": {
+        "cells": 2200465,
+        "applies_45": 398257,
+        "not_evaluated_no_candidate": 1593028,
+        "lot_metric_missing": 5540,
+        "note": "1 target x 5 classes x 440,093 lots, all new (before \"-\"); applies:number 45, winner 150.10.40.40(1)#whole, evidence clause"
+      },
+      "N2": "dropped (not a Layer 2 cell; clause-cited setting relief_frontage_max_m = 12.2, M-404; 0 N2 cells)",
+      "U0_unchanged": {
+        "cells": 148751434
+      }
+    },
+    "lots_gated": 40908,
+    "scenario_axis_results": 0,
+    "golden25_allowed_pairs": 75,
+    "golden25_allowed_file": "~/Buildo-scratch/mcbylaws/inc6/night/blocks/g25-allowed.txt",
+    "storage": {
+      "rule": "model figure only; P_up = max(exact G-STOR model, test write x 1.02); stop 780 MiB; ST-3 line 1,650 MiB combined (L2_LINE, operator \"y\" 2026-11-16, provisional until MB-111)",
+      "model_mib": "read from the night (gstor-final.zsh at width 73)",
+      "test_mib": "read from the rehearsal"
+    },
+    "coa_per_tv_repin": "the increment-6 commit re-pins expected-172.json and expected-4d.json for the new table_version (coa-scorecard --pin); no scorer value move",
+    "named_test_moves": "the width 72 -> 73 and 57 -> 58 anchors (migration-295/297/304, migration, profiles, materialize-roof-axis, d5, bylaw-inc5-layer2/corner-floor/through-floor), the gain.reasons expectation (increment4-suite-gain), the lineage registry target, the building-types raw sha pin (layer3-catalogue), and the five further oracle-class tests the new target moves (bylaw-eval-perf and bylaw-permission-disclosure corpus digests, bylaw-mb18j principal count, bylaw-suite-owed literal, bylaw-validation-fixes sweep list); the catalogue, switchboard and step-closure moves ride Part B",
+    "cells_moved": 2200465,
+    "cells_unchanged": 148751434,
+    "dry_sha256": {
+      "transitions": "d8dbb640ccc6b0fbc053ae92cf8839ee1c60b7beccf19f07a644f24e50339c99",
+      "unchanged": "59c25425aa56559bcb70e8260672d596b8415ea3a41576d009a84afd595d2073",
+      "row_sha": "cb80dc062905a7e1309816a6687b54e32a9b1fd4a47d8542ae93286c527f07d0",
+      "row_sha_note": "row-sha was taken on an earlier stamp; the stamp of the C2-L2 tree is 07bc0ba7b615: re-take at the night; transitions and unchanged do not depend on it"
+    }
+  }
+}
