@@ -280,7 +280,9 @@
     "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page itself has no tunable and reads only the unsure flag.",
     "evidence": [
       "migrations/320_parcel_lot_form_view.sql",
-      "scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m"
+      "migrations/323_semi_o4_zone_and_wall_asks.sql",
+      "scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m",
+      "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes"
     ],
     "logic_variables": [
       {
@@ -300,6 +302,23 @@
         "min": 0,
         "max": 50,
         "on_invalid": "fail"
+      },
+      {
+        "name": "semi_auto_max_shared_len_m",
+        "min": 10,
+        "max": 500,
+        "on_invalid": "default",
+        "why": "A bad value reads as the seeded 60 m inside the view; it asks more, it never auto-calls a longer wall."
+      },
+      {
+        "name": "semi_detect_zone_classes",
+        "on_invalid": "default",
+        "why": "A missing, empty or out-of-vocabulary list reads as the seeded residential list inside the view; the vocabulary is the closed list of five residential codes (R, RD, RS, RT, RM), non-empty and distinct."
+      },
+      {
+        "name": "semi_ask_two_parcel_zone_classes",
+        "on_invalid": "default",
+        "why": "A missing, empty or out-of-vocabulary list reads as the seeded [RD] inside the view; the vocabulary is the closed list of five residential codes (R, RD, RS, RT, RM), non-empty and distinct."
       }
     ],
     "retired": []

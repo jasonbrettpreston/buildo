@@ -10543,7 +10543,7 @@
     "type": "number",
     "min": 0,
     "max": 1,
-    "description": "Spec 78 O-4 doubt rule (operator \"semi all y\", 2026-11-13; D4): 1 = on, 0 = off. On: a lot whose footprint links 2..semi_doubt_max_link_parcels parcels, or whose strict-O-4 party wall is shorter than semi_doubt_min_shared_len_m, is treated as a possible semi and the app asks the one-question page before the report (operator \"semi ask a\"). Off: strict O-4 only, never asks. Inserted by migration 320. CONSUMED by the view parcel_lot_form (migration 320), read by the consumer lookup (src/lib/parcels/lot-form.ts).",
+    "description": "Spec 78 O-4 doubt rule (operator \"semi all y\", 2026-11-13; D4): 1 = on, 0 = off. On: a lot whose footprint links 2..semi_doubt_max_link_parcels parcels, or whose strict-O-4 shared lot line is shorter than semi_doubt_min_shared_len_m, is treated as a possible semi and the app asks the one-question page before the report (operator \"semi ask a\"). Off: the doubt rule and the short-shared-line ask are off (strict O-4 only). It does NOT switch off the two asks of the operator ruling \"a\" (2026-11-14): an RD two-parcel match (semi_ask_two_parcel_zone_classes) and a shared length above semi_auto_max_shared_len_m are asked whatever this switch says. Inserted by migration 320; description amended by migration 323. CONSUMED by the view parcel_lot_form (migrations 320 and 323), read by the consumer lookup (src/lib/parcels/lot-form.ts).",
     "admin": {
       "group": "Parcel Lookup"
     }
@@ -10563,7 +10563,33 @@
     "type": "number",
     "min": 0,
     "max": 50,
-    "description": "Spec 78 O-4 doubt rule (operator \"semi all y\", 2026-11-13; D4): the shortest shared boundary, in metres, that counts as a party wall. A doubt-rule lot below it stays detached; a strict-O-4 lot below it is still a semi but is asked (unsure). Starting value 5 m from the measured spread (strict pairs: 2 percent under 10.2 m, median 35 m; 706 strict lots under 5 m); to be re-set from the 50-lot imagery check. Bounds 0..50. Inserted by migration 320. CONSUMED by the view parcel_lot_form (migration 320), read by the consumer lookup (src/lib/parcels/lot-form.ts).",
+    "description": "Spec 78 O-4 doubt rule (operator \"semi all y\", 2026-11-13; D4): the shortest shared lot line (the boundary the two lots share, in metres) that counts as a semi. A doubt-rule lot below it stays detached; a strict-O-4 lot below it is still a semi but is asked (unsure). It is the length of the boundary the two lots share, not a building wall (owed card, corrected 2026-11-14). Starting value 5 m from the measured spread (strict pairs: 2 percent under 10.2 m, median 35 m; 706 strict lots under 5 m); to be re-set from the 50-lot imagery check. Bounds 0..50. Inserted by migration 320; description corrected by migration 323. CONSUMED by the view parcel_lot_form (migrations 320 and 323), read by the consumer lookup (src/lib/parcels/lot-form.ts).",
+    "admin": {
+      "group": "Parcel Lookup"
+    }
+  },
+  "semi_detect_zone_classes": {
+    "default": ["R","RD","RS","RT","RM"],
+    "type": "list",
+    "description": "Operator ruling \"a\" (2026-11-14; ~/Buildo-scratch/mcbylaws/SEMI-O4/plan.md, last section; plan-b2.md). The zones where the semi detector runs at all (item 1): a lot whose zoning_class is not listed (or is NULL) is detached and never asked. A JSON array of zone codes stored in variable_value_json with the sentinel 0 in variable_value (seed type list, Q-J); closed to the five codes of the repo Residential Zone category (R, RD, RS, RT, RM: Spec 130 neighbour_residential, Spec 134 section 2 resolve_bylaws_population_zone_classes); must be non-empty and distinct. on_invalid default: a missing row, a non-array, an empty array or a code outside the five reads as the seeded default. Hidden internal until the admin card renders lists (Q-J). Inserted by migration 323. CONSUMED by the view parcel_lot_form (migration 323).",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "semi_ask_two_parcel_zone_classes": {
+    "default": ["RD"],
+    "type": "list",
+    "description": "Operator ruling \"a\" (2026-11-14; ~/Buildo-scratch/mcbylaws/SEMI-O4/plan.md, last section; plan-b2.md). The zones where a two-parcel O-4 match is asked (the semi question) and not auto-called (item 2). Default RD: the by-law permits no semi in RD (Spec 131 LC-17, 10.20.20.40(1)) and the imagery check found 1 semi in 7 RD lots (RESULTS-20261114.md). A JSON array of zone codes stored in variable_value_json with the sentinel 0 in variable_value (seed type list, Q-J); closed to the five codes of the repo Residential Zone category (R, RD, RS, RT, RM: Spec 130 neighbour_residential, Spec 134 section 2 resolve_bylaws_population_zone_classes); must be non-empty and distinct. on_invalid default: a missing row, a non-array, an empty array or a code outside the five reads as the seeded default. Hidden internal until the admin card renders lists (Q-J). Inserted by migration 323. CONSUMED by the view parcel_lot_form (migration 323).",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "semi_auto_max_shared_len_m": {
+    "default": 60,
+    "type": "number",
+    "min": 10,
+    "max": 500,
+    "description": "Operator ruling \"a\" (2026-11-14; ~/Buildo-scratch/mcbylaws/SEMI-O4/plan.md, last section; plan-b2.md). The longest shared lot line, in metres, that a semi match may have and still be auto-called (item 3): a shared length ABOVE it is asked (the semi question), exactly it is auto-called. Default 60 from the imagery check (0 semis of 5 lots at 85-247 m; true semis at 21-52 m, one RM at 59 m). on_invalid default: an out-of-bounds or missing value reads as 60. Bounds 10..500. Inserted by migration 323. CONSUMED by the view parcel_lot_form (migration 323).",
     "admin": {
       "group": "Parcel Lookup"
     }

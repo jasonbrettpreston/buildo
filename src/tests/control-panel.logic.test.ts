@@ -67,7 +67,7 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Q-J: list-typed seed variables (hidden "internal"): never in LOGIC_VAR_DEFAULTS or LOGIC_VAR_ENUMS, so they sit outside the expected numeric/enum set. */
-const LIST_SEED_KEYS = ['resolve_bylaws_population_zone_classes', 'compute_maxbld_scenarios_population_parcel_ids'];
+const LIST_SEED_KEYS = ['resolve_bylaws_population_zone_classes', 'compute_maxbld_scenarios_population_parcel_ids', 'semi_detect_zone_classes', 'semi_ask_two_parcel_zone_classes'];
 
 const EXPECTED_LOGIC_VAR_KEYS = [
   // batch-2 Phase 0.9 I5 (2026-09-16) — geocode_permits' three. THREE and not one: the
@@ -246,6 +246,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'semi_doubt_enabled',
   'semi_doubt_max_link_parcels',
   'semi_doubt_min_shared_len_m',
+  'semi_auto_max_shared_len_m',
   // MF-19 Add lot size (operator 2026-11-11 D-1..D-8 "all as recommmended"): the switch (hidden internal, off) and the four
   // "MaxBLD Lot Size" settings (D-2 range, D-3 City ratio, D-4 entries a day), migration 305
   'user_lot_size_entry_enabled',

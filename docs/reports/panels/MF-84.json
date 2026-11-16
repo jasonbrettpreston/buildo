@@ -24,7 +24,8 @@
     "When migration 320 is applied the 42P01 degrade in readLotForm is dead code in practice; keep it (it only fires when the view is absent)."
   ],
   "evidence": [
-    "docs/reports/red-evidence/SEMI-B/"
+    "docs/reports/red-evidence/SEMI-B/",
+    "docs/reports/red-evidence/SEMI-B2/"
   ],
-  "notes": "The view reads the lot rows under the current settings; the dev measurement: 102,466 clear semis, 706 short-wall asked, 21,565 doubt-band asked, 371,799 detached. Microcopy (S-093 select.none, select.go, select.label): approved by the operator \"as long as they are compliant\" (relayed by the coordinator, 2026-11-13); kept as content entries and checked against the MF-53 pattern and the descriptor a11y labels (complete); surface conformance and golden tests pass."
+  "notes": "The view reads the lot rows under the current settings; the dev measurement: 102,466 clear semis, 706 short-wall asked, 21,565 doubt-band asked, 371,799 detached. Microcopy (S-093 select.none, select.go, select.label): approved by the operator \"as long as they are compliant\" (relayed by the coordinator, 2026-11-13); kept as content entries and checked against the MF-53 pattern and the descriptor a11y labels (complete); surface conformance and golden tests pass. SEMI-B2 (2026-11-14, operator ruling a): migration 323 (written, not applied) amends the view so the app asks (unsure) in three more cases; the one-question page S-093 itself is unchanged and reads the same unsure flag. DeepSeek four lenses on plan-b2.md, grounded (~/Buildo-scratch/mcbylaws/SEMI-O4/panel-b2-lens1..4.txt, folds in plan-b2.md). Only the S-093 descriptor config.logic_variables lists three more settings."
 }

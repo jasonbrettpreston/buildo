@@ -1,0 +1,20 @@
+   × Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 item 2: an RD two-parcel match is asked (semi_half, unsure), not auto-called 15ms
+     → expected { parcel_id: 24, …(5) } to match object { Object (lot_form_detected, lot_form_basis, ...) }
+   × Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 item 3: a shared length above 60 m is asked; exactly 60 m is auto-called 10ms
+     → expected { parcel_id: 26, …(5) } to match object { Object (lot_form_detected, unsure) }
+   × Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 item 1: a zone outside the residential list is detached and never asked (CR, IH, no zone), including a 3-parcel doubt lot 9ms
+     → expected { parcel_id: 28, …(5) } to match object { lot_form_detected: 'detached', …(2) }
+   × Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 settings move the rules: the long-wall limit, the ask list and the detect list 18ms
+     → expected { parcel_id: 34, …(5) } to match object { unsure: true }
+   × Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 on_invalid default: an empty list, a non-array and an out-of-bounds number read as the seeded defaults 17ms
+     → expected { parcel_id: 36, …(5) } to match object { Object (lot_form_detected, unsure) }
+   × Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 the switch off does not auto-call RD or a long wall (the ruling is not a doubt cut) 10ms
+     → expected { parcel_id: 46, …(5) } to match object { unsure: true }
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/tests/db/parcel-lot-form.db.test.ts > Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 item 2: an RD two-parcel match is asked (semi_half, unsure), not auto-called
+AssertionError: expected { parcel_id: 24, …(5) } to match object { Object (lot_form_detected, lot_form_basis, ...) }
+ FAIL  src/tests/db/parcel-lot-form.db.test.ts > Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 item 3: a shared length above 60 m is asked; exactly 60 m is auto-called
+AssertionError: expected { parcel_id: 26, …(5) } to match object { Object (lot_form_detected, unsure) }
+ FAIL  src/tests/db/parcel-lot-form.db.test.ts > Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 item 1: a zone outside the residential list is detached and never asked (CR, IH, no zone), including a 3-parcel doubt lot
+AssertionError: expected { parcel_id: 28, …(5) } to match object { lot_form_detected: 'detached', …(2) }
+ FAIL  src/tests/db/parcel-lot-form.db.test.ts > Spec 78 O-4 semi detector: the view parcel_lot_form (migrations 320 and 323) > B2 settings move the rules: the long-wall limit, the ask list and the detect list

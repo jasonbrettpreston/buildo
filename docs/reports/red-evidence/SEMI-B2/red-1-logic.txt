@@ -1,0 +1,25 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-semib2
+
+ ❯ src/tests/parcel-lot-form.logic.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/parcel-lot-form.logic.test.ts [ src/tests/parcel-lot-form.logic.test.ts ]
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-semib2/migrations/323_semi_o4_zone_and_wall_asks.sql'
+ ❯ src/tests/parcel-lot-form.logic.test.ts:194:21
+    192| // ───────────────────────────────────────────────────────────────────…
+    193| describe('SEMI-B2 migration 323: zone gate, RD ask and long-wall ask a…
+    194|   const MIG323 = fs.readFileSync(path.resolve(__dirname, '../../migrat…
+       |                     ^
+    195|   const VIEW323 = MIG323.slice(MIG323.indexOf('CREATE OR REPLACE VIEW'…
+    196|   const DESC = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  15:40:16
+   Duration  233ms (transform 46ms, setup 9ms, collect 0ms, tests 0ms, environment 0ms, prepare 28ms)
+

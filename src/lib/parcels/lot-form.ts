@@ -11,8 +11,10 @@ import { logWarn } from '@/lib/logger';
 import { ConsumerLotFormSchema, type ConsumerLotForm } from '@/app/api/parcels/lookup/types';
 
 export const LOT_FORM_VIEW = 'parcel_lot_form'; // the SQL below names it literally (the src-sql ledger allows no new interpolation); a test locks the two equal
-/** The three settings the view reads (admin group "Parcel Lookup"; seed scripts/seeds/logic_variables.json; migration 320). */
-export const LOT_FORM_SETTING_KEYS = ['semi_doubt_enabled', 'semi_doubt_max_link_parcels', 'semi_doubt_min_shared_len_m'] as const;
+/** The numeric settings the view reads (migrations 320 and 323) (admin group "Parcel Lookup"; seed scripts/seeds/logic_variables.json). */
+export const LOT_FORM_SETTING_KEYS = ['semi_doubt_enabled', 'semi_doubt_max_link_parcels', 'semi_doubt_min_shared_len_m', 'semi_auto_max_shared_len_m'] as const;
+/** The two list settings the view reads (migration 323; operator ruling "a" 2026-11-14): the detect zones and the RD-style two-parcel ask zones. */
+export const LOT_FORM_ZONE_LIST_KEYS = ['semi_detect_zone_classes', 'semi_ask_two_parcel_zone_classes'] as const;
 
 export type LotForm = ConsumerLotForm['detected'];
 

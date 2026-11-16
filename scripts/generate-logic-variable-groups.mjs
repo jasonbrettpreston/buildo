@@ -1307,7 +1307,8 @@ const GROUP_ORDER = [
       "parcel_map_neighbour_limit",
       "semi_doubt_enabled",
       "semi_doubt_max_link_parcels",
-      "semi_doubt_min_shared_len_m"
+      "semi_doubt_min_shared_len_m",
+      "semi_auto_max_shared_len_m"
     ]
   },
   {

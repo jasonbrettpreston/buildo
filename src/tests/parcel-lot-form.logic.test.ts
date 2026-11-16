@@ -17,7 +17,7 @@ vi.mock('@/lib/db/client', () => ({ query: (...a: unknown[]) => queryMock(...a) 
 const warnMock = vi.fn();
 vi.mock('@/lib/logger', () => ({ logWarn: (...a: unknown[]) => warnMock(...a), logInfo: vi.fn(), logError: vi.fn() }));
 
-import { readLotForm, lotFormEffective, lotFormAuditCounts, LOT_FORM_VIEW, LOT_FORM_SETTING_KEYS } from '@/lib/parcels/lot-form';
+import { readLotForm, lotFormEffective, lotFormAuditCounts, LOT_FORM_VIEW, LOT_FORM_SETTING_KEYS, LOT_FORM_ZONE_LIST_KEYS } from '@/lib/parcels/lot-form';
 import { ConsumerLotFormSchema, ConsumerParcelLookupResponseSchema } from '@/app/api/parcels/lookup/types';
 
 const MIG = fs.readFileSync(path.resolve(__dirname, '../../migrations/320_parcel_lot_form_view.sql'), 'utf8');
@@ -86,7 +86,7 @@ describe('lotFormEffective (the shared pure function, P5.7; O-12)', () => {
 
 describe('the view (migration 320) keeps every cut in a logic variable (L-SEMI c, h)', () => {
   it('reads each of the three settings by key, and each is in the seed with bounds and an admin group', () => {
-    for (const k of LOT_FORM_SETTING_KEYS) {
+    for (const k of LOT_FORM_SETTING_KEYS.filter((x) => x.startsWith('semi_doubt_'))) {
       expect(MIG).toContain(`'${k}'`);
       const s = SEED[k];
       expect(s, k).toBeTruthy();
@@ -182,5 +182,97 @@ describe('the read-only audit count (D6)', () => {
     const [sql] = queryMock.mock.calls[0] as [string];
     expect(sql).toMatch(/^\s*SELECT/);
     expect(sql).not.toMatch(/INSERT|UPDATE|DELETE|ALTER|CREATE|DROP/i);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEMI-B2 · operator ruling (a), 2026-11-14 (plan ~/Buildo-scratch/mcbylaws/SEMI-O4/plan.md "Operator 2026-11-14 ... verbatim: a";
+// plan-b2.md): (1) detection only on residential zones, (2) an RD two-parcel match is asked, (3) a shared length above
+// semi_auto_max_shared_len_m is asked. Migration 323 amends the view; every cut is a registered setting (Spec 132 core.8).
+// ─────────────────────────────────────────────────────────────────────────────
+describe('SEMI-B2 migration 323: zone gate, RD ask and long-wall ask are registered settings', () => {
+  const MIG323 = fs.readFileSync(path.resolve(__dirname, '../../migrations/323_semi_o4_zone_and_wall_asks.sql'), 'utf8');
+  const VIEW323 = MIG323.slice(MIG323.indexOf('CREATE OR REPLACE VIEW'));
+  const DESC = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json'), 'utf8'));
+  const RESIDENTIAL = SEED.resolve_bylaws_population_zone_classes.default; // the repo's Residential Zone category (R, RD, RS, RT, RM; Spec 130, Spec 134 §2)
+
+  it('L1 the zone lists are the repo residential list (not invented), closed, non-empty; the ask list defaults to RD', () => {
+    expect(RESIDENTIAL).toEqual(['R', 'RD', 'RS', 'RT', 'RM']);
+    expect(SEED.semi_detect_zone_classes).toMatchObject({ type: 'list', default: RESIDENTIAL });
+    expect(SEED.semi_ask_two_parcel_zone_classes).toMatchObject({ type: 'list', default: ['RD'] });
+    for (const k of LOT_FORM_ZONE_LIST_KEYS) {
+      expect(SEED[k].admin?.hidden, `${k}: list variables are hidden internal (Q-J)`).toBe('internal');
+      expect(MIG323, k).toContain(`'${k}'`);
+    }
+    expect(MIG323).toMatch(/'semi_detect_zone_classes', 0, '\["R","RD","RS","RT","RM"\]'::jsonb/);
+    expect(MIG323).toMatch(/'semi_ask_two_parcel_zone_classes', 0, '\["RD"\]'::jsonb/);
+  });
+
+  it('L1 the long-wall limit is a number setting in the existing semi group: default 60, bounds 10..500', () => {
+    expect(LOT_FORM_SETTING_KEYS).toContain('semi_auto_max_shared_len_m');
+    expect(SEED.semi_auto_max_shared_len_m).toMatchObject({ type: 'number', default: 60, min: 10, max: 500 });
+    expect(SEED.semi_auto_max_shared_len_m.admin?.group).toBe('Parcel Lookup');
+    expect(MIG323).toMatch(/'semi_auto_max_shared_len_m', 60, NULL/);
+  });
+
+  it('L2 the view gates detection on the zone list and asks on the RD list and on the long wall', () => {
+    expect(VIEW323).toMatch(/semi_detect_zone_classes/);
+    expect(VIEW323).toMatch(/semi_ask_two_parcel_zone_classes/);
+    expect(VIEW323).toMatch(/semi_auto_max_shared_len_m/);
+    expect(VIEW323).toMatch(/zoning_class\s*=\s*ANY\s*\(\s*cfg\.detect_zones\s*\)/);
+    expect(VIEW323).toMatch(/zoning_class\s*=\s*ANY\s*\(\s*cfg\.ask_zones\s*\)/);
+    expect(VIEW323).toMatch(/best_shared_len_m\s*>\s*cfg\.auto_max_len/);
+  });
+
+  it('L2 the two new asks are not switched off by the doubt switch (the ruling is not a doubt cut)', () => {
+    const askLines = VIEW323.split('\n').filter((l) => /cfg\.ask_zones|cfg\.auto_max_len/.test(l));
+    expect(askLines.length).toBeGreaterThan(0);
+    for (const l of askLines) expect(l).not.toContain('cfg.doubt_on');
+  });
+
+  it('L2 no rule number is a literal in the view: the only numbers are the COALESCE/CASE fallbacks, equal to the seed defaults and bounds', () => {
+    expect(MIG323).toMatch(/BETWEEN 10 AND 500 THEN v\.n ELSE 60[\s\S]{0,300}'semi_auto_max_shared_len_m'\), 60\)/);
+    expect(VIEW323).not.toMatch(/>\s*60\b/);
+    expect(VIEW323).not.toMatch(/zoning_class\s*=\s*'RD'/); // the RD ask is the setting, never a literal in the view body
+    expect(VIEW323).not.toMatch(/confidence/i);
+  });
+
+  it('L3 on_invalid: each new setting declares "default" with a why in the descriptor, and the view falls back to the seeded default', () => {
+    const rows = DESC.config.logic_variables as Array<{ name: string; on_invalid: string; why?: string }>;
+    for (const k of ['semi_detect_zone_classes', 'semi_ask_two_parcel_zone_classes', 'semi_auto_max_shared_len_m']) {
+      const r = rows.find((x) => x.name === k);
+      expect(r, k).toBeTruthy();
+      expect(r?.on_invalid, k).toBe('default');
+      expect(r?.why, k).toBeTruthy();
+    }
+    // lists: a non-array or empty array reads as the default; the number: out of bounds reads as the default
+    expect(VIEW323).toMatch(/jsonb_typeof\(/);
+    expect(VIEW323).toMatch(/jsonb_array_length\(/);
+  });
+
+  it('L4 the owed card: semi_doubt_min_shared_len_m is the shared lot line, not the party wall (seed and migration 323)', () => {
+    const d = String(SEED.semi_doubt_min_shared_len_m.description);
+    expect(d).toMatch(/shared lot line/i);
+    expect(d).not.toMatch(/party wall/i);
+    expect(MIG323).toMatch(/UPDATE logic_variables SET description = '[^']*shared lot line[^']*'\s+WHERE variable_key = 'semi_doubt_min_shared_len_m'/);
+  });
+
+  it("L4 the view comment and the switch description no longer say party wall, and the switch says the ruling asks are independent of it", () => {
+    expect(MIG323).toMatch(/COMMENT ON VIEW parcel_lot_form IS/);
+    const comment = MIG323.slice(MIG323.indexOf("COMMENT ON VIEW"), MIG323.indexOf("COMMENT ON VIEW") + 2500).split("\n-- DOWN")[0];
+    expect(comment).not.toMatch(/party wall/i);
+    expect(String(SEED.semi_doubt_enabled.description)).toMatch(/semi_detect_zone_classes|operator "a"|ruling/);
+    expect(MIG323).toMatch(/UPDATE logic_variables SET description = '[^']*'\s+WHERE variable_key = 'semi_doubt_enabled'/);
+  });
+
+  it("L3 the closed-list check is in the view: every member must be one of the five residential codes", () => {
+    expect(VIEW323).toMatch(/NOT EXISTS|<@/);
+    expect(VIEW323).toMatch(/ARRAY\['R','RD','RS','RT','RM'\]/);
+  });
+
+  it('is written, not applied: a view amendment and settings rows only, same view columns, no table change', () => {
+    expect(MIG323).not.toMatch(/ALTER TABLE|CREATE TABLE/i);
+    expect(MIG323).toMatch(/ON CONFLICT \(variable_key\) DO NOTHING/);
+    for (const c of ['parcel_id', 'lot_form_detected', 'lot_form_basis', 'unsure', 'linked_parcel_count', 'best_shared_len_m']) expect(VIEW323).toContain(c);
   });
 });

@@ -1,0 +1,8 @@
+ ✓ src/tests/parcel-lot-form.logic.test.ts (33 tests) 6ms
+ ✓ src/tests/control-panel.logic.test.ts (33 tests) 39ms
+
+ Test Files  2 passed (2)
+      Tests  66 passed (66)
+   Start at  15:46:16
+   Duration  369ms (transform 123ms, setup 18ms, collect 200ms, tests 45ms, environment 0ms, prepare 45ms)
+
