@@ -63,25 +63,54 @@
     },
     {
       "id": "paid_basic",
+      "email": "mctest-basic@mctest.test",
       "entitlement": {
         "product": "parcel_tool",
         "status": "active",
-        "tier": "basic"
+        "plan_key": "basic",
+        "reports_used": 1
       },
-      "status": "waits",
-      "owner": "MF-47",
-      "waits_on": "MF-47 (D-9 a: tiers not ruled)"
+      "limit_key": "parcel_tool_report_limit_plan",
+      "expect": {
+        "search_page": "shown",
+        "new_lot": "counted"
+      },
+      "status": "active",
+      "owner": "MF-47"
     },
     {
       "id": "paid_pro",
+      "email": "mctest-pro@mctest.test",
       "entitlement": {
         "product": "parcel_tool",
         "status": "active",
-        "tier": "pro"
+        "plan_key": "pro",
+        "reports_used": 1
       },
-      "status": "waits",
-      "owner": "MF-47",
-      "waits_on": "MF-47 (D-9 a: tiers not ruled)"
+      "limit_key": "parcel_tool_report_limit_pro",
+      "expect": {
+        "search_page": "shown",
+        "new_lot": "counted"
+      },
+      "status": "active",
+      "owner": "MF-47"
+    },
+    {
+      "id": "pro_at_limit",
+      "email": "mctest-proatlimit@mctest.test",
+      "entitlement": {
+        "product": "parcel_tool",
+        "status": "active",
+        "plan_key": "pro",
+        "reports_used": "=limit"
+      },
+      "limit_key": "parcel_tool_report_limit_pro",
+      "expect": {
+        "new_lot": "403_REPORT_LIMIT_REACHED",
+        "already_counted_lot": "shown"
+      },
+      "status": "active",
+      "owner": "MF-47"
     },
     {
       "id": "at_limit",

@@ -32,7 +32,9 @@ import { personaEmails } from "../../scripts/mctest/seed-personas.mjs";
 import { runFiles, sampleLots, signInAll, startApp } from "./stack.mjs";
 
 const PORT = 3110;
-const LOTS_PER_USER = 20; // the plan and trial allowance (D-12 a); never more lots than this per user
+// MF-47 (RULED 2026-11-14, C-9: McTest follows trial 10 / Basic 10): the lots each user opens are the stress pool's Basic allowance, READ from the test
+// stack's setting at run time (the pool persona is an active Basic holder), never typed; a literal here halved the real load when the allowance moved.
+const ALLOWANCE_KEY = "parcel_tool_report_limit_plan";
 const SIGNIN_PER_5MIN = 110; // under the test stack's 150 token requests per 5 minutes per address (plan MF81-2 a)
 const POOL_MAX = 20; // the app's default pool (src/lib/db/client.ts PG_POOL_MAX)
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -103,7 +105,8 @@ async function main() {
   let stop = () => {};
   try {
     if (!arg("target")) stop = await startApp(PORT, appEnv(process.env));
-    const lots = await sampleLots(cat, seed, users * LOTS_PER_USER, true);
+    const lotsPerUser = await readAllowance(ALLOWANCE_KEY);
+    const lots = await sampleLots(cat, seed, users * lotsPerUser, true);
     const signedInAt = Date.now();
     const tokens = await signInAll(emails.slice(0, users), SIGNIN_PER_5MIN);
     for (const p of profiles) {
@@ -114,7 +117,7 @@ async function main() {
         throw new Error(
           `tokens_too_old_for_${p.id}: signed in ${Math.round(ageMs / 60000)} min ago, the test stack's tokens last ${TOKEN_LIFE_MS / 60000} min`,
         );
-      const out = await runProfile(p, { target, lots, tokens, seed });
+      const out = await runProfile(p, { target, lots, tokens, seed, lotsPerUser });
       const file = saveJson(`stress-${p.id}.json`, {
         ...out,
         sha,
@@ -168,7 +171,22 @@ function rng(text) {
   };
 }
 
-async function runProfile(p, { target, lots, tokens, seed }) {
+/** One allowance from the test stack's settings (read-only connection); a missing or non-whole value throws (a FAIL line, never a guess). */
+async function readAllowance(key) {
+  const db = new pg.Client({ connectionString: process.env.MCTEST_DATABASE_URL, application_name: "mctest-load-sampler" });
+  await db.connect();
+  try {
+    await db.query("SET default_transaction_read_only = on");
+    const r = await db.query("SELECT variable_value FROM logic_variables WHERE variable_key = $1", [key]);
+    const n = Number(r.rows[0]?.variable_value);
+    if (!Number.isInteger(n) || n < 1) throw new Error(`${key} is missing or not a whole number on the test stack`);
+    return n;
+  } finally {
+    await db.end();
+  }
+}
+
+async function runProfile(p, { target, lots, tokens, seed, lotsPerUser }) {
   const n = p.concurrent_users;
   const interval = p.interval_s * 1000;
   const start = Date.now() + 1000;
@@ -243,12 +261,12 @@ async function runProfile(p, { target, lots, tokens, seed }) {
 
   const userLoop = async (u) => {
     const draw = rng(`${seed}:${p.id}:${u}`);
-    const mine = userLots(lots, u, LOTS_PER_USER);
+    const mine = userLots(lots, u, lotsPerUser);
     for (let k = 0; ; k += 1) {
       const at = start + (u / n) * interval + k * interval; // starts spread over one interval
       if (at >= end) return;
       await new Promise((r) => setTimeout(r, Math.max(0, at - Date.now())));
-      const req = fire(u, pickKind(draw(), p.mix), mine[k % LOTS_PER_USER]);
+      const req = fire(u, pickKind(draw(), p.mix), mine[k % lotsPerUser]);
       inflight.add(req);
       req.finally(() => inflight.delete(req));
     }

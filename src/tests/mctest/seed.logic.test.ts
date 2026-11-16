@@ -11,7 +11,10 @@ import {
   confirmEmail,
   setProfile,
   usedCount,
+  limitKeyFor,
 } from "../../../scripts/mctest/seed-personas.mjs";
+import fs from "node:fs";
+import { readCatalogue } from "../../../scripts/mctest/lib.cjs";
 
 const TEST = {
   MCTEST_DATABASE_URL: "postgres://postgres:x@127.0.0.1:55322/postgres",
@@ -133,5 +136,38 @@ describe("confirmEmail (MF-79 follow-up: seeded users must be able to sign in)",
     await expect(confirmEmail(stub(0), "u1")).rejects.toThrow(
       /email not confirmed/,
     );
+  });
+});
+
+// MF-47 (RULED 2026-11-14, build-row obligation C-9): trial 10 / Basic 10 / Pro 25 reach McTest as data. A Pro persona carries plan_key and the Pro
+// limit key; the stress load reads the allowance from the test stack's setting and types no number.
+describe("McTest follows the MF-47 plans", () => {
+  const seedJson = JSON.parse(fs.readFileSync(path.join(ROOT, "scripts/seeds/logic_variables.json"), "utf8")) as Record<string, unknown>;
+  const cat = readCatalogue() as { personas: Array<{ id: string; status: string; entitlement?: { plan_key?: string; status?: string }; limit_key?: string; owner?: string }> };
+  const persona = (id: string) => cat.personas.find((p) => p.id === id);
+  it("limitKeyFor: trial takes the trial key whatever the plan; Pro its own; Basic and no plan the plan key", () => {
+    expect(limitKeyFor({ status: "trial", plan_key: "pro" })).toBe("parcel_tool_report_limit_trial");
+    expect(limitKeyFor({ status: "active", plan_key: "pro" })).toBe("parcel_tool_report_limit_pro");
+    expect(limitKeyFor({ status: "active", plan_key: "basic" })).toBe("parcel_tool_report_limit_plan");
+    expect(limitKeyFor({ status: "active" })).toBe("parcel_tool_report_limit_plan");
+    expect(limitKeyFor(null)).toBe("parcel_tool_report_limit_plan");
+  });
+  it("the Pro personas are active with a plan_key and a limit_key that is a real setting; the old tier field is gone", () => {
+    for (const id of ["paid_pro", "pro_at_limit"]) {
+      const p = persona(id)!;
+      expect([p.status, p.entitlement?.plan_key, p.limit_key]).toEqual(["active", "pro", "parcel_tool_report_limit_pro"]);
+      expect(seedJson[p.limit_key!], id).toBeDefined();
+      expect(p.entitlement).not.toHaveProperty("tier");
+    }
+    expect(persona("paid_basic")?.entitlement?.plan_key).toBe("basic");
+  });
+  it("RED plant: a stress runner that types the allowance (const LOTS_PER_USER = 20) is caught; the real one reads the setting", () => {
+    const planted = "const LOTS_PER_USER = 20;";
+    const typed = /\b(LOTS_PER_USER|lotsPerUser)\s*=\s*\d+/;
+    expect(typed.test(planted)).toBe(true);
+    const real = fs.readFileSync(path.join(ROOT, "tests/load/stress.mjs"), "utf8");
+    expect(typed.test(real)).toBe(false);
+    expect(real).toMatch(/readAllowance\(ALLOWANCE_KEY\)/);
+    expect(seedJson["parcel_tool_report_limit_plan"]).toBeDefined();
   });
 });

@@ -17,7 +17,17 @@ const TRADE = "plumbing"; // the user_profiles row needs one trade; the dev-user
 const LIMIT_KEY = {
   trial: "parcel_tool_report_limit_trial",
   plan: "parcel_tool_report_limit_plan",
-}; // REPORT_LIMIT_KEYS
+  pro: "parcel_tool_report_limit_pro",
+}; // REPORT_LIMIT_KEYS; MF-47: plan is the Basic allowance
+
+/**
+ * The allowance setting a persona's entitlement is metered against (MF-47, RULED 2026-11-14): a trial takes the trial allowance whatever the plan;
+ * otherwise plan_key picks Pro or Basic (the plan key). Mirrors allowanceFor in src/lib/entitlements/index.ts.
+ */
+export function limitKeyFor(e) {
+  if (e?.status === "trial") return LIMIT_KEY.trial;
+  return e?.plan_key === "pro" ? LIMIT_KEY.pro : LIMIT_KEY.plan;
+}
 
 /** The seeded users of one persona row: its email, or email_pattern expanded over count. */
 export function personaEmails(p) {
@@ -124,8 +134,7 @@ async function main() {
     );
     for (const p of personas) {
       const e = p.entitlement ?? null;
-      const limit =
-        limits[e?.status === "trial" ? LIMIT_KEY.trial : LIMIT_KEY.plan];
+      const limit = limits[limitKeyFor(e)];
       for (const email of personaEmails(p)) {
         const uid = await account(email);
         await db.query("BEGIN");
@@ -140,6 +149,13 @@ async function main() {
           await db.query(
             "INSERT INTO entitlements (user_id, product, status, trial_started_at) VALUES ($1, $2, $3, CASE WHEN $3 = 'trial' THEN now() END)",
             [uid, e.product, e.status],
+          );
+        }
+        if (e?.plan_key) {
+          // only a persona that declares a plan_key touches the column (migration 322); every other persona keeps the column default
+          await db.query(
+            "UPDATE entitlements SET plan_key = $3 WHERE user_id = $1 AND product = $2",
+            [uid, e.product, e.plan_key],
           );
         }
         await db.query(
