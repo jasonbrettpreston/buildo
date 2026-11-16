@@ -1611,6 +1611,16 @@
       "label": "Not read — scheduled for retirement",
       "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
     },
+    "parcel_tool_overage_cap_default": {
+      "badge": "not_read_scheduled_for_retirement",
+      "label": "Not read — scheduled for retirement",
+      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
+    "parcel_tool_overage_enabled": {
+      "badge": "not_read_scheduled_for_retirement",
+      "label": "Not read — scheduled for retirement",
+      "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
     "placeholder_cost_threshold": {
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
