@@ -50,6 +50,7 @@
     "layout": {
       "columns": 1,
       "details": "collapsed",
+      "details_view": "sheet",
       "meta": "when_set",
       "page_break": "none"
     },

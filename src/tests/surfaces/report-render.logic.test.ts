@@ -280,7 +280,7 @@ describe('T20 the image node (MF-38)', () => {
     const t = build([it1()]);
     const views = (TARGETS as string[]).map((target) => viewOf(t, { scenario: P, target, urls: { a1: '/u' } }, reportCtx).image);
     for (const x of views) expect(x).toEqual(views[0]);
-    expect(Object.keys((reportCtx.layout as Json).closed)).toEqual(['columns', 'details', 'meta', 'page_break']);
+    expect(Object.keys((reportCtx.layout as Json).closed)).toEqual(['columns', 'details', 'details_view', 'meta', 'page_break']); // MF-83 (FE-43): details_view added; no image key
   });
   it('assertTree RED: two image nodes, an image in a lifecycle tree, an item whose scenario is unknown', () => {
     const t = build([it1()]);

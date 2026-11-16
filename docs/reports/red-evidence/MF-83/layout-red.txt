@@ -1,0 +1,4 @@
+   × T20 the image node (MF-38) > the same image on every target: the layout table has no image key 3ms
+   × P3b MF-83 (FE-43) details_view: a second closed layout key, no existing value moves > the closed set is inline | sheet; web and mobile open See details as a sheet, admin and pdf keep it inline 3ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 152 passed (154)

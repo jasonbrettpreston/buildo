@@ -162,7 +162,7 @@ const PageSectionSchema = z
 export const ReportPageViewSchema = z
   .object({
     target: z.literal('mobile'),
-    layout: z.object({ columns: z.number(), details: z.string(), meta: z.string(), page_break: z.string() }).strict(),
+    layout: z.object({ columns: z.number(), details: z.string(), details_view: z.string(), meta: z.string(), page_break: z.string() }).strict(),
     sections: z.array(PageSectionSchema),
   })
   .strict();

@@ -228,6 +228,20 @@ describe('P2 buildPage: the capture, the throw and Q-G4 a', () => {
   });
 });
 
+describe('P3b MF-83 (FE-43) details_view: a second closed layout key, no existing value moves', () => {
+  const L = reportCtx.layout as Json;
+  it('the closed set is inline | sheet; web and mobile open See details as a sheet, admin and pdf keep it inline', () => {
+    expect(L.closed.details_view).toEqual(['inline', 'sheet']);
+    expect(Object.fromEntries((TARGETS as string[]).map((t) => [t, L.targets[t].details_view]))).toEqual({ mobile: 'sheet', web: 'sheet', admin: 'inline', pdf: 'inline' });
+  });
+  it('the existing details values are unchanged (the six readers of collapsed keep their meaning)', () => {
+    expect(Object.fromEntries((TARGETS as string[]).map((t) => [t, L.targets[t].details]))).toEqual({ mobile: 'collapsed', web: 'collapsed', admin: 'expanded', pdf: 'expanded' });
+  });
+  it('pageViewOf carries the row verbatim, so every target sees its details_view', () => {
+    for (const t of TARGETS as string[]) expect((pageViewOf(golden(t).rendered_tree, { target: t }, reportCtx) as Json).layout.details_view, t).toBe(L.targets[t].details_view);
+  });
+});
+
 describe('P3 pageViewOf: the layout row', () => {
   it('an unknown target throws RR-TARGET', () => {
     expect(has(problemsOf(() => pageViewOf(golden('web').rendered_tree, { target: 'tv' }, reportCtx)), 'RR-TARGET')).toBe(true);
