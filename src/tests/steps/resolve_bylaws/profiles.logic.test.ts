@@ -35,7 +35,7 @@ describe('R-JA: scopePairs — the pointer order is the scope seed order', () =>
   // 55 = MB-27 increment 5 (migration 315): principal_coverage_path_b_pct joins (build Q3 a as ruled B5A-1 c, operator 2026-11-12).
   // 56 = MB-27 increment 5 Part B (migration 321): the garden suite's side_setback_street_floor_m, the 150.7.60.20(6)(C) corner floor, joins (operator 2026-11-13 P1 b).
   it('the scope holds exactly 57 (structure, target) pairs, a literal that a scope edit alone cannot move', () => {
-    expect(NPAIRS).toBe(57); // P2 a (B5B-5, named re-pin): the through-lot rear floor rear_setback_through_floor_m joins (migration 321, operator 2026-11-13 P2 a)
+    expect(NPAIRS).toBe(58); // MB-27 increment 6 named re-pin (migration 329): suite_interior_share_pct joins; was 57 (P2 a) // P2 a (B5B-5, named re-pin): the through-lot rear floor rear_setback_through_floor_m joins (migration 321, operator 2026-11-13 P2 a)
   });
 
   it('the literal is not computed from the scope: a 56-pair or a 58-pair copy of the scope counts differently', () => {
@@ -46,10 +46,10 @@ describe('R-JA: scopePairs — the pointer order is the scope seed order', () =>
     const more = copy();
     more.targets.principal = [...(more.targets.principal as string[]), 'zz_extra_target_m'];
     expect(count(SCOPE)).toBe(NPAIRS);
-    expect(count(fewer)).toBe(56);
-    expect(count(more)).toBe(58);
-    expect(rb().scopePairs(fewer)).toHaveLength(56);
-    expect(rb().scopePairs(more)).toHaveLength(58);
+    expect(count(fewer)).toBe(NPAIRS - 1);
+    expect(count(more)).toBe(NPAIRS + 1);
+    expect(rb().scopePairs(fewer)).toHaveLength(NPAIRS - 1);
+    expect(rb().scopePairs(more)).toHaveLength(NPAIRS + 1);
   });
 });
 

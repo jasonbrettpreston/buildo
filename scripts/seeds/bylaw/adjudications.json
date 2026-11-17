@@ -116108,6 +116108,74 @@
           "has_garden_suite"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-11-16",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-150.10.40.40(1)#whole/archetype~s1",
+      "kind": "correction",
+      "reason": "N1: the bound is 45 percent of the interior floor area of the dwelling unit; the percent is stored as a principal cell on its own pct target so Layer 3 multiplies it by the unit interior (the unit interior is a Layer 3 quantity, not a DSL input)",
+      "rule": "MB-27 increment 6 (operator 2026-11-13 \"9 y\", item 5 b (i) \"5ci\", item 7 \".85\"; BUILD-PLAN section 4): the number moves into a Layer 2 cell, read by Layer 3 as a setting (R3-02); M-75",
+      "supersedes": "COR-150.10.40.40(1)#whole/archetype",
+      "unit": "150.10.40.40(1)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-11-16",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.10.40.40(1)#whole/target~s1",
+      "kind": "correction",
+      "reason": "N1: the bound is 45 percent of the interior floor area of the dwelling unit; the percent is stored as a principal cell on its own pct target so Layer 3 multiplies it by the unit interior (the unit interior is a Layer 3 quantity, not a DSL input)",
+      "rule": "MB-27 increment 6 (operator 2026-11-13 \"9 y\", item 5 b (i) \"5ci\", item 7 \".85\"; BUILD-PLAN section 4): the number moves into a Layer 2 cell, read by Layer 3 as a setting (R3-02); M-75",
+      "supersedes": "COR-150.10.40.40(1)#whole/target",
+      "unit": "150.10.40.40(1)#whole",
+      "value": "suite_interior_share_pct"
+    },
+    {
+      "adjudicated_on": "2026-11-16",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-150.10.40.40(1)#whole/bound~s1",
+      "kind": "correction",
+      "reason": "N1: the bound is 45 percent of the interior floor area of the dwelling unit; the percent is stored as a principal cell on its own pct target so Layer 3 multiplies it by the unit interior (the unit interior is a Layer 3 quantity, not a DSL input)",
+      "rule": "MB-27 increment 6 (operator 2026-11-13 \"9 y\", item 5 b (i) \"5ci\", item 7 \".85\"; BUILD-PLAN section 4): the number moves into a Layer 2 cell, read by Layer 3 as a setting (R3-02); M-75",
+      "supersedes": "COR-150.10.40.40(1)#whole/bound",
+      "unit": "150.10.40.40(1)#whole",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-11-16",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.10.40.40(1)#whole/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "N1: the bound is 45 percent of the interior floor area of the dwelling unit; the percent is stored as a principal cell on its own pct target so Layer 3 multiplies it by the unit interior (the unit interior is a Layer 3 quantity, not a DSL input)",
+      "rule": "MB-27 increment 6 (operator 2026-11-13 \"9 y\", item 5 b (i) \"5ci\", item 7 \".85\"; BUILD-PLAN section 4): the number moves into a Layer 2 cell, read by Layer 3 as a setting (R3-02); M-75",
+      "supersedes": "COR-150.10.40.40(1)#whole/numeric_expression",
+      "unit": "150.10.40.40(1)#whole",
+      "value": [
+        "suite_interior_share_pct = 45 pct @(1)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-11-16",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.10.40.40(1)#whole/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "N1: the bound is 45 percent of the interior floor area of the dwelling unit; the percent is stored as a principal cell on its own pct target so Layer 3 multiplies it by the unit interior (the unit interior is a Layer 3 quantity, not a DSL input)",
+      "rule": "MB-27 increment 6 (operator 2026-11-13 \"9 y\", item 5 b (i) \"5ci\", item 7 \".85\"; BUILD-PLAN section 4): the number moves into a Layer 2 cell, read by Layer 3 as a setting (R3-02); M-75",
+      "supersedes": "COR-150.10.40.40(1)#whole/literals_not_expressed",
+      "unit": "150.10.40.40(1)#whole",
+      "value": [
+        {
+          "clause": "(1)",
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
     }
   ]
 }

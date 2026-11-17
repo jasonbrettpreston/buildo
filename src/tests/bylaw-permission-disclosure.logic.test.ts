@@ -130,7 +130,8 @@ describe('G5-p: permitted() moved only by disclosures: [] (the eval-perf corpus)
   // re-pinned 2026-11-06 (DL-4 a, operator E1C a; ABS-11.1..11.4): the corpus moved the RM houseplex cells, as bylaw-eval-perf; before bdcce3c4…, after f07a6998….
   // re-pinned 2026-11-12 (MB-27 increment 5 C2a): the corpus moved the increment-5 Layer 1 keying cells, as bylaw-eval-perf; before f07a6998…, after af995f63….
   // re-pinned 2026-11-13 (MB-27 increment 5 Part B, P1 b): the corner-floor and (P2 a, B5B-5) through-lot-floor targets join the corpus, as bylaw-eval-perf; before af995f63…, after 41e93eea….
-  const G5_PIN = '41e93eeac5ad2f2acd5a5f2717529b96c271ebab00bb0aa47b6f36a0a7a6801c';
+  // re-pinned 2026-11-16 (MB-27 increment 6, the Layer 2 part; migration 329): the new principal target suite_interior_share_pct joins the corpus, as bylaw-eval-perf; before 41e93eea…, after b6db53b7….
+  const G5_PIN = 'b6db53b7fe6f8ad639aa6492de8fa59b573c2ccfb9a7b42c5e1e1da0b88761f6';
   it('with permitted()\'s disclosures removed the corpus hashes to G5_PIN (prereg-g5 golden_from, re-pinned), and all 840 results carry disclosures: []', () => {
     const r = corpusHash((lot, bt, cands) => E.permitted(lot, bt, cands, C));
     expect([r.hash, r.bad]).toEqual([G5_PIN, []]);

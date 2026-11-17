@@ -59,7 +59,7 @@ describe('Q1 / D2 — an optional variation ("Despite …, … may …", no valu
   });
   // amended 2026-10-21 (69a M-255, F-SC-13/14): the RD / RS / RM (2)(C) extension clearance is keyed (extension_side_setback_m), so
   // it is no longer valueless; 14 remain
-  it('the sweep of every chapter: exactly these 14 valueless PERMIT / UNUSUAL units are optional variations that keep a numeric base limit', () => {
+  it('the sweep of every chapter: exactly these 15 valueless PERMIT / UNUSUAL units are optional variations that keep a numeric base limit', () => {
     const tg = (u: Json): string[] => [].concat(u.target || []).filter((t: string) => t && t !== 'none');
     const caught = units.filter((u) => !tg(u).length && ['PERMIT', 'UNUSUAL'].includes(u.archetype) && u.displaces_optional
       && units.some((x) => x !== u && tg(x).length && ['LIMIT', 'DEFINE'].includes(x.archetype) && u.displaces.some((r: string) => E.refMatch(r, x.unit_id))))
@@ -70,6 +70,7 @@ describe('Q1 / D2 — an optional variation ("Despite …, … may …", no valu
       '10.5.20.40(7)#(7)(A)', '10.5.20.40(7)#(7)(B)', '10.5.60.20(7)#whole',
       '10.80.40.20(2)#(2)(A)', '10.80.40.20(2)#(2)(B)',
       '200.5.10.1(11)#(11)(A)', '200.5.10.1(11)#(11)(B)', '200.5.10.1(13)@1075-2026#(13)', '970.10.15.10(2)#whole',
+      '150.10.40.40(2)#whole', // MB-27 increment 6 (named re-pin, migration 329): 150.10.40.40(1) is keyed LIMIT on suite_interior_share_pct, so the valueless 150.10.40.40(2) permission now displaces a numeric base limit
     ].sort());
   });
   it('a value clause with a later "may" is not an optional variation (900.2.10(735)(M): "… is 2.6 metres …, except that … may …")', () => {

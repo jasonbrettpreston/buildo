@@ -73,10 +73,11 @@ describe('M-177(1)/(4) — the 150.10 secondary-suite scope units: the suite cla
 });
 
 describe('M-199 — 150.10.40.40: a secondary suite may be 45 % of the WHOLE house it sits in; the stricter reading is disclosed', () => {
-  it('M-199: 150.10.40.40(1) states the whole-house reading and keeps 45 percent as a clause literal (keying owed)', () => {
+  it('M-199: 150.10.40.40(1) states the whole-house reading and states 45 percent as the principal cell suite_interior_share_pct (MB-27 increment 6: keyed LIMIT max, named re-pin; was a clause literal, keying owed)', () => {
     const u = unitOf('150.10.40.40(1)#whole');
     expect(u.disclosure).toBe('A secondary suite may take up to 45% of the interior floor area of the house it is in, the suite included; if the City reads 45% against the main unit only, the suite is smaller.');
-    expect(u.literals_not_expressed).toContainEqual({ clause: '(1)', literal: '45 percent', reason: 'limit_not_modelled' });
+    expect(u.literals_not_expressed).not.toContainEqual({ clause: '(1)', literal: '45 percent', reason: 'limit_not_modelled' });
+    expect([u.archetype, u.target, u.bound, u.numeric_expression]).toEqual(['LIMIT', 'suite_interior_share_pct', 'max', ['suite_interior_share_pct = 45 pct @(1)']]);
     expect(u.calculation_handling.gaps).toContain('whole house interior floor area (suite included)');
   });
   it('M-199 / M-177: 150.10.40.40(2) the basement suite of a one-storey detached house may take the whole basement', () => {

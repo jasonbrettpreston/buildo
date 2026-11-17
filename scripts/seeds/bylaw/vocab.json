@@ -86,6 +86,7 @@
     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
     "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area", "area of the ancillary"] },
+    "suite_interior_share_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum share, percent, of the interior floor area of the dwelling unit that all secondary suites together may take", "patterns": ["interior floor area of the dwelling unit"] },
     "interior_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum (or minimum) interior floor area of the building, suite or room the unit applies to", "patterns": ["interior floor area"] },
     "height_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of the building the unit applies to, from established grade", "patterns": ["maximum height", "height of", "in height", "maximum building height"] },
     "height_projection_m": { "unit": "m", "aspect": "envelope", "concept": "a structure may exceed the permitted maximum height by (Spec 69a M-81 R5)", "patterns": ["may exceed the permitted maximum height", "above the permitted maximum height"] },

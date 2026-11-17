@@ -1953,7 +1953,9 @@
    ],
    "keyed": {
     "units": [],
-    "layer2_targets": [],
+    "layer2_targets": [
+     "suite_interior_share_pct"
+    ],
     "owed": [
      {
       "what": "suite classes and the applies() suite match (M-182, M-177)",

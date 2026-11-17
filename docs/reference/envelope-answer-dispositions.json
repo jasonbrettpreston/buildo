@@ -4627,7 +4627,7 @@
     {
      "file": "src/tests/bylaw-suite-owed.logic.test.ts",
      "describe": "M-199 — 150.10.40.40: a secondary suite may be 45 % of the WHOLE house it sits in; the stricter reading is disclosed",
-     "it": "M-199: 150.10.40.40(1) states the whole-house reading and keeps 45 percent as a clause literal (keying owed)",
+     "it": "M-199: 150.10.40.40(1) states the whole-house reading and states 45 percent as the principal cell suite_interior_share_pct (MB-27 increment 6: keyed LIMIT max, named re-pin; was a clause literal, keying owed)",
      "asserts": [
       "'150.10.40.40(1)#whole'",
       "'45 percent'"

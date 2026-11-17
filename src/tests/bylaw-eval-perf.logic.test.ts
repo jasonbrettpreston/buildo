@@ -97,7 +97,7 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     const targets = Object.keys(PVOCAB.dsl_target).sort(cmp);
     const h = crypto.createHash('sha256');
     const hLeftOut = crypto.createHash('sha256'); // the same walk with the dsl_targets added since the 2026-10-26 pin left out
-    const NEW_TARGETS = new Set(['platform_side_setback_street_m']);
+    const NEW_TARGETS = new Set(['platform_side_setback_street_m', 'suite_interior_share_pct']); // MB-27 increment 6: the 45 percent suite share target is left out of the left-out digest (its cells move no existing cell)
     // MB-18 j: a dsl_target added after the pin is left out of BOTH hashes, as the earlier re-pins argued: its cells move no
     // existing cell; its own cells are locked by bylaw-mb18j.logic.test.ts.
     // MB-27.L2 P3-0 (D-6, amended by Q-M2 a): pitched_roof_slope_min, the M-465 threshold, and the two 10.5.40.40(2) mechanical-attic targets are
@@ -179,7 +179,8 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // principal target principal_coverage_path_b_pct joins the corpus; before 094c0572…, after fbe7b685….
     // re-pinned 2026-11-13 (MB-27 increment 5 Part B, P1 b; operator 2026-11-13): the new garden_suite target side_setback_street_floor_m joins the corpus and
     // 150.7.60.20(6)(C) moves onto it (1.5 m); the through-lot-floor target rear_setback_through_floor_m (P2 a) joins too; before fbe7b685…, after 7d438f65….
-    expect(h.digest('hex')).toBe('7d438f651dcbcbedea3485e155fb7857635482de890e27d6a239b437632df888');
+    // re-pinned 2026-11-16 (MB-27 increment 6, the Layer 2 part; migration 329): the new principal target suite_interior_share_pct (150.10.40.40(1), 45 percent) joins the corpus; before 7d438f65…, after fa3bba5c….
+    expect(h.digest('hex')).toBe('fa3bba5ce4e2bce86cc856671d07f5f1747a977b3e39ac3172dc26ebd8719f0f');
     // E1C-S (standing approval; the same ruled data change, ABS-11.1..11.4): the left-out digest moves mechanically; before cada5b36…, after 2e8d816d…
     // re-pinned 2026-11-12 (MB-27 increment 5 C2a, the same keying change): the left-out digest moves mechanically; before 2e8d816d…, after 97d047fe…
     // re-pinned 2026-11-13 (MB-27 increment 5 Part B, P1 b, the same keying change, P1 b + P2 a): before 97d047fe…, after 08703422….

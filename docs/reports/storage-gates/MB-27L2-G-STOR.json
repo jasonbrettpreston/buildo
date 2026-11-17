@@ -1,36 +1,36 @@
 {
-  "$comment": "MB-27 increment 5 G-STOR (ST-3 exact model; McStorage rulings ST-1..ST-3, 2026-11-12), bound to the increment-5 tree (C2a on origin 076c3ad7c + C0 6c22252af). Read-only on the dev DB: the tree's own pure core (materializeBatch) over every parcel in default_transaction_read_only sessions (dry-run harness ~/Buildo-scratch/mcbylaws/MB-27L2/dryrun, command ~/Buildo-scratch/mcbylaws/inc5/night/run-dry.zsh); each of the 440093 lot rows sized by pgsize.mjs tupleLen at width 70 with the stamps as bytea and the table's toast_tuple_target 1624 (ST-1; the toaster runs above 2,032 B and compresses / moves values until the row fits 1,624 B), next-fit in parcel_id order (the reload's insert order; MAXALIGN 8, 4 B line pointer, 8,168 B usable); the out-of-line values (68257 rows) sized as TOAST chunk tuples (1,996 B chunks) with an index estimate; pkey/forks and dictionaries carried from the increment-4 record. ST-3: the night's record takes P_up = max(this model, the measured test write x 1.02) and stops on a gap above 3 % (D-74: |model - test| / model); the test write is the test-stack rehearsal's full reload, measured after VACUUM FULL (S2). Dry-run outputs: ~/Buildo-scratch/mcbylaws/inc5/night/dry/.",
+  "$comment": "MB-27 increment 6 G-STOR (ST-3 exact model; McStorage rulings ST-1..ST-3), bound to the increment-6 Layer 2 tree (C2-L2, parent 3d04affc3; one new principal target suite_interior_share_pct, width 73, migration 329). Read-only on the dev DB: the tree's own pure core (materializeBatch) over every parcel in default_transaction_read_only sessions (dry-run harness ~/Buildo-scratch/mcbylaws/MB-27L2/dryrun, command ~/Buildo-scratch/mcbylaws/inc6/night/run-dry-inc6-final.zsh (dryrun.mjs compute --stamps bytea --toast-target 1624)); each of the 440093 lot rows sized by pgsize.mjs tupleLen at width 73 with the stamps as bytea and the table's toast_tuple_target 1624 (ST-1; the toaster runs above 2,032 B and compresses / moves values until the row fits 1,624 B), next-fit in parcel_id order (the reload's insert order; MAXALIGN 8, 4 B line pointer, 8,168 B usable); the out-of-line values (153929 rows) sized as TOAST chunk tuples (1,996 B chunks) with an index estimate; pkey/forks and dictionaries carried from the increment-4 record (as the increment-5 record did). Operator 2026-11-16 \"y\": the combined ST-3 line is 1,650 MiB, provisional until MB-111; the Layer 2 stop stays 780 MiB. ST-3: the night's record takes P_up = max(this model, the measured test write x 1.02) and stops on a gap above 3 % (D-74: |model - test| / model); the test write is the test-stack rehearsal's full reload, measured after VACUUM FULL (S2). Dry-run outputs: ~/Buildo-scratch/mcbylaws/inc6/night/dry-inc6-final/.",
   "verdict": "PASS",
-  "P_up_mib": 699.24,
+  "P_up_mib": 714.05,
   "stop_mib": 780,
-  "ratio": 0.538,
-  "T0_mib": 758.77,
+  "ratio": 0.549,
+  "T0_mib": 697.15,
   "method": "exact tuple model (pgsize.mjs, toast_tuple_target 1624, TOAST relation sized) on the built core's rows; next-fit in parcel_id order; ST-3 test write recorded by the night",
   "parts_mib": {
-    "lots_heap": 637.88,
-    "toast_heap": 48.63,
-    "toast_index_estimate": 1.45,
+    "lots_heap": 597,
+    "toast_heap": 102.5,
+    "toast_index_estimate": 3.27,
     "lots_pkey_and_forks": 9.68,
     "dictionaries": 0.6,
     "delta_dict_allowance": 1
   },
   "heap_pages": {
-    "projected_lots": 81648,
-    "projected_toast": 6224,
-    "stored_simulated": 97122
+    "projected_lots": 76416,
+    "projected_toast": 13120,
+    "stored_simulated": 89235
   },
   "rows": 440093,
   "row_bytes": {
-    "projected_bytea_avg": 1421.61,
+    "projected_bytea_avg": 1330.01,
     "max": 1624,
-    "rows_out_of_line": 68257,
-    "toast_payload_bytes": 45707869
+    "rows_out_of_line": 153929,
+    "toast_payload_bytes": 96159950
   },
-  "table_version": "1c7d84565cd0bda2b514afd554274a5a900cd6c0a3697a1a57e4e260ecaa2cef",
+  "table_version": "07bc0ba7b615547edd66d7ed60c6af9acc6a0687ea8b45cf2e9ff14bfe7b7830",
   "evaluator_version": "1c29ca3f7e131f077cff6502089324454411a46148bbdc39a2c1f359676d2586",
-  "parent_sha": "6c22252af77ff547d21f406fe62e3eedd7ef3036",
-  "measured": "2026-11-12",
+  "parent_sha": "b1bdee676018dd7738b90b2cd41db18eef6d00f4",
+  "measured": "2026-11-16",
   "toast_tuple_target": 1624,
-  "width": 70,
-  "rebound": "2026-11-13 re-cut on origin 33af0759a (wf1/inc5a-1113): table_version moved b65aa721278d -> fe54cdb5986b by the landed Layer 2 seed edits (B5B-1, E-COST); re-bound by regeneration, not re-measured: the stored cells and model rows are Layer 2 only and unchanged (21,053,617 moved cells, P_up 699.24 MiB); the night re-measures P_up from the test write (ST-3) | 2026-11-13 re-bound again on origin 3dc51a394 (wf1/laner-1113, the register batch): table_version moved fe54cdb5986b -> 84132253a074 by the new Spec 69a row for the ST-3 sizing rule (a rule-map row; no seed, stored cell or model row moved); re-bound by regeneration, not re-measured (P_up 699.24 MiB unchanged); standard G-STOR re-bind flow on a table_version move | 2026-11-13 (B5B-5): table_version re-bound to the P1 b + P2 a tree (migration 321: width 72, two garden_suite floor targets); by regeneration, not re-measured (one more slot at width 72, the D-81 re-run re-measures) | 2026-11-13 (B5B-6): table_version and evaluator_version re-bound to the Part B engine tree (the add-on building types, suite rows, split pass and catalogue are scripts/seeds/bylaw inputs; the exception() reader is in the DSL); by regeneration, not re-measured, no stored cell or model row moves"
+  "width": 73,
+  "rebound": "2026-11-16 re-bound by regeneration, not re-measured, to the C2-L2 tree (origin 3d04affc3 + the one new principal target suite_interior_share_pct, migration 329, width 73): the model figure comes from the full dry run with sizes of the same Layer 2 content (night/dry-inc6-final: 440,093 lots, 2,200,465 new cells, P_up 714.05 MiB); the Layer 3 seeds of the Part B commit do not enter a Layer 2 cell, so table_version moves again only by the Part B seed edits (the D-78 form). The night re-measures P_up from the test write (ST-3)."
 }

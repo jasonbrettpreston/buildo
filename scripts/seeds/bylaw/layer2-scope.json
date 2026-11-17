@@ -43,6 +43,7 @@
       "roof_slope_max",
       "side_setback_m",
       "side_setback_street_m",
+      "suite_interior_share_pct",
       "upper_storey_setback_m"
     ],
     "garden_suite": [

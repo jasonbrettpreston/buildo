@@ -36,7 +36,7 @@ describe('DL-7 a: the scope lists the houseplex for the roof-form option slots',
   // MB-27 increment 5 (named re-pin, build Q3 a as ruled B5A-1 c): migration 315 adds the principal pair principal_coverage_path_b_pct and the 8
   // suite_height slots after the 7 roof_form slots (55 + 15); the roof_form slot order is unchanged
   it('the base pairs and the option slot order are those of migration 315 (55 + 15) and 321 (57 + 15), roof_form first', () => {
-    expect([RB.scopePairs(SCOPE).length, RB.optionPairs(SCOPE, VOCAB.design_options).length]).toEqual([57, 15]);
+    expect([RB.scopePairs(SCOPE).length, RB.optionPairs(SCOPE, VOCAB.design_options).length]).toEqual([58, 15]); // MB-27 increment 6 named re-pin (migration 329: one more principal base pair)
     expect(RB.optionPairs(SCOPE, VOCAB.design_options).slice(0, 7).every((p: { option_name: string }) => p.option_name === 'roof_form')).toBe(true);
   });
 });

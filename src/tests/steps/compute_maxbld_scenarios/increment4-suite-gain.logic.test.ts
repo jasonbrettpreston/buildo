@@ -122,7 +122,7 @@ describe('D-2 a: the comparison is data, keyed by the releasing clause, with the
     const s = seeds();
     expect(bt(s, SUITE).base_type).toBe(HOUSE);
     expect((s.buildingTypes.gain.fields as Json[]).map((f) => f.row)).toEqual(['gfa_max_m2', 'footprint_max_m2', 'storeys_max']);
-    expect((s.buildingTypes.gain.reasons as Json[]).map((r) => [r.clause, r.reason])).toEqual([['x.40.40(1)(C)', 'fsi_not_applicable'], ['x.30.40(1)(D)', 'coverage_45']]);
+    expect((s.buildingTypes.gain.reasons as Json[]).map((r) => [r.clause, r.reason])).toEqual([['x.40.40(1)(C)', 'fsi_not_applicable'], ['x.30.40(1)(D)', 'coverage_45'], ['150.10.40.40(1)', 'suite_share_not_read']]); // MB-27 increment 6 (named re-pin): the N1 cell differs between the suite house and the house; never named (no gain row reads it)
     expect(s.buildingTypes.gain.fail_reason).toBe('no_producer');
     expect(s.vocab.layer3.field_not_evaluated_reason).toContain('no_producer');
   });

@@ -56,11 +56,12 @@ describe('item 1 (D-1 a) + item 7 (D-4 a): the suite_height design option', () =
   it('the row is 70 wide: 55 base pairs, roof_form 56-62, suite_height 63-70 (low then tall), the option run sets the token and `sets`', () => {
     const rb = req(path.join(ROOT, 'scripts/lib/bylaw-resolution.js'));
     const base = rb.scopePairs(SCOPE); const opts = rb.optionPairs(SCOPE, VOCAB.design_options);
-    expect([base.length, base.length + opts.length]).toEqual([57, 72]); // Part B, P2 a (named re-pin; migration 321, width 72: the through-lot rear floor joins at base 37, the corner floor moves to 41, the option slots to 58-72); P1 b: (named re-pin; migration 321): the corner floor joins the base pairs at 40; the option slots move to 57-71 (the roof_form threshold 63, suite_height 64-71); the suite_height base positions 31-38 are before it and do not move
+    expect([base.length, base.length + opts.length]).toEqual([58, 73]); // MB-27 increment 6 named re-pin (migration 329: suite_interior_share_pct, width 73); was [57, 72]: Part B, P2 a (named re-pin; migration 321, width 72: the through-lot rear floor joins at base 37, the corner floor moves to 41, the option slots to 58-72); P1 b: (named re-pin; migration 321): the corner floor joins the base pairs at 40; the option slots move to 57-71 (the roof_form threshold 63, suite_height 64-71); the suite_height base positions 31-38 are before it and do not move
     const sh = opts.filter((p: Json) => p.option_name === 'suite_height');
     expect(sh.map((p: Json) => `${p.target}:${p.option}:${p.base_index + 1}`)).toEqual([
-      'gfa_m2:suite_low:31', 'gfa_m2:suite_tall:31', 'height_m:suite_low:32', 'height_m:suite_tall:32',
-      'rear_setback_m:suite_low:36', 'rear_setback_m:suite_tall:36', 'separation_m:suite_low:39', 'separation_m:suite_tall:39']); // P2 a (named re-pin): separation_m base position 38 -> 39 (the through-lot rear floor joins at 37)
+      'gfa_m2:suite_low:32', 'gfa_m2:suite_tall:32', 'height_m:suite_low:33', 'height_m:suite_tall:33',
+      'rear_setback_m:suite_low:37', 'rear_setback_m:suite_tall:37', 'separation_m:suite_low:40', 'separation_m:suite_tall:40']); // MB-27 increment 6 named re-pin (329): every garden_suite base position +1 (suite_interior_share_pct joins the principal pairs)
+    // // P2 a (named re-pin): separation_m base position 38 -> 39 (the through-lot rear floor joins at 37)
     expect(rb.optionLot({ flags: { suite_one_storey: false } }, sh[0]).flags).toEqual({ suite_one_storey: true, suite_height_over_4m: false });
     expect(rb.optionInputPaths(opts)).toEqual(['flags.flat_or_shallow_roof', 'flags.suite_height_over_4m', 'flags.suite_one_storey']);
   });
@@ -176,8 +177,8 @@ describe('migration 315 (written, not applied)', () => {
     const s = m315();
     const v = (name: string): string => (new RegExp(`CREATE OR REPLACE VIEW ${name} AS([\\s\\S]*?);\\n`).exec(s) as RegExpExecArray)[1] as string;
     const base = [...v('bylaw_resolution_results').matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
-    expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m').map((p, i) => ({ i: i + 1, ...p }))); // Part B, P1 b (named re-pin): 315's text is the 55-pair era; migration 321 is locked by bylaw-inc5-corner-floor.logic.test.ts
+    expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).filter((p) => p.target !== 'side_setback_street_floor_m' && p.target !== 'rear_setback_through_floor_m' && p.target !== 'suite_interior_share_pct').map((p, i) => ({ i: i + 1, ...p }))); // Part B, P1 b (named re-pin): 315's text is the 55-pair era; migration 321 is locked by bylaw-inc5-corner-floor.logic.test.ts
     const opt = [...v('bylaw_resolution_option_results').matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)', (NULL|'[a-z_]+'), (NULL|\d+)\)/g)].map((m) => [Number(m[1]), m[3], m[4] === 'NULL' ? null : m[4]!.slice(1, -1), m[5] === 'NULL' ? null : Number(m[5])]);
-    expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : (rb.scopePairs(SCOPE) as Json[]).filter((q) => q.target !== 'side_setback_street_floor_m' && q.target !== 'rear_setback_through_floor_m').findIndex((q) => q.structure === p.structure && q.target === p.target) + 1])); // P2 a (named re-pin): base positions in 315's own 55-pair text
+    expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [56 + k, p.target, p.option, p.base_index === null ? null : (rb.scopePairs(SCOPE) as Json[]).filter((q) => q.target !== 'side_setback_street_floor_m' && q.target !== 'rear_setback_through_floor_m' && q.target !== 'suite_interior_share_pct').findIndex((q) => q.structure === p.structure && q.target === p.target) + 1])); // P2 a (named re-pin): base positions in 315's own 55-pair text
   });
 });

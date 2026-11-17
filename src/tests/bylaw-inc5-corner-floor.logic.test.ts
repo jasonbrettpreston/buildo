@@ -49,11 +49,11 @@ describe('P1 (b): the corner street-side floor is its own garden_suite target', 
     expect(SCOPE.targets.principal).not.toContain(FLOOR);
     expect(SCOPE.targets.laneway_suite).not.toContain(FLOOR);
   });
-  it('the row is 72 wide (P2 a: the through-lot rear floor joined at 37): 57 base pairs, the option slots after them (roof_form, suite_height), the corner floor at base position 41', () => {
+  it('the row was 72 wide at 321 (live 73 since inc 6) (P2 a: the through-lot rear floor joined at 37): 57 base pairs, the option slots after them (roof_form, suite_height), the corner floor at base position 41', () => {
     const rb = req(path.join(ROOT, 'scripts/lib/bylaw-resolution.js'));
     const base = rb.scopePairs(SCOPE) as Json[]; const opts = rb.optionPairs(SCOPE, VOCAB.design_options) as Json[];
-    expect([base.length, base.length + opts.length]).toEqual([57, 72]);
-    expect(base.findIndex((p) => p.structure === 'garden_suite' && p.target === FLOOR) + 1).toBe(41);
+    expect([base.length, base.length + opts.length]).toEqual([58, 73]); // MB-27 increment 6 (named re-pin, migration 329): suite_interior_share_pct joins the base pairs (width 73)
+    expect(base.findIndex((p) => p.structure === 'garden_suite' && p.target === FLOOR) + 1).toBe(42); // +1: suite_interior_share_pct joins the principal pairs (increment 6)
   });
   it('150.7.60.20(6)(C) states the floor on its own target, 1.5 m, and no longer reads the principal side yard input', () => {
     const u = unit('150.7.60.20(6)#(6)(C)');
@@ -82,8 +82,9 @@ describe('migration 321 (written, not applied)', () => {
     const s = read(NAME);
     const v = (name: string): string => (new RegExp(`CREATE OR REPLACE VIEW ${name} AS([\\s\\S]*?);\\n`).exec(s) as RegExpExecArray)[1] as string;
     const base = [...v('bylaw_resolution_results').matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)'\)/g)].map((m) => ({ i: Number(m[1]), structure: m[2], target: m[3] }));
-    expect(base).toEqual((rb.scopePairs(SCOPE) as Json[]).map((p, i) => ({ i: i + 1, ...p })));
+    const live = rb.scopePairs(SCOPE) as Json[]; const era = live.filter((p) => p.target !== 'suite_interior_share_pct'); // 321 is the 57-pair era (increment 6 named re-pin)
+    expect(base).toEqual(era.map((p, i) => ({ i: i + 1, ...p })));
     const opt = [...v('bylaw_resolution_option_results').matchAll(/\((\d+), '([a-z_]+)', '([a-z0-9_]+)', (NULL|'[a-z_]+'), (NULL|\d+)\)/g)].map((m) => [Number(m[1]), m[3], m[4] === 'NULL' ? null : m[4]!.slice(1, -1), m[5] === 'NULL' ? null : Number(m[5])]);
-    expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [58 + k, p.target, p.option, p.base_index === null ? null : p.base_index + 1]));
+    expect(opt).toEqual((rb.optionPairs(SCOPE, VOCAB.design_options) as Json[]).map((p, k) => [58 + k, p.target, p.option, p.base_index === null ? null : era.indexOf(live[p.base_index] as Json) + 1]));
   });
 });

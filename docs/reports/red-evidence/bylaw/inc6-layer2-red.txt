@@ -1,0 +1,113 @@
+# inc6 red evidence: layer2 (lane INC6-B, 2026-11-15; tree = eda44dc7e + Part B patch unstaged, code absent)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-inc6b
+
+ ❯ src/tests/bylaw-inc6-layer2.logic.test.ts (7 tests | 6 failed) 26ms
+   × increment 6 Layer 2: the two new principal targets > the principal list gains N1 and N2 (27 -> 29); the suite structures are unchanged 2ms
+     → expected [ 'attic_counted_clearance_m', …(26) ] to include 'interior_floor_area_m2'
+   × increment 6 Layer 2: the two new principal targets > both are vocab dsl_targets (N1 a ratio of the interior floor area, N2 a length) 1ms
+     → expected undefined to be defined
+   × increment 6 Layer 2: the two new principal targets > adjudications key 150.10.40.40(1)#whole to N1 and 10.5.40.71(3) to N2 21ms
+     → expected false to be true // Object.is equality
+   × increment 6 migration 318: the Layer 2 night DDL, written not applied > exists and names the increment, the ledger claim and the widths 0ms
+     → expected false to be true // Object.is equality
+   × increment 6 migration 318: the Layer 2 night DDL, written not applied > holds no VALIDATE itself: the three VALIDATE lines sit commented at the foot (the 315 form) 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/318_resolve_bylaws_reno_targets.sql'
+   × increment 6: no law number in Layer 3 (R3-02) > 12.2 and 0.45 appear in no Layer 3 source outside comments 1ms
+     → expected 0 to be greater than 0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/bylaw-inc6-layer2.logic.test.ts > increment 6 Layer 2: the two new principal targets > the principal list gains N1 and N2 (27 -> 29); the suite structures are unchanged
+AssertionError: expected [ 'attic_counted_clearance_m', …(26) ] to include 'interior_floor_area_m2'
+ ❯ src/tests/bylaw-inc6-layer2.logic.test.ts:22:15
+     20|   it('the principal list gains N1 and N2 (27 -> 29); the suite structu…
+     21|     const p = scope.targets.principal as string[];
+     22|     expect(p).toContain(N1);
+       |               ^
+     23|     expect(p).toContain(N2);
+     24|     expect(p.length).toBe(29);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/tests/bylaw-inc6-layer2.logic.test.ts > increment 6 Layer 2: the two new principal targets > both are vocab dsl_targets (N1 a ratio of the interior floor area, N2 a length)
+AssertionError: expected undefined to be defined
+ ❯ src/tests/bylaw-inc6-layer2.logic.test.ts:31:19
+     29|     const t = readJson('scripts/seeds/bylaw/vocab.json').dsl_target as…
+     30|     expect(t[N1]).toBeDefined();
+     31|     expect(t[N2]).toBeDefined();
+       |                   ^
+     32|   });
+     33|   it('adjudications key 150.10.40.40(1)#whole to N1 and 10.5.40.71(3) …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/tests/bylaw-inc6-layer2.logic.test.ts > increment 6 Layer 2: the two new principal targets > adjudications key 150.10.40.40(1)#whole to N1 and 10.5.40.71(3) to N2
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/bylaw-inc6-layer2.logic.test.ts:37:43
+     35|     const mentions = (unit: string, target: string): boolean => new Re…
+     36|     expect(mentions('150.10.40.40(1)#whole', N1)).toBe(true);
+     37|     expect(mentions('10.5.40.71(3)', N2)).toBe(true);
+       |                                           ^
+     38|   });
+     39|   it('the option slots of increment 5 are untouched (roof_form and sui…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/tests/bylaw-inc6-layer2.logic.test.ts > increment 6 migration 318: the Layer 2 night DDL, written not applied > exists and names the increment, the ledger claim and the widths
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/bylaw-inc6-layer2.logic.test.ts:47:50
+     45|   const file = 'migrations/318_resolve_bylaws_reno_targets.sql';
+     46|   it('exists and names the increment, the ledger claim and the widths'…
+     47|     expect(fs.existsSync(path.join(ROOT, file))).toBe(true);
+       |                                                  ^
+     48|     const sql = fs.readFileSync(path.join(ROOT, file), 'utf8');
+     49|     expect(sql).toMatch(/MB-27 increment 6/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/tests/bylaw-inc6-layer2.logic.test.ts > increment 6 migration 318: the Layer 2 night DDL, written not applied > holds no VALIDATE itself: the three VALIDATE lines sit commented at the foot (the 315 form)
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/318_resolve_bylaws_reno_targets.sql'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ src/tests/bylaw-inc6-layer2.logic.test.ts:55:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/tests/bylaw-inc6-layer2.logic.test.ts > increment 6: no law number in Layer 3 (R3-02) > 12.2 and 0.45 appear in no Layer 3 source outside comments
+AssertionError: expected 0 to be greater than 0
+ ❯ src/tests/bylaw-inc6-layer2.logic.test.ts:74:26
+     72|     const cat = fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/l…
+     73|     const exprs = (JSON.parse(cat).rows as Json[]).filter((r) => r.inc…
+     74|     expect(exprs.length).toBeGreaterThan(0);
+       |                          ^
+     75|     for (const e of exprs) expect(e).not.toMatch(/(?<![\d.])(12\.2|0\.…
+     76|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 1 passed (7)
+   Start at  11:47:55
+   Duration  184ms (transform 27ms, setup 7ms, collect 3ms, tests 26ms, environment 0ms, prepare 16ms)
+
