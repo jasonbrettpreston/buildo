@@ -1,0 +1,120 @@
+{
+  "$comment": "M-321 pre-registration, task MB-27, prereg 62 file name prereg-MB-27-62 (R-MA; round 193, claimed in the ID ledger before use; lane INC6-PARTB, McIncrement step 5): the loop round of the single increment-6 Part B commit, the LAYER 3 part of increment 6 (renovation module, the ST-4 skip hook, descriptor bounds, migration 330 with its three settings, the catalogue, switchboard and building-types seeds, the ten reading rows, the 14 split literals moved into the building-types split declaration (the MB-67 exception closed), the report fields, the 10.5.40.71(3) citation correction of PANEL-71-3-4-20261116, option c). It follows the Layer 2 part (prereg-MB-27-61, round 189, C2-L2 5f0f32ba9, round-84 loop record) and the oracle-door note on M-481 (3eee4881d); Layer 2 is not touched (no new target, no table_version move, no night). No scorer move: the CoA and the 4d and cumulative expectation are carried from prereg 61 (MATCH 407 and 283). The one oracle-class change is the reading-row count line of bylaw-switchboard-confidence (+9 -> +19), listed in expected_value_changes through the oracle-first door (M-481, CHAT-225.Q-CONF). Committed alone, directly before the Part B commit. The Layer 3 recapture (the one D7 window) and migration 330 on dev follow the push.",
+  "disclosure": "Written 2026-11-16 after the targeted Part B tests were green on the build tree (16 files, 356 tests); the expectation is the measured state of prereg 61 (the Layer 2 part), since Part B moves no Layer 2 cell and no scorer line.",
+  "schema": "coa-round-prereg-v1",
+  "round": 193,
+  "task": "MB-27",
+  "increment": "1",
+  "rules": [
+    "M-191",
+    "M-253",
+    "M-267",
+    "M-314",
+    "M-198",
+    "M-284",
+    "M-465",
+    "M-475",
+    "M-481",
+    "M-483",
+    "M-498",
+    "M-321",
+    "R-MA"
+  ],
+  "plan_ref": "~/Buildo-scratch/mcbylaws/inc6/BUILD-PLAN.md (sections 1, 4, 6, 12, 14); ~/Buildo-scratch/mcbylaws/inc6/PARTB-SEQUENCE-20261116.md; ~/Buildo-scratch/mcbylaws/inc6/BUILD-LOG-20261116.md",
+  "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
+  "expected_moves": [],
+  "expected_totals": {
+    "ANSWERED": 7,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 30,
+    "MATCH": 407,
+    "NO ANSWER": 40,
+    "NOT MODELLED": 94,
+    "NOT SCORABLE": 25,
+    "OWED": 67
+  },
+  "expected_before_totals": {
+    "ANSWERED": 7,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 30,
+    "MATCH": 407,
+    "NO ANSWER": 40,
+    "NOT MODELLED": 94,
+    "NOT SCORABLE": 25,
+    "OWED": 67
+  },
+  "expected_figure_changes": [],
+  "expected_moves_4d": [],
+  "expected_totals_4d": {
+    "ANSWERED": 2,
+    "BY-LAW CHANGED": 4,
+    "DATA": 22,
+    "DIFFER": 23,
+    "MATCH": 283,
+    "NO ANSWER": 28,
+    "NOT MODELLED": 73,
+    "NOT SCORABLE": 12,
+    "OWED": 49
+  },
+  "expected_before_totals_4d": {
+    "ANSWERED": 2,
+    "BY-LAW CHANGED": 4,
+    "DATA": 22,
+    "DIFFER": 23,
+    "MATCH": 283,
+    "NO ANSWER": 28,
+    "NOT MODELLED": 73,
+    "NOT SCORABLE": 12,
+    "OWED": 49
+  },
+  "expected_figure_changes_4d": [],
+  "expected_moves_cumulative": [],
+  "expected_totals_cumulative": {
+    "ANSWERED": 9,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 34,
+    "MATCH": 459,
+    "NO ANSWER": 56,
+    "NOT MODELLED": 129,
+    "NOT SCORABLE": 34,
+    "OWED": 72
+  },
+  "expected_before_totals_cumulative": {
+    "ANSWERED": 9,
+    "BY-LAW CHANGED": 4,
+    "DATA": 24,
+    "DIFFER": 34,
+    "MATCH": 459,
+    "NO ANSWER": 56,
+    "NOT MODELLED": 129,
+    "NOT SCORABLE": 34,
+    "OWED": 72
+  },
+  "expected_figure_changes_cumulative": [],
+  "expected_before_totals_source": "prereg-MB-27-59.json (round 183, the newest MB prereg carrying totals) and the round-82 loop record, equal to the scores of the parent tree",
+  "expected_floors": "no floor line moves; floors-172.json unchanged",
+  "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure; no Layer 2 file, seed or migration of the Layer 2 part moves",
+  "expected_repin": [],
+  "expected_assertion_changes": [],
+  "expected_value_changes": [
+    {
+      "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+      "case": "bylaw-switchboard-confidence: MB-27 increment 6 Part B named re-pin (the ten increment-6 reading rows join the switchboard: the reading-row count line READINGS.length + 9 -> + 19; M-481)",
+      "ruling": "M-481",
+      "ruling_ref": "CHAT-225.Q-CONF",
+      "old": "expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 9); // MB-27 increment 5 (lane B5B-1, FD-4 a): +1 reading:fitted_house_storey_rule (medium; it cites no confidence-register line); was + 8 // +1 increment-4 reading (D-1 b); was + 7",
+      "new": null
+    },
+    {
+      "path": "src/tests/bylaw-switchboard-confidence.logic.test.ts",
+      "case": "bylaw-switchboard-confidence: MB-27 increment 6 Part B named re-pin (the ten increment-6 reading rows join the switchboard: the reading-row count line READINGS.length + 9 -> + 19; M-481)",
+      "ruling": "M-481",
+      "ruling_ref": "CHAT-225.Q-CONF",
+      "old": null,
+      "new": "expect(SW.rows.filter((x: Json) => x.kind === 'reading')).toHaveLength(READINGS.length + 19); // MB-27 increment 6 Part B (named re-pin): +10 readings (the renovation readings of BUILD-PLAN section 14, the frontage-is-a-cited-setting reading, the unsure-half and semi-suite readings and reading:reno_relief_71_4_not_applied_inc6, M-481, PANEL-71-3-4); was + 9 // MB-27 increment 5 (lane B5B-1, FD-4 a): +1 reading:fitted_house_storey_rule (medium; it cites no confidence-register line); was + 8 // +1 increment-4 reading (D-1 b); was + 7"
+    }
+  ]
+}
