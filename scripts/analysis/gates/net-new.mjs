@@ -15,7 +15,12 @@
 //      this); a SHALLOW clone cannot prove it and is refused (Spec 08 output panel round 1, 2026-10-18);
 //   2. no `legacy_citation` on the row (that field cites a legacy script — the opposite claim);
 //   3. a nonzero recipe — `docs/reports/golden/<slug>/recapture.json` has >=1 entry with
-//      `via` "bracket" or "env" (Spec 124 R-CZ, #38);
+//      `via` "bracket" or "env" (Spec 124 R-CZ, #38), OR (R-DK amended, operator "y" 2026-11-18,
+//      option Y) a `via` "plain" entry whose OWN POST (a `post/*.json` key) records run-1 writes above
+//      zero (summary records_new + records_updated) and `rerun_proof.answer === "PASS"`: the
+//      rewrite-in-place proof a step with no force bypass cannot otherwise give
+//      (countNonzeroRecipes; the evidence is read from the capture file, never from recapture.json text).
+//      Applies to every `legacy: "none"` row;
 //   4. red-first evidence — >=1 `docs/reports/red-evidence/<slug>/*.json` (gate K, #41);
 //   5. rerun-zero — every committed POST capture carries `rerun_proof.answer === "PASS"`.
 
@@ -44,12 +49,35 @@ export function netNewDecision(e) {
     return refuse('the script or its descriptor has no git history to check');
   }
   if (e.scriptFirstCommitTs < e.descriptorFirstCommitTs) return refuse('the script has git history before its descriptor (a legacy script exists)');
-  if (!(e.nonzeroRecipes > 0)) return refuse('no recapture.json entry with via bracket|env (R-CZ, #38)');
+  if (!(e.nonzeroRecipes > 0)) return refuse('no nonzero recipe: no recapture.json entry with via bracket|env, and no via plain entry whose own POST records run-1 writes and a rerun PASS (R-DK, amended 2026-11-18)');
   if (!(e.redEvidenceFiles > 0)) return refuse('no docs/reports/red-evidence/<slug>/*.json (gate K)');
   if (!(e.postCaptures > 0) || e.postsWithRerunPass !== e.postCaptures) {
     return refuse(`rerun-zero proof missing on ${e.postCaptures - e.postsWithRerunPass} of ${e.postCaptures} POST capture(s)`);
   }
   return { netNew: true, ok: true, why: NET_NEW_TAG };
+}
+
+/**
+ * PURE. Count the nonzero recipes in a recapture.json `captures` map (evidence item 3).
+ * `postOf(key)` returns the parsed capture document at that key, or null when it is missing or unparseable.
+ * A "plain" entry counts only when its key is a POST file (`post/<name>.json`, no traversal, never a PRE),
+ * its run 1 wrote rows (summary records_new + records_updated, as numbers, > 0) and its rerun is PASS.
+ * @param {Record<string, {via?: string}>} captures
+ * @param {(key: string) => any} postOf
+ * @returns {number}
+ */
+export function countNonzeroRecipes(captures, postOf) {
+  let n = 0;
+  for (const [key, c] of Object.entries(captures || {})) {
+    if (!c) continue;
+    if (c.via === 'bracket' || c.via === 'env') { n++; continue; }
+    if (c.via !== 'plain' || !/^post\/[^/]+\.json$/.test(key)) continue;
+    const doc = postOf(key);
+    const s = doc && doc.summary;
+    const writes = s ? Number(s.records_new || 0) + Number(s.records_updated || 0) : 0;
+    if (Number.isFinite(writes) && writes > 0 && doc.rerun_proof && doc.rerun_proof.answer === 'PASS') n++;
+  }
+  return n;
 }
 
 /** Oldest commit timestamp touching `rel`, following renames (`--follow`; `-m` so a file a merge introduced is seen), or null. */
@@ -88,7 +116,10 @@ export function loadNetNew(repoRoot) {
     const recipePath = path.join(golden, 'recapture.json');
     if (existsSync(recipePath)) {
       const caps = JSON.parse(readFileSync(recipePath, 'utf8')).captures || {};
-      nonzeroRecipes = Object.values(caps).filter((c) => c && (c.via === 'bracket' || c.via === 'env')).length;
+      // the same working-tree read as the rerun-proof loop below; a missing or unparseable POST is null
+      nonzeroRecipes = countNonzeroRecipes(caps, (key) => {
+        try { return JSON.parse(readFileSync(path.join(golden, key), 'utf8')); } catch { return null; }
+      });
     }
     const posts = jsonFiles(path.join(golden, 'post'));
     let postsWithRerunPass = 0;

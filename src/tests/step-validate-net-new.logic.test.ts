@@ -16,6 +16,7 @@ type NetNewVerdict = { netNew: boolean; ok: boolean; why: string };
 type NetNewModule = {
   NET_NEW_TAG: string;
   netNewDecision: (e: Record<string, unknown>) => NetNewVerdict;
+  countNonzeroRecipes: (captures: Record<string, unknown>, postOf: (key: string) => unknown) => number;
   loadNetNew: (repoRoot: string) => Map<string, NetNewVerdict>;
   isShallowRepo: (repoRoot: string) => boolean;
 };
@@ -75,6 +76,38 @@ describe('Spec 124 R-DK — a net-new step has no PRE; its reference is its own 
       expect(v.why, label).toMatch(/^legacy:"none" refused/);
     }
     expect(nn.netNewDecision({ ...GOOD, legacy: undefined }).netNew).toBe(false);
+  });
+
+  // Operator 2026-11-18, "y" to option Y (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry
+  // "RULED: push 6's last red test: option Y"; R-DK amended at 124a): a via "plain" entry is a nonzero
+  // recipe only when its own POST (a post/*.json key) records run-1 writes above zero and a rerun PASS.
+  it('countNonzeroRecipes: bracket and env count; plain counts only with run-1 writes and a rerun PASS from its own POST', () => {
+    const post = (records_new: unknown, records_updated: unknown, answer = 'PASS') => ({ summary: { records_new, records_updated }, rerun_proof: { answer } });
+    const docs: Record<string, unknown> = {
+      'post/wrote.json': post(0, 624325),
+      'post/new-only.json': post(5, undefined),
+      'post/strings.json': post('0', '3'),
+      'post/zero.json': post(0, 0),
+      'post/no-pass.json': post(0, 10, 'FAIL'),
+      'pre/wrote.json': post(0, 10),
+    };
+    const postOf = (key: string) => (key in docs ? docs[key] : null);
+    const one = (key: string, via: string) => nn.countNonzeroRecipes({ [key]: { via } }, postOf);
+    expect(one('post/x.json', 'bracket'), 'bracket').toBe(1);
+    expect(one('post/x.json', 'env'), 'env').toBe(1);
+    expect(one('post/wrote.json', 'plain'), 'plain with run-1 updates and rerun PASS').toBe(1);
+    expect(one('post/new-only.json', 'plain'), 'plain with run-1 inserts only').toBe(1);
+    expect(one('post/strings.json', 'plain'), 'plain with numeric strings').toBe(1);
+    expect(one('post/zero.json', 'plain'), 'plain with zero run-1 writes').toBe(0);
+    expect(one('post/no-pass.json', 'plain'), 'plain without a rerun PASS').toBe(0);
+    expect(one('post/missing.json', 'plain'), 'plain with a missing or unparseable POST').toBe(0);
+    expect(one('pre/wrote.json', 'plain'), 'plain keyed to a PRE').toBe(0);
+    expect(one('post/../pre/wrote.json', 'plain'), 'plain with a path-escaping key').toBe(0);
+    expect(nn.countNonzeroRecipes({ 'post/wrote.json': { via: 'plain' }, 'post/x.json': { via: 'bracket' } }, postOf), 'two qualifying entries').toBe(2);
+    const why = nn.netNewDecision({ ...GOOD, nonzeroRecipes: 0 }).why;
+    expect(why).toMatch(/bracket\|env/);
+    expect(why).toMatch(/plain/);
+    expect(why).toMatch(/R-DK/);
   });
 
   it('isShallowRepo fails closed: a directory git cannot answer for reads as shallow', () => {
