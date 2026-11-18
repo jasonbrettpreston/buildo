@@ -180,14 +180,16 @@ describe('arm L — MB-67 literal classes that are not by-law values (operator 2
     expect(got).toContain('FAIL:L:number:1e9');
   });
 
-  it('the named INC-6 C2a exception is per-file, per-literal and exact (27 hits)', () => {
+  it('the named INC-6 C2a exception has expired: split.js keeps only its plain names and joiner (3 hits); two-structure.js is unchanged (5 hits)', () => {
+    // literal-allow.json $comment, dated note 2026-11-16 (INC-6 C2a; operator "recommendation accepted move them in incr 6"): the by-law ids, kinds and epsilons moved into the building-types.json split declaration and their baseline entries were removed (shrink only).
     const b = realAllow.baseline;
     const sum = (f: string) => [...Object.values(b[f].numbers), ...Object.values(b[f].strings)].reduce((a: number, n) => a + (n as number), 0);
-    expect(b['scripts/lib/compute/maxbld/split.js'].strings.crossing).toBe(1);
-    expect(b['scripts/lib/compute/maxbld/split.js'].strings.row).toBe(4);
-    expect(b['scripts/lib/compute/maxbld/split.js'].numbers['1e-7']).toBe(1);
+    const split = b['scripts/lib/compute/maxbld/split.js'];
+    expect(split.numbers).toEqual({});
+    expect(split.strings).toEqual({ base: 2, '/': 1 });
+    for (const s of ['crossing', 'row', 'range_end', 'min', 'suite_gfa_lt_main', 'suite_gfa_cap', 'ancillary_coverage', 'A', 'lot_coverage', 'suite_region']) expect(split.strings[s], s).toBeUndefined();
     expect(b['scripts/lib/compute/maxbld/two-structure.js'].strings.principal).toBe(2);
-    expect(sum('scripts/lib/compute/maxbld/split.js')).toBe(19);
+    expect(sum('scripts/lib/compute/maxbld/split.js')).toBe(3);
     expect(sum('scripts/lib/compute/maxbld/two-structure.js')).toBe(5);
     expect(realAllow.$comment).toContain('increment 6 C2a');
   });
