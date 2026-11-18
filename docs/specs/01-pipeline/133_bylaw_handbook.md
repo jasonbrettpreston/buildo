@@ -483,7 +483,7 @@ First clause cited: 10.5.40.71.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vector frontage 12.0 vs 13.0 m (OWED, step commit ①); keying of 10.5.40.71(3) (OWED, keying… · +3 dated notes
 
 - **m.211** Renovation corrections. (1) Up room: 10.5.40.71(3) relieves setbacks only; the up-storey plate still meets the depth / length caps (additions must comply, 10.5.40.21(2), 10.5.40.31(2)) and, where FSI applies, also fsi × lot − existing GFA; the smaller cap binds.
-  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +5 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +7 dated notes
 
 - **m.372** OWED to Phase 3: cumulative 10.5.40 accuracy.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"
@@ -589,7 +589,7 @@ First clause cited: 150.15, 150.7, 150.50, 150.48, 150.10, 150.8.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 setback vectors (OWED, step commit ①) · +1 dated note
 
 - **m.198** Suite setbacks where a lot fact is not held.
-  Status: RATIFIED 2026-10-18 · Enforced by: lot-line classification (OWED, Spec 130 lane); P5.13 (OWED, ①) · +4 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: lot-line classification (OWED, Spec 130 lane); P5.13 (OWED, ①) · +5 dated notes
 
 - **m.199** A secondary suite may be up to 45 % of the interior floor area of the WHOLE house it sits in; the stricter reading is disclosed.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.10 suite_interior_sqm, INV-13 (OWED, step commit ①) · +2 dated notes
@@ -1150,7 +1150,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-10-20 · Enforced by: P2-0 round record; Spec 134 storage check at ② (OWED, step lane); spec134-resolve-bylaws.logic
 
 - **m.234** Layer 2 v1 is narrowed to what the scenario step needs.
-  Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic; the step's I1 check at ① (OWED, step lane)
+  Status: RULED 2026-10-20 · Enforced by: spec134-resolve-bylaws.logic; the step's I1 check at ① (OWED, step lane) · +1 dated note
 
 - **m.238** M-223(1) not_buildable scenario status
   Status: RULED 2026-10-20 · Enforced by: bylaw-fix-2.logic.test.ts › "CHAT-10 / M-223(1) — …"
@@ -1645,7 +1645,7 @@ Rows that cite no by-law clause: process, method and cross-cutting rulings.
   Status: RULED 2026-11-12 · Enforced by: the rehearsal gate ~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh (scratch tooling, sourced in each…
 
 - **m.515** McIncrement (MCINC-8): one ID ledger. Text home: Spec 08 §11.8.
-  Status: RULED 2026-11-12 · Enforced by: the ledger check ~/Buildo-scratch/ids/check.mjs (scratch tooling, node only): exit 1 when an MF, FE or MB… · +10 dated notes
+  Status: RULED 2026-11-12 · Enforced by: the ledger check ~/Buildo-scratch/ids/check.mjs (scratch tooling, node only): exit 1 when an MF, FE or MB… · +13 dated notes
 
 - **m.516** McStorage strategy ST-3: every Layer 2 night and every Layer 3 write night sizes storage twice on the final tree before the go: the exact G-STOR plus a measured test write. Text home: this row; pointers in Spec 08 §11.8 step 5 and M-492 follow with the build.
   Status: RULED 2026-11-12 · Enforced by: the night tooling (gstor-final.zsh, pgsize.mjs, scratch) and the G-STOR record… · +6 dated notes
