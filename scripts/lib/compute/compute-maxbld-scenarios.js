@@ -22,6 +22,7 @@ const cat = require('./maxbld/catalogue.js');
 const cellsLib = require('./maxbld/layer2-cells.js');
 const twoStructure = require('./maxbld/two-structure.js');
 const splitLib = require('./maxbld/split.js');
+const renovation = require('./maxbld/renovation.js');
 const factsLib = require('./maxbld/neighbour-facts.js');
 // MB-27 R2 (operator "Q-r2 a"): ROOF-5's word is Layer 2's own rule, recomputed on read through its withNotAbove, never re-derived here
 const { withNotAbove, traceResult, permissionDisclosuresOf, makeEnv } = require('../bylaw-materialize.js');
@@ -193,6 +194,7 @@ function buildParcelRows(parcelInput, seeds, meta) {
   const only = typeof p.buildingType === 'string' ? p.buildingType : null;
   for (const bt of toList(seeds && seeds.buildingTypes && seeds.buildingTypes.rows)) {
     if (only !== null && bt.id !== only) continue;
+    if (!renovation.renovationApplies(p, bt.id)) continue; // ST-4 (MB-27 increment 6): no owner entry, no renovation row
     const results = runAllRows({ ...inputs, buildingType: bt.id });
     for (const result of results) out.push(dbRow(p.parcel_id, bt.id, bt.increment, result, s));
   }
@@ -373,6 +375,7 @@ function oneParcel(source, lookups) {
   let unparseable = 0;
   const designOptions = L.vocab && L.vocab.design_options;
   for (const bt of toList(L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.rows)) {
+    if (!renovation.renovationApplies(source, bt.id)) continue; // ST-4 (MB-27 increment 6): a renovation type is neither decoded nor counted without the owner entry
     if (twoStructure.isAddon(bt)) {
       // MB-27 increment 5 (B5B-2, L3-2): an add-on type reads the class's principal cells and its garden-suite cells under the declared prefix
       const two = twoStructure.decodeAddon(toList(source.cells), toList(source.options), bt, { buildingTypes: L.seeds && L.seeds.buildingTypes, designOptions, notAbove: withNotAbove });
@@ -394,6 +397,7 @@ function oneParcel(source, lookups) {
   const U = cat.unitsFor(L.seeds && L.seeds.catalogue, L.vocab, L.seeds && L.seeds.buildingTypes);
   const perType = {};
   for (const bt of toList(L.seeds && L.seeds.buildingTypes && L.seeds.buildingTypes.rows)) {
+    if (!renovation.renovationApplies(source, bt.id)) continue;
     const perm = l2Classes.includes(bt.class)
       ? cellsLib.decodePermission(source.lot || {}, bt.class, { classes: l2Classes, permissionKeys: L.permissionKeys, texts: L.texts })
       : {};
@@ -401,6 +405,7 @@ function oneParcel(source, lookups) {
     const words = l2Classes.includes(bt.class) ? disclosureWords(source, bt, Object.keys(decoded[bt.id]), L) : { l2Flags: {}, permFlags: [] };
     const parcelInput = {
       parcel_id: source.parcel_id,
+      owner_input: source.owner_input,
       buildingType: bt.id, // E7 item 2 (M-494): buildParcelRows runs this one type; the loop above is the only per-type loop
       l2: decoded[bt.id],
       l2Options: options[bt.id],

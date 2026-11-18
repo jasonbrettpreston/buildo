@@ -1,0 +1,184 @@
+# inc6 red evidence: renovation-seeds (lane INC6-B, 2026-11-15; tree = eda44dc7e + Part B patch unstaged, code absent)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-inc6b
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts (11 tests | 9 failed) 23ms
+   × increment 6 (1): the six renovation types are building-types rows > each row is class detached_house, principal, increment 6, switched by building_type:<id>, ruled LC-16 4ms
+     → renovation_addition: expected [ undefined, undefined, …(2) ] to deeply equal [ 'detached_house', 'principal', …(2) ]
+   × increment 6 (2): the switches and the new catalogue rows > each renovation type has its building_type switch, on 2ms
+     → renovation_addition: expected [ undefined, undefined ] to deeply equal [ 'building_type', 'on' ]
+   × increment 6 (2): the switches and the new catalogue rows > every increment-6 catalogue row names only existing building types, carries clauses and a unit, and has its formula switch 2ms
+     → expected 0 to be greater than 0
+   × increment 6 (3): the settings are law in data > the suite interior share is 0.85, bounded, and labelled an operator value 2ms
+     → expected undefined to be close to 0.85, received difference is NaN, but expected 5e-10
+   × increment 6 (3): the settings are law in data > the basement livable share is 1.0 under a ceiling of 1.0 3ms
+     → expected undefined to be close to 1, received difference is NaN, but expected 5e-10
+   × increment 6 (4): the semi seam (UB-7) > the map keys the strings "false" and "true", each to an existing building type, and names its reader file 2ms
+     → expected [] to deeply equal [ 'false', 'reader', 'true' ]
+   × increment 6 (4): the semi seam (UB-7) > both halves take the detached house envelope today (UB-7) 2ms
+     → Cannot read properties of undefined (reading 'false')
+   × increment 6 (4): the semi seam (UB-7) > the seam is read through the map only: no other maxbld module carries the semi envelope type 2ms
+     → expected 'undefined' to be 'string' // Object.is equality
+   × increment 6 (5): the increment-6 module names no retired engine > renovation.js exists and mentions no retired module 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (1): the six renovation types are building-types rows > each row is class detached_house, principal, increment 6, switched by building_type:<id>, ruled LC-16
+AssertionError: renovation_addition: expected [ undefined, undefined, …(2) ] to deeply equal [ 'detached_house', 'principal', …(2) ]
+
+- Expected
++ Received
+
+  Array [
+-   "detached_house",
+-   "principal",
+-   "6",
+-   "building_type:renovation_addition",
++   undefined,
++   undefined,
++   undefined,
++   undefined,
+  ]
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:77:77
+     75|       const id = RENO_TYPES[code];
+     76|       const row = rowOf(rows, id);
+     77|       expect([row?.class, row?.structure, row?.increment, row?.switch]…
+       |                                                                             ^
+     78|       expect((row?.rules as string[]) ?? [], id).toContain('LC-16');
+     79|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (2): the switches and the new catalogue rows > each renovation type has its building_type switch, on
+AssertionError: renovation_addition: expected [ undefined, undefined ] to deeply equal [ 'building_type', 'on' ]
+
+- Expected
++ Received
+
+  Array [
+-   "building_type",
+-   "on",
++   undefined,
++   undefined,
+  ]
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:92:53
+     90|     for (const code of RENO_ROWS) {
+     91|       const s = rowOf(sw.rows as Json[], `building_type:${RENO_TYPES[c…
+     92|       expect([s?.kind, s?.state], RENO_TYPES[code]).toEqual(['building…
+       |                                                     ^
+     93|     }
+     94|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (2): the switches and the new catalogue rows > every increment-6 catalogue row names only existing building types, carries clauses and a unit, and has its formula switch
+AssertionError: expected 0 to be greater than 0
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:99:25
+     97|     const ids = new Set((s.buildingTypes.rows as Json[]).map((b) => b.…
+     98|     const rows = newCatalogueRows(s.catalogue);
+     99|     expect(rows.length).toBeGreaterThan(0);
+       |                         ^
+    100|     const board = boardIds(s.switchboard);
+    101|     const unpaired = rows.filter((r) => !board.includes(`formula:${r.i…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (3): the settings are law in data > the suite interior share is 0.85, bounded, and labelled an operator value
+AssertionError: expected undefined to be close to 0.85, received difference is NaN, but expected 5e-10
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:113:24
+    111|   it('the suite interior share is 0.85, bounded, and labelled an opera…
+    112|     const v = seeds().logicVariables[SUITE_SHARE] as Json;
+    113|     expect(v?.default).toBeCloseTo(0.85, 9);
+       |                        ^
+    114|     expect(typeof v?.min).toBe('number');
+    115|     expect(typeof v?.max).toBe('number');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (3): the settings are law in data > the basement livable share is 1.0 under a ceiling of 1.0
+AssertionError: expected undefined to be close to 1, received difference is NaN, but expected 5e-10
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:122:24
+    120|   it('the basement livable share is 1.0 under a ceiling of 1.0', () =>…
+    121|     const v = seeds().logicVariables[BASEMENT_SHARE] as Json;
+    122|     expect(v?.default).toBeCloseTo(1.0, 9);
+       |                        ^
+    123|     expect(v?.max).toBeCloseTo(1.0, 9);
+    124|     expect(typeof v?.min).toBe('number');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (4): the semi seam (UB-7) > the map keys the strings "false" and "true", each to an existing building type, and names its reader file
+AssertionError: expected [] to deeply equal [ 'false', 'reader', 'true' ]
+
+- Expected
++ Received
+
+- Array [
+-   "false",
+-   "reader",
+-   "true",
+- ]
++ Array []
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:145:43
+    143|   it('the map keys the strings "false" and "true", each to an existing…
+    144|     const map = seam();
+    145|     expect(Object.keys(map ?? {}).sort()).toEqual(['false', 'reader', …
+       |                                           ^
+    146|     const ids = new Set((seeds().buildingTypes.rows as Json[]).map((b)…
+    147|     expect(ids.has(map.false)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (4): the semi seam (UB-7) > both halves take the detached house envelope today (UB-7)
+TypeError: Cannot read properties of undefined (reading 'false')
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:152:18
+    150|   });
+    151|   it('both halves take the detached house envelope today (UB-7)', () =…
+    152|     expect([seam().false, seam().true]).toEqual(['detached_house', 'de…
+       |                  ^
+    153|   });
+    154|   it('the seam is read through the map only: no other maxbld module ca…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (4): the semi seam (UB-7) > the seam is read through the map only: no other maxbld module carries the semi envelope type
+AssertionError: expected 'undefined' to be 'string' // Object.is equality
+
+Expected: "string"
+Received: "undefined"
+
+ ❯ mapReader src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:137:26
+    135|   const mapReader = (): string => {
+    136|     const named = seam()?.reader as string;
+    137|     expect(typeof named).toBe('string');
+       |                          ^
+    138|     const files = maxbldSources().filter((f) => path.basename(f) === n…
+    139|     expect(files).toHaveLength(1);
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:155:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts > increment 6 (5): the increment-6 module names no retired engine > renovation.js exists and mentions no retired module
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:27:46
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-seeds.logic.test.ts:165:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 2 passed (11)
+   Start at  11:47:26
+   Duration  185ms (transform 40ms, setup 8ms, collect 4ms, tests 23ms, environment 0ms, prepare 17ms)
+

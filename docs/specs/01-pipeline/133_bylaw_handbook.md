@@ -483,7 +483,7 @@ First clause cited: 10.5.40.71.
   Status: RATIFIED 2026-10-18 · Enforced by: Spec 78 P5.13 vector frontage 12.0 vs 13.0 m (OWED, step commit ①); keying of 10.5.40.71(3) (OWED, keying… · +3 dated notes
 
 - **m.211** Renovation corrections. (1) Up room: 10.5.40.71(3) relieves setbacks only; the up-storey plate still meets the depth / length caps (additions must comply, 10.5.40.21(2), 10.5.40.31(2)) and, where FSI applies, also fsi × lot − existing GFA; the smaller cap binds.
-  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +4 dated notes
+  Status: RATIFIED 2026-10-18 · Enforced by: P5.13 (OWED, ①) · +5 dated notes
 
 - **m.372** OWED to Phase 3: cumulative 10.5.40 accuracy.
   Status: RULED 2026-10-29 · OWED · Enforced by: chat-rulings-register.logic.test.ts › "CHAT-199 (batch 2026-10-29-ab)"

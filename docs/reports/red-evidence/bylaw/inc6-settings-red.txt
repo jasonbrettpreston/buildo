@@ -1,0 +1,251 @@
+# inc6 red evidence: settings (lane INC6-B, 2026-11-15; tree = eda44dc7e + Part B patch unstaged, code absent)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-inc6b
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts (16 tests | 14 failed) 14ms
+   × INC6-B (1): migration 319 seeds the two renovation settings > the migration file exists (model: migrations/316_layer3_increment5_settings.sql) 3ms
+     → expected false to be true // Object.is equality
+   × INC6-B (1): migration 319 seeds the two renovation settings > seeds exactly the two names with 0.85 and 1.0, idempotently 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+   × INC6-B (1): migration 319 seeds the two renovation settings > carries a confidence on each description and no assume-1-storey setting 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+   × INC6-B (1): migration 319 seeds the two renovation settings > comments a DOWN rollback naming both keys 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+   × INC6-B (2): the seed and the migration agree > compute_maxbld_scenarios_suite_interior_gfa_share is a seeded number with its bounds and its confidence 2ms
+     → expected undefined to be 'number' // Object.is equality
+   × INC6-B (2): the seed and the migration agree > compute_maxbld_scenarios_reno_basement_livable_share is a seeded number with its bounds and its confidence 1ms
+     → expected undefined to be 'number' // Object.is equality
+   × INC6-B (2): the seed and the migration agree > the basement livable share takes 1.0 as its ceiling and the suite share stays under the whole 1ms
+     → expected undefined to be 1 // Object.is equality
+   × INC6-B (2): the seed and the migration agree > the migration rows carry the seed names, values and bounds in their text 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+   × INC6-B (3): the descriptor declares both names and the Admin Control Panel carries them > compute_maxbld_scenarios_suite_interior_gfa_share is declared bounded, on_invalid fail 0ms
+     → compute_maxbld_scenarios_suite_interior_gfa_share: expected undefined to be truthy
+   × INC6-B (3): the descriptor declares both names and the Admin Control Panel carries them > compute_maxbld_scenarios_reno_basement_livable_share is declared bounded, on_invalid fail 0ms
+     → compute_maxbld_scenarios_reno_basement_livable_share: expected undefined to be truthy
+   × INC6-B (3): the descriptor declares both names and the Admin Control Panel carries them > the generated groups file carries both keys (generated: presence only) 2ms
+     → compute_maxbld_scenarios_suite_interior_gfa_share: expected [ 'los_multiplier_bid', …(1048) ] to include 'compute_maxbld_scenarios_suite_interi…'
+   × INC6-B (4): neither renovation name is retired, and renovation.js reads no retired name > renovation.js names no retired engine setting 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+   × INC6-B (5): renovation.js takes its numbers only from the settings argument > exports renovationResults and holds no numeric literal 0.85, 0.5, 30 or 12.2 outside comments 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+   × INC6-B (5): renovation.js takes its numbers only from the settings argument > reads each of its settings through the argument name 0ms
+     → ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (1): migration 319 seeds the two renovation settings > the migration file exists (model: migrations/316_layer3_increment5_settings.sql)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:51:31
+     49| describe('INC6-B (1): migration 319 seeds the two renovation settings'…
+     50|   it('the migration file exists (model: migrations/316_layer3_incremen…
+     51|     expect(exists(MIGRATION)).toBe(true);
+       |                               ^
+     52|   });
+     53| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (1): migration 319 seeds the two renovation settings > seeds exactly the two names with 0.85 and 1.0, idempotently
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:15:46
+ ❯ upRows src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:38:19
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:55:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (1): migration 319 seeds the two renovation settings > carries a confidence on each description and no assume-1-storey setting
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:15:46
+ ❯ upRows src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:38:19
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:61:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (1): migration 319 seeds the two renovation settings > comments a DOWN rollback naming both keys
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:15:46
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:73:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (2): the seed and the migration agree > compute_maxbld_scenarios_suite_interior_gfa_share is a seeded number with its bounds and its confidence
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (2): the seed and the migration agree > compute_maxbld_scenarios_reno_basement_livable_share is a seeded number with its bounds and its confidence
+AssertionError: expected undefined to be 'number' // Object.is equality
+
+- Expected: 
+"number"
+
++ Received: 
+undefined
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:82:22
+     80|   it.each(NAMES)('%s is a seeded number with its bounds and its confid…
+     81|     const row = seedRow(name);
+     82|     expect(row.type).toBe('number');
+       |                      ^
+     83|     expect(row.default).toBe(VALUES[name]);
+     84|     expect(typeof row.min).toBe('number');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (2): the seed and the migration agree > the basement livable share takes 1.0 as its ceiling and the suite share stays under the whole
+AssertionError: expected undefined to be 1 // Object.is equality
+
+- Expected: 
+1
+
++ Received: 
+undefined
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:92:40
+     90| 
+     91|   it('the basement livable share takes 1.0 as its ceiling and the suit…
+     92|     expect(seedRow(LIVABLE_SHARE).max).toBe(1.0);
+       |                                        ^
+     93|     expect(seedRow(LIVABLE_SHARE).min).toBeLessThan(1.0);
+     94|     expect(seedRow(SUITE_SHARE).max).toBeLessThanOrEqual(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (2): the seed and the migration agree > the migration rows carry the seed names, values and bounds in their text
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/migrations/319_layer3_increment6_settings.sql'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:15:46
+ ❯ upRows src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:38:19
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:98:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (3): the descriptor declares both names and the Admin Control Panel carries them > compute_maxbld_scenarios_suite_interior_gfa_share is declared bounded, on_invalid fail
+AssertionError: compute_maxbld_scenarios_suite_interior_gfa_share: expected undefined to be truthy
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:116:24
+    114|   it.each(NAMES)('%s is declared bounded, on_invalid fail', (name) => {
+    115|     const decl = declared().find((d) => d.name === name);
+    116|     expect(decl, name).toBeTruthy();
+       |                        ^
+    117|     const seed = seedRow(name);
+    118|     expect([decl!.min, decl!.max, decl!.on_invalid]).toEqual([seed.min…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (3): the descriptor declares both names and the Admin Control Panel carries them > compute_maxbld_scenarios_reno_basement_livable_share is declared bounded, on_invalid fail
+AssertionError: compute_maxbld_scenarios_reno_basement_livable_share: expected undefined to be truthy
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:116:24
+    114|   it.each(NAMES)('%s is declared bounded, on_invalid fail', (name) => {
+    115|     const decl = declared().find((d) => d.name === name);
+    116|     expect(decl, name).toBeTruthy();
+       |                        ^
+    117|     const seed = seedRow(name);
+    118|     expect([decl!.min, decl!.max, decl!.on_invalid]).toEqual([seed.min…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (3): the descriptor declares both names and the Admin Control Panel carries them > the generated groups file carries both keys (generated: presence only)
+AssertionError: compute_maxbld_scenarios_suite_interior_gfa_share: expected [ 'los_multiplier_bid', …(1048) ] to include 'compute_maxbld_scenarios_suite_interi…'
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:123:50
+    121|   it('the generated groups file carries both keys (generated: presence…
+    122|     const keys = groupKeys();
+    123|     for (const name of NAMES) expect(keys, name).toContain(name);
+       |                                                  ^
+    124|   });
+    125| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (4): neither renovation name is retired, and renovation.js reads no retired name > renovation.js names no retired engine setting
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:15:46
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:134:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (5): renovation.js takes its numbers only from the settings argument > exports renovationResults and holds no numeric literal 0.85, 0.5, 30 or 12.2 outside comments
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:15:46
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:144:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/14]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts > INC6-B (5): renovation.js takes its numbers only from the settings argument > reads each of its settings through the argument name
+Error: ENOENT: no such file or directory, open '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+ ❯ Object.mapped [as readFileSync] src/tests/helpers/before-image-sandbox.ts:65:25
+     63|       const original = fsTable[name] as FsFn;
+     64|       fsTable[name] = function mapped(this: unknown, first: unknown, .…
+     65|         return original.call(this, mapBeforeImagePath(first), ...rest);
+       |                         ^
+     66|       };
+     67|     }
+ ❯ readText src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:15:46
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-settings.logic.test.ts:152:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/14]⎯
+
+ Test Files  1 failed (1)
+      Tests  14 failed | 2 passed (16)
+   Start at  11:47:27
+   Duration  207ms (transform 36ms, setup 9ms, collect 6ms, tests 14ms, environment 0ms, prepare 19ms)
+

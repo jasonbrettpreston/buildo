@@ -57,6 +57,8 @@ describe('E7 trigger vector: an exception one-unit cap inside the suite scope', 
       ['detached_house', 1, 1], ['detached_houseplex', 4, 1], ['house_with_secondary_suite', 2, 2],
       // MB-27 increment 5 (lane B5B-2, item 11 (b)): the three add-on types carry their principal type's units and floor
       ['detached_house_garden_suite', 1, 1], ['detached_houseplex_garden_suite', 4, 1], ['house_with_secondary_suite_garden_suite', 2, 2],
+      // MB-27 increment 6 (named re-pin): the six renovation types carry units 1 and floor 1 (their units come from the stored detached_house units_max)
+      ['renovation_addition', 1, 1], ['renovation_expand', 1, 1], ['renovation_interior', 1, 1], ['renovation_basement_new', 1, 1], ['renovation_basement_finish', 1, 1], ['renovation_basement_underpinned', 1, 1],
     ]);
   });
 });

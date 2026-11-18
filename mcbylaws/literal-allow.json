@@ -1,5 +1,5 @@
 {
-  "$comment": "Arm L (MB-67): the ONLY literals a by-law file may hold besides the four number sentinels 0, 1, 2, 100. SHRINK-ONLY baseline (R-LA): a listed file may keep the literals counted at the base, never add one; the reviewer lowers it, nothing here raises it. Edited by MB-67's lane only. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT; operator \"all recommendations accepted\", review-20261113 K3 + Q3): baseline entries added for the by-law code paths and scripts/analysis/bylaw-validation scripts newly in literal_scope, set to the literals on the tip at 33af0759a. Shrink-only: they move out of code in the planned evaluator change after INC5-NIGHT, never grow. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT, after increment 5 Part A landed at 3dc51a394): baseline entries for the literals the landed inc-5 files hold (assembly.mjs, coa-scorecard.mjs, golden-lots-cases.mjs, bylaw-resolution.js), set at that tip. Shrink-only; no code changed. Dated note 2026-11-16 (MB-67 owner commit, lane MB67-LIT; operator \"1. just to understand we get rid of the 51 errors and save teh rest.  Approved\", panel ~/Buildo-scratch/mcbylaws/inc5/m14/PANEL-LITERALS-20261116.md): status_words gain the evaluator closed status words computed, permitted, missing_input:permitted, missing_input:absent_target, missing_input:gate; the scanner no longer flags a require() source, 'use strict', a typeof operand or an Error message argument (literal-scan.mjs, L11). New files still get no baseline; no baseline entry added or raised; spec note in 124a R-LA. Dated note 2026-11-16 (MB-67 owner commit 2, lane MB67-LIT; operator \"recommendation accepted move them in incr 6\" and \"1. just to understand we get rid of the 51 errors and save teh rest.  Approved\"; list ~/Buildo-scratch/mcbylaws/inc5/m14/D78-REMAINING-LITERALS.md): NAMED EXCEPTION, per-file per-literal baseline entries (27 hits) for scripts/lib/compute/maxbld/split.js and two-structure.js (new files), compute-maxbld-scenarios.js and scripts/analysis/bylaw/evaluate-l3.mjs, set to the residual arm-L hits on the D-78 staged tree. By-law ids, kinds and the epsilons 1e-9 and 1e-7: expires when MB-27 increment 6 C2a lands (INC-6 C2a moves them into the building-types.json split declaration). SQL text, single-character joiners and plain names (base, principal, flags, l2, shared): expire at the same point, owners INC-6 C2a and MB-67, when the scanner is extended (SQL text, joiners) or they move into a vocabulary. Shrink-only, never raised; not a precedent for any other new file.",
+  "$comment": "Arm L (MB-67): the ONLY literals a by-law file may hold besides the four number sentinels 0, 1, 2, 100. SHRINK-ONLY baseline (R-LA): a listed file may keep the literals counted at the base, never add one; the reviewer lowers it, nothing here raises it. Edited by MB-67's lane only. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT; operator \"all recommendations accepted\", review-20261113 K3 + Q3): baseline entries added for the by-law code paths and scripts/analysis/bylaw-validation scripts newly in literal_scope, set to the literals on the tip at 33af0759a. Shrink-only: they move out of code in the planned evaluator change after INC5-NIGHT, never grow. Dated note 2026-11-13 (MB-67 owner commit, lane MB67-LIT, after increment 5 Part A landed at 3dc51a394): baseline entries for the literals the landed inc-5 files hold (assembly.mjs, coa-scorecard.mjs, golden-lots-cases.mjs, bylaw-resolution.js), set at that tip. Shrink-only; no code changed. Dated note 2026-11-16 (MB-67 owner commit, lane MB67-LIT; operator \"1. just to understand we get rid of the 51 errors and save teh rest.  Approved\", panel ~/Buildo-scratch/mcbylaws/inc5/m14/PANEL-LITERALS-20261116.md): status_words gain the evaluator closed status words computed, permitted, missing_input:permitted, missing_input:absent_target, missing_input:gate; the scanner no longer flags a require() source, 'use strict', a typeof operand or an Error message argument (literal-scan.mjs, L11). New files still get no baseline; no baseline entry added or raised; spec note in 124a R-LA. Dated note 2026-11-16 (MB-67 owner commit 2, lane MB67-LIT; operator \"recommendation accepted move them in incr 6\" and \"1. just to understand we get rid of the 51 errors and save teh rest.  Approved\"; list ~/Buildo-scratch/mcbylaws/inc5/m14/D78-REMAINING-LITERALS.md): NAMED EXCEPTION, per-file per-literal baseline entries (27 hits) for scripts/lib/compute/maxbld/split.js and two-structure.js (new files), compute-maxbld-scenarios.js and scripts/analysis/bylaw/evaluate-l3.mjs, set to the residual arm-L hits on the D-78 staged tree. By-law ids, kinds and the epsilons 1e-9 and 1e-7: expires when MB-27 increment 6 C2a lands (INC-6 C2a moves them into the building-types.json split declaration). SQL text, single-character joiners and plain names (base, principal, flags, l2, shared): expire at the same point, owners INC-6 C2a and MB-67, when the scanner is extended (SQL text, joiners) or they move into a vocabulary. Shrink-only, never raised; not a precedent for any other new file. Dated note 2026-11-16 (INC-6 C2a, lane INC6-BUILD; operator 'recommendation accepted move them in incr 6'): the by-law ids, kinds and epsilons of split.js (1e-9, 1e-7, range_end, min, row x4, crossing, suite_gfa_lt_main, suite_gfa_cap, ancillary_coverage, A x2, lot_coverage, suite_region: 14 distinct, 2 numbers + 12 strings, 17 hits) moved into the building-types.json split declaration; their baseline entries are removed (shrink only). The plain names and joiners (base, /, principal, flags, l2, shared) and SQL text remain, owners MB-67 and a vocabulary move.",
   "numbers": [],
   "status_words": [
     "not_evaluated",
@@ -13808,23 +13808,10 @@
       }
     },
     "scripts/lib/compute/maxbld/split.js": {
-      "numbers": {
-        "1e-9": 1,
-        "1e-7": 1
-      },
+      "numbers": {},
       "strings": {
-        "range_end": 1,
-        "min": 1,
-        "row": 4,
-        "crossing": 1,
         "base": 2,
-        "/": 1,
-        "suite_gfa_lt_main": 1,
-        "suite_gfa_cap": 1,
-        "ancillary_coverage": 1,
-        "A": 2,
-        "lot_coverage": 1,
-        "suite_region": 1
+        "/": 1
       }
     },
     "scripts/lib/compute/maxbld/two-structure.js": {

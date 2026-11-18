@@ -95,8 +95,8 @@ function candidateDepths(base, decl, ctx, lo, hi) {
   };
   const declared = [...toList(decl.common_candidates), ...toList(ctx.path.candidates)];
   for (const c of declared) {
-    if (c.kind === 'range_end') add(c.end === 'min' ? lo : hi);
-    else if (c.kind === 'row') {
+    if (c.kind === decl.kinds.range_end) add(c.end === decl.kinds.range_min_end ? lo : hi);
+    else if (c.kind === decl.kinds.row) {
       // a row's depth is rounded at 9 places by the evaluator (env.round9): the kink itself may sit just on the refused side of a minimum, so its two neighbours at the declared nudge are candidates too
       const v = num(rows.runRowsIn([c.row], ctx.arm, base)[c.row]);
       if (v !== null) for (const k of [0, -1, 1]) add(v + k * decl.row_nudge_m);
@@ -104,14 +104,14 @@ function candidateDepths(base, decl, ctx, lo, hi) {
   }
   // crossings: on each interval between the candidates so far, both rows are straight lines: the root is exact
   const pts = [...found.keys()].sort((a, b) => a - b);
-  const crossings = declared.filter((c) => c.kind === 'crossing');
+  const crossings = declared.filter((c) => c.kind === decl.kinds.crossing);
   if (crossings.length) {
     const extra = [...new Set(crossings.flatMap((c) => [c.a, c.b]))];
     for (let i = 0; i + 1 < pts.length; i += 1) {
       const x0 = pts[i];
       const x1 = pts[i + 1];
-      if (!(x1 - x0 > 1e-9)) continue;
-      const e = (x1 - x0) * 1e-7;
+      if (!(x1 - x0 > decl.crossing.min_interval)) continue;
+      const e = (x1 - x0) * decl.crossing.nudge_factor;
       const g = [x0 + e, x1 - e].map((d) => evaluate(base, decl, ctx, d, extra));
       if (!g[0] || !g[1]) continue;
       for (const c of crossings) {
@@ -179,13 +179,13 @@ function bindingOf(ev, c, decl, seeds) {
   const cap = x(o.cap_row) === null ? null : x(o.cap_row) - margin;
   const st = c.storeys;
   const fromFootprint = st * c.suiteFootprint;
-  if (c.suite < Math.min(fromFootprint, cap === null ? Infinity : cap) - decl.tie_tolerance_m2) return 'suite_gfa_lt_main';
-  if (cap !== null && cap <= fromFootprint + decl.tie_tolerance_m2) return 'suite_gfa_cap'; // a tie with the cap is the cap (the key checks the cap after the region)
+  if (c.suite < Math.min(fromFootprint, cap === null ? Infinity : cap) - decl.tie_tolerance_m2) return decl.binding_ids.lt_main;
+  if (cap !== null && cap <= fromFootprint + decl.tie_tolerance_m2) return decl.binding_ids.cap; // a tie with the cap is the cap (the key checks the cap after the region)
   const region = x(o.region_row);
   const anc = x(o.ancillary_row) === null ? null : (x(o.ancillary_row) - margin);
-  if (c.path === decl.tie_path && anc !== null && region !== null && anc < st * region - decl.tie_tolerance_m2) return 'ancillary_coverage'; // strictly smaller than the region (the key)
-  if (c.path === 'A' && region !== null && round9(st * region) > round9(fromFootprint)) return 'lot_coverage';
-  return 'suite_region';
+  if (c.path === decl.tie_path && anc !== null && region !== null && anc < st * region - decl.tie_tolerance_m2) return decl.binding_ids.ancillary; // strictly smaller than the region (the key)
+  if (c.path === decl.path_a && region !== null && round9(st * region) > round9(fromFootprint)) return decl.binding_ids.lot_coverage;
+  return decl.binding_ids.region;
 }
 
 /**
@@ -234,14 +234,14 @@ function splitResults(perType, seeds) {
     const ev = evaluate(inputs, decl, ctx, c.d, [o.cap_row, o.ancillary_row, o.region_row]);
     const lower = !(round9(c.total) > round9(alone.value));
     const flags = [o.arm_words[c.arm], o.path_words[c.path], o.binding_words[bindingOf(ev, c, decl, seeds)]];
-    if (c.path === 'A' && round9(c.main) > round9(alone.value)) flags.push(o.coverage_path_a_word);
+    if (c.path === decl.path_a && round9(c.main) > round9(alone.value)) flags.push(o.coverage_path_a_word);
     if (lower) flags.push(o.lower_option_word);
-    const trace = [{ kind: 'row', id: decl.main_gfa_row }, { kind: 'row', id: path.suite_gfa_row }];
+    const trace = [{ kind: decl.kinds.row, id: decl.main_gfa_row }, { kind: decl.kinds.row, id: path.suite_gfa_row }];
     emit(o.suite_gfa, 'computed', c.suite, null, [...flags].sort(), trace);
     emit(o.suite_footprint, 'computed', c.suite / c.storeys, null, [], trace);
     emit(o.depth, 'computed', c.d, null, [], trace);
     emit(o.main_with, 'computed', c.main, null, [], trace);
-    emit(o.main_without, 'computed', alone.value, null, [], [{ kind: 'row', id: decl.alone.gfa_row }]);
+    emit(o.main_without, 'computed', alone.value, null, [], [{ kind: decl.kinds.row, id: decl.alone.gfa_row }]);
     emit(o.gain, 'computed', c.total - alone.value, null, lower ? [o.lower_option_word] : [], trace);
   }
   return out;

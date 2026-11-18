@@ -606,6 +606,9 @@
       "compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm",
       "compute_maxbld_scenarios_min_suite_gfa_m2",
       "compute_maxbld_scenarios_min_main_dwelling_gfa_m2",
+      "compute_maxbld_scenarios_suite_interior_gfa_share",
+      "compute_maxbld_scenarios_reno_basement_livable_share",
+      "compute_maxbld_scenarios_relief_frontage_max_m",
       "footprint_shape_factor",
       "compute_maxbld_scenarios_bbox_degree_divisor",
       "compute_maxbld_scenarios_batch_size"

@@ -7,7 +7,97 @@
     {"id":"house_with_secondary_suite","class":"house_with_secondary_suite","structure":"principal","units":2,"units_floor":2,"increment":"4","switch":"building_type:house_with_secondary_suite","base_type":"detached_house","rules":["LC-16","LC-33","M-379","M-182","M-344"]},
     {"id":"detached_house_garden_suite","class":"detached_house","structure":"garden_suite","addon_of":"detached_house","units":1,"units_floor":1,"increment":"5","switch":"building_type:detached_house_garden_suite","rules":["LC-16","M-403","M-415","L3-2","item 11 (b)"]},
     {"id":"detached_houseplex_garden_suite","class":"detached_houseplex","structure":"garden_suite","addon_of":"detached_houseplex","units":4,"units_floor":1,"increment":"5","switch":"building_type:detached_houseplex_garden_suite","rules":["LC-16","M-403","M-415","L3-2","item 11 (b)"]},
-    {"id":"house_with_secondary_suite_garden_suite","class":"house_with_secondary_suite","structure":"garden_suite","addon_of":"house_with_secondary_suite","units":2,"units_floor":2,"increment":"5","switch":"building_type:house_with_secondary_suite_garden_suite","rules":["LC-16","M-403","M-415","L3-2","item 11 (b)"]}
+    {"id":"house_with_secondary_suite_garden_suite","class":"house_with_secondary_suite","structure":"garden_suite","addon_of":"house_with_secondary_suite","units":2,"units_floor":2,"increment":"5","switch":"building_type:house_with_secondary_suite_garden_suite","rules":["LC-16","M-403","M-415","L3-2","item 11 (b)"]},
+    {
+      "id": "renovation_addition",
+      "class": "detached_house",
+      "structure": "principal",
+      "units": 1,
+      "units_floor": 1,
+      "increment": "6",
+      "switch": "building_type:renovation_addition",
+      "rules": [
+        "LC-16",
+        "M-206",
+        "M-211(2)",
+        "item 1"
+      ]
+    },
+    {
+      "id": "renovation_expand",
+      "class": "detached_house",
+      "structure": "principal",
+      "units": 1,
+      "units_floor": 1,
+      "increment": "6",
+      "switch": "building_type:renovation_expand",
+      "rules": [
+        "LC-16",
+        "M-206",
+        "M-211(2)",
+        "item 1"
+      ]
+    },
+    {
+      "id": "renovation_interior",
+      "class": "detached_house",
+      "structure": "principal",
+      "units": 1,
+      "units_floor": 1,
+      "increment": "6",
+      "switch": "building_type:renovation_interior",
+      "rules": [
+        "LC-16",
+        "M-206",
+        "M-211(2)",
+        "item 1"
+      ]
+    },
+    {
+      "id": "renovation_basement_new",
+      "class": "detached_house",
+      "structure": "principal",
+      "units": 1,
+      "units_floor": 1,
+      "increment": "6",
+      "switch": "building_type:renovation_basement_new",
+      "rules": [
+        "LC-16",
+        "M-206",
+        "M-211(2)",
+        "item 1"
+      ]
+    },
+    {
+      "id": "renovation_basement_finish",
+      "class": "detached_house",
+      "structure": "principal",
+      "units": 1,
+      "units_floor": 1,
+      "increment": "6",
+      "switch": "building_type:renovation_basement_finish",
+      "rules": [
+        "LC-16",
+        "M-206",
+        "M-211(2)",
+        "item 1"
+      ]
+    },
+    {
+      "id": "renovation_basement_underpinned",
+      "class": "detached_house",
+      "structure": "principal",
+      "units": 1,
+      "units_floor": 1,
+      "increment": "6",
+      "switch": "building_type:renovation_basement_underpinned",
+      "rules": [
+        "LC-16",
+        "M-206",
+        "M-211(2)",
+        "item 1"
+      ]
+    }
   ],
   "suite_read": {
     "$comment": "MB-27 increment 5 (Part B, B5B-2 piece 1; BUILD-PLAN C2 two-structure read, L3-2): an add-on type (a row with addon_of) reads its class's principal cells under their own names and its class's `structure` cells under this one prefix, so a row writes l2(rear_setback_m) for the house and l2(suite_rear_setback_m) for the suite. scripts/lib/compute/maxbld/two-structure.js reads it; the units of the prefixed names are the vocab.dsl_target units of the unprefixed targets.",
@@ -37,7 +127,7 @@
     ]
   },
   "split": {
-    "$comment": "MB-27 increment 5 (Part B, B5B-3; operator 2026-11-12 'Q1 a, Q2 a, Q3 a', 'Q5 a, Q6a'; D-65; Spec 69a M-403 / M-390 / M-415; FD-3 a): the split of the garden-suite add-on, declared in data and run by scripts/lib/compute/maxbld/split.js after the per-type loop. For each add-on type, each arm (the values of vocab design_options.arm_design_option), each coverage path and allocation, every CANDIDATE depth is evaluated through the M-415 seam (depth_inject; then footprint_inject = the allocation's footprint row) over the catalogue rows, and the best total of main + suite is kept. A candidate depth is one of three declared kinds, never a search: range_end (the two ends of the range), row (a catalogue row whose value is a depth: a closed-form straight-line kink, a pitched-B root, a D-65 stationary point) and crossing (the depth where two rows meet, solved on the straight line of each interval between the other candidates, which is exact where both rows are straight lines there; a crossing that meets on a curved row (a pitched roof attic floor) declares refine_steps, the fixed number of secant steps that refine the straight-line root, D-65). Tie (FD-3 a, ANSWER-KEY.md:48): equal total, then path B, then the larger main GFA, then the larger main footprint.",
+    "$comment": "MB-27 increment 5 (Part B, B5B-3; operator 2026-11-12 'Q1 a, Q2 a, Q3 a', 'Q5 a, Q6a'; D-65; Spec 69a M-403 / M-390 / M-415; FD-3 a): the split of the garden-suite add-on, declared in data and run by scripts/lib/compute/maxbld/split.js after the per-type loop. For each add-on type, each arm (the values of vocab design_options.arm_design_option), each coverage path and allocation, every CANDIDATE depth is evaluated through the M-415 seam (depth_inject; then footprint_inject = the allocation's footprint row) over the catalogue rows, and the best total of main + suite is kept. A candidate depth is one of three declared kinds, never a search: range_end (the two ends of the range), row (a catalogue row whose value is a depth: a closed-form straight-line kink, a pitched-B root, a D-65 stationary point) and crossing (the depth where two rows meet, solved on the straight line of each interval between the other candidates, which is exact where both rows are straight lines there; a crossing that meets on a curved row (a pitched roof attic floor) declares refine_steps, the fixed number of secant steps that refine the straight-line root, D-65). The split's remaining by-law words and tolerances (operator 'recommendation accepted move them in incr 6' 2026-11-16, INC-6 C2a): `path_a`, `kinds` (the three candidate kinds and the range end), `crossing` (the 1e-9 minimum interval and the 1e-7 nudge factor of the straight-line crossing solve) and `binding_ids` (the five binding ids) are read by split.js, behaviour-preserving. Tie (FD-3 a, ANSWER-KEY.md:48): equal total, then path B, then the larger main GFA, then the larger main footprint.",
     "arm_design_option": "suite_height",
     "depth_inject": "buildable_depth_m",
     "footprint_inject": "footprint_max_m2",
@@ -51,6 +141,10 @@
     "suite_width_row": "addon_suite_width_m",
     "alone": {"permission_row": "permitted", "gfa_row": "gfa_max_m2"},
     "tie_path": "B",
+    "path_a": "A",
+    "kinds": { "range_end": "range_end", "range_min_end": "min", "row": "row", "crossing": "crossing" },
+    "crossing": { "min_interval": 1e-9, "nudge_factor": 1e-7 },
+    "binding_ids": { "lt_main": "suite_gfa_lt_main", "cap": "suite_gfa_cap", "ancillary": "ancillary_coverage", "lot_coverage": "lot_coverage", "region": "suite_region" },
     "row_nudge_m": 3e-9,
     "tie_tolerance_m2": 1e-6,
     "outputs": {
@@ -122,5 +216,108 @@
         ]
       }
     ]
+  },
+  "renovation": {
+    "$comment": "MB-27 increment 6 (renovations; operator 2026-11-12/13/14 items 1-12, UB-1..10; UB-7 semi seam). `envelope_by_half_lot`: the envelope type a renovation row reads, chosen by the effective half-lot flag; both halves read the detached house today (disclosed); the one reader is `reader` (scripts/lib/compute/maxbld/<reader>). `ids`: the six renovation building types (the ST-4 skip). `words` and `params`: the closed output vocabulary and the rounding of scripts/lib/compute/maxbld/renovation.js, kept here so that file holds no literal (Spec 133 arm L); the words are the McProof key words (examples fixture). `converted_semi_suite_units_floor`: the secondary-suite maximum is not_applicable on a semi half only when the converted house ends with MORE units than this (10.5.20.40(6); pending operator ruling on E10/E11, REAPPROVAL-WALK items 4-5). Never a by-law number: those arrive as Layer 2 cells and logic_variables settings.",
+    "envelope_by_half_lot": {
+      "false": "detached_house",
+      "true": "detached_house",
+      "reader": "renovation.js"
+    },
+    "ids": [
+      "renovation_addition",
+      "renovation_expand",
+      "renovation_interior",
+      "renovation_basement_new",
+      "renovation_basement_finish",
+      "renovation_basement_underpinned"
+    ],
+    "rows": [
+      "RA",
+      "RE",
+      "RI",
+      "RB",
+      "RF",
+      "UB"
+    ],
+    "params": {
+      "scale_4dp": 10000,
+      "scale_9dp": 1000000000,
+      "epsilon": 1e-9,
+      "half_units_cap": 4,
+    "converted_semi_suite_units_floor": 1
+    },
+    "words": {
+      "status": {
+        "computed": "computed",
+        "not_applicable": "not_applicable",
+        "not_evaluated": "not_evaluated"
+      },
+      "basement": {
+        "none": "none",
+        "unfinished": "unfinished",
+        "finished": "finished"
+      },
+      "zone": {
+        "r": "R",
+        "rd": "RD",
+        "rs": "RS",
+        "rm": "RM"
+      },
+      "binds": {
+        "fsi_room": "fsi_room",
+        "envelope_room": "envelope_room",
+        "fits": "fits"
+      },
+      "lawful": {
+        "yes": "yes",
+        "no": "no"
+      },
+    "flag": {
+        "needs_user_input": "needs_user_input",
+        "envelope": "envelope"
+      },
+      "field": {
+        "existing_footprint": "existing_footprint",
+        "existing_storeys": "existing_storeys",
+        "existing_basement": "existing_basement",
+        "storeys": "storeys",
+        "basement": "basement"
+      },
+      "reason": {
+        "needs_user_input_prefix": "needs_user_input:",
+        "invalid_owner_input_prefix": "invalid_owner_input:",
+        "house_row_prefix": "house row ",
+        "list_separator": ",",
+        "vacant_lot": "vacant_lot",
+        "no_basement": "no_basement",
+        "basement_exists": "basement_exists (use UB or RF)",
+        "basement_not_unfinished": "basement_not_unfinished",
+        "converted_semi_suite": "no_secondary_suite_in_converted_semi (10.5.20.40(6))",
+        "units_max_not_stored": "units_max not stored",
+        "attic": "needs the existing box (carded)",
+        "law_value_missing": "law_value_not_in_settings"
+      },
+      "text": {
+        "no_fsi_cap": "no FSI cap",
+        "extension_disclosed": "disclosed (window met; no number)",
+        "extension_not_disclosed": "not disclosed (outside window)",
+        "whole_basement_yes": "yes (150.10.40.40(2), one storey)",
+        "whole_basement_no": "no (house not one storey)",
+        "rf_note": "computed from the three inputs; Building Code headroom disclosed (Q-UB-5)",
+        "ub_basement_stays": "yes (lowering only lowers the midpoint, 800.50(80))",
+        "ub_finished_note": "finished: area is not new floor area (Q-UB-2)",
+        "ri_small_note": "1 unit, gain 0: this house is too small to split into more units (11b)"
+      },
+      "disclosure": {
+        "envelope_semi_detached_used": "envelope_semi_detached_used",
+        "unsure_half_assumed": "unsure_half_assumed",
+        "ri_five_six_units_not_modelled": "ri_five_six_units_not_modelled",
+        "sixplex_overlay_not_evaluated": "sixplex_overlay_not_evaluated",
+        "relief_applied": "relief_applied",
+        "relief_71_1_precondition_taken_as_holding": "relief_71_1_precondition_taken_as_holding",
+        "one_storey_extension": "one_storey_extension"
+      }
+    }
   }
 }

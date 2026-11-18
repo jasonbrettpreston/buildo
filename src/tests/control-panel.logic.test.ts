@@ -272,7 +272,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'fya_placeholder_ring_min_n',
   'compute_maxbld_scenarios_bbox_degree_divisor', // MB-31 (e) / MB-35 D-4 (operator "a yes" 2026-11-11): the zone-pool bbox divisor, migration 310
   'compute_maxbld_scenarios_batch_size',
-  'compute_maxbld_scenarios_min_main_dwelling_gfa_m2', // MB-27 increment 5 Part B (migration 316): the four settings the garden-suite engine reads
+  'compute_maxbld_scenarios_min_main_dwelling_gfa_m2',
+  'compute_maxbld_scenarios_suite_interior_gfa_share', // MB-27 increment 6 (migration 330): the renovation settings
+  'compute_maxbld_scenarios_reno_basement_livable_share',
+  'compute_maxbld_scenarios_relief_frontage_max_m', // 10.5.40.71(3) clause-cited setting (M-404) // MB-27 increment 5 Part B (migration 316): the four settings the garden-suite engine reads
   'compute_maxbld_scenarios_min_suite_gfa_m2',
   'compute_maxbld_scenarios_plate_min_dimension_m',
   'compute_maxbld_scenarios_suite_gfa_lt_main_margin_sqm',

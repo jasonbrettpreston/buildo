@@ -1,0 +1,28 @@
+# inc6 red evidence: renovation-examples (lane INC6-B, 2026-11-15; tree = eda44dc7e + Part B patch unstaged, code absent)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-inc6b
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-examples.logic.test.ts (45 tests | 45 skipped) 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-renovation-examples.logic.test.ts [ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-examples.logic.test.ts ]
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+Require stack:
+- /Users/brettpreston_macmini/Buildo-wt-inc6b/package.json
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-renovation-examples.logic.test.ts:63:7
+     61| let R: Json;
+     62| beforeAll(() => {
+     63|   R = req(path.join(ROOT, MOD_PATH)) as Json;
+       |       ^
+     64| });
+     65| const run = (example: Json, settings?: Json): Json => R.renovationResu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  45 skipped (45)
+   Start at  11:47:26
+   Duration  135ms (transform 29ms, setup 7ms, collect 5ms, tests 2ms, environment 0ms, prepare 22ms)
+

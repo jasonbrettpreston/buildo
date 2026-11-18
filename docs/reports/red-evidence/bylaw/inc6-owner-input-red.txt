@@ -1,0 +1,70 @@
+# inc6 red evidence: owner-input (lane INC6-B, 2026-11-15; tree = eda44dc7e + Part B patch unstaged, code absent)
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-inc6b
+
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts (34 tests | 34 skipped) 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts > owner entry: the contract (increment 6, items 3, 4 b, 10, 11 c, UB-9)
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+Require stack:
+- /Users/brettpreston_macmini/Buildo-wt-inc6b/package.json
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts:139:10
+    137|   let EX: Json[];
+    138|   beforeAll(() => {
+    139|     RV = req(path.join(ROOT, 'scripts/lib/compute/maxbld/renovation.js…
+       |          ^
+    140|     SEEDS = seeds();
+    141|     EX = fixture().examples as Json[];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts > renovation rows: the worked examples, each row read by its own key (approved key 2026-11-13)
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+Require stack:
+- /Users/brettpreston_macmini/Buildo-wt-inc6b/package.json
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts:255:10
+    253|   let EX: Json[];
+    254|   beforeAll(() => {
+    255|     RV = req(path.join(ROOT, 'scripts/lib/compute/maxbld/renovation.js…
+       |          ^
+    256|     SEEDS = seeds();
+    257|     EX = fixture().examples as Json[];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts > RI and the basement level (E3, E11): a basement floor counts only when the existing house has one
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+Require stack:
+- /Users/brettpreston_macmini/Buildo-wt-inc6b/package.json
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts:295:10
+    293|   let EX: Json[];
+    294|   beforeAll(() => {
+    295|     RV = req(path.join(ROOT, 'scripts/lib/compute/maxbld/renovation.js…
+       |          ^
+    296|     SEEDS = seeds();
+    297|     EX = fixture().examples as Json[];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts > ST-4 (McStorage strategy, item 10 a): no existing-house input, no renovation row
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-inc6b/scripts/lib/compute/maxbld/renovation.js'
+Require stack:
+- /Users/brettpreston_macmini/Buildo-wt-inc6b/package.json
+ ❯ src/tests/steps/compute_maxbld_scenarios/increment6-owner-input.logic.test.ts:342:10
+    340|   let SEEDS: Json;
+    341|   beforeAll(() => {
+    342|     RV = req(path.join(ROOT, 'scripts/lib/compute/maxbld/renovation.js…
+       |          ^
+    343|     STEP = req(path.join(ROOT, 'scripts/lib/compute/compute-maxbld-sce…
+    344|     SEEDS = seeds();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  34 skipped (34)
+   Start at  11:48:13
+   Duration  171ms (transform 32ms, setup 7ms, collect 8ms, tests 2ms, environment 0ms, prepare 17ms)
+

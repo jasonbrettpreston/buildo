@@ -2,17 +2,8 @@
   "contract_version": 1,
   "captures": {
     "post/standalone.json": {
-      "via": "bracket",
-      "steps": [
-        [
-          "{sql}",
-          "DELETE FROM parcel_maxbld_scenarios WHERE building_type = 'detached_house'"
-        ],
-        [
-          "{harness}"
-        ]
-      ],
-      "why": "run 1 of a retake with new rows must be nonzero (#38, Spec 124 R-CZ): the DELETE is the descriptor recovery.reset (the detached_house rows of the population), then a plain harness run re-derives them through the guarded upsert and inserts the rows the Part B engine adds (the garden-suite building types and the new catalogue rows: 325 rows a lot, was 153) and rewrites the old rows whose content moved; the harness second run must write 0 rows (the rerun-zero proof). M14 (decision D-78, MB-27 increment 5 Part B): the one Layer 3 recapture after INC5-NIGHT, on the 1,921-lot cohort: 624,325 rows after, 293,913 before; migration 316 (four settings) applied by the same job."
+      "via": "plain",
+      "why": "INC-6 (MB-27 increment 6) Layer 3 cohort recapture after INC6-NIGHT, F-9 of PANEL-INC6-BUILD-20261116: layer2_table_version is inside the row content hash and the seed edits moved catalogue_sha, switchboard_sha and building_types_sha, so the plain harness run 1 rewrites every stored row in place through the guarded upsert (is_distinct_from on content_sha: 624,325 rows on 1,921 lots, 325 a lot, no row added or deleted, no reset step) and the harness second run must write 0 rows (the rerun-zero proof)."
     }
   }
 }

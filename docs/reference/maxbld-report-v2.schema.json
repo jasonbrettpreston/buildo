@@ -137,6 +137,27 @@
               "mechanical_attic_outside_gfa_a_m2",
               "mechanical_attic_outside_gfa_b_m2",
               "permitted",
+              "reno_addition_gfa_m2",
+              "reno_back_footprint_m2",
+              "reno_back_gfa_m2",
+              "reno_back_storeys",
+              "reno_basement_finish_m2",
+              "reno_basement_level_count",
+              "reno_basement_new_m2",
+              "reno_basement_underpinned_m2",
+              "reno_envelope_room_m2",
+              "reno_existing_gfa_m2",
+              "reno_expand_gain_m2",
+              "reno_floors_above_count",
+              "reno_fsi_room_m2",
+              "reno_suite_max_interior_m2",
+              "reno_total_after_m2",
+              "reno_units",
+              "reno_units_gain",
+              "reno_units_per_floor",
+              "reno_units_raw",
+              "reno_up_gfa_m2",
+              "reno_up_plate_m2",
               "roof_assembly_depth_a_m",
               "roof_assembly_depth_b_m",
               "roof_pitch_a",
@@ -1179,6 +1200,230 @@
                 "x-render": "rendered",
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "reno_addition_gfa_m2": {
+                "description": "reno_addition_gfa_m2",
+                "x-source": "catalogue:reno_addition_gfa_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_back_footprint_m2": {
+                "description": "reno_back_footprint_m2",
+                "x-source": "catalogue:reno_back_footprint_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_back_gfa_m2": {
+                "description": "reno_back_gfa_m2",
+                "x-source": "catalogue:reno_back_gfa_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_back_storeys": {
+                "description": "reno_back_storeys",
+                "x-source": "catalogue:reno_back_storeys",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_basement_finish_m2": {
+                "description": "reno_basement_finish_m2",
+                "x-source": "catalogue:reno_basement_finish_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_basement_level_count": {
+                "description": "reno_basement_level_count",
+                "x-source": "catalogue:reno_basement_level_count",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_basement_new_m2": {
+                "description": "reno_basement_new_m2",
+                "x-source": "catalogue:reno_basement_new_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_basement_underpinned_m2": {
+                "description": "reno_basement_underpinned_m2",
+                "x-source": "catalogue:reno_basement_underpinned_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_envelope_room_m2": {
+                "description": "reno_envelope_room_m2",
+                "x-source": "catalogue:reno_envelope_room_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_existing_gfa_m2": {
+                "description": "reno_existing_gfa_m2",
+                "x-source": "catalogue:reno_existing_gfa_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_expand_gain_m2": {
+                "description": "reno_expand_gain_m2",
+                "x-source": "catalogue:reno_expand_gain_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_floors_above_count": {
+                "description": "reno_floors_above_count",
+                "x-source": "catalogue:reno_floors_above_count",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_fsi_room_m2": {
+                "description": "reno_fsi_room_m2",
+                "x-source": "catalogue:reno_fsi_room_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_suite_max_interior_m2": {
+                "description": "reno_suite_max_interior_m2",
+                "x-source": "catalogue:reno_suite_max_interior_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_total_after_m2": {
+                "description": "reno_total_after_m2",
+                "x-source": "catalogue:reno_total_after_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_units": {
+                "description": "reno_units",
+                "x-source": "catalogue:reno_units",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_units_gain": {
+                "description": "reno_units_gain",
+                "x-source": "catalogue:reno_units_gain",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_units_per_floor": {
+                "description": "reno_units_per_floor",
+                "x-source": "catalogue:reno_units_per_floor",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_units_raw": {
+                "description": "reno_units_raw",
+                "x-source": "catalogue:reno_units_raw",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_up_gfa_m2": {
+                "description": "reno_up_gfa_m2",
+                "x-source": "catalogue:reno_up_gfa_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reno_up_plate_m2": {
+                "description": "reno_up_plate_m2",
+                "x-source": "catalogue:reno_up_plate_m2",
+                "x-status": "planned",
+                "x-render": "rendered",
+                "x-unit": "m²",
+                "type": [
+                  "number",
                   "null"
                 ]
               },

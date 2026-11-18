@@ -1,0 +1,18 @@
+-- 330: compute_maxbld_scenarios (Layer 3, MB-27 increment 6, claimed ids/mig-330; renumbered from 319 per REVIEW-OPTIMIZED-RUN-20261116 F-2) — three settings the renovation rows read through lv():
+-- the suite interior share (item 7, 0.85) and the basement livable share (UB-3, 1.0, ceiling 1.0). Both are operator values, not by-law figures (the by-law
+-- number 45 % is a Layer 2 cell, migration 329; the 12.2 m relief frontage of 10.5.40.71(3) is the clause-cited setting compute_maxbld_scenarios_relief_frontage_max_m, M-404, operator "2 y" 2026-11-16). No assumed-storeys setting is seeded (item 4 b). Mirrors scripts/seeds/logic_variables.json entry for
+-- entry (the seed file is the test truth), the 316 form. Idempotent: ON CONFLICT (variable_key) DO NOTHING preserves any operator-set value.
+-- Applied by the normal migration flow; rehearsed on the test stack first (MCINC-7).
+--
+-- SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-451
+-- SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 3; R-CV; R-DE (v))
+-- UP
+INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description) VALUES
+  ('compute_maxbld_scenarios_suite_interior_gfa_share', 0.85, NULL, 'M-211(2), item 7 (MB-27 increment 6, operator 2026-11-13 ".85"; name per C18): the share of a renovated house''s existing interior floor area that the secondary-suite maximum (renovation_interior) is taken over, after the 45 % suite share of 150.10.40.40(1); 0.85 allows for walls, stairs and shared space. An operator value, not a by-law figure; confidence medium; bounds 0.5..1. Changes only by a ruling. CONSUMED by the increment-6 renovation rows.'),
+  ('compute_maxbld_scenarios_reno_basement_livable_share', 1, NULL, 'UB-3, Q-UB-5 (MB-27 increment 6, operator 2026-11-13; name per C18): the share of the existing footprint that a finished or newly built basement counts as livable floor area (renovation_basement_new, renovation_basement_finish, renovation_basement_underpinned); 1.0 is the ceiling. An operator value, not a by-law figure; confidence medium; bounds 0.5..1. Changes only by a ruling. CONSUMED by the increment-6 renovation rows.'),
+  ('compute_maxbld_scenarios_relief_frontage_max_m', 12.2, NULL, '10.5.40.71(3) "a lot frontage of 12.2 metres or less" (MB-27 increment 6, operator "2 y" 2026-11-16 on PANEL-N2-M158-20261116; citation corrected, operator "y" 2026-11-16, PANEL-71-3-4-20261116, option c; M-404 clause-cited setting, M-192; the 12.2 m is a clause literal, kept out of Layer 2 and out of code): the largest stored lot frontage, in metres, at which an addition above a lawfully existing building keeps the lawful existing setbacks; inclusive. Applied in increment 6 to additions above only (10.5.40.71(3)); the same 12.2 m literal also bounds 10.5.40.71(4)(B) (additions to the rear or side, side lot line only), which increment 6 does not apply (deferred to increment 7). Pinned to the clause: changes only by a by-law amendment. Confidence high on the number, medium on the storage form; bounds 12.2..12.2. CONSUMED by the increment-6 renovation rows (renovation.js relief) and the increment-7 semi relief.')
+ON CONFLICT (variable_key) DO NOTHING;
+-- DOWN — manual rollback only, intentionally not transactional (matches migrations 159, 283, 294, 296 and 316).
+-- DELETE FROM logic_variables WHERE variable_key = 'compute_maxbld_scenarios_suite_interior_gfa_share';
+-- DELETE FROM logic_variables WHERE variable_key = 'compute_maxbld_scenarios_reno_basement_livable_share';
+-- DELETE FROM logic_variables WHERE variable_key = 'compute_maxbld_scenarios_relief_frontage_max_m';

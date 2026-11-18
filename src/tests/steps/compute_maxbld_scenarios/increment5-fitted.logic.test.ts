@@ -116,9 +116,9 @@ describe('C4 / C15 / C6: asserted bounds fail closed (never a clip) and every bo
   it('validateCatalogue refuses a dead or shadowing audit count: unknown row, core key, both or neither of reason and above, an undeclared reason (panel fold)', () => {
     const C = req(path.join(ROOT, 'scripts/lib/compute/maxbld/catalogue.js')) as Json;
     const s = seeds();
-    expect(C.validateCatalogue(s, ['1', '2', '3', '4', '5'])).toEqual([]);
+    expect(C.validateCatalogue(s, ['1', '2', '3', '4', '5', '6'])).toEqual([]);
     s.catalogue.audit_counts.push({ key: 'parcels', row: 'no_such_row', reason: 'no_such_word', above: 3 });
-    const errs = C.validateCatalogue(s, ['1', '2', '3', '4', '5']) as string[];
+    const errs = C.validateCatalogue(s, ['1', '2', '3', '4', '5', '6']) as string[];
     for (const w of ['core count', 'not a catalogue row', 'exactly one of reason or above', 'not a refuse reason']) expect([w, errs.some((e) => e.includes(w))]).toEqual([w, true]);
   });
 });

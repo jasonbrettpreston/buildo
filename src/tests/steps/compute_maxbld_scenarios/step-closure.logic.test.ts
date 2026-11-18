@@ -36,6 +36,7 @@ const EXPECTED_LOCAL = [
   'scripts/lib/compute/maxbld/disclosures.js', // MB-27 D-8: the pure disclosure-to-word carriage
   'scripts/lib/compute/maxbld/layer2-cells.js',
   'scripts/lib/compute/maxbld/neighbour-facts.js',
+  'scripts/lib/compute/maxbld/renovation.js', // MB-27 increment 6 (named re-pin): the renovation rows' pure arithmetic and the ST-4 skip (words and ids from building-types.json)
   'scripts/lib/compute/maxbld/rows.js',
   'scripts/lib/compute/maxbld/split.js', // MB-27 increment 5 (B5B-3, Q2 a): the split pass (pure; declared in building-types.json split)
   'scripts/lib/compute/maxbld/two-structure.js', // MB-27 increment 5 (B5B-2, L3-2): the two-structure read (pure; reached through catalogue.js and rows.js)

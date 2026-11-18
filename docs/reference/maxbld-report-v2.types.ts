@@ -270,6 +270,48 @@ export type ReportV2Scenarios = {
     mechanical_attic_outside_gfa_b_m2: number | null;
     /** permitted — catalogue:permitted */
     permitted: string | null;
+    /** reno_addition_gfa_m2 — catalogue:reno_addition_gfa_m2 (m²) */
+    reno_addition_gfa_m2: number | null;
+    /** reno_back_footprint_m2 — catalogue:reno_back_footprint_m2 (m²) */
+    reno_back_footprint_m2: number | null;
+    /** reno_back_gfa_m2 — catalogue:reno_back_gfa_m2 (m²) */
+    reno_back_gfa_m2: number | null;
+    /** reno_back_storeys — catalogue:reno_back_storeys */
+    reno_back_storeys: number | null;
+    /** reno_basement_finish_m2 — catalogue:reno_basement_finish_m2 (m²) */
+    reno_basement_finish_m2: number | null;
+    /** reno_basement_level_count — catalogue:reno_basement_level_count */
+    reno_basement_level_count: number | null;
+    /** reno_basement_new_m2 — catalogue:reno_basement_new_m2 (m²) */
+    reno_basement_new_m2: number | null;
+    /** reno_basement_underpinned_m2 — catalogue:reno_basement_underpinned_m2 (m²) */
+    reno_basement_underpinned_m2: number | null;
+    /** reno_envelope_room_m2 — catalogue:reno_envelope_room_m2 (m²) */
+    reno_envelope_room_m2: number | null;
+    /** reno_existing_gfa_m2 — catalogue:reno_existing_gfa_m2 (m²) */
+    reno_existing_gfa_m2: number | null;
+    /** reno_expand_gain_m2 — catalogue:reno_expand_gain_m2 (m²) */
+    reno_expand_gain_m2: number | null;
+    /** reno_floors_above_count — catalogue:reno_floors_above_count */
+    reno_floors_above_count: number | null;
+    /** reno_fsi_room_m2 — catalogue:reno_fsi_room_m2 (m²) */
+    reno_fsi_room_m2: number | null;
+    /** reno_suite_max_interior_m2 — catalogue:reno_suite_max_interior_m2 (m²) */
+    reno_suite_max_interior_m2: number | null;
+    /** reno_total_after_m2 — catalogue:reno_total_after_m2 (m²) */
+    reno_total_after_m2: number | null;
+    /** reno_units — catalogue:reno_units */
+    reno_units: number | null;
+    /** reno_units_gain — catalogue:reno_units_gain */
+    reno_units_gain: number | null;
+    /** reno_units_per_floor — catalogue:reno_units_per_floor */
+    reno_units_per_floor: number | null;
+    /** reno_units_raw — catalogue:reno_units_raw */
+    reno_units_raw: number | null;
+    /** reno_up_gfa_m2 — catalogue:reno_up_gfa_m2 (m²) */
+    reno_up_gfa_m2: number | null;
+    /** reno_up_plate_m2 — catalogue:reno_up_plate_m2 (m²) */
+    reno_up_plate_m2: number | null;
     /** roof_assembly_depth_a_m — catalogue:roof_assembly_depth_a_m (m) */
     roof_assembly_depth_a_m: number | null;
     /** roof_assembly_depth_b_m — catalogue:roof_assembly_depth_b_m (m) */

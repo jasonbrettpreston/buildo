@@ -8,12 +8,12 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 ## Totals
 
-178 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
+199 fields in 15 sections; 0 scenario cards; 0 catalogue rows not in the report.
 
 | Source | Fields |
 |---|---|
 | `ad_slot` | 4 |
-| `catalogue` | 107 |
+| `catalogue` | 128 |
 | `content` | 35 |
 | `parcels` | 30 |
 | `user_input` | 2 |
@@ -192,6 +192,27 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 | addon_x_anc_m2 | `scenarios.cards[].addon_x_anc_m2` | number | m² | planned | rendered | `catalogue:addon_x_anc_m2` |  |
 | addon_x_region_m2 | `scenarios.cards[].addon_x_region_m2` | number | m² | planned | rendered | `catalogue:addon_x_region_m2` |  |
 | addon_x_room_a_m2 | `scenarios.cards[].addon_x_room_a_m2` | number | m² | planned | rendered | `catalogue:addon_x_room_a_m2` |  |
+| reno_existing_gfa_m2 | `scenarios.cards[].reno_existing_gfa_m2` | number | m² | planned | rendered | `catalogue:reno_existing_gfa_m2` |  |
+| reno_back_footprint_m2 | `scenarios.cards[].reno_back_footprint_m2` | number | m² | planned | rendered | `catalogue:reno_back_footprint_m2` |  |
+| reno_back_storeys | `scenarios.cards[].reno_back_storeys` | number |  | planned | rendered | `catalogue:reno_back_storeys` |  |
+| reno_back_gfa_m2 | `scenarios.cards[].reno_back_gfa_m2` | number | m² | planned | rendered | `catalogue:reno_back_gfa_m2` |  |
+| reno_up_plate_m2 | `scenarios.cards[].reno_up_plate_m2` | number | m² | planned | rendered | `catalogue:reno_up_plate_m2` |  |
+| reno_up_gfa_m2 | `scenarios.cards[].reno_up_gfa_m2` | number | m² | planned | rendered | `catalogue:reno_up_gfa_m2` |  |
+| reno_fsi_room_m2 | `scenarios.cards[].reno_fsi_room_m2` | number | m² | planned | rendered | `catalogue:reno_fsi_room_m2` |  |
+| reno_envelope_room_m2 | `scenarios.cards[].reno_envelope_room_m2` | number | m² | planned | rendered | `catalogue:reno_envelope_room_m2` |  |
+| reno_addition_gfa_m2 | `scenarios.cards[].reno_addition_gfa_m2` | number | m² | planned | rendered | `catalogue:reno_addition_gfa_m2` |  |
+| reno_total_after_m2 | `scenarios.cards[].reno_total_after_m2` | number | m² | planned | rendered | `catalogue:reno_total_after_m2` |  |
+| reno_expand_gain_m2 | `scenarios.cards[].reno_expand_gain_m2` | number | m² | planned | rendered | `catalogue:reno_expand_gain_m2` |  |
+| reno_units_per_floor | `scenarios.cards[].reno_units_per_floor` | number |  | planned | rendered | `catalogue:reno_units_per_floor` |  |
+| reno_floors_above_count | `scenarios.cards[].reno_floors_above_count` | number |  | planned | rendered | `catalogue:reno_floors_above_count` |  |
+| reno_basement_level_count | `scenarios.cards[].reno_basement_level_count` | number |  | planned | rendered | `catalogue:reno_basement_level_count` |  |
+| reno_units_raw | `scenarios.cards[].reno_units_raw` | number |  | planned | rendered | `catalogue:reno_units_raw` |  |
+| reno_units | `scenarios.cards[].reno_units` | number |  | planned | rendered | `catalogue:reno_units` |  |
+| reno_units_gain | `scenarios.cards[].reno_units_gain` | number |  | planned | rendered | `catalogue:reno_units_gain` |  |
+| reno_suite_max_interior_m2 | `scenarios.cards[].reno_suite_max_interior_m2` | number | m² | planned | rendered | `catalogue:reno_suite_max_interior_m2` |  |
+| reno_basement_new_m2 | `scenarios.cards[].reno_basement_new_m2` | number | m² | planned | rendered | `catalogue:reno_basement_new_m2` |  |
+| reno_basement_finish_m2 | `scenarios.cards[].reno_basement_finish_m2` | number | m² | planned | rendered | `catalogue:reno_basement_finish_m2` |  |
+| reno_basement_underpinned_m2 | `scenarios.cards[].reno_basement_underpinned_m2` | number | m² | planned | rendered | `catalogue:reno_basement_underpinned_m2` |  |
 | Status reason (plain words) | `scenarios.cards[].status_text` | text |  | proposed | rendered | `content:status_text` | PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback |
 | Per-field trust tier | `scenarios.cards[].field_trust` | jsonb |  | proposed | payload_only | `content:field_trust` | per-field trust (O-17); not generated yet: the catalogue rows carry no trust tier |
 | Trust label (plain words) | `scenarios.cards[].trust_label` | text |  | proposed | rendered | `content:trust_label` | PRESENTATION: high → "By-law derived", disclosed → "By-law derived, see notes", low → "Estimate", CoA → "Precedent estimate" |
