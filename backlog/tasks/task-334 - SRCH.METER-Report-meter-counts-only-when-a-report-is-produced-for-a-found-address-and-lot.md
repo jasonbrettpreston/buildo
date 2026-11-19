@@ -3,11 +3,11 @@ id: TASK-334
 title: >-
   SRCH.METER Report meter counts only when a report is produced for a found
   address and lot
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-METER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:56:00Z'
+updated_date: '2026-11-19T15:57:00Z'
 labels:
   - S
   - plan:SRCH.METER
@@ -18,6 +18,7 @@ references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1082
   - src/app/api/parcels/lookup/route.ts#L161
   - docs/reports/lanes/2026-11-19/BL-ROUTE/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-METER/REPORT.md
 type: build
 project: McIncrement
 ordinal: 35012
@@ -33,9 +34,9 @@ Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The report meter (openReport) is called only when a report is produced for a found address and lot, not at the lookup; an unsure lot answering the semi question is not counted until its report is produced; one row per lot per month kept
-- [ ] #2 Red test first on the lookup route and the report route (a lookup that ends in candidates, no-match or the semi question counts nothing); the existing meter tests stay green
-- [ ] #3 The reports-left line (A.6) reads the same counter; no new field
+- [x] #1 The report meter (openReport) is called only when a report is produced for a found address and lot, not at the lookup; an unsure lot answering the semi question is not counted until its report is produced; one row per lot per month kept
+- [x] #2 Red test first on the lookup route and the report route (a lookup that ends in candidates, no-match or the semi question counts nothing); the existing meter tests stay green
+- [x] #3 The reports-left line (A.6) reads the same counter; no new field
 <!-- AC:END -->
 
 ## Definition of Done
@@ -65,3 +66,9 @@ Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.t
 <!-- SECTION:NOTES:BEGIN -->
 Output review r2 (lens double and missed counting): 2 KEPT test gaps (parcelId semi case, lot map case) added in the fix commit; no route defect. Files: src/tests/parcel-lookup-gate.infra.test.ts
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Meter call gated on a produced report (page sent) and a lot not awaiting its semi question; commits 7577c4e8b, c97b53448, 669de237d through the real hooks (gate file 50 passed); red 4 failed in red.out; A.6 reads the same usage_events, unchanged. Open: unsure-lot count after the answer (task-319); billing opens with MB-44.
+<!-- SECTION:FINAL_SUMMARY:END -->
