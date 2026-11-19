@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-R6'
 created_date: '2026-11-19T05:28:00Z'
-updated_date: '2026-11-19T11:57:00Z'
+updated_date: '2026-11-19T12:04:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -64,3 +64,9 @@ Rules quoted (file:line):
 3. AC3: write board-ff.zsh and the com.maxbld.board-ff plist (StartInterval 600); WARN when the ff is refused; BOARD-STATUS-6421.txt written by the job.
 4. AC4: load com.maxbld.board-browser-6421, check 200 on 6421, one CLI board edit committed by the job; measure check_active_branches once; ONE commit with Task: task-305.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 R6: jobs loaded, browser on 6421
+<!-- SECTION:NOTES:END -->
