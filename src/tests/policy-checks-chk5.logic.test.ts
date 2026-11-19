@@ -18,7 +18,8 @@ const D: Json = await import(pathToFileURL(DRIVER).href).catch((err: unknown) =>
 const TBL = ['parcel', 'maxbld', 'scenarios'].join('_'); // the replaced all-lot table (MORNING-DECISIONS.md:704)
 const NEW_TBL = 'opened_lot_records_fixture';
 const entry = (over: Json = {}): Json => ({ name: NEW_TBL, producers: ['scripts/**/producer-*.js'], stamp_columns: ['table_version', 'settings_sha'], read_guard: ['assertCurrentStamp'], verified: true, verified_source: 'fixture migration', ...over });
-const config = (tables: Json[], extra: Json = {}): Json => ({ chk5_tables: tables, chk5_replaced_tables: [TBL], ...extra });
+const CHK3 = { chk3_component_globs: ['src/components/report/**'], chk3_binding_sources_path: 'scripts/surfaces/_schema/binding-sources.json' }; // CHK.3 keys: the driver runs every check
+const config = (tables: Json[], extra: Json = {}): Json => ({ chk5_tables: tables, chk5_replaced_tables: [TBL], ...CHK3, ...extra });
 const run = (cfg: Json, over: Json = {}): Json => D.runChecks!({ files: [], allFiles: null, config: cfg, ledger: [], ...over });
 const rules = (r: Json): string[] => r.findings.map((f: Json) => f.rule);
 
@@ -37,7 +38,7 @@ describe('CHK.5 states', () => {
     expect(r.waits[0]).toContain('owner');
   });
   it('FAIL closed: chk5_tables that is not an array is a finding, not a WAITS', () => {
-    const r = run({ chk5_tables: null });
+    const r = run({ chk5_tables: null, ...CHK3 });
     expect(rules(r)).toEqual(['chk5-config']);
     expect(r.waits).toEqual([]);
   });

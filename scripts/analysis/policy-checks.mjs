@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPEC LINK: MORNING-DECISIONS.md:725 (the eight automatic checks; Increment 1·A, built in the repo under its hooks: :744); scripts/analysis/mcbylaws/gate.mjs (the same fail-closed shape: no flag, word or environment variable turns a check off).
-// POLICY CHECKS driver (CHK.3 and CHK.5 here; CHK.6 is gate RS-12 inside report-schema.mjs and runs through the existing pre-commit `report-schema.mjs --check`).
+// POLICY CHECKS driver (CHK.3 nothing new without a ruling, CHK.5 McStorage writer and stamp; CHK.6 is gate RS-12 inside report-schema.mjs and runs through the existing pre-commit `report-schema.mjs --check`).
 //   node scripts/analysis/policy-checks.mjs --commit-msg <file>   the hook (.husky/commit-msg): the staged checks, then every ledger row ADDED by the commit needs its ruling id in an Operator-Ruling: trailer
 //   node scripts/analysis/policy-checks.mjs --staged               the staged checks alone (reads the index, git show :path)
 //   node scripts/analysis/policy-checks.mjs --all                  every tracked file, plus the stale-stamp test (the suite and CI backstop)
@@ -10,18 +10,19 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { applyLedger, validateLedger, trailerCheck, isSource } from './policy-checks/lib.mjs';
+import * as chk3 from './policy-checks/chk3-nothing-new.mjs';
 import * as chk5 from './policy-checks/chk5-mcstorage.mjs';
 
 export const CONFIG_PATH = 'docs/reports/policy/policy-config.json';
 export const LEDGER_PATH = 'docs/reports/policy/policy-ledger.json';
-const CHECKS = [{ id: 'CHK.5', mod: chk5 }];
+const CHECKS = [{ id: 'CHK.3', mod: chk3 }, { id: 'CHK.5', mod: chk5 }];
 export const TREE_RULES = CHECKS.flatMap((c) => c.mod.TREE_RULES || []);
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28 });
 const fail = (msg) => { console.error(`FAIL:policy-checks:cannot-decide ${msg}`); process.exit(1); };
 
 /** Pure core: runs every registered check and applies the ledger. Returns { findings, errors, waits, orphans }. */
-export function runChecks({ files, allFiles = null, changes = [], pkgBefore = '', pkgAfter = '', config, ledger, all = false }) {
+export function runChecks({ files, allFiles = null, changes = [], pkgBefore = '', pkgAfter = '', config, ledger, all = false, gone = null }) {
   const errors = validateLedger(ledger);
   if (errors.length) return { findings: [], errors, waits: [], orphans: [] };
   const raw = [];
@@ -32,6 +33,8 @@ export function runChecks({ files, allFiles = null, changes = [], pkgBefore = ''
     waits.push(...r.waits);
   }
   const { unallowed, orphans } = applyLedger(raw, ledger, { all, treeRules: TREE_RULES });
+  // CHK.3 rows describe a diff, so they are orphans when the approved thing is gone (path or dependency), not when this run saw no violation.
+  if (gone) orphans.push(...chk3.goneRows(ledger, gone));
   return { findings: unallowed, errors: [], waits, orphans };
 }
 
@@ -62,7 +65,9 @@ function main(argv) {
     errors.push(...trailerCheck(added, readFileSync(arg, 'utf8')));
   }
   const files = changes.filter((c) => isSource(c.path) || /\.sql$/.test(c.path)).map((c) => ({ path: c.path, content: read(c.path) ?? '' }));
-  const r = runChecks({ files, allFiles: mode === '--all' ? files : null, changes: staged ? changes : [], config, ledger, all: mode === '--all' });
+  const pkgNow = read('package.json') ?? '';
+  const gone = { exists: (p) => read(p) !== null, deps: chk3.depNames(pkgNow) };
+  const r = runChecks({ files, allFiles: mode === '--all' ? files : null, changes: staged ? changes : [], pkgBefore: staged ? fromHead('package.json') : '', pkgAfter: staged ? pkgNow : '', config, ledger, all: mode === '--all', gone });
   errors.push(...r.errors);
   for (const w of r.waits) console.log(w);
   if (errors.length || r.findings.length || r.orphans.length) {
