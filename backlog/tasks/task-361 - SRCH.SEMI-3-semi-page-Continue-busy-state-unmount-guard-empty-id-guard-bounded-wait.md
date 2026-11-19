@@ -3,9 +3,11 @@ id: TASK-361
 title: >-
   SRCH.SEMI-3 semi page Continue: busy state, unmount guard, empty-id guard,
   bounded wait
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SEMI3'
 created_date: '2026-11-19T22:30:00Z'
+updated_date: '2026-11-19T22:34:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -58,3 +60,9 @@ Added after the lens run (BL-LENSES, DeepSeek lenses on 9fea46277; grounded on h
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-SEMI3, worktree /Users/brettpreston_macmini/Buildo-wt-semi3, branch wf1/inc1b-semi3), RR-0240
+<!-- SECTION:NOTES:END -->
