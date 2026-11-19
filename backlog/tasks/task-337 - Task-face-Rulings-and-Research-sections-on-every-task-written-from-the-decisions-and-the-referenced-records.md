@@ -1,11 +1,12 @@
 ---
-id: DRAFT-36
+id: TASK-337
 title: >-
   Task face: Rulings and Research sections on every task, written from the
   decisions and the referenced records
-status: Draft
+status: LATER
 assignee: []
 created_date: '2026-11-19T16:19:00Z'
+updated_date: '2026-11-19T16:24:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -29,6 +30,10 @@ Operator 2026-11-19 (task-69 example): "I see the acceptance criteria and defini
 <!-- AC:BEGIN -->
 - [ ] #1 Every task description carries a Rulings section (each decision naming the task: RR id, the operator quote, what was ruled, the cite) and a Research section (each referenced record: the path, the cited lines quoted, one line on what it found), written by a repo tool that reuses the context-pack readers, run once for the loaded tasks and at every decision or reference edit; red test first
 - [ ] #2 References that point under ~/Buildo-scratch show the repo copy once draft-28 lands, so the Research section opens from the board
+- [ ] #3 Purpose: one plain sentence at the top of every task (what it delivers, for whom), written from the title, the plan brief and the element ids; the raw loader lines (Full title, snapshot, Estimate GUESS, Plan text at the snapshot, planNote) move below the sections
+- [ ] #4 Scope now, Evidence (BUILT/DONE: commits, tests, hook result, push) and Waiting on (WAITS/BUILT: the dependency or push it waits on) sections, from the notes, the git log and the dependencies
+- [ ] #5 A machine-readable block in the task front matter (plan id, element ids, MF row, spec cites, Files) that backlog-next.mjs, backlog-status-check.mjs and backlog-lane.mjs read instead of parsing prose; red tests on fixtures
+- [ ] #6 Run once over the loaded tasks and re-run on every decision or reference edit (the board-commit job calls it); idempotent; a task edited by hand keeps its sections
 <!-- AC:END -->
 
 ## Definition of Done
@@ -44,3 +49,9 @@ Operator 2026-11-19 (task-69 example): "I see the acceptance criteria and defini
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 promoted from draft-36 on the operator word (MORNING-DECISIONS.md:1134); the face serves the operator first and the model second (the G1 context pack already assembles the same data for lanes); priority: next lane after push window 5 (operator to confirm)
+<!-- SECTION:NOTES:END -->
