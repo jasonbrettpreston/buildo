@@ -3,11 +3,11 @@ id: TASK-12
 title: >-
   GAP.13 Search follow-ups to the current design: the ruled tagline 'Lot
   Intelligence'...
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-GAP13'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:57:00Z'
+updated_date: '2026-11-19T16:58:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -127,6 +127,8 @@ C.5 building footprint layer and C.7 card lead line (has the house / faces the s
 Dated note 2026-11-19 (M-246, prior text kept; RR-0281 · task-12 · Backlog; operator, verbatim: "Task-330 is not required. We dont need a clear search.")
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0284 · task-12 · Backlog; operator, verbatim: "if it a small change let's do it - we have the data - why not")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push window 5: 78f552fbb at 16:56Z, station PASS 28367 tests)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -3,11 +3,11 @@ id: TASK-316
 title: >-
   R10 Increment 1·B validation pass: tasks, semi page placeholder, McFrontend
   fields and pages, dependencies, prior panels linked
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R10'
 created_date: '2026-11-19T14:44:00Z'
-updated_date: '2026-11-19T15:00:00Z'
+updated_date: '2026-11-19T16:58:00Z'
 labels:
   - follow-up
   - validation
@@ -68,6 +68,8 @@ Operator 2026-11-19: "lets begin work on Incr 1b. Lets ensure all the tasks (inc
 2026-11-19 taken on the board at lane launch (lane BL-R10, worktree /Users/brettpreston_macmini/Buildo-wt-r10, branch wf2/inc1b-r10), RR-0240
 
 2026-11-19 AC evidence (commit d849925a6): AC1 task-317 to 322 and task-323 (semi placeholder = task-319), deps fixed on task-68, 268, 209 (backlog doctor clean); AC2 field map in REPORT.md section 2 (65 rows, gaps E.2 task-324, B.3 removed by design); AC3 MF rows linked by id, chain 267-266-123/265 and 68-66/67 verified (REPORT section 1 and 3); AC4 records linked per task, RR-0145 gap draft-33; AC5 r1 review 29 findings triaged in TRIAGE.md, dated note on every m-1 task; AC6 m-1 milestone sections added, 0 lines removed, draft-32 for all milestones. Docs-only change: no test run.
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push window 5: 78f552fbb at 16:56Z, station PASS 28367 tests)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

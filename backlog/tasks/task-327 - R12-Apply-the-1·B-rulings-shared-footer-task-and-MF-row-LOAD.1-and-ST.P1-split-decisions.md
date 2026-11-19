@@ -3,11 +3,11 @@ id: TASK-327
 title: >-
   R12 Apply the 1·B rulings: shared footer task and MF row, LOAD.1 and ST.P1
   split, decisions
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R12'
 created_date: '2026-11-19T15:37:00Z'
-updated_date: '2026-11-19T15:46:00Z'
+updated_date: '2026-11-19T16:58:00Z'
 labels:
   - follow-up
 milestone: m-1
@@ -66,6 +66,8 @@ Operator 2026-11-19 (MORNING-DECISIONS.md:1061, :1065): "1. once  -approved 2. y
 2026-11-19 taken on the board at lane launch (lane BL-R12, worktree /Users/brettpreston_macmini/Buildo-wt-r12, branch wf2/inc1b-r12), RR-0240
 
 AC1: decisions 77, 78 (docs/reports/lanes/2026-11-19/BL-R12/REPORT.md); task-332 created; MF-91 claimed (ls ids: MF-90 MF-91). AC2: decision-79; doctor clean. AC3: r1-review.txt and TRIAGE.md. Coordinator addition: decisions 80, 81 written; task-328/329 DONE edits skipped (not in this worktree).
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push window 5: 78f552fbb at 16:56Z, station PASS 28367 tests)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

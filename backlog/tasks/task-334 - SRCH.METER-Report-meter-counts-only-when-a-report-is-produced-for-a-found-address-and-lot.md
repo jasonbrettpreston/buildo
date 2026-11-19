@@ -3,11 +3,11 @@ id: TASK-334
 title: >-
   SRCH.METER Report meter counts only when a report is produced for a found
   address and lot
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-METER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:57:00Z'
+updated_date: '2026-11-19T16:58:00Z'
 labels:
   - S
   - plan:SRCH.METER
@@ -65,6 +65,8 @@ Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.t
 
 <!-- SECTION:NOTES:BEGIN -->
 Output review r2 (lens double and missed counting): 2 KEPT test gaps (parcelId semi case, lot map case) added in the fix commit; no route defect. Files: src/tests/parcel-lookup-gate.infra.test.ts
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push window 5: 78f552fbb at 16:56Z, station PASS 28367 tests)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -3,11 +3,11 @@ id: TASK-318
 title: >-
   SRCH.ROUTE Search identifies the case and routes it: two or more parcels at
   one...
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-ROUTE'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:37:00Z'
+updated_date: '2026-11-19T16:58:00Z'
 labels:
   - S
   - plan:SRCH.ROUTE
@@ -95,6 +95,8 @@ Files: src/tests/search-routing.logic.test.ts, docs/reports/reviews/task-318/, d
 2026-11-19 taken on the board at lane launch (lane BL-ROUTE, worktree /Users/brettpreston_macmini/Buildo-wt-route, branch wf1/inc1b-route), RR-0240
 
 2026-11-19 BL-ROUTE: all four cases route today with no code change. Test src/tests/search-routing.logic.test.ts (7 cases + 1 todo). Red proven by mutation of classifyRows (red.out: multi_parcel -> text_candidates). Mis-typed address -> no_match (OPERATOR item, it.todo).
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push window 5: 78f552fbb at 16:56Z, station PASS 28367 tests)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -3,11 +3,11 @@ id: TASK-333
 title: >-
   SRCH.FUZZY Mis-typed address resolves to candidates through the permit
   pipeline address-spec matcher (same module)
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-FUZZY'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:58:00Z'
+updated_date: '2026-11-19T16:58:00Z'
 labels:
   - S
   - plan:SRCH.FUZZY
@@ -65,6 +65,8 @@ Operator 2026-11-19 (RR-0277, MORNING-DECISIONS.md:1082): "we have resolved this
 2026-11-19 taken on the board at lane launch (lane BL-FUZZY, worktree /Users/brettpreston_macmini/Buildo-wt-fuzzy, branch wf1/inc1b-fuzzy), RR-0240
 
 Output review r2: one KEEP (admin regression guard case), others rejected with evidence in TRIAGE.md. Disclosed risk: threshold 2 on a street token may offer near-name lots at the same house number (UNVERIFIED rate, no DB).
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push window 5: 78f552fbb at 16:56Z, station PASS 28367 tests)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
