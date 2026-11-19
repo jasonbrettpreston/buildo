@@ -245,7 +245,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
     // MF-46 follow-up (dated 2026-11-12; Help & Support contact): + 5 web_help mailto labels and the search page's list.report (377 -> 383 strings).
     // MF-92 (SRCH.DAYLIGHT, task-322; dated 2026-11-19): 417 -> 414 strings (search.account.label, lot.facts removed; GAP.13 map.rail + map.badge -> map.heading); screen arm unchanged (98 goldens).
     // task-336 SRCH.LOTCARD (dated 2026-11-19; RR-0284 and RR-0289): 414 -> 418 strings: the four card-line keys lot.lead.house, lot.lead.house_faces, lot.lead.no_building, lot.lead.no_building_faces; screen arm unchanged (98 goldens).
-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 98 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 418 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+    // MF-91 SRCH.FOOTER (task-332; dated 2026-11-19; operator RR-0270 "1. once  -approved" and RR-0273 "this is a shared component"): 418 -> 422 strings: +4 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json (footer.copyright, footer.help, footer.privacy, footer.terms, lines 2-5); measured with surface-validate --check before (418) and after (422).
+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 98 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 422 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
   });
   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));

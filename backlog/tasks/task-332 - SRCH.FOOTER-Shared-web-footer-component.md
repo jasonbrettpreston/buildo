@@ -10,7 +10,7 @@ status: BUILT
 assignee:
   - '@lane-BL-FOOTER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T20:15:00Z'
+updated_date: '2026-11-19T20:17:00Z'
 labels:
   - S
   - plan:SRCH.FOOTER
@@ -31,6 +31,9 @@ references:
   - docs/reports/lanes/2026-11-19/BL-FOOTER/TRIAGE.md
 documentation:
   - backlog/docs/increments/doc-4 - Increment-1-requirements.md
+modified_files:
+  - src/tests/surfaces/surface-validate.logic.test.ts
+  - src/tests/surfaces/surface-conformance.logic.test.ts
 type: build
 ordinal: 30012
 ---
@@ -99,6 +102,8 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-332 · Backlog; o
 2026-11-19 taken on the board at lane launch (lane BL-FOOTER, worktree /Users/brettpreston_macmini/Buildo-wt-footer, branch wf1/inc1b-footer), RR-0240
 
 Build commit (lane BL-FOOTER): footerNode.ts is the one shared footer tree builder; static, web search and web report use it; web goldens by buildGoldens, mobile fingerprints by search-golden-capture.ts and emit-mobile-surfaces.mjs; S-sbind pin 414 -> 422.
+
+S-sbind pins moved 418 -> 422 (four footer.* keys, F01 content lines 2-5) after BL-LOTFIX cleared the lot-card finding.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
