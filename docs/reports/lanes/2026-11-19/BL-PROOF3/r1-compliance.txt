@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of docs/reports/reviews/task-363/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10999 chars, answer 96 chars, 15s
+```
+BUG severity=HIGH — AC #5 "node scripts/analysis/proof-slice.mjs --slice S --out <dir> still prints the table with exit 3 on the real file (PASS rows unchanged)" — plan step 5 "5. Header line 11 exit table: unwritable --out is exit 2." — the plan edits the header text but names no step that runs the real slice S and records exit 3 with PASS 5 / FAIL 0 unchanged, so half of AC #5 has no plan step — add a step: run node scripts/analysis/proof-slice.mjs --slice S --out <tmp>, assert exit 3, record the table in docs/reports/lanes/2026-11-19/BL-PROOF3/TABLE.md
+DEFER severity=MED — AC #4 "git grep proof-slices.json src/tests: no pin on the old value found by me, UNVERIFIED until the hook run" — plan step 4 "4. proof-slices.json report-opens blockedBy ["task-123"] -> ["task-287"]; design-fit unchanged (RR-0306)." — the plan never names the grep that proves no test or fixture pins ["task-123"], leaving the clause at UNVERIFIED — add the grep to step 4 and paste its output in the lane report
+DEFER severity=LOW — AC #1 "src/tests/proof-slice.logic.test.ts: a red-first case where a row has "suite": null" — plan step 1 "1. Red tests: suite null (checkSpec problem, main 2)" — step 1 names no file and no commit-before-fix order, so "red-first" is not pinned by the plan — name src/tests/proof-slice.logic.test.ts in step 1 and state the failing run is committed before the checkSpec change
+MET — AC #1 — plan step 2 "checkSpec: suite must be an object with non-empty suite_files" — a "suite": null row yields a problem string instead of a TypeError on r.suite.suite_files
+MET — AC #2 — plan step 2 "timeoutMs, when present, a positive integer" — "5" and -1 both fail the type check and exit 2
+MET — AC #3 — plan step 3 "main: wrap io.mkdir in try/catch; console.error one `proof-slice: cannot create --out ...` line; return 2." — one proof-slice: line and exit 2, not the uncaught-exception exit 1
+MET — AC #4 "blockedBy is exactly ["task-287"]" — plan step 4 "report-opens blockedBy ["task-123"] -> ["task-287"]" — the row value is corrected to the live-switch blocker
+MET — RR-0306 "I would agree" — plan step 4 "design-fit unchanged (RR-0306)" — the design-fit row is left as is, per the ruling
+MET — PLAN-PROTOCOL:3 "keep it simple; no scope creep" — plan "Scope fence: nothing else in the runner changes." — no behaviour beyond the four named clauses is added
+MET — RR-0190 "must cite file:line, an RR id or UNVERIFIED" — plan step 4 cites "RR-0306" — the ruling is cited by id, satisfying the citation rule
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+```
+
+---
+⏱  17700ms (17.7s)
+📊 Tokens — total: 23701, input: 19996, output: 3705, reasoning: 2942

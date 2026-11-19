@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of docs/reports/reviews/task-363/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10111 chars, answer 0 chars, 15s
+DEFER severity=MED — "(no pasted context provided)" — the File block carries only the plan and lane prose, so checkSpec, main, the io.mkdir handler and the three tests cannot be read or judged — paste the changed lines of scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json and src/tests/proof-slice.logic.test.ts.
+DEFER severity=MED — "3. main: wrap io.mkdir in try/catch; console.error one `proof-slice: cannot create --out ...` line; return 2." — the try scope is invisible, and if it also encloses the table build/write a genuine write failure returns 2 (usage or bad data file) instead of the documented FAIL code 1 at proof-slice.mjs:11 — quote "exit ... 1 any FAIL ... 2 usage or bad data file" and keep the try around the io.mkdir call only, rethrowing nothing else into exit 2.
+DEFER severity=MED — "2. checkSpec: suite must be an object with non-empty suite_files; timeoutMs, when present, a positive integer." — nothing here settles what timeoutMs 0 means; if any existing row in proof-slices.json uses 0, a positive-integer check invalidates the real data file and breaks AC #5 (PASS rows unchanged, exit 3) — confirm t > 0 against every timeoutMs in proof-slices.json before locking the predicate.
+DEFER severity=LOW — "#2 Same file: a row with \"timeoutMs\": \"5\" or -1 returns a problem and exit 2" — the AC names only a string and a negative, so a typeof check passes true/NaN/1.5 unnoticed — use Number.isInteger(t) && t > 0, which already rejects NaN, Infinity and 1.5.
+DEFER severity=LOW — "#4 scripts/analysis/proof-slices.json row report-opens blockedBy is exactly [\"task-287\"] instead of [\"task-123\"] (git grep proof-slices.json src/tests: no pin on the old value found by me, UNVERIFIED until the hook run)" — a single-row edit leaves any other row that pins task-123 as a stale blocker, and a test pin would silently keep the old value — run the git grep over proof-slices.json and src/tests before claiming #4 and cite the result.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- No file content in the File block, so no changed line could be checked against the six correctness questions.
+- Unverified try scope around io.mkdir could swallow a real write failure into exit 2, contradicting the header exit table.
+- Unverified timeoutMs predicate (positive integer) may reject the committed data file and change the real run's exit code from 3.
+
+---
+⏱  20981ms (21.0s)
+📊 Tokens — total: 23784, input: 19943, output: 3841, reasoning: 3226

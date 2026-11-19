@@ -3,11 +3,11 @@ id: TASK-363
 title: >-
   PROOF.S-2 proof-slice.mjs: reject a null suite and bad timeout, exit 2 on an
   unwritable out dir, correct the report-opens blocker
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-PROOF3'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:40:00Z'
+updated_date: '2026-11-19T22:41:00Z'
 labels:
   - S
   - plan:PROOF.S
@@ -16,6 +16,7 @@ dependencies:
   - TASK-68
 references:
   - docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md
+  - docs/reports/lanes/2026-11-19/BL-PROOF3/REPORT.md
 type: build
 project: McIncrement
 ordinal: 63012
@@ -36,10 +37,10 @@ Files: scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json, src
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 src/tests/proof-slice.logic.test.ts: a red-first case where a row has "suite": null; checkSpec returns a problem string and main returns 2 (no TypeError)
-- [ ] #2 Same file: a row with "timeoutMs": "5" or -1 returns a problem and exit 2
-- [ ] #3 Same file: main with an io.mkdir that throws returns 2 and prints one proof-slice: line
-- [ ] #4 scripts/analysis/proof-slices.json row report-opens blockedBy is exactly ["task-287"] instead of ["task-123"] (git grep proof-slices.json src/tests: no pin on the old value found by me, UNVERIFIED until the hook run); the design-fit row is unchanged (RR-0306)
+- [x] #1 src/tests/proof-slice.logic.test.ts: a red-first case where a row has "suite": null; checkSpec returns a problem string and main returns 2 (no TypeError)
+- [x] #2 Same file: a row with "timeoutMs": "5" or -1 returns a problem and exit 2
+- [x] #3 Same file: main with an io.mkdir that throws returns 2 and prints one proof-slice: line
+- [x] #4 scripts/analysis/proof-slices.json row report-opens blockedBy is exactly ["task-287"] instead of ["task-123"] (git grep proof-slices.json src/tests: no pin on the old value found by me, UNVERIFIED until the hook run); the design-fit row is unchanged (RR-0306)
 - [ ] #5 The header exit table (proof-slice.mjs:11) is updated to say an unwritable --out is exit 2; node scripts/analysis/proof-slice.mjs --slice S --out <dir> still prints the table with exit 3 on the real file (PASS rows unchanged)
 <!-- AC:END -->
 
@@ -70,3 +71,9 @@ Files: scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json, src
 
 Lane BL-PROOF3: suite null, timeoutMs, mkdir guard and report-opens blocker fixed with tests; read-only existing --out dir still exits 1 via writeFile (leftover).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+6f7bed541: guards, mkdir exit 2, report-opens task-287; hook run 40 passed. AC5 header says 'cannot be created'; read-only existing --out still exit 1 (leftover).
+<!-- SECTION:FINAL_SUMMARY:END -->

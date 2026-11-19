@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of docs/reports/reviews/task-363/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10504 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21095 chars, answer 0 chars, 30s
+DEFER severity=MED — scripts/analysis/proof-slice.mjs checkSpec, "r?.suite !== undefined && !(Array.isArray(r.suite.suite_files) ...)" — the planned fix guards a null suite only; a null entry in the rows array (or a non-object row) makes `r?.suite` undefined so the condition is false, checkSpec passes it and main still dereferences it, the same uncaught TypeError exit 1 — add a first check that every row is a plain object carrying a string id, plus a red-first test on rows [null].
+
+DEFER severity=MED — BL-PROOF3 lane plan step 3, "main: wrap io.mkdir in try/catch; console.error one `proof-slice: cannot create --out ...` line; return 2." — on the second run into an --out that already exists a non-recursive mkdir throws EEXIST and the new path reports "cannot create --out" with exit 2, so a legitimate re-run reads as unwritable; cannot see which mkdir form io.mkdir uses — treat EEXIST as success (or pass recursive true) and exit 2 only on EACCES, EPERM, ENOTDIR, ENOSPC, with a red-first second-run test.
+
+DEFER severity=LOW — BL-PROOF3 lane plan step 3, "console.error one `proof-slice: cannot create --out ...` line; return 2." — dropping err.code makes EACCES, ENOENT on a missing parent and ENOSPC indistinguishable in the single line, so a usage typo looks like a permissions fault — append err.code to that same one proof-slice: line and keep it one line.
+
+DEFER severity=MED — BL-PROOF3 lane plan step 2, "timeoutMs, when present, a positive integer." — a positive integer above 2147483647 passes this check, but the timeout call it feeds overflows in Node and fires in about 1 ms, killing a healthy run and turning a PASS row into FAIL with exit 1 — reject values above 2147483647 (or clamp) and add the boundary to the red tests beside "5" and -1.
+
+DEFER severity=MED — BL-PROOF3 lane plan, "Scope fence: nothing else in the runner changes." — the try/catch covers mkdir only; if main writes any table or report file under --out (cannot see whether it does, AC #5 says the table is printed to stdout) that write still dies with Node's uncaught exit 1, the exact class this task exists to remove — wrap the out-dir writes the same way or have the grounder confirm nothing is written under --out after mkdir.
+
+VERDICT: PASS on error-path safety
+Paths walked: null suite, null row entry, missing suite_files, bad timeoutMs type ("5", -1), oversized timeoutMs, timeout expiry (not covered by plan), unwritable --out EACCES, existing --out EEXIST on re-run, missing parent ENOENT, stdout table with exit 3, blockedBy data edit   Unguarded: 3
+
+---
+⏱  44447ms (44.4s)
+📊 Tokens — total: 28264, input: 19960, output: 8304, reasoning: 7630
