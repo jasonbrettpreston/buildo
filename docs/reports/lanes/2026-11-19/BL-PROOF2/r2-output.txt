@@ -1,0 +1,63 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of docs/reports/reviews/task-68/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10219 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22619 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29187 chars, answer 4300 chars, 45s
+## Scope note
+
+The review request carries a single lens: *"does any row print PASS without having run its check, and does a missing check print NOT BUILT (or GAP) rather than PASS?"* Everything below is framed against that lens. Line numbers are relative to the embedded `scripts/analysis/proof-slice.mjs` listing (the code block starts at `#!/usr/bin/env node` = line 1). A short out-of-lens section is appended at the end — it contains a crash and an arbitrary-execution path that I won't withhold.
+
+---
+
+## Findings
+
+- **[CRITICAL]** (lines 67–68, `commandRow`): **PASS is the default for exit 0.** The only thing that converts a green command row into NOT BUILT is an opt-in `waits` string that the *check itself* must print. Nothing in `checkSpec` requires `waits` on any argv row, and nothing asserts the command did anything. Concretely: `chk3-nothing-new` and `chk5-mcstorage` both spawn `node scripts/analysis/policy-checks.mjs --all`. If that script exits 0 while implementing CHK.1 and CHK.2 only, both rows print PASS. Worse, the sentinel has a bootstrap problem — a not-yet-written CHK.3 check cannot print `WAITS CHK.3` because it doesn't exist, so the row that exists specifically to prove CHK.3 is *most* likely to be the one that silently passes. And because both rows share one command, a `policy-checks.mjs` that prints `WAITS CHK.3` but nothing for CHK.5 gives you NOT BUILT on chk3 and PASS on chk5, with CHK.5 possibly not existing at all. **Fix:** invert the polarity. Require positive proof of execution — every argv check must emit a machine-readable line (e.g. `CHECK RAN <id> checks=<n>`), and `commandRow` returns GAP, not PASS, when it is absent. Absence of a "not built" marker is not evidence of a run.
+
+- **[HIGH]** (line 78, `suiteRow`): **PASS without evidence the listed suite files ran.** The green condition is `field('sha') === head && field('RESULT') === 'PASS'`. `row.suite.suite_files` appears only in the proof string (`covers: ...`, line 72) — it is never compared to the pass file. Any pass file from any suite run on the current HEAD turns this row green, including a run of an unrelated subset. That is exactly the lens failure: PASS with the check not having run. **Fix:** the pass file must carry the file list and per-file result; match it. Or store a stable hash of the sorted `suite_files` in both the JSON row and the pass file and compare.
+
+- **[HIGH]** (line 76, `suiteRow`): **First-match regex over a pass file that can hold multiple runs.** `new RegExp('^sha:\\s*(\\S+)', 'm').exec(body)` and the same for `RESULT` return the *first* occurrence. If the station pass file is appended across runs (the natural thing for a log), a stale block whose sha happens to equal HEAD and whose `RESULT: PASS` sits first masks a later FAIL for the same sha — e.g. a re-run after a flake fix regressed. Green on stale evidence. **Fix:** parse the *last* run block, or reject files containing more than one `^sha:` line as ambiguous (GAP).
+
+- **[HIGH]** (lines 66–67, `commandRow`, ordering): **The `waits` test runs only after the exit-code test.** A not-built check that honestly exits non-zero (a stub `process.exit(1)`, or a check that throws "not implemented") is reported **FAIL** — exit 1 — not NOT BUILT, exit 3. That's the mirror of the lens question and it matters operationally: exit 1 is "the tree is broken", exit 3 is "not built yet", and the caller (PROOF.S, task-268) will react differently. It also trains the JSON author to make unbuilt checks exit 0 so they're classified correctly — which pushes them straight into finding #1. **Fix:** evaluate `waits` against the output *before* branching on `res.status`, or accept either status for the sentinel path.
+
+- **[MED]** (line 41, `checkSpec`): **`waits` is validated as a string and nothing else.** It is silently ignored when the row kind is `suite` or `notbuilt` (`suiteRow` never reads it; the notbuilt branch never reads it). An author who writes `{"suite": {...}, "waits": "WAITS X"}` gets PASS from a pass file, not the NOT BUILT they asked for, with no validation error. **Fix:** `if (r.waits !== undefined && r.argv === undefined) problems.push(...)`.
+
+- **[MED]** (lines 34–47, `checkSpec`): **Unknown keys are never rejected, so a typo silently converts to PASS.** `"wait": "WAITS CHK.3"` (singular), `"Waits"`, or `"waits "` all pass validation untouched, and `commandRow`'s `row.waits` is `undefined` — the row can never be NOT BUILT, it's PASS-or-FAIL only. Fail-closed shape validation is the whole point of `checkSpec`; it currently fails open on the one field that governs the lens. **Fix:** whitelist keys per row kind (`id/proof/timeoutMs` + exactly one of `argv|waits`, `suite`, `notbuilt`) and push a problem for anything else.
+
+- **[MED]** (lines 66–68 vs. the three golden rows): **The golden-capture rows have no minimum-count assertion.** `search-goldens` / `lotmap-goldens` / `semi-goldens` claim "10 states", "11 states", "8 states" in prose only. If `scripts/surfaces/*-golden-capture.ts` finds zero goldens (directory renamed, glob broken, `--check` short-circuits on an empty set), it exits 0 and the row prints PASS — a vacuous pass, which is the canonical "PASS without having run its check". Same for `surface-validate`. **Fix:** make the counts data, not prose (`"expect": {"comparisons": 10}`), require the check to print the count, and fail when it doesn't match.
+
+- **[MED]** (line 92, `runSlice`): **Exit 0 is structurally unreachable for slice `S`,** so the tool's green signal is dead and callers will learn to ignore exit 3 — which is precisely how a fake PASS gets waved through later. Nine rows are hardcoded `notbuilt`, including `mobile-jest` with `blockedBy: []`. A row with no blocker can never be unblocked; it is permanently NOT BUILT *by authorial decision*, not by dependency, and the table renders it as "unblocked by `-`". That is a fourth state ("this tool does not cover it") being smuggled into the third ("blocked"). **Fix:** give it its own status and exit code (e.g. `UNCOVERED`, exit 4) or drop the row; and stop the tool promising `exit 0 every row PASS` in the header when no slice can reach it.
+
+- **[MED]** (line 44, `checkSpec` — crash, not validation): **`"notbuilt": null` throws.** `kinds` counts `notbuilt` because `null !== undefined`, then `const b = r.notbuilt.blockedBy` throws `TypeError` on null. The exception escapes `runSlice`, escapes `main`, and the process dies with a stack trace and exit 1 — the header promises exit 2 for a bad data file. **Fix:** `if (typeof r.notbuilt !== 'object' || r.notbuilt === null) problems.push(`${at}: notbuilt must be an object`); else { ... }`.
+
+- **[LOW]** (line 19–20 / `realIo`, `head`): **A failed `git rev-parse HEAD` is swallowed.** `spawnSync(...).stdout.trim()` yields `''` on failure, not an error, and `suiteRow` then compares the pass file's sha against `''`. It fails safe today (`undefined !== ''` → GAP), but the run proceeds against a HEAD it never established and reports a per-row GAP instead of a flat "cannot determine HEAD". **Fix:** check `status !== 0` and return exit 2 before running any row.
+
+- **[LOW]** (`proof-slices.json`, `chk3-nothing-new` / `chk5-mcstorage`): **The same command is spawned twice** for two rows, at up to 120 s each, writing two evidence files from two independent runs. If `policy-checks.mjs` is slow you double the wall clock; if it is non-deterministic or stateful you get two *different* evidence files for the same command and no way to tell which row's verdict came from which. **Fix:** memoise by `argv.join('\0')` and share the run (and the evidence file) across rows.
+
+- **[LOW]** (line 58, `commandRow` evidence): **The evidence file omits `res.error`.** `text(res)` covers stdout/stderr only, so a GAP caused by `ENOENT`/`EACCES`/`ENOBUFS` writes a file that reads `$ node ...\nexit: none (ENOENT)\n\n` and nothing else. The `.txt` is the audit artifact; it should state *why* the command didn't run. Also the `cause` for `ENOBUFS` reads "could not start (ENOBUFS)", which is false — it started and was truncated at `maxBuffer`. **Fix:** append `error.code`, `error.message` and `signal` to the evidence body, and branch the cause string on `ENOBUFS`.
+
+- **[LOW]** (line 34, `checkSpec` / `commandRow`): **A missing check *script* classifies as FAIL, not GAP.** For `argv: ["node", "scripts/surfaces/surface-validate.mjs", "--check"]`, `cmd === 'node'` maps to `process.execPath`, which exists; the missing file is an argument, so node runs and exits 1 (`MODULE_NOT_FOUND`). The ENOENT→GAP path (lines 60–65) is effectively dead for every `node` row. The row then claims the surface validation *failed* when in truth it never ran. Not a false PASS — but a false statement about what was checked, which is the same defect class the lens is hunting. **Fix:** pre-flight `fs.existsSync` on argv entries that look like repo-relative paths, and return GAP with "check not present".
+
+- **[NIT]** (line 29): An unknown slice reports `slice X: no rows` — indistinguishable from a real slice with an empty row set. Also `main` calls `io.mkdir(outDir)` (line ~114) *before* the slice id is validated, so a typo leaves an empty directory behind.
+
+- **[NIT]** (`parseArgs`, line ~106): Repeated flags (`--slice A --slice B`) silently take the last; no duplicate detection.
+
+- **[NIT]** (line 78 rendering): `proof` and `cause` are interpolated raw into a markdown table cell. A `|` or embedded newline in either breaks the table — and `cause` can contain arbitrary text from a spawned command's exit path.
+
+---
+
+## Out of lens (not withholding these)
+
+- **[HIGH]** (`realIo.run`, line ~110): `spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, ... })` executes **any** binary named in the JSON data file, with the repo as cwd, unsandboxed. A row of `["rm","-rf","..."]` or `["git","push"]` runs. The file's own header claims "Commits nothing; reads and writes no database" — that is a description of today's data, not a property of the tool. Enforce an allowlist (`node`, `node_modules/.bin/*`) in `checkSpec`; the fail-closed validator is right there.
+- **[MED]** (line 78 → `renderTable`): a `RESULT: PASS` line is accepted from any file the caller points `--suite-pass` at. Nothing binds the pass file to the push station, to a signature, or to mtime-vs-HEAD-commit-time. Point it at a hand-written two-line file with the right sha and the suite row goes green. Given the lens, that's the cheapest path to a PASS that never ran.
+
+---
+
+## Verdict
+
+The tool is honest about *blocked* work and dishonest about *absent* work. Every mechanism it has for distinguishing "the check ran and passed" from "the check isn't there" is opt-in, supplied by the check under suspicion: the `WAITS` sentinel for command rows, the bare `RESULT: PASS` + sha for the suite row, and exit-0 for everything else. That inverts the burden of proof in the one place you cannot afford to invert it — `chk3-nothing-new` passes unless someone edits a file that doesn't exist yet to say it doesn't exist. The suite row is independently broken in the same direction (`suite_files` is decorative), and the exit-code ordering actively rewards authors for making unbuilt checks exit 0. Fix the polarity (require positive proof of execution, default to GAP), bind the suite row to the files it names, and reject unknown/ignored keys in `checkSpec`, and the lens question becomes answerable. Until then, no row in this output is a claim you can rely on.
+
+---
+⏱  55451ms (55.5s)
+📊 Tokens — total: 30953, input: 19774, output: 11179, reasoning: 8098
+rc=0

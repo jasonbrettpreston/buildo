@@ -21,6 +21,7 @@ const DATA = path.join(REPO, 'scripts/analysis/proof-slices.json');
 const DEFAULT_TIMEOUT_MS = 120000;
 const ID_RE = /^[a-z0-9-]{1,40}$/;
 const TASK_RE = /^task-\d+$/;
+const KEYS = ['id', 'proof', 'argv', 'waits', 'expect', 'timeoutMs', 'suite', 'notbuilt'];
 const STATUSES = ['PASS', 'FAIL', 'NOT BUILT', 'GAP'];
 
 // Shape problems of one slice (fail closed: any problem is exit 2).
@@ -38,9 +39,14 @@ export function checkSpec(spec, slice) {
     const kinds = ['argv', 'suite', 'notbuilt'].filter((k) => r?.[k] !== undefined);
     if (kinds.length !== 1) problems.push(`${at}: needs exactly one of argv, suite, notbuilt`);
     if (r?.argv !== undefined && !(Array.isArray(r.argv) && r.argv.length > 0 && r.argv.every((a) => typeof a === 'string'))) problems.push(`${at}: argv must be an array of strings`);
-    if (r?.waits !== undefined && typeof r.waits !== 'string') problems.push(`${at}: waits must be a string`);
+    for (const k of Object.keys(r ?? {})) if (!KEYS.includes(k)) problems.push(`${at}: unknown key ${k}`);
+    for (const k of ['waits', 'expect']) {
+      if (r?.[k] !== undefined && (typeof r[k] !== 'string' || r[k] === '')) problems.push(`${at}: ${k} must be a non-empty string`);
+      if (r?.[k] !== undefined && r.argv === undefined) problems.push(`${at}: ${k} is only read on an argv row`);
+    }
     if (r?.suite !== undefined && !(Array.isArray(r.suite.suite_files) && r.suite.suite_files.length > 0)) problems.push(`${at}: suite.suite_files missing`);
-    if (r?.notbuilt !== undefined) {
+    if (r?.notbuilt !== undefined && (typeof r.notbuilt !== 'object' || r.notbuilt === null)) problems.push(`${at}: notbuilt must be an object`);
+    else if (r?.notbuilt !== undefined) {
       const b = r.notbuilt.blockedBy;
       if (!Array.isArray(b) || !b.every((t) => TASK_RE.test(t))) problems.push(`${at}: notbuilt.blockedBy must be an array of task ids`);
       else if (b.length === 0 && !(typeof r.notbuilt.reason === 'string' && r.notbuilt.reason !== '')) problems.push(`${at}: notbuilt needs a blocker or a reason`);
@@ -55,7 +61,8 @@ function commandRow(row, { run, outDir, writeFile }) {
   const res = run(row.argv, { timeoutMs: row.timeoutMs ?? DEFAULT_TIMEOUT_MS });
   const evidence = path.join(outDir, `${row.id}.txt`);
   const out = text(res);
-  writeFile(evidence, `$ ${row.argv.join(' ')}\nexit: ${res.status ?? `none (${res.signal ?? res.error?.code ?? 'unknown'})`}\n\n${out}`);
+  const why = res.error ? `\nerror: ${res.error.code ?? ''} ${res.error.message ?? ''}`.trimEnd() : '';
+  writeFile(evidence, `$ ${row.argv.join(' ')}\nexit: ${res.status ?? `none (${res.signal ?? res.error?.code ?? 'unknown'})`}${why}\n\n${out}`);
   const base = { id: row.id, proof: row.proof, evidence, blockedBy: [] };
   if (res.status === null || res.status === undefined) {
     const code = res.error?.code;
@@ -65,6 +72,8 @@ function commandRow(row, { run, outDir, writeFile }) {
   }
   if (res.status !== 0) return { ...base, status: 'FAIL', cause: `exit ${res.status}` };
   if (row.waits && out.split('\n').some((l) => l.startsWith(row.waits))) return { ...base, status: 'NOT BUILT', cause: `${row.waits} in the check's own output` };
+  // Positive proof of a run: when the row names the line its check prints, a clean exit without that line is GAP, never PASS.
+  if (row.expect && !out.split('\n').some((l) => l.includes(row.expect))) return { ...base, status: 'GAP', cause: `exit 0 but the expected output line was not found: ${row.expect}` };
   return { ...base, status: 'PASS' };
 }
 
@@ -130,6 +139,7 @@ const realIo = () => ({
 export function main(argv, io = realIo()) {
   const a = parseArgs(argv);
   if (!a) { console.error(USAGE); return 2; }
+  if (!io.head) { console.error('proof-slice: cannot determine HEAD (git rev-parse failed)'); return 2; }
   let spec;
   try { spec = JSON.parse(io.readFile(DATA)); } catch (e) { console.error(`proof-slices.json unreadable or malformed: ${e.message}`); return 2; }
   const outDir = path.resolve(a.out);

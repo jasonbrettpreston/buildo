@@ -192,3 +192,39 @@ describe('T7 tripwire (not a sandbox): the runner carries no database or network
     expect(text).not.toMatch(/from ['"]pg['"]|require\(['"]pg['"]\)|postgres(ql)?:\/\/|\bfetch\(/);
   });
 });
+
+describe('T8 output review r2 (KEPT findings): positive proof of a run, strict row keys', () => {
+  it('a clean exit without the expected output line is GAP, never PASS', () => {
+    const r = go([cmd('g', { expect: 'goldens ok' })], () => ({ status: 0, stdout: '' }));
+    expect(r.rows[0]).toMatchObject({ status: 'GAP' });
+    expect(r.exit).toBe(3);
+  });
+  it('a clean exit with the expected output line is PASS', () => {
+    expect(go([cmd('g', { expect: 'goldens ok' })], () => ({ status: 0, stdout: 'search goldens ok (10)\n' })).rows[0]?.status).toBe('PASS');
+  });
+  it('the WAITS marker still wins over expect', () => {
+    const r = go([cmd('c', { waits: 'WAITS CHK.5', expect: 'POLICY CHECKS OK' })], () => ({ status: 0, stdout: 'WAITS CHK.5 x\nPOLICY CHECKS OK\n' }));
+    expect(r.rows[0]?.status).toBe('NOT BUILT');
+  });
+  it('unknown row keys, and waits or expect on a non-argv row, are bad data', () => {
+    expect(checkSpec(spec([cmd('a', { wait: 'WAITS X' })]), 'S').join()).toMatch(/unknown key wait/);
+    expect(checkSpec(spec([{ id: 's', proof: 'p', suite: { suite_files: ['x'] }, waits: 'WAITS X' }]), 'S').join()).toMatch(/only read on an argv row/);
+    expect(checkSpec(spec([cmd('a', { expect: '' })]), 'S').join()).toMatch(/non-empty string/);
+  });
+  it('notbuilt null is a stated problem, not a crash', () => {
+    expect(checkSpec(spec([{ id: 'n', proof: 'p', notbuilt: null }]), 'S').join()).toMatch(/notbuilt must be an object/);
+  });
+  it('an unknown HEAD exits 2 before any row runs', () => {
+    const io = { readFile: () => JSON.stringify(spec([cmd('a')])), run: ok, head: '', writeFile: () => undefined, mkdir: () => undefined, print: () => undefined };
+    expect(main(['--slice', 'S', '--out', '/out'], io)).toBe(2);
+  });
+  it('the evidence file states why a command did not run', () => {
+    const written: Record<string, string> = {};
+    go([cmd('nope')], () => ({ status: null, error: { code: 'ENOENT', message: 'spawn x ENOENT' } as { code: string } }), { writeFile: (f: string, t: string) => { written[f] = t; } });
+    expect(written['/out/nope.txt']).toContain('error: ENOENT');
+  });
+  it('every golden, surface and policy row in the committed data names the line its check prints', () => {
+    const rows = (JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slices.json'), 'utf8')) as Record<string, { rows: Array<Record<string, unknown>> }>).S?.rows ?? [];
+    for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk3-nothing-new', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
+  });
+});
