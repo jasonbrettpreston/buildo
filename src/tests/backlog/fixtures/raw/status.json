@@ -1,0 +1,106 @@
+{
+ "generated": "2026-11-19T00:00:00Z",
+ "tip": "e9bd70288",
+ "ladder": "PLANNED<READY<BUILT<DONE<LANDED",
+ "counts": {},
+ "duplicates": [],
+ "tasks": {
+  "EV.1": {
+   "inc": "F",
+   "id": "EV.1",
+   "title": "EV.1",
+   "typed": "",
+   "deps": [],
+   "evidence": [
+    {
+     "rung": "DONE",
+     "kind": "test",
+     "ref": "x",
+     "quote": "q"
+    }
+   ],
+   "flags": [],
+   "status": "DONE",
+   "waitsOn": []
+  },
+  "EV.2": {
+   "inc": "F",
+   "id": "EV.2",
+   "title": "EV.2",
+   "typed": "",
+   "deps": [],
+   "evidence": [
+    {
+     "rung": "BUILT",
+     "kind": "test",
+     "ref": "x",
+     "quote": "q"
+    }
+   ],
+   "flags": [],
+   "status": "BUILT",
+   "waitsOn": []
+  },
+  "EV.3": {
+   "inc": "F",
+   "id": "EV.3",
+   "title": "EV.3",
+   "typed": "",
+   "deps": [],
+   "evidence": [
+    {
+     "rung": "DONE",
+     "kind": "test",
+     "ref": "x",
+     "quote": "q"
+    }
+   ],
+   "flags": [],
+   "status": "DONE",
+   "waitsOn": []
+  },
+  "EV.4": {
+   "inc": "F",
+   "id": "EV.4",
+   "title": "EV.4",
+   "typed": "",
+   "deps": [],
+   "evidence": [
+    {
+     "rung": "LANDED",
+     "kind": "test",
+     "ref": "x",
+     "quote": "q"
+    }
+   ],
+   "flags": [],
+   "status": "LANDED",
+   "waitsOn": []
+  },
+  "EV.5": {
+   "inc": "F",
+   "id": "EV.5",
+   "title": "EV.5",
+   "typed": "",
+   "deps": [],
+   "evidence": [
+    {
+     "rung": "LANDED",
+     "kind": "test",
+     "ref": "x",
+     "quote": "q"
+    }
+   ],
+   "flags": [],
+   "status": "LANDED",
+   "waitsOn": []
+  }
+ },
+ "queueFlags": [],
+ "queueCandidates": [],
+ "queueRowGaps": {
+  "noStatus": [],
+  "dupStatus": []
+ },
+ "spec137": "fixture"
+}

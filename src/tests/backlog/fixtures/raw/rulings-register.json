@@ -1,0 +1,85 @@
+{
+ "_note": "fixture",
+ "schema": "1",
+ "built": "2026-11-19",
+ "rows": [
+  {
+   "id": "RR-0101",
+   "date": "2026-11-18",
+   "topic": "Backlog is the home of the plan",
+   "groups": [
+    "F"
+   ],
+   "text": "Backlog is the home; CHK.5 and RUL.1 are named",
+   "cite": "~/Buildo-scratch/q.md:2",
+   "quote": "yes of course",
+   "status": "in force",
+   "supersedes": [],
+   "today": true,
+   "kind": "ruling",
+   "source": "operator"
+  },
+  {
+   "id": "RR-0102",
+   "date": "2026-11-18",
+   "topic": "McLane is the name",
+   "groups": [
+    "F"
+   ],
+   "text": "name",
+   "cite": "~/Buildo-scratch/q.md:3",
+   "quote": "Let's stick with McLane for a name.",
+   "status": "in force",
+   "supersedes": [],
+   "today": true,
+   "kind": "ruling",
+   "source": "operator"
+  },
+  {
+   "id": "RR-0103",
+   "date": "2026-11-18",
+   "topic": "Photo bands six",
+   "groups": [
+    "1"
+   ],
+   "text": "six bands",
+   "cite": "~/Buildo-scratch/q.md:4",
+   "quote": "IMG-1 b",
+   "status": "in force",
+   "supersedes": [],
+   "today": false,
+   "kind": "ruling",
+   "source": "operator"
+  },
+  {
+   "id": "RR-0104",
+   "date": "2026-11-17",
+   "topic": "Orchestrator reading of storage",
+   "groups": [
+    "S"
+   ],
+   "text": "reading",
+   "cite": "~/Buildo-scratch/q.md:5",
+   "quote": "reading text",
+   "status": "in force",
+   "supersedes": [],
+   "today": false,
+   "kind": "ruling",
+   "source": "reading"
+  },
+  {
+   "id": "RR-0105",
+   "date": "2026-11-17",
+   "topic": "Entry heading only",
+   "groups": [],
+   "text": "entry",
+   "cite": "~/Buildo-scratch/q.md:6",
+   "quote": "entry",
+   "status": "in force",
+   "supersedes": [],
+   "today": false,
+   "kind": "entry",
+   "source": "entry"
+  }
+ ]
+}

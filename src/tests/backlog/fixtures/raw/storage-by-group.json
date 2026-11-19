@@ -1,0 +1,16 @@
+{
+ "head": [
+  "storage head"
+ ],
+ "groups": {
+  "1": {
+   "lines": [
+    {
+     "text": "storage line",
+     "cite": "~/Buildo-scratch/q.md:4",
+     "quote": "IMG-1 b"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "1": {
+  "scenario": "fixture scenario",
+  "rows": [
+   {
+    "id": "E1",
+    "element": "Report tile"
+   }
+  ]
+ }
+}

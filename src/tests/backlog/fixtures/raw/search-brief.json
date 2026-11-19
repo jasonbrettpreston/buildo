@@ -1,0 +1,17 @@
+{
+ "inc": [
+  {
+   "text": "Search first",
+   "cite": "~/Buildo-scratch/q.md:2",
+   "quote": "yes of course"
+  }
+ ],
+ "deliverable": [
+  {
+   "text": "Small pages",
+   "cite": "~/Buildo-scratch/q.md:3",
+   "quote": "McLane"
+  }
+ ],
+ "specs": []
+}

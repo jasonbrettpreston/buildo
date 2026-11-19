@@ -1,0 +1,30 @@
+{
+ "legend": {
+  "AV3": {
+   "name": "Airtight V3",
+   "cite": "x:1",
+   "quote": "q",
+   "also": ""
+  }
+ },
+ "groups": {
+  "1": {
+   "title": "Increment 1: fixture",
+   "problems": [
+    {
+     "text": "a problem",
+     "cite": "~/Buildo-scratch/q.md:2",
+     "quote": "yes of course"
+    }
+   ],
+   "problems_note": null,
+   "objectives_project": [
+    {
+     "text": "Objective fixture",
+     "cite": "~/Buildo-scratch/q.md:3",
+     "quote": "McLane"
+    }
+   ]
+  }
+ }
+}

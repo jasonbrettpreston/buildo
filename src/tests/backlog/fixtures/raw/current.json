@@ -1,0 +1,17 @@
+[
+ {
+  "page": "search",
+  "id": "SP1",
+  "element": "box",
+  "where": "top",
+  "main": true,
+  "fields": [],
+  "status": "built",
+  "sweep_id": "x",
+  "tasks": [],
+  "source": "x",
+  "diff_vs_sweep": "",
+  "missed": false,
+  "removed": false
+ }
+]

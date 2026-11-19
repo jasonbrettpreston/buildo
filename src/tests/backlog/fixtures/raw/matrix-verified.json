@@ -1,0 +1,19 @@
+{
+ "generated": "2026-11-19",
+ "scenarios": [
+  {
+   "inc": "1",
+   "scenario": "fixture scenario",
+   "card_ids": [
+    "A"
+   ],
+   "categories": [],
+   "notes": ""
+  }
+ ],
+ "completeness": [],
+ "not_in_any_scenario": [],
+ "verify_generated": "x",
+ "verify_rules": "x",
+ "completeness_verify": "x"
+}

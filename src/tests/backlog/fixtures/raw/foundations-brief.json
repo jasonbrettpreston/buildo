@@ -1,0 +1,22 @@
+{
+ "inc": [
+  {
+   "text": "Foundations first",
+   "cite": "~/Buildo-scratch/q.md:2",
+   "quote": "yes of course"
+  }
+ ],
+ "deliverable": [
+  {
+   "text": "Every commit checked",
+   "cite": "~/Buildo-scratch/q.md:3",
+   "quote": "McLane"
+  }
+ ],
+ "specs": [
+  {
+   "name": "Spec 137",
+   "path_or_link": "docs/specs/00-architecture/137_mcqueue.md"
+  }
+ ]
+}

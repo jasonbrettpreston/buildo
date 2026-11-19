@@ -1,0 +1,281 @@
+{
+ "expect": {
+  "CEN.01": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.02": null,
+  "CEN.03": {
+   "status": "MERGED",
+   "labels": []
+  },
+  "CEN.04": {
+   "status": "draft",
+   "labels": []
+  },
+  "CEN.05": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.06": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.07": {
+   "status": "DROPPED",
+   "labels": []
+  },
+  "CEN.08": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.09": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.10": {
+   "status": "LATER",
+   "labels": []
+  },
+  "CEN.11": {
+   "status": "WAITS",
+   "labels": []
+  },
+  "CEN.12": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.13": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.14": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.15": {
+   "status": "draft",
+   "labels": []
+  },
+  "CEN.16": {
+   "status": "MERGED",
+   "labels": []
+  },
+  "CEN.17": {
+   "status": "WAITS",
+   "labels": []
+  },
+  "CEN.18": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.19": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.20": {
+   "status": "WAITS",
+   "labels": [
+    "held-unruled"
+   ]
+  },
+  "CEN.21": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.22": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.23": {
+   "status": "DONE",
+   "labels": []
+  },
+  "CEN.24": {
+   "status": "OPERATOR",
+   "labels": []
+  },
+  "CEN.25": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.26": {
+   "status": "WAITS",
+   "labels": []
+  },
+  "CEN.27": {
+   "status": "draft",
+   "labels": []
+  },
+  "CEN.28": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.29": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.30": {
+   "status": "RUNNING",
+   "labels": []
+  },
+  "CEN.31": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.32": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.33": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.34": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.35": {
+   "status": "OPERATOR",
+   "labels": []
+  },
+  "CEN.36": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "CEN.99": {
+   "status": "LATER",
+   "labels": [
+    "unverified"
+   ]
+  },
+  "EV.1": {
+   "status": "DONE",
+   "labels": []
+  },
+  "EV.2": {
+   "status": "BUILT",
+   "labels": []
+  },
+  "EV.3": {
+   "status": "DROPPED",
+   "labels": [],
+   "ruling": "we do not need it"
+  },
+  "EV.4": {
+   "status": "MERGED",
+   "labels": []
+  },
+  "EV.5": {
+   "status": "DONE",
+   "labels": []
+  },
+  "EV.6": {
+   "status": "FROZEN",
+   "labels": [],
+   "ruling": "hold this until push 8"
+  },
+  "EV.7": {
+   "status": "WAITS",
+   "labels": []
+  },
+  "EV.8": {
+   "status": "WAITS",
+   "labels": [
+    "held-unruled"
+   ]
+  }
+ },
+ "counts": {
+  "tasksMin": 72,
+  "draftsExact": 3
+ },
+ "censusWords": [
+  "NOT",
+  "DROP",
+  "MERGE",
+  "NEW",
+  "PLANNED",
+  "RULED",
+  "DROPPED",
+  "DEFERRED",
+  "queue",
+  "LATER",
+  "WAITS",
+  "operator",
+  "OPEN",
+  "+",
+  "proposed",
+  "FOLDED",
+  "WAITING",
+  "READY",
+  "CONFIRMED-WITH-CHANGE",
+  "HELD",
+  "CONFIRMED",
+  "storage",
+  "DONE",
+  "CONDITIONAL",
+  "R1",
+  "BLOCKED",
+  "DRAFTED",
+  "read-only",
+  "R-D",
+  "WRITING",
+  "ruling",
+  "process",
+  "",
+  "RE-DATE",
+  "OPERATOR",
+  "SERIES"
+ ],
+ "who": {
+  "WHO": [
+   "lane",
+   "operator",
+   "runner",
+   "McFrontend lane (E)",
+   "lane (MB-44 W read module owner)"
+  ]
+ },
+ "snapshotDate": "2026-11-19"
+}
