@@ -1,0 +1,4 @@
+A lookupsFor on golden dictionaries (108 texts, 112 units): rebuild 0.61 ms per request, memo hit 0.0001 ms (real dictionaries are 2,874 texts and 1,025 units: UNMEASURED at that size)
+B one-lot full compute on the golden 25 (no SQL), ms: min 132.6 median 9714.7 p90 13573.1 max 15856.8; rows per lot 325
+C page option types: detached_house, detached_houseplex | seed types: 12
+C8 rows of the page types: 2825 equal, 0 differ (content_sha excluded: it hashes the building-types seed, so it moves by design); filtered compute mean 44.3 ms per lot

@@ -2690,6 +2690,29 @@
       "reads": {},
       "writes": {}
     },
+    "src/lib/parcels/report-compute.ts": {
+      "class": "interpolated",
+      "statements": 2,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "024e5abf33946149",
+        "72ccf0f2c6f1c702"
+      ],
+      "reads": {
+        "bylaw_resolution_texts": [
+          "text",
+          "text_key"
+        ],
+        "bylaw_resolution_units": [
+          "unit_id",
+          "unit_key"
+        ]
+      },
+      "writes": {}
+    },
     "src/lib/parcels/what-we-checked.ts": {
       "class": "static",
       "statements": 4,

@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T22:13:00Z'
+updated_date: '2026-11-19T22:41:00Z'
 labels:
   - S
   - loose-ends
@@ -131,4 +131,6 @@ CHK.6 design-fit check and its elements file (task-67, task-345): not built; ope
 2026-11-19 (R18, task-355) loose end, from the no-plan research (task-357): the app cannot tell the two 403 refusals of the lookup apart, SUBSCRIPTION_REQUIRED and REPORT_LIMIT_REACHED, because ApiError holds a status and a message only (mobile/src/lib/errors.ts:14-21; mobile/src/lib/parcelSearchMatch.ts:295-300), so a person who used every report reads the subscription notice. Severity: visible. tied up by: the limit wall loose end above (NONE); task-357 builds a read-based rule for its own trigger only.
 
 task-351 (BL-RESET): built but unowned/unproven: (1) the limit wall resetsOn (src/features/leads/api/error-mapping.ts:34-38) is still a raw instant, its screen must use a server label; (2) formatDateDmy still prints Sept on the lot-size page (operator item in docs/reports/lanes/2026-11-19/BL-RESET/REPORT.md); (3) mobile jest and device look of the reports-left line not run (CI after push).
+
+Dated note 2026-11-19 (M-246; loose ends from LOAD.1 stage 2, lane BL-LOAD1B, task-266; launch preconditions, NOT fixed in LOAD.1): (1) the core requires the 7.4 MB docs/reference/bylaw-layer2-input.json and ESM .mjs files; the Cloud Run image copies only public, standalone, static, migrations and scripts (Dockerfile:29-33) on node:20-alpine (Dockerfile:15): not proven to load there, to be proven before the web live switch flips (LS.12). (2) The compute is synchronous: it blocks one instance for 3.9 to 15.9 s per lot here (golden 25, no SQL; 33.6 s measured by the STORAGE lane) as built; no deadline, no single-flight. (3) The app retries a failed lookup three more times (mobile/src/hooks/useParcelLookup.ts:52-59), so one failing compute can run four times. (4) The platform request timeout is unknown (cloudbuild.yaml sets no --timeout). (5) Suggested, not built: a reason code logged for each null return of computeCustomerPageResponse, and the entry added to the growth-locked src SQL ledger interpolated set (30th file, scripts/analysis/src-sql-ledger.mjs) needs the operator's review.
 <!-- SECTION:NOTES:END -->

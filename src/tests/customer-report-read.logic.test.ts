@@ -10,10 +10,10 @@
 //   T4 current     a response buildPage and the mobile view accept; the expected values are HAND-WRITTEN, not taken from the admin producer
 //   T5 gated       a gated lot is a deliberate all-not-evaluated page, not a miss
 //   T6 scope       W and the shared read import no meter, entitlement, usage, consumer-lookup or admin module and write nothing; the fence is not vacuous
-//   T7 route       through the real lookup route: a current lot sends a page; a stale lot sends `page: null`
+//   T7 route       through the real lookup route: a current lot sends a page (compute never called); a stale lot computes (LOAD.1) and sends that page; a thrown compute is a 500; the switch off reads no lot table
 //   T8 no legacy   no key outside the declared page fields, none inside `values` outside the declared bindings, no legacy column name anywhere
 //   T9 parity      for the same scripted lot, W's page equals the admin preview's page (one resolver)
-//   T10 importers  only the lookup route imports report-page.ts
+//   T10 importers  only the lookup route and the LOAD.1 compute entry import report-page.ts
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -41,6 +41,11 @@ vi.mock('@/lib/admin/parcel-lookup', async (orig) => ({
   fetchParcelById: vi.fn(),
   fetchCoaProjects: vi.fn(async () => []),
 }));
+// LOAD.1 (task-266): the compute entry runs for real unless a test scripts it (the switch-off case below proves the real gate).
+vi.mock('@/lib/parcels/report-compute', async (orig) => {
+  const real = await orig<typeof import('@/lib/parcels/report-compute')>();
+  return { ...real, computeCustomerPageResponse: vi.fn(real.computeCustomerPageResponse) };
+});
 vi.mock('@/lib/parcels/lot-form', async (orig) => ({
   ...(await orig<typeof import('@/lib/parcels/lot-form')>()),
   readLotForm: vi.fn(async () => ({ detected: 'detached', basis: 'o4_not_met', unsure: false })),
@@ -49,6 +54,7 @@ vi.mock('@/lib/parcels/lot-form', async (orig) => ({
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
 import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
+import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
 import { CONSUMER_WITHHELD_LEGACY_COLS } from '@/lib/parcels/consumer-lookup';
 import { storedPageResponse } from '@/lib/admin/report-preview-live/stored-page';
 import { pageBindings } from '@/lib/report-projection/project';
@@ -240,7 +246,7 @@ describe('T5b gated with stored rows that are stale or absent: still no option n
 });
 
 describe('T6 scope: W holds no user check, meters nothing and writes nothing', () => {
-  const FILES = ['src/lib/parcels/report-page.ts', ...fs.readdirSync(path.join(ROOT, 'src/lib/report-projection')).filter((f) => f.endsWith('.ts')).map((f) => `src/lib/report-projection/${f}`)];
+  const FILES = ['src/lib/parcels/report-page.ts', 'src/lib/parcels/report-compute.ts', ...fs.readdirSync(path.join(ROOT, 'src/lib/report-projection')).filter((f) => f.endsWith('.ts')).map((f) => `src/lib/report-projection/${f}`)];
   const BAD_IMPORT = /entitlement|usage|openReport|consumer-lookup|api\/parcels\/lookup(?!\/types)|parcel-tool|report-preview-live|@\/lib\/admin|@\/app\/admin|@\/app\/api\/admin|auth\//;
   const BAD_IMPORT_IN = (src: string): string[] => [...src.matchAll(/from '([^']+)'/g)].map((m) => m[1] as string).filter((i) => BAD_IMPORT.test(i));
   it('imports no meter, entitlement, usage, consumer lookup, auth or admin module (report-page.ts, and every file of src/lib/report-projection/)', () => {
@@ -284,14 +290,41 @@ describe('T7 the route: the real lookup route over the real read module', () => 
     expect(r.body.data?.page).toEqual(mobilePageView(EXPECTED_CURRENT));
     expect(meterLog().page).toBe(true);
   });
-  it('a stale lot: 200 with page null (the app shows the miss; LOAD.1 computes), and the log says no page', async () => {
+  it('a current lot is read, never computed (W first)', async () => {
+    use(CURRENT_LOT);
+    await call();
+    expect(computeCustomerPageResponse).not.toHaveBeenCalled();
+    expect(meterLog().page_source).toBe('stored');
+  });
+  it('a stale lot computes (LOAD.1): 200, the page is the mobile view of the computed response, and the log says computed', async () => {
     use({ ...CURRENT_LOT, rows: ROWS({ catalogue_sha: OLD_SHA }) });
+    vi.mocked(computeCustomerPageResponse).mockResolvedValueOnce(EXPECTED_CURRENT);
+    const r = await call();
+    expect(r.status).toBe(200);
+    expect(computeCustomerPageResponse).toHaveBeenCalledWith(REF);
+    expect(r.body.data?.page).toEqual(mobilePageView(EXPECTED_CURRENT));
+    expect(meterLog().page).toBe(true);
+    expect(meterLog().page_source).toBe('computed');
+    expect(typeof meterLog().compute_ms).toBe('number');
+  });
+  it('a stale lot the engine cannot compute (null): 200 with page null, and the log says no page', async () => {
+    use({ ...CURRENT_LOT, rows: ROWS({ catalogue_sha: OLD_SHA }) });
+    vi.mocked(computeCustomerPageResponse).mockResolvedValueOnce(null);
     const r = await call();
     expect(r.status).toBe(200);
     expect(r.body.data?.page).toBeNull();
     expect(meterLog().page).toBe(false);
+    expect(meterLog().page_source).toBe('none');
   });
-  it('the switch off: 200 with page null and the lot tables are never read', async () => {
+  it('a thrown compute is a 500 with no payload and nothing logged as a lookup (no meter), not a miss', async () => {
+    use({ ...CURRENT_LOT, rows: ROWS({ catalogue_sha: OLD_SHA }) });
+    vi.mocked(computeCustomerPageResponse).mockRejectedValueOnce(new Error('compute down'));
+    const r = await call();
+    expect(r.status).toBe(500);
+    expect(r.body.data).toBeNull();
+    expect(logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup')).toBeUndefined();
+  });
+  it('the switch off: 200 with page null, the real compute gate answers null and the lot tables are never read', async () => {
     live.on = false;
     use(CURRENT_LOT);
     const r = await call();
@@ -355,13 +388,13 @@ describe('T9 parity: one resolver for the admin preview and the customer read', 
   });
 });
 
-describe('T10 importers: report-page.ts is server code, imported by the lookup route only', () => {
+describe('T10 importers: report-page.ts is server code, imported by the lookup route and the LOAD.1 compute entry only', () => {
   const walk = (d: string): string[] => (fs.existsSync(path.join(ROOT, d)) ? fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
   const IMPORTS = (src: string): boolean => /from '[^']*lib\/parcels\/report-page'/.test(src);
-  it('no component, mobile source or other lib file imports it; the one non-test importer is the route', () => {
+  it('no component, mobile source or other lib file imports it; the non-test importers are the route and the compute entry', () => {
     const files = [...walk('src'), ...walk('mobile/src'), ...walk('mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
     expect(files.length).toBeGreaterThan(500);
-    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/app/api/parcels/lookup/route.ts']);
+    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/report-compute.ts']); // LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
   });
   it('the fence is not vacuous', () => {
     expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(true);

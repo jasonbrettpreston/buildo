@@ -51,6 +51,7 @@ import { assembleConsumerPayload, assembleLotMap, hasEvaluatedOption } from '@/l
 import { resolveLotMap } from '@/lib/parcels/lot-map';
 import { readLotForm } from '@/lib/parcels/lot-form';
 import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
+import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
 import {
   ConsumerParcelLookupQuerySchema,
   ConsumerParcelLookupResponseSchema,
@@ -119,6 +120,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
     // The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text.
     let parcelRef: string | null = null;
+    let pageSource: 'stored' | 'computed' | 'none' = 'none'; // LOAD.1: where the page came from (logged, never its content)
+    let computeMs: number | null = null;
     if (resolved.match) {
       const row = await fetchParcelById(resolved.match.parcelId);
       if (!row) {
@@ -131,7 +134,16 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         parcelRef = String(row.parcel_id);
         // MF-48 Stage B (B-3 a): the report page view from the lot's producer response, through MF-57's core; null while no producer has the lot
         // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
-        const pageResponse = await readCustomerPageResponse(parcelRef);
+        // LOAD.1 (task-266): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
+        // live switch is off, for a lot with no Layer 2 stamp, and for no such parcel. A compute error throws to the catch below (500): no page, no meter.
+        let pageResponse = await readCustomerPageResponse(parcelRef);
+        if (pageResponse !== null) pageSource = 'stored';
+        else {
+          const c0 = Date.now();
+          pageResponse = await computeCustomerPageResponse(parcelRef);
+          computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
+          if (pageResponse !== null) pageSource = 'computed';
+        }
         const page = pageResponse === null ? null : mobilePageView(pageResponse);
         // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
         const lotForm = await readLotForm(parcelRef);
@@ -189,6 +201,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       lot_form_unsure: response.lotForm?.unsure ?? null,
       semi_answered: semi === 'answered', // SRCH.SEMI stage 2: the flag the semi page sends at Continue
       page: response.page !== null, // MF-48 Stage B: whether a report page was sent (never its content)
+      page_source: pageSource, // LOAD.1: stored, computed or none
+      compute_ms: computeMs, // LOAD.1: the compute entry's time when it ran (about 0 while the switch is off), null when W served the page
     });
     if (duration_ms > SLOW_QUERY_MS) {
       logWarn(TAG, 'slow_query', { duration_ms, outcome });

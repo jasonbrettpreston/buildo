@@ -75,7 +75,9 @@ export const NOT_POSTGRES = Object.freeze({
  * The closed, counted set of src/ files with >=1 interpolated or non-static SQL;
  * it may not grow (`grew:`) and a file that stops interpolating must be removed
  * (`stale:`). This is the measured closed set — measured 2026-10-03 (72
- * SQL-bearing files: 41 static, 29 interpolated, 2 not_postgres).
+ * SQL-bearing files: 41 static, 29 interpolated, 2 not_postgres); LOAD.1 (task-266,
+ * 2026-11-19) adds the 30th: src/lib/parcels/report-compute.ts, whose one batch statement
+ * is the step core's own text (see the entry below).
  */
 export const CLOSED_INTERPOLATED_SET = Object.freeze([
   'src/app/api/admin/leads/watchlist/route.ts',
@@ -106,6 +108,7 @@ export const CLOSED_INTERPOLATED_SET = Object.freeze([
   'src/lib/builders/enrichment.ts',
   'src/lib/coa/pre-permits.ts',
   'src/lib/coa/repository.ts',
+  'src/lib/parcels/report-compute.ts', // LOAD.1 (task-266, dated note 2026-11-19): the batch statement text is built by the Layer 3 step's own core (buildSourceSql: checked-literal settings and the one lot id read from the database as an integer; the binds are last_key and batch_size), passed as a variable; no request text enters it
   'src/lib/quality/metrics.ts',
 ]);
 

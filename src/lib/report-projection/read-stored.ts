@@ -9,7 +9,7 @@
 // Server only. No write, no meter, no entitlement, no usage, no user id: the caller decides who may read and what an absent lot means.
 import type { QueryResult, QueryResultRow } from 'pg';
 import { CURRENT_SEED_SHAS, type SeedShas } from './seed-shas';
-import { pageBindings, projectStoredPage, type Lineage, type LotStamp, type PageResponse, type StoredRow } from './project';
+import { pageBindings, projectStoredPage, type Lineage, type LotFacts, type LotStamp, type PageResponse, type StoredRow } from './project';
 
 /** A pg Pool or PoolClient: anything exposing parameterised `query`. */
 export interface Queryable {
@@ -40,21 +40,32 @@ export interface StoredPage {
 }
 
 /**
+ * LOAD.1 (task-266): the parcels half of the read, shared OUT of readStoredPage so the one-lot compute (src/lib/parcels/report-compute.ts) builds the
+ * same lot facts (the integer id, the address, the zoning and the page's parcels columns, the K2 lineage CASE included) from the same one static
+ * statement, never a second parcels read. `null` = no such parcel.
+ */
+export async function readLotFacts(db: Queryable, parcelId: string): Promise<LotFacts | null> {
+  const p = (await db.query<Record<string, unknown>>(PARCEL_SQL, [parcelId])).rows[0];
+  if (!p) return null;
+  const columns: Record<string, unknown> = {};
+  for (const c of PARCEL_COLUMNS) columns[c] = p[c];
+  return { id: Number(p.id), parcel_id: String(p.parcel_id), address: (p.address as string | null) ?? null, zoning: (p.zoning_zn_string as string | null) ?? null, columns };
+}
+
+/**
  * The lot by its parcel_id (varchar), its stamp and its stored scenario rows, projected. `null` = no such parcel. While parcel_maxbld_scenarios is
  * absent the read refuses cleanly through to_regclass and the projection takes the not-evaluated path ("a declared read that refuses cleanly").
  * A thrown query propagates: the caller logs it and decides (it is never read as a miss here).
  */
 export async function readStoredPage(db: Queryable, parcelId: string, current: SeedShas = CURRENT_SEED_SHAS): Promise<StoredPage | null> {
-  const p = (await db.query<Record<string, unknown>>(PARCEL_SQL, [parcelId])).rows[0];
-  if (!p) return null;
-  const id = Number(p.id);
+  const lot = await readLotFacts(db, parcelId);
+  if (lot === null) return null;
+  const id = lot.id;
   const stamp = (await db.query<LotStamp>(STAMP_SQL, [id])).rows[0] ?? null;
   const present = Boolean((await db.query<{ present: boolean }>(TABLE_SQL)).rows[0]?.present);
   const rows = present ? (await db.query<StoredRow>(ROWS_SQL, [id])).rows : null;
-  const columns: Record<string, unknown> = {};
-  for (const c of PARCEL_COLUMNS) columns[c] = p[c];
   return projectStoredPage({
-    lot: { id, parcel_id: String(p.parcel_id), address: (p.address as string | null) ?? null, zoning: (p.zoning_zn_string as string | null) ?? null, columns },
+    lot,
     stamp,
     rows,
     current,

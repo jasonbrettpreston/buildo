@@ -1,0 +1,113 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load1b/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11104 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22953 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34226 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48087 chars, answer 0 chars, 60s
+BUG severity=N/A (see DEFER lines below)
+
+DEFER severity=MED — plan line "One route expression at src/app/api/parcels/lookup/route.ts" and "No new switch, table, migration, key, response field." — src/app/api/parcels/lookup/route.ts:203 "page_source: pageSource, // LOAD.1: stored, computed or none" (with :204 "compute_ms: computeMs") — the route carries more than one expression: two new variables, a Date.now() timing pair and two new lookup-log keys that no pasted plan line or ruling names, against a plan line that closes the route scope and forbids a new key — drop page_source/compute_ms and the timer, or get the plan line amended to name them before merge.
+
+DEFER severity=MED — src-sql-ledger growth lock "it may not grow (`grew:`)" — scripts/analysis/src-sql-ledger.mjs:111 "+  'src/lib/parcels/report-compute.ts', // LOAD.1 (task-266, dated note 2026-11-19)" with the pin moved at src/tests/src-sql-ledger.logic.test.ts "+    expect(set).toHaveLength(30);" — a growth-locked measured set is grown 29 to 30 by editing its pin, and no pasted ruling authorises the exception (the deviation list only records it) — either keep the batch text out of a new interpolated call site (have the core hand over its own statement) or record an explicit operator ruling for the 30th entry.
+
+MET — D-1 ruling "first statement of the compute entry is `if (!MAXBLD_WEB_LIVE) return null`, the core is never imported while it is false" — src/lib/parcels/report-compute.ts:74 "if (!MAXBLD_WEB_LIVE) return null;" with the core lazy import below it at :77, no session or admin condition and no second switch.
+
+MET — plan line "The core throws on a lot with no Layer 2 stamp or no parcels row: the entry turns those into null (a miss), never a 500." — src/lib/parcels/report-compute.ts:93 "if (!row || Number(row.id) !== lot.id || !row.parcel || !row.lot) return null;".
+
+MET — RR-0271 "compute at the pick, no record write" / plan line "No write (no INSERT/UPDATE/DELETE)" — src/lib/parcels/report-compute.ts:92 "const row = (await pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])).rows[0];" is the only statement executed, no write verb in the file.
+
+MET — Standard 10.2 "Parameterised SQL only" — src/lib/parcels/report-compute.ts:92 binds "[lot.id - 1, 1]" and :32-33 are static lookup statements, no request text is interpolated.
+
+MET — Spec 126 section 11b.2 "never a second resolver" / plan line "pageForVerdict exported from report-page.ts (one miss rule in one place)" — src/lib/parcels/report-page.ts:39 "export function pageForVerdict(stored: StoredPage): Json | null {" used unchanged at src/lib/parcels/report-compute.ts:103, projection through the same projectStoredPage and readLotFacts.
+
+MET — plan line "W first; compute only when W's answer is a miss" — src/app/api/parcels/lookup/route.ts:140 "let pageResponse = await readCustomerPageResponse(parcelRef);" then :144 "pageResponse = await computeCustomerPageResponse(parcelRef);" only in the miss branch.
+
+REJECT — plan line "never when the switch is off" — the change is accused of calling the compute from the route with no switch test at the call site — that is the ruled shape: the gate is the entry's first statement at report-compute.ts:74, and D-1 rules one expression in one place.
+
+REJECT — RR-0304 "nothing built left unwired" — the change is accused of leaving the new entry unwired — the caller is named at src/lib/parcels/report-compute.ts:7 "the lookup route calls this entry" and the opener at :11 "THE GATE is the existing web live switch ALONE"; only the LS.12 step label is absent.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+
+---
+⏱  74559ms (74.6s)
+📊 Tokens — total: 45292, input: 29208, output: 16084, reasoning: 15079
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load1b/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11110 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22886 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34243 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45434 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 57145 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 68422 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 79454 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 90388 chars, answer 0 chars, 120s
+BUG severity=HIGH — src/tests/customer-report-compute.logic.test.ts "['a batch row with no Layer 2 stamp', { batch: [{ ...ROW_LAZY(), lot: null }] }]," — ROW_LAZY() executes at describe-collection time when ROW (assigned only in beforeAll) is still undefined, so the built rows have no `id`, and the `Number(row.id) !== lot.id` guard fires before `!row.lot` / `!row.parcel`, leaving those null branches untested — build the rows inside the `it` body (or assign ROW before the `it.each`) so C3 actually exercises the stampless/no-parcel guard.
+
+DEFER severity=MED — src/lib/parcels/report-compute.ts "value: (r.value ?? null) as StoredRow['value']," — the core hands `value`/`increment` back as numbers but they are cast to the string-typed StoredRow fields without `String()`, unlike the modeled pg read in the test ("value: r.value === null ... ? null : String(r.value)"), so the cast hides a real type lie that would throw on any string method or leak a number-vs-string drift into the page if the projection does not coerce — use `r.value === null ? null : String(r.value)` (same for `increment`).
+
+DEFER severity=LOW — scripts/analysis/src-sql-ledger.mjs "one bound lot id), passed as a variable; no request text enters it" — the lot id is not bound, it is interpolated into the SQL text (the test asserts "unnest((ARRAY[428050]::int[]))"), while the two binds are last_key and batch_size, so the ledger note mislabels the interpolation — reword to say the population id is a checked literal and the binds are last_key/batch_size.
+
+DEFER severity=LOW — scripts/analysis/src-sql-ledger.mjs "41 static, 29 interpolated, 2 not_postgres); LOAD.1 (task-266," — the base totals line still reports 29 interpolated / 72 files, but the frozen set now has 30 entries, so the counted totals no longer reconcile with the array — update the sum line to 30 interpolated (and 73 SQL-bearing).
+
+DEFER severity=LOW — src/lib/parcels/report-compute.ts "if (!row || Number(row.id) !== lot.id || !row.parcel || !row.lot) return null;" — `!row.parcel` downgrades to a silent miss even though `lot` (from readLotFacts, which already read the same parcel) proves the parcel exists, so a batch/parcels join inconsistency is swallowed as a null rather than surfaced or computed from `lot` — drop the `!row.parcel` check or base projection on the `lot` already read.
+
+DEFER severity=NIT — src/tests/customer-report-compute.logic.test.ts "const h = vi.hoisted(() => ({ live: { on: false }, loaded: { core: 0, config: 0 }, cfg: { values: {} as Record<string, unknown>, calls: 0 } }));" — `h.loaded.config` is incremented in the config mock factory but never asserted anywhere (only `h.cfg.calls` and `h.loaded.core` are read), so it is a dead counter — remove it or assert it in C1.
+
+DEFER severity=NIT — src/tests/customer-report-compute.logic.test.ts "const rows = CORE_ROWS.map(asStored) as never;" — casting to `never` disables all type checking of the `rows` passed to projectStoredPage, so a wrong shape would still typecheck — cast to `StoredRow[]` (or the exact param type) instead.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- C3 it.each rows are built from `ROW_LAZY()` at collection time when ROW is undefined, so the stampless and no-parcel null branches are never exercised (a regression there would surface as a customer 500).
+- `toStoredRow` casts the core's numeric `value`/`increment` to string-typed StoredRow fields without `String()`, a type lie that diverges from the modeled pg read.
+- The ledger note claims "one bound lot id" and the header keeps 29 interpolated, both inconsistent with what the test and the frozen 30-entry set show.
+
+---
+⏱  133983ms (134.0s)
+📊 Tokens — total: 55599, input: 29155, output: 26444, reasoning: 25465
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load1b/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10091 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20810 chars, answer 0 chars, 30s
+BUG severity=HIGH — src/app/api/parcels/lookup/route.ts "          pageResponse = await computeCustomerPageResponse(parcelRef);" — a missed lookup now runs the full synchronous one-lot compute (measured median 9.7 s, max 15.9 s) with no deadline, no in-flight dedup and no cache, and "the app retries a failed lookup three more times", so one pick can pin an instance for roughly 4x16 s and every retry recomputes from scratch — bound the compute with a request deadline and a short-TTL singleflight keyed by parcel_id so a retried or concurrent pick of the same lot reuses one result.
+
+BUG severity=MED — src/app/api/parcels/lookup/route.ts "      page_source: pageSource, // LOAD.1: stored, computed or none" — 'none' is emitted for five distinct outcomes (switch off, no parcel, no Layer 2 stamp, no batch row, id mismatch) and for a seed-sha drift that makes pageForVerdict miss every computed page, and the compute entry imports no logger so none of these is ever recorded, so a total failure of the feature looks identical to the switch being off — log one warn with a reason code inside computeCustomerPageResponse on each null return and carry it into page_source.
+
+BUG severity=MED — src/app/api/parcels/lookup/route.ts "          if (pageResponse !== null) { pageSource = 'computed'; computeMs = Date.now() - c0; }" — compute_ms is recorded only when the compute produced a page, so the slow compute that ends in a miss (or throws, which logs no meter line at all) carries no timing, which is exactly the 15.9 s worst case you need to see — capture Date.now()-c0 before the null test and emit it alongside page_source.
+
+DEFER severity=LOW — src/lib/parcels/report-compute.ts "  const lot = await readLotFacts(pool, parcelRef);" — on a W miss the parcel row is read a second time (readStoredPage already read it), so a deletion or replica lag between the two reads turns a lot W just found into page null — fails closed with no wrong number, but it is a wasted round trip and a spurious miss on a dependency blip.
+
+DEFER severity=LOW — src/lib/parcels/report-compute.ts "  if (!row || Number(row.id) !== lot.id || !row.parcel || !row.lot) return null;" — a systematic core keyset drift (the [id-1, 1] bind returning a neighbouring lot) makes every lot silently null with no error and no log, i.e. the feature goes dark and reads as off rather than broken — raise a warn when a row came back but its id differs, distinct from a genuine empty batch.
+
+REJECT — src/lib/parcels/report-compute.ts "  const row = (await pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])).rows[0];" — a re-sent request or double-submitted tap looks like it could double-write or double-count — every statement is a SELECT (C2 asserts no INSERT/UPDATE/DELETE) and the entry keeps no process cache or mutable state, so any number of retries and tabs is a no-op on stored data.
+
+REJECT — src/lib/parcels/report-compute.ts "// route's error boundary makes it a 500 with no page and no meter); it is never read as a miss." — a thrown query or core error looks like it should degrade to page null — it is deliberately propagated so a DB or core failure can never be served as "no numbers" (Spec 08), and the route catch yields a 500 with no page and no meter line.
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (W throw, thrown batch query, core config error), empty (no parcel, zero batch rows, no Layer 2 stamp, no parcels row, id mismatch), retry and time-out, double-submit, degrade-safety (fail closed via null, web live switch), idempotency and dedup (no write, none needed)   Unguarded: 2
+
+---
+⏱  44645ms (44.6s)
+📊 Tokens — total: 37949, input: 29172, output: 8777, reasoning: 7855
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load1b/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11035 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21994 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32401 chars, answer 1699 chars, 45s
+Touches: PII (parcel page values, address, zoning served to the lookup caller) and an injection surface (a new interpolated batch statement admitted to the ledger). Auth/authorisation and money are unchanged by this diff.
+
+DEFER severity=MED — src/app/api/parcels/lookup/route.ts "+          pageResponse = await computeCustomerPageResponse(parcelRef);" — any client who requests a lot whose stored record is stale or absent runs a full synchronous ~10-16s CPU compute per request (measured "median 9.7 s, max 15.9 s (synchronous, blocks the instance)") with "No process cache", and the app retries a failed lookup three more times, so a low request rate pins instance CPU and drives Cloud Run cost — rate-limit or add a per-lot cooldown/TTL budget on the compute path before LS.12 flips the switch; the route's rate limit is outside this diff, cannot see.
+REJECT — src/lib/parcels/report-compute.ts "+  const plan = buildSourceSql(descriptor, { ...config, [POPULATION_SETTING]: [String(lot.id)] }, {});" and "+  const row = (await pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])).rows[0];" — looks like request-controlled interpolation into batch_sql (new file added to the closed interpolated set) — not exploitable: the only interpolated value is String(lot.id) where lot.id = Number(p.id) read via the parameterised PARCEL_SQL (a DB integer PK, Number() yields NaN rather than request text), config comes from the DB, and the caller's parcel_id only enters the bind array.
+REJECT — src/lib/parcels/report-compute.ts "+// so this adds no session gate, no admin condition and no new switch." — looks like an unauthenticated path to computed report numbers — not exploitable: the entry is reached only from the lookup route for the parcel the caller already matched (that route's session/rate-limit wrap is outside this diff, cannot see), and MAXBLD_WEB_LIVE is the literal false at landing so the compute is dark code.
+REJECT — src/lib/parcels/report-page.ts "+export function pageForVerdict(stored: StoredPage): Json | null {" — looks like a second caller could reuse the miss rule to serve a stale or withheld page — not exploitable: the compute hands the same StoredPage through the same one rule, so gated lots still get the all-not-evaluated page and a stale record is recomputed, never served.
+
+VERDICT: PASS on exploitability
+Surfaces touched: PII, money (compute cost, deferred)
+
+---
+⏱  45722ms (45.7s)
+📊 Tokens — total: 37607, input: 29162, output: 8445, reasoning: 7849

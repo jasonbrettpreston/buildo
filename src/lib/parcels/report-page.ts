@@ -13,6 +13,8 @@
 // when the stored record is current (or the lot is gated); a missing or stale record is a miss (null), which LOAD.1 reads as "compute". W holds no
 // user check, meters nothing and writes nothing: the callers (session, plan, rate limit, meter) run around it. The tester feed of MB-94 part (f) lands
 // behind its own switch and import fence.
+// LOAD.1 (task-266): the lookup route asks W first and, on a miss, the one-lot compute (src/lib/parcels/report-compute.ts); that entry applies the SAME
+// miss rule through the exported pageForVerdict below (one place), so a computed lot and a stored lot are served or missed by one rule.
 import { pool } from '@/lib/db/client';
 import { logWarn } from '@/lib/logger';
 import { readStoredPage, type StoredPage } from '@/lib/report-projection/read-stored';
@@ -34,7 +36,7 @@ const TAG = '[parcels/report-page]';
  * served, doc-16 section 4); not_stored is a miss (no record yet: LOAD.1 computes at the pick). D2 (what a no-record lot shows): to show the
  * "Not yet evaluated" page for a lot with no record instead, change the `not_stored` branch to `return stored.response`.
  */
-function pageForVerdict(stored: StoredPage): Json | null {
+export function pageForVerdict(stored: StoredPage): Json | null {
   switch (stored.lineage.freshness.verdict) {
     case 'current':
     case 'gated':

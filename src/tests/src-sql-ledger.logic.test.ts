@@ -229,13 +229,14 @@ describe('src-sql-ledger — parse errors vs resolution notes', () => {
 });
 
 describe('src-sql-ledger — CLOSED_INTERPOLATED_SET (measured)', () => {
-  it('CLOSED_INTERPOLATED_SET is the measured 29-file set, frozen and sorted (growth lock)', () => {
+  it('CLOSED_INTERPOLATED_SET is the measured 29-file set plus the LOAD.1 compute entry (30), frozen and sorted (growth lock)', () => {
     const set = ssl.CLOSED_INTERPOLATED_SET;
     expect(Object.isFrozen(set)).toBe(true);
-    expect(set).toHaveLength(29);
+    expect(set).toHaveLength(30); // LOAD.1 (task-266): 29 measured 2026-10-03 + src/lib/parcels/report-compute.ts
     expect(set).toEqual([...set].sort());
     expect(set).toContain('src/app/api/permits/route.ts');
     expect(set).toContain('src/lib/admin/step-output-query.ts');
+    expect(set).toContain('src/lib/parcels/report-compute.ts');
   });
 });
 

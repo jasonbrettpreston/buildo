@@ -14,6 +14,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { goldenBatch } from './golden25-harness';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped CommonJS module surface
 const ROOT = process.cwd();
@@ -46,46 +47,6 @@ function seedConfig(): Json {
   const out: Json = {};
   for (const d of D.config.logic_variables as Json[]) out[d.name] = lv[d.name].default;
   return out;
-}
-
-/** The golden 25 as the batch statement returns them: the stored lot (pure core), the parcels row, the decoded result views, and the fixture's neighbours. */
-function goldenBatch(): { rows: Json[]; raw: Json } {
-  const MZ = req(path.join(ROOT, 'scripts/lib/bylaw-materialize.js')) as Json;
-  const lr = req(path.join(ROOT, 'scripts/lib/bylaw-lot-row.js')) as Json;
-  const rb = req(path.join(ROOT, 'scripts/lib/bylaw-resolution.js')) as Json;
-  const SCOPE = readJson('scripts/seeds/bylaw/layer2-scope.json');
-  const VOCAB = readJson('scripts/seeds/bylaw/vocab.json');
-  const INPUT = readJson('docs/reference/bylaw-layer2-input.json');
-  const MAP = readJson('scripts/seeds/bylaw/layer2-map.json');
-  const zoneList = readJson('scripts/seeds/logic_variables.json').resolve_bylaws_population_zone_classes.default;
-  const env = MZ.makeEnv({ body: INPUT.body, map: MAP, scope: SCOPE, vocab: VOCAB, zoneList, versions: { table_version: INPUT.table_version, evaluator_version: INPUT.evaluator_version } });
-  const parcels = readJson(`${G25}/parcels-rows.json`) as unknown as Json[];
-  const out = MZ.materializeBatch(parcels, env);
-  const dicts = lr.makeDecodeDicts({ units: out.rows.units, texts: out.rows.texts });
-  const pairs = rb.scopePairs(SCOPE);
-  const optionPairs = rb.optionPairs(SCOPE, VOCAB.design_options);
-  const lines = readJsonl(`${G25}/inputs.jsonl`);
-  const rows = out.rows.lots.map((lot: Json) => {
-    const e = expected.find((x) => x.parcel_id === lot.parcel_id) as Json;
-    const line = lines.find((l) => l.case === e.case) as Json;
-    const view = (d: Json) => ({ parcel_id: lot.parcel_id, lot_gate: lot.lot_gate ?? null, ...d });
-    return {
-      id: lot.parcel_id,
-      parcel: parcels.find((p) => p.id === lot.parcel_id),
-      lot: { parcel_id: lot.parcel_id, lot_gate: lot.lot_gate ?? null, permitted: lot.permitted, permitted_text_ids: lot.permitted_text_ids ?? null, table_version: lot.table_version, evaluator_version: lot.evaluator_version },
-      cells: lr.decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs }).filter((d: Json) => !d.option).map(view),
-      options: lr.decodeOptionResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs }).map((d: Json) => { const { option_name: _n, ...rest } = d; return view(rest); }), // eslint-disable-line @typescript-eslint/no-unused-vars
-      abutters: (line.abutments || []).map((a: Json, i: number) => ({ parcel_id: lot.parcel_id, neighbour_id: 900000 + i, shared_len_m: 10, est: a.est, est_status: a.st, bldg_m: a.bldg, same_street: a.sameStreet, residential: a.res })),
-      street: line.street_pool ? line.street_pool.values.map((v: number, i: number) => ({ id: 800000 + i, est: v })) : [],
-      zone: [],
-      ring_edges: [],
-    };
-  });
-  const raw = {
-    bylaw_resolution_units: out.rows.units,
-    bylaw_resolution_texts: out.rows.texts,
-  };
-  return { rows, raw };
 }
 
 beforeAll(() => {
