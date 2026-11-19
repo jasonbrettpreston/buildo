@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:29:00Z'
+updated_date: '2026-11-19T15:59:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -86,4 +86,6 @@ element ids delivered: D.9, D.10
 Dated note 2026-11-19 (M-246, prior text kept; RR-0264 · task-319 · Backlog; operator, verbatim: "1 y")
 
 Scope now: page, mock and link only in 1·B (RR-0264); the owner-input store stays at its later increment home (GAP.12 task-213)
+
+2026-11-19 from SRCH.METER (task-334): the lookup route never counts an unsure lot (the semi answer is a client param); when the semi question is answered and the report produced, the count belongs to this page: add the meter call after the answer (RR-0278, one row per lot per month)
 <!-- SECTION:NOTES:END -->
