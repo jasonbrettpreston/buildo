@@ -3,11 +3,11 @@ id: TASK-316
 title: >-
   R10 Increment 1·B validation pass: tasks, semi page placeholder, McFrontend
   fields and pages, dependencies, prior panels linked
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R10'
 created_date: '2026-11-19T14:44:00Z'
-updated_date: '2026-11-19T14:52:00Z'
+updated_date: '2026-11-19T15:00:00Z'
 labels:
   - follow-up
   - validation
@@ -17,6 +17,10 @@ references:
   - docs/reports/plan-import/raw/2026-11-19/search-brief.json
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1018
+  - docs/reports/lanes/2026-11-19/BL-R10/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-R10/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-R10/r1-review.txt
+  - docs/reports/reviews/task-316/context-2026-11-19.md
 type: record
 project: McIncrement
 ordinal: 23012
@@ -30,12 +34,12 @@ Operator 2026-11-19: "lets begin work on Incr 1b. Lets ensure all the tasks (inc
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every task the Increment 1·B brief (doc-2, search-brief.json, elements-by-inc S, storage-by-group S) and the McFrontend queue rows for the search pages call for is on the board in m-1 with correct dependencies, or a gap task is created; the semi-detached page placeholder for future semi development is present or raised as an OPERATOR decision with Grounded and Recommendation lines
-- [ ] #2 Every McFrontend field of the 1·B elements (artifact: elements-by-inc.json S and the doc-2 Elements section) maps to a task that builds or binds it, or a gap is listed
-- [ ] #3 The McFrontend page tasks 1·B needs (search pages, loading screen, report start) are on the board with their MF row mirrored and the dependency chain to 1·A and to the report increment verified
-- [ ] #4 The prior build pass and panels (lanes-20261117/avail-search, inc-plan, inc-briefs, fe-built, buildpass-*) are linked from each m-1 task through references; anything the panels required that is not on a task is listed as a gap
-- [ ] #5 Repo review round r1 in review mode on the context file, triaged; the lane outcome recorded on each m-1 task as a dated note (KEPT, CHANGED, gap created, dependency fixed)
-- [ ] #6 The m-1 milestone file carries, in named sections, the project objectives (the five principles and the product objectives the context pack cites), the increment objectives and deliverable, the reference specs with paths, the register rulings of group S, and a Decisions section listing every Backlog decision that names an m-1 task or the group; the same section form is proposed for all milestones as a draft
+- [x] #1 Every task the Increment 1·B brief (doc-2, search-brief.json, elements-by-inc S, storage-by-group S) and the McFrontend queue rows for the search pages call for is on the board in m-1 with correct dependencies, or a gap task is created; the semi-detached page placeholder for future semi development is present or raised as an OPERATOR decision with Grounded and Recommendation lines
+- [x] #2 Every McFrontend field of the 1·B elements (artifact: elements-by-inc.json S and the doc-2 Elements section) maps to a task that builds or binds it, or a gap is listed
+- [x] #3 The McFrontend page tasks 1·B needs (search pages, loading screen, report start) are on the board with their MF row mirrored and the dependency chain to 1·A and to the report increment verified
+- [x] #4 The prior build pass and panels (lanes-20261117/avail-search, inc-plan, inc-briefs, fe-built, buildpass-*) are linked from each m-1 task through references; anything the panels required that is not on a task is listed as a gap
+- [x] #5 Repo review round r1 in review mode on the context file, triaged; the lane outcome recorded on each m-1 task as a dated note (KEPT, CHANGED, gap created, dependency fixed)
+- [x] #6 The m-1 milestone file carries, in named sections, the project objectives (the five principles and the product objectives the context pack cites), the increment objectives and deliverable, the reference specs with paths, the register rulings of group S, and a Decisions section listing every Backlog decision that names an m-1 task or the group; the same section form is proposed for all milestones as a draft
 <!-- AC:END -->
 
 ## Definition of Done
@@ -62,4 +66,12 @@ Operator 2026-11-19: "lets begin work on Incr 1b. Lets ensure all the tasks (inc
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R10, worktree /Users/brettpreston_macmini/Buildo-wt-r10, branch wf2/inc1b-r10), RR-0240
+
+2026-11-19 AC evidence (commit d849925a6): AC1 task-317 to 322 and task-323 (semi placeholder = task-319), deps fixed on task-68, 268, 209 (backlog doctor clean); AC2 field map in REPORT.md section 2 (65 rows, gaps E.2 task-324, B.3 removed by design); AC3 MF rows linked by id, chain 267-266-123/265 and 68-66/67 verified (REPORT section 1 and 3); AC4 records linked per task, RR-0145 gap draft-33; AC5 r1 review 29 findings triaged in TRIAGE.md, dated note on every m-1 task; AC6 m-1 milestone sections added, 0 lines removed, draft-32 for all milestones. Docs-only change: no test run.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in commit d849925a6 (hooks passed, no bypass): five drafts promoted to m-1, one gap task, three OPERATOR tasks, three dependency fixes, three drafts, m-1 milestone sections, reports in docs/reports/lanes/2026-11-19/BL-R10.
+<!-- SECTION:FINAL_SUMMARY:END -->
