@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/proof3/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10336 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19663 chars, answer 1745 chars, 30s
+BUG severity=HIGH — scripts/analysis/proof-slice.mjs:148 "try { io.mkdir(outDir); } catch (e) { console.error(`proof-slice: cannot create --out ${outDir} (${e?.code ?? e?.message ?? 'error'})`); return 2; }" — mkdir is recursive, so an --out that already exists but is not writable does not throw here; the failure lands later in the unguarded io.writeFile inside runSlice, which throws uncaught, so the process exits 1 with a stack trace instead of the new promised "exit 2 ... unwritable --out" with one proof-slice: line, and callers read 1 as "a check FAILED" — after mkdir, probe writability (e.g. io.access(outDir, W_OK) or write-then-unlink a probe file in outDir) and return 2 on failure before runSlice.
+
+DEFER severity=MED — scripts/analysis/proof-slice.mjs:48 "if (r?.timeoutMs !== undefined && !(Number.isInteger(r.timeoutMs) && r.timeoutMs > 0)) problems.push(`${at}: timeoutMs must be a positive integer`);" — the field is now validated as data, but the run path is passed only "run: io.run" (proof-slice.mjs:150) and cannot see whether r.timeoutMs reaches spawnSync as timeout, nor how a killed child (status null, signal SIGTERM) is classified, so a hung check may have no demonstrated bound or outcome — thread r.timeoutMs into the spawnSync options and classify a timed-out result as FAIL, not PASS.
+
+DEFER severity=LOW — scripts/analysis/proof-slice.mjs:11 "exit 0 every row PASS · 1 any FAIL · 2 usage, bad data file or an unwritable --out · 3 no FAIL but a row is NOT BUILT or GAP." — cannot see any non-empty guard on the slice's row list, and "every row PASS" is vacuously true for zero rows, so an empty or misspelled slice prints an empty table and exits 0 as a green result from no checks — add a checkSpec problem when the selected slice has no rows.
+
+DEFER severity=LOW — scripts/analysis/proof-slice.mjs:10 "Each command row's full output is written to <out>/<row-id>.txt." — the dedup key is the row id path and nothing removes files for rows that later disappear or are renamed, so a repeat run over the same --out leaves an earlier run's output on disk that a reader can take as current evidence for a row that no longer ran — clear outDir row files, or write into a per-run subdirectory.
+
+REJECT — scripts/analysis/proof-slice.mjs:148 "io.mkdir(outDir);" — a second or concurrent run over an existing --out looks like a double-submit hazard — it is not: mkdir is recursive so the repeat is a no-op, each "<out>/<row-id>.txt" is overwritten with content derived from the same tree, and nothing counted or committed is incremented, so the repeat is idempotent.
+
+REJECT — scripts/analysis/proof-slice.mjs:47 "if (r?.suite !== undefined && (typeof r.suite !== 'object' || r.suite === null || Array.isArray(r.suite))) problems.push(`${at}: suite must be an object`);" — the null and array shapes of suite look like they could slip through to a later r.suite.suite_files read — they cannot: null is explicitly excluded, an array or scalar hits this problem, and a bare "{}" falls to the else-if at :48 and reports suite_files missing, all exiting 2 before any row runs.
+
+REJECT — scripts/analysis/proof-slices.json:15 "notbuilt": { "blockedBy": ["task-287"] } — changing which task unblocks report-opens looks like it could alter the exit code or block path — it cannot: blockedBy is display text printed on a NOT BUILT row, the row still produces exit 3 and no command runs, and there is no write to key or dedup here.
+
+DEFER severity=NIT — scripts/analysis/proof-slice.mjs:10 "Each command row's full output is written to <out>/<row-id>.txt." — two runs sharing one --out concurrently write the same files with no lock, so a reader can see one run's partial file — bounded, since exit codes and the table go to stdout and no count or write is duplicated, so treat as safe to defer.
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (mkdir, per-row writeFile, spec parse), empty (suite null, suite [], suite {}, suite_files [], zero-row slice), retry and time-out (second run over same --out, timeoutMs bound and expiry classification), double-submit (concurrent runs on one --out), degrade-safety (bad data fails closed at exit 2), idempotency and dedup (key: <out>/<row-id>.txt overwrite, no counted event)   Unguarded: 2
+
+---
+⏱  33021ms (33.0s)
+📊 Tokens — total: 9998, input: 3979, output: 6019, reasoning: 4901

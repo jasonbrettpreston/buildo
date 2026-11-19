@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lotmap2/review-input.diff (model: deepseek-reasoner)
+
+```
+BUG severity=NONE — none filed, see DEFER lines below
+DEFER severity=MED — mobile/src/lib/maxbldHelp.ts:26 "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`)" — when the sheet fails to open the person taps "Get help with an address" and gets nothing at all, no sheet and no message, only a console line they never see, so the link reads as broken — design is silent on the failure state, add one short person-visible line on the page (or fall back to Linking) so the tap is never silent
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx:250 "...(awaitingPick(s) ? [pickHint()] : [])" — the moment the person taps a card the hint line is removed and the Help row below (LotMapBinding.tsx:251 "helpRow(),") jumps up under the finger that is still moving toward it, so a mis-tap on the now-enabled Continue button is possible — design is silent on the transition, reserve the hint's line height while picked so nothing below moves
+REJECT — mobile/src/lib/maxbldHelp.ts:19 "no Done button, the system back closes it" — reads like an Android person is trapped in the sheet with no way out, but the Custom Tab toolbar carries its own close control and the pasted acceptance text records this as intended, so it matches the approved design
+REJECT — mobile/src/components/surfaces/LotMapBinding.tsx:219 "...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {})," — a screen reader hears "Pick a lot on the map or in the list." on the button and then again on the visible text node, which sounds duplicated, but the design itself gives the button aria-describedby="pick-hint" alongside the visible <p class="small" id="pick-hint">, so it is the approved behaviour and no text is lost if the reader's hints are off
+VERDICT: PASS on the person's experience
+States checked: first view (choose-a-lot, nothing picked, hint shown), picked lot (Continue with Lot B, hint gone), multi_parcel_3plus_none, unlinked, unlinked_no_pin, intersection, too_many_lots, loading, rate_limited_zero, help sheet opened from the lot map, help sheet opened from the search list, sheet dismissed with Done, sheet failed to open, Android Custom Tab   Dead ends found: 0
+```
+
+---
+⏱  49596ms (49.6s)
+📊 Tokens — total: 25292, input: 16018, output: 9274, reasoning: 8725

@@ -494,6 +494,9 @@
                   "accessibilityLabel": {
                     "content": "select.label"
                   },
+                  "accessibilityHint": {
+                    "content": "select.hint"
+                  },
                   "onPress": null
                 },
                 "children": [
@@ -508,6 +511,19 @@
                         "content": "select.none"
                       }
                     ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "pick-hint",
+                  "testID": "parcel-lotmap-pick-hint",
+                  "className": "mt-2 w-full text-center text-xs font-normal text-report-soft"
+                },
+                "children": [
+                  {
+                    "content": "select.hint"
                   }
                 ]
               },
@@ -572,7 +588,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "6d6300d9417a45c5",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
     }
   }

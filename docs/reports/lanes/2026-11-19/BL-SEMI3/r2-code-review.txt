@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/semi3/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11419 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23256 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34665 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45878 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 57394 chars, answer 0 chars, 75s
+DEFER severity=LOW — mobile/src/lib/semiQuestion.ts "const timer = setTimeout(() => reject(new SemiContinueTimeoutError()), ms);" — the timer has no cancel path: it is cleared only when `p` settles, so an unmounted screen (or an abandoned Continue) keeps a 60 s timer pending that later rejects a promise whose only consumer has already returned — give `boundedWait` a cancel handle (or accept a `shouldReject`/clear callback) and clear it in the screen's effect cleanup, note this is not the excluded AbortSignal-into-fetchWithAuth item
+DEFER severity=NIT — mobile/src/lib/semiQuestion.ts "export class SemiContinueTimeoutError extends Error {" — the class is exported but nothing in the diff imports it (the behaviour test imports only SEMI_CONTINUE_WAIT_MS and asserts the error copy, not the type), so the export is unused surface — drop `export`, or assert `instanceof SemiContinueTimeoutError` where it is observed
+DEFER severity=NIT — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "it('semi-question.html:130 `.btn.p[aria-busy=\"true\"]`: while Continue is pending the Continue node is busy; it is idle again after the report opens', async () => {" — the title promises an "idle again after the report opens" assertion but the test ends at `waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1))` and never re-checks `accessibilityState` after the resolve — add `.not.toHaveProperty('busy')` after the waitFor, or trim the title to what is asserted
+DEFER severity=LOW — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "mockParams = {};" — the case mutates the module level params mock and no restore is visible in the diff, so every later test in the file would run with an empty id; whether the file's beforeEach resets `mockParams` cannot be seen, and mobile jest is not run in this lane (task-343), so a leak surfaces only on CI — restore `mockParams` in a finally/beforeEach
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx "if (!id) return;" — an early return placed ahead of `submittingRef.current = true` looks like it could leave the latch or the busy state stuck — it is correct: nothing is latched and `setSubmitting(true)` is never called on that path, so the empty-id press is a no-op and later presses still work
+
+VERDICT: PASS on code correctness
+
+---
+⏱  77253ms (77.3s)
+📊 Tokens — total: 27907, input: 13019, output: 14888, reasoning: 14321

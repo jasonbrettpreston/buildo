@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/semi3/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10903 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22460 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33924 chars, answer 0 chars, 45s
+DEFER severity=MED — AC #3 "Semi goldens are regenerated only by the repo script: node_modules/.bin/tsx ... semi-question-golden-capture.ts --check is clean after any new state, and node scripts/surfaces/surface-validate.mjs --check prints no new finding" — mobile/__tests__/fixtures/semiQuestion.situations.json "ask_yes_busy" (new key under "inputs" and "named") and SemiQuestionBinding.tsx "className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect" — the diff adds a new fixture input and a new utility class literal but carries no regenerated golden and no --check output, and the task's own Files list names scripts/surfaces/parcel_product/ which the diff does not touch; whether the capture script enumerates fixture inputs (which would now demand a golden for ask_yes_busy) is cannot see — paste the two --check outputs, and if ask_yes_busy is a captured state, regenerate it with the repo script rather than by hand.
+DEFER severity=LOW — RR-0233 "a design choice the task or approved design does not settle is the operator's: reported as an operator item, not built" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS = 60_000;" with only the comment "(a timeframe; operator item in the lane report)" — the 60 s duration is settled by no pasted clause and the operator item is asserted solely in a code comment, the lane report itself is not in the diff — cite the lane report path in the review so the operator item is visible, or obtain the operator's number before merge.
+
+MET — AC #1 — mobile/src/components/surfaces/SemiQuestionBinding.tsx "accessibilityState: s.busy ? { disabled: s.route === null, busy: true } : { disabled: s.route === null }" — the Continue node carries busy true while submitting, with a behaviour case in semiQuestionPage.behaviour.test.tsx.
+MET — AC #2 — mobile/app/(app)/parcel-tool/semi-question.tsx "mountedRef.current = true;" inside the effect body, plus the StrictMode remount case "a screen whose effects ran cleanup and then again ... still opens the report".
+MET — AC #5 — mobile/app/(app)/parcel-tool/semi-question.tsx "if (!id) return;" placed before "if (submittingRef.current) return;" and before the fetch, with the case "an empty parcel id never calls the lookup and never navigates".
+MET — AC #6 — mobile/app/(app)/parcel-tool/semi-question.tsx "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS)" and the finally "submittingRef.current = false;" — the unanswered lookup lands in the built error state and the latch is released, fake-timer case present.
+MET — AC #7 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "it('semi-question.html:130 `.btn.p[aria-busy=\"true\"]`: while Continue is pending ...')" — the fidelity pin quotes the mock line and rule.
+MET — RR-0308/RR-0309 "it draws no busy section, no spinner and no busy text" — SemiQuestionBinding.tsx adds only "className" and "accessibilityState", no new node, section, spinner or copy.
+MET — D-1 "the failed-Continue state must not change" — semi-question.tsx catch path unchanged "if (mountedRef.current) setSubmitError(e);" so the built error state and its Try again are the ones already shipped.
+MET — Brief "the failed state shows the existing built error state with its existing Try again" — the timeout error is routed through the same setSubmitError, and the behaviour case asserts the existing copy "Couldn’t reach the lot service. Check your connection and try again." plus parcel-semi-retry.
+REJECT — RR-0176 "no 35 s cap on the loading screen; that is a different wait from this lookup" — accused of capping the loading screen — not a real issue: the bound is on the Continue answered lookup, a wait the ruling explicitly separates.
+REJECT — Brief "no new string" — accused of adding copy via SemiContinueTimeoutError "super('The answered lookup did not settle in time')" — not a rendering path: the screen shows the built error text, which the new fake-timer case asserts, so no new user-visible string is introduced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  59066ms (59.1s)
+📊 Tokens — total: 24209, input: 13072, output: 11137, reasoning: 10094

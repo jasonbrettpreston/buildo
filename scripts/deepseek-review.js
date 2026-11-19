@@ -153,7 +153,7 @@ async function cmdTest() {
   console.log('\n✅ Connection working');
 }
 
-async function cmdReviewFile(filePath, contextPath = null, sections = [], { answer = false, dryRun = false } = {}) {
+async function cmdReviewFile(filePath, contextPath = null, sections = [], { answer = false, dryRun = false, templatePath = null } = {}) {
   if (answer) {
     // MB-77 (c) — answer mode: answerSystemPrompt() + the file verbatim, no review wrapper. --context is ignored.
     const { pathToFileURL } = require('url');
@@ -174,6 +174,26 @@ async function cmdReviewFile(filePath, contextPath = null, sections = [], { answ
   const code = readFileOrFail(filePath);
   const rawContext = contextPath ? readFileOrFail(contextPath) : null;
   const context = rawContext && sections.length ? extractSections(rawContext, sections) : rawContext;
+
+  // task-358 (REVIEW.LENSES) — lens mode: `--template <lens>` sends the lens template's own System persona and User prompt
+  // ({{PLAN}} = the file under review, {{SPECS}} = the --context file) so its strict output format reaches the model.
+  if (templatePath) {
+    const split = splitTemplate(readFileOrFail(templatePath));
+    const systemInstruction = split.systemInstruction ?? 'You are a focused reviewer. Follow the prompt\'s output format strictly.';
+    const userPrompt = substitutePlaceholders(split.userTemplate, {
+      plan: code,
+      specs: context ?? '(no pasted context provided)',
+      dataContext: '(no live-DB context provided)',
+    });
+    if (dryRun) {
+      console.log(`DRY-RUN ${JSON.stringify({ messages: [{ role: 'system', content: systemInstruction }, { role: 'user', content: userPrompt }] })}`);
+      return;
+    }
+    const lensResult = await callDeepSeek(userPrompt, systemInstruction);
+    console.log(lensResult.text);
+    printUsage(lensResult.usage, lensResult.durationMs);
+    return;
+  }
 
   const systemInstruction = `You are a senior software engineer performing an ADVERSARIAL code review. Your job is to find bugs, edge cases, security issues, and design flaws that the original author may have missed or rationalised away. Be specific. Cite line numbers. Do not be polite — be useful.
 
@@ -309,6 +329,7 @@ Commands:
   review <file>                 Adversarial code review of a file
   review <file> --context <f>   Code review with extra context
        [--answer]               Answer mode: file verbatim + answerSystemPrompt()
+       [--template <lens>]      Lens mode: the template's System persona + User prompt ({{PLAN}} = file, {{SPECS}} = --context)
        [--dry-run]              Print the messages as one DRY-RUN line instead of calling the API
   spec <spec-path>              Adversarial spec review
   plan                          Review .cursor/active_task.md (legacy hardcoded prompt)
@@ -350,7 +371,9 @@ Examples:
       const sections = args.flatMap((a, i) => (a === '--section' && args[i + 1] ? [args[i + 1]] : []));
       const answer = args.includes('--answer');
       const dryRun = args.includes('--dry-run');
-      await cmdReviewFile(file, contextFile, sections, { answer, dryRun });
+      const tIdx = args.indexOf('--template');
+      const templatePath = tIdx !== -1 ? args[tIdx + 1] : null;
+      await cmdReviewFile(file, contextFile, sections, { answer, dryRun, templatePath });
     } else if (command === 'spec') {
       const file = args[1];
       if (!file) {

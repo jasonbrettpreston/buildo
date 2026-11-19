@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/proof3/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11157 chars, answer 0 chars, 15s
+BUG severity=CRIT/HIGH: none. No unmet clause found.
+
+DEFER severity=NIT — task "proof-slice.mjs rejects \"suite\": null and bad timeoutMs with exit 2" — proof-slice.mjs:47 "if (r?.suite !== undefined && (typeof r.suite !== 'object' || r.suite === null || Array.isArray(r.suite))) problems.push(`${at}: suite must be an object`);" — the guard rejects strings, numbers and arrays as well as null, so inputs that previously reported "suite.suite_files missing" now report a different problem line; the exit code is unchanged (still 2) and no pasted clause names those extra shapes — keep it if you accept the wider message, or narrow the branch to `r.suite === null` plus the existing suite_files check if the card's word "null" is meant literally.
+
+MET — task "rejects \"suite\": null ... with exit 2" — proof-slice.mjs:47 — null now yields a `suite must be an object` problem instead of a `null.suite_files` TypeError, and main turns `r.problems` into exit 2 at "if (r.problems.length) { for (const p of r.problems) console.error(`proof-slice: ${p}`); return 2; }"
+MET — task "bad timeoutMs with exit 2" — proof-slice.mjs:49 — "if (r?.timeoutMs !== undefined && !(Number.isInteger(r.timeoutMs) && r.timeoutMs > 0)) problems.push(`${at}: timeoutMs must be a positive integer`);" reaches the same problems-to-exit-2 path
+MET — task "unwritable --out exits 2 with one proof-slice: line" — proof-slice.mjs:148 — "try { io.mkdir(outDir); } catch (e) { console.error(`proof-slice: cannot create --out ${outDir} (${e?.code ?? e?.message ?? 'error'})`); return 2; }" prints exactly one proof-slice: line and returns 2
+MET — ruling "header table: exit 0 all PASS, 1 any FAIL, 2 usage or bad data, 3 NOT BUILT/GAP" — proof-slice.mjs:11 — "exit 0 every row PASS · 1 any FAIL · 2 usage, bad data file or an unwritable --out · 3 no FAIL but a row is NOT BUILT or GAP" keeps all four codes and names the new exit-2 case
+MET — task "report-opens row blockedBy [\"task-287\"]" — proof-slices.json:15 — "notbuilt": { "blockedBy": ["task-287"] } replaces ["task-123"]
+MET — task "design-fit row unchanged (RR-0306: the proof tool does not wait, prints NOT BUILT)" — proof-slices.json:12 — the design-fit line carrying "notbuilt": { "blockedBy": ["task-345", "task-67"] } is outside both hunks
+MET — ruling "adjudication already REJECTED: oversized timeout cap, writeFile guards, null row entries, EEXIST (mkdir is recursive)" — proof-slice.mjs:148 — no cap, no writeFile guard, no EEXIST branch, no null-row-entry change appears in the diff
+MET — task "Scope fence (PLAN-PROTOCOL.md:3 simple, no scope creep): nothing else changes" — proof-slice.mjs hunks — limit: three hunks in proof-slice.mjs plus one row in proof-slices.json, no other lines touched
+
+REJECT — task "unwritable --out exits 2 with one proof-slice: line" — accused of not covering a --out that mkdir creates but writeFile cannot write into — the pasted adjudication explicitly REJECTED writeFile guards, so the mkdir guard is the ruled-on scope of this clause.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  20445ms (20.4s)
+📊 Tokens — total: 8145, input: 4015, output: 4130, reasoning: 3243

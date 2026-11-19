@@ -228,3 +228,40 @@ describe('T8 output review r2 (KEPT findings): positive proof of a run, strict r
     for (const id of ['surface-validate', 'search-goldens', 'lotmap-goldens', 'semi-goldens', 'chk3-nothing-new', 'chk5-mcstorage']) expect(rows.find((r) => r.id === id)?.expect, id).toBeTruthy();
   });
 });
+
+describe('T9 task-363 input guards: null suite, bad timeoutMs, unwritable --out (RR-0306 keeps the design-fit row as is)', () => {
+  const j = (rows: unknown[]) => JSON.stringify(spec(rows));
+  const mk = (text: string, mkdir: (d: string) => void = () => undefined) => ({
+    readFile: (f: string) => { if (f.endsWith('.json')) return text; throw new Error('no file'); },
+    run: ok, head: HEAD, writeFile: () => undefined, mkdir, print: () => undefined,
+  });
+  it('a row with "suite": null is a stated problem and main exits 2, no TypeError', () => {
+    const rows = [{ id: 's', proof: 'p', suite: null }];
+    expect(checkSpec(spec(rows), 'S').join()).toMatch(/suite must be an object/);
+    expect(main(['--slice', 'S', '--out', '/out'], mk(j(rows)))).toBe(2);
+  });
+  it('timeoutMs "5", -1, 0 and 1.5 are problems and main exits 2; a positive integer is accepted', () => {
+    for (const t of ['5', -1, 0, 1.5]) {
+      expect(checkSpec(spec([cmd('a', { timeoutMs: t })]), 'S').join(), String(t)).toMatch(/timeoutMs must be a positive integer/);
+      expect(main(['--slice', 'S', '--out', '/out'], mk(j([cmd('a', { timeoutMs: t })])))).toBe(2);
+    }
+    expect(checkSpec(spec([cmd('a', { timeoutMs: 5000 })]), 'S')).toEqual([]);
+  });
+  it('an io.mkdir that throws exits 2 and prints one proof-slice: line (not the FAIL code 1)', () => {
+    const lines: string[] = [];
+    const orig = console.error;
+    console.error = (...a: unknown[]) => { lines.push(a.join(' ')); };
+    try {
+      const code = main(['--slice', 'S', '--out', '/out'], mk(j([cmd('a')]), () => { throw Object.assign(new Error('EACCES: permission denied'), { code: 'EACCES' }); }));
+      expect(code).toBe(2);
+    } finally { console.error = orig; }
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatch(/^proof-slice: .*EACCES/);
+  });
+  it('the committed report-opens row is blocked by the live switch task-287, the design-fit row is unchanged', () => {
+    const data = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slices.json'), 'utf8')) as Record<string, { rows: Array<Record<string, any>> }>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON rows
+    const byId = (id: string) => (data.S?.rows ?? []).find((r) => r.id === id);
+    expect(byId('report-opens')?.notbuilt.blockedBy).toEqual(['task-287']);
+    expect(byId('design-fit')?.notbuilt.blockedBy).toEqual(['task-345', 'task-67']);
+  });
+});

@@ -87,3 +87,46 @@ The templates encode these lessons as guardrails (the "Anti-patterns" sections) 
 - **Add `--template` flag to both review scripts** so templates can be invoked end-to-end without paste.
 - **Add a "data-reality" pre-flight** that runs canned queries (row counts, NULL distribution, FK coverage) against the live DB and feeds the result into the DeepSeek `{{DATA_CONTEXT}}` slot automatically.
 - **Add a third template for the worktree code-reviewer** at R8 with the same triage format. The worktree reviewer's free-prose output is the highest-quality but slowest-to-triage of the three reviewers.
+
+## The lens set (Task: task-358, REVIEW.LENSES)
+
+Spec 08 section 7 rule 4: "NEVER run one generic pass; run the LENS SET in parallel, each a narrow prompt." Rule 7: the smallest diverse panel, typically 5 to 8 lenses. Rule 9: DeepSeek does static reviews; tool-bearing Claude only where the live tree, DB or git is strictly required. Operator, verbatim, 2026-11-19 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, "Operator: the review protocol"): "I believe deepseek does the compliance seat" and "Deepseek is respoonsible for many of these seats - too many tokens to run all claude ones".
+
+Each lens asks one question, names what it is not responsible for, rejects any finding with no quote, and ends with a strict one-line-per-finding format (at most 8 findings).
+
+| Lens template | The one question | Spec 08 seat | When it fires | Altitude |
+|---|---|---|---|---|
+| `plan-review-deepseek.md` | Failure modes and rollback, data reality, sibling bugs | A2 DeepSeek (adversarial) | every task | plan, and output on money or pipeline work |
+| `lens-compliance.md` | Does it satisfy every pasted spec clause and operator ruling? | A10 Compliance (section 5.1) | every task, including record-only tasks (the only lens for those) | plan and output |
+| `lens-code-review.md` | Correct, typed, errors handled and logged, no dead code? | A3 Code Reviewer | any task that writes code | output (plan: only if the plan names code) |
+| `lens-ux.md` | Does it serve the person on the other end, in every state, in the approved design text? | A11 User-Advocate | a build on a surface (app or web page) | plan and output |
+| `lens-error-paths.md` | Error, empty, retry, time-out, double-submit, degrade-safety, idempotency and dedup | A2 DeepSeek lens 4 (section 7 rule 4) | any task that writes code or a counted event | plan and output |
+| `lens-security.md` | How is this exploited? | A12 Security | only when the change touches money, auth, entitlements, PII or admin (Files line: entitlements, auth, stripe, a metered route) | plan and output |
+
+### The standard
+
+1. The lenses that fire run in parallel, one DeepSeek call each, one narrow prompt each; outputs `r1-<lens>.txt`.
+2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): KEEP or REJECT with the opened `file:line`, in `TRIAGE.md`. The grounder also does the Integration check (A5) itself.
+3. Reality-Check (A7, Claude) runs only when values are served (DB fields, derived numbers); it is not a lens.
+4. Wording rule: a claim is "verified" only with the name of what verified it (which lens, which round, or which grounder check). "Verified" alone is not accepted.
+
+### How to run a lens
+
+Output review (the file under review is the diff; the pasted spec clauses, rulings and design text go in a separate `--context` file; the lens is passed with `--template`, which sends the lens's own system persona and strict format; measured 2026-11-19: the older `--context <lens>` form wraps the lens under the generic adversarial prompt and returned zero strict-format lines in five runs):
+
+```bash
+git show <sha> -- <paths> > review-input.diff
+DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config \
+  scripts/deepseek-review.js review review-input.diff \
+  --template .claude/review-templates/lens-<lens>.md --context pasted-context.md > r1-<lens>.txt
+```
+
+Plan review (the plan is `.cursor/active_task.md`; the pasted context goes in `--specs`):
+
+```bash
+DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config \
+  scripts/deepseek-review.js plan \
+  --template .claude/review-templates/lens-<lens>.md --specs <context file> > r1-<lens>.txt
+```
+
+`review --template` is the one runner change of task-358 (a lens cannot reach the model in strict form through `--context`); `plan --template` already existed. Add `--dry-run` to print the two messages without a call.

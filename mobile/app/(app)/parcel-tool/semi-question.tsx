@@ -17,7 +17,7 @@ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/Surface
 import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
 import { fetchParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
-import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
+import { boundedWait, buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
 import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
 
 export default function SemiQuestionScreen() {
@@ -28,13 +28,18 @@ export default function SemiQuestionScreen() {
   const { data, isFetching, error, refetch } = useParcelLookup(id || undefined);
   const storeLookup = useSetParcelLookup();
   const [submitError, setSubmitError] = useState<unknown>(null);
+  const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  // Set true in the body too: an effect cleanup followed by a re-run (Fast Refresh, StrictMode) must not leave the guard false (task-361, CR-1).
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const situation = useMemo(
-    () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected }),
-    [id, data, error, submitError, isFetching, selected],
+    () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected, submitting }),
+    [id, data, error, submitError, isFetching, selected, submitting],
   );
 
   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
@@ -47,17 +52,22 @@ export default function SemiQuestionScreen() {
   }, [target, isFetching, router]);
 
   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
+  // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
+  // a lookup that does not settle ends in the same built error state as a failed one, and the next Continue works.
   const continueToReport = useCallback(async (route: string) => {
+    if (!id) return;
     if (submittingRef.current) return;
     submittingRef.current = true;
+    setSubmitting(true);
     let result;
     try {
-      result = await fetchParcelLookup({ parcelId: id, semi: 'answered' });
+      result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);
     } catch (e) {
       if (mountedRef.current) setSubmitError(e);
       return;
     } finally {
       submittingRef.current = false;
+      if (mountedRef.current) setSubmitting(false);
     }
     // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
     if (!mountedRef.current) return;

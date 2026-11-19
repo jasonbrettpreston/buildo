@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of docs/reports/reviews/task-362/context-2026-11-19.md (model: deepseek-reasoner)
+
+BUG severity=HIGH, file=lane plan item 4 "no busy state, no new component or package; Android Custom Tab has no Done button (system back)" — double-submit path: two quick taps on "Get help with an address" both reach openHelp, Android stacks two Custom Tabs and iOS gets a second present while the first sheet is still up, and the second failure runs only the console.warn branch — put an in-flight flag in openHelp so a repeat call while a sheet is open is a no-op, and pin it with the rejecting case below.
+
+BUG severity=HIGH, acceptance #1 "a mocked expo-web-browser case written first" — the only planned mock is the success path, so the catch demanded by #5 "a rejecting openBrowserAsync is caught and logged, not thrown" has no test and a later edit to `void WebBrowser.openBrowserAsync(...)` stays green while throwing the rejection — add a case whose mock returns Promise.reject and assert openHelp resolves and warns, no unhandled rejection.
+
+DEFER severity=MED, acceptance #5 "a rejecting openBrowserAsync is caught and logged, not thrown" — on failure the person sees nothing and the caller at SurfaceRenderer action open_help cannot tell failure from success because openHelp returns void, same silence as today's line mobile/src/lib/maxbldHelp.ts:19 "void Linking.openURL(helpUrl(topic, q));" — return a boolean so a caller can log the topic or offer the help URL as a retry.
+
+DEFER severity=MED, lane plan item 2 "adds a Text node (testID parcel-lotmap-pick-hint) after the Continue button only while s.route === null" — the hint tracks route null rather than the predicate that disables Choose a lot, so any other disabled case (a pick in flight, a failed parcel read, zero cards) shows the hint under an enabled button or hides it under a disabled one — have the button and the hint read one shared boolean.
+
+DEFER severity=LOW, acceptance #2 "a content key in the lot map content file, not copy in code" — the empty path is undefined: if select.hint is absent from mobile_parcel_disambiguation_map.content.json the Text renders blank with nothing failing, so the page silently loses the line the task adds — make the binding throw or the golden pin fail on a missing key.
+
+REJECT — lane plan item 2 "only while s.route === null" — the hint looks like render state that could double up on re-render or on a pick followed by a back-navigation — it is pure render from s.route with no write and no counted event, so there is no key to dedup and a repeat is a no-op.
+
+REJECT — lane plan item 1 "a rejection is caught and logged (console.warn), not thrown" at the fire-and-forget callers mobile/app/(app)/parcel-tool/disambiguate.tsx:51 and parcel-tool/index.tsx:117 — moving from a never-throwing void call to an awaited openBrowserAsync looks like it can leave an unhandled rejection — handled, the try/catch sits inside openHelp so both call sites receive a promise that never rejects (still pin it per the second finding).
+
+VERDICT: PASS on error-path safety
+Paths walked: help-tap success, help-tap rejection, help double-tap, sheet dismissed via system back, hint shown at open, hint after pick, hint with missing content key, repeated render of the hint   Unguarded: 3
+
+---
+⏱  32175ms (32.2s)
+📊 Tokens — total: 26203, input: 20296, output: 5907, reasoning: 5158

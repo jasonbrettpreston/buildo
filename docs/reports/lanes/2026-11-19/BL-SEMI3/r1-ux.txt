@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of docs/reports/reviews/task-361/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10525 chars, answer 0 chars, 15s
+BUG severity=HIGH — PLAN fix 1 "which lands in the existing catch -> setSubmitError -> the existing built error state (no new string)" vs task scope "UX-3 (what a person sees after a failed Continue) waits on the operator's answer to draft D-1 and is NOT in this task" — a person who waits out the bounded Continue is sent to a screen whose wording has no approved ruling, so this task ships exactly the undesigned moment it declares out of scope — route the timeout to the approved load-failure copy instead (RR-0179 "A load-failure page is a task, built from the other small pages") or hold the timeout path until D-1 is answered.
+
+BUG severity=HIGH — PLAN fix 1 "continueToReport: 'if (!id) return;' before the latch" — with an empty id a Continue tap produces no busy look, no message and no navigation, a button that does nothing visible and strands the person on the question — send the empty-id tap to the same approved load-failure copy so the person is told to go back and pick their lot.
+
+DEFER severity=MED — PLAN fix 3 "Continue gets accessibilityState {disabled:false, busy:true}" — while the answered lookup runs the control still reports itself available, but a second tap is swallowed by the latch with no feedback, so a screen-reader user is told to press a button that answers nothing — mark it disabled while busy, design silent on the disabled attribute so this is DEFER.
+
+DEFER severity=MED — PLAN fix 1 "boundedWait(promise, SEMI_CONTINUE_WAIT_MS=30000)" vs mock ".btn.p[aria-busy='true'] { opacity:.85; cursor:progress }" — for up to 30 s the only sign anything is happening is a 15 per cent opacity drop, which on a phone reads as a dead button — design silent on a spinner or elapsed text, so record the wait length for the operator rather than add one here.
+
+DEFER severity=MED — PLAN fix 3 "and class L.semiSelectBusy (= semiSelect + opacity-[0.85], the v8 rule) only when busy; unchanged otherwise so existing goldens do not move" — the yes/no choice and Back stay live while the answered lookup runs, so a person who changes their answer mid-flight still gets the report opened for the answer they abandoned — disable the choice while busy or drop the pending lookup on change, design silent.
+
+REJECT — PLAN fix 3 "opacity-[0.85], the v8 rule" vs mock ".btn.p[aria-busy='true'] { opacity:.85; cursor:progress }" — dropping cursor:progress looks like part of the approved busy look is missing — native mobile has no cursor, so the person sees the full approved effect.
+
+VERDICT: FAIL on the person's experience
+States checked: first view (question, ask), pending busy, answered then report opens, timeout error, empty id, network failure/offline, change answer mid-flight, back/leave mid-flight, repeat visit, hot-reload remount (mock lines taken only as quoted in the plan, approved design text block is empty)   Dead ends found: 1
+
+---
+⏱  28850ms (28.9s)
+📊 Tokens — total: 26615, input: 21273, output: 5342, reasoning: 4658

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lenses/lens-run/review-input.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11520 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22796 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35636 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 47847 chars, answer 0 chars, 60s
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx:73 "push: (route: string) => void continueToReport(route)," — every renderer push now runs the answered lookup, so a push other than Continue (the 56 px back chevron, if it routes through push; cannot see SurfaceRenderer) also sends semi=answered and counts the lot before any report exists — keep the plain router.replace for non-Continue pushes and gate the flagged fetch on the Continue route only.
+
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx:53 "const result = await fetchParcelLookup({ parcelId: id, semi: 'answered' });" — id is passed unguarded here while the sibling call guards it ("useParcelLookup(id || undefined)"), so an empty parcelId reaches the fetcher as a real id — return early when id is falsy, or pass id || undefined to match the hook call.
+
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx:31 "const [submitError, setSubmitError] = useState<unknown>(null);" — `submitError ?? error` widens to `{} | <lookup error type>` (NonNullable<unknown> is `{}`), and buildSemiQuestionSituation's error parameter (cannot see its declaration) may not accept `{}`, which would not compile — type the state to the hook's error type and normalise in the catch.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:58 "setSubmitError(e);" — the failed answered lookup is put in UI state and never logged, so a server-side submit failure leaves no trace — log it with the same reporter the lookup hook uses before setting state.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:55 "redirectedRef.current = true;" — looks like the redirect guard is set before the navigation it guards — correct, setQueryData settles the shared key synchronously, so the guard must be true before the re-render commits or the redirect effect would replace with its own target once the answered payload lands.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:68 "retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); }" — looks like Try again drops the retry after a failed submit — correct per the stated behaviour ("Try again clears it and the chosen answer is still there"), the owner then presses Continue to re-issue the answered lookup, while the base-query error path still refetches.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL): n/a, no CRIT or HIGH finding
+
+---
+⏱  63915ms (63.9s)
+📊 Tokens — total: 18755, input: 5616, output: 13139, reasoning: 12528

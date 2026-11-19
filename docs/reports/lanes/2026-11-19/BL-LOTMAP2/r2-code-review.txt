@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lotmap2/review-input.diff (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx "accessibilityState: { disabled: s.route === null }," — the awaitingPick doc says "one predicate for both", but disabled still recomputes the raw condition, so the disabled flag and the hint can drift apart if the predicate ever changes — fix: set `accessibilityState: { disabled: awaitingPick(s) }` so both derive from one predicate
+
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx "...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {})," — the button carries the hint whenever route is null, but the pick-hint node is emitted only in the choose arm ("...(awaitingPick(s) ? [pickHint()] : []),"); if continueButton is drawn in any other arm with route null the description dangles (cannot see the other arms) — fix: gate accessibilityHint on the same arm that emits pickHint, or render pickHint wherever continueButton is drawn
+
+DEFER severity=LOW — mobile/src/lib/maxbldHelp.ts "export const openHelp = async (topic: string, q: string): Promise<void> => {" — the return type moved from void to Promise<void> and the two call sites (disambiguate.tsx:51, index.tsx:117) are not in the diff, so an unawaited call there is a floating promise that no-floating-promises will flag, even though the catch makes rejection impossible — fix: `void openHelp(...)` at the call sites
+
+DEFER severity=NIT — mobile/__tests__/maxbldHelp.test.ts "link.mockRestore();" — the restore runs after the assertions, so a failing expectation leaves Linking.openURL mocked (and the warn spy, "warn.mockRestore();") in place for later tests — fix: afterEach(() => jest.restoreAllMocks())
+
+REJECT — mobile/src/lib/maxbldHelp.ts "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" — looks like an error swallowed with no error object and no stack — it is correct: the spec requires logging the topic only and never the typed address, so dropping the error payload is intentional
+
+VERDICT: PASS on code correctness
+
+---
+⏱  67950ms (68.0s)
+📊 Tokens — total: 29794, input: 16002, output: 13792, reasoning: 13295

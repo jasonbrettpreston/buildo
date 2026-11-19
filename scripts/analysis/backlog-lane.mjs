@@ -132,6 +132,18 @@ const msDir = path.join(board, 'backlog/milestones');
 const msTitle = milestone && fs.existsSync(msDir) ? fs.readdirSync(msDir).filter((f) => f.endsWith('.md')).map((f) => parseFM(fs.readFileSync(path.join(msDir, f), 'utf8')).fm).find((fm) => String(fm.id) === milestone)?.title : undefined;
 const letter = /\[([^\]]+)\]\s*$/.exec(String(msTitle ?? ''))?.[1];
 if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group] letter in the title of milestone ${milestone || '(none)'}; groups defaults to F\n`);
+// task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
+const lensLine = (task, ctx) => {
+  const files = /\bFiles:\s*(.+)$/m.exec(descriptionOf(task))?.[1] ?? '';
+  const code = ['build', 'fix'].includes(String(task.fm.type ?? '').toLowerCase());
+  const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
+  const sec = /entitlement|auth|stripe|metered/i.test(files);
+  const plan = ['plan-review-deepseek', 'compliance', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])];
+  const out = ['compliance', ...(code ? ['code-review'] : []), ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])];
+  const f = (l) => (l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`);
+  const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
+  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file>\` (the context file is the plan and its pasted rulings). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. Run the lenses of each review in parallel, one call each, outputs r1-<lens>.txt; then triage every finding as round 2 (one grounder, KEEP or REJECT with the opened file:line, TRIAGE.md).`;
+};
 const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
 const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
 const spec = {
@@ -145,7 +157,7 @@ const spec = {
   outputs: [...new Set([...pathy.map(abs), path.join(laneDir, 'REPORT.md')])],
   groups: [letter ?? 'F'],
   writeScope: [laneDir, wt],
-  extra: [ticket, `Review (review mode, from the worktree): DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`],
+  extra: [ticket, `Review (review mode, from the worktree): DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`, lensLine(t, ctxRel)],
 };
 const specPath = specGiven ?? path.join(laneDir, 'task.json');
 if (!specGiven) {

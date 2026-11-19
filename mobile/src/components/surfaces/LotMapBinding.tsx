@@ -104,6 +104,10 @@ const helpLink = (topic: 'lot_match' | 'address_match'): PropsNode =>
     onPress: { action: 'open_help', topic, q: derived('query') },
   }, [node('Text', { key: 'help-text', className: L.helpLinkText }, [content('help.address.link')])]);
 
+/** C.11 (task-362; choose-lot.html:278): "Pick a lot on the map or in the list." under the disabled Choose a lot button. */
+const pickHint = (): PropsNode =>
+  node('Text', { key: 'pick-hint', testID: 'parcel-lotmap-pick-hint', className: L.pickHint }, [content('select.hint')]);
+
 /** C.12: "Not sure which lot? Get help with an address" (choose-lot.html:279). */
 const helpRow = (): PropsNode =>
   node('View', { key: 'help-row', testID: 'parcel-lotmap-help-row', className: L.helpRow }, [
@@ -193,6 +197,9 @@ const cards = (s: LotMapSituation): PropsNode[] =>
     ])]);
   });
 
+/** Nothing picked yet: Choose a lot is disabled and its hint shows (one predicate for both; choose-lot.html:278). */
+const awaitingPick = (s: LotMapSituation): boolean => s.route === null;
+
 const continueButton = (s: LotMapSituation): PropsNode => {
   const label: Child = s.route === null
     ? content('select.none')
@@ -204,10 +211,12 @@ const continueButton = (s: LotMapSituation): PropsNode => {
     testID: 'parcel-lotmap-continue',
     variant: 'default',
     className: L.select,
-    disabled: s.route === null,
+    disabled: awaitingPick(s),
     accessibilityRole: 'button',
-    accessibilityState: { disabled: s.route === null },
+    accessibilityState: { disabled: awaitingPick(s) },
     accessibilityLabel: content('select.label'),
+    // aria-describedby="pick-hint" of the mock: the hint line travels with the disabled button.
+    ...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {}),
     onPress: s.route === null ? null : { action: 'push', route: s.route },
   }, [node('Text', { key: 'continue-text', className: L.selectText }, [label])]);
 };
@@ -238,6 +247,7 @@ const body = (s: LotMapSituation): PropsNode[] => {
         ...mapView(s),
         ...cards(s),
         continueButton(s),
+        ...(awaitingPick(s) ? [pickHint()] : []),
         helpRow(),
       ];
     case 'redirect':

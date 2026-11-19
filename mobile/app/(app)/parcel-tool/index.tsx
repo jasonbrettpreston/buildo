@@ -113,7 +113,7 @@ export default function ParcelSearchScreen() {
       push: (to: string) => navigate(to),
       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
-      // MF-46 follow-up (P35-D18 a): "Report incorrect address match" leaves the app for Help & Support (Linking.openURL).
+      // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
       open_help: openHelp,
     }),
     [refetch, navigate, router],

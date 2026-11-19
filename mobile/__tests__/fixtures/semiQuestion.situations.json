@@ -200,6 +200,26 @@
           "unsure": false
         }
       }
+    },
+    "ask_yes_busy": {
+      "parcelId": "PCL-S1",
+      "selected": "yes",
+      "data": {
+        "match": {
+          "parcelId": "PCL-S1",
+          "matchType": "exact",
+          "address": "5 Elm St"
+        },
+        "candidates": [],
+        "warnings": [],
+        "parcel": null,
+        "lotForm": {
+          "detected": "semi_half",
+          "basis": "doubt_multi_parcel_abut",
+          "unsure": true
+        }
+      },
+      "submitting": true
     }
   },
   "named": [
@@ -208,6 +228,7 @@
     "redirect_detached",
     "redirect_older_server",
     "redirect_no_data",
-    "stale_pick_outside_ask"
+    "stale_pick_outside_ask",
+    "ask_yes_busy"
   ]
 }

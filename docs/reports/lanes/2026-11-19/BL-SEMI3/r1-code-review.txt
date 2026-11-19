@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of docs/reports/reviews/task-361/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10982 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20513 chars, answer 1522 chars, 30s
+BUG severity=HIGH — plan fix 1 "the fetch wrapped in boundedWait(promise, SEMI_CONTINUE_WAIT_MS=30000) from semiQuestion.ts that rejects with SemiContinueTimeoutError" — the plan stops waiting but never aborts: no AbortController is named, so the request keeps running, the 30 s timer must be cleared on the settle path or it fires after the race is decided (the fake-timer case in AC #6 will surface it as a stray timer), and a late rejection of the losing fetch becomes an unhandled rejection that can fail the jest run — implement boundedWait so it clearTimeout in both branches and attaches a no-op catch to the promise it stops waiting for, and pass an AbortSignal into fetchParcelLookup so the abandoned request is actually cancelled.
+
+BUG severity=MED — plan fix 1 "which lands in the existing catch -> setSubmitError -> the existing built error state (no new string)" — the new timeout reaches the error path with no log call named anywhere in the plan, so a lookup that never settles leaves no trace beyond a screen the person sees — add a log naming SemiContinueTimeoutError and the parcel id in the catch (or where the error is classified), independent of the string shown.
+
+BUG severity=MED — plan fix 1 "`if (!id) return;` before the latch" — an empty id makes Continue a silent no-op: no state change, no log, no signal, and the case is only observable from the test asserting fetchParcelLookup was not called — log a warning with the guard name before returning so an unreachable-by-design branch that fires in the field is visible.
+
+DEFER severity=MED — plan fix 2 "situation.busy (true only in ask state)" — tying the busy flag to the ask state rather than to submitting alone means any situation change while the request is in flight silently drops the busy look and the accessibilityState busy flag, so the indicator can vanish while Continue is still pending — derive busy from submitting only and let the ask-state condition gate rendering, not the busy value.
+
+DEFER severity=LOW — plan fix 3 "class L.semiSelectBusy (= semiSelect + opacity-[0.85], the v8 rule) only when busy" — a second class list copying semiSelect will drift from it, and the mock keys the style on the attribute (".btn.p[aria-busy="true"]") while this encodes the same fact twice, in the attribute and in a class — build the busy class list from the same base constant, or apply only the extra opacity on top of the existing semiSelect entry.
+
+REJECT — plan fix 1 "mountedRef: effect body sets true, cleanup false." — writing true in the body looks redundant next to the existing useRef(true) initialiser — it is required: the cleanup of a prior effect run leaves the ref false, which is CR-1, so the body write is the fix and not dead code.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- boundedWait has no abort and no stated timer clear or losing-promise catch, so the timeout leaks a timer and can produce an unhandled rejection
+- the timeout path reaches the shared error state with no log, so a stuck lookup is untraceable
+- the empty-id guard returns silently, giving an inert Continue with no trace (the actual .tsx/.ts files are cannot see in this prompt, only the plan text)
+
+---
+⏱  32044ms (32.0s)
+📊 Tokens — total: 26836, input: 21257, output: 5579, reasoning: 4844

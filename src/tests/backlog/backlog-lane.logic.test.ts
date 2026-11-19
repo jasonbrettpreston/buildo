@@ -182,3 +182,45 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
     expect(fs.existsSync(f.wt)).toBe(false);
   });
 });
+
+// task-358 (REVIEW.LENSES): the brief names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass") for plan and output review, by task type.
+describe('backlog-lane review line names the lens set (task-358)', () => {
+  const lensBrief = (type: string | null, files: string) => {
+    const f = fixture();
+    const dir = path.join(f.board, 'backlog/tasks');
+    const file = path.join(dir, fs.readdirSync(dir).find((n) => n.startsWith(f.task))!);
+    let body = fs.readFileSync(file, 'utf8').replace('Launch description text.', `Launch description text. Files: ${files}`);
+    if (type) body = body.replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`);
+    fs.writeFileSync(file, body);
+    const r = lane(f, ['--dry-run']);
+    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
+    expect(spec, r.stdout + r.stderr).not.toBeNull();
+    return spec.extra.join('\n') as string;
+  };
+  it('a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs r1-<lens>.txt, triage as round 2; no security', () => {
+    const e = lensBrief('build', 'mobile/app/(app)/x.tsx, src/tests/');
+    for (const l of ['plan-review-deepseek.md', 'lens-compliance.md', 'lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md']) expect(e).toContain(l);
+    expect(e).not.toContain('lens-security.md');
+    expect(e).toMatch(/plan review/i);
+    expect(e).toMatch(/output review/i);
+    expect(e).toContain('in parallel');
+    expect(e).toContain('r1-<lens>.txt');
+    expect(e).toMatch(/round 2/);
+    expect(e).toContain('NEVER run one generic pass');
+  });
+  it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+    for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
+      expect(lensBrief('build', files), files).toContain('lens-security.md');
+    }
+  });
+  it('a build that is not on a surface has no ux lens', () => {
+    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
+    expect(e).toContain('lens-code-review.md');
+    expect(e).not.toContain('lens-ux.md');
+  });
+  it('a record-only task runs compliance only', () => {
+    const e = lensBrief('record', 'docs/specs/00-architecture/08_agents.md');
+    expect(e).toContain('lens-compliance.md');
+    for (const l of ['lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
+  });
+});
