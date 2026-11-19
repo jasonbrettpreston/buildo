@@ -1,0 +1,95 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/footer/diff-code.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11718 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23659 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35056 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46347 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 58014 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 69128 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 80217 chars, answer 385 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 80217 chars, answer 13448 chars, 120s
+# Adversarial review — BL-FOOTER (MF-91 / task-332)
+
+*Line numbers for `footerNode.ts` are the new-file lines (patch header `+1,64`); others are the new-side positions from the hunk headers, so ±3. I reviewed through the lane lens only.*
+
+---
+
+### Static byte-identity (lens 3) — broken in three independent ways
+
+- **[HIGH]** (footerNode.ts:47-62 vs the deleted `footerNode` at StaticBinding.tsx:173-180):
+  **The static footer output is not byte-identical.** Three concrete divergences, all reachable with today's content files:
+  1. **Empty links group.** The old builder *always* emitted the links `Group` (`node('Group', {key:`${s.id}-links`, className:L.links}, s.parts.filter(...))`) — a footer section with zero link parts rendered an empty `<div>`. The new builder emits the Group lazily (`if (links === null)`), so a link-less footer loses a DOM node.
+  2. **Order.** The old code did two independent `filter`s — *all* links first (in one Group), *then* all legal texts. The new builder preserves part order and reopens a Group after every non-link part. Any static footer whose content orders `legal` before `link`, or interleaves them, now emits a different DOM order.
+  3. **Roles that used to be dropped now render.** The old code rendered only `link` and `legal` and silently discarded everything else. The new builder throws for unknown roles — but `line` and `copyright` are *known* roles, and `STATIC_FOOTER` supplies both (`line: L.legal, copyright: L.legal`). So any static footer part carrying role `line` or `copyright` now prints text that did not exist on the page before.
+  *Why it matters:* the lane's acceptance criterion is byte-identity; items 1 and 3 are silent content/layout edits to live pages. *Fix:* diff the emitted tree for every static footer content file before/after (`staticWebTree` JSON snapshot), and if `line`/`copyright` were ever present, either delete those parts or accept the change explicitly.
+
+- **[HIGH]** (StaticBinding.tsx:176-180 + the untouched static content files):
+  **Nothing in this diff makes the static footers use the same links, texts and order as the search and report footers.** The *builder* is shared; the *data* is not. Static footers still read `href`/`content` from their own content files, none of which this patch touches. If those files say `/support` rather than `/help`, or `© 2026 MaxBLD` rather than `© MaxBLD`, or link in a different order, lens item (1) fails while the code review looks clean. Grep every static footer part (`"role": "link"`, `"role": "legal"`) and diff the strings against `SEARCH_FOOTER` and `ReportFooter` before claiming the footer is "the same on all three pages".
+
+### Required-prop / failure-mode regressions
+
+- **[HIGH]** (ReportPage.tsx:401, StaticBinding.tsx:437, report-preview/page.tsx:50):
+  **`footer` became a required prop on the shared `ReportPage` and only two call sites were updated.** Every other call site (tests, storybook, the `STATES` branch of the preview page if it renders `<ReportPage>`, any admin preview) either fails the build or — if it passes through JS / a spread / `as` — reaches `pickFooterText(undefined)`, which throws `TypeError: Cannot convert undefined or null to object` from `Object.hasOwn`, not the named FE-18 error the design claims. *Fix:* guard first — `if (!footer) throw new Error('ReportPage: no footer text')`.
+
+- **[HIGH]** (StaticBinding.tsx:339 `footer?: FooterText` + :392 `footerOf2`):
+  **`StaticReport.footer` is optional in the type but mandatory at runtime.** Any producer of `StaticReport` that omits it (the `/help` page's embedded sample, preview fixtures, tests) compiles cleanly and 500s on render. This is a type hole dressed as safety. *Fix:* make `footer` required when `sample` is present (discriminated union, or `footer: FooterText` on a `{sample: PageView}` variant), so the compiler enforces what `fail()` currently enforces at request time.
+
+- **[HIGH]** (maxbld-landing.ts:147):
+  **`pickFooterText(SEARCH_CONTENT)` throws eagerly inside `readLanding`, defeating that function's own degraded path.** `readLanding` is explicitly written to degrade (`const state = lines.length ? 'static' : 'degraded'`), and `picture`/`demo` are conditionally spread precisely so a missing piece is omitted. A renamed or dropped `footer.*` key in a *different surface's* content file now turns the marketing landing page into a 500 instead of a degraded render. *Fix:* compute the footer only when the sample is actually renderable, and omit the `ReportPage` node (as `picture` is omitted) when it is not.
+
+### Silent skips (lens 4)
+
+- **[MEDIUM]** (ReportPage.tsx:252-266 `ReportFooter`):
+  **The report view's own `copyright` part is now silently discarded** — the old code rendered `one(s, 'copyright')`; the new code renders the caller's `footer.copyright` and never looks at the part. Worse, any *other* part in the report footer section (a `legal`, a second `line`, a renamed role) is ignored with no error, because the parts array is hand-built from `one(s,'sources')`/`one(s,'change')` only. This is exactly the "nothing skipped silently" rule the builder enforces for its own data and the report renderer does not. *Fix:* assert the report footer section contains only the roles you consume (throw otherwise), or keep `s.copyright` and treat the shared string as a fallback.
+
+- **[MEDIUM]** (footerNode.ts:24-32 + SearchBinding.tsx:139 / StaticBinding.tsx:389-434):
+  **FE-18 is enforced on one of three surfaces.** `renderFooter` in ReportPage throws on an unknown text key; `pickFooterText` throws on a missing key. But the search and static bindings resolve `{content: key}` through their own content maps, whose failure mode this diff does not change or show. A missing `footer.terms` will throw a named error on the report and can render blank/raw-key on the other two. Share the ref-resolution (or at least the throw) across the three renderers.
+
+- **[MEDIUM]** (ReportPage.tsx:240-250 `renderFooter`):
+  **The report renderer discards `testID`, `size`, `variant` and `color` from the node props.** The builder emits `report-footer`, `report-link-/terms`, `report-legal`, `report-copyright`; none reach the DOM, so the shared footer is not assertable by test id on the report surface and the three renders are observably different trees. If the acceptance test for "same footer on all three pages" is a `data-testid` query, it silently passes on two and finds nothing on the third. Emit `data-testid` in `renderFooter` (you already emit `data-section`).
+
+### Search-page behaviour
+
+- **[MEDIUM]** (SearchBinding.tsx:363-365, new Button branch):
+  **The `href` branch is placed before the `open_help` branch and deliberately bypasses the live switch.** Any `Button` node carrying both `href` and `onClick.action === 'open_help'` now loses its `#topic=…&q=…` anchor and navigates to the bare href; and a control that was previously disabled during a live search is now always clickable ("it is not a control of the search form" is an assumption, not a check). Audit every Button in the tree for an `href` before shipping.
+
+- **[MEDIUM]** (SearchBinding.tsx:122-141 + 230-245):
+  **The MF-58 legal sentence moved from under the address input to after up to 10 results and the prompt.** The comment cites operator approval, but MF-58 is recorded as a *must-survive* row ("the legal line under the address input, before any result block") and this diff changes it unilaterally. Any ordering test now fails or, worse, passes on a selector that no longer encodes position, while the disclaimer sits below the fold. Record the approval against MF-58 explicitly, or keep a legal line under the input.
+
+- **[MEDIUM]** (SearchBinding.tsx:62-66 + 230-245):
+  **The footer is a sibling of `column` inside `screen`, not inside the column.** It escapes the column's width/padding budget (`w-full … px-4 py-6` on top of the column's own padding) and `mt-auto` only works if `L.screen` is a full-height flex column — and Mantine `Stack` sets `gap` as an inline CSS var, so `gap-3` in `className` is dead. Verify at 320/430px; if it isn't intended to be full-bleed, put it inside the column.
+
+- **[MEDIUM]** (mobile/src/generated/…/mobile_parcel_search.json):
+  **Four `footer.*` keys now live in a mobile surface that no mobile renderer reads** (the mobile binding keeps its own footer per the ReportPage comment). If the mobile build has an "every content key is referenced" lint, schema check, or golden snapshot, this is a build break on the surface the lane promised not to touch; if it doesn't, it's four dead strings shipped to mobile. Also confirm no other generated artefact pins `input_sha` for the same source.
+
+### Types / layering / hygiene
+
+- **[MEDIUM]** (SearchBinding.tsx:139 `as WebNode`):
+  **The one artefact that must be identical across three surfaces is the one whose type is being lied about.** `FooterNode` is `{component: string; props: Record<string, unknown>; children: Array<FooterNode|FooterRef>}`; the cast suppresses any mismatch with `WebNode` (a disallowed `pending` prop, a different child-ref shape, a missing `href` in the props union). Make the conversion explicit and typed, or have `footerNode` take a node-constructor.
+
+- **[LOW]** (maxbld-landing.ts:38-39): a `src/lib` module now imports from `src/components` (`footerNode`) and from a second lib (`maxbld-web`). It works only because `footerNode.ts` happens to be dependency-free and has no `'use client'`; one import added to `footerNode.ts` later creates a server→client cycle. Move `FooterText` / `FOOTER_TEXT_KEYS` / `pickFooterText` into `src/lib/surfaces/footerText.ts` and have all three renderers import from there.
+
+- **[LOW]** (report-preview/page.tsx:14-50): the admin **report** preview sources its footer strings from `SEARCH_CONTENT` — the *search* surface's content file. The preview now renders another surface's copy; when the report surface gets its own strings (it will), the preview lies with no error. Use the report surface's content or a preview-specific fixture.
+
+- **[LOW]** (ReportPage.tsx:401): `pickFooterText(footer)` is redundant re-validation (the type already guarantees the keys) and runs on every render; meanwhile it does *not* catch the realistic failure (an `undefined` prop) cleanly — see the TypeError above. Either delete it or make it the single named guard.
+
+- **[LOW]** (footerNode.ts:9, comment: *"a same-origin path, checked by the caller's table"*): **there is no href validation anywhere in the builder.** The href goes straight into `href` / `Link`; the type allows any string. Today the callers pass code constants, so this is only a false claim — but the comment asserts a safety property that does not exist in the code. Either validate (`href.startsWith('/')`) or delete the sentence.
+
+- **[LOW]** (footerNode.ts:39-42): `Object.hasOwn(L, role)` can never be false given `FooterLayout = Record<'footer'|'links'|…, string>` — the guard is dead code that gives false confidence. `cls()` also accepts `''`, so a layout typo'd to the empty string passes and renders `class=""` silently (which is exactly how the report's `line`/`legal`/`copyright` slots work — intentional there, indistinguishable from a mistake elsewhere).
+
+- **[NIT]** (ReportPage.tsx:241, 243): `String(p.className)` / `String(p.key)` — a node without a className renders `class="undefined"`. Use `p.className ?? ''`. Also `PENDING` is now referenced at module scope inside `renderFooter`; confirm it is a module-level constant and not scoped inside `T` (a build-time catch if wrong, but if it is loose, pending styling silently disappears).
+
+- **[NIT]** (SearchBinding.tsx:63-65, StaticBinding.tsx:177): `SEARCH_FOOTER_LAYOUT` sets `line` and `legal` to `L.footerLegal` (identical strings) and `STATIC_FOOTER` aliases `line`/`copyright` to `L.legal`. Filling layout slots for roles a section never uses means the *next* person to add a `copyright` part to search gets legal typography and no complaint.
+
+- **[NIT]** (footerNode.ts:58-62): multiple `legal` parts all receive `testID: `${prefix}-legal`` — duplicate `data-testid`s (pre-existing for static, now inherited by the search page). Include the index.
+
+- **[NIT]** (StaticBinding.tsx:392): `footerOf2`. Two near-identically named helpers in one file (`footerOf` = the builder wrapper, `footerOf2` = the report's text accessor). Rename to `reportFooterText`.
+
+---
+
+**Verdict.** The architecture is right — one builder, three thin renders, refs only, roles closed with a throw — and that part is genuinely better than the two footers it replaces. But the change is not landed: the static surface is *not* byte-identical (lazy links group, part-order instead of links-first, and `line`/`copyright` parts that used to be dropped now rendering), the static content files were never updated so the "same links and texts on all three pages" claim rests entirely on the builder being shared rather than on the data matching, `ReportPage`'s new required prop turns every un-updated call site into a runtime TypeError, `StaticReport.footer?` is a compile-clean path to a 500, `readLanding` throws away its own degraded path over a string in another surface's content file, and the report renderer discards test ids and the view's own copyright part without a word — which is precisely the silent skip the module's own docblock forbids. Fix the byte-identity diffs and the failure modes first; the naming and layout-slot nits can wait.
+
+---
+⏱  120057ms (120.1s)
+📊 Tokens — total: 32271, input: 8244, output: 24027, reasoning: 20628
