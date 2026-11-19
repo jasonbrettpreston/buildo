@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MB94C'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:32:00Z'
+updated_date: '2026-11-19T20:35:00Z'
 due_date: '2026-11-26'
 labels:
   - 6c
@@ -83,4 +83,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-MB94C, worktree /Users/brettpreston_macmini/Buildo-wt-mb94c2, branch wf1/inc1b-mb94c), RR-0240
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-121 · Backlog; operator, verbatim: "task 341 approved")
 <!-- SECTION:NOTES:END -->

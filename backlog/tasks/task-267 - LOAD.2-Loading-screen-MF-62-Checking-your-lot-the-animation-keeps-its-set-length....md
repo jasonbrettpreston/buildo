@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:13:00Z'
+updated_date: '2026-11-19T20:35:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -95,4 +95,6 @@ who (plan text): McFrontend lane (MF-62 follow-up)
 Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-267 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
 
 2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-341 (the LOAD chain and the two 6c tasks); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-267 · Backlog; operator, verbatim: "task 341 approved")
 <!-- SECTION:NOTES:END -->

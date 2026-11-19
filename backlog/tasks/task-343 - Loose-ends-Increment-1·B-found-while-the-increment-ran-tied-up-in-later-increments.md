@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T20:30:00Z'
+updated_date: '2026-11-19T20:36:00Z'
 labels:
   - S
   - loose-ends
@@ -57,3 +58,13 @@ Loose ends found on 2026-11-19 (source: the lane reports under docs/reports/lane
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0302 · task-343 · Backlog; operator, verbatim: "create a milestone task called loose ends")
+
+2026-11-19 (R14, task-344) loose end: the generated context pack for task-344 printed Dependencies as (none) and three Document sections as not readable ENOENT (doc-2, doc-16) while citing their lines; fix in the generator (context file docs/reports/reviews/task-344/context-2026-11-19.md).
+
+2026-11-19 (R14, task-344) loose end: design-fit.mjs (RS-12 draft) is untested, and 63 of 117 report element design_refs cite the stale REPORT-LAYOUT-BRIEF-v4.md: tied up by task-345.
+<!-- SECTION:NOTES:END -->

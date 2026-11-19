@@ -3,9 +3,10 @@ id: TASK-341
 title: >-
   LOAD chain (tasks 266, 267, 317) waits on 1.3 W, which waits on two Increment
   6c tasks (121, 122): run them now, ahead of 6c?
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T20:13:00Z'
+updated_date: '2026-11-19T20:36:00Z'
 labels:
   - S
   - gap
@@ -45,3 +46,15 @@ Recommendation: run 121, then 122, then 123 now, in that order, ahead of 6c; the
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-341 · Backlog; operator, verbatim: "task 341 approved")
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Approved by the operator 2026-11-19 (RR-0301, decision-88, MORNING-DECISIONS.md:1160: "task 341 approved"). Tasks 121, 122, 123 run now ahead of the rest of 6c, then LOAD.1 task-266, LOAD.2 task-267, LOAD.4 task-317. Recorded by lane BL-R14 (task-344).
+<!-- SECTION:FINAL_SUMMARY:END -->

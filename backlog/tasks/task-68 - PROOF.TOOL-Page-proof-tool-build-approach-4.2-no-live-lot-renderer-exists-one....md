@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:13:00Z'
+updated_date: '2026-11-19T20:36:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -90,4 +90,8 @@ who (plan text): one lane; claim an ID by mkdir before it starts (ID ledger)
 Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-68 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
 
 2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-342 (PROOF.TOOL and CHK.6); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0303 · task-68 · Backlog; operator, verbatim: "if it needs to be produced at some point - we should do it now - if it isnt a big job")
+
+2026-11-19 (R14, task-344, RR-0303): PROOF.TOOL note: the design-elements file CHK.6 (task-67) needs now has a build task, task-345 (CHK.6a, m-0, LATER); task-67 depends on it. Until it lands the design-fit row is a GAP as task-342 says.
 <!-- SECTION:NOTES:END -->

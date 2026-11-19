@@ -8,13 +8,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-R14'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T20:32:00Z'
+updated_date: '2026-11-19T20:36:00Z'
 labels:
   - follow-up
 milestone: m-1
 dependencies: []
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1160
+  - docs/reports/lanes/2026-11-19/BL-R14/REPORT.md
 type: record
 ordinal: 44012
 ---
@@ -27,9 +28,9 @@ Operator 2026-11-19, verbatim: "task 341 approved - also create a milestone task
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 RR-0301, RR-0302 and RR-0303 entered as Backlog decisions through G2; task-341 closed with the decision as its final summary
-- [ ] #2 task-342 carries the answer: where the design-elements file comes from (source files with file:line), its measured size (element count, what exists already), and a Recommendation: line (produce now or not) with its verification
-- [ ] #3 If producing the file now is recommended and small, one build task for it exists in the right milestone (LATER, with Scope now, sources and acceptance criteria) and task-67 depends on it
+- [x] #1 RR-0301, RR-0302 and RR-0303 entered as Backlog decisions through G2; task-341 closed with the decision as its final summary
+- [x] #2 task-342 carries the answer: where the design-elements file comes from (source files with file:line), its measured size (element count, what exists already), and a Recommendation: line (produce now or not) with its verification
+- [x] #3 If producing the file now is recommended and small, one build task for it exists in the right milestone (LATER, with Scope now, sources and acceptance criteria) and task-67 depends on it
 <!-- AC:END -->
 
 ## Definition of Done
@@ -46,8 +47,16 @@ Operator 2026-11-19, verbatim: "task 341 approved - also create a milestone task
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Measure the design-elements file (sources, counts, RS-12 size) with commands; review round r1; fold. 2. Enter RR-0301, RR-0302, RR-0303 through backlog-decision.mjs; close task-341 DONE; order notes on 121, 122, 123, 266, 267, 317. 3. Answer on task-342 (Grounded, Recommendation); build task only if small, task-67 depends on it, notes on task-68 and 342; loose ends on task-343. 4. backlog doctor, one docs commit with Task: task-344, reports to docs/reports/lanes/2026-11-19/BL-R14, close task-344 BUILT.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R14, worktree /Users/brettpreston_macmini/Buildo-wt-r14, branch wf2/inc1b-r14), RR-0240
+
+R14: decisions 88-90 entered; task-341 DONE; answer on task-342; build task task-345 created, task-67 depends on it; review r1 triaged (TRIAGE.md). Commit sha in the final summary.
 <!-- SECTION:NOTES:END -->
