@@ -3,9 +3,11 @@ id: TASK-333
 title: >-
   SRCH.FUZZY Mis-typed address resolves to candidates through the permit
   pipeline address-spec matcher (same module)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-FUZZY'
 created_date: '2026-11-19T15:44:00Z'
+updated_date: '2026-11-19T15:46:00Z'
 labels:
   - S
   - plan:SRCH.FUZZY
@@ -49,3 +51,9 @@ Operator 2026-11-19 (RR-0277, MORNING-DECISIONS.md:1082): "we have resolved this
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-FUZZY, worktree /Users/brettpreston_macmini/Buildo-wt-fuzzy, branch wf1/inc1b-fuzzy), RR-0240
+<!-- SECTION:NOTES:END -->
