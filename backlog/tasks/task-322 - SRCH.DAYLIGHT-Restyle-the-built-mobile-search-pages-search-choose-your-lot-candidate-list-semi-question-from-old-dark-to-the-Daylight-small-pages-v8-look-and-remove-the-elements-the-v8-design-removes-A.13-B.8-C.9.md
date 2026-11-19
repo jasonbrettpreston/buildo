@@ -81,4 +81,5 @@ Grounded: yes. doc-2 Built state (backlog/docs/increments/doc-2 - Increment-S-re
 2026-11-19 taken on the board at lane launch (lane BL-DAYLIGHT, worktree /Users/brettpreston_macmini/Buildo-wt-daylight, branch wf1/inc1b-daylight), RR-0240
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0282 · task-322 · Backlog; operator, verbatim: "Task 335 - y keep as built for now")
+2026-11-19 BL-DAYLIGHT: restyle + A.13/B.8/C.9 removals built (tokens: report-* of mobile/tailwind.config.js); goldens by search/lotmap/semi-question-golden-capture.ts and emit-mobile-surfaces.mjs; AC1 (MF id claim) blocked outside lane write scope; OPERATOR items: #b45309 wordmark/map stroke and light map tile palette have no report token.
 <!-- SECTION:NOTES:END -->
