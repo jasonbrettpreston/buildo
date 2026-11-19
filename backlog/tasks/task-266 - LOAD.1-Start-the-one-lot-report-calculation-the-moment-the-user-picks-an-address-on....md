@@ -3,11 +3,11 @@ id: TASK-266
 title: >-
   LOAD.1 Start the one-lot report calculation the moment the user picks an
   address on...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-LOAD1B'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T22:33:00Z'
+updated_date: '2026-11-19T23:04:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -37,6 +37,7 @@ references:
   - docs/reports/lanes/2026-11-19/BL-LOAD1/REPORT.md
   - docs/reports/lanes/2026-11-19/BL-LOAD1/PLAN.md
   - docs/reports/lanes/2026-11-19/BL-LOAD1/IMPACT.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD1B/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -62,14 +63,14 @@ who (plan text): lane
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
 - [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
 - [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
 - [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
 - [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -126,3 +127,9 @@ Dated note 2026-11-19 (lane BL-LOAD1, stage 1; prior text kept): the measured pl
 
 Dated note 2026-11-19 (M-246, prior text kept; lane BL-LOAD1B, stage 2, step 0 measured file-only, no database): (1) C8 types filter: cutting the building-types seed list to the page option types (detached_house, detached_houseplex) gives 2825 equal rows and 0 differing rows over the golden 25 (content_sha excluded: it hashes the seed list); the filtered compute takes a mean 44 ms per lot against a median 9.7 s (min 0.13 s, p90 13.6 s, max 15.9 s) for the full 325 rows (measure.out). The core has no types parameter, so the entry runs the full compute (no change to scripts/, Standard 10.2); a types option is a later task. (2) Rebuilding the core lookups per request on the golden dictionaries (108 texts, 112 units) costs 0.61 ms; at the real size (2,874 texts, 1,025 units) it is UNMEASURED. (3) fetchParcelById selects id (src/lib/admin/parcel-lookup.ts:55 lists it in the identity group), but the entry reads the lot facts through the shared stored read instead, because the batch parcels read lacks the K2 heritage and ravine columns the page binds. Gate: the existing web live switch only (decision D-1 / task-348 not ruled); the compute is dark code at landing, as W is.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+LOAD.1 built behind the existing web live switch only (dark code at landing, as W is; D-1 task-348 not ruled). Commits 7134366c2 (prereg-MB-44-2 alone, round 198) and b5d77c14b (code and tests; hook: 19 test files, 485 tests passed, GATE OK); report commit follows. Tests C1 to C9, T7 and T10 re-pinned, red first (red.out: typecheck refusal). Output review: lenses compliance, code-review, error-paths, security (TRIAGE.md). AC4 (plan lens set) and AC5 (separate grounder) NOT met and left unchecked: stage 1 ran one generic round; this lane grounded the output round itself. Deviations flagged: readLotFacts extraction, src SQL ledger closed set 29 to 30 (needs operator review), T10 two importers, no rebase onto wf2/board (denied). Launch preconditions on task-343.
+<!-- SECTION:FINAL_SUMMARY:END -->
