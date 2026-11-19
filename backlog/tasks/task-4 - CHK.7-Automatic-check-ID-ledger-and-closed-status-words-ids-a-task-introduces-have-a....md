@@ -3,11 +3,11 @@ id: TASK-4
 title: >-
   CHK.7 Automatic check: ID ledger and closed status words (ids a task
   introduces have a...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-CHK7'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:10:00Z'
+updated_date: '2026-11-19T14:11:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -22,6 +22,7 @@ references:
   - >-
     ~/Buildo-scratch/lanes-20261117/inc-plan/checks/PANEL.md#L2
     sha256=b30b7f626bca
+  - docs/reports/lanes/2026-11-19/BL-CHK7/REPORT.md
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low
@@ -47,12 +48,12 @@ who (plan text): lane
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
 - [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
@@ -95,4 +96,12 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-4 · Backlog; ope
 2026-11-19 taken on the board at lane launch (lane BL-CHK7, worktree /Users/brettpreston_macmini/Buildo-wt-chk7, branch wf1/inc1a-chk7), RR-0240
 
 CHK.7 output review r2 triaged (docs/reports/lanes/2026-11-19/BL-CHK7/TRIAGE.md); fix commit for K6, K7.
+
+AC1 not checked: the brief commits the pre-registration with the work, not alone. AC8 not applicable: no McFrontend build. Closed-status-word half dropped by the R9 note.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+CHK.7 landed: idLedgerErrors in mcbylaws-queue-check.mjs wired into gate.mjs --staged; commits 901ea6a02 (feat) and 0ca2d9ccb (fix), both through the real hooks (141 related tests, GATE OK). Reports in docs/reports/lanes/2026-11-19/BL-CHK7/.
+<!-- SECTION:FINAL_SUMMARY:END -->
