@@ -248,8 +248,44 @@ describe('L4 and ST: the payload contract and the option states', () => {
     const { response, lineage } = run(null);
     expect(response.not_evaluated).toEqual(pageOptions().map((o) => o.id));
     expect(response.hidden).toEqual([]);
-    expect(Object.keys(response.values).sort()).toEqual(['lot.size', 'sheet.record']);
+    // named re-pin (MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 R-2): was ['lot.size', 'sheet.record']; each option now also sends its reason sentence (See details), "Not yet evaluated"
+    expect(Object.keys(response.values).sort()).toEqual(['lot.size', 'o1.panel.reason', 'o2.panel.reason', 'o3.panel.reason', 'sheet.record']);
     expect(lineage.freshness).toMatchObject({ verdict: 'not_stored', not_stored_reason: 'table_absent' });
+  });
+  // MB-94 (c) RED FIRST, Spec 126 11a.3 dated note 2026-11-12 (R-2 literal): the reason is the state of EVERY option on a lot that has no stored Layer 3 rows,
+  // whatever its stamp or gate (the staged tree also required a stamp and no gate: recut, task-121); a lot WITH rows is unchanged.
+  describe('R-2 not_in_engine_population on every no-row lot', () => {
+    const SENTENCE = 'Not yet evaluated';
+    const reasonKeys = ['o1.panel.reason', 'o2.panel.reason', 'o3.panel.reason'];
+    const noRowLots: Array<[string, StoredRow[] | null, LotStamp | null]> = [
+      ['table absent', null, STAMP],
+      ['no rows', [], STAMP],
+      ['unstamped lot, table absent', null, null],
+      ['unstamped lot, no rows', [], null],
+      ['gated lot, no rows', [], { ...STAMP, lot_gate: 'G-TEST' } as LotStamp],
+      ['gated lot, table absent', null, { ...STAMP, lot_gate: 'G-TEST' } as LotStamp],
+    ];
+    it.each(noRowLots)('%s: every option carries the reason and its sentence; no number is sent', (_n, rows, stamp) => {
+      const { response, lineage } = run(rows, stamp);
+      expect(response.not_evaluated).toEqual(pageOptions().map((o) => o.id));
+      for (const o of pageOptions()) expect(lineage.options[o.id]).toMatchObject({ shown_as: 'not_evaluated', reason: 'not_in_engine_population' });
+      for (const key of reasonKeys) expect(response.values[key]).toBe(SENTENCE);
+      expect(Object.keys(response.values).filter((x) => !reasonKeys.includes(x)).sort()).toEqual(['lot.size', 'sheet.record']);
+      expect(() => buildPage(response, reportCtx)).not.toThrow();
+    });
+    it('a gated no-row lot keeps its gate verdict; the reason refines it, never replaces it', () => {
+      expect(run([], { ...STAMP, lot_gate: 'G-TEST' } as LotStamp).lineage.freshness).toMatchObject({ verdict: 'gated', gate: 'G-TEST' });
+      expect(run(null, null).lineage.freshness).toMatchObject({ verdict: 'not_stored', not_stored_reason: 'no_layer2_stamp' });
+    });
+    it('a lot with rows is never labelled by the producer: a stored not_evaluated option has reason null here (its own reason stays in fields)', () => {
+      const { response, lineage } = run(withPermitted('detached_house', 'not_evaluated'));
+      for (const o of pageOptions()) expect(lineage.options[o.id]?.reason).toBeNull();
+      for (const key of reasonKeys) expect(response.values[key]).not.toBe(SENTENCE);
+    });
+    it('a lot with rows keeps its values: the reason keys are absent for the permitted options', () => {
+      const { response } = run(base());
+      for (const key of reasonKeys) expect(response.values[key]).toBeUndefined();
+    });
   });
   it('no rows for the lot, or no Layer 2 stamp: not stored', () => {
     expect(run([]).lineage.freshness).toMatchObject({ verdict: 'not_stored', not_stored_reason: 'no_rows' });

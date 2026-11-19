@@ -58,7 +58,8 @@ export interface Lineage {
   layer3: { increments: string[]; catalogue_sha: string[]; switchboard_sha: string[]; settings_sha: string[]; rows: number };
   freshness: Freshness;
   lot_size_implausible: boolean;
-  options: Record<string, { building_type: string; stored_status: string | null; shown_as: 'shown' | 'hidden' | 'not_evaluated' }>;
+  /** `reason` is set only for the closed reason this producer itself decides (MB-94 (c): `not_in_engine_population`); a stored row's own reason stays in `fields`. */
+  options: Record<string, { building_type: string; stored_status: string | null; shown_as: 'shown' | 'hidden' | 'not_evaluated'; reason: string | null }>;
   unbound_types: string[];
   /** D-46: the page fields with a user_input source, projected as not evaluated (never a value). */
   user_inputs_not_evaluated: string[];
@@ -137,6 +138,8 @@ const PERMITTED = 'permitted';
 const COMPUTED = 'computed';
 const PERMITTED_FIELD = 'permitted';
 const NOT_EVALUATED = 'not_evaluated';
+/** MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2): the reason of every option on a lot with no stored Layer 3 rows (never stored; the producer decides it). */
+export const NOT_IN_ENGINE_POPULATION = 'not_in_engine_population';
 const STATUS_TEXT = (presentation as unknown as { status_text: Record<string, string> }).status_text;
 const isTextRule = (r: string): boolean => (TEXT_RULES as readonly string[]).includes(r);
 /** The weakest confidence word among a stored row's readings (M-481); null when no reading carries one (the page then shows the dash, never a guess). */
@@ -186,6 +189,8 @@ export function projectStoredPage(input: ProjectInput): { response: PageResponse
   const { lot, stamp, rows, current } = input;
   const stored = rows ?? [];
   const gated = Boolean(stamp?.lot_gate);
+  // R-2 literal: per LOT, whatever its stamp or gate (the freshness verdict keeps naming those); a lot with some rows keeps per-option states
+  const noEngineRows = stored.length === 0;
   const rowOf = (bt: string, field: string): StoredRow | undefined => stored.find((r) => r.building_type === bt && r.field_id === field);
 
   const hidden: string[] = [];
@@ -200,7 +205,7 @@ export function projectStoredPage(input: ProjectInput): { response: PageResponse
     if (shownAs === 'hidden') hidden.push(o.id);
     if (shownAs === 'not_evaluated') notEvaluated.push(o.id);
     if (shownAs === 'shown') shownPermitted.add(o.id);
-    options[o.id] = { building_type: o.building_type, stored_status: status, shown_as: shownAs };
+    options[o.id] = { building_type: o.building_type, stored_status: status, shown_as: shownAs, reason: shownAs === 'not_evaluated' && noEngineRows ? NOT_IN_ENGINE_POPULATION : null };
   }
 
   const values: Record<string, string> = {};
@@ -209,7 +214,8 @@ export function projectStoredPage(input: ProjectInput): { response: PageResponse
     if (b.rule === 'reason_text') {
       // Spec 78 6.6 rule 5: a not-evaluated option shows its stored reason in See details (the ruled status text), never on the face.
       const r = b.building_type !== null && options[b.section]?.shown_as === 'not_evaluated' ? rowOf(b.building_type, b.field) : undefined;
-      const sentence = r && r.status === NOT_EVALUATED && r.reason ? STATUS_TEXT[`not_evaluated:${r.reason}`] : undefined;
+      const reason = options[b.section]?.reason ?? (r && r.status === NOT_EVALUATED ? r.reason : null); // MB-94 (c): the producer's own reason first (no stored rows at all), else the stored row's
+      const sentence = reason ? STATUS_TEXT[`not_evaluated:${reason}`] : undefined;
       if (typeof sentence === 'string' && sentence !== '') values[b.key] = sentence;
       continue;
     }

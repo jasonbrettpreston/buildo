@@ -23,6 +23,7 @@
     "not_evaluated:needs_user_input:existing_storeys": "Enter the number of storeys of your house to see this result.",
     "not_evaluated:needs_user_input:semi_lot": "This lot looks like half of a semi-detached house. Enter your house details to see renovation options.",
     "not_evaluated:coa_factor_unfitted": "Not enough past Committee of Adjustment builds of this form to estimate.",
+    "not_evaluated:not_in_engine_population": "Not yet evaluated",
     "not_evaluated:coa_factor_unfitted:suite": "Not enough past Committee of Adjustment rear-suite builds to estimate (Q-4: calibrating)."
   },
   "field_trust": {

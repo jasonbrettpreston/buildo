@@ -597,6 +597,7 @@ const pres = {
     'not_evaluated:needs_user_input:existing_storeys': 'Enter the number of storeys of your house to see this result.',
     'not_evaluated:needs_user_input:semi_lot': 'This lot looks like half of a semi-detached house. Enter your house details to see renovation options.',
     'not_evaluated:coa_factor_unfitted': 'Not enough past Committee of Adjustment builds of this form to estimate.',
+    'not_evaluated:not_in_engine_population': 'Not yet evaluated', // MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)
     'not_evaluated:coa_factor_unfitted:suite': 'Not enough past Committee of Adjustment rear-suite builds to estimate (Q-4: calibrating).',
   },
   field_trust: { note: 'per-field trust is not generated yet: the catalogue rows carry no trust tier (McBylaws catalogue, row owed); never hand-listed' },

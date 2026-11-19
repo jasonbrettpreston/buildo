@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MB94C'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:35:00Z'
+updated_date: '2026-11-19T20:41:00Z'
 due_date: '2026-11-26'
 labels:
   - 6c
@@ -51,6 +51,7 @@ Plan text at the snapshot: READY to author after push 6 (hook runs the suite); n
 landingPush: push 7
 slicePart: (3)/(5) producer, no-row state (MB-94 c)
 who (plan text): lane
+Files: src/lib/admin/report-preview-live/project.ts, scripts/surfaces/_schema/seed-report-v2.mjs, scripts/surfaces/_schema/report-presentation.json, src/tests/admin-report-preview-live.logic.test.ts, src/tests/surfaces/engine-inputs-bind.logic.test.ts, src/tests/fixtures/surfaces/report/, src/tests/fixtures/report-page/, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json, .cursor/MCFRONTEND-QUEUE.md, docs/reports/reviews/task-121/, docs/reports/lanes/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -79,10 +80,17 @@ who (plan text): lane
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Tests red first (R-2 cases both directions incl. unstamped and gated no-row lots; new engine-inputs-bind lock); red.out via commit attempt. 2. Re-apply project.ts, seed-report-v2.mjs and its json by hand to the literal: reason on every option of a lot with stored.length===0. 3. Regenerate by script, run all generator checks. 4. Green commit with Task trailer. 5. Output review one lens, triage. 6. Reports to docs/reports/lanes. 7. Close with --check-ac evidence.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-MB94C, worktree /Users/brettpreston_macmini/Buildo-wt-mb94c2, branch wf1/inc1b-mb94c), RR-0240
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-121 · Backlog; operator, verbatim: "task 341 approved")
+BLOCKED at the commit gate (lane BL-MB94C 2026-11-19): recut is built and green on the related run (3 files, 102 tests) but the commit is refused by the McBylaws frontend arm: FAIL:C:no-mf-task (needs a 'McFrontend-Task: MF-nn' trailer; scripts/analysis/mcbylaws/cite-arms.mjs:150) and FAIL:P:no-record (panel.mjs:82-84, a prereg record for that MF task). No MF id was given in the brief; lane stopped per BRIEF.md:10. Tree is staged and uncommitted in ~/Buildo-wt-mb94c2; patch at ~/Buildo-scratch/lanes-20261119/inc1b/mb94c/recut-staged.patch.
 <!-- SECTION:NOTES:END -->
