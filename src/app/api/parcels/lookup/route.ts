@@ -10,9 +10,12 @@
 // Gate: server-side entitlement check (Spec 100 §5), per product (MF-45, D-4 a): a parcel_tool entitlement in
 //   ACTIVE_SUBSCRIPTION_STATUSES → metered; else the lead_gen status in the same set → the App A shelf, UNMETERED, a
 //   declared deviation MF-50 removes; else 403 — before any parcel DB work.
-// Meter: on a hit for a parcel_tool holder, after the .strict() parse, openReport (usage_events, one row per new lot in
-//   the billing month); a new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error
-//   is a 500, never an unmetered payload.
+// Meter: for a parcel_tool holder, after the .strict() parse, openReport (usage_events, one row per new lot in the billing month) runs only
+//   when a report is PRODUCED for the found lot: a hit whose response carries `page`. Dated 2026-11-19 (operator, RR-0278, verbatim "it shouldnt
+//   count the report unless the report is produced. I should only be charged a report if I find the address and lot Im looking for and a report
+//   is produced"; MORNING-DECISIONS.md:1082): a lookup that ends in candidates, no-match, the lot map, a dangling id, a hit with no page, or an
+//   unsure lot whose semi question comes first counts nothing. Prior text: a hit with an evaluated option counted at the lookup (route.ts:161).
+//   A new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error is a 500, never an unmetered payload.
 // Rate: `parcels-search:${uid}` 60/min on the q path; `parcels-lookup:${uid}` 30/min on parcelId.
 // MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12, B-3 a): a hit also carries `page`, the mobile report page view built by MF-57's core from the
 //   lot's producer response (src/lib/parcels/report-page.ts); null for every lot until MB-44 serves one. The meter is unchanged by it.
@@ -148,14 +151,17 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     // It runs BEFORE the meter, so a response that fails it charges nothing (MF-45 fold 3).
     const body = ConsumerParcelLookupResponseSchema.parse(response);
 
-    // Meter (MF-45): only a hit (a report shown) on the parcel_tool path counts. Candidates, a miss or a
-    // dangling id show no report and count nothing. Under the row lock the status is re-tested.
+    // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
+    // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
+    // report shows; the route cannot see the answer: UNVERIFIED who counts the lot after it, the semi page task-319). Under the row lock the status is re-tested.
     // Operator 2026-11-12, verbatim "1 b 2 a" (item 1 (b); Spec 100 §3.2 dated note): a hit with no evaluated option is served and
     // NOT counted (meter not_evaluated), so a report whose sizes and costs read "Not yet evaluated" costs the user nothing.
-    let meter: 'counted' | 'already_counted' | 'limit_reached' | 'not_entitled' | 'none' | 'unmetered' | 'not_evaluated' =
+    let meter: 'counted' | 'already_counted' | 'limit_reached' | 'not_entitled' | 'none' | 'unmetered' | 'not_evaluated' | 'semi_pending' | 'not_produced' =
       access === 'parcel_tool' ? 'none' : 'unmetered';
     let refusal: ReturnType<typeof reportLimitReached> | ReturnType<typeof forbiddenSubscription> | null = null;
     if (access === 'parcel_tool' && body.parcel && parcelRef !== null && !hasEvaluatedOption(body.parcel)) meter = 'not_evaluated';
+    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.lotForm?.unsure === true) meter = 'semi_pending';
+    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.page === null) meter = 'not_produced';
     else if (access === 'parcel_tool' && body.parcel && parcelRef !== null) {
       const ref = parcelRef;
       const m = await withTransaction((client) => openReport(client, ctx.uid, ref));

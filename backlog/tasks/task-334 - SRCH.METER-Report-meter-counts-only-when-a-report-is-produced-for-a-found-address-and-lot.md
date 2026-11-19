@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-METER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:47:00Z'
+updated_date: '2026-11-19T15:53:00Z'
 labels:
   - S
   - plan:SRCH.METER
@@ -50,8 +50,16 @@ Operator 2026-11-19 (RR-0278, MORNING-DECISIONS.md:1082): "it shouldnt count the
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC1) In route.ts keep the one openReport call, but gate it on a produced report: body.page !== null for a resolved lot, and not an unsure lot (lotForm.unsure) whose semi question comes first; the not_evaluated rule stays first. Lookup outcomes candidates, no-match, lot map, dangling id and semi question count nothing; one row per lot per month unchanged (openReport untouched).
+2. (AC2) Red first: new cases in parcel-lookup-gate.infra.test.ts (page null hit counts nothing, semi question counts nothing, produced page counts once, second report same lot counts nothing more, q path and parcelId path); existing counted cases get a producer fixture so they stay green.
+3. (AC3) The reports-left line reads readParcelToolUsage over usage_events, the same rows openReport writes; no new field, no schema change; existing T-usage tests stay green.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-2026-11-19 taken on the board at lane launch (lane BL-METER, worktree /Users/brettpreston_macmini/Buildo-wt-meter, branch wf1/inc1b-meter), RR-0240
+Code: route.ts meter gate (page produced, lot not unsure); tests in parcel-lookup-gate.infra.test.ts (red 4 failed, then green 48 passed). Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.test.ts, docs/reports/reviews/task-334/context-2026-11-19.md
 <!-- SECTION:NOTES:END -->
