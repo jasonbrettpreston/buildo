@@ -3,9 +3,11 @@ id: TASK-309
 title: >-
   R8d McLane context pack: milestone text, documents, decisions, reviews and
   dependency summaries in the G1 context file
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-R8d'
 created_date: '2026-11-19T12:52:00Z'
+updated_date: '2026-11-19T13:02:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -46,3 +48,9 @@ Operator 2026-11-19 (RR-0235): "We need them linked with all the relevant data -
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8d in ~/Buildo-wt-r8d, branch wf2/r8d-context-pack)
+<!-- SECTION:NOTES:END -->

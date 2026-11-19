@@ -3,9 +3,11 @@ id: TASK-308
 title: >-
   R8c Lane reports in the repo: docs/reports/lanes/<date>/<lane>/REPORT.md at
   the lane close step
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-R8c'
 created_date: '2026-11-19T12:52:00Z'
+updated_date: '2026-11-19T13:02:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -44,3 +46,9 @@ Operator 2026-11-19 (RR-0232), proposal (c) approved. Grounded: yes - 162 task r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8c in ~/Buildo-wt-r8c, branch wf2/r8c-lane-reports; the lane has since reported BUILT on its branch, commit 69a9d24cf)
+<!-- SECTION:NOTES:END -->
