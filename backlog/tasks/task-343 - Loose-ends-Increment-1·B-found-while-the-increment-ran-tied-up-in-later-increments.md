@@ -7,8 +7,6 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T22:27:00Z'
-
 updated_date: '2026-11-19T22:30:00Z'
 labels:
   - S
