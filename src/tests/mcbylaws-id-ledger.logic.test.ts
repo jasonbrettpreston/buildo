@@ -115,6 +115,13 @@ describe('CHK.7 idLedgerErrors: migrations', () => {
     r.stage('migrations/315_c.sql');
     expect(ids(r)).toEqual([`FAIL:Q:id-duplicate:mig-315:migrations/315_c.sql`]);
   });
+  it('a migration renamed onto a fresh number is judged like a new one; a rename that keeps its number is not', () => {
+    const r = base({ [MB]: head(5, row(1)), 'migrations/330_a.sql': 'a\n', 'migrations/331_b.sql': 'b\n' });
+    r.git(['mv', 'migrations/330_a.sql', 'migrations/330_z.sql']);
+    expect(ids(r)).toEqual([]);
+    r.git(['mv', 'migrations/331_b.sql', 'migrations/340_b.sql']);
+    expect(ids(r)).toEqual(['FAIL:Q:id-no-row:mig-340:migrations/340_b.sql']);
+  });
   it('a diff with no queue edit and no new migration reports nothing', () => {
     const r = base({ [MB]: head(5, row(1)) });
     r.write('docs/y.md', 'y\n');

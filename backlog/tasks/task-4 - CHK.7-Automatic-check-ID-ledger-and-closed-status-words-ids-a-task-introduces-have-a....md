@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CHK7'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:01:00Z'
+updated_date: '2026-11-19T14:10:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -93,4 +93,6 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-4 · Backlog; ope
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): CHANGED (R7b note stands): extends scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs, no new tool (re-use ruling MORNING-DECISIONS.md:750-751); the closed-status-word half is the nine configured Backlog statuses (backlog/config.yml:3) plus G3; no R8 deliverable checks ids. Scope now: extend mcbylaws-queue-check.mjs so ids a task introduces have a ledger claim or a queue row and no number repeats; no status-word check.
 
 2026-11-19 taken on the board at lane launch (lane BL-CHK7, worktree /Users/brettpreston_macmini/Buildo-wt-chk7, branch wf1/inc1a-chk7), RR-0240
+
+CHK.7 output review r2 triaged (docs/reports/lanes/2026-11-19/BL-CHK7/TRIAGE.md); fix commit for K6, K7.
 <!-- SECTION:NOTES:END -->

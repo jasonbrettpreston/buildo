@@ -306,7 +306,9 @@ export function idLedgerErrors({ cwd, entries } = {}) {
         else if (n >= Number(next[1])) out.push(`FAIL:Q:id-unclaimed:${prefix}-${n}:${file}`);
       }
     }
-    const added = entries.filter((e) => e.status === 'A' && MIGRATION.test(e.path));
+    const migNum = (p) => (typeof p === 'string' && MIGRATION.test(p) ? Number(MIGRATION.exec(p)[1]) : null);
+    // A new file, or a rename/copy onto a number the old path did not carry (OUTPUT review r2: a rename must not dodge the check).
+    const added = entries.filter((e) => migNum(e.path) !== null && (e.status === 'A' || ((e.status === 'R' || e.status === 'C') && migNum(e.oldPath) !== migNum(e.path))));
     if (added.length > 0) {
       const tracked = listTracked(cwd, '');
       if (tracked === null) return [...out, CANNOT];

@@ -267,7 +267,7 @@ function staged(cwd) {
   const touches = paths.some((p) => { const c = classify(policy, p); return c.layer23 || c.literalScope || isDbScopePath(p) || isFrontend(policy, p); });
   if (!touches) return idLines;
   const tracked = listTracked(cwd, 'HEAD');
-  if (tracked === null) return ['FAIL:H:cannot-decide'];
+  if (tracked === null) return ['FAIL:H:cannot-decide', ...idLines];
   // O67-12: a deleted path has no worktree file and a rename's OLD path is gone too; scan the live paths only.
   const live = entries.filter((e) => e.status !== 'D').map((e) => e.path);
   const scope = live.filter((p) => classify(policy, p).literalScope);
