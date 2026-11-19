@@ -3,11 +3,11 @@ id: TASK-319
 title: >-
   SRCH.SEMI Semi question page as a small page, with its wiring: (1) design
   first: a...
-status: RUNNING
+status: WAITS
 assignee:
   - '@lane-BL-SEMI'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T19:56:00Z'
+updated_date: '2026-11-19T20:03:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -31,6 +31,7 @@ references:
   - .cursor/MCFRONTEND-QUEUE.md#L649
   - .cursor/MCFRONTEND-QUEUE.md#L654
   - .cursor/MCBYLAWS-QUEUE.md#L94
+  - docs/reports/lanes/2026-11-19/BL-SEMI/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -78,6 +79,16 @@ element ids delivered: D.9, D.10
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Ground: read the built semi page (SemiQuestionBinding.tsx, semiQuestion.ts, content and descriptor files), the v8 template and its build (choose-lot, choose-lot-states) and the Daylight token table.
+2. Element table D.1-D.7 (content key, v8 component, token), appended to the context file; review round r1 (review mode); TRIAGE.md; fold KEPT.
+3. Mock: lane-dir build-semi.mjs reads the v8 CSS and icon paths read-only and writes semi-question.html (default, picked, five D.7 states), copy verbatim from the built content file only.
+4. DELTA.md: built vs mock, files, goldens, MF row, meter call site for RR-0278 with file:line.
+5. Docs commit with the context file, reports, mock and task file (no code); task notes Grounded and Recommendation; status WAITS.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -90,4 +101,7 @@ Scope now: page, mock and link only in 1·B (RR-0264); the owner-input store sta
 2026-11-19 from SRCH.METER (task-334): the lookup route never counts an unsure lot (the semi answer is a client param); when the semi question is answered and the report produced, the count belongs to this page: add the meter call after the answer (RR-0278, one row per lot per month)
 
 2026-11-19 taken on the board at lane launch (lane BL-SEMI, worktree /Users/brettpreston_macmini/Buildo-wt-semi1b, branch wf1/inc1b-semi), RR-0240
+
+Grounded: the semi question page is already built, elements D.1 to D.7 (doc-2 lines 67-73): mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/components/surfaces/SemiQuestionBinding.tsx:29-117, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json; the link from search is proven by src/tests/search-routing.logic.test.ts:136; the v8 mock for approval is docs/reports/lanes/2026-11-19/BL-SEMI/semi-question.html with the delta list DELTA.md beside it (RR-0184 MORNING-DECISIONS.md:801, RR-0264 :1041-1043).
+Recommendation: approve the mock as drawn and answer the four small questions in DELTA.md section 6 (Q1 chevron, Q2 info icon, Q3 curly apostrophes, Q4 v8 retry and loading form); stage 2 then builds the structural restyle and the meter call after the answer. Checked by one repo review round on the plan (r1-plan.txt, TRIAGE.md); the mock render and the device look are UNVERIFIED.
 <!-- SECTION:NOTES:END -->
