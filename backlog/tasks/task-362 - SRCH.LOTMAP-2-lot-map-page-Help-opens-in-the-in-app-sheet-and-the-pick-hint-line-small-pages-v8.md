@@ -1,0 +1,58 @@
+---
+id: TASK-362
+title: >-
+  SRCH.LOTMAP-2 lot map page: Help opens in the in-app sheet, and the pick hint
+  line (small-pages-v8)
+status: LATER
+assignee: []
+created_date: '2026-11-19T22:30:00Z'
+labels:
+  - S
+  - plan:SRCH.LOTMAP
+milestone: m-1
+dependencies:
+  - TASK-321
+references:
+  - docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md
+type: build
+project: McIncrement
+ordinal: 62012
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Scope now: two items the approved design (small-pages-v8) draws on the lot map page and the built page lacks: Help opens in the in-app sheet with Done, and the hint line under the disabled Choose a lot button. Findings UX-6, UX-7b of docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md. (UX-7a, the bare help link in the intersection, unlinked and many-lots states, is FALSE: v8 draws it.)
+
+In plain words: tapping "Get help with an address" today throws the person out of the app into the phone browser; the design keeps them in the app with a Done button. And the design shows a small line "Pick a lot on the map or in the list." under the greyed button; the built page shows none.
+
+Cause (opened on head f65b64674): (1) mobile/src/lib/maxbldHelp.ts:19 `void Linking.openURL(helpUrl(topic, q));` against v8 search.html:235 "in-app browser sheet (B10): Help, Terms, Privacy open the web page with Done"; expo-web-browser ~15.0.11 is already a dependency and used the same way by useSubscribeCheckout.ts:61 (WebBrowser.openBrowserAsync). (2) git grep "Pick a lot on the map" over mobile/src, mobile/app, scripts/surfaces: 0 hits; v8 choose-lot.html:278 `<p class="small" id="pick-hint">`; the requirements doc marks C.11 BUILT (backlog/docs/increments/doc-2 - Increment-S-requirements.md:63).
+Rule or design line: approved design Daylight v8 (~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md:347 C.11); the help topic names stay as built (lot_match, address_match are an orchestrator reading, task-343 line 7; not in this task).
+Reuse: the existing openHelp helper and the existing expo-web-browser use; no new component.
+
+Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBinding.tsx, scripts/surfaces/parcel_product/ (the lot map content file), mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts, docs/reports/lanes/
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 openHelp(topic, q) calls WebBrowser.openBrowserAsync(helpUrl(topic, q)) and Linking.openURL is no longer called by maxbldHelp.ts (git grep -n "Linking.openURL" mobile/src/lib/maxbldHelp.ts prints nothing); a mocked expo-web-browser case written first
+- [ ] #2 The lot map page shows the hint "Pick a lot on the map or in the list." (a content key in the lot map content file, not copy in code) while Choose a lot is disabled and hides it after a pick; a case in mobile/__tests__/lotMapPage.behaviour.test.tsx
+- [ ] #3 Goldens by repo scripts only: lotmap-golden-capture.ts --check clean, emit-mobile-surfaces.mjs --check prints surfaces ok, surface-validate.mjs --check no new finding
+- [ ] #4 npm run typecheck is clean; mobile jest is not run by the hook (task-343 line 10): the close-out says UNVERIFIED unless run on CI or device
+- [ ] #5 git grep -n "openHelp(" mobile/src mobile/app lists every caller; each is checked by the case (search page and lot map); a rejecting openBrowserAsync is caught and logged, not thrown; on Android the Custom Tab has no Done button, so the expectation is the system back (stated in the close-out)
+- [ ] #6 Fidelity pins quote the mock: the busy/hint asserts name semi-question.html:130 and choose-lot.html:278, not only a --check of regenerated goldens
+<!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
+- [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+<!-- DOD:END -->

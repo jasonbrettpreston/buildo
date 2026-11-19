@@ -8,6 +8,8 @@ assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
 updated_date: '2026-11-19T22:27:00Z'
+
+updated_date: '2026-11-19T22:30:00Z'
 labels:
   - S
   - loose-ends
@@ -133,4 +135,10 @@ CHK.6 design-fit check and its elements file (task-67, task-345): not built; ope
 task-351 (BL-RESET): built but unowned/unproven: (1) the limit wall resetsOn (src/features/leads/api/error-mapping.ts:34-38) is still a raw instant, its screen must use a server label; (2) formatDateDmy still prints Sept on the lot-size page (operator item in docs/reports/lanes/2026-11-19/BL-RESET/REPORT.md); (3) mobile jest and device look of the reports-left line not run (CI after push).
 
 2026-11-19 loose ends from task-356 (BL-BOX): the v8 mock (~/Buildo-scratch/mcfrontend/small-pages-v8/content.json:97 and search.html:265, :278, :318) still draws 'Enter lot address'; backlog/docs/increments/doc-2 - Increment-S-requirements.md:31 and :100 (A.2) still say 'Enter lot address'.
+
+2026-11-19 (PANEL.TRIAGE-1, task-359; verdicts docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md) loose end, RC-1: the meter's second gate has no owner: route.ts:163 skips the count when hasEvaluatedOption(body.parcel) is false and consumer-lookup.ts:161 always sends costMenu.menu null, so even after W serves a page nothing counts, the reports-left line never moves and the limit wall cannot fire; the pin parcels-lookup-page.logic.test.ts:165-182 names 'MB-94 c / MB-44' as owner but task-121 (MB-94 c recut), task-123 and task-285 carry no meter text (git grep of backlog/tasks, backlog/docs and .cursor for hasEvaluatedOption, evaluated option and costMenu finds only .cursor/MCBYLAWS-QUEUE.md). Line 15 above covers the null page only. Severity: hidden until reports ship, then blocks billing (G.6). tied up by: NONE. Recommendation: one build task that reads the evaluated option from the served page (or the stored rows) instead of the legacy menu, with the pin flipped; before task-287 flips the live switch. UNVERIFIED.
+
+2026-11-19 (task-359) loose end, UX-1 verified TRUE on the board head (error-mapping.ts:37, parcelSearchMatch.ts:295-300, ReportBinding.tsx:373-377): the limit wall and the 403 split are still unowned (see R17 and R18 lines above). Severity: visible once RC-1's gate is fixed (cannot fire today because nothing counts). tied up by: NONE; must have an owner before task-287 flips the live switch.
+
+2026-11-19 (task-359) loose ends, record only: (a) GR-2: the MF-48 queue note (.cursor/MCFRONTEND-QUEUE.md:371) files task-123 under MF-48 without saying it is an orchestrator reading (the MF-85 note :622 and task-121 :102 do say so); tied up by: NONE (a queue note for the orchestrator). (b) CR-3 mobile ParcelToolEntitlementSchema status is z.string() (schemas.ts:446) and reportsUsed and reportsLimitReached are unread; tied up by: NONE. (c) CR-5 web SearchBinding.tsx:144 casts footerNode(...) as WebNode; tied up by: NONE. (d) CR-6 read-stored.ts:48-53 four sequential reads with no snapshot; a torn read can only give out_of_date (a miss); tied up by: task-272. (e) The five 1·B fix tasks from the panel triage: task-360, task-361, task-362, task-363, task-364.
 <!-- SECTION:NOTES:END -->

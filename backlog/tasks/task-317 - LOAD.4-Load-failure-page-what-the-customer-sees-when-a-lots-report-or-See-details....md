@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:35:00Z'
+updated_date: '2026-11-19T22:30:00Z'
 labels:
   - S
   - plan:LOAD.4
@@ -85,4 +85,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-317 · Backlog; o
 2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-341 (the LOAD chain and the two 6c tasks); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-317 · Backlog; operator, verbatim: "task 341 approved")
+
+2026-11-19 (task-359, UX-2) built state to replace: after a lot pick the report screen shows 'No report for this lot yet.' with Back only, no address and no reason (mobile/app/(app)/parcel-tool/[parcelId].tsx:34; ReportBinding.tsx:400-401; report-presentation.json:88-89). Until MB-44 W is live every lot shows it (task-348). The failure page must say which lot and why, built from the small pages.
 <!-- SECTION:NOTES:END -->

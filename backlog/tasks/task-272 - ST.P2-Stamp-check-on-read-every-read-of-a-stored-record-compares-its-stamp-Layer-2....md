@@ -7,6 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T22:30:00Z'
 due_date: '2026-11-26'
 labels:
   - L
@@ -66,3 +67,9 @@ who (plan text): lane (MB-44 W read module owner)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 (task-359, RC-3) the stamp comparison for settings is owned here and not built: src/lib/report-projection/project.ts:179-184 compares layer2 table_version, catalogue_sha and switchboard_sha only; settings_sha is stored on rows and shown but never compared, and evaluator_version is only copied to the lineage (project.ts:253); seed-shas.ts:23 SeedShas has no settings part, so there is no CURRENT settings sha to compare against yet. McStorage doc-16 P3 (:32) and P4 (:33) require every read to compare the whole stamp. A changed cost setting leaves a stored record current until this lands.
+<!-- SECTION:NOTES:END -->
