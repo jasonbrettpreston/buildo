@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/hyg/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12508 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24082 chars, answer 0 chars, 30s
+BUG severity=HIGH — Spec 137 rule 3 "Spec 137 rule 3 status line in the same commit." — NONE — the pasted diff touches only the three comment hunks in semi-question.tsx, lotForm.ts and entitlement/route.ts, no status line appears anywhere in it — include the Spec 137 rule 3 status line update in this same commit.
+
+DEFER severity=NIT — PLAN-PROTOCOL.md:3 "simple, no scope creep" — src/app/api/parcels/entitlement/route.ts:6 "// Read by the app search page's reports-left line (the left count, the allowance and the served reset label) and the Account page." — AC1 asked only to drop "of 20 reports" and the allowance number, the replacement instead enumerates three served values the card never named — reduce to a plain reports-left phrasing or get that enumeration from the operator.
+
+DEFER severity=NIT — AC3 "typecheck clean" — NONE — cannot see typecheck output in the pasted material; every changed line is a `//` line so no type surface is visible to check — record the typecheck result alongside the commit.
+
+MET — AC1 — src/app/api/parcels/entitlement/route.ts:6 — "of 20 reports" and its "20" are gone, the new line carries no allowance number.
+
+MET — AC2 — mobile/src/lib/lotForm.ts:8-9 — "// it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet" plus "the effect is the semi calculation of 7.25 (task-209)", both required statements present.
+
+MET — AC4 — mobile/app/(app)/parcel-tool/semi-question.tsx:9 — "no extra request" is replaced by "the one lookup it issues is the answered one on Continue (below)", so the answered lookup is named and the old claim removed.
+
+MET — task-364 "comment and cite lines only; no behaviour, no string, no test logic" — all three hunks — only `//` lines change, no code, string or test logic added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  38104ms (38.1s)
+📊 Tokens — total: 11337, input: 3317, output: 8020, reasoning: 7533

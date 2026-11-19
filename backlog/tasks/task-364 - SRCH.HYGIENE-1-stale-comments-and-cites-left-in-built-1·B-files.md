@@ -1,11 +1,11 @@
 ---
 id: TASK-364
 title: SRCH.HYGIENE-1 stale comments and cites left in built 1·B files
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-HYG'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:26:00Z'
+updated_date: '2026-11-19T23:29:00Z'
 labels:
   - S
   - plan:SRCH.HYGIENE
@@ -14,6 +14,7 @@ dependencies:
   - TASK-320
 references:
   - docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md
+  - docs/reports/lanes/2026-11-19/BL-HYG/REPORT.md
 type: build
 project: McIncrement
 ordinal: 64012
@@ -38,10 +39,10 @@ Also (review r1 LOW, KEPT): correct the stale cites on records by dated note, no
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 git grep -n "of 20 reports" src/app/api/parcels/entitlement/route.ts prints nothing; git grep -n "[0-9]" on the header comment lines 5-7 of that file prints no allowance number (the seeded defaults are owned by the settings seed, not the comment)
-- [ ] #2 mobile/src/lib/lotForm.ts header says the answer travels as a route param and the report does not apply it yet (7.25, task-209)
-- [ ] #3 npm run typecheck is clean; no behaviour change
-- [ ] #4 mobile/app/(app)/parcel-tool/semi-question.tsx header reworded to name the one answered lookup (git grep -n "no extra request" prints nothing)
+- [x] #1 git grep -n "of 20 reports" src/app/api/parcels/entitlement/route.ts prints nothing; git grep -n "[0-9]" on the header comment lines 5-7 of that file prints no allowance number (the seeded defaults are owned by the settings seed, not the comment)
+- [x] #2 mobile/src/lib/lotForm.ts header says the answer travels as a route param and the report does not apply it yet (7.25, task-209)
+- [x] #3 npm run typecheck is clean; no behaviour change
+- [x] #4 mobile/app/(app)/parcel-tool/semi-question.tsx header reworded to name the one answered lookup (git grep -n "no extra request" prints nothing)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -71,3 +72,9 @@ Also (review r1 LOW, KEPT): correct the stale cites on records by dated note, no
 
 Comment lines changed in entitlement/route.ts:6, lotForm.ts:8-9, semi-question.tsx:9; diff proof: only // lines in source files; typecheck clean. Red-first not applicable (comment only).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Three header comments corrected (33a23f319); cites noted on task-343 and task-348; typecheck clean; hooks green.
+<!-- SECTION:FINAL_SUMMARY:END -->
