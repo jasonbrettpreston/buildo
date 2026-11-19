@@ -4,14 +4,16 @@ title: >-
   SUITE.FIX-2 Station suite repair on the combined 1·B head: 7 failing cases in
   3 files (FE-09 lock column, FE-07 search parity states, C-2 import boundary,
   C-9m 44 px)
-status: RUNNING
+status: WAITS
 assignee:
   - '@lane-BL-SUITEFIX2'
 created_date: '2026-11-19T21:37:00Z'
-updated_date: '2026-11-19T21:45:00Z'
+updated_date: '2026-11-19T21:50:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-19/BL-SUITEFIX2/REPORT.md
 type: build
 ordinal: 53012
 ---
@@ -25,7 +27,7 @@ Scope now: make the push-station suite green on the board head without weakening
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 the seven cases pass through the pre-commit related run with the three test files staged
-- [ ] #2 no check is weakened: each change is the code brought to the rule, or a pinned count moved as data with a dated comment naming what moved; a rule-versus-approved-design conflict is reported to the operator, not decided
+- [x] #2 no check is weakened: each change is the code brought to the rule, or a pinned count moved as data with a dated comment naming what moved; a rule-versus-approved-design conflict is reported to the operator, not decided
 <!-- AC:END -->
 
 ## Definition of Done
@@ -52,4 +54,6 @@ Scope now: make the push-station suite green on the board head without weakening
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-SUITEFIX2, worktree /Users/brettpreston_macmini/Buildo-wt-suitefix2, branch wf1/inc1b-suitefix2), RR-0240
+
+C-9m waits on the operator (RR-0309 48 px vs the exact 44 px pin); six of seven fixed in 44789da8c
 <!-- SECTION:NOTES:END -->
