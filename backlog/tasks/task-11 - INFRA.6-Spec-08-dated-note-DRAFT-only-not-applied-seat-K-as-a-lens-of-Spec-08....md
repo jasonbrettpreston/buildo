@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-INFRA6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:11:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -66,6 +66,12 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Quote the rules: 08_agents.md section 5.8 (:249-254) and section 9 Role proliferation (:380); sources MORNING-DECISIONS.md:712, :744, :750, :941-944; template axes line :3. 2. Draft one DRAFT (not applied) dated note, at most 8 lines, M-246 form, after the 5.8 KFM line; no rule text change, no new role, seat or template. 3. One review round (deepseek-review.js review mode, plan template) on the note text; triage KEEP/REJECT; fold KEPT defects only. 4. Write note; one docs commit via real hooks with Task: task-11 and the task file. 5. Copy REPORT/TRIAGE/review output to docs/reports/lanes/2026-11-19/BL-INFRA6/ in a last docs commit; add-ref; check AC with evidence (tests/panel-run AC not applicable to a note); BUILT.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -74,4 +80,6 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): KEPT: not covered by any R8 deliverable (no Spec 08 note on seat K in R8c 1c47f4c79, which added the lane-reports rule at 08_agents.md:344). Lands after push 6 (landingPush in the description). Scope now: one Spec 08 dated note (M-246 form) naming seat K as a lens of section 5.8 at plan altitude, creating no second role.
 
 2026-11-19 taken on the board at lane launch (lane BL-INFRA6, worktree /Users/brettpreston_macmini/Buildo-wt-infra6, branch wf1/inc1a-infra6), RR-0240
+
+2026-11-19 BL-INFRA6: section 5.8 (08_agents.md:249-254) is a WF6 decision-trail audit, so it does not make the note redundant; full DRAFT (not applied) dated note written after :253 (one paragraph, M-246 form, prior text kept, no rule text change, no new role/seat/template). Review r1 (review mode, plan template) triaged in docs/reports/lanes/2026-11-19/BL-INFRA6/TRIAGE.md; 4 KEPT items folded.
 <!-- SECTION:NOTES:END -->
