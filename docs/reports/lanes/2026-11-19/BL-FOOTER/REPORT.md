@@ -21,7 +21,7 @@ Status line (Spec 137 rule 3): BL-FOOTER lane · task-332 · BUILT on wf1/inc1b-
 - 10 x *.mobile.json: fingerprint line only. Report page goldens: none moved (report-page.json and report-presentation.json untouched). Static goldens: none moved.
 
 ## Pins (S-sbind strings, surface-validate.logic.test.ts:85 and surface-conformance.logic.test.ts:247)
-NOT moved in the commit. Measured with screen-checks.mjs sbindArm: 422 strings with my four keys; the tip measured 418 before them against the pin 414 (SRCH.LOTCARD added keys without moving it). Both tests already fail on the tip (the frontageStreet findings) and the hook refuses a commit that touches them, so the pin move (414 -> 422, dated comment prepared in my first attempt) belongs with the commit that clears the LOTCARD finding. ORCHESTRATOR ITEM.
+NOT moved in the build commit (moved afterwards, see the Addendum). Measured with screen-checks.mjs sbindArm: 422 strings with my four keys; the tip measured 418 before them against the pin 414 (SRCH.LOTCARD added keys without moving it). Both tests already fail on the tip (the frontageStreet findings) and the hook refuses a commit that touches them, so the pin move (414 -> 422, dated comment prepared in my first attempt) belongs with the commit that clears the LOTCARD finding. ORCHESTRATOR ITEM.
 
 ## Decisions worth a look
 - G4/G5: no schema part added and report-page.json untouched, because the ruling keeps the mobile report on its own binding (MORNING-DECISIONS.md:1066) and any schema edit moves the mobile report's fingerprints and the G4 part it renders. The web G4 copyright and G5 links therefore come from the shared footer strings, not from page parts; the schema's G4 stays `pending` (mobile). The page test's every-part-text check exempts role copyright with a dated comment.
@@ -31,3 +31,8 @@ NOT moved in the commit. Measured with screen-checks.mjs sbindArm: 422 strings w
 - Mobile jest suites are not run by the commit hook nor the station suite's root run.
 - Visual layout of the search footer (full width, mt-auto, 320/430 px) and the report footer styling: not rendered in a browser.
 - The prereg round number 195 is my pick (round is only checked as an integer).
+
+
+## Addendum (after rebase onto the board head; commits f99d25451 prereg, d2cd0d5a2 build, 6a5042964 reports, c168b4ef4 pins)
+The shas in the sections above are superseded by the orchestrator's rebase. Pins: BL-LOTFIX moved 414 -> 418; commit c168b4ef4 moved surface-validate.logic.test.ts and surface-conformance.logic.test.ts 418 -> 422, exactly the four footer.* keys (F01 content file lines 2-5). The real `surface-validate --check` stdout equals the expected line in the test character by character (it ends "S-sbind ok (17 surfaces, 422 strings)"); the pre-commit related run passed "Test Files  2 passed (2) / Tests  95 passed (95)" (commit2.out). Re-run after the rebase: typecheck rc=0, search-golden-capture --check "search goldens ok (10)", emit-mobile-surfaces --check "surfaces ok (4 surfaces, 29 goldens)", web golden rewrite "changed 0", report-page-capture --check "page goldens current (40 and the landing sample)", generate-target-files --check rc=0; surface-validate --check is now fully ok (the two frontageStreet findings are gone).
+Kept as stated: report-page.json is untouched; the web report copyright and links come from the shared footer strings and the schema G4 stays pending for the mobile binding (RR-0273: the mobile report keeps its own binding).
