@@ -48,7 +48,7 @@ const docs = asList(t.fm.documentation);
 // ---- McLane context pack (task-309 R8d, RR-0235 "linked with all the relevant data"): milestone text, document sections, decisions, prior reviews, dependencies.
 const CAP_TOTAL = 120 * 1024; const CAP_BLOCK = 12 * 1024; const CAP_SUMMARY = 4000;
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const namesId = (text, id, flags = '') => !!id && new RegExp(`(?<![\\w.-])${esc(id)}(?![\\w-]|\\.\\d)`, flags).test(text);
+const namesId = (text, id, flags = '') => !!id && new RegExp(`(?<![\\w.-])${esc(String(id))}(?![\\w-]|\\.\\d)`, flags).test(text);
 const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
 const rel = (p) => path.relative(root, p) || p;
 const ls = (dir) => { try { return fs.readdirSync(dir); } catch { return []; } };
@@ -57,13 +57,13 @@ const readText = (p) => { try { return fs.readFileSync(p, 'utf8'); } catch { ret
 // (1) milestone: the file whose id or title is the task's milestone.
 const msKey = String(t.fm.milestone ?? '').trim().toLowerCase();
 const msDir = path.join(root, 'backlog/milestones');
-const ms = msKey ? ls(msDir).filter((f) => f.endsWith('.md')).map((f) => parseFM(readText(path.join(msDir, f)) ?? '')).find((m) => [m.fm.id, m.fm.title].some((v) => String(v ?? '').trim().toLowerCase() === msKey)) : undefined;
+const ms = msKey ? ls(msDir).filter((f) => f.endsWith('.md')).sort().map((f) => parseFM(readText(path.join(msDir, f)) ?? '')).find((m) => [m.fm.id, m.fm.title].some((v) => String(v ?? '').trim().toLowerCase() === msKey)) : undefined;
 const msSection = ms
   ? [`${ms.fm.id} ${ms.fm.title}`, '', ms.body.trim().replace(/^## /gm, '### ')]
   : [`(no milestone file for "${t.fm.milestone ?? 'none'}" under backlog/milestones)`];
 
 // (2) documents: links from the task's documentation list and the milestone's Documents section; "path#L10-20", "path#Section title" or bare path.
-const linkOf = (s) => (/\]\(([^)]+)\)/.exec(s)?.[1] ?? s).trim();
+const linkOf = (s) => (/\]\(([^)]+)\)/.exec(String(s))?.[1] ?? String(s)).trim();
 const msLinks = ms ? (/^##+ Documents[^\n]*\n([\s\S]*?)(?=\n## |(?![\s\S]))/im.exec(ms.body)?.[1] ?? '').split('\n').map((l) => /^\s*[-*]\s+(.+)$/.exec(l)?.[1]).filter(Boolean).map(linkOf) : [];
 const links = [...new Set([...docs.map(linkOf), ...msLinks].filter(Boolean))];
 const fence = (body) => { const n = Math.max(2, ...[...body.matchAll(/^~+/gm)].map((m) => m[0].length)) + 1; return '~'.repeat(n); };
@@ -71,12 +71,12 @@ function docBlock(link) {
   const [p0, ...fr] = link.split('#'); const p = p0.trim(); const frag = safeDecode(fr.join('#')).trim();
   if (/^https?:\/\//i.test(p)) return `### ${p}\n(not a local file; read it at ${p})`;
   const abs = p.startsWith('~/') ? path.join(os.homedir(), p.slice(2)) : path.resolve(root, p.replace(/^origin:/, ''));
-  const text = readText(abs);
-  if (text === null) return `### ${p} (not readable: no such file or not a regular file; read it at ${p})`;
+  let text; try { text = fs.readFileSync(abs, 'utf8'); } catch (e) { return `### ${p} (not readable: ${e.code ?? e.message}; read it at ${p})`; }
   const all = text.split('\n'); if (all.at(-1) === '') all.pop();
+  if (!all.length) return `### ${p} (empty file)`;
   let from = 1; let to = all.length; let note = '';
   const lr = /^L(\d+)(?:-L?(\d+))?$/.exec(frag);
-  if (lr) { from = Number(lr[1]); to = lr[2] ? Number(lr[2]) : from; if (from > to) [from, to] = [to, from]; from = Math.max(1, from); to = Math.min(to, all.length); if (from > to) { from = 1; to = all.length; note = ` (range ${frag} is outside the file)`; } }
+  if (lr) { from = Number(lr[1]); to = lr[2] ? Number(lr[2]) : from; if (from > to) [from, to] = [to, from]; from = Math.max(1, from); to = Math.min(to, all.length); if (from > to) { from = 1; to = all.length; note = ` (range ${frag} is outside the file)`; } else if (Number(lr[2] ?? lr[1]) > all.length) note = ` (range ${frag} runs past the end of the file)`; }
   else if (frag) {
     const head = (l) => /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(l);
     const i = all.findIndex((l) => head(l)?.[2].toLowerCase() === frag.toLowerCase());
@@ -88,11 +88,11 @@ function docBlock(link) {
   const body = kept.join('\n'); const f = fence(body);
   return `### ${p} lines ${from}-${last} of ${all.length}${note}${last < to ? ' (cut at 12 KB)' : ''}\n${f}\n${body}\n${f}\n(read the rest at ${p})`;
 }
-const docSection = [`Cap: 120 KB in total, 12 KB per block; a block that would pass the total is listed as omitted. Sections named in a link (#L<n>-<m> or a section title) are read; with none named, the first 12 KB.`, ''];
+const docSection = [`Cap: 120 KB in total, 12 KB per block (document blocks below; an omitted block costs its notice against the total); a block that would pass the total is listed as omitted. Sections named in a link (#L<n>-<m> or a section title) are read; with none named, the first 12 KB.`, ''];
 let used = 0;
 for (const l of links) {
   const b = docBlock(l); const size = Buffer.byteLength(b) + 2;
-  if (used + size > CAP_TOTAL) { docSection.push(`### ${l.split('#')[0]}\n(omitted: total cap of 120 KB reached; read it at ${l.split('#')[0]})`, ''); continue; }
+  if (used + size > CAP_TOTAL) { const o = `### ${l.split('#')[0]}\n(omitted: total cap of 120 KB reached; read it at ${l.split('#')[0]})`; used += Buffer.byteLength(o) + 2; docSection.push(o, ''); continue; }
   used += size; docSection.push(b, '');
 }
 if (!links.length) docSection.push('(no linked documents)', '');
@@ -107,7 +107,8 @@ const hits = decisions.map((d) => {
 const decSection = hits.length ? hits.map(({ d, why }) => `- ${d.title} (names ${why.join(', ')}) — ${d.quote ? `"${d.quote}" (${d.cite ?? 'cite in the decision'})` : '(no operator quote recorded)'}`) : ['- (none)'];
 
 // (4) prior reviews and lane reports for the task and each dependency.
-const depIds = asList(t.fm.dependencies).map((x) => String(x).toLowerCase());
+const depAll = asList(t.fm.dependencies).map((x) => String(x).toLowerCase());
+const depIds = depAll.filter((x) => /^task-\d+(\.\d+)*$/.test(x));
 const lanesDir = path.join(root, 'docs/reports/lanes');
 const laneReports = ls(lanesDir).flatMap((a) => ls(path.join(lanesDir, a)).map((b) => path.join(lanesDir, a, b, 'REPORT.md'))).map((p) => ({ p, text: readText(p) })).filter((r) => r.text !== null);
 const priorSection = [];
@@ -127,7 +128,7 @@ const depSection = depIds.length ? depIds.flatMap((id) => {
   if (!x) return [`- ${id}: (no such task or draft file)`];
   const fin = finalOf(x);
   return [`- ${id} ${x.fm.title} · status: ${x.fm.status}`, `  final summary: ${fin ? (fin.length > CAP_SUMMARY ? `${fin.slice(0, CAP_SUMMARY)} ... (cut; read the rest in ${rel(x.file)})` : fin) : '(none yet)'}`];
-}) : ['- (none)'];
+}).concat(depAll.filter((x) => !depIds.includes(x)).map((x) => `- ${JSON.stringify(x)}: (not a task id; skipped)`)) : ['- (none)'];
 
 const ctx = [
   `# Review context for ${taskId} (${label}) written ${date} by backlog-brief.mjs`, '',

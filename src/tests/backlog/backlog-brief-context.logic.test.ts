@@ -102,6 +102,15 @@ describe('G1 context pack (task-309, RR-0235)', () => {
     expect(section(ctxOf(d, task), 'Document sections')).toMatch(/docs\/missing\.md.*not readable|not found/i);
   });
 
+  it('an empty linked file and a range that runs past the end are stated, not hidden', () => {
+    const { d, task } = fixture(['--doc', 'docs/empty.md', '--doc', 'docs/spec.md#L90-200']);
+    put(d, 'docs/empty.md', '');
+    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
+    const s = section(ctxOf(d, task), 'Document sections');
+    expect(s).toContain('docs/empty.md (empty file)');
+    expect(s).toMatch(/docs\/spec\.md lines 90-100 of 100 \(range L90-200 runs past the end/);
+  });
+
   it('## Decisions naming this task: a decision naming the plan id or the task id gets its operator quote and cite; one naming neither is absent', () => {
     const { d, task } = fixture();
     put(d, 'backlog/decisions/decision-1 - RR-0501-x.md', '---\nid: decision-1\ntitle: "RR-0501 2026-11-19 · a ruling on the subject"\ndate: 2026-11-19\nstatus: accepted\n---\n## Context\n\nAbout plan SUBJ.1 only.\n\n## Decision\n\nOperator, verbatim, 2026-11-19: "PLAN-QUOTE-WORDS here"\n\nCite: ~/x/MORNING.md:12\n');

@@ -3,11 +3,11 @@ id: TASK-309
 title: >-
   R8d McLane context pack: milestone text, documents, decisions, reviews and
   dependency summaries in the G1 context file
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R8d'
 created_date: '2026-11-19T12:52:00Z'
-updated_date: '2026-11-19T13:02:00Z'
+updated_date: '2026-11-19T13:10:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -28,11 +28,11 @@ Operator 2026-11-19 (RR-0235): "We need them linked with all the relevant data -
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The G1 context file (docs/reports/reviews/<task>/context-<date>.md) carries the milestone description (objectives, deliverable, specs, register rulings, Documents section)
-- [ ] #2 It carries the linked documents relevant sections, size-capped, with the path to read the rest
-- [ ] #3 It carries every decision whose body names the task id or its plan id, with the operator quote and cite, not only the RR ids the task body names
-- [ ] #4 It carries the prior review records and repo lane reports for the task and its dependencies, and the dependencies final summaries
-- [ ] #5 Red tests first on fixtures (src/tests/backlog/), green, through the real hooks; repo review round r1 on the plan, triaged, before code
+- [x] #1 The G1 context file (docs/reports/reviews/<task>/context-<date>.md) carries the milestone description (objectives, deliverable, specs, register rulings, Documents section)
+- [x] #2 It carries the linked documents relevant sections, size-capped, with the path to read the rest
+- [x] #3 It carries every decision whose body names the task id or its plan id, with the operator quote and cite, not only the RR ids the task body names
+- [x] #4 It carries the prior review records and repo lane reports for the task and its dependencies, and the dependencies final summaries
+- [x] #5 Red tests first on fixtures (src/tests/backlog/), green, through the real hooks; repo review round r1 on the plan, triaged, before code
 <!-- AC:END -->
 
 ## Definition of Done
@@ -59,3 +59,15 @@ Operator 2026-11-19 (RR-0235): "We need them linked with all the relevant data -
 <!-- SECTION:PLAN:BEGIN -->
 1. AC1: add ## Milestone (milestone file body by the task milestone id, whole body incl. Documents when present; absent milestone = one stated line). 2. AC2: add ## Document sections: links from documentation: and the milestone Documents section; #L range, section title, or first 12 KB; 12 KB per block, 120 KB total, cap stated in file; each block headed path + line range and ended (read the rest at <path>); unreadable file = stated line, never a crash. 3. AC3: add ## Decisions naming this task: every decision whose title/body names task id, any plan:<id> label or ROW id (word-bounded) or an RR id the task body names, with quote and cite. 4. AC4: add ## Prior reviews and lane reports (reviews/<id>/*.md except the file written; lanes/*/*/REPORT.md naming the id; task and each dependency) and ## Dependencies (id, title, status, Final Summary section). 5. AC5: red = commit attempt with only src/tests/backlog/backlog-brief-context.logic.test.ts + task + context file; plan review r1 triaged before code; green commit through hooks; one added line in the printed brief; one output review round.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+AC1 ## Milestone section: tests 'Milestone carries the milestone body' and 'no milestone file' green (commit.out). AC2 ## Document sections: #L range, section title, first 12 KB, cap line, read-the-rest line, missing/empty/past-EOF files green. AC3 ## Decisions naming this task: plan id, task id, RR id with quote and cite green. AC4 ## Prior reviews and lane reports and ## Dependencies (status, Final Summary) green. AC5 red.out (12 of 12 failed through pre-commit), plan round r1 + TRIAGE.md before the green commit, 18 related tests green through hooks (commit.out), one output review r2 triaged.
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+McLane context pack landed in scripts/analysis/backlog-brief.mjs: five new sections after the G1 sections (Milestone, Document sections with 12 KB/120 KB caps, Decisions naming this task, Prior reviews and lane reports, Dependencies), one added brief line, printed review line now the review-mode form. Test file src/tests/backlog/backlog-brief-context.logic.test.ts; feat commit c74a901dd (hooks green, commit.out), error-path fixes in the follow-up commit (commit2.out). No push.
+<!-- SECTION:FINAL_SUMMARY:END -->
