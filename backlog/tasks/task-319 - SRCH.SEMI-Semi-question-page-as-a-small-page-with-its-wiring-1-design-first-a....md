@@ -3,11 +3,11 @@ id: TASK-319
 title: >-
   SRCH.SEMI Semi question page as a small page, with its wiring: (1) design
   first: a...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SEMI2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:17:00Z'
+updated_date: '2026-11-19T21:18:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -32,6 +32,7 @@ references:
   - .cursor/MCFRONTEND-QUEUE.md#L654
   - .cursor/MCBYLAWS-QUEUE.md#L94
   - docs/reports/lanes/2026-11-19/BL-SEMI/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-SEMI2/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -55,14 +56,14 @@ element ids delivered: D.9, D.10
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -107,3 +108,9 @@ Stage 2 (lane BL-SEMI2, MF-93): semi page built to the approved mock with the he
 
 Output review r2 (meter lens): two findings kept and fixed (page left during the Continue fetch, replace outside the try); the rest rejected with lines in TRIAGE.md.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Stage 2 built (MF-93): semi page to the approved mock with the heading spanning the cards, meter flag semi=answered in contract, route and client. Commits 02cbc5718 (prereg+row), 6df83425a (build), 7b25b61be (fix). Hooks: GATE OK, 182 passed in the related run; search and lot map goldens unmoved. Mobile jest cases UNVERIFIED (not run).
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semi question: one question before the report · MaxBLD</title>
+<link rel="icon" type="image/svg+xml" sizes="16x16" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20width%3D%2216%22%20height%3D%2216%22%20role%3D%22img%22%20aria-label%3D%22The%20Building%20Possibilities%20Report%20mark%22%3E%20%3Crect%20x%3D%22.5%22%20y%3D%22.5%22%20width%3D%2215%22%20height%3D%2215%22%20rx%3D%223.5%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23e9e3d8%22%2F%3E%20%3Cpath%20d%3D%22M1.5%2011.5L8%208.5L14.5%2011.5L8%2014.5Z%22%20fill%3D%22%23f59e0b%22%20fill-opacity%3D%22.3%22%20stroke%3D%22%23d98a00%22%20stroke-linejoin%3D%22round%22%2F%3E%20%3Cpath%20d%3D%22M4.5%2011.5V6.5L8%203L11.5%206.5V11.5Z%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%231d1b18%22%20stroke-linejoin%3D%22round%22%2F%3E%20%3C%2Fsvg%3E">
+<link rel="icon" type="image/svg+xml" sizes="32x32" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%20width%3D%2232%22%20height%3D%2232%22%20role%3D%22img%22%20aria-label%3D%22The%20Building%20Possibilities%20Report%20mark%22%3E%20%3Crect%20x%3D%22.5%22%20y%3D%22.5%22%20width%3D%2231%22%20height%3D%2231%22%20rx%3D%227%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23e9e3d8%22%2F%3E%20%3Cpath%20d%3D%22M3%2022L16%2015.5L29%2022L16%2028.5Z%22%20fill%3D%22%23f59e0b%22%20fill-opacity%3D%22.25%22%20stroke%3D%22%23d98a00%22%20stroke-width%3D%222%22%20stroke-linejoin%3D%22round%22%2F%3E%20%3Cpath%20d%3D%22M9%2022.5V13L16%206.5L23%2013V22.5Z%22%20fill%3D%22%23ffffff%22%2F%3E%20%3Cpath%20d%3D%22M16%206.5L23%2013V22.5H16Z%22%20fill%3D%22%23e6dfd2%22%2F%3E%20%3Cpath%20d%3D%22M9%2022.5V13L16%206.5L23%2013V22.5Z%22%20fill%3D%22none%22%20stroke%3D%22%231d1b18%22%20stroke-width%3D%221.5%22%20stroke-linejoin%3D%22round%22%2F%3E%20%3C%2Fsvg%3E">
+<style>
+/* brand lockup (R-D1): copied verbatim from brand/lockup.html at build */
+
+.bpr-cover, .bpr-bar, .bpr-name { font-family:"Inter",system-ui,-apple-system,sans-serif; font-optical-sizing:auto; font-feature-settings:"cv11","ss01"; color:#1d1b18 }
+.bpr-r { color:#9a4a07 }
+/* ™: real glyph, half size, top on the cap line; line-height 0 so it never opens the leading */
+.bpr-tm { font-size:.46em; font-weight:500; letter-spacing:0; line-height:0; position:relative; top:-.78em; margin-left:.08em }
+/* mark tile: the SVG draws the white tile; the wrapper adds the warm card shadow */
+.bpr-mark { display:inline-block; flex:none; border-radius:22%; box-shadow:0 1px 2px rgba(70,50,20,.08), 0 4px 10px -2px rgba(70,50,20,.14) }
+.bpr-mark svg { display:block; width:100%; height:100% }
+
+/* 1. Cover title (report head). Put it in the page h1. Full mark; it never drops under 48 px here. */
+.bpr-cover { display:flex; align-items:center; gap:.36em; margin:0; font-size:clamp(28px, 7.6vw, 48px); font-weight:700; line-height:1.08; letter-spacing:-.03em }
+.bpr-cover .bpr-mark { width:1.9em; height:1.9em; min-width:48px; min-height:48px }
+.bpr-cover .bpr-n { min-width:0; text-wrap:balance }
+
+/* 2. Phone top bar (56 px bar, 390 wide, after a 44 px back button). Simple 32 glyph at 28 px; full name on one line. */
+.bpr-bar { display:flex; align-items:center; gap:8px; min-width:0; min-height:44px; font-size:14.5px; font-weight:700; line-height:20px; letter-spacing:-.012em; white-space:nowrap }
+.bpr-bar .bpr-mark { width:28px; height:28px }
+.bpr-bar .bpr-n { min-width:0; overflow:hidden; text-overflow:ellipsis }
+.bpr-bar .bpr-tm { font-size:9px; top:-.6em }
+
+/* 3. Inline name (running text, How-it-works step, buttons' neighbours). No mark. Inherits size from the text. */
+.bpr-name { font-weight:600; letter-spacing:-.01em }
+.bpr-name .bpr-r { white-space:nowrap } /* keeps ™ with Report */
+.bpr-name .bpr-tm { font-size:max(9px, .46em); top:-.6em }
+
+/* Tokens v8 (Daylight proposal): the report's "Daylight model" (report-themes/B-daylight.css :root), mapped onto the v7 token names so every
+   rule keeps its role. Paper table, white cards, warm long shadows; amber fills the one primary action with ink text on it; amber as text is
+   --amber-t; the wordmark "BLD" is the report's #b45309. Contrast (on paper / on white): ink 15.2 / 17.2, t2 8.0 / 9.1, t3 5.6 / 6.3,
+   amber-t 5.6 / 6.3, ok 5.2 / 5.9, no 5.8 / 6.5, ink on amber 8.0; --field-b #8a8172 keeps the ruled >= 3:1 control edge (3.4 / 3.8). */
+:root { --page:#f4f1eb; --raise:#ffffff; --card:#ffffff; --line:#d9d0c1; --ink:#1d1b18; --muted:#4d4841; --soft:#655f55; --amber:#f59e0b; --amber-hi:#fbbf24; --amber-ink:#1d1b18; --amber-t:#9a4a07; --amber-wm:#b45309; --amber-soft:#fdf1d8; --ok:#1a7340; --no:#b3261e;
+  --s-outer:#ffffff; --s-outer-b:#e9e3d8; --s-inner:#faf8f4; --s-tile:#efe9df; --btn:#ffffff; --btn-b:#d9d0c1; --field-b:#8a8172; --t2:#4d4841; --t3:#655f55; --err:#b3261e;
+  --sh:70,50,20; --sh-1:0 1px 2px rgba(var(--sh),.06), 0 1px 1px rgba(var(--sh),.03);
+  --sh-2:0 1px 2px rgba(var(--sh),.05), 0 10px 28px -6px rgba(var(--sh),.10), 0 28px 60px -24px rgba(var(--sh),.14);
+  --sh-3:0 2px 4px rgba(var(--sh),.06), 0 24px 64px -12px rgba(var(--sh),.22);
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px; --sp-8:32px; --sp-12:48px;
+  --ease:cubic-bezier(.16,1,.3,1); --sans:"Inter",system-ui,-apple-system,sans-serif; color-scheme:light; }
+* { box-sizing:border-box }
+::selection { background:rgba(245,158,11,.28); color:var(--ink) }
+html { background:var(--page) }
+body { background:var(--page); color:var(--ink); font:16px/24px var(--sans); margin:0; caret-color:var(--amber-t); -webkit-font-smoothing:antialiased; font-feature-settings:"cv11","ss01" }
+.wrap { max-width:430px; margin:0 auto }
+/* design notes (mock chrome, hidden in the usability test) */
+.mocknote { margin:var(--sp-4) var(--sp-4) 0; font:13px/18px var(--sans); color:var(--soft); border:1px dashed var(--line); border-radius:10px; padding:var(--sp-2) var(--sp-3) }
+.mocknote b { color:var(--t2); font-weight:600 }
+.sl { margin:var(--sp-8) var(--sp-4) 0; padding-top:var(--sp-3); border-top:1px dashed var(--line); font:600 11px/14px var(--sans); letter-spacing:.08em; text-transform:uppercase; color:var(--soft) }
+.sn { margin:var(--sp-1) var(--sp-4) var(--sp-2); font:13px/18px var(--sans); color:var(--t3) }
+/* one frame per platform; one left axis (16 px phone gutter); rhythm: 8 inside a group, 12 label to rows, 24 between groups, 32 between sections */
+.state { display:flex; flex-direction:column }
+.state.app:has(.tabbar) { min-height:780px } /* a phone screen: the tab bar sits at the bottom */
+.screen { padding:var(--sp-6) var(--sp-4) var(--sp-8); display:flex; flex-direction:column; gap:var(--sp-6); flex:1 }
+.screen.auth { padding-top:var(--sp-12) }
+.screen.c { min-height:720px; justify-content:center; align-items:center; text-align:center }
+.screen.c .lead { margin-top:calc(-1 * var(--sp-2)) }
+.section { display:grid; gap:var(--sp-3); min-width:0 } .section > * { min-width:0 }
+.section ~ .section { margin-top:var(--sp-2) }
+.head { display:grid; gap:var(--sp-2) }
+/* field values (FE-05): a fine dashed underline marks every value read from a field or setting */
+.fc { border-bottom:1px dashed #c4b9a6; padding-bottom:1px; white-space:nowrap }
+/* seven type roles: display 28/34 · title 22/28 · heading 18/24 · body 16/24 · body-sm 14/20 · caption 13/18 · label 12/16 */
+h1 { font:700 22px/28px var(--sans); margin:0; letter-spacing:-.01em; text-wrap:balance }
+h1.big { font:700 28px/34px var(--sans); letter-spacing:-.02em }
+h1.addr { font:600 14px/20px var(--sans); letter-spacing:0; color:var(--t2) }
+h2 { font:700 18px/24px var(--sans); margin:0; text-wrap:balance }
+p { margin:0 }
+.addr { font:400 16px/24px var(--sans); color:var(--t2) }
+.lead { font:16px/24px var(--sans); color:var(--t2); text-wrap:pretty; max-width:60ch }
+.small, .hint, .legal { font:13px/18px var(--sans); color:var(--t3) }
+.legal { color:var(--muted) }
+.err { font:14px/20px var(--sans); color:var(--err) }
+.sec-h { font:600 12px/16px var(--sans); letter-spacing:.06em; text-transform:uppercase; color:var(--soft); margin:0 }
+/* wordmark: "Max" white + "BLD" amber (ruled); tagline "Lot Intelligence" (Spec 117 OD-B2) — left on the axis */
+.wm { display:grid; justify-items:start; gap:var(--sp-1) }
+.wm .w { font:800 24px/28px var(--sans); letter-spacing:-.03em } .wm .w b { color:var(--amber-wm) }
+.wm .t { font:600 12px/16px var(--sans); letter-spacing:.14em; text-transform:uppercase; color:var(--t2) }
+.wm.big { justify-items:center; gap:var(--sp-3) } .wm.big .w { font:800 44px/50px var(--sans); letter-spacing:-.03em } .wm.big .t { font:600 14px/20px var(--sans); letter-spacing:.16em }
+/* app frame: top bar 56 (title left, optional back) + tab bar; web frame: header 64 on --raise with Lookup · Tracked Lots · Account */
+.top { display:flex; align-items:center; gap:var(--sp-2); padding:0 var(--sp-4); min-height:56px; border-bottom:1px solid var(--s-outer-b); background:var(--page); box-shadow:var(--sh-1) }
+.top h1 { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.top h1.long { white-space:normal; font-size:18px; line-height:22px; text-wrap:balance }
+.top .back { display:grid; place-items:center; width:44px; height:44px; margin-left:calc(-1 * var(--sp-3)); color:var(--ink); border-radius:12px }
+.top .btn.sm { margin-right:calc(-1 * var(--sp-3)) }
+.state.web .top { min-height:64px; background:var(--raise); justify-content:space-between }
+.top .w { display:inline-flex; align-items:center; min-height:44px; font:800 20px/24px var(--sans); letter-spacing:-.03em; color:var(--ink); text-decoration:none } .top .w b { color:var(--amber-wm) }
+.top .r { display:flex; align-items:center; gap:var(--sp-1) }
+.top .r a { display:inline-flex; align-items:center; min-height:44px; padding:0 var(--sp-2); font:500 15px/20px var(--sans); color:var(--t2); text-decoration:none; border-radius:8px; transition:color .15s var(--ease) }
+.top .r a:hover { color:var(--ink) }
+.top .r a[aria-current] { color:var(--ink); box-shadow:inset 0 -2px 0 var(--amber) }
+.tabbar { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--s-outer-b); background:rgba(255,255,255,.94); padding:0 var(--sp-2) var(--sp-6) }
+.tabbar a { position:relative; display:grid; justify-items:center; align-content:center; gap:2px; min-height:56px; font:600 12px/16px var(--sans); color:var(--t3); text-decoration:none; border-radius:10px }
+.tabbar a[aria-current] { color:var(--ink) }
+.tabbar a[aria-current]::before { content:""; position:absolute; top:0; left:30%; right:30%; height:2px; border-radius:0 0 2px 2px; background:var(--amber) }
+/* form */
+.form { display:grid; gap:var(--sp-4) }
+.field { display:grid; gap:var(--sp-2) }
+.field label, .lbl { font:600 14px/20px var(--sans); color:var(--t2) }
+.in { display:flex; align-items:center; width:100%; min-height:48px; border-radius:12px; border:1px solid var(--field-b); background:var(--card); padding:var(--sp-3) var(--sp-4); font:16px/24px var(--sans); color:var(--ink); transition:border-color .15s var(--ease) }
+.in::placeholder { color:var(--soft) }
+.in.bad { border-color:var(--no) }
+.in.area { min-height:120px; resize:vertical; font:16px/24px var(--sans); align-items:flex-start }
+.in .fc { white-space:normal }
+.in .chev { margin-left:auto; color:var(--t2); display:flex }
+.sw { display:flex; justify-content:space-between; align-items:center; gap:var(--sp-3); width:100%; min-height:52px; padding:var(--sp-3) 0; background:none; border:0; border-top:1px solid var(--s-outer-b); color:var(--ink); font:16px/24px var(--sans); text-align:left; cursor:pointer }
+.sw:last-child { border-bottom:1px solid var(--s-outer-b) }
+.sw > .small { margin-left:auto }
+.form .sw, .form .sw:last-child { border:0; padding:0; min-height:44px; font:14px/20px var(--sans); color:var(--t2) }
+figure { margin:0 } figure svg { display:block; width:100%; height:auto }
+fieldset { border:0; padding:0; margin:0; min-width:0 } legend { padding:0; margin-bottom:var(--sp-2) }
+.sw:has(> input:first-child) { justify-content:flex-start }
+.sw input { width:22px; height:22px; margin:0; accent-color:var(--ink); flex:none }
+.tog { width:48px; height:28px; border-radius:999px; background:var(--field-b); position:relative; flex:none; transition:background .2s var(--ease) }
+.tog::after { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:999px; background:var(--card); box-shadow:var(--sh-1); transition:left .2s var(--ease) }
+.sw[aria-checked="true"] .tog { background:var(--ink) } .sw[aria-checked="true"] .tog::after { left:23px; background:var(--card) }
+/* buttons: primary (amber, once per app screen) · secondary · tertiary · danger (text, last) — one size for every button */
+.btn { display:flex; align-items:center; justify-content:center; gap:var(--sp-2); width:100%; min-height:48px; border-radius:12px; border:0; background:none; font:600 16px/24px var(--sans); text-align:center; padding:0 var(--sp-4); color:var(--ink); text-decoration:none; cursor:pointer; transition:background .15s var(--ease), color .15s var(--ease) }
+.btn.p { background:var(--amber); color:var(--amber-ink); font-weight:700; box-shadow:0 1px 2px rgba(var(--sh),.12), 0 6px 16px rgba(217,119,6,.2) } .btn.p:hover:not(:disabled) { background:var(--amber-hi) }
+.btn.s { background:var(--btn); border:1px solid var(--btn-b); box-shadow:var(--sh-1) } .btn.s:hover { background:var(--s-inner); border-color:var(--field-b) }
+.btn.g { color:var(--ink); min-height:44px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--soft) } .btn.g:hover { text-decoration-color:var(--ink) }
+.btn.d { color:var(--err); min-height:44px } .btn.d:hover { text-decoration:underline; text-underline-offset:4px }
+.btn.g:not(.sm), .btn.d:not(.sm) { justify-content:flex-start; padding:0; width:auto; justify-self:start } /* text buttons sit on the left axis */
+.btn.p[aria-busy="true"] { opacity:.85; cursor:progress }
+.in > input { flex:1; min-width:0; background:none; border:0; padding:0; font:inherit; color:inherit } .in > input:focus { outline:0 } .in:focus-within { outline:2px solid var(--amber-t); outline-offset:2px }
+.in > .link { flex:none; display:inline-flex; align-items:center; min-height:44px; margin:-12px 0; font:600 14px/20px var(--sans) }
+.btn:disabled { background:var(--s-tile); border:1px solid var(--s-outer-b); color:var(--soft); box-shadow:none; cursor:not-allowed; text-decoration:none }
+.btn.g:disabled, .btn.d:disabled { background:none; border:0; color:var(--soft) } /* a disabled text button stays text */
+.btn.sm { min-height:44px; width:auto; padding:0 var(--sp-3); font:600 15px/20px var(--sans) }
+.btns { display:grid; gap:var(--sp-3) }
+:focus-visible { outline:2px solid var(--amber-t); outline-offset:2px }
+.btn.p:focus-visible { outline-color:var(--ink) }
+.link { color:var(--ink); font-weight:600; text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--field-b) }
+.link:hover { text-decoration-color:var(--ink) }
+.story-img { display:block; width:100%; height:auto; border-radius:22px; background:#f4f2ee; box-shadow:inset 0 0 0 1px rgba(var(--sh),.06), var(--sh-1) }
+.btns > .link { display:inline-flex; align-items:center; min-height:44px; justify-self:start }
+/* v7.2 (operator 2026-11-11) */
+.vh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap }
+.screen.focus { align-items:center; text-align:center; padding:var(--sp-12) var(--sp-4) var(--sp-12); gap:var(--sp-8) }
+.screen.focus > * { width:100%; max-width:480px }
+.screen.focus .wm { justify-items:center }
+.screen.focus .row { justify-content:center }
+.screen.focus .rows { text-align:left }
+.screen.focus .ok-mark { width:56px; height:56px; justify-self:center; margin:0 auto }
+.screen.focus .btn { justify-self:center }
+.screen.focus .banner, .screen.focus .searchpill { text-align:left }
+.banner.info { background:var(--card); border-color:var(--btn-b); box-shadow:var(--sh-1) } .banner.info > svg { color:var(--ink) }
+.banner h2 { font:700 16px/22px var(--sans); margin:0 } .banner p { margin:var(--sp-1) 0 0; color:var(--t2) }
+.plans { display:grid; gap:var(--sp-3) }
+@media (min-width:900px) { .state.web .plans { grid-template-columns:repeat(4,minmax(0,1fr)); align-items:stretch } .state.web .plans .card { align-content:start } }
+button.card { width:100%; text-align:left; color:var(--ink); font:inherit; cursor:pointer }
+button.card { border:1px solid var(--s-outer-b); box-shadow:var(--sh-1) }
+button.card[role="radio"] { position:relative; padding-left:52px }
+button.card[role="radio"]::before { content:""; position:absolute; left:16px; top:50%; width:22px; height:22px; margin-top:-11px; box-sizing:border-box; border-radius:50%; border:2px solid var(--field-b); background:var(--card) }
+button.card[role="radio"][aria-checked="true"]::before { border:7px solid var(--ink) }
+.doc p a, .doc li a { display:inline-flex; align-items:center; min-height:44px } button.card[aria-checked="true"] { border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink), var(--sh-2) }
+.screen.auth.roomy { gap:var(--sp-8) }
+button.link { background:none; border:0; padding:0; font:inherit; font-weight:600; cursor:pointer }
+.links { display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center; column-gap:var(--sp-2); font:14px/20px var(--sans); color:var(--t2) }
+.links .link { display:inline-flex; align-items:center; min-height:44px }
+.row-r { display:flex; justify-content:flex-start; margin:calc(-1 * var(--sp-2)) 0; font:14px/20px var(--sans) } .row-r .link { display:inline-flex; align-items:center; min-height:44px }
+.or { display:flex; align-items:center; gap:var(--sp-3); font:13px/18px var(--sans); color:var(--soft) }
+.or::before, .or::after { content:""; flex:1; height:1px; background:var(--s-outer-b) }
+.foot { margin-top:var(--sp-2); display:grid; justify-items:start; font:13px/18px var(--sans); color:var(--t3) }
+.foot .ln { display:flex; flex-wrap:wrap; column-gap:var(--sp-4) }
+.foot a, .wfoot a { display:inline-flex; align-items:center; min-height:44px; color:var(--t2); text-decoration:none }
+.foot a:hover, .wfoot a:hover { color:var(--ink) }
+.wfoot { border-top:1px solid var(--s-outer-b); padding:var(--sp-6) var(--sp-4); display:grid; gap:var(--sp-2); font:13px/18px var(--sans); color:var(--t3); background:var(--page) }
+.wfoot p { max-width:72ch }
+.wfoot .ln { display:flex; flex-wrap:wrap; column-gap:var(--sp-6) }
+/* one plain row component (B12): the v21 report .rows, hairline dividers, no outer box; dl rows read-only, a rows open */
+.rows { margin:0; display:grid }
+.rows > div, .rows > a { display:flex; justify-content:space-between; align-items:center; gap:var(--sp-3); min-height:52px; padding:var(--sp-3) 0; border-top:1px solid var(--s-outer-b); color:var(--ink); text-decoration:none }
+.rows > a { transition:background .15s var(--ease) } .rows > a:hover { background:var(--s-inner) }
+.rows > :last-child { border-bottom:1px solid var(--s-outer-b) }
+.rows dt { color:var(--muted); font:16px/24px var(--sans) }
+.rows dd { margin:0; font:600 16px/24px var(--sans); text-align:right; font-variant-numeric:tabular-nums }
+.rows .chev { color:var(--soft); display:flex; flex:none; align-self:flex-start; margin-top:2px }
+.rows .txt { display:grid; gap:var(--sp-1); min-width:0; flex:1 }
+.rows .ad { font:700 18px/24px var(--sans) }
+.rows .m { font:14px/20px var(--sans); color:var(--t2); font-variant-numeric:tabular-nums }
+.rows .m b { color:var(--ink); font-weight:600 }
+.price { font:700 28px/34px var(--sans); letter-spacing:-.02em; font-variant-numeric:tabular-nums; margin:0 }
+.price .fc { white-space:nowrap }
+.rows .dpill { justify-self:start; display:inline-flex; align-items:center; gap:6px; margin-top:var(--sp-1); font:600 13px/18px var(--sans); border-radius:999px; padding:3px 10px 3px 8px; color:var(--ink); background:var(--s-inner); box-shadow:inset 0 0 0 1px var(--btn-b) }
+.rows .dpill::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--ok); flex:none }
+.pill { display:inline-flex; align-items:center; gap:6px; font:600 12px/16px var(--sans); padding:3px 10px 3px 8px; color:var(--ink); background:var(--card); box-shadow:inset 0 0 0 1px var(--btn-b), var(--sh-1); border-radius:999px }
+.pill::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--amber); flex:none }
+.ticks { margin:0; padding:0; list-style:none; display:grid; gap:var(--sp-2); font:16px/24px var(--sans); color:var(--t2) }
+.ticks li { position:relative; padding-left:var(--sp-6) }
+.ticks li::before { content:""; position:absolute; left:2px; top:5px; width:14px; height:14px; background:var(--ok); -webkit-mask:var(--tick) no-repeat center/14px; mask:var(--tick) no-repeat center/14px }
+.ticks { --tick:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") }
+/* processing steps (what-we-checked): resolved = tick + fact; the active step = amber pulse + present-progressive label */
+.steps { margin:0; padding:0; list-style:none; display:grid; gap:var(--sp-3); font:16px/24px var(--sans); color:var(--ink); font-variant-numeric:tabular-nums }
+.steps li { position:relative; padding-left:var(--sp-8) }
+.steps li::before { content:""; position:absolute; left:0; top:2px; width:20px; height:20px; border-radius:999px; background:#efeae1 }
+.steps li::after { content:""; position:absolute; left:4px; top:6px; width:12px; height:12px; background:var(--ink); -webkit-mask:var(--tick) no-repeat center/12px; mask:var(--tick) no-repeat center/12px }
+.steps { --tick:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") }
+.steps li.n { color:var(--t2) } .steps li.n::before { background:var(--s-tile) } .steps li.n::after { background:var(--t2); -webkit-mask:none; mask:none; height:2px; top:11px; left:5px; width:10px; border-radius:1px }
+.steps li.on { color:var(--amber-t) }
+.steps li.on::before { background:none; border:2px solid rgba(217,119,6,.2); border-top-color:var(--amber); animation:spin .8s linear infinite }
+.steps li.on::after { display:none }
+.steps li.soon { color:var(--soft) } .steps li.soon::before { background:none; border:1px dashed var(--btn-b) } .steps li.soon::after { display:none }
+@keyframes spin { to { transform:rotate(360deg) } }
+@media (prefers-reduced-motion:reduce) { .steps li.on::before { animation:none } * { transition:none !important } }
+/* search (MF-35 layout): pill bar, recent-search chips */
+.searchpill { display:flex; align-items:center; gap:var(--sp-2); width:100%; min-height:52px; border-radius:999px; border:1px solid var(--field-b); background:var(--card); box-shadow:var(--sh-1); padding:var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-4); font:16px/24px var(--sans); color:var(--ink) }
+.searchpill > svg { color:var(--t2); flex:none }
+.searchpill .ph { flex:1; min-width:0; min-height:44px; background:none; border:0; padding:0; font:16px/24px var(--sans); color:var(--ink) } .searchpill .ph::placeholder { color:var(--soft) }
+.searchpill .q { display:block; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap } .searchpill .q .fc { white-space:nowrap }
+.searchpill .x { width:44px; height:44px; border-radius:999px; display:grid; place-items:center; color:var(--t2); flex:none; background:none; border:0 }
+.row { display:flex; gap:var(--sp-2); flex-wrap:wrap; justify-content:flex-start }
+.row .btn { border-radius:999px }
+.banner { display:flex; align-items:flex-start; gap:var(--sp-3); border-radius:12px; padding:var(--sp-3) var(--sp-4); background:#fbeceb; border:1px solid rgba(179,38,30,.35); font:14px/20px var(--sans) }
+.banner > svg { color:var(--err); flex:none; margin-top:2px }
+.banner.n { background:var(--card); border-color:var(--s-outer-b); align-items:center; justify-content:space-between; box-shadow:var(--sh-2) }
+.ok-mark { width:48px; height:48px; border-radius:999px; background:#e3f0e7; display:grid; place-items:center; color:var(--ok) }
+.toc { margin:0; padding-left:var(--sp-6); display:grid; gap:0; font:16px/24px var(--sans); color:var(--t2) }
+.toc a { display:inline-flex; min-height:44px; align-items:center; color:var(--ink); text-decoration:none } .toc a:hover { text-decoration:underline }
+.doc { display:grid; gap:var(--sp-2) } .doc h2 { margin-top:var(--sp-6) } .doc p { font:16px/24px var(--sans); color:var(--t2); max-width:65ch }
+.card { display:grid; gap:var(--sp-3); padding:var(--sp-4); background:var(--card); border:0; border-radius:20px; box-shadow:var(--sh-2) }
+.card .illus svg { height:168px }
+.card .illus { border:0; box-shadow:none; margin:calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) 0; border-radius:20px 20px 0 0 }
+h3 { font:700 18px/24px var(--sans); margin:0 }
+/* illustrations v8: the Daylight white-card style (a model on a white card with a warm long shadow); amber only on the lot picker (MF-53) */
+.illus { display:block; border-radius:20px; overflow:hidden; background:var(--card); box-shadow:var(--sh-2) }
+/* in-app browser sheet (B10): Help, Terms, Privacy open the web page with Done */
+.sheet { margin-top:var(--sp-4); background:var(--s-inner); border:1px solid var(--s-outer-b); border-bottom:0; border-radius:24px 24px 0 0; overflow:hidden; box-shadow:var(--sh-3) }
+.sheet .top { min-height:52px; padding-top:var(--sp-1); padding-bottom:var(--sp-1); background:var(--s-inner); justify-content:space-between } .sheet .top .lbl { color:var(--t3) }
+.sheet .close-btn { display:inline-flex; align-items:center; min-height:44px; padding:0; background:none; border:0; color:var(--ink); font:600 16px/24px var(--sans); cursor:pointer }
+.sheet .screen { padding-top:var(--sp-6) }
+/* email (CASL, A8) */
+.mail { border:0; border-radius:20px; overflow:hidden; background:var(--card); box-shadow:var(--sh-2) }
+.mail .head { padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--s-outer-b); gap:2px }
+.mail .section { padding:var(--sp-4) }
+/* web layout at desktop widths: bar and footer full width; content column on the wordmark's left edge (560 app-like, 720 Read) */
+@media (min-width:900px) {
+  .wrap { max-width:none } .state { max-width:430px; margin:0 auto } .state.web { max-width:none }
+  .state.web .screen { max-width:608px; margin:0 0 0 max(var(--sp-6), calc(50% - 560px)); padding-left:0; padding-right:var(--sp-6); padding-top:var(--sp-12); padding-bottom:var(--sp-12) }
+  .state.web .screen.wide { max-width:768px }
+  .state.web .screen:has(.plans) { max-width:1120px } /* v7.2: four plan boxes in one row */
+  .state.web .screen.focus { max-width:none; margin:0; padding-left:var(--sp-6); padding-right:var(--sp-6) } /* v7.2: centred column on web */
+  .state.web .top, .state.web .wfoot { padding-left:max(var(--sp-6), calc(50% - 560px)); padding-right:max(var(--sp-6), calc(50% - 560px)) }
+  .mocknote { max-width:820px; margin-left:auto; margin-right:auto }
+}
+
+/* BL-SEMI2 (operator 2026-11-19, MORNING-DECISIONS.md:1188): the v8 rule h2 { text-wrap: balance } wraps the question at a narrower measure than the cards beneath; the question spans the cards' width (same left and right edges). */
+.section h2 { text-wrap: wrap; width: 100% }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="states">
+
+<section class="state app" aria-label="Ask · none chosen (default)">
+<div class="sl">1 · App · Ask · none chosen (default)</div>
+<p class="sn">Nothing is selected at open; Continue is disabled and reads the built "Choose an answer" (D.5, descriptor check parcelsemi_nothing_preselected).</p>
+<!-- content key: back.label (aria-label only) --><header class="top"><a href="/lookup" class="back" aria-label="Back to search"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a></header><div class="screen">
+<div class="section"><!-- content key: question.title --><h2>Is this house one half of a semi-detached pair?</h2></div>
+<div class="section" role="radiogroup" aria-label="Is this house one half of a semi-detached pair?">
+<!-- content key: answer.yes --><button type="button" class="card" role="radio" aria-checked="false" aria-label="Yes, it's one half of a semi"><span class="lead">Yes, it's one half of a semi</span></button>
+<!-- content key: answer.no --><button type="button" class="card" role="radio" aria-checked="false" aria-label="No, it's detached"><span class="lead">No, it's detached</span></button>
+<!-- content key: answer.not_sure --><button type="button" class="card" role="radio" aria-checked="false" aria-label="Not sure"><span class="lead">Not sure</span></button>
+</div>
+<!-- content key: select.none (button text, disabled); select.label (aria-label) --><button type="button" class="btn p" disabled aria-label="Open the report with this answer">Choose an answer</button>
+</div><nav class="tabbar" aria-label="Main"><a href="#" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5"/></svg><span>Lookup</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Tracked Lots</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Account</span></a></nav>
+</section>
+
+<section class="state app" aria-label="Ask · an answer chosen">
+<div class="sl">2 · App · Ask · an answer chosen</div>
+<p class="sn">One answer chosen (the same radio card as choose-lot, ink edge and filled dot); Continue becomes enabled and reads "Continue".</p>
+<!-- content key: back.label (aria-label only) --><header class="top"><a href="/lookup" class="back" aria-label="Back to search"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a></header><div class="screen">
+<div class="section"><!-- content key: question.title --><h2>Is this house one half of a semi-detached pair?</h2></div>
+<div class="section" role="radiogroup" aria-label="Is this house one half of a semi-detached pair?">
+<!-- content key: answer.yes --><button type="button" class="card" role="radio" aria-checked="true" aria-label="Yes, it's one half of a semi"><span class="lead">Yes, it's one half of a semi</span></button>
+<!-- content key: answer.no --><button type="button" class="card" role="radio" aria-checked="false" aria-label="No, it's detached"><span class="lead">No, it's detached</span></button>
+<!-- content key: answer.not_sure --><button type="button" class="card" role="radio" aria-checked="false" aria-label="Not sure"><span class="lead">Not sure</span></button>
+</div>
+<!-- content key: select.go (button text); select.label (aria-label) --><button type="button" class="btn p" aria-label="Open the report with this answer">Continue</button>
+</div><nav class="tabbar" aria-label="Main"><a href="#" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5"/></svg><span>Lookup</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Tracked Lots</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Account</span></a></nav>
+</section>
+
+<section class="state app" aria-label="Searching (loading)">
+<div class="sl">3 · App · Searching (loading)</div>
+<p class="sn">D.7. The built page shows a spinner with this word; v8 draws a quiet status line without a spinner (search.html "Searching").</p>
+<!-- content key: back.label (aria-label only) --><header class="top"><a href="/lookup" class="back" aria-label="Back to search"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a></header><div class="screen">
+<!-- content key: state.loading --><p class="lead" role="status">Searching</p>
+</div><nav class="tabbar" aria-label="Main"><a href="#" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5"/></svg><span>Lookup</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Tracked Lots</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Account</span></a></nav>
+</section>
+
+<section class="state app" aria-label="Error (500)">
+<div class="sl">4 · App · Error (500)</div>
+<p class="sn">D.7. The v8 error banner (alert icon), then one Try again button.</p>
+<!-- content key: back.label (aria-label only) --><header class="top"><a href="/lookup" class="back" aria-label="Back to search"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a></header><div class="screen">
+<!-- content key: state.error --><div class="banner" role="alert"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 21h20zM12 10v5M12 18v.01"/></svg><p>Couldn’t reach the lot service. Check your connection and try again.</p></div>
+<!-- content key: retry.text (button text); retry.label (aria-label) --><button type="button" class="btn s" aria-label="Retry the search">Try again</button>
+</div><nav class="tabbar" aria-label="Main"><a href="#" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5"/></svg><span>Lookup</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Tracked Lots</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Account</span></a></nav>
+</section>
+
+<section class="state app" aria-label="Schema drift">
+<div class="sl">5 · App · Schema drift</div>
+<p class="sn">D.7. The same banner, no retry (a deterministic failure; descriptor errors.classes).</p>
+<!-- content key: back.label (aria-label only) --><header class="top"><a href="/lookup" class="back" aria-label="Back to search"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a></header><div class="screen">
+<!-- content key: state.schema_drift --><div class="banner" role="alert"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 21h20zM12 10v5M12 18v.01"/></svg><p>We couldn’t read the response for that address. This is our problem, not yours — it has been reported.</p></div>
+</div><nav class="tabbar" aria-label="Main"><a href="#" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5"/></svg><span>Lookup</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Tracked Lots</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Account</span></a></nav>
+</section>
+
+<section class="state app" aria-label="Rate limited (429)">
+<div class="sl">6 · App · Rate limited (429)</div>
+<p class="sn">D.7. The v8 error banner; the second count is a field value (sample 30, from errors.429.retryAfterSeconds).</p>
+<!-- content key: back.label (aria-label only) --><header class="top"><a href="/lookup" class="back" aria-label="Back to search"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a></header><div class="screen">
+<!-- content key: state.ratelimit --><div class="banner" role="alert"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 21h20zM12 10v5M12 18v.01"/></svg><p>Too many searches. Try again in <span class="fc">30</span>s.</p></div>
+</div><nav class="tabbar" aria-label="Main"><a href="#" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5"/></svg><span>Lookup</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Tracked Lots</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Account</span></a></nav>
+</section>
+
+<section class="state app" aria-label="Entitlement (403)">
+<div class="sl">7 · App · Entitlement (403)</div>
+<p class="sn">D.7. The v8 neutral notice (info icon).</p>
+<!-- content key: back.label (aria-label only) --><header class="top"><a href="/lookup" class="back" aria-label="Back to search"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a></header><div class="screen">
+<!-- content key: state.entitlement --><div class="banner info" role="status"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 11v5M12 8v.01"/></svg><p>Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.</p></div>
+</div><nav class="tabbar" aria-label="Main"><a href="#" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5"/></svg><span>Lookup</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Tracked Lots</span></a><a href="#"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Account</span></a></nav>
+</section>
+</div>
+<p class="mocknote"><b>Design notes · Semi question</b> · SRCH.SEMI task-319 stage 1 · small-pages mock v8 (Daylight, light only), 390 px. Built from the v8 choose-lot frame (heading, radio cards, one button, banner states). Every string is read from the built content file mobile_parcel_semi_question.content.json (the key is in a comment beside it); no new copy, no new element. Shows the built elements D.3 to D.7; D.1 (shown only when the lot is unsure) and D.2 (lot form on the hit) have no visible part. Not drawn: D.8 owner answer stored, D.9 wall-distance input, D.10 override in the report (later homes task-213 and task-209; RR-0264). The page is reached only when a lot is a possible semi (lotForm.unsure). A dashed underline marks a value from a field or setting.</p>
+</div>
+</body>
+</html>
