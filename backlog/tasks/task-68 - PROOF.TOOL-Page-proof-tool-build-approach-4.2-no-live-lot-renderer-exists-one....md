@@ -7,6 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T14:58:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -15,7 +16,6 @@ labels:
 milestone: m-1
 dependencies:
   - TASK-62
-  - TASK-65
   - TASK-66
   - TASK-67
 references:
@@ -23,6 +23,16 @@ references:
   - >-
     ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L711
     sha256=a551450e6f8d
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/inc-briefs/BRIEFS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/holistic-audit/AUDIT.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/build-approach/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -71,3 +81,9 @@ who (plan text): one lane; claim an ID by mkdir before it starts (ID ledger)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 1·B validation (R10, RR-0257, task-316): dependency fixed: depends-on was 62, 65, 66, 67; now 62, 66, 67. TASK-65 CHK.4 is DROPPED (decision-69 'drop INFRA.2 guard.mjs and CHK.4', duplicate of report-no-maths MF-16; RR-0152); TASK-66 CHK.5 is BUILT and TASK-67 CHK.6 is LATER (kept); TASK-62 push 6 kept (the tool runs on the test stack after push 6, plan dependsOn 6.43). The description still says 'Reuses ... CHK.4': read it as the report-no-maths check MF-16, not a task. Proof task: no designed element (supporting function: PROOF slice S). Plan status 'approved S1/S2/Q-H4 a'; panel and build pass owed (readiness).
+<!-- SECTION:NOTES:END -->

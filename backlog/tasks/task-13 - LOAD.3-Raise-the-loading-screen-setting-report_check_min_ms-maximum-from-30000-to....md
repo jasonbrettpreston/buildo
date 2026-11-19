@@ -7,7 +7,7 @@ status: DROPPED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:58:00Z'
+updated_date: '2026-11-19T14:58:00Z'
 labels:
   - S
   - plan:LOAD.3
@@ -16,6 +16,16 @@ dependencies: []
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#S/LOAD.3
   - scripts/seeds/logic_variables.json#L10491-10495 sha256=e48e92186f8e
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/inc-briefs/BRIEFS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/holistic-audit/AUDIT.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-1b-adj/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -70,4 +80,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-18 (M-246, prior text kept; RR-0176 · task-13 · Backlog; operator, verbatim: "yes that is correct")
+
+2026-11-19 1·B validation (R10, RR-0257, task-316): KEPT (DROPPED): RR-0176 'yes that is correct' (decision-43, supersedes RR-0174): no 35 s cap, the setting change is not needed now; nothing depends on it (grep TASK-13 in backlog/tasks: none); task-267 carries the label dep-dropped. Stale text left as found: doc-16 section 5 row S and the m-1 Storage set-up still name LOAD.3 and 35 s (listed in the milestone Problems).
 <!-- SECTION:NOTES:END -->

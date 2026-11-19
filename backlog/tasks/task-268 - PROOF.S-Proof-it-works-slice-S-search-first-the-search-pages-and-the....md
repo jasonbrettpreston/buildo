@@ -5,6 +5,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T14:58:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -21,6 +22,16 @@ references:
   - >-
     ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L711
     sha256=a551450e6f8d
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/inc-briefs/BRIEFS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/holistic-audit/AUDIT.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/build-approach/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -69,3 +80,9 @@ who (plan text): fresh lane (no builder context) with the page-proof tool; opera
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 1·B validation (R10, RR-0257, task-316): dependency fixed: depends-on was 12, 69, 267, 68; now also 317 (LOAD.4), 318 (SRCH.ROUTE), 319 (SRCH.SEMI), 320 (SRCH.A6), 321 (SRCH.C12), 322 (SRCH.DAYLIGHT). Grounds: its text proves candidate list, lot map, semi question and the loading screen from the pick, and holistic-audit/AUDIT.md:159 'each PROOF.n waits for the slice's C-n check task, the slice's content tasks ... and PROOF.TOOL'. Chain to the report increment: 267 -> 266 -> 123 (1.3, m-3) and 265 (ST.P1, m-13); to 1·A: 68 -> 66 (BUILT), 67 (m-0). Open OPERATOR questions in m-1 (task-323, 324, 325) go to the answer page (RR-0154).
+<!-- SECTION:NOTES:END -->

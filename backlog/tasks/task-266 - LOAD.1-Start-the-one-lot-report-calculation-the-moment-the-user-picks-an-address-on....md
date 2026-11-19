@@ -7,6 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T14:58:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -22,6 +23,18 @@ references:
   - >-
     ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md#L8
     sha256=b253e641293a
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/inc-briefs/BRIEFS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/holistic-audit/AUDIT.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/storage-policy/REVIEW.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -70,3 +83,9 @@ who (plan text): lane
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 1·B validation (R10, RR-0257, task-316): KEPT (deps task-123 1.3 m-3, task-265 ST.P1 m-13): plan storage-policy dependsOn 1.3,ST.P1; RR-0178 builds W now. Chain: 123 -> 122 (6c.8a) -> 62 (push 6); 265 -> 259 (L.6), 82 (5.11). task-265 lands at push 12 (its landingPush), so 1·B completes only then unless ST.P1 is built earlier: raised as OPERATOR task-325 (timeframe), dependency not changed. Page element: supporting function of G.2 processing screen. Panel and build pass owed.
+<!-- SECTION:NOTES:END -->

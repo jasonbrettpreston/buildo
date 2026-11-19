@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-R10'
 created_date: '2026-11-19T14:44:00Z'
-updated_date: '2026-11-19T14:46:00Z'
+updated_date: '2026-11-19T14:52:00Z'
 labels:
   - follow-up
   - validation
@@ -51,6 +51,12 @@ Operator 2026-11-19: "lets begin work on Incr 1b. Lets ensure all the tasks (inc
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1 tasks and dependencies: read the 8 m-1 tasks, the 12 group S plan items (sequence.json S) and the board; five S items are drafts, not tasks (LOAD.4, SRCH.A6, SRCH.C12, SRCH.ROUTE, SRCH.SEMI): promote them into m-1 through backlog draft promote and write their dependencies as task ids; fix task-68 (drop the DROPPED CHK.4 task-65), task-268 (add the promoted content tasks), task-209 (7.25 follows SRCH.SEMI); create SRCH.DAYLIGHT (no task or queue row carries the Daylight restyle of the search pages) as a gap task; semi placeholder = SRCH.SEMI (RR-0182, RR-0184 place the semi question page on the search flow); its scope split (wall-distance input and owner-answer storage vs GAP.12 at inc 7) raised as an OPERATOR task with Grounded and Recommendation lines; web footer E.2 raised as an OPERATOR task. 2. AC2 field map: every doc-2 Elements id to a task or a listed gap. 3. AC3 page tasks: GAP.13, LOAD.1, LOAD.2, LOAD.4, SRCH.* with the MF rows linked by id (RR-0205: queue rows stay, linked not copied); dependency chain to 1.3 (m-3), ST.P1 (m-13), push 6 and group F checks verified. 4. AC4 link the 2026-11-17 panel and build-pass records on each m-1 task with --add-ref; gaps they required listed. 5. AC5 one repo review round r1 (review mode) on the context file, triaged KEEP/REJECT, then a dated note on every m-1 task. 6. AC6 add Problems, Project objectives, Increment objectives, Rulings, Compliance codes in use and Decisions sections to the m-1 milestone file (existing sections kept) and a draft task proposing the Decisions section on all milestones. Docs-only, no test run; one commit with Task: task-316.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

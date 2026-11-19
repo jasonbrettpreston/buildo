@@ -7,6 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T14:58:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -25,6 +26,17 @@ references:
   - >-
     ~/Buildo-scratch/lanes-20261117/inc-plan/1-2/BUILD-PASS.md#L1
     sha256=f820d870862f
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/inc-briefs/BRIEFS.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/holistic-audit/AUDIT.md
+  - >-
+    /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
+  - .cursor/MCFRONTEND-QUEUE.md#L453
+  - .cursor/MCFRONTEND-QUEUE.md#L310
+  - .cursor/MCFRONTEND-QUEUE.md#L394
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -81,3 +93,9 @@ dependency not a plan task, dropped: MF-53
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 1·B validation (R10, RR-0257, task-316): KEPT (LATER, deps none): MF-53 is DONE (queue :394) so the wait named on MF-60 is closed (queue :453 'MF-53 now landed'); the reference #L451 was the MF-60 row before later edits, the row is at #L453 (added). Deferred by operator words: W5 on the web RR-0170 'ONE-35 b', recent-search chips E.6 RR-0180 '3. This can stay defferred for now'. Elements B.10 (marked REMOVED by the design) E.4 E.6. No panel ran on this task (readiness: panel, build pass, open item); owed when it is un-deferred.
+<!-- SECTION:NOTES:END -->
