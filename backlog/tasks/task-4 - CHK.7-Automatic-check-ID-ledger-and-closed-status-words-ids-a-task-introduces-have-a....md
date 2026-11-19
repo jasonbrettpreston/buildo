@@ -3,11 +3,11 @@ id: TASK-4
 title: >-
   CHK.7 Automatic check: ID ledger and closed status words (ids a task
   introduces have a...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-CHK7'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:44:00Z'
+updated_date: '2026-11-19T13:58:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -78,4 +78,6 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-4 · Backlog; ope
 2026-11-19 relevancy pass (R7, RR-0214): CHANGED: extends mcbylaws-queue-check.mjs, no new tool (MORNING-DECISIONS.md:751); the closed-status-word half is now carried by the configured Backlog statuses and gate G3 (plan sections 1 and 3; overlap named at .cursor/active_task.md line 90), the ID-ledger half stays. Description unchanged (narrowed scope is the orchestrator's reading, not a quotable plan sentence).
 
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): CHANGED (R7b note stands): extends scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs, no new tool (re-use ruling MORNING-DECISIONS.md:750-751); the closed-status-word half is the nine configured Backlog statuses (backlog/config.yml:3) plus G3; no R8 deliverable checks ids. Scope now: extend mcbylaws-queue-check.mjs so ids a task introduces have a ledger claim or a queue row and no number repeats; no status-word check.
+
+2026-11-19 taken on the board at lane launch (lane BL-CHK7, worktree /Users/brettpreston_macmini/Buildo-wt-chk7, branch wf1/inc1a-chk7), RR-0240
 <!-- SECTION:NOTES:END -->
