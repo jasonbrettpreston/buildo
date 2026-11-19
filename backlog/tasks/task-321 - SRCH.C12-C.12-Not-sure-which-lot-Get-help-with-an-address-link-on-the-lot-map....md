@@ -3,11 +3,11 @@ id: TASK-321
 title: >-
   SRCH.C12 C.12 "Not sure which lot? Get help with an address" link on the lot
   map,...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-C12'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:08:00Z'
+updated_date: '2026-11-19T20:16:00Z'
 labels:
   - S
   - plan:SRCH.C12
@@ -82,4 +82,6 @@ element ids delivered: B.7, C.12
 Dated note 2026-11-19 (M-246, prior text kept; RR-0299 · task-321 · Backlog; operator, verbatim: "C12 - is a fake email address until launch")
 
 2026-11-19 (R13, RR-0299, MORNING-DECISIONS.md:1155): Scope now: the help link is built against the placeholder support address until launch (RR-0299); the real address is set at launch by LS.6 (task-15). Ground: the variable logic_variables.maxbld_support_inbox already exists (migrations/314_maxbld_support_inbox.sql:15-17 inserts it; SUPPORT_INBOX_KEY at src/lib/surfaces/maxbld-support.ts:13); the migration seeds it EMPTY ("" as JSONB, 314:7 and :17), so until a value is set the page shows no contact links; the built page web_help reads it (scripts/surfaces/parcel_product/F06/surfaces/web_help.descriptor.json:204). Status unchanged (LATER; the launch script takes it, RR-0298).
+
+2026-11-19 taken on the board at lane launch (lane BL-C12, worktree /Users/brettpreston_macmini/Buildo-wt-c12, branch wf1/inc1b-c12), RR-0240
 <!-- SECTION:NOTES:END -->
