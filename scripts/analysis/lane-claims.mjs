@@ -8,7 +8,7 @@
 //   existing ancestor + the rest) at claim AND compare time, so symlinks cannot hide an overlap (GD-1). Default TTL 12 h.
 // Exit codes: 0 ok, 1 refused (claim overlap, check with another owner), 2 usage, 3 registry unreadable (unparsable JSON is never treated as empty).
 import { mkdirSync, rmSync, writeFileSync, readFileSync, statSync, renameSync, realpathSync } from 'node:fs';
-import { basename, dirname } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
@@ -19,14 +19,16 @@ const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { 
 
 async function withLock(lockDir, fn, waitMs = 30000) {
   const t0 = Date.now();
+  mkdirSync(dirname(lockDir), { recursive: true });
   for (;;) {
+    if (Date.now() - t0 > waitMs) throw new Error(`lock wait exceeded ${waitMs} ms: ${lockDir}`);
     try { mkdirSync(lockDir); writeFileSync(`${lockDir}/pid`, String(process.pid)); break; }
     catch (e) {
+      if (e.code === 'ENOENT') { rmSync(lockDir, { recursive: true, force: true }); continue; } // our half-made dir was reclaimed under us: retry
       if (e.code !== 'EEXIST') throw e;
       let pid = NaN; try { pid = parseInt(readFileSync(`${lockDir}/pid`, 'utf8'), 10); } catch { /* pid not written yet */ }
       if (Number.isFinite(pid) && !alive(pid)) { rmSync(lockDir, { recursive: true, force: true }); continue; }
       if (!Number.isFinite(pid)) { try { if (Date.now() - statSync(lockDir).mtimeMs > 10000) { rmSync(lockDir, { recursive: true, force: true }); continue; } } catch { /* gone */ } }
-      if (Date.now() - t0 > waitMs) throw new Error(`lock wait exceeded ${waitMs} ms: ${lockDir}`);
       await sleep(50);
     }
   }
@@ -36,7 +38,7 @@ const readJson = (f, d) => { try { return JSON.parse(readFileSync(f, 'utf8')); }
 const writeJsonAtomic = (f, o) => { const t = `${f}.tmp.${process.pid}`; writeFileSync(t, JSON.stringify(o, null, 1)); renameSync(t, f); };
 
 const real = (p) => { let q = p; const rest = []; for (let i = 0; i < 40; i++) { try { return [realpathSync(q), ...rest.reverse()].join('/').replace(/\/\//g, '/'); } catch { const b = basename(q); if (!b || dirname(q) === q) break; rest.push(b); q = dirname(q); } } return p; };
-export const norm = (p) => real(p.replace(/^~(?=\/|$)/, H).replace(/\/+/g, '/').replace(/\/$/, '')).replace(/\/$/, '');
+export const norm = (p) => { if (!String(p).trim()) throw new Error('empty path'); return real(resolve(p.replace(/^~(?=\/|$)/, H))).replace(/\/$/, ''); }; // resolve(): absolute, no . or .. left in a not-yet-existing suffix
 export const overlaps = (a, b) => { a = norm(a); b = norm(b); return a === b || a.startsWith(b + '/') || b.startsWith(a + '/'); };
 
 async function mutate(fn) { return withLock(FILE + '.lock', async () => { const now = Date.now(); const cl = readJson(FILE, []).filter((c) => c.expires > now); const r = fn(cl, now); writeJsonAtomic(FILE, cl); return r; }); }
@@ -61,7 +63,7 @@ if (isMain) {
   const USAGE = 'usage: lane-claims.mjs claim <lane> <path...> [--ttl-h N] | release <lane> | list | check <lane> <path> | owner <path>';
   const [cmd, ...a] = process.argv.slice(2);
   const ti = a.indexOf('--ttl-h'); const ttl = ti >= 0 ? Number(a.splice(ti, 2)[1]) : 12;
-  if (!(ttl > 0)) { console.error('--ttl-h needs a positive number'); process.exit(2); }
+  if (!(Number.isFinite(ttl) && ttl > 0)) { console.error('--ttl-h needs a positive number'); process.exit(2); }
   let r;
   try {
     if (cmd === 'claim' && a.length >= 2) r = await claim(a[0], a.slice(1), ttl);
@@ -71,5 +73,5 @@ if (isMain) {
     else if (cmd === 'check' && a.length === 2) { const o = (await owner(a[1])).filter((l) => l !== a[0]); r = { ok: o.length === 0, otherOwners: o }; }
     else { console.error(USAGE); process.exit(2); }
   } catch (e) { console.error(String(e.message || e)); process.exit(3); }
-  console.log(JSON.stringify(r)); process.exit(r && r.ok === false ? 1 : 0);
+  console.log(JSON.stringify(r)); process.exitCode = r && r.ok === false ? 1 : 0;
 }

@@ -120,6 +120,21 @@ describe('lane-claims: realpath', () => {
   });
 });
 
+describe('lane-claims: output-review fixes (r2)', () => {
+  it('dot-dot in a not-yet-existing suffix is resolved before comparing', () => {
+    const { dir, reg } = fx();
+    cli(reg, 'claim', 'L1', path.join(dir, 'a'));
+    expect(cli(reg, 'claim', 'L2', path.join(dir, 'nope/../a/b')).status).toBe(1);
+  });
+  it('a missing registry directory is created; an empty path and a non-finite ttl are refused', () => {
+    const { dir } = fx();
+    const reg = path.join(dir, 'new/dir/lanes.json');
+    expect(cli(reg, 'claim', 'L1', path.join(dir, 'a')).status).toBe(0);
+    expect(cli(reg, 'claim', 'L2', '').status).toBe(3);
+    expect(cli(reg, 'claim', 'L2', path.join(dir, 'foo'), '--ttl-h', 'Infinity').status).toBe(2);
+  });
+});
+
 describe('lane-claims: lock and registry safety', () => {
   it('a lock held by a dead process is reclaimed, not waited on', () => {
     const { dir, reg } = fx();

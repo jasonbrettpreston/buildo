@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-INFRA5'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:00:00Z'
+updated_date: '2026-11-19T14:08:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -85,4 +85,6 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): CHANGED: pack-cache half DROPPED from this task (its only reader was the retired scratch run-panel; INFRA.1 merged, see task-9). Claims-registry half stays: ~/.claude/hooks/lane-guard.mjs:111-128 (B5) reads the claims, and per-lane worktrees from backlog-lane.mjs (R8e 4e8c498a4, backlog-lane.mjs:6) isolate git writes only, not the lane dirs under ~/Buildo-scratch. Build in the repo per MORNING-DECISIONS.md:744 and :751 (lane-guard hook moves into scripts/hooks). Not DROPPED: no operator ruling names it. Scope now: a small repo claims module (claim, overlap refusal incl. symlink paths (finding GD-1), release, expiry) that the lane-guard hook in scripts/hooks reads; tests first.
 
 2026-11-19 taken on the board at lane launch (lane BL-INFRA5, worktree /Users/brettpreston_macmini/Buildo-wt-infra5, branch wf1/inc1a-infra5), RR-0240
+
+2026-11-19 lane BL-INFRA5: module scripts/analysis/lane-claims.mjs landed (commit eb57bad40) and output-review fixes (r2: lexical resolve of not-yet-existing suffix, registry dir created, finite ttl, lock deadline). Registry path env LANES_FILE, default ~/Buildo-scratch/panel-tools/lanes.json. Advisory single-host lock; hook switch is the orchestrator's step after the push.
 <!-- SECTION:NOTES:END -->
