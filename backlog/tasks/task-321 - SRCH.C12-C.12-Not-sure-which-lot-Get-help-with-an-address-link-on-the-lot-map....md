@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-C12'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:28:00Z'
+updated_date: '2026-11-19T20:31:00Z'
 labels:
   - S
   - plan:SRCH.C12
@@ -47,6 +47,7 @@ Estimate: UNMEASURED
 Plan text at the snapshot: NEW: panel + build pass owed; needs the operator support inbox address (LS.6)
 who (plan text): lane
 element ids delivered: B.7, C.12
+Files: .cursor/MCFRONTEND-QUEUE.md, mobile/app/(app)/parcel-tool/disambiguate.tsx, mobile/src/components/surfaces/LotMapBinding.tsx, mobile/src/constants/lotMap.ts, mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json, src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map/, src/tests/surfaces/lot-map-help-link.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts, docs/reports/reviews/task-321/, docs/reports/lanes/2026-11-19/BL-C12/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

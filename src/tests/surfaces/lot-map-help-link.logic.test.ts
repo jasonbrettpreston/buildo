@@ -6,8 +6,7 @@
 //   C.12  "Not sure which lot? Get help with an address" under the cards of the multi-lot state (choose-lot.html:279);
 //   B.7   "Get help with an address" under each of the three address-confusion notices (choose-lot-states.html:267, :278, :289):
 //         intersection, no lot linked, many lots.
-// Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with topic wrong-lot (v8's route
-// /help?topic=wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+// Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
 // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -38,7 +37,9 @@ const allByTestId = (n: Json, id: string): Json[] => [
 /** The children of the page column of a golden. */
 const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')[0]!.children as Json[];
 const HELP = 'parcel-lotmap-help';
-const OPEN_HELP = { action: 'open_help', topic: 'wrong-lot', q: { derived: 'query' } };
+// The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+// the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
+const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
 
 describe('SRCH.C12: the two v8 strings', () => {
   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
@@ -48,7 +49,7 @@ describe('SRCH.C12: the two v8 strings', () => {
 });
 
 describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get help with an address"', () => {
-  it.each(WITH_ROW)('%s: after the Continue button, one row: the prompt text and the link button to Help with topic wrong-lot', (name) => {
+  it.each(WITH_ROW)('%s: after the Continue button, one row: the prompt text and the link button to Help with topic lot_match', (name) => {
     const col = column(golden(name));
     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
     expect(at).toBeGreaterThan(-1);
@@ -61,7 +62,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get 
     expect(link!.component).toBe('Button');
     expect(link!.props.testID).toBe(HELP);
     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
-    expect(link!.props.onPress).toEqual(OPEN_HELP);
+    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
   });
@@ -76,7 +77,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
     expect(link.component).toBe('Button');
     expect(link.props.testID).toBe(HELP);
     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
-    expect(link.props.onPress).toEqual(OPEN_HELP);
+    expect(link.props.onPress).toEqual(openHelp('address_match'));
     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
@@ -111,7 +112,9 @@ describe('SRCH.C12: the dated note on the parent queue row (M-246, prior text ke
   it('MF-53 carries a 2026-11-19 note quoting RR-0299 and keeps the earlier notes', () => {
     expect(row).toContain('Dated note 2026-11-19 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-C12, task-321 SRCH.C12');
     expect(row).toContain('C12 - is a fake email address until launch');
-    expect(row).toContain('/help?topic=wrong-lot');
+    expect(row).toContain('Dated note 2026-11-19 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-C12, task-321 follow-up: Help topics');
+    expect(row).toContain('topic lot_match');
+    expect(row).toContain('topic address_match');
     expect(row).toContain('Dated note 2026-11-19 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-LOTCARD');
   });
 });

@@ -93,22 +93,22 @@ const unlinkedNotice = (): PropsNode =>
     ]),
   ]);
 
-/** SRCH.C12 / B.7: the v8 link to Help & Support, topic wrong-lot (/help?topic=wrong-lot), prefilled with the typed query (the existing action open_help). */
-const helpLink = (): PropsNode =>
+/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). */
+const helpLink = (topic: 'lot_match' | 'address_match'): PropsNode =>
   node('Button', {
     key: 'help',
     testID: 'parcel-lotmap-help',
     variant: 'link',
     className: L.helpLink,
     accessibilityRole: 'link',
-    onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('query') },
+    onPress: { action: 'open_help', topic, q: derived('query') },
   }, [node('Text', { key: 'help-text', className: L.helpLinkText }, [content('help.address.link')])]);
 
 /** C.12: "Not sure which lot? Get help with an address" (choose-lot.html:279). */
 const helpRow = (): PropsNode =>
   node('View', { key: 'help-row', testID: 'parcel-lotmap-help-row', className: L.helpRow }, [
     node('Text', { key: 'help-prompt', className: L.helpPrompt }, [content('help.lot.prompt')]),
-    helpLink(),
+    helpLink('lot_match'),
   ]);
 
 const polygon = (key: string, coords: string, holes: string, stroke: string, fill: string, width: number, parcelPath: string): PropsNode =>
@@ -222,13 +222,13 @@ const body = (s: LotMapSituation): PropsNode[] => {
     case 'error':
       return errorNotices(s);
     case 'intersection':
-      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink()];
+      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink('address_match')];
     case 'too_many_lots':
-      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink()];
+      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink('address_match')];
     case 'unlinked_no_pin':
-      return [unlinkedNotice(), helpLink()];
+      return [unlinkedNotice(), helpLink('address_match')];
     case 'unlinked':
-      return [unlinkedNotice(), helpLink(), ...mapView(s)];
+      return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];
     case 'multi_parcel':
       return [
         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [
