@@ -3,11 +3,11 @@ id: TASK-320
 title: >-
   SRCH.A6 A.6 reports-left line on the app search page ("6 of 10 reports left
   until 9...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-A6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:13:00Z'
+updated_date: '2026-11-19T20:52:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -82,4 +82,6 @@ element ids delivered: A.6
 Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-320 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
 
 2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-340 (A.6 and the web checkout); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
+
+2026-11-19 taken on the board at lane launch (lane BL-A6, worktree /Users/brettpreston_macmini/Buildo-wt-a6, branch wf1/inc1b-a6), RR-0240
 <!-- SECTION:NOTES:END -->
