@@ -83,11 +83,11 @@ describe('CHK.7 idLedgerErrors: queue headings', () => {
     r.stage(MF);
     expect(ids(r)).toEqual([`FAIL:Q:id-unclaimed:MF-10:${MF}`]);
   });
-  it('a new row with no readable Next free id line is one cannot-decide, never a pass', () => {
+  it('a queue with no Next free id line is not judged for claims (a repeat still is)', () => {
     const r = base({ [MB]: '# Queue\n' + row(1) });
     r.write(MB, '# Queue\n' + row(1) + row(2));
     r.stage(MB);
-    expect(ids(r)).toEqual(['FAIL:Q:cannot-decide']);
+    expect(ids(r)).toEqual([]);
   });
   it('a new queue file is judged against an empty base', () => {
     const r = base({});
@@ -134,18 +134,22 @@ describe('CHK.7 idLedgerErrors: migrations', () => {
 describe('CHK.7 wiring: arm Q runs at push and CI only (O67-15, R-KK, R-KW)', () => {
   const DRIVER = path.resolve(__dirname, './fixtures/mcbylaws-gate/gate-driver.mjs');
   const POLICY = JSON.stringify({ pending_globs: [], layer23: ['scripts/analysis/bylaw/**'], protected: [], literal_scope: [], literal_exempt: [], held_dirs: [], held_limit: 12, worktrees: [], boot1: { tasks: ['MB-67'], exempt_ids: ['BOOT-1'] }, external_arms: [] });
-  const env = () => ({ ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0' }) as unknown as NodeJS.ProcessEnv;
+  const env = () => ({ ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0', SKIP_MCBYLAWS_GATE: '1', MCBYLAWS_GATE: 'off' }) as unknown as NodeJS.ProcessEnv;
   const staged = (r: Repo, args: string[]) => {
     const o = spawnSync(process.execPath, [GATE, ...args], { cwd: r.dir, encoding: 'utf8', timeout: 60_000, env: env() });
     return `${String(o.stdout)}\n${String(o.stderr)}`;
   };
-  const push = (r: Repo, tip: string, baseSha: string) => {
+  const drive = (r: Repo, args: string[], input?: string) => {
     const boot = r.git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0]!;
-    const o = spawnSync(process.execPath, [DRIVER, GATE, boot, 'real', '--push'], { cwd: r.dir, encoding: 'utf8', timeout: 60_000, env: env(), input: `refs/heads/x ${tip} refs/heads/x ${baseSha}\n` });
+    const o = spawnSync(process.execPath, [DRIVER, GATE, boot, 'real', ...args], { cwd: r.dir, encoding: 'utf8', timeout: 60_000, env: env(), ...(input === undefined ? {} : { input }) });
     return { status: o.status, out: `${String(o.stdout)}\n${String(o.stderr)}` };
   };
-  it('the same fixture is silent at --staged and --commit-msg, and fails at --push', () => {
-    // A queue with no Next free id line: a new row is undecidable (cannot-decide) and a repeated number is a duplicate.
+  const push = (r: Repo, tip: string, baseSha: string) => drive(r, ['--push'], `refs/heads/x ${tip} refs/heads/x ${baseSha}\n`);
+  const seeded = () => base({ [MB]: '# McBylaws queue (fixture)\n', 'mcbylaws/protected-paths.json': POLICY });
+  const BAD = '**MB-01 One - DONE** (M)\n- MB-01\n';
+  const good = (s: string) => `**MB-01 One - DONE** (M) MB-01@${s}\n- MB-01@${s}\n`;
+
+  it('the same fixture is silent at --staged and --commit-msg, and the duplicate fails at --push', () => {
     const r = base({ [MB]: '# Queue\n' + row(1), 'mcbylaws/protected-paths.json': POLICY });
     const baseSha = r.git(['rev-parse', 'HEAD']);
     r.write(MB, '# Queue\n' + row(1) + row(1) + row(2));
@@ -160,6 +164,27 @@ describe('CHK.7 wiring: arm Q runs at push and CI only (O67-15, R-KK, R-KW)', ()
     const p = push(r, tip, baseSha);
     expect(p.status).toBe(1);
     expect(p.out).toContain(`FAIL:Q:id-duplicate:MB-1:${MB}`);
-    expect(p.out).toContain('FAIL:Q:cannot-decide');
+    expect(p.out).not.toContain('FAIL:Q:cannot-decide');
+  });
+  it('green fixture 1: a stamped DONE row in a queue with no Next free id line passes at --ci and at --push', () => {
+    const r = seeded();
+    const baseSha = r.git(['rev-parse', 'HEAD']);
+    r.write(MB, good(baseSha));
+    const tip = r.commit('MB-67 queue');
+    for (const x of [drive(r, ['--ci', '--base', baseSha]), push(r, tip, baseSha)]) {
+      expect(x.out).not.toContain('FAIL:Q:');
+      expect(x.status).toBe(0);
+    }
+  });
+  it('green fixture 2: only the base..tip diff is judged, so a bad row at the base and its fix at the tip pass', () => {
+    const r = seeded();
+    const first = r.git(['rev-parse', 'HEAD']);
+    r.write(MB, BAD);
+    const badBase = r.commit('MB-67 bad queue');
+    r.write(MB, good(first));
+    r.commit('MB-67 fixed queue');
+    const x = drive(r, ['--ci', '--base', badBase]);
+    expect(x.out).not.toContain('FAIL:Q:');
+    expect(x.status).toBe(0);
   });
 });

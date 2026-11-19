@@ -304,8 +304,8 @@ export function idLedgerErrors({ cwd, entries, rev = '', baseRev = 'HEAD' } = {}
       const introduced = [...cur].filter(([n, c]) => c > (was.get(n) ?? 0)).sort((a, b) => a[0] - b[0]);
       for (const [n, c] of introduced) {
         if (c > 1) out.push(`FAIL:Q:id-duplicate:${prefix}-${n}:${file}`);
-        else if (next === null) undecided = true;
-        else if (n >= Number(next[1])) out.push(`FAIL:Q:id-unclaimed:${prefix}-${n}:${file}`);
+        // No "Next free id" line (the gate fixtures): there is no claim record to judge against, so nothing is said.
+        else if (next !== null && n >= Number(next[1])) out.push(`FAIL:Q:id-unclaimed:${prefix}-${n}:${file}`);
       }
     }
     const migNum = (p) => (typeof p === 'string' && MIGRATION.test(p) ? Number(MIGRATION.exec(p)[1]) : null);

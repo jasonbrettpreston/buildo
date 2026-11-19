@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-CHK7'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:33:00Z'
+updated_date: '2026-11-19T14:50:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -102,6 +102,10 @@ AC1 not checked: the brief commits the pre-registration with the work, not alone
 2026-11-19 correction (station suite failure on src/tests/mcbylaws-gate.logic.test.ts 'arm Q does not run at commit time'): the CHK.7 id-ledger check is arm Q, so it runs at push and CI only (O67-15, R-KK, R-KW), not at --staged or --commit-msg. The brief's 'pre-commit only' reading was wrong; the call moves from staged() to the push/CI arm.
 
 CHK.7 now runs at push and CI (arm Q) only; header comment of mcbylaws-queue-check.mjs updated; the earlier 'pre-commit only' wording is superseded.
+
+2026-11-19 second station failure (mcbylaws-gate.logic.test.ts arm Q green fixtures, exit 1 at --push and --ci): the fixture queues have no Next free id line, so the CHK.7 cannot-decide became a FAIL. A queue without that line is now not judged for claims; two fixture shapes are cases in mcbylaws-id-ledger.logic.test.ts.
+
+Fix: idLedgerErrors skips the unclaimed judgement when the queue has no Next free id line (no cannot-decide, no WARN); duplicates are still judged.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
