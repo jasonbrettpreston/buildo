@@ -239,8 +239,10 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
 // MF-62 follow-up · the search placeholder (operator 2026-11-11, small pages v7.1 item 9, verbatim: "inside the search box - should be enter lot
 // address"; and 14:54 "app search placeholder is lot address?"). Supersedes "Search Toronto address..." (ruling 2026-11-09 item 1). Content only:
 // the MF-35 search binding reads the key; the generated slice carries it.
-describe('the search placeholder (small pages v7.1 item 9)', () => {
+// Dated note 2026-11-19 (RR-0313, MORNING-DECISIONS.md:1216, operator verbatim: "c. can't we put in the search box. Enter a Toronto address"; task-356):
+// the placeholder now reads "Enter a Toronto address", replacing "Enter lot address" (above, kept). The outside-Toronto notice stays (RR-0314, "yes.").
+describe('the search placeholder (small pages v7.1 item 9; RR-0313)', () => {
   it('the content key search.input.placeholder holds the ruled text verbatim', () => {
-    expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter lot address');
+    expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter a Toronto address');
   });
 });

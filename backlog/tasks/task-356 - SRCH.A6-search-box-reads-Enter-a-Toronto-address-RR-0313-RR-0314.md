@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-BOX'
 created_date: '2026-11-19T22:02:00Z'
-updated_date: '2026-11-19T22:18:00Z'
+updated_date: '2026-11-19T22:19:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -85,6 +85,17 @@ Files: scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1+AC2: change the pin in mobile/__tests__/parcelScreens.golden.test.ts:239-244 to 'Enter a Toronto address' (dated comment citing RR-0313), stage with task file, prove red through the pre-commit related run (red.out).
+2. AC1: edit search.input.placeholder in F01 mobile_parcel_search.content.json:17 (one line).
+3. AC4+AC5: regenerate by their own scripts once: emit-mobile-surfaces.mjs --write, search-golden-capture.ts --write, buildGoldens one-line tsx caller; confirm only fingerprint lines move in goldens.
+4. AC3: append a clause to INTENTIONALLY_CHANGED in parcel-legacy-oracle.logic.test.ts:25 keeping the earlier clause; dated notes in Spec 100 and MF-35 queue row (prior text kept).
+5. Output review round on the diff, TRIAGE.md, fold KEPT; green landing commit through the real hooks (commit.out); checks AFTER; typecheck.
+6. AC6: report names the v8 departure (search.html:265,:278,:318) and the scratch design source still to change; loose end on task-343; reports into docs/reports/lanes/2026-11-19/BL-BOX/.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
