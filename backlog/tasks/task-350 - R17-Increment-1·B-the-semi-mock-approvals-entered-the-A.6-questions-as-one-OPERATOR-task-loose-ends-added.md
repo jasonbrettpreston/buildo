@@ -3,11 +3,11 @@ id: TASK-350
 title: >-
   R17 Increment 1·B: the semi mock approvals entered; the A.6 questions as one
   OPERATOR task; loose ends added
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R17'
 created_date: '2026-11-19T21:24:00Z'
-updated_date: '2026-11-19T21:34:00Z'
+updated_date: '2026-11-19T21:35:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -57,3 +57,9 @@ Scope now: record-only. (1) Enter through G2 the operator's two semi mock approv
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R17, worktree /Users/brettpreston_macmini/Buildo-wt-r17, branch wf2/inc1b-r17), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in a02ba26ba (hooks: GATE OK, POLICY CHECKS OK): decision-93 (RR-0308), decision-94 (RR-0309), decision-95 (RR-0310); task-351 (build, LATER) for the Toronto-time reset label; OPERATOR task-352 with three design questions; 13 loose-end lines plus header on task-343 (18 unowned); backlog doctor clean; review r1 triaged.
+<!-- SECTION:FINAL_SUMMARY:END -->

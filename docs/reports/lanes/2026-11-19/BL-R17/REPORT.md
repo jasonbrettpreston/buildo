@@ -45,3 +45,5 @@ New count of unowned lines: 18 now read `tied up by: NONE` (10 before, 8 added; 
 
 ## UNVERIFIED
 1. Share of customers whose period end is in the Toronto-evening band (no database). 2. Live presence of the three allowance settings. 3. Hermes Intl behaviour (not needed under option C). 4. Sizes in task-351 and task-352 (GUESS). 5. The three task-352 recommendations (r1 read pasted text only). 6. Whether the web gate behaves after the switch flips. 7. Location of the inc-1 answer key for the 25 lots.
+
+Commit: a02ba26ba (hook tail in commit.out: GATE OK; POLICY CHECKS OK (commit-msg): 0 file(s)).
