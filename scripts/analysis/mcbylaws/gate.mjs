@@ -261,13 +261,11 @@ function staged(cwd) {
   if (!res.ok) return ['FAIL:H:cannot-decide'];
   const { policy } = res;
   const paths = allPaths(entries);
-  // CHK.7 (task-4): ids this staged diff introduces have a repo claim and no number repeats (queue rows, migrations).
-  const idLines = idLedgerErrors({ cwd, entries });
   // Fast path: nothing staged is Layer 2/3, in literal scope or in DB scope, and no glob list needs the tree.
   const touches = paths.some((p) => { const c = classify(policy, p); return c.layer23 || c.literalScope || isDbScopePath(p) || isFrontend(policy, p); });
-  if (!touches) return idLines;
+  if (!touches) return [];
   const tracked = listTracked(cwd, 'HEAD');
-  if (tracked === null) return ['FAIL:H:cannot-decide', ...idLines];
+  if (tracked === null) return ['FAIL:H:cannot-decide'];
   // O67-12: a deleted path has no worktree file and a rename's OLD path is gone too; scan the live paths only.
   const live = entries.filter((e) => e.status !== 'D').map((e) => e.path);
   const scope = live.filter((p) => classify(policy, p).literalScope);
@@ -280,7 +278,6 @@ function staged(cwd) {
     ...dbLines(cwd, '', db),
     ...deadScopeLines(policy, tracked),
     ...externalArmLines(cwd, policy, 'commit'),
-    ...idLines,
   ];
 }
 
@@ -483,6 +480,7 @@ function summaryInput({ cwd, refs, ci, ctx }) {
     arms.push(...rangeArms({ cwd, base: b, tip: r.localSha, policy, pre }));
     arms.push(...externalArmLines(cwd, res.policy, ci ? 'ci' : 'push', b, r.localSha));
     arms.push(...queueCheck({ cwd, rev: r.localSha }));
+    arms.push(...idLedgerLines(cwd, b, r.localSha));
     arms.push(...frontendQueueLines(cwd, b, r.localSha, res.policy));
     // S2: the tip's copy of the policy may not raise held_limit above the base copy's.
     let tipLimit = res.policy.held_limit;
@@ -505,6 +503,18 @@ function summaryInput({ cwd, refs, ci, ctx }) {
     refs: out, policy: policy || {}, basePolicy, held, worktrees, ci, writeFull,
     pending: now === null ? { now: null, was: null } : { now, was: now }, armVerdicts: arms,
   };
+}
+
+/** CHK.7 (task-4), arm Q (push and CI only; O67-15, R-KK, R-KW): ids the range base..tip introduces have a claim and no number repeats. */
+function idLedgerLines(cwd, base, tip) {
+  try {
+    const diff = git(cwd, ['diff', '--name-status', '-z', '-M', base, tip]);
+    if (diff.status !== 0) return [CANNOT];
+    const entries = parseNameStatusZ(diff.stdout);
+    return entries === null ? [CANNOT] : idLedgerErrors({ cwd, entries, rev: tip, baseRev: base });
+  } catch {
+    return [CANNOT];
+  }
 }
 
 /**

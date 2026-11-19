@@ -5,6 +5,7 @@
 // Red first: idLedgerErrors does not exist yet. Prose, dated notes and fenced lines are never read as introduced ids.
 
 import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { makeRepo, type Repo } from './fixtures/mcbylaws-gate/repo-helper';
@@ -130,17 +131,35 @@ describe('CHK.7 idLedgerErrors: migrations', () => {
   });
 });
 
-describe('CHK.7 wiring: gate.mjs --staged calls it', () => {
-  it('a staged repeated queue number fails the pre-commit gate with the id line', () => {
-    const r = base({
-      [MB]: head(5, row(1)),
-      'mcbylaws/protected-paths.json': JSON.stringify({ pending_globs: [], layer23: ['scripts/analysis/bylaw/**'], protected: [], literal_scope: [], literal_exempt: [], held_dirs: [], held_limit: 12, worktrees: [], boot1: { tasks: ['MB-67'], exempt_ids: ['BOOT-1'] }, external_arms: [] }),
-    });
-    r.write(MB, head(5, row(1) + row(1)));
+describe('CHK.7 wiring: arm Q runs at push and CI only (O67-15, R-KK, R-KW)', () => {
+  const DRIVER = path.resolve(__dirname, './fixtures/mcbylaws-gate/gate-driver.mjs');
+  const POLICY = JSON.stringify({ pending_globs: [], layer23: ['scripts/analysis/bylaw/**'], protected: [], literal_scope: [], literal_exempt: [], held_dirs: [], held_limit: 12, worktrees: [], boot1: { tasks: ['MB-67'], exempt_ids: ['BOOT-1'] }, external_arms: [] });
+  const env = () => ({ ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))), GIT_CONFIG_GLOBAL: '/dev/null', HUSKY: '0' }) as unknown as NodeJS.ProcessEnv;
+  const staged = (r: Repo, args: string[]) => {
+    const o = spawnSync(process.execPath, [GATE, ...args], { cwd: r.dir, encoding: 'utf8', timeout: 60_000, env: env() });
+    return `${String(o.stdout)}\n${String(o.stderr)}`;
+  };
+  const push = (r: Repo, tip: string, baseSha: string) => {
+    const boot = r.git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0]!;
+    const o = spawnSync(process.execPath, [DRIVER, GATE, boot, 'real', '--push'], { cwd: r.dir, encoding: 'utf8', timeout: 60_000, env: env(), input: `refs/heads/x ${tip} refs/heads/x ${baseSha}\n` });
+    return { status: o.status, out: `${String(o.stdout)}\n${String(o.stderr)}` };
+  };
+  it('the same fixture is silent at --staged and --commit-msg, and fails at --push', () => {
+    // A queue with no Next free id line: a new row is undecidable (cannot-decide) and a repeated number is a duplicate.
+    const r = base({ [MB]: '# Queue\n' + row(1), 'mcbylaws/protected-paths.json': POLICY });
+    const baseSha = r.git(['rev-parse', 'HEAD']);
+    r.write(MB, '# Queue\n' + row(1) + row(1) + row(2));
     r.stage(MB);
-    const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_'))) as Record<string, string>;
-    const out = spawnSync(process.execPath, [GATE, '--staged'], { cwd: r.dir, encoding: 'utf8', timeout: 60_000, env: { ...env, GIT_CONFIG_GLOBAL: '/dev/null' } as unknown as NodeJS.ProcessEnv });
-    expect(out.status).toBe(1);
-    expect(String(out.stdout)).toContain(`FAIL:Q:id-duplicate:MB-1:${MB}`);
+    const s = staged(r, ['--staged']);
+    expect(s).not.toContain('FAIL:Q:id-');
+    expect(s).not.toContain('FAIL:Q:cannot-decide');
+    const msg = path.join(r.dir, '.git', 'COMMIT_EDITMSG');
+    fs.writeFileSync(msg, 'MB-67 queue\n');
+    expect(staged(r, ['--commit-msg', msg])).not.toContain('FAIL:Q:');
+    const tip = r.commit('MB-67 queue');
+    const p = push(r, tip, baseSha);
+    expect(p.status).toBe(1);
+    expect(p.out).toContain(`FAIL:Q:id-duplicate:MB-1:${MB}`);
+    expect(p.out).toContain('FAIL:Q:cannot-decide');
   });
 });

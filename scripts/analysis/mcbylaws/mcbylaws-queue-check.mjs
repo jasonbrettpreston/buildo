@@ -10,7 +10,7 @@
 // MF-24a (docs/specs/02-web-admin/128_surface_standard_policy.md §4.11 item 7, dated note 2026-11-06; D-9 b, operator
 // "yes. proceed"): every function takes an optional `{queuePath, prefix}`; the defaults are the McBylaws queue and `MB`, so
 // every McBylaws call and verdict is unchanged. The McFrontend queue is `MF_QUEUE_PATH` with prefix `MF`.
-// CHK.7 (task-4): idLedgerErrors, the staged-diff ID check. Ids it recognises: MB-nn and MF-nn queue headings and migration numbers (see the
+// CHK.7 (task-4): idLedgerErrors, the push/CI ID check (arm Q). Ids it recognises: MB-nn and MF-nn queue headings and migration numbers (see the
 //            block above the function); the local ID ledger is never read, card ids have no repo claim record.
 
 import { git, listTracked, pathExistsAt, readAt } from './git-util.mjs';
@@ -248,12 +248,13 @@ export function queueCheck({ cwd, rev, queuePath, prefix } = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-// CHK.7 (task-4, lane BL-CHK7; re-use ruling MORNING-DECISIONS.md:750-751): ids a STAGED diff introduces have a repo claim and no
+// CHK.7 (task-4, lane BL-CHK7; re-use ruling MORNING-DECISIONS.md:750-751): ids a pushed range introduces have a repo claim and no
 // number repeats. Ids recognised: MB-nn and MF-nn (a queue HEADING `**MB-nn` added by the diff, never an id in prose, a dated note or
 // a fenced block) and migration numbers (a new `migrations/NNN_*.sql`). Claim records read: the queue's "Next free id" line (Spec 137
 // §2 notes: "the one tools read") and the queue rows that name a migration. The ID ledger itself is LOCAL (`~/Buildo-scratch/ids`,
-// Spec 137 §2) and is never read by a hook; card ids (CARD-*) have no repo claim record, so they are not checked here. Judged on the
-// index against HEAD (the pre-commit `gate.mjs --staged`), so an old duplicate the diff does not touch is never judged.
+// Spec 137 §2) and is never read by a hook; card ids (CARD-*) have no repo claim record, so they are not checked here. Arm Q runs at push and CI only
+// (O67-15, R-KK, R-KW): gate.mjs calls this in the push/CI arm with `entries` = the range diff, `rev` = the tip and `baseRev` = the base;
+// never at `--staged` or `--commit-msg`. An old duplicate the diff does not touch is never judged.
 // One FAIL line per id: `FAIL:Q:id-<duplicate|unclaimed|no-row>:<id>:<file>`; anything undecidable is one `cannot-decide`.
 // ---------------------------------------------------------------------------------------------------------------------------
 const ID_QUEUES = [
@@ -279,24 +280,25 @@ function headingCounts(text, prefix) {
 }
 
 /**
- * (CHK.7): `entries` = parsed `git diff --cached --name-status -z` of the commit. Reads the index and HEAD; never throws.
+ * (CHK.7): `entries` = parsed `git diff --name-status -z -M` of the range (default: the staged diff, rev '' = index, baseRev HEAD). Reads `rev` and `baseRev`; never throws.
  * A queue heading whose count rose is introduced: more than one of its number is `id-duplicate`; a number at or above the queue's
  * "Next free id" is `id-unclaimed`. An added migration is `id-duplicate` when another tracked file holds its number, and `id-no-row`
  * when no queue line names it.
  */
-export function idLedgerErrors({ cwd, entries } = {}) {
+/** @param {{cwd?: string, entries?: Array<{status: string, path: string, oldPath: string|null}>|null, rev?: string, baseRev?: string}} [args] */
+export function idLedgerErrors({ cwd, entries, rev = '', baseRev = 'HEAD' } = {}) {
   try {
     if (!Array.isArray(entries)) return [CANNOT];
     const out = [];
     let undecided = false;
     for (const { path: file, prefix } of ID_QUEUES) {
       if (!entries.some((e) => e.path === file && e.status !== 'D')) continue;
-      const now = readAt(cwd, '', file);
+      const now = readAt(cwd, rev, file);
       if (now === null) {
         undecided = true;
         continue;
       }
-      const was = headingCounts(readAt(cwd, 'HEAD', file) ?? '', prefix);
+      const was = headingCounts(readAt(cwd, baseRev, file) ?? '', prefix);
       const cur = headingCounts(now, prefix);
       const next = new RegExp(`Next free id:\\s*\\*\\*${prefix}-(\\d+)\\*\\*`).exec(now);
       const introduced = [...cur].filter(([n, c]) => c > (was.get(n) ?? 0)).sort((a, b) => a[0] - b[0]);
@@ -310,9 +312,9 @@ export function idLedgerErrors({ cwd, entries } = {}) {
     // A new file, or a rename/copy onto a number the old path did not carry (OUTPUT review r2: a rename must not dodge the check).
     const added = entries.filter((e) => migNum(e.path) !== null && (e.status === 'A' || ((e.status === 'R' || e.status === 'C') && migNum(e.oldPath) !== migNum(e.path))));
     if (added.length > 0) {
-      const tracked = listTracked(cwd, '');
+      const tracked = listTracked(cwd, rev);
       if (tracked === null) return [...out, CANNOT];
-      const queueText = ID_QUEUES.map((x) => readAt(cwd, '', x.path) ?? '').join('\n');
+      const queueText = ID_QUEUES.map((x) => readAt(cwd, rev, x.path) ?? '').join('\n');
       for (const { path: file } of added) {
         const n = Number(MIGRATION.exec(file)[1]);
         const held = tracked.some((p) => p !== file && MIGRATION.test(p) && Number(MIGRATION.exec(p)[1]) === n);

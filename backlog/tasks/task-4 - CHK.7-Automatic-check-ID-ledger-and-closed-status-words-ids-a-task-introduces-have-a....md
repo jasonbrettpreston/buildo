@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-CHK7'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:11:00Z'
+updated_date: '2026-11-19T14:33:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -98,6 +98,10 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-4 · Backlog; ope
 CHK.7 output review r2 triaged (docs/reports/lanes/2026-11-19/BL-CHK7/TRIAGE.md); fix commit for K6, K7.
 
 AC1 not checked: the brief commits the pre-registration with the work, not alone. AC8 not applicable: no McFrontend build. Closed-status-word half dropped by the R9 note.
+
+2026-11-19 correction (station suite failure on src/tests/mcbylaws-gate.logic.test.ts 'arm Q does not run at commit time'): the CHK.7 id-ledger check is arm Q, so it runs at push and CI only (O67-15, R-KK, R-KW), not at --staged or --commit-msg. The brief's 'pre-commit only' reading was wrong; the call moves from staged() to the push/CI arm.
+
+CHK.7 now runs at push and CI (arm Q) only; header comment of mcbylaws-queue-check.mjs updated; the earlier 'pre-commit only' wording is superseded.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
