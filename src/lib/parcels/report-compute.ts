@@ -14,6 +14,7 @@
 // Null = a miss: the switch is off, no such parcel, no Layer 2 stamp for the lot, no batch row for it. A thrown query or a core error propagates (the
 // route's error boundary makes it a 500 with no page and no meter); it is never read as a miss. No process cache: config and lookups are read per request.
 // Server only: no meter, no entitlement, no usage, no user id, no write.
+// Integrated with the board head (2026-11-19, merge ba7953933): the related run of the merge commit re-proves C1 to C9 on that head.
 import { pool } from '@/lib/db/client';
 import { pageForVerdict } from '@/lib/parcels/report-page';
 import { projectStoredPage, type StoredRow } from '@/lib/report-projection/project';

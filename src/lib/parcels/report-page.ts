@@ -15,6 +15,7 @@
 // behind its own switch and import fence.
 // LOAD.1 (task-266): the lookup route asks W first and, on a miss, the one-lot compute (src/lib/parcels/report-compute.ts); that entry applies the SAME
 // miss rule through the exported pageForVerdict below (one place), so a computed lot and a stored lot are served or missed by one rule.
+// (Integrated with the board head, merge ba7953933.)
 import { pool } from '@/lib/db/client';
 import { logWarn } from '@/lib/logger';
 import { readStoredPage, type StoredPage } from '@/lib/report-projection/read-stored';

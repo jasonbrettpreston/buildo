@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-LOAD1B'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T23:04:00Z'
+updated_date: '2026-11-19T23:07:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -128,6 +128,8 @@ Dated note 2026-11-19 (lane BL-LOAD1, stage 1; prior text kept): the measured pl
 2026-11-19 (task-359, GR-6) correction to the note of 2026-11-19 (R16) above: MORNING-DECISIONS.md:704-705 do not say 'a miss in W'. :704 rules the storage and the stamp (a record with another stamp is never served and is recomputed; no record for lots nobody opened). The word miss for W is in task-123 :58 and :67 and docs/reports/lanes/2026-11-19/BL-W2/REPORT.md:5; the verified direction for LOAD.1 and the null report slot is MORNING-DECISIONS.md:1057 (task-325). Prior text kept.
 
 Dated note 2026-11-19 (M-246, prior text kept; lane BL-LOAD1B, stage 2, step 0 measured file-only, no database): (1) C8 types filter: cutting the building-types seed list to the page option types (detached_house, detached_houseplex) gives 2825 equal rows and 0 differing rows over the golden 25 (content_sha excluded: it hashes the seed list); the filtered compute takes a mean 44 ms per lot against a median 9.7 s (min 0.13 s, p90 13.6 s, max 15.9 s) for the full 325 rows (measure.out). The core has no types parameter, so the entry runs the full compute (no change to scripts/, Standard 10.2); a types option is a later task. (2) Rebuilding the core lookups per request on the golden dictionaries (108 texts, 112 units) costs 0.61 ms; at the real size (2,874 texts, 1,025 units) it is UNMEASURED. (3) fetchParcelById selects id (src/lib/admin/parcel-lookup.ts:55 lists it in the identity group), but the entry reads the lot facts through the shared stored read instead, because the batch parcels read lacks the K2 heritage and ravine columns the page binds. Gate: the existing web live switch only (decision D-1 / task-348 not ruled); the compute is dark code at landing, as W is.
+
+2026-11-19 (lane BL-LOAD1B) integrated with the board: git merge wf2/board (merge ba7953933; only task-266 and task-343 conflicted, both kept); the 15 file-only checks pass on the merged head; the related run re-proved customer-report-compute (25 tests), customer-report-read (36), parcels-lookup-page (22), parcel-lookup-gate (56) and search-routing (13).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

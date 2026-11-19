@@ -134,7 +134,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         parcelRef = String(row.parcel_id);
         // MF-48 Stage B (B-3 a): the report page view from the lot's producer response, through MF-57's core; null while no producer has the lot
         // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
-        // LOAD.1 (task-266): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
+        // LOAD.1 (task-266, integrated with the board head): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
         // live switch is off, for a lot with no Layer 2 stamp, and for no such parcel. A compute error throws to the catch below (500): no page, no meter.
         let pageResponse = await readCustomerPageResponse(parcelRef);
         if (pageResponse !== null) pageSource = 'stored';
