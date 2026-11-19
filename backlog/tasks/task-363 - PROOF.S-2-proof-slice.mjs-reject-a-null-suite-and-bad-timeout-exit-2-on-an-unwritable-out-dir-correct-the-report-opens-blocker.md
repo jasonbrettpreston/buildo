@@ -3,9 +3,11 @@ id: TASK-363
 title: >-
   PROOF.S-2 proof-slice.mjs: reject a null suite and bad timeout, exit 2 on an
   unwritable out dir, correct the report-opens blocker
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-PROOF3'
 created_date: '2026-11-19T22:30:00Z'
+updated_date: '2026-11-19T22:34:00Z'
 labels:
   - S
   - plan:PROOF.S
@@ -54,3 +56,9 @@ Files: scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json, src
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-PROOF3, worktree /Users/brettpreston_macmini/Buildo-wt-proof3, branch wf1/inc1b-proof3), RR-0240
+<!-- SECTION:NOTES:END -->
