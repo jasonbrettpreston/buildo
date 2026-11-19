@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R6'
 created_date: '2026-11-19T05:28:00Z'
-updated_date: '2026-11-19T12:05:00Z'
+updated_date: '2026-11-19T12:52:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -73,6 +73,8 @@ Rules quoted (file:line):
 2026-11-19 R6 check_active_branches measured once (build-r6/measure.out): task list --plain real 0.154 s with false and 0.123 s with true; the first rows and `task view task-305` were identical in both runs, no lane-branch variants appeared (wf2/board-move2 holds the same task files); config.yml restored to false (git status clean). Nothing depends on it (active_task.md:57).
 
 2026-11-19 R6 BOARD-STATUS decision: the repo board writes its own one-line file ~/Buildo-scratch/backlog-pilot/BOARD-STATUS-6421.txt (format `6421: <sha> <ff|WARN reason> <time>`), because auto-board.zsh rewrites BOARD-STATUS.txt wholly at every rebuild (auto-board.zsh:28-31). Logs: ~/Buildo-wt-board/.board/*.log (gitignored). Note: ff-only on a checkout that is ahead of origin with origin an ancestor reports ff (already up to date); WARN appears only when origin has moved and the branches diverged or backlog/ is dirty.
+
+2026-11-19 pushed: 181aac24b and the job commits landed on origin/wf1/mb-rulings (push fa08e8f24 12:52Z); board-ff fast-forwarded the checkout to fa08e8f24 at 07:52 local
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

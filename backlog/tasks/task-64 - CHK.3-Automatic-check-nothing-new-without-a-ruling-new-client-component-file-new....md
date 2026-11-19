@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R7a'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:09:00Z'
+updated_date: '2026-11-19T12:52:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -90,4 +90,6 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0196 · task-64 · Backlog; op
 2026-11-19 re-cut onto 957d83b88 by lane BL-R7a: commit pending (was d284e2d44 on wf1/inc1a-checks); CHK.3 tests proved by the pre-commit related-tests step; hooks passed
 
 2026-11-19 relevancy pass (R7, RR-0214): KEPT: not replaced by BL.0 (.cursor/active_task.md planNote); BUILT stays; not pushed before push 6 (MORNING-DECISIONS.md:825).
+
+2026-11-19 pushed: CHK.3 re-cut landed as 2ba07f464 on origin/wf1/mb-rulings (push fa08e8f24 12:52Z, station PASS 28244 tests)
 <!-- SECTION:NOTES:END -->
