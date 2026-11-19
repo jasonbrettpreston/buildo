@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lenses/lens-run/review-input.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10171 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19412 chars, answer 2460 chars, 30s
+Touches: entitlements and metering (a per-lot monthly usage count lifted by a client request flag); no auth, PII or admin change is visible in the pasted diff.
+
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx "const result = await fetchParcelLookup({ parcelId: id, semi: 'answered' });" — the only proof that the semi question was answered is a query flag the client sets, so any client (modified build, curl with the user's session) can call the lookup with semi=answered on a lot whose report is already produced and lift semi_pending without ever showing or answering the question, advancing the once-per-lot monthly meter — server-side: record the answer (or mint a one-use token at answer time) and lift the hold only from that record, never from a request field; the flag may stay for rendering but must not gate the count.
+
+DEFER severity=LOW — commit text "the route lifts the semi_pending hold when the flag is present, so a PRODUCED report counts once per lot per month (RR-0278)" — the only thing bounding the flag above is the once-per-lot-per-month dedupe, and a replay of the answered GET (Try again clears the error, then Continue re-fetches) relies on that dedupe being per lot-month rather than per event; cannot see the route diff to confirm — ask the route owner to state and test the idempotency key, and make the count an idempotent write keyed on session+parcel+month.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx "const id = typeof parcelId === 'string' ? parcelId : '';" — arbitrary parcelId taken from route params and sent to the lookup looks like IDOR — not introduced here: the hook already fetched the same id and authorisation lives in the route (cannot see), and the new call sends that same id, so no new object reach is granted.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx "queryClient.setQueryData(['parcel-lookup', id], result);" — writing the flagged response into the report cache looks like cache poisoning or cross-parcel leakage — the key is the same id being viewed and the value is the server's own response for that id, so no other user's or parcel's data enters the entry.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx "queryClient.setQueryData(['parcel-lookup', id], result);" — parcelId in a cache key looks like PII at rest — the key already existed for this query before this diff and the entry is in-memory React Query state, not a log or URL (persistence, if any, cannot see).
+
+VERDICT: PASS on exploitability (one deferrable MED: the semi=answered assertion is client-controlled metering input)
+Surfaces touched: entitlements
+
+---
+⏱  30285ms (30.3s)
+📊 Tokens — total: 10831, input: 5623, output: 5208, reasoning: 4570

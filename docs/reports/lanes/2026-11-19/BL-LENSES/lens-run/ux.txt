@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lenses/lens-run/review-input.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11350 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22973 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 38081 chars, answer 0 chars, 45s
+```
+BUG severity=HIGH — mobile/app/(app)/parcel-tool/semi-question.tsx:52 "if (submittingRef.current) return;" vs design "v8 draws a quiet status line without a spinner" — after the tap the page is unchanged, Continue stays enabled and still reads Continue, no quiet line appears, so the person cannot tell the answered lookup is running and a second tap is dropped in silence — fix: drive the drawn quiet loading line from a submitting state and show Continue as not pressable while the answered lookup is in flight
+BUG severity=HIGH — mobile/app/(app)/parcel-tool/semi-question.tsx:58 "router.replace(route);" — the person who taps the back chevron while the Continue request is still running is taken to the report when that request lands, a screen they had chosen to leave, because nothing on screen told them work was still in flight — fix: do not navigate once the screen is gone
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx:70 "retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); }" vs design "then one Try again button" — Try again after a failed Continue resends nothing, the person lands back on the question and must press Continue a second time for the retry the button promised — fix: when submitError is set, Try again repeats the answered lookup the person just made
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:35 "schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError" — a strict parse failure after Continue leaves the page with a banner and no Try again at all — harmless, the design draws exactly that: "The same banner, no retry (a deterministic failure; descriptor errors.classes)."
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:73 "if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);" — Try again returning to the question could be expected to drop the chosen answer — harmless, selected is never cleared, so the answered page comes back with the same radio card still chosen, as the commit claims ("the chosen answer is still there")
+DEFER severity=LOW — commit 9fea4627 message "48 px Continue, 56 px top bar with back chevron" vs design "Continue and Try again at 48 px" and "touch-target floor (44x44)" — cannot see: the pasted diff carries only semi-question.tsx, so the 48 px buttons, the 56 px bar and the full-width question heading cannot be checked against the approved mock — rationale: no code line for those layout keys exists in the material under review
+DEFER severity=LOW — design "The regenerated mock draws the back chevron, the info icon on the entitlement notice" — cannot see an accessible name for the icon-only back chevron anywhere in the pasted diff — rationale: the control lives in the renderer or binding file, neither of which is pasted
+
+VERDICT: FAIL on the person's experience
+States checked: first view with nothing chosen, answered, Continue in flight (new), error 500 after Continue, rate limited 429, entitlement 403, schema drift after Continue, Try again after a failed Continue, back chevron during the in-flight request, offline, repeat visit and back from the report   Dead ends found: 1
+```
+
+---
+⏱  58586ms (58.6s)
+📊 Tokens — total: 17803, input: 5632, output: 12171, reasoning: 11418

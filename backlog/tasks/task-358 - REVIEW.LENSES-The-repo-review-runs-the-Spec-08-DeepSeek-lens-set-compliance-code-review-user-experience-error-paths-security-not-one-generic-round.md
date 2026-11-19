@@ -3,14 +3,17 @@ id: TASK-358
 title: >-
   REVIEW.LENSES The repo review runs the Spec 08 DeepSeek lens set (compliance,
   code review, user experience, error paths, security), not one generic round
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-LENSES'
 created_date: '2026-11-19T22:07:00Z'
-updated_date: '2026-11-19T22:16:00Z'
+updated_date: '2026-11-19T22:26:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-19/BL-LENSES/REPORT.md
+  - .claude/review-templates/README.md
 type: build
 ordinal: 58012
 ---
@@ -23,9 +26,9 @@ Scope now: add the missing narrow DeepSeek lens templates to .claude/review-temp
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 five lens templates exist, each one narrow question with the strict output format of the existing template, and a README table mapping lens to Spec 08 seat
-- [ ] #2 the lane brief written by backlog-lane.mjs names the lens set for plan and for output review and the round-2 adjudication; a test pins it
-- [ ] #3 one real run of each lens on a small real diff returns findings in the format (outputs pasted)
+- [x] #1 five lens templates exist, each one narrow question with the strict output format of the existing template, and a README table mapping lens to Spec 08 seat
+- [x] #2 the lane brief written by backlog-lane.mjs names the lens set for plan and for output review and the round-2 adjudication; a test pins it
+- [x] #3 one real run of each lens on a small real diff returns findings in the format (outputs pasted)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -42,8 +45,24 @@ Scope now: add the missing narrow DeepSeek lens templates to .claude/review-temp
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Review the lane plan (one generic round: the lens set does not exist yet), triage, fold KEPT.
+2. AC1: write lens-compliance, lens-code-review, lens-ux, lens-error-paths, lens-security in .claude/review-templates/ in the form and strict output format of plan-review-deepseek.md; README gains the lens to Spec 08 seat table and the standard (parallel DeepSeek lenses, one Claude grounder round 2, verified-by wording rule).
+3. AC2: red test first in src/tests/backlog/backlog-lane.logic.test.ts pinning the lens-set review line; then change only the review line (extra) in scripts/analysis/backlog-lane.mjs to name the plan-review and output-review lens sets by task type, parallel, r1-<lens>.txt, round-2 triage. No runner code unless a flag is missing (check deepseek-review.js review --context).
+4. AC3: run each lens once for real on git show 9fea46277 -- mobile/app with the approved mock text and RR-0308/RR-0309 lines; paste outputs under lens-run/; list findings in the report, not triaged into tasks.
+5. Commit with Task: task-358, copy REPORT/TRIAGE/review output to docs/reports/lanes/2026-11-19/BL-LENSES/, add-ref, check ACs, close BUILT.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-LENSES, worktree /Users/brettpreston_macmini/Buildo-wt-lenses, branch wf1/inc1b-lenses), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Five lens templates and README table (.claude/review-templates/); lane brief names the lens set by task type (backlog-lane.mjs lensLine, 4 pinned cases); review --template runner flag added (the --context form returned 0 strict lines in 5 runs); 5 real lens runs on 9fea46277 pasted under docs/reports/lanes/2026-11-19/BL-LENSES/lens-run/, all in strict format, 64 s and 76,711 tokens per set. Red proven in red.out; commit sha in the landing commit.
+<!-- SECTION:FINAL_SUMMARY:END -->

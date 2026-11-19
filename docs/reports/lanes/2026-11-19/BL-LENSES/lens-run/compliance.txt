@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lenses/lens-run/review-input.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11682 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23266 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33922 chars, answer 1688 chars, 45s
+DEFER severity=MED — mock state 4 "The v8 error banner (alert icon), then one Try again button." — mobile/app/(app)/parcel-tool/semi-question.tsx:65 "retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); }," — the mock's Try again performs a retry, but in the submit-error state this handler only dismisses the error, a behaviour no pasted clause or ruling names — make retry re-issue the semi=answered fetch (or re-run continueToReport) when submitError came from the Continue fetch, and keep the clear for the lookup refetch path.
+DEFER severity=LOW — task-319 stage 2 "Continue calls the same lookup with the one flag semi=answered and opens the report" — mobile/app/(app)/parcel-tool/semi-question.tsx:70 "push: (route: string) => void continueToReport(route)," — the answered fetch is now bound to the renderer's generic push action, so any pushed route from this surface sends semi=answered, not only the Continue button the clause names — gate continueToReport on the Continue route/answer state, or add a dedicated continue action.
+DEFER severity=LOW — RR-0308 "approved with one change: the question heading as wide as the answer boxes" — NONE — the heading-span change is not in the pasted diff (only semi-question.tsx is pasted), so it rests on the commit message alone; cannot see — confirm the lotMap.ts / SemiQuestionBinding.tsx diff carries the wide heading before merge.
+DEFER severity=LOW — RR-0309 "Continue and Try again at 48 px" and Spec 126:351 "touch-target floor (44x44)" — NONE — no layout key or size appears in the pasted diff, so the 48 px Continue/Try again and the 44x44 floor cannot be verified; cannot see — check the semi-only layout keys in mobile/src/constants/lotMap.ts.
+NIT — task-319 stage 2 "Continue calls the same lookup with the one flag semi=answered" — mobile/app/(app)/parcel-tool/semi-question.tsx:9 "so it makes no extra request." — the page header now contradicts the new fetch, since Continue issues a second lookup — reword the header line to name the one answered call.
+MET — task-319 stage 2 — mobile/app/(app)/parcel-tool/semi-question.tsx:50 — "const result = await fetchParcelLookup({ parcelId: id, semi: 'answered' });" followed by "router.replace(route)", the same lookup with the one flag, then the report.
+MET — RR-0309 "no string may change" — mobile/app/(app)/parcel-tool/semi-question.tsx (whole diff) — no string literal is added or edited; copy still comes from the built content file.
+MET — design notes "no new copy, no new element." — mobile/app/(app)/parcel-tool/semi-question.tsx:44 — the failed fetch reuses the built error situation via "error: submitError ?? error", adding no element.
+MET — mock state 1 "Continue is disabled and reads the built \"Choose an answer\"" — mobile/app/(app)/parcel-tool/semi-question.tsx:30 — selection state and the built situation are untouched, so the open-state disable is unchanged by this diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  46462ms (46.5s)
+📊 Tokens — total: 14853, input: 5669, output: 9184, reasoning: 8409

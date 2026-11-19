@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lenses/lens-run/review-input.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10645 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21627 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33019 chars, answer 0 chars, 45s
+BUG severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx "const result = await fetchParcelLookup({ parcelId: id, semi: 'answered' });" — no timeout and no AbortController, so a hanging request leaves submittingRef.current true and every later Continue tap is silently ignored with no error state shown — pass an AbortSignal with a bounded timeout and set submitError on expiry.
+BUG severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx "router.replace(route);" — there is no unmount cleanup or abort, so a fetch that resolves after the owner backs out still writes the cache and replaces whatever screen they are now on — track a mounted ref or an AbortController and skip navigation when unmounted.
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx "push: (route: string) => void continueToReport(route)," — push is the generic action, so any non-Continue push from the semi surface would run the answered lookup and lift the hold, counting a lot the owner never continued — confirm the semi surface has no other push route, or gate on the Continue route (cannot see SemiQuestionBinding).
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx "fetchParcelLookup({ parcelId: id, semi: 'answered' })" — id can be '' here while the initial query is disabled as "useParcelLookup(id || undefined)", so Continue can fire with an empty parcelId and land in the error or drift state — guard with an id check or reuse the same undefined rule (cannot see the route schema).
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx "catch (e) { setSubmitError(e); }" — the submit failure is shown but not logged or reported, while the mock state 5 copy says it "has been reported"; the direct fetchParcelLookup bypasses whatever useParcelLookup reports — call the same reporter or do not claim it was reported (cannot see fetchParcelLookup).
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx "finally { submittingRef.current = false; }" — the guard is re-armed on the success path before the screen is guaranteed gone, so a fast second tap can re-fire semi=answered; only safe if the count is keyed per lot per month (RR-0278, cannot see the route) — leave the guard set once navigation starts and reset only in the catch.
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx "if (submittingRef.current) return;" — two taps on Continue could double-fire the lookup — handled: the ref is checked before the await, so a double tap is dropped and the answered fetch runs once.
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx "if (submitError != null) setSubmitError(null); else void refetch();" — a retry re-sends semi=answered and might count twice — handled: the lift is a flag set and the count is once per lot per month per RR-0278, so a repeat download is a no-op (per commit, route not pasted).
+
+VERDICT: PASS on error-path safety
+Paths walked: submit error catch, empty id, Try again retry, timeout/hang, late resolution after unmount, double-submit, per-month idempotency   Unguarded: 2
+
+---
+⏱  48908ms (48.9s)
+📊 Tokens — total: 14469, input: 5633, output: 8836, reasoning: 8070
