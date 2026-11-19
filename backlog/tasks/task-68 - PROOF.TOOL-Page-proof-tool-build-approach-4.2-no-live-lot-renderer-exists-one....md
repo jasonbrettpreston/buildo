@@ -3,11 +3,11 @@ id: TASK-68
 title: >-
   PROOF.TOOL Page-proof tool (build-approach 4.2: no live-lot renderer exists):
   one...
-status: RUNNING
+status: WAITS
 assignee:
   - '@lane-BL-PROOF'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:50:00Z'
+updated_date: '2026-11-19T21:01:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -32,6 +32,9 @@ references:
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
   - >-
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/build-approach/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-PROOF/PLAN.md
+  - docs/reports/lanes/2026-11-19/BL-PROOF/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-PROOF/TRIAGE.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -53,6 +56,8 @@ landingPush: none (evidence files; no repo change beyond the tool in PROOF.TOOL)
 slicePart: SUPPORT S3 proof and answer keys
 planNote: holistic-r1: status PLANNED (approved: S1/S2/Q-H4 a, 2026-11-18) (operator answers 2026-11-18 on the answer page (MORNING-DECISIONS.md, "Operator answers saved on the answer page": Q-H1 a, Q-H2 a, Q-H3 a, Q-H4 a, Q-H5 a, S1 a, S2 a))
 who (plan text): one lane; claim an ID by mkdir before it starts (ID ledger)
+
+Files: scripts/surfaces/proof-slice.mjs; scripts/surfaces/proof-slices.json; src/tests/surfaces/proof-slice.logic.test.ts; the task-68 task file (stage 2, scope: minimum tool for slice S); conditional: one dated paragraph in docs/specs/02-web-admin/127_surface_conversion_procedure.md if check-spec-diff.mjs asks. Stage 1 plan: docs/reports/lanes/2026-11-19/BL-PROOF/PLAN.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -81,6 +86,20 @@ who (plan text): one lane; claim an ID by mkdir before it starts (ID ledger)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC#1) Stage 2 step 0: run ids check.mjs for the worktree (no id kind expected); pre-register the expected moves (the three files above, nothing else) in one commit alone.
+2. (AC#2) Failing tests T1-T7 are written into this plan (docs/reports/lanes/2026-11-19/BL-PROOF/PLAN.md section 5) and were reviewed at plan altitude in review round r1 (TRIAGE.md).
+3. (AC#3) write_scope for stage 2: scripts/surfaces/proof-slice.mjs, scripts/surfaces/proof-slices.json, src/tests/surfaces/proof-slice.logic.test.ts, this task file; conditional Spec 127 paragraph.
+4. (AC#4) Plan review run once with the plan template (r1-plan.txt); every finding KEPT or REJECTED with file:line (TRIAGE.md).
+5. (AC#5) The orchestrator grounder re-executes the measured claims in PLAN.md section 2 (surface-validate, three golden --check runs, policy-checks --all, all green on head 8e0742142).
+6. (AC#6) Build red first: commit attempt with only the test and task files staged (red.out), then the runner and data file (green.out) through the real hooks, on the origin tip; typecheck allowed; the push station suite and push are the operator's.
+7. (AC#7) Output review record committed with the work (lane report copy in docs/reports/lanes/<date>/BL-PROOF/).
+8. (AC#8) Not applicable: not a McFrontend build, no queue row.
+Minimum tool: one runner for slice S that CALLS the existing checks and prints one table (PASS, FAIL, NOT BUILT, GAP; evidence file per row; exit 0/1/2/3). Not built now: screenshot per lot, element extraction, McProof key compare, storage probes (need 1.3 W task-123, ST.P1 task-265, a rehearsed test-stack job), design fit (task-345, task-67; RR-0306), browser driver, any DB code.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -99,4 +118,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-68 · Backlog; op
 Scope now: runs the group F checks that exist and prints the design-fit check as not built (RR-0306); it does not build or wait for CHK.6
 
 2026-11-19 taken on the board at lane launch (lane BL-PROOF, worktree /Users/brettpreston_macmini/Buildo-wt-proof, branch wf2/inc1b-proof), RR-0240
+
+2026-11-19 stage 1 (lane BL-PROOF): the measured minimum plan for slice S is done and reviewed once (r1, TRIAGE.md). Measured today on head 8e0742142: surface-validate, the search, lot map and semi golden --check runs and policy-checks --all are green; CHK.5 prints WAITS (no record table named); the customer report read returns null (src/lib/parcels/report-page.ts:23-26); no 1.6 harness code exists (task-206 merged into draft-15). Minimum tool: one runner over the existing checks, about 300 lines in 3 files, 1 day GUESS. Later stages with their unblockers: screenshots and element check (task-123, task-265, test-stack GO), key compare (task-123, key file), storage probes (task-265, table migration), design fit (task-345 then task-67). One operator draft (D1, accept the four report-page proofs as GAP for 1·B) is in PLAN.md section 6 for the orchestrator. stage 1 plan done; stage 2 build waits on the orchestrator
 <!-- SECTION:NOTES:END -->
