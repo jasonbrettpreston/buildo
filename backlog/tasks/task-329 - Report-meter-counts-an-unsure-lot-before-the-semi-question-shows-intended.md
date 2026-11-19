@@ -1,9 +1,10 @@
 ---
 id: TASK-329
 title: 'Report meter counts an unsure lot before the semi question shows: intended?'
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T15:38:00Z'
+updated_date: '2026-11-19T15:48:00Z'
 labels:
   - S
   - open-decisions
@@ -41,3 +42,15 @@ Grounded: yes - for a parcel_tool holder the q lookup runs openReport at route.t
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 decision-81 (RR-0278) entered through G2; resolved by task-334
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Operator 2026-11-19 (RR-0278, decision-81): the report meter counts only when a report is produced for a found address and lot; build task task-334 SRCH.METER
+<!-- SECTION:FINAL_SUMMARY:END -->

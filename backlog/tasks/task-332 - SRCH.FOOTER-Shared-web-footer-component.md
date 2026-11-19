@@ -9,13 +9,12 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:44:00Z'
+updated_date: '2026-11-19T15:48:00Z'
 labels:
   - S
   - plan:SRCH.FOOTER
 milestone: m-1
-dependencies:
-  - TASK-127
+dependencies: []
 references:
   - .cursor/MCFRONTEND-QUEUE.md#L310
   - .cursor/MCFRONTEND-QUEUE.md#L319
@@ -85,4 +84,6 @@ UNVERIFIED (not run, from task-324): the web search goldens, and whether the F01
 Dated note 2026-11-19 (M-246, prior text kept; RR-0270 · task-332 · Backlog; operator, verbatim: "1. once  -approved")
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-332 · Backlog; operator, verbatim: "this is a shared component")
+
+2026-11-19 dependency corrected: the footer does not wait on GAP.4 data; task-127 depends on this task (RR-0273)
 <!-- SECTION:NOTES:END -->

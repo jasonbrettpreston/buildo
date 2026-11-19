@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:44:00Z'
+updated_date: '2026-11-19T15:48:00Z'
 due_date: '2026-11-26'
 labels:
   - '1'
@@ -19,6 +19,7 @@ dependencies:
   - TASK-122
   - TASK-123
   - TASK-124
+  - TASK-332
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#1/GAP.4
   - scripts/surfaces/_schema/report-page.json#L328 sha256=d3410e9b677d
@@ -78,4 +79,6 @@ element ids delivered: B1, B2, B6, B9, B10, G2, B9.23
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-127 · Backlog; operator, verbatim: "this is a shared component")
+
+2026-11-19 RR-0273 (decision-78): the footer is one shared component built by task-332 SRCH.FOOTER; GAP.4 binds its G2 sources-and-data-date line inside it, so this task depends on task-332 (dependency direction corrected by the orchestrator from the R12 question)
 <!-- SECTION:NOTES:END -->

@@ -3,9 +3,10 @@ id: TASK-328
 title: >-
   Mis-typed address routes to no-match, not candidates: keep B.9 for 1·B or add
   a typeahead-retry task?
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T15:38:00Z'
+updated_date: '2026-11-19T15:48:00Z'
 labels:
   - S
   - open-decisions
@@ -43,3 +44,15 @@ Grounded: yes - the task-318 title and RR-0182 send a mis-typed address to the c
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 decision-80 (RR-0277) entered through G2; resolved by task-333
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Operator 2026-11-19 (RR-0277, decision-80): the search miss uses the permit pipeline address-spec matcher, the same module; build task task-333 SRCH.FUZZY
+<!-- SECTION:FINAL_SUMMARY:END -->
