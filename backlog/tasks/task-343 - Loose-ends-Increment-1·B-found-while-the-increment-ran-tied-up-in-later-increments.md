@@ -3,10 +3,11 @@ id: TASK-343
 title: >-
   Loose ends: Increment 1·B (found while the increment ran; tied up in later
   increments)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T20:36:00Z'
+updated_date: '2026-11-19T20:38:00Z'
 labels:
   - S
   - loose-ends
@@ -67,4 +68,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0302 · task-343 · Backlog; o
 2026-11-19 (R14, task-344) loose end: the generated context pack for task-344 printed Dependencies as (none) and three Document sections as not readable ENOENT (doc-2, doc-16) while citing their lines; fix in the generator (context file docs/reports/reviews/task-344/context-2026-11-19.md).
 
 2026-11-19 (R14, task-344) loose end: design-fit.mjs (RS-12 draft) is untested, and 63 of 117 report element design_refs cite the stale REPORT-LAYOUT-BRIEF-v4.md: tied up by task-345.
+
+2026-11-19 taken on the board at lane launch (lane BL-LOOSE, worktree /Users/brettpreston_macmini/Buildo-wt-loose, branch wf2/inc1b-loose), RR-0240
 <!-- SECTION:NOTES:END -->
