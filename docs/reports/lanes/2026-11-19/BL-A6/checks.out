@@ -1,0 +1,87 @@
+=== BEFORE (head 953b0988f + docs, no code change)
+$ node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 98 goldens) · S-sbind ok (17 surfaces, 424 strings)
+rc=0
+$ node scripts/surfaces/emit-mobile-surfaces.mjs --check
+surfaces ok (4 surfaces, 29 goldens)
+rc=0
+$ node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (171 rows, 171 descriptors)
+rc=0
+$ node scripts/analysis/gates/consumer-registry.mjs --check
+scripts/steps/_schema/consumer-registry.json is fresh
+rc=0
+$ node scripts/analysis/generate-target-files.mjs --check
+rc=0
+$ node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/search-golden-capture.ts --check
+search goldens ok (10)
+rc=0
+
+=== AFTER (working tree with the A.6 change)
+$ node scripts/surfaces/surface-validate.mjs --check
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must be equal to constant
+SV-DESC mobile_parcel_search: /states/10/name must match exactly one schema in oneOf
+SV-DESC mobile_parcel_search: /states must match exactly one schema in oneOf
+SV-SBIND mobile_parcel_search.content.json: / must match pattern "^[a-z0-9_]+(\.[a-z0-9_]+)+$"
+SV-SBIND mobile_parcel_search.content.json: / property name must be valid
+rc=1
+$ node scripts/surfaces/emit-mobile-surfaces.mjs --check
+surfaces ok (4 surfaces, 30 goldens)
+rc=0
+$ node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] DESCRIPTOR DRIFT — 1 file(s) disagree with the census. Run `--emit-descriptors`.
+  stale: scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+rc=1
+$ node scripts/analysis/gates/consumer-registry.mjs --check
+scripts/steps/_schema/consumer-registry.json is fresh
+rc=0
+$ node scripts/analysis/generate-target-files.mjs --check
+rc=0
+$ node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/search-golden-capture.ts --check
+search goldens ok (11)
+rc=0
+
+=== AFTER 2 (state hit, key search.reports_left, census synced)
+$ node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 425 strings)
+rc=0
+$ node scripts/surfaces/emit-mobile-surfaces.mjs --check
+surfaces ok (4 surfaces, 30 goldens)
+rc=0
+$ node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (171 rows, 171 descriptors)
+rc=0
+$ node scripts/analysis/gates/consumer-registry.mjs --check
+scripts/steps/_schema/consumer-registry.json is fresh
+rc=0
+$ node scripts/analysis/generate-target-files.mjs --check
+rc=0
+$ node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/search-golden-capture.ts --check
+search goldens ok (11)
+rc=0
+
+=== AFTER 3 (r2 folds: error gate, calendar validity, token guard, deviation text)
+$ node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 425 strings)
+rc=0
+$ node scripts/surfaces/emit-mobile-surfaces.mjs --check
+surfaces ok (4 surfaces, 30 goldens)
+rc=0
+$ node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (171 rows, 171 descriptors)
+rc=0
+$ node scripts/analysis/gates/consumer-registry.mjs --check
+scripts/steps/_schema/consumer-registry.json is fresh
+rc=0
+$ node scripts/analysis/generate-target-files.mjs --check
+rc=0
+$ node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/search-golden-capture.ts --check
+search goldens ok (11)
+rc=0

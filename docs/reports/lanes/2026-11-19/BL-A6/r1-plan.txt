@@ -1,0 +1,114 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of docs/reports/reviews/task-320/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9591 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20173 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31114 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41948 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 48042 chars, answer 4651 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 48042 chars, answer 15363 chars, 90s
+# Adversarial review — `docs/reports/reviews/task-320/context-2026-11-19.md`
+
+The file is one fenced block, so I anchor findings on the section heading + the quoted fragment rather than inventing line numbers where the source gives none. Where the document itself supplies a line number (e.g. `index.ts:542-548`) I quote it verbatim.
+
+---
+
+## CRITICAL
+
+- **[CRITICAL]** (§STEP B (3), "Null cases"/fallback paragraph; §Operator list item 3): The plan *knows* the reset date is wrong for a daily window and ships it anyway. Verbatim: "resetsOn is a UTC instant; the function writes the UTC calendar date, so a period end between 19:00 and 24:00 Toronto time would show one day later than the Toronto calendar date." With EST that window is 00:00–05:00 UTC daily, i.e. *every* user whose Stripe billing anchor lands in that 5-hour band, permanently, on a date the customer will compare to their card statement. The task's *only* new rendered value is this date; "UNVERIFIED how often" is not an answer when the fix is deterministic and free. DST is never mentioned at all (the window is 4 h in EDT, 5 h in EST — so even a hand-rolled offset is wrong half the year). **Fix:** format in `America/Toronto` explicitly (Intl with an explicit timeZone, or a static UTC-offset routine with a DST boundary table) and add the four DST/EST boundary cases to `formatResetDate`'s test set. Do not defer this to an operator question — the operator is not going to prefer a wrong date.
+
+- **[CRITICAL]** (§STEP B (3) fallback paragraph, citing `index.ts:542-548`): The claim "It cannot show a wrong date by itself" is false for the exact mechanism described. `reportPeriod` "stepped in whole months from current_period_end" is month arithmetic; a period end on the 29th/30th/31st overflows when stepped across a short month (31 Jan + 1 month = 3 Mar in naïve `Date` arithmetic), and stepping is unbounded when `current_period_end` is stale/superseded (a lapsed subscription whose row was never updated will be stepped forward month by month to "now"). The plan's own test list contains "a date near a month boundary" — but that test targets `formatResetDate`, which "does no date arithmetic", so it tests the wrong function and cannot catch this. **Fix:** verify `reportPeriod` clamps day-of-month (min(anchorDay, daysInMonth)) and caps iterations; add a test that a 31 Jan anchor renders 28 Feb, not 3 Mar. Add the verification query below.
+
+---
+
+## HIGH
+
+- **[HIGH]** (§STEP B (1) vs §STEP B (3) row 3; §Operator list item 2): v8 draws the line on state 1 "Fresh install" (`search.html:267`) — the signed-out/first-run screen. The plan rules that "no parcel_tool row → all null → line ABSENT", and files the divergence only obliquely under item 2 framed as "a lead_gen-only user in the transition". That is not the same problem: fresh install is the *primary entry state of the app the design draws the line on*, and the build will render nothing there. **Fix:** raise it as its own operator question with the two options (anonymous allowance of N shown pre-signup, or the line genuinely absent at first run and v8 is wrong) and do not ship the primary state silently divergent from the approved design.
+
+- **[HIGH]** (§binding table row 3/4, "shown-rule test"; §Tests (d) "each of the three fields null hides"): The whole "absent" behaviour is handed to a "shown rule" that is never localised. If that rule lives in `SurfaceRenderer`, adding "a node with any unresolved ref is absent" is a *global renderer semantic change* and every other surface with an optional ref starts dropping nodes — a textbook sibling bug. If instead it is per-node config, the plan must say which config key and that the node renders nothing rather than the literal `{left}`. The plan asserts the behaviour as a given in every row of the table and never points at the code. **Fix:** name the renderer file/function and state whether the rule is node-local; add a regression test that an existing optional-ref node on another surface still renders.
+
+- **[HIGH]** (§Tests header, closing sentence): "Mobile jest tests … are written to the same cases but are not run by the hook or the station root run (UNVERIFIED)." So the only test that actually executes the new `SearchBinding.tsx` render path is never run in the gate. Everything green is a file-content assertion over committed JSON. A binding that renders the literal `{reset}` or drops the line entirely ships with a green board. **Fix:** wire at least one execution-level assertion into the station root run (snapshot of the resolved Text node for state `reports_left`), or the task has no test of its deliverable.
+
+- **[HIGH]** (§STEP B (3) data table; nothing anywhere on caching): The entitlement count is mutable server state and the plan has no staleness policy. The user opens search → gets "6 of 10" → produces a report → returns to search → the cached read still says 6. That is a guaranteed first-month bug report, and on mobile there is no take-back: a wrong count shipped in a binary is wrong until the next store release. The DeepSeek axis-1 "cache poisoning (TanStack Query, MMKV)" case is entirely unaddressed. **Fix:** state the cache key, `staleTime`, and invalidation trigger (refetch on focus / on report-produced), and confirm the read is not persisted across app restarts in MMKV.
+
+- **[HIGH]** (§Tests (c) vs §binding table row 1 and §Operator list item 6): Test (c) asserts "the ten existing goldens carry no reports-left node", while v8 draws the line on states 1 Fresh install, 2 Recent searches, 3 Searching, 4 Outside Toronto and 5 Web signed-in, and item 6 says the line is built "under the box in one fixed slot for every state". Both cannot be true: either the line only ever appears in one synthetic eleventh state (and is therefore never rendered in the four states the design specifies), or the ten existing goldens *do* change and test (c) is wrong. **Fix:** add the line to the situations that are actually reachable (signed-in × {idle, searching, outside-Toronto, results}) and drop test (c) to "situations without entitlement data carry no node".
+
+- **[HIGH]** (§STEP B (3) table row "allowance (10)", "NOT queried live (UNVERIFIED)"; §Dependencies): The allowance comes from settings seeded by `migrations/322_mf47_checkout_plans.sql`, i.e. task-71's migration — which the brief lists as a dependency at status **LATER** — while the plan declares "nothing of MF-47… no DB job". If `parcel_tool_report_limit_plan` is absent in an environment, `readReportLimits` yields "counts null with a WARN (`index.ts:644-650`)" and the line silently disappears. There is no alert on that WARN, so a prod misconfiguration presents as "feature not built". **Fix:** make the migration-in-each-environment check an explicit precondition with a query (below), and add a monitor/test for the WARN path rather than letting it be a silent no-op.
+
+- **[HIGH]** (§STEP B (4) item: "the surface descriptor mobile_parcel_search `inputs.contract_ref` (:79-81 lists only /api/parcels/lookup)"): The field is named singular. Adding the entitlement contract either requires a `contract_refs` array — a schema change to every surface descriptor plus the generator plus the validator — or an ad-hoc second key that no consumer reads. The plan moves the contract descriptor's `sharing` and consumers but never states which, and never lists the validator/generator change. **Fix:** confirm whether `contract_ref` is singular in the descriptor schema; if it is, treat the schema change as in-scope with its own file list and its own red test, not as a one-line edit.
+
+- **[HIGH]** (Acceptance criterion #8 vs §STEP B (5) last bullet): Criterion #8 says "No McFrontend work starts without its row in" `.cursor/MCFRONTEND-QUEUE.md:72`. The plan's answer is "the MF-35 queue note (M-246 form) is added with the build commit" — a *note*, added *after* the work, citing two prior lanes as precedent. That precedent may be the ruling, but the plan does not show it is; it just asserts the pattern. As written the plan contradicts the gate it must satisfy. **Fix:** either add the row first (cheapest, and it's what the criterion literally says) or quote the ruling that converts follow-ups into dated notes and cite it in the task, not in the lane's own reasoning.
+
+- **[HIGH]** (§STEP B (5) "UNVERIFIED until then. If the gate refuses on the MF-35 record, the lane stops"; §Tests (f) "424 → 425, 98 → 100"): Both preconditions are *static file checks* and the plan leaves them UNVERIFIED anyway. Whether `prereg-MF-35-1.json` has every rule RULED and `docs/reports/panels/MF-35.json` exists is a `cat`/`jq` away; whether the pins are 424 and 98 and the golden count 98 is a grep away. Writing all the code and *then* discovering the gate refuses is a self-inflicted deadlock. **Fix:** verify both in the plan section before r1 triage and record the observed values with a sha; if the counts differ, correct them here.
+
+---
+
+## MEDIUM
+
+- **[MED]** (§STEP B (1) "Limit reached… Not part of this task"; §Operator list item 1): The plan deliberately does not bind `reportsLimitReached`, the server's own authoritative flag for exactly the zero state, and shows "0 of 10" off a clamped `Math.max(0, …)`. Meanwhile the wall lives on `report-limit.html`, which this task does not build — so the user in the zero state taps lookup, receives 403 `REPORT_LIMIT_REACHED` (`route.ts:161`), and lands nowhere the plan accounts for. Two sources of truth for the same fact and no destination for the failure. **Fix:** bind `reportsLimitReached` for the *shown rule* only (no arithmetic, so FE-05 is untouched) and either verify the 403 currently renders a wall or record the missing wall as a blocking dependency in the task, not as "separate surface".
+
+- **[MED]** (§STEP B (2) last paragraph; §Operator list item 4): `reset_date` extends a closed derived-name list that "an operator ruling adjudicated" (P35-D14 a). The plan defers ratification *past* the build. If the answer is no, the third placeholder, the content key, both goldens, both pins and the web tree all change. That is the definition of an expected move that should have been pre-registered (criterion #1). **Fix:** ask before code, or design the fallback now (hide the date clause and render "6 of 10 reports left" when no ratifiable derived name exists) so a refusal costs one branch, not a rewrite.
+
+- **[MED]** (§Tests (d); `formatResetDate` spec): Output determinism is unspecified. "9 Dec 2026" comes from *somewhere* — if it's `toLocaleDateString`, Hermes ICU output varies by locale and the golden breaks on a non-en locale device; if it's a month-name array, say so. Test set omits 1 Jan, 31 Dec, 29 Feb 2028, and `2026-12-09T23:59:59Z`. **Fix:** mandate a hand-rolled `["Jan"…]` formatter with zero Intl dependency, and add the four boundary cases.
+
+- **[MED]** (§Tests (d) "an invalid date hides"): Hiding the entire line because the client could not parse a date is a silent failure indistinguishable from "no entitlement", and it is unrecoverable in the field. The count is the valuable half of the sentence. **Fix:** invalid/unparseable date → render the count without the date clause; log the parse failure. Only all-null counts hide the line.
+
+- **[MED]** (§Tests (a)–(e), content key `search.reportsLeft` = `"{left} of {allowance} reports left until {reset}"`): The mapping placeholder→ref (`left`→`reportsLeft`, `allowance`→`reportsLimit`, `reset`→derived `reset_date`) is asserted nowhere. Rename a ref and the page renders the literal text `{reset}` — and every listed test still passes because none asserts the *rendered* string. **Fix:** add a test that the resolved output contains no `{` and equals the v8 copy for the fixture 6/10/2026-12-09.
+
+- **[MED]** (§Tests (e) "no arithmetic: no `-` or `reportsUsed` in the new binding lines"): A substring check for `-` fails on the plan's own testID `parcel-search-reports-left` and on any class string in `PARCEL_SEARCH_LAYOUT`. Either the check is scoped to something the plan doesn't say, or it is guaranteed red. And as a grep it is trivially bypassed by `Math.max`, `parseInt`, or a template expression. **Fix:** assert on the parsed ref set of the golden (every value ref ∈ {reportsLeft, reportsLimit, reset_date}) rather than on characters.
+
+- **[MED]** (§STEP B (4) "Not yet declared, to be moved … the descriptor's `sharing` (… "No surface renders it yet")"): Moving `sharing.surfaces`/`x-draft.consumers` to name the web surface is a false declaration: the web mount "keeps passing the static situation (no entitlement), so no line shows on the web until the live switch flips", and the "pure tree, no fetch" has no code path that would ever populate it. The descriptor will assert a consumer that cannot render. **Fix:** declare mobile only; if parity forces the web refs, mark the web state explicitly as inert in `evidence` and open a task for wiring web on live-switch flip.
+
+- **[MED]** (§STEP B (4) item 3; §Files expected): Editing `scripts/surfaces/_schema/census/contracts.json` by hand perpetuates the exact defect the plan cites ("the hand-kept mirror … no generator owns it", BL-LOTFIX). Test (e) only asserts "both list the three fields" — presence, not equality — so the mirror can drift on every other field forever. **Fix:** in this task, add a full-document equality test between the descriptor and the census mirror (cheap, one test), and file the generator debt; otherwise the drift you just documented is the drift you just extended.
+
+- **[MED]** (doc-2 element row A.6: "deliverers SRCH.A6 LS.12 LS.3"; §STEP B (5) "MF-35 plainly owns A.6"): Three deliverers on the element and the plan reconciles none of them. If LS.3 (or LS.12) also binds the line, this task ships a duplicate node or a race. **Fix:** state what LS.3 and LS.12 deliver for A.6 and that they are not building the line, or narrow the task.
+
+- **[MED]** (§Operator list item 2, "task-340's open question"; §Dependencies): A live open question on another task is a shared-state dependency but is not modelled as one — no edge, no "waits", no note on what changes if task-340 rules the other way. **Fix:** add the edge (task-320 ← task-340 answer) or record the answer here; "none blocks the build" is a claim, not a dependency declaration.
+
+- **[MED]** (§binding table, "class in PARCEL_SEARCH_LAYOUT"; §STEP B (2) "No new component kind"): The design's `fc` spans are a *distinct visual* ("a dashed underline marks a value from a field or setting", `search.html:326`). The plan says "a class string in the existing layout table" without naming the style, and goldens capture refs, not CSS — so a missing `fc` style is invisible to every test listed. **Fix:** name the style token being added (or confirm it exists at `parcelSearch.ts:161`-adjacent) and state that it is verified by eye on device, or it is unverified UI.
+
+- **[MED]** (§Files expected: `mobile/src/lib/parcelSearchMatch.ts`): A.6 is a display binding; the address matcher is not on any path described in §STEP B or §Tests. Either this is scope creep or a copy-paste from a template file list. **Fix:** drop it or state the one-line change it needs.
+
+- **[MED]** (§Task / §Storage set-up / §Register rulings): The brief that gates this build cannot pass its own acceptance criterion #5 ("one grounder re-executes every claim"). Four Storage set-up citations end `"undefined"` — the literal string — and RR-0005's quote is truncated mid-word and unescaped: `"Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"`. The plan's evidence chain (`CURRENT-SEARCH.md:68-79` quoted as "sweep traced N of 20 with no date") contains an unrendered `N`. **Fix:** the generator defect must be fixed and the brief regenerated before r1 triage, or the plan is being reviewed against citations that do not resolve — which is the RR-0208 failure mode verbatim.
+
+---
+
+## LOW / NIT
+
+- **[LOW]** (§Plan steps preamble, "No code is written until this section is reviewed (r1) and triaged"; §Tests "red first"): Criterion #6 requires red tests on the tip and #2 requires failing tests written *into the plan*. What exists here is prose describing tests. That is defensible at r1 but the plan should say explicitly that the red commit is owed and is not part of this section, so the grounder does not read it as delivered.
+
+- **[LOW]** (§Document sections, "### Requirements: … (not readable: ENOENT)" ×3): The loader reports ENOENT for the same path it successfully rendered 92 lines of two blocks earlier, and one notice has an unclosed paren and repeats the section title as the path. A reader cannot distinguish "file missing" from "loader bug". Generator defect — fix and regenerate with the others.
+
+- **[LOW]** (§Storage set-up, lines still saying "behind the 35 s loading screen" and "LOAD.1 to LOAD.3"): The Problems list flags these as superseded by RR-0176, then the Rulings list supplies RR-0176, and the Storage set-up block *still contains them unmarked*. A lane reading top-down implements the 35 s cap. Strike them or prefix `[SUPERSEDED by RR-0176]`.
+
+- **[LOW]** (§binding table row 1, "Text in the column View"): No `accessibilityLabel`/grouping and no announcement when the count changes after a report is produced. The line is the only entitlement signal on the screen. Add `accessible` on the node with a composed label.
+
+- **[LOW]** (§Operator list item 7, "Search surface descriptor `metering` text still says 'Nothing here is counted' … stale since SRCH.METER; not edited here"): This task edits that descriptor anyway (contract_ref, sharing, evidence, deviation text). Leaving a *known-false* sentence in a file you are already touching, in the same diff, is the cheapest possible fix refused for scope aesthetics. Fix it and note it.
+
+- **[NIT]** (§Document body): "## Documents" appears twice with different contents, and "## Objectives" duplicates "### Increment objectives" with the same quote truncated at a different offset. Generator duplication.
+
+- **[NIT]** (§binding table, "reports-limit.html:286 'You've used all {limit} reports'"): No pluralisation rule anywhere; `allowance` and `left` are small ints so it will not bite, but the template has three free variables and zero formatting contract. State "integers as served, no locale separators".
+
+---
+
+## Unverified data premises (verification queries)
+
+1. **Allowance setting present in every environment** (the plan says NOT queried live; if absent the line vanishes):
+   `SELECT key, value FROM settings WHERE key IN ('parcel_tool_report_limit_plan','parcel_tool_report_limit_pro','parcel_tool_report_limit_trial');`
+2. **Month-end anchors exist and step correctly** (the 31 Jan → 3 Mar class of bug):
+   `SELECT count(*) FROM entitlements WHERE current_period_end IS NOT NULL AND extract(day FROM current_period_end) >= 29;` — then re-run `reportPeriod` over those rows and diff against expected end-of-month.
+3. **How often the period end falls in the Toronto-evening/UTC-morning window** (the CRITICAL date bug):
+   `SELECT count(*) FROM entitlements WHERE current_period_end IS NOT NULL AND (current_period_end AT TIME ZONE 'America/Toronto')::date <> (current_period_end AT TIME ZONE 'UTC')::date;`
+4. **Stale anchors** (rows whose `current_period_end` is far in the past but status is still metered, exercising the unbounded stepping loop):
+   `SELECT status, count(*), min(current_period_end), max(current_period_end) FROM entitlements GROUP BY status;`
+5. **Who actually has a row** (the fresh-install / lead_gen question): `SELECT count(*) FROM entitlements WHERE status = 'admin_managed';` and confirm the lead_gen-only population size so the "no line for them" decision is quantified, not asserted.
+
+---
+
+## Verdict
+
+**FAIL on plan-readiness.** The plan is honest and unusually well-instrumented — it names its own unknowns — but it then ships through them: the single new value this task renders is a date the author has already proven can be wrong for a five-hour daily window and can drift at month-end, and that is deferred to an operator question while the build proceeds. Layered on top are structural gaps that are cheap to close now and expensive later: the "absent when null" behaviour is handed to a renderer rule nobody has located (a global-semantics change waiting to bite every other surface), the only test of the actual mobile render is in a suite the gate does not run, the primary design state (fresh install, signed out) renders nothing and is filed as a footnote rather than a divergence, and the two static preconditions for the McFrontend gate (all rules RULED, the pin counts) are left UNVERIFIED despite being checkable by reading two committed files. The dependency story also contradicts itself: the plan declares no MF-47 coupling while depending on migration 322 for the allowance, with a silent-WARN failure mode and no alert. Fix the date (Toronto time, clamped month stepping), bind `reportsLimitReached` for the shown-rule, localise the absence rule, put one execution-level test in the gate, and verify the gate's static preconditions in this section — then this is a small, clean task.
+
+---
+⏱  97553ms (97.6s)
+📊 Tokens — total: 37025, input: 19984, output: 17041, reasoning: 11778

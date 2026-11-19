@@ -3,11 +3,11 @@ id: TASK-320
 title: >-
   SRCH.A6 A.6 reports-left line on the app search page ("6 of 10 reports left
   until 9...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-A6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:16:00Z'
+updated_date: '2026-11-19T21:19:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -26,6 +26,11 @@ references:
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
   - /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/fe-built/BUILT.md
   - .cursor/MCFRONTEND-QUEUE.md#L133
+  - docs/reports/lanes/2026-11-19/BL-A6/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-A6/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-A6/r1-plan.txt
+  - docs/reports/lanes/2026-11-19/BL-A6/r2-output.txt
+  - docs/reports/reviews/task-320/context-2026-11-19.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -49,14 +54,14 @@ element ids delivered: A.6
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -101,4 +106,12 @@ Files: mobile/app/(app)/parcel-tool/, mobile/src/components/surfaces/SearchBindi
 Files (final): mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/constants/parcelSearch.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/lib/parcelSearchCore.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/src/lib/persistFilter.ts, mobile/src/lib/schemas.ts, src/components/surfaces/web/SearchBinding.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.{content,descriptor}.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, scripts/surfaces/_schema/census/{contracts,mobile-product}.json, src/tests/fixtures/surfaces/mobile_parcel_search/*, mobile/__tests__/fixtures/*, mobile/src/generated/surfaces/mobile_parcel_search.json, docs/reports/generated/127-surface-*.md, src/tests/surfaces/{search-reports-left.logic,search-web-binding.ui,surface-validate.logic,surface-conformance.logic}.test.ts, .cursor/MCFRONTEND-QUEUE.md
 
 2026-11-19 BL-A6 output review r2 triaged (TRIAGE.md): five KEPT items fixed in the follow-up commit.
+
+AC evidence 2026-11-19 (BL-A6): #1 no prereg written: no new MF id was claimed; the expected moves (state hit, 424 -> 425 strings, 98 -> 100 goldens, admin-media 69 -> 70) are in the context file 'Plan steps under review' and the pins carry dated comments; generic McBylaws prereg criterion does not apply to a follow-up on MF-35 (prereg-MF-35-1.json read, rules RULED). #2 failing tests written into the plan section and reviewed at plan altitude (context file, r1-plan.txt). #3 write_scope in the brief (BRIEF.md Write scope). #4 plan review by DeepSeek reasoner, one round, in the lens set of the repo review template, r1-plan.txt. #5 every r1 finding opened and triaged KEEP/REJECT with file:line (TRIAGE.md). #6 red attempt refused (red.out, typecheck stage), green e311411de through the real hooks (commit.out). #7 output review r2 (r2-output.txt, TRIAGE.md) committed with the work in docs/reports/lanes/2026-11-19/BL-A6/. #8 row MF-35 (DONE) owns A.6; dated note added to the row; gate accepted McFrontend-Task: MF-35.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+SRCH.A6 built: the reports-left line 'N of M reports left until <date>' on the app search page, bound to the existing GET /api/parcels/entitlement (reportsLeft, reportsLimit, resetsOn); no plan, loading and read failure draw no line. Commits e311411de (feat) and 1703b3104 (review folds) on wf1/inc1b-a6, hooks green (Test Files 8 passed, Tests 160 passed; POLICY CHECKS OK), every generator --check clean, S-sbind 425 and S-screen 100. UNVERIFIED: mobile jest not run, no device check, live allowance values not queried. Questions owed are in the lane REPORT.md (zero-left display, reset-date time zone, ratify derived name reset_date, web twin).
+<!-- SECTION:FINAL_SUMMARY:END -->
