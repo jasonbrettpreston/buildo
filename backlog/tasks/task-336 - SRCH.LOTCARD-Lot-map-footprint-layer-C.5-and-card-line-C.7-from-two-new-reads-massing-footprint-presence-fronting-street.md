@@ -3,11 +3,11 @@ id: TASK-336
 title: >-
   SRCH.LOTCARD Lot map: footprint layer C.5 and card line C.7 from two new reads
   (massing footprint presence, fronting street)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-LOTCARD'
 created_date: '2026-11-19T15:57:00Z'
-updated_date: '2026-11-19T16:16:00Z'
+updated_date: '2026-11-19T16:19:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -19,6 +19,7 @@ references:
   - ~/Buildo-scratch/mcfrontend/small-pages-v8/choose-lot.html#L306
   - docs/reports/lanes/2026-11-19/BL-GAP13/REPORT.md
   - src/lib/lot-map.ts#L26
+  - docs/reports/lanes/2026-11-19/BL-LOTCARD/REPORT.md
 type: build
 project: McIncrement
 ordinal: 37012
@@ -36,8 +37,8 @@ Files: src/lib/parcels/lot-map.ts, src/lib/parcels/consumer-lookup.ts, src/app/a
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 DATA CHECK on the rehearsal stack first: for the SAMPLES.md multi-lot addresses, the massing join returns footprint presence and primary_frontage_street_name is populated; counts pasted
-- [ ] #2 CONSUMER_MAP_COLS (lot-map.ts:26) and the map descriptor field whitelist gain the two fields, with their both-way lock tests updated (red first)
-- [ ] #3 C.5: the building footprint drawn on each matched lot when massing returns one; C.7: the card line says which street the lot faces always and "has the house" only when a footprint is present; nothing about the house where massing is missing; goldens by the repo scripts
+- [x] #2 CONSUMER_MAP_COLS (lot-map.ts:26) and the map descriptor field whitelist gain the two fields, with their both-way lock tests updated (red first)
+- [x] #3 C.5: the building footprint drawn on each matched lot when massing returns one; C.7: the card line says which street the lot faces always and "has the house" only when a footprint is present; nothing about the house where massing is missing; goldens by the repo scripts
 <!-- AC:END -->
 
 ## Definition of Done
@@ -66,4 +67,12 @@ Per context-2026-11-19.md 'Plan steps under review (lane BL-LOTCARD)': red tests
 2026-11-19 taken on the board at lane launch (lane BL-LOTCARD, worktree /Users/brettpreston_macmini/Buildo-wt-lotcard, branch wf1/inc1b-lotcard), RR-0240
 
 RR-0289 (MORNING-DECISIONS.md:1117) supersedes plan step 4: footprint -> 'has the house', none -> 'no building', presence only. Cite carried into the context file, the MF-53 dated note and the content keys.
+
+AC1: data check script written (scripts/analysis/lot-map-data-check.mjs); orchestrator runs it on the rehearsal stack. AC2/3 evidence: commits d03adc2b7, 6140a6867; goldens 'lotmap goldens ok (11)'.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built on wf1/inc1b-lotcard (d03adc2b7, 6140a6867, unpushed): two reads in the one lot SELECT, CONSUMER_MAP_COLS and whitelist 14 to 16 with both-way locks, C.5 footprint-presence fill tier (geometry is a follow-up), C.7 lead per RR-0284/RR-0289, data-check script. AC1 open for the orchestrator.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,0 +1,93 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of docs/reports/reviews/task-336/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9283 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19100 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28795 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 31881 chars, answer 7062 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 31881 chars, answer 17138 chars, 75s
+# Adversarial review — `docs/reports/reviews/task-336/context-2026-11-19.md`
+
+Note on citations: this is a generated Markdown brief, not line-numbered source; I cite the section name plus the best-estimate line (prefix `~`) so the author can locate the exact text. The substantive findings are about the plan the brief carries, plus the generator that produced the brief.
+
+---
+
+## CRITICAL
+
+- **[CRITICAL]** (~L7–9, "Description", and the whole `## Document sections` block): **The review is running blind.** All three required source documents are `ENOENT`: `doc-2 - Increment-S-requirements.md`, the Elements section of the same, and `doc-16 - McStorage-policy-v2.md`. Those are the files that define C.5, C.7, the "65 designed search elements", and the storage policy this task is supposed to honour. Acceptance criterion #3 ("C.5: the building footprint drawn…", "C.7: the card line…") is written *against* those definitions, and the plan's whitelist claim ("14-entry map descriptor whitelist") cannot be checked. Worse, the generator degrades silently to "not readable: ENOENT; read it at …" instead of failing the brief. A reviewer cannot validate the plan against the spec when the spec is missing. **Fix:** make `backlog-brief.mjs` fail closed — if a document named in the milestone's Documents list cannot be read, emit a blocking notice at the *top* of the brief and mark the task non-reviewable. Then actually place `doc-2` and `doc-16` at the paths the milestone names (or fix the paths).
+
+- **[CRITICAL]** (~L180–190, "Plan steps under review", step 3): **C.5 is silently re-scoped and the AC is not met.** Acceptance criterion #3 says "the building footprint **drawn** on each matched lot when massing returns one." Plan step 3 says drawing the footprint geometry "is outside the two ruled fields; so C.5 draws footprint **PRESENCE** as a **fill tier** on the matched lot and the geometry is recorded as a follow-up." A fill tier on the *lot polygon* is not a drawing of the *building footprint*; a user will read the tinted lot as the building. RR-0284 authorised "two data reads," not a redesign of C.5 from an outline to a lot tint. **Fix:** either (a) split the real C.5 geometry into its own task with the new payload shape it needs and mark task-336 AC#3 amended, or (b) get an explicit operator ruling for the fill-tier substitution. Do not ship a fill tier under the label C.5.
+
+- **[CRITICAL]** (~L195–205, "Plan steps under review", step 5 vs AC #1): **The gating acceptance criterion is outsourced and has no pass/fail rule.** AC #1 requires the data check "first … counts pasted." Plan step 5 says the script is "written, not run; the orchestrator runs it." The lane therefore cannot close AC #1; if the orchestrator does not run it, the lane sits blocked — which violates RR-0154 ("nothing waits idle"). Additionally the AC says "counts pasted" but nowhere states what counts constitute a go, e.g. "≥80% of SAMPLES multi-lot addresses have a populated street and ≥1 footprint, else the card line ships only for `frontageStreet`." **Fix:** add an explicit numeric go/no-go threshold to AC #1, and either (i) grant the lane a read-only rehearsal-stack connection (subject to RR-0186's operator-GO rule) or (ii) make the data check its own task with a hard dependency edge before task-336.
+
+---
+
+## HIGH
+
+- **[HIGH]** (~L210–218, Binding table, `hasFootprint` row): **The massing source is an unverified premise.** The binding table asserts `EXISTS(parcel_buildings pb WHERE pb.parcel_id = parcels.id)`, but AC #1 and the Description talk about "the massing join" — nothing establishes that massing lives in `parcel_buildings`, that the FK is `parcel_id` (not `lot_id`/`address_id`), or that a single EXISTS is the right predicate. `parcel_buildings` may be a permit-buildings table, not the massing table. **Fix:** add a verification step to the brief listing the exact catalog query (`SELECT table_schema, table_name FROM information_schema.tables WHERE table_name ILIKE '%massing%' OR table_name ILIKE '%building%'`) and confirm the FK and semantics before step 2.
+
+- **[HIGH]** (~L200–204, step 4, and AC #3): **"has the house" is a semantic overreach.** `hasFootprint = EXISTS(parcel_buildings …)` means "a building footprint of any kind exists on this parcel." A footprint can be a garage, a shed, a church, a commercial structure, or a proposed/never-built structure if the table carries a lifecycle/status column. C.7 will tell the customer "has the house" for a lot with a detached garage. **Fix:** rename the surfaced string to "has a building," or add a filter/semantic check that the footprint is a residential dwelling before claiming "house." If the v8 content key is immovable, add a filter to the EXISTS predicate and document it.
+
+- **[HIGH]** (~L210–218, Binding table `frontageStreet`; step 2): **Empty-string street names are unhandled.** `parcels.primary_frontage_street_name` can be `''` (not NULL) in many ETL'd datasets. The type is `string | null`, so `''` type-checks; a `frontageStreet` truthiness check will render "faces " with a blank, or worse, fall through to the "has the house" branch logic. **Fix:** normalise in SQL — `NULLIF(primary_frontage_street_name, '') AS frontage_street` — and add a test fixture with `''`.
+
+- **[HIGH]** (~L195–200, step 5, "connects only with a database URL on the command line"): **No guard against pointing the "rehearsal" check at production, and no enforcement of read-only.** AC #1 says "on the rehearsal stack first", but the script accepts any URL. DB credentials passed on argv are visible in `ps` and shell history to every user on the host. There is also nothing preventing a runaway UPDATE if the script is later modified. **Fix:** require `DATABASE_URL` via env var or a `.pgpass`-style file; refuse to connect unless the host or database name matches a rehearsal allow-list; wrap the session in `BEGIN READ ONLY` (or connect with a read-only role). Log the host/db, never the credential.
+
+- **[HIGH]** (~L185–190, step 1(a), "the lot SELECT list equals CONSUMER_MAP_COLS, both ways, now with … has_footprint"): **The both-way lock test will very likely break on the EXISTS expression.** The existing test compares the SELECT list to `CONSUMER_MAP_COLS`. Adding `EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id) AS has_footprint` introduces nested parentheses and commas inside the SELECT list. If the test splits the SELECT on commas at the top level (a common naive implementation), the EXISTS sub-query's inner comma will split mid-expression and the column-name extraction will yield garbage. **Fix:** make the lock test parse the projection list with a paren-aware tokenizer (or use the query builder's projection AST), and add a red test that asserts the alias `has_footprint` survives parsing.
+
+- **[HIGH]** (~L23–140, "Decisions in force", and step 3/4): **RR-0190 sourcing rule is violated inside the plan.** RR-0190 requires that claims naming a ruling cite `file:line`, an RR id, or `UNVERIFIED`. Plan step 3 says "outside the two ruled fields" with no RR id; step 4 says "the ruling says nothing about the house where massing is missing" with no RR id. The plan is subject to the enforcement rule it cites as a ruling. **Fix:** annotate each step with the governing RR id and line, e.g. `(RR-0284, MORNING-DECISIONS.md:1099)`, and mark the C.5 fill-tier substitution `UNVERIFIED — operator approval pending`.
+
+- **[HIGH]** (~L25–60, "Decisions in force", RR-0172): **RR-0172 ("no new data read or drawing code") is not reconciled with RR-0284.** RR-0172 is listed as in force, and the plan adds a column and an EXISTS and a fill tier. The plan needs to say explicitly that RR-0284 supersedes RR-0172 *for the card line only* (and not for the road-label drawing, which RR-0172 still governs). As written, a reviewer cannot tell whether the plan is knowingly overriding a live ruling or has forgotten it. **Fix:** add a "Ruling reconciliation" subsection to the plan: RR-0172 governs map road labels; RR-0284 governs the card line and the footprint-presence read; state the dated supersession.
+
+- **[HIGH]** (~L10–14, AC #3, and step 6): **No rollback path is stated anywhere.** The review axes explicitly ask for rollback. The plan adds a server column, a server EXISTS, a strict server schema field, a mobile optional field, content keys, goldens and mobile surfaces. If the data check returns near-zero coverage, or the goldens drift, or the mobile schema breaks an older client, what is the revert? The mobile-optional decision gives forward compatibility but the plan never says so as a rollback. **Fix:** add a rollback paragraph: revert the single commit; mobile `schemas.ts` keeps the keys optional so reverting the server is backward-compatible; goldens regenerate via `lotmap-golden-capture --write`; no migration to DOWN (the column is pre-existing).
+
+---
+
+## MEDIUM
+
+- **[MEDIUM]** (~L200–205, step 4 + AC #3): **The card-lead branch logic has no unit test.** Step 1(b) tests the whitelist and a golden shows "the lead per lot," but the decision logic that picks among four content keys from `(frontageStreet, hasFootprint)` — including the `undefined`/`null`/`''` and the "both absent" cases — is not unit-tested. The riskiest branch is "hasFootprint false/absent ⇒ say nothing about the house," which is exactly the branch most likely to regress. **Fix:** add a pure-function test for the lead selector covering all 3×3 combinations (street present/absent/empty, footprint true/false/undefined).
+
+- **[MEDIUM]** (~L195–200, step 5): **The data-check script has only a `--dry-run` test.** Plan step 1(c) tests that `--dry-run` prints SQL and opens no connection. The actual query (counts of footprint and populated street) is never tested — against a fixture, a mock, or even snapshot SQL. The one artefact determining go/no-go is the least tested. **Fix:** add a SQL snapshot test (golden SQL) and a fixture-backed test using an in-memory/embedded Postgres or a mocked `pg` client.
+
+- **[MEDIUM]** (~L205–210, step 6): **`emit-mobile-surfaces.mjs` is run with `--write` but not `--check`,** unlike `lotmap-golden-capture --write` then `--check`. Mobile surfaces can drift without a CI gate. **Fix:** require `emit-mobile-surfaces.mjs --check` in the same step and confirm the repo's CI runs it.
+
+- **[MEDIUM]** (~L23–140, "Decisions in force"): **Nine identical, irrelevant decisions bloat the brief to the 120 KB cap.** RR-0087/0088/0092/0099/0012/0060/0080/0081/0086 all carry the same title ("2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready"). Many others (RR-0136 Inc 1·A, RR-0141 Q-LT-1, RR-0147 NAME-1, RR-0164 ONE-4, …) have nothing to do with lot map. The brief's own `## Document sections` cap (120 KB total, 12 KB per block) means this boilerplate competes with — and likely pushes out — the content the reviewer needs. **Fix:** dedupe by (title, body hash) and filter to decisions whose `Tasks named` line includes the task id or its dependencies' ids. The generator's whole purpose is relevance; it is not delivering it.
+
+- **[MEDIUM]** (~L42–46, "Decisions in force", RR-0174 vs RR-0176): **Superseded RR-0174 is listed alongside RR-0176 with no marker.** A reader can implement against the 35 s cap. The brief even acknowledges the drift in `## Milestone → Problems` ("the first two Storage set-up lines still say a 35 s loading screen … RR-0176 supersedes RR-0174") but does not remove or annotate RR-0174 in the decisions list. **Fix:** the generator should pair supersessions (`RR-0174 — SUPERSEDED BY RR-0176`) or omit the superseded row.
+
+- **[MEDIUM]** (~L195–210, step 5): **SAMPLES.md is not linked and the data check is not reproducible.** "SAMPLES.md multi-lot addresses" appears in AC #1 and step 5 but is absent from `## References`. A reviewer cannot reproduce or verify the counts. **Fix:** add the SAMPLES.md path to References and cite the specific addresses inline in the plan.
+
+- **[MEDIUM]** (~L200–205, step 4): **The claim "the v8 'no building' is not used" is correct and safe, but the inverse risk is unstated:** `hasFootprint = true` (a fill tier on the map) is presented to the user as "has the house," which is a positive assertion the massing table may not support for stale, proposed, or non-residential structures. Absence → silence is safe; presence → assertion is not. **Fix:** either filter the EXISTS by structure type/lifecycle status, or soften the positive assertion to a neutral presence indicator and document the false-positive risk.
+
+- **[MEDIUM]** (~L10–14, AC #2): **The whitelist count is described as "14-entry" but the new count is never stated, and the test that changes it is not named.** The plan says the whitelist "gains map.lots[].frontageStreet and map.lots[].hasFootprint" but never says the test asserts 16 or that the 14-entry assertion in `search-follow-ups.logic.test.ts` is the one updated. **Fix:** state "14 → 16" and name the test file and the assertion.
+
+- **[MEDIUM]** (~L180–190, step 1(a), "planted red kept"): **Ambiguous red-first policy.** "Planted red kept" could mean the failing lock test is committed to the lane branch (fine) or merged to the base board head (breaks every other lane). **Fix:** say explicitly "red test committed on the lane branch only; base head stays green."
+
+- **[MEDIUM]** (~L170–178, step 6, "queue row MF-53 gets a dated note"): **No relevance/sizing justification against RR-0214.** `task-12`'s final summary already says C.5 and C.7 were "NOT BUILT, OPERATOR: … data not served." task-336 could legitimately be a continuation, but RR-0214 requires a relevancy pass and the brief presents none. The task is labelled `S` but packs a schema change, a mobile change, content keys, two golden systems, and a data-check script. **Fix:** add a one-line relevancy justification under Decision-Refs pointing at RR-0284 and the task-12 hand-off.
+
+---
+
+## LOW / NIT
+
+- **[LOW]** (~L180, step 3): **RR-0284's title may be an orchestrator summary, not operator words.** RR-0190 says only operator words feed reviews as rulings. The title "Lot map: two data reads allowed (C.5 footprint, C.7 card line)" reads like a summary. If the operator words are only "if it a small change lets do it - we have the data - why not", then "C.5 footprint" in the title is an inference the plan is leaning on. **Fix:** cite the verbatim operator words in the plan; treat the title as an orchestrator reading and mark it as such.
+
+- **[LOW]** (~L15–20, References; and `## Decisions naming this task` ~L145): **Inconsistent path forms.** References use `~/Buildo-scratch/…`; the RR-0284 decision citation uses `/Users/brettpreston_macmini/Buildo-scratch/…`. The hook enforcement in RR-0190 expects `file:line`; the absolute path with a personal home directory is non-portable and may fail hook validation. **Fix:** normalise to repo-relative or `~/` and verify the hook accepts it.
+
+- **[LOW]** (~L200–205, `hasFootprint` fill tier): **Color-only presence indicator has no non-visual alternative.** The card line partly compensates, but the map tint alone encodes "has a building". **Fix:** add a shape (hatch or outline) alongside the tint, or note that the card line is the accessible equivalent.
+
+- **[LOW]** (~L215–218, Binding table): **Correlated `EXISTS` per lot is fine for a single address, but the "map view" may later render a whole block/street.** Note the query shape assumes small N. **Fix:** add a comment in `lot-map.ts` that the EXISTS is per-address and must be revisited if the map ever renders at street scale.
+
+- **[LOW]** (~`## Document sections`, the three ENOENT notices): **The ENOENT instruction text is malformed** — "read it at Requirements: backlog/docs/… (not readable: ENOENT; read it at …)". Nested, self-referential. **Fix:** one clean line per block: `UNREADABLE (ENOENT): <path>`.
+
+- **[NIT]** (~L42, `## Compliance codes in use`): **The statement "None named: no 1·B task carries a comp: label"** enumerates task-12…task-325 but omits **task-336 itself**, the task under review. **Fix:** include the task under review in the scan, or state "including task-336."
+
+- **[NIT]** (~L3–9, "Decisions in force" completeness): **Summary vs verbatim mismatch.** RR-0005's verbatim text in the Register section is truncated mid-word ("This Lot" information (Main page) and details as well as t") and the summary in `## Decisions in force` is different. The brief should carry one canonical text per ruling to avoid the reviewer quoting the truncated version. **Fix:** store verbatim once; reference by id.
+
+---
+
+## Overall verdict
+
+**FAIL** on review-readiness. The generated brief is structurally rich but substantively blind: the three documents the plan must be validated against are all `ENOENT`, and the generator degrades silently rather than failing closed, so the reviewer is asked to bless a C.5/C.7 change without C.5/C.7's definitions. On top of that, the plan itself re-scopes AC #3 (a footprint *drawing* becomes a lot *fill tier*) without an operator ruling, leaves AC #1 uncloseable by the lane and without a numeric go/no-go threshold, and restates a "has the house" claim that the underlying boolean (`EXISTS` on an unverified `parcel_buildings`) does not support. Fix the generator to fail on missing documents and dedupe the decisions list; add a numeric data-check threshold and a real read-only, rehearsal-only connection story; reconcile RR-0172/0174 against RR-0284/0176 explicitly; and either implement C.5 geometry or get an operator amendment for the fill tier. Until those land, the plan is not safe to lock or build.
+
+---
+⏱  75846ms (75.8s)
+📊 Tokens — total: 24038, input: 11555, output: 12483, reasoning: 7950
