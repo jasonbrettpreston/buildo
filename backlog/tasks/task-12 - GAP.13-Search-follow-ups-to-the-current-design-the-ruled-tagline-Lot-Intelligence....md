@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-GAP13'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:50:00Z'
+updated_date: '2026-11-19T15:57:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -125,6 +125,8 @@ A.11 Clear (x) in the search box. Grounded: v8 shows the x only in App frames (s
 C.5 building footprint layer and C.7 card lead line (has the house / faces the street). Grounded: choose-lot.html:306 names the fields (footprint presence from the massing join; primary_frontage_street_name); neither is in the map descriptor field_whitelist (mobile_parcel_disambiguation_map.descriptor.json inputs.field_whitelist, pinned by the new root test) and src/lib/parcels/lot-map.ts:26 CONSUMER_MAP_COLS is locked both ways (consumer-parcel-lookup.infra.test.ts:208); search-1b-adj/REPORT.md GAP.13-d and -f. Recommendation (UNVERIFIED): rule the data read (serve the primary building outline and the street name through the lookup contract, with the DATA CHECK on the rehearsal stack first), then one build task covers C.5, C.7 and the card accessibility label; the 'faces the street' rule question was withdrawn (MORNING-DECISIONS.md:774) so the lead line follows the design words only.
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0281 · task-12 · Backlog; operator, verbatim: "Task-330 is not required. We dont need a clear search.")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0284 · task-12 · Backlog; operator, verbatim: "if it a small change let's do it - we have the data - why not")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
