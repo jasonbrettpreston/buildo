@@ -3,11 +3,11 @@ id: TASK-68
 title: >-
   PROOF.TOOL Page-proof tool (build-approach 4.2: no live-lot renderer exists):
   one...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-PROOF2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:14:00Z'
+updated_date: '2026-11-19T21:15:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -35,6 +35,7 @@ references:
   - docs/reports/lanes/2026-11-19/BL-PROOF/PLAN.md
   - docs/reports/lanes/2026-11-19/BL-PROOF/REPORT.md
   - docs/reports/lanes/2026-11-19/BL-PROOF/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-PROOF2/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -64,12 +65,12 @@ Files: scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json, src
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
 - [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
 - [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
 - [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
@@ -130,3 +131,9 @@ Stage 2 (lane BL-PROOF2, 2026-11-19): building the minimum runner per PLAN.md se
 
 Output review r2 (lane BL-PROOF2): triage in docs/reports/lanes/2026-11-19/BL-PROOF2/TRIAGE.md; KEPT defects fixed in the fix commit (expect line = positive proof of a run, key whitelist, notbuilt null, head check, error in evidence).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+BUILT for the minimum only: scripts/analysis/proof-slice.mjs + proof-slices.json + src/tests/proof-slice.logic.test.ts (commits e641ff7be, fix 0918e53a8; hooks green, 36 tests). Slice S table on committed head: PASS 5, FAIL 0, NOT BUILT 10, GAP 1, exit 3 (docs/reports/lanes/2026-11-19/BL-PROOF2/TABLE.md). Caller: the PROOF.S lane (task-268) runs it as its acceptance command. Later stages and unblockers: design fit task-345 then task-67; loading task-266, task-267; load-failure task-317; report read, key match task-123; screenshots and element check task-123, task-265; storage probes task-265. AC #1 and #8 are generic criteria that do not apply (no by-law step, no McFrontend row); #4 and #5 not re-verified in stage 2.
+<!-- SECTION:FINAL_SUMMARY:END -->
