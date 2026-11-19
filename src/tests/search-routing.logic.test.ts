@@ -101,6 +101,14 @@ describe('SRCH.ROUTE: one route per case', () => {
     expect(route).toBe(`${BASE}/disambiguate?q=${encodeURIComponent('26 Kenneth Ave')}&kind=multi_parcel`);
   });
 
+  it('two lots printing DIFFERENT addresses is the candidates list, not the map (the one-address rule)', async () => {
+    state.exact['32|ACACIA'] = [{ parcel_id: 'A1', address: '32 Acacia Ave' }, { parcel_id: 'A2', address: '32 Acacia Rd' }];
+    const { data, route } = await search('32 Acacia');
+    expect(data.resolution).toBe('text_candidates');
+    expect(data.map).toBeNull();
+    expect(route).toBeNull();
+  });
+
   it('an address with no lot link (76R Abbott Ave, sample 10) -> the same map page, kind unlinked', async () => {
     state.unlinked = [{ address_point_id: 14198374, address: '76R Abbott Ave', latitude: 43.6607746, longitude: -79.4581974 }];
     const { data, route } = await search('76R Abbott Ave');
@@ -118,6 +126,7 @@ describe('SRCH.ROUTE: one route per case', () => {
     expect(data.resolution).toBe('text_candidates');
     expect(data.map).toBeNull();
     expect(data.candidates.map((c) => c.address)).toEqual(['1 Derwyn Rd', '10 Derwyn Rd', '11 Derwyn Rd']);
+    expect(data.candidates.map((c) => c.parcelId)).toEqual(['1001', '1010', '1011']); // the id a pick opens
     expect(route).toBeNull(); // the list renders on the search page itself
   });
 
@@ -135,7 +144,7 @@ describe('SRCH.ROUTE: one route per case', () => {
     expect(mount).toContain('router.replace(semiQuestionRoute(parcelId))');
   });
 
-  it('an older server or an absent view (no lotForm block) never asks the semi question', async () => {
+  it('an absent view (the lot has no parcel_lot_form row: lotForm null) never asks the semi question', async () => {
     state.exact['49|CANOE'] = [{ parcel_id: '5002012', address: '49 Canoe Cres' }];
     const { data, route } = await search('49 Canoe Cres');
     expect(data.lotForm).toBeNull();
@@ -157,6 +166,7 @@ describe('SRCH.ROUTE: one route per case', () => {
     const { data, route } = await search('41 Derwyn Road, Toronto');
     expect(readParams(0)).toEqual(['41', 'DERWYN']); // the city suffix after the comma is dropped
     expect(data.resolution).toBe('unique');
+    expect(dbQuery.mock.calls.some((c) => /FROM parcels WHERE parcel_id = \$1/.test(String(c[0])) && c[1]?.[0] === '5293897')).toBe(true); // the report read is for the matched lot
     expect(data.map).toBeNull();
     expect(data.candidates).toEqual([]);
     expect(route).toBe(`${BASE}/5293897`);

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ROUTE'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:34:00Z'
+updated_date: '2026-11-19T15:36:00Z'
 labels:
   - S
   - plan:SRCH.ROUTE
@@ -45,6 +45,8 @@ Estimate: UNMEASURED
 
 Plan text at the snapshot: NEW: panel + build pass owed
 who (plan text): lane
+
+Files: src/tests/search-routing.logic.test.ts, docs/reports/reviews/task-318/, docs/reports/lanes/2026-11-19/BL-ROUTE/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
