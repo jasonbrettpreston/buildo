@@ -3,11 +3,11 @@ id: TASK-69
 title: >-
   1.4 Search parser: direction guard after the match and unit-token strip (join
   key...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-PARSER'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T20:00:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -100,4 +100,6 @@ element ids delivered: A.4, A.5
 Dated note 2026-11-18 (M-246, prior text kept; RR-0166 · task-69 · Backlog; operator, verbatim: "ONE-12 a")
 
 2026-11-19 1·B validation (R10, RR-0257, task-316): KEPT (deps task-62 push 6; inc-6 protection RR-0186 keeps origin moving only by push 6): the doc-2 Elements rows A.4 and A.5 NOT-BUILT are right: src/lib/parcels/address.ts:39 'Directional suffixes (N, S, E, W) are stripped from the name' and fe-built/BUILT.md:55 'parseFreeTextAddress has no direction guard'; the search-delta current table row A.4 'AVAILABLE' is stale. RR-0166 'ONE-12 a': two labels and one dated note on Spec 89 line 33. Panel and build pass owed (readiness: panel, open item).
+
+2026-11-19 taken on the board at lane launch (lane BL-PARSER, worktree /Users/brettpreston_macmini/Buildo-wt-parser, branch wf1/inc1b-parser), RR-0240
 <!-- SECTION:NOTES:END -->
