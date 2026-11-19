@@ -84,6 +84,7 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 2026-11-19 taken on the board at lane launch (lane BL-INFRA6, worktree /Users/brettpreston_macmini/Buildo-wt-infra6, branch wf1/inc1a-infra6), RR-0240
 
 2026-11-19 BL-INFRA6: section 5.8 (08_agents.md:249-254) is a WF6 decision-trail audit, so it does not make the note redundant; full DRAFT (not applied) dated note written after :253 (one paragraph, M-246 form, prior text kept, no rule text change, no new role/seat/template). Review r1 (review mode, plan template) triaged in docs/reports/lanes/2026-11-19/BL-INFRA6/TRIAGE.md; 4 KEPT items folded.
+Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-11 · Backlog; operator, verbatim: "y - this is a major improvement")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -5,6 +5,7 @@ status: OPERATOR
 assignee:
   - '@operator'
 created_date: '2026-11-19T13:07:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 labels:
   - queue-row
   - open-decisions
@@ -41,3 +42,11 @@ Recommendation: renew with a named event as expiry, `expires when the increments
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0232 · task-312 · Backlog; operator, verbatim: "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified).")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-312 · Backlog; operator, verbatim: "I really only have expertise in the front-end, design of the app, how much storage, timeframes, priorities - beyond that my expertise is limited and I need to rely on yo or the panel or the gates to make sure the rules are followed and we are making prudent decisions")
+<!-- SECTION:NOTES:END -->

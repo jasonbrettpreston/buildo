@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:44:00Z'
+updated_date: '2026-11-19T14:15:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -81,4 +81,6 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-2 · Backlog; ope
 2026-11-19 relevancy pass (R7, RR-0214): CHANGED: goes through the repo decision log (decision-log.mjs, R-HK) and G2 backlog-decision.mjs; BL.0's loader already loaded the rulings as 68 Backlog decisions; the scratch register and add-ruling.mjs are not built as new tools. Overlaps BL.0 (plan line 90: 'Overlaps CHK.0, CHK.7 and INFRA.3'; MORNING-DECISIONS.md:751 'CHK.0 goes through decision-log.mjs'). Description unchanged (no quotable narrowed scope beyond the ruling).
 
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): CHANGED: no scratch register, add-ruling or ruling-gate is built; BL.0 G2 scripts/analysis/backlog-decision.mjs (quote at a resolving cite, 3002ef51c era) and scripts/analysis/decision-log.mjs (R-HK) are the pair, 68 rulings already loaded (R7b note). Rulings after RR-0219 enter through task-314 (R8f, LATER, not built; MORNING-DECISIONS.md:960). (re-use ruling MORNING-DECISIONS.md:750-751). Scope now: build nothing new; confirm task-314 covers the rulings from RR-0220 on, then close this task as covered (MERGED into task-314 once task-314 is DONE).
+
+2026-11-19 (R8f, task-314): the remaining scope of this task (rulings after RR-0219 enter the Backlog decisions) is covered once the task-314 commit lands: five operator rulings RR-0232, RR-0233, RR-0235, RR-0242, RR-0248 written through G2 as decision-71 to decision-75; five reading rows (RR-0223, 0225, 0227, 0238, 0240) held back as orchestrator words. Task-2 can close MERGED into task-314 once task-314 is DONE.
 <!-- SECTION:NOTES:END -->

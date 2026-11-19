@@ -5,7 +5,7 @@ status: OPERATOR
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:07:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -84,6 +84,10 @@ Recommendation: hold to the freeze lift; land an item only if it blocks a projec
 2026-11-19 (BL-R7b): stays WAITS; operator word owed: the freeze-lift word for this item (plan text 'HELD to freeze lift' / 'HELD under the infra freeze'; no operator words found).
 
 2026-11-19 (BL-R7b, draft-18 part 2): queue row MB-79 (MCBYLAWS-QUEUE.md:398) NOT set DONE: no landing commit grounds it. The loader's LANDED flag rests on commits that mention MB-79 (status.json queueFlags; the commits are queue upkeep, partial parts or the tip, not a completing commit) and the row's own Status line still names open work (Spec 137 137_mcqueue.md:63 'The work landed and the evidence exists'). Row left as is; needs the operator or the row's lane.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0232 · task-298 · Backlog; operator, verbatim: "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified).")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-298 · Backlog; operator, verbatim: "I really only have expertise in the front-end, design of the app, how much storage, timeframes, priorities - beyond that my expertise is limited and I need to rely on yo or the panel or the gates to make sure the rules are followed and we are making prudent decisions")
 <!-- SECTION:NOTES:END -->
 
 ## Comments

@@ -106,6 +106,7 @@ CHK.7 now runs at push and CI (arm Q) only; header comment of mcbylaws-queue-che
 2026-11-19 second station failure (mcbylaws-gate.logic.test.ts arm Q green fixtures, exit 1 at --push and --ci): the fixture queues have no Next free id line, so the CHK.7 cannot-decide became a FAIL. A queue without that line is now not judged for claims; two fixture shapes are cases in mcbylaws-id-ledger.logic.test.ts.
 
 Fix: idLedgerErrors skips the unclaimed judgement when the queue has no Next free id line (no cannot-decide, no WARN); duplicates are still judged.
+Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-4 · Backlog; operator, verbatim: "y - this is a major improvement")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

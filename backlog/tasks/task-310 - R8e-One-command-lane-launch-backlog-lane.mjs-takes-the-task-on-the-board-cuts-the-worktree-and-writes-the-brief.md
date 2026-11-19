@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R8e'
 created_date: '2026-11-19T13:05:00Z'
-updated_date: '2026-11-19T13:22:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -65,6 +65,8 @@ Operator 2026-11-19: "you now need to manually change the board or add a task - 
 2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8e in ~/Buildo-wt-r8e, branch wf2/r8e-lane-launch), RR-0240
 
 2026-11-19 BL-R8e: script and 16 tests landed in 67032d6a6 (red.out: 16 failed, no module; commit.out: 16 passed, hooks green); r1 plan review and r2 output review triaged in docs/reports/lanes/2026-11-19/BL-R8e/TRIAGE.md; fixes folded in the second commit; dry-run proof in the lane dir dryrun.out (task-310 refused as RUNNING, task-14 LATER printed all commands).
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0242 · task-310 · Backlog; operator, verbatim: "wasnt the point of this to avoid just that")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-R8F'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-19T14:11:00Z'
+updated_date: '2026-11-19T14:15:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -45,8 +45,18 @@ Review r1 of task-308 (build-r8/r8c/r1-review.txt, HIGH): the Decisions in force
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Plan (lane BL-R8F): 1 Read the 10 ruling rows RR-0220 onward (none has a decision file: grep RR-02 in backlog/decisions returns none). 2 Five rows have source operator (RR-0232, 0233, 0235, 0242, 0248): write each through G2 with the register quote at its cite, naming tasks per the map. 3 Five rows have source reading, orchestrator words, not the operator's (RR-0223, 0225, 0227, 0238, 0240): G2 would write "Operator, verbatim" and source: operator, which is false (Spec 137 rule 4, RR-0190), so they are not written and the reason is stated. 4 One note on task-2. 5 One docs commit with Task: task-314; reports in a last commit; close.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R8F, worktree /Users/brettpreston_macmini/Buildo-wt-r8f, branch wf2/r8f-decisions), RR-0240
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-314 · Backlog; operator, verbatim: "y - this is a major improvement")
+
+Plan step 1-4 executed: decisions.out in lane dir shows G2 exit 0 for decision-71..75; register-table.txt shows 10 kind ruling rows, 5 source operator written, 5 source reading not written (orchestrator words, RR-0190).
 <!-- SECTION:NOTES:END -->

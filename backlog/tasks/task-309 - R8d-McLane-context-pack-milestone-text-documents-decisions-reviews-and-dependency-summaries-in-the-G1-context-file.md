@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R8d'
 created_date: '2026-11-19T12:52:00Z'
-updated_date: '2026-11-19T13:10:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -49,11 +49,6 @@ Operator 2026-11-19 (RR-0235): "We need them linked with all the relevant data -
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
-## Implementation Notes
-
-<!-- SECTION:NOTES:BEGIN -->
-2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8d in ~/Buildo-wt-r8d, branch wf2/r8d-context-pack)
-<!-- SECTION:NOTES:END -->
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
@@ -63,7 +58,9 @@ Operator 2026-11-19 (RR-0235): "We need them linked with all the relevant data -
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-AC1 ## Milestone section: tests 'Milestone carries the milestone body' and 'no milestone file' green (commit.out). AC2 ## Document sections: #L range, section title, first 12 KB, cap line, read-the-rest line, missing/empty/past-EOF files green. AC3 ## Decisions naming this task: plan id, task id, RR id with quote and cite green. AC4 ## Prior reviews and lane reports and ## Dependencies (status, Final Summary) green. AC5 red.out (12 of 12 failed through pre-commit), plan round r1 + TRIAGE.md before the green commit, 18 related tests green through hooks (commit.out), one output review r2 triaged.
+2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8d in ~/Buildo-wt-r8d, branch wf2/r8d-context-pack)
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0235 · task-309 · Backlog; operator, verbatim: "We need them linked with all the relevant data - beyond just the data references")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

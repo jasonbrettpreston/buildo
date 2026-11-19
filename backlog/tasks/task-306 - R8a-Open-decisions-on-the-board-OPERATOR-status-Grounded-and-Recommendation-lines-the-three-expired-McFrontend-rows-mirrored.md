@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R8a'
 created_date: '2026-11-19T12:52:00Z'
-updated_date: '2026-11-19T13:07:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 labels:
   - follow-up
   - open-decisions
@@ -49,11 +49,6 @@ Operator 2026-11-19 (RR-0232): "recommendation approved - however the open decis
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
-## Implementation Notes
-
-<!-- SECTION:NOTES:BEGIN -->
-2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8a in ~/Buildo-wt-r8a, branch wf2/r8a-open-decisions)
-<!-- SECTION:NOTES:END -->
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
@@ -66,7 +61,11 @@ Operator 2026-11-19 (RR-0232): "recommendation approved - however the open decis
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-AC1: six held tasks set to OPERATOR with Grounded:/Recommendation: (node scripts/analysis/backlog-next.mjs OPERATOR section lists them ok). AC2: task-311 (MF-08), task-312 (MF-22), task-313 (MF-49) created, milestone m-8 (placement UNVERIFIED as increment ownership, stated in each Grounded). AC3: Spec 137 rule 13 dated note + backlog-next OPERATOR section, red proven (red.out: 3 failed) then green in commit 27f0c7009 (3 passed, GATE OK). AC4: review r1 in review mode on the context file (r1-plan.txt), triaged in TRIAGE.md; every Recommendation marked UNVERIFIED because r1 tested routing, not answers.
+2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8a in ~/Buildo-wt-r8a, branch wf2/r8a-open-decisions)
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0232 · task-306 · Backlog; operator, verbatim: "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified).")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-306 · Backlog; operator, verbatim: "I really only have expertise in the front-end, design of the app, how much storage, timeframes, priorities - beyond that my expertise is limited and I need to rely on yo or the panel or the gates to make sure the rules are followed and we are making prudent decisions")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

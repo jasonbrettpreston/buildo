@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-CHK1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:11:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -97,6 +97,7 @@ Files: scripts/hooks/check-task-files.mjs, src/tests/backlog/check-task-files.lo
 2026-11-19 lane BL-CHK1: output review r2 (one lens) triaged; KEPT: renamed and deleted task file handling (fixed, test-first).
 
 2026-11-19 BL-CHK1: AC #1, #3, #4, #5, #8 not applicable after the R9 narrowing (brief/panel/pre-registration parts dropped; no work invented). #2, #6, #7 checked with evidence in docs/reports/lanes/2026-11-19/BL-CHK1/REPORT.md.
+Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-3 · Backlog; operator, verbatim: "y - this is a major improvement")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

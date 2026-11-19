@@ -7,7 +7,7 @@ status: OPERATOR
 assignee:
   - '@operator'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:07:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -94,6 +94,10 @@ Recommendation: keep AL.1 held after launch (do not lift the freeze for it); lif
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 (BL-R7b): stays WAITS; operator word owed: the freeze-lift word for this item (plan text 'HELD to freeze lift' / 'HELD under the infra freeze'; no operator words found).
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0232 · task-293 · Backlog; operator, verbatim: "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified).")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-293 · Backlog; operator, verbatim: "I really only have expertise in the front-end, design of the app, how much storage, timeframes, priorities - beyond that my expertise is limited and I need to rely on yo or the panel or the gates to make sure the rules are followed and we are making prudent decisions")
 <!-- SECTION:NOTES:END -->
 
 ## Comments

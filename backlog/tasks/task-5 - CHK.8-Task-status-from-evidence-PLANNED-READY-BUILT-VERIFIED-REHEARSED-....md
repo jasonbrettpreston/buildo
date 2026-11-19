@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-CHK8'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:09:00Z'
+updated_date: '2026-11-19T14:14:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -90,6 +90,7 @@ who (plan text): lane
 2026-11-19 taken on the board at lane launch (lane BL-CHK8, worktree /Users/brettpreston_macmini/Buildo-wt-chk8, branch wf1/inc1a-chk8), RR-0240
 
 2026-11-19 lane BL-CHK8: check built at scripts/analysis/backlog-status-check.mjs (test src/tests/backlog/backlog-status-check.logic.test.ts). Review r1 (plan) and r2 (output, lens git range edge cases and exit codes) triaged in docs/reports/lanes/2026-11-19/BL-CHK8/TRIAGE.md; KEPT fixes: exit 2 on a non-repo root or a range outside HEAD, annotated trailers, empty diff not docs-only.
+Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-5 · Backlog; operator, verbatim: "y - this is a major improvement")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
