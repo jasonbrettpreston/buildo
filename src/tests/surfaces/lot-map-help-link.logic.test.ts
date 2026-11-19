@@ -1,0 +1,117 @@
+// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 (props goldens, content file one source; regenerated, never hand-edited),
+//            §11b.7 (the support inbox is ONE setting; the Help page reads it), docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+//            FE-31, FE-32 (every value a ref), docs/specs/00-architecture/137_mcqueue.md rule 10 (M-246 dated notes keep the prior text).
+//
+// SRCH.C12 (task-321, Increment 1·B; McFrontend follow-up row on MF-53) · the help link of the choose-your-lot page, as small-pages-v8 draws it:
+//   C.12  "Not sure which lot? Get help with an address" under the cards of the multi-lot state (choose-lot.html:279);
+//   B.7   "Get help with an address" under each of the three address-confusion notices (choose-lot-states.html:267, :278, :289):
+//         intersection, no lot linked, many lots.
+// Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with topic wrong-lot (v8's route
+// /help?topic=wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+// this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
+import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+
+type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
+const ROOT = process.cwd();
+const rj = (p: string): Json => JSON.parse(fs.readFileSync(path.join(ROOT, p), 'utf8'));
+const SURF = 'scripts/surfaces/parcel_product/F01/surfaces';
+const MAP = 'mobile_parcel_disambiguation_map';
+const GOLD = `src/tests/fixtures/surfaces/${MAP}`;
+const content: Record<string, string> = rj(`${SURF}/${MAP}.content.json`);
+const slice = rj(`mobile/src/generated/surfaces/${MAP}.json`).content as Record<string, string>;
+const golden = (name: string): Json => rj(`${GOLD}/${name}.mobile.json`);
+
+const PROMPT = 'Not sure which lot?';
+const LINK = 'Get help with an address';
+/** The closed classification of every committed golden: a new state fails until it is placed here. */
+const WITH_ROW = ['multi_parcel_2', 'multi_parcel_3plus'];
+const WITH_LINK: Record<string, string> = { intersection: 'parcel-lotmap-intersection', too_many_lots: 'parcel-lotmap-too-many', unlinked: 'parcel-lotmap-unlinked' };
+const NONE = ['error', 'loading', 'rate_limited', 'redirect', 'schema_drift', 'unauthorized'];
+
+/** Every node (depth first) whose props.testID equals `id`. */
+const allByTestId = (n: Json, id: string): Json[] => [
+  ...(n?.props?.testID === id ? [n] : []),
+  ...((n?.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap((c) => allByTestId(c, id)),
+];
+/** The children of the page column of a golden. */
+const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')[0]!.children as Json[];
+const HELP = 'parcel-lotmap-help';
+const OPEN_HELP = { action: 'open_help', topic: 'wrong-lot', q: { derived: 'query' } };
+
+describe('SRCH.C12: the two v8 strings', () => {
+  it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+    expect([content['help.lot.prompt'], content['help.address.link']]).toEqual([PROMPT, LINK]);
+    expect([slice['help.lot.prompt'], slice['help.address.link']]).toEqual([PROMPT, LINK]);
+  });
+});
+
+describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get help with an address"', () => {
+  it.each(WITH_ROW)('%s: after the Continue button, one row: the prompt text and the link button to Help with topic wrong-lot', (name) => {
+    const col = column(golden(name));
+    const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+    expect(at).toBeGreaterThan(-1);
+    const row = col[at + 1]!;
+    expect(row.component).toBe('View');
+    expect(row.props.testID).toBe('parcel-lotmap-help-row');
+    const [prompt, link] = row.children as Json[];
+    expect(prompt!.component).toBe('Text');
+    expect(prompt!.children).toEqual([{ content: 'help.lot.prompt' }]);
+    expect(link!.component).toBe('Button');
+    expect(link!.props.testID).toBe(HELP);
+    expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+    expect(link!.props.onPress).toEqual(OPEN_HELP);
+    expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+    expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+  });
+});
+
+describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+  it.each(Object.entries(WITH_LINK))('%s: the link button follows the notice, and there is no prompt text (v8 draws the link alone)', (name, noticeId) => {
+    const col = column(golden(name));
+    const at = col.findIndex((c) => c.props?.testID === noticeId);
+    expect(at).toBeGreaterThan(-1);
+    const link = col[at + 1]!;
+    expect(link.component).toBe('Button');
+    expect(link.props.testID).toBe(HELP);
+    expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+    expect(link.props.onPress).toEqual(OPEN_HELP);
+    expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+    expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+    expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+  });
+  it.each(NONE)('%s: no help link (v8 draws none on the loading and error states)', (name) => {
+    expect(allByTestId(golden(name).props, HELP)).toEqual([]);
+    expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+  });
+  it('every committed golden is classified above (a new state must be placed here)', () => {
+    const files = fs.readdirSync(path.join(ROOT, GOLD)).filter((f) => f.endsWith('.mobile.json')).map((f) => f.replace('.mobile.json', '')).sort();
+    expect(files).toEqual([...WITH_ROW, ...Object.keys(WITH_LINK), ...NONE].sort());
+  });
+});
+
+describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+  it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+    const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+    expect(src).toContain("import { openHelp } from '@/lib/maxbldHelp';");
+    expect(src).toMatch(/open_help: openHelp/);
+  });
+  it('the binding names no setting and no mail link; the only data ref of the link is the existing derived query', () => {
+    const src = fs.readFileSync(path.join(ROOT, 'mobile/src/components/surfaces/LotMapBinding.tsx'), 'utf8');
+    expect(src).not.toMatch(/maxbld_support_inbox|mailto:/);
+    expect(JSON.stringify(golden('intersection').props)).not.toMatch(/maxbld_support_inbox|mailto/);
+  });
+});
+
+describe('SRCH.C12: the dated note on the parent queue row (M-246, prior text kept)', () => {
+  const queue = fs.readFileSync(path.join(ROOT, '.cursor/MCFRONTEND-QUEUE.md'), 'utf8');
+  const start = queue.indexOf('\n**MF-53 ');
+  const row = queue.slice(start, queue.indexOf('\n**MF-54 ', start));
+  it('MF-53 carries a 2026-11-19 note quoting RR-0299 and keeps the earlier notes', () => {
+    expect(row).toContain('Dated note 2026-11-19 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-C12, task-321 SRCH.C12');
+    expect(row).toContain('C12 - is a fake email address until launch');
+    expect(row).toContain('/help?topic=wrong-lot');
+    expect(row).toContain('Dated note 2026-11-19 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-LOTCARD');
+  });
+});

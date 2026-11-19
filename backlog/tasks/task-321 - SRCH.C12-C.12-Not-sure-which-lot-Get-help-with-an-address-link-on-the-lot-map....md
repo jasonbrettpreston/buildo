@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-C12'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:16:00Z'
+updated_date: '2026-11-19T20:19:00Z'
 labels:
   - S
   - plan:SRCH.C12
@@ -73,6 +73,16 @@ element ids delivered: B.7, C.12
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Red tests first (lot-map-help-link.logic.test.ts) for C.12 and B.7, proven red through the commit hook.
+2. Add two content keys and the help link/row parts in LotMapBinding.tsx (existing Button link + open_help action), open_help passed by disambiguate.tsx.
+3. Regenerate goldens by lotmap-golden-capture and emit-mobile-surfaces; run every generator --check and surface-validate --check.
+4. MF-53 dated note quoting RR-0299; no DB write, no setting, no placeholder value.
+5. One output review (link goes to Help with the topic on every state, no data read), triage, report in repo, close BUILT.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

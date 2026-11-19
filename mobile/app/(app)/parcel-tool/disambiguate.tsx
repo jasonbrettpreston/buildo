@@ -15,6 +15,7 @@ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/Surface
 import { LOT_MAP_SLICE, lotMapData, lotMapProps } from '@/components/surfaces/LotMapBinding';
 import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { buildLotMapSituation } from '@/lib/lotMap';
+import { openHelp } from '@/lib/maxbldHelp';
 import { PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
 
 export default function ParcelDisambiguationScreen() {
@@ -46,6 +47,8 @@ export default function ParcelDisambiguationScreen() {
       retry: () => void refetch(),
       select: (parcelId: string) => setSelectedParcelId(parcelId),
       push,
+      // SRCH.C12 (task-321): the help link leaves the app for Help & Support with the topic and the query (the same action as the search page).
+      open_help: openHelp,
       // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
     }),

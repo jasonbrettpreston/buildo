@@ -40,6 +40,11 @@ export const LOT_MAP_LAYOUT = {
   markerTextChecked: 'text-xs font-bold text-report-ink',
   select: S.select,
   selectText: S.selectText,
+  // SRCH.C12 (v8 choose-lot.html:279): the help link reuses the search page link classes; the prompt is small muted text beside it.
+  helpRow: 'mt-3 flex-row flex-wrap items-center justify-center gap-1',
+  helpPrompt: 'text-xs font-normal text-report-soft',
+  helpLink: S.report,
+  helpLinkText: S.reportText,
 } as const;
 
 /** Map colours (react-native-maps takes colour values, not classes): the Daylight twins. Amber is report-amber; the stroke is report-amber-ink (v8 draws #b45309, which has no report token: OPERATOR item). */

@@ -510,6 +510,59 @@
                     ]
                   }
                 ]
+              },
+              {
+                "component": "View",
+                "props": {
+                  "key": "help-row",
+                  "testID": "parcel-lotmap-help-row",
+                  "className": "mt-3 flex-row flex-wrap items-center justify-center gap-1"
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "help-prompt",
+                      "className": "text-xs font-normal text-report-soft"
+                    },
+                    "children": [
+                      {
+                        "content": "help.lot.prompt"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "help",
+                      "testID": "parcel-lotmap-help",
+                      "variant": "link",
+                      "className": "mt-2 min-h-[44px] self-center",
+                      "accessibilityRole": "link",
+                      "onPress": {
+                        "action": "open_help",
+                        "topic": "wrong-lot",
+                        "q": {
+                          "derived": "query"
+                        }
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "help-text",
+                          "className": "text-xs font-semibold text-report-ink underline"
+                        },
+                        "children": [
+                          {
+                            "content": "help.address.link"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }
@@ -519,7 +572,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "620c5a3d85281f76",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "6d6300d9417a45c5",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
     }
   }
