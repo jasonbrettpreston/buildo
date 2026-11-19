@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-METER2'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:08:00Z'
+updated_date: '2026-11-19T23:19:00Z'
 labels:
   - S
   - plan:SRCH.METER
@@ -40,7 +40,7 @@ Acceptance criteria (also on this task as AC): see AC list.
 
 The post-answer navigation already appends the flag: mobile/src/lib/lotForm.ts:41 reportRouteAfterAnswer builds `?semi=answered`, and semi-question.tsx stores the answered result under the report key; no change there, listed for the end-to-end case.
 
-Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.test.ts, src/tests/parcels-lookup-page.logic.test.ts, mobile/src/hooks/useParcelLookup.ts, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/__tests__/useParcelLookup.test.ts, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, mobile/src/lib/lotForm.ts (read only), docs/reports/lanes/
+Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.test.ts, src/tests/parcels-lookup-page.logic.test.ts, mobile/src/hooks/useParcelLookup.ts, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/__tests__/useParcelLookup.test.ts, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, mobile/src/lib/lotForm.ts (read only), docs/reports/lanes/, mobile/__tests__/reportScreen.mount.behaviour.test.tsx
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -68,6 +68,12 @@ Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.t
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Route: read lotForm first; held = unsure and semi !== answered; for a held lot skip the stored read W and the compute, page null, meter semi_pending (AC1, AC6). 2. Tests red first in parcel-lookup-gate.infra.test.ts: held lot no flag page null, no openReport, compute not called; semi=answered returns page and counts once; no evaluated option stays not_evaluated; second lookup already_counted (AC1, AC2, AC8). 3. Update the existing unsure-with-page case in the gate test; check parcels-lookup-page.logic.test.ts T-B3 for any unsure-page case (AC3). 4. Mobile: useParcelLookup(parcelId, semi) sends semi=answered only for the exact route param; report screen passes it; question page unchanged (AC4, AC7). 5. Report screen: loading state while needsSemiQuestion and settled (AC5). 6. Lenses compliance, code-review, ux, error-paths, security at plan and output; typecheck; gates (AC6).
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

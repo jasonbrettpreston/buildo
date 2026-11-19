@@ -15,6 +15,8 @@
 //   count the report unless the report is produced. I should only be charged a report if I find the address and lot Im looking for and a report
 //   is produced"; MORNING-DECISIONS.md:1082): a lookup that ends in candidates, no-match, the lot map, a dangling id, a hit with no page, or an
 //   unsure lot whose semi question comes first counts nothing. Prior text: a hit with an evaluated option counted at the lookup (route.ts:161).
+//   SRCH.METER-2 (task-360, 2026-11-19): that unsure lot's `page` is not sent either (null; neither the stored read nor the compute runs, meter semi_pending) until
+//   the request carries semi=answered, so a page that is sent is a page that is counted. Prior text: the page was sent and only the meter said semi_pending.
 //   A new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error is a 500, never an unmetered payload.
 // Rate: `parcels-search:${uid}` 60/min on the q path; `parcels-lookup:${uid}` 30/min on parcelId.
 // MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12, B-3 a): a hit also carries `page`, the mobile report page view built by MF-57's core from the
@@ -136,17 +138,21 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
         // LOAD.1 (task-266, integrated with the board head): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
         // live switch is off, for a lot with no Layer 2 stamp, and for no such parcel. A compute error throws to the catch below (500): no page, no meter.
-        let pageResponse = await readCustomerPageResponse(parcelRef);
+        // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
+        const lotForm = await readLotForm(parcelRef);
+        // SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag): a page that is sent must be a page that
+        // is counted, so neither the stored read nor the compute runs for a held lot (the compute can take many seconds) and `page` is null; the meter below labels it
+        // semi_pending and the app asks the question. `unsure` is the server's own read of the view, never request text; the flag can only make the caller's own lot count.
+        const held = lotForm?.unsure === true && semi !== 'answered';
+        let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);
         if (pageResponse !== null) pageSource = 'stored';
-        else {
+        else if (!held) {
           const c0 = Date.now();
           pageResponse = await computeCustomerPageResponse(parcelRef);
           computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
           if (pageResponse !== null) pageSource = 'computed';
         }
         const page = pageResponse === null ? null : mobilePageView(pageResponse);
-        // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
-        const lotForm = await readLotForm(parcelRef);
         response = {
           match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
           candidates: [],

@@ -23,6 +23,7 @@ import { ApiError, AccountDeletedError, RateLimitError } from '@/lib/errors';
 import { ConsumerParcelLookupResultSchema } from '@/lib/schemas';
 import {
   fetchParcelLookup,
+  parcelLookupParams,
   shouldRetryParcelLookup,
   ParcelLookupSchemaError,
 } from '@/hooks/useParcelLookup';
@@ -106,6 +107,15 @@ describe('fetchParcelLookup — Zod boundary', () => {
     mockFetch.mockResolvedValue({ data: hitResponse });
     await fetchParcelLookup({ parcelId: 'PIN-777', semi: 'answered' });
     expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&semi=answered');
+  });
+
+  // SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2): the report screen's own query forwards the route param, so an answered lot refetches WITH the flag (the server
+  // holds an unsure lot's page without it). Only the exact sentinel counts as answered; a stray param, an empty one or none sends nothing (a stray param asks, never skips).
+  it('parcelLookupParams sends semi=answered only when the route param is exactly "answered"', () => {
+    expect(parcelLookupParams('PIN-777', 'answered')).toEqual({ parcelId: 'PIN-777', semi: 'answered' });
+    for (const stray of [undefined, '', 'Answered', 'yes', 'answered ', 'true']) {
+      expect(parcelLookupParams('PIN-777', stray)).toEqual({ parcelId: 'PIN-777' });
+    }
   });
 });
 

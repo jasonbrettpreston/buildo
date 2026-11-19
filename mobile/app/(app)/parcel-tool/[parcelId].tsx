@@ -19,18 +19,21 @@ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm'
 export default function ParcelReportScreen() {
   const router = useRouter();
   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
-  const { data, isError, isFetching, refetch } = useParcelLookup(parcelId);
+  const semiParam = typeof semi === 'string' ? semi : undefined;
+  const { data, isError, isFetching, refetch } = useParcelLookup(parcelId, semiParam);
   // SEMI-B (operator "semi ask a", 2026-11-13): an unsure lot (the doubt band of Spec 78 O-4) is asked the one question BEFORE the report shows. The
   // redirect fires once, on the first settled data (Spec 99 §6.5), never on a background refetch; a `semi` param means it was answered, and an older
   // server that sends no lotForm never asks. Clear semis and clear detached lots stay on the report.
   const askedRef = useRef(false);
-  const ask = needsSemiQuestion(data, typeof semi === 'string' ? semi : undefined);
+  const ask = needsSemiQuestion(data, semiParam);
   useEffect(() => {
     if (isFetching || !ask || askedRef.current || !parcelId) return;
     askedRef.current = true;
     router.replace(semiQuestionRoute(parcelId));
   }, [ask, isFetching, parcelId, router]);
-  const { view, lifecycle } = reportScreenState({ data: data ? { page: data.page ?? null } : undefined, isError });
+  // SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading
+  // state, never the miss text, on the settled render before the redirect above fires.
+  const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
   const onRetry = useCallback(() => void refetch(), [refetch]);
   const onBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
   return <ReportPageHost view={view} lifecycle={lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} />;

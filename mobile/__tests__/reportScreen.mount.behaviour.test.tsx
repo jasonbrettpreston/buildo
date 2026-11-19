@@ -21,14 +21,16 @@ jest.mock('@gorhom/bottom-sheet', () => ({ __esModule: true, ...jest.requireActu
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
 let mockCanGoBack = true;
+let mockParams: Record<string, string> = { parcelId: 'PIN-777' };
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace, back: mockBack, push: jest.fn(), canGoBack: () => mockCanGoBack }),
-  useLocalSearchParams: () => ({ parcelId: 'PIN-777' }),
+  useLocalSearchParams: () => mockParams,
 }));
 type Hook = { data: unknown; isError: boolean; refetch: jest.Mock };
 let mockHook: Hook = { data: undefined, isError: false, refetch: jest.fn() };
 const mockIds: unknown[] = [];
-jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: (id: unknown) => { mockIds.push(id); return mockHook; } }));
+const mockSemi: unknown[] = [];
+jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return mockHook; } }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;
@@ -50,7 +52,7 @@ const hit = (page: Json | null) => ({ match: { parcelId: 'PIN-777', matchType: '
 const LEGACY = /Max build FSI|Max buildable GFA|As-of-right|Max build storeys|CoA FSI|What it costs|Envelope constrained|setback-zq7|maximum envelope|3\.17|10,753|2,503,805|\$0|Nearby examples|Committee of Adjustment/i;
 
 beforeEach(() => {
-  mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true; mockIds.length = 0;
+  mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true; mockIds.length = 0; mockSemi.length = 0; mockParams = { parcelId: 'PIN-777' };
   mockHook = { data: undefined, isError: false, refetch: jest.fn() };
 });
 const noLegacy = (): void => expect(screen.queryAllByText(LEGACY)).toEqual([]);
@@ -95,6 +97,41 @@ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () => 
     expect(screen.getByTestId('report-page')).toBeTruthy();
     expect(screen.queryByText(LIFE.error!)).toBeNull();
     expect(screen.queryByTestId('report-retry')).toBeNull();
+  });
+});
+
+// SRCH.METER-2 (task-360, RR-0278; UX-2c, SE-1): an unsure lot is held by the server (page null) until the semi answer; the screen must not flash the
+// miss text on the settled render that precedes the redirect to the question, and it forwards its route param to the lookup so an answered lot refetches with the flag.
+const unsureHit = (page: Json | null) => ({ ...hit(page), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } });
+describe('SRCH.METER-2 the held report screen', () => {
+  it('a settled unsure lot with page null shows the loading state, not the miss text, and redirects to the question once', () => {
+    mockHook = { data: unsureHit(null), isError: false, refetch: jest.fn() };
+    render(<Screen />);
+    expect(screen.getByText(LIFE.loading!)).toBeTruthy();
+    expect(screen.queryByText(LIFE.miss!)).toBeNull();
+    expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/semi-question?parcelId=PIN-777']]);
+  });
+  it('an answered unsure lot (semi=answered) with its page shows the report and does not redirect', () => {
+    mockParams = { parcelId: 'PIN-777', semi: 'answered' };
+    mockHook = { data: unsureHit(VIEW), isError: false, refetch: jest.fn() };
+    render(<Screen />);
+    expect(screen.getByTestId('report-page')).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+  it('a clear lot with page null still shows the miss text (only the unsure, unanswered case is held)', () => {
+    mockHook = { data: { ...hit(null), lotForm: { detected: 'detached', basis: 'o4_not_met', unsure: false } }, isError: false, refetch: jest.fn() };
+    render(<Screen />);
+    expect(screen.getByText(LIFE.miss!)).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+  it('the route param is forwarded to the lookup hook: exactly the string, else undefined', () => {
+    mockParams = { parcelId: 'PIN-777', semi: 'answered' };
+    render(<Screen />);
+    expect(mockSemi).toContain('answered');
+    mockSemi.length = 0;
+    mockParams = { parcelId: 'PIN-777' };
+    render(<Screen />);
+    expect(mockSemi.every((v) => v === undefined)).toBe(true);
   });
 });
 

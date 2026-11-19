@@ -46,6 +46,8 @@ vi.mock('@/lib/parcels/report-page', async (orig) => {
   const a = await orig<typeof import('@/lib/parcels/report-page')>();
   return { ...a, readCustomerPageResponse: vi.fn(a.readCustomerPageResponse) };
 });
+// SRCH.METER-2 (task-360): the one-lot compute at the pick (LOAD.1, task-266) is mocked so a test can prove it is NOT run for a held (unsure, unanswered) lot.
+vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));
 const logInfo = vi.fn();
 vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
 
@@ -56,6 +58,7 @@ import { assembleConsumerPayload } from '@/lib/parcels/consumer-lookup';
 import { resolveLotMap } from '@/lib/parcels/lot-map';
 import { readLotForm } from '@/lib/parcels/lot-form';
 import { readCustomerPageResponse } from '@/lib/parcels/report-page';
+import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
 import fs from 'node:fs';
 import path from 'node:path';
 import { GET } from '@/app/api/parcels/lookup/route';
@@ -67,7 +70,7 @@ const PERIOD_END = new Date('2026-12-05T10:00:00.000Z');
 const ROW = { parcel_id: 'P-45', lot_size_sqm: 400, neighbourhood_id: null, __display_address: '5 Elm St' };
 const RAW_Q = '5 elm st secret-typed-text';
 
-type Body = { data: { parcel: unknown; match: unknown; page?: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
+type Body = { data: { parcel: unknown; match: unknown; page?: unknown; lotForm?: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
 const req = (qs: string): NextRequest => ({ url: `https://x.test/api/parcels/lookup?${qs}`, nextUrl: { pathname: '/api/parcels/lookup' }, headers: { get: () => null } } as unknown as NextRequest);
 const call = async (qs = 'parcelId=P-45'): Promise<{ status: number; body: Body }> => {
   const res = await GET(req(qs));
@@ -303,13 +306,34 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I 
     expect(r.status).toBe(200);
     expect(meterCalls()).toBe(0);
   });
-  it('an unsure lot (the semi question comes first) counts nothing even with a page, no meter read', async () => {
+  // SRCH.METER-2 (task-360, RR-0278): a page that is sent must be a page that is counted, so an unsure lot's page is held (page null, not read, not computed)
+  // until the semi answer; prior text: the page was sent and only the meter label said semi_pending.
+  it('an unsure lot (the semi question comes first) is served with NO page and counts nothing, no meter read, neither the stored read nor the compute run', async () => {
     vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
     const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
     expect(r.status).toBe(200);
-    expect(r.body.data?.page).not.toBeNull();
+    expect(r.body.data?.page).toBeNull();
+    expect(r.body.data?.lotForm).toMatchObject({ unsure: true });
     expect(meterCalls()).toBe(0);
-    expect(meterLog()).toMatchObject({ meter: 'semi_pending', lot_form_unsure: true });
+    expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();
+    expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
+    expect(meterLog()).toMatchObject({ meter: 'semi_pending', lot_form_unsure: true, page: false, page_source: 'none', compute_ms: null });
+  });
+  it('a held lot whose stored read misses never starts the compute either (the many-second compute is not spent on a page that is not sent)', async () => {
+    vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    const r = await call('parcelId=P-45');
+    expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();
+    expect(r.body.data?.page).toBeNull();
+    expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
+  });
+  it('a clear lot (not unsure) with a stored miss still reaches the compute, and the compute page is sent and counted (the hold is for unsure lots only)', async () => {
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    vi.mocked(computeCustomerPageResponse).mockResolvedValueOnce(GOLDEN.response_fixture);
+    const r = await call('parcelId=P-45');
+    expect(vi.mocked(computeCustomerPageResponse)).toHaveBeenCalledTimes(1);
+    expect(r.body.data?.page).not.toBeNull();
+    expect(meterLog()).toMatchObject({ meter: 'counted', page_source: 'computed' });
   });
   it('a report produced for the found lot counts once: one row keyed on the lot, log meter counted', async () => {
     const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
@@ -333,10 +357,11 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I 
     expect(r.status).toBe(200);
     expect(inserts()).toHaveLength(0);
   });
-  it('the parcelId path of an unsure lot counts nothing either (same lot, same rule on both entrances)', async () => {
+  it('the parcelId path of an unsure lot counts nothing either and sends no page (same lot, same rule on both entrances)', async () => {
     vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
     const r = await call('parcelId=P-45');
     expect(r.status).toBe(200);
+    expect(r.body.data?.page).toBeNull();
     expect(meterCalls()).toBe(0);
     expect(meterLog()).toMatchObject({ meter: 'semi_pending' });
   });
@@ -372,6 +397,7 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I 
     unsure();
     const r = await call('parcelId=P-45');
     expect(r.status).toBe(200);
+    expect(r.body.data?.page).toBeNull();
     expect(meterCalls()).toBe(0);
     expect(meterLog()).toMatchObject({ meter: 'semi_pending', semi_answered: false });
   });

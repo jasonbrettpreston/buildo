@@ -77,14 +77,23 @@ export function useParcelSearch(q: string) {
 }
 
 /**
- * Detail lookup by parcelId. Depends ONLY on `['parcel-lookup', parcelId]` (Spec 100 §4 /
- * fold #9 query-key hygiene) — never on the search query string.
+ * SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2): the parcelId form of the lookup, carrying the report route's `semi` param to the server as `semi: 'answered'`
+ * only when it is exactly the string 'answered' (the server holds an unsure lot's page without it; a stray param asks, never skips: lotForm.ts needsSemiQuestion).
  */
-export function useParcelLookup(parcelId: string | undefined) {
+export function parcelLookupParams(parcelId: string, semi?: string): { parcelId: string; semi?: 'answered' } {
+  return semi === 'answered' ? { parcelId, semi: 'answered' } : { parcelId };
+}
+
+/**
+ * Detail lookup by parcelId. Depends ONLY on `['parcel-lookup', parcelId]` (Spec 100 §4 /
+ * fold #9 query-key hygiene) — never on the search query string. `semi` is the report route's param (the report screen only); it changes the request,
+ * not the key (the semi page stores its answered result under the same key, useSetParcelLookup).
+ */
+export function useParcelLookup(parcelId: string | undefined, semi?: string) {
   const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['parcel-lookup', parcelId],
-    queryFn: () => fetchParcelLookup({ parcelId: parcelId! }),
+    queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi)),
     enabled: !!parcelId && !!accessToken,
     staleTime: 60_000,
     retry: shouldRetryParcelLookup,
