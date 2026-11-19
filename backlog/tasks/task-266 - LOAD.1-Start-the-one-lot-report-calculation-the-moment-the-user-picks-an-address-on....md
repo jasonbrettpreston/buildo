@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LOAD1B'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T22:17:00Z'
+updated_date: '2026-11-19T22:22:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -89,14 +89,14 @@ who (plan text): lane
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. (AC#1, stage 2) Pre-register the expected moves, committed alone: next prereg for the owning row, round claimed by mkdir in ~/Buildo-scratch/ids (highest claim round-197).
-2. (AC#2, done in stage 1) Failing tests C1 to C9 plus the T7 rewrite are written into docs/reports/lanes/2026-11-19/BL-LOAD1/PLAN.md section 4 and reviewed at plan altitude by repo review round r1 (TRIAGE.md).
-3. (AC#3) write_scope declared in the stage-2 brief: ~/Buildo-wt-load1 and the lane directory.
-4. (AC#4, stage 2) PLAN panel with the full lens set, not one generic pass (stage 1 ran one template round only).
-5. (AC#5, stage 2) A grounder re-executes every claim of the fold.
-6. (AC#6, stage 2) Step 0 measurement (C8, lookups rebuild cost), then red attempt (tests and task file only, red.out), then green landing of src/lib/parcels/report-compute.ts, the one route expression at route.ts:134, the exported pageForVerdict, generated files and notes, through the real hooks.
-7. (AC#7, stage 2) OUTPUT panel record committed with the work.
-8. (AC#8) No McFrontend build in LOAD.1; the queue rows for LOAD.2 and LOAD.4 are theirs. Not built: record write ST.P1, stamp check ST.P2, web path, LOAD.2, LOAD.4, tester surface, off-thread compute, 5.11.
+1. (AC#1) Pre-register the expected moves, committed alone: prereg-MB-44-2.json, round 198 claimed by mkdir in ~/Buildo-scratch/ids (lane BL-LOAD1B).
+2. (AC#2) Failing tests C1 to C9 plus the T7 and T10 re-pins are written into docs/reports/lanes/2026-11-19/BL-LOAD1/PLAN.md section 4 (stage 1, one repo review round r1) and into src/tests/customer-report-compute.logic.test.ts, red first.
+3. (AC#3) write_scope declared in the stage-2 brief: ~/Buildo-scratch/lanes-20261119/inc1b/load1b and ~/Buildo-wt-load1b.
+4. (AC#4) Review: stage 1 ran one generic round (not a panel); stage 2 runs the repo review round on the output (lens templates if present), every finding adjudicated against the files in TRIAGE.md.
+5. (AC#5) The lane (tool-bearing) re-reads every cited line of the fold; claims without a pasted output line are marked UNVERIFIED.
+6. (AC#6) Measure first (C8 types filter, per-request lookups cost, file-only), red attempt (tests and task file only, red.out), green landing: src/lib/parcels/report-compute.ts behind the existing web-live switch only, the route expression at route.ts:134, exported pageForVerdict, lot-facts read extracted in read-stored.ts, generated files, notes, through the real hooks.
+7. (AC#7) OUTPUT review record committed with the work (docs/reports/lanes/2026-11-19/BL-LOAD1B/).
+8. (AC#8) No McFrontend build in LOAD.1; queue rows for LOAD.2 and LOAD.4 are theirs. Not built: record write ST.P1, stamp check ST.P2, web path, LOAD.2, LOAD.4, tester surface, session gate, admin condition, new switch, off-thread run, 5.11.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
