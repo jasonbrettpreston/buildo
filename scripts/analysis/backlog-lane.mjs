@@ -9,21 +9,22 @@
 //   4. write the G1 ticket (backlog-brief.mjs --root <worktree>) into the lane dir;
 //   5. write task.json from the task (or use --spec) and run panel-tools/brief.mjs;
 //   6. print `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
-// Refusals (exit 3, one line, before any write): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
-// backlog binary or an input missing. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
+// Refusals (exit 3, one line): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
+// backlog binary or an input missing; all before any write except two checks after the take (the 4 minute wait ran out, or the task is not RUNNING for the lane after the commit), which also exit 3 and name the undo command. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
 // --dry-run prints every command (cd <dir> && <command>) and the task.json, writes nothing.
 // Test flags (documented, not config): --no-launchd runs scripts/board/board-commit.zsh inline instead of launchctl; --wait-ms <n> shortens the wait;
 // --lane-dir, --main, --panel-tools, --backlog-bin, --date override the defaults. Rules: PLAN-PROTOCOL.md:3 simple, no scope creep.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
 
 const a = args();
 const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
 const refuse = (m) => { process.stderr.write(`backlog-lane: refused: ${m}\n`); process.exit(3); };
 const usage = (m) => { process.stderr.write(`backlog-lane: ${m}\n`); process.exit(2); };
-const q = (s) => (/^[A-Za-z0-9_@%+=:,./~-]+$/.test(s) ? s : `'${String(s).replace(/'/g, `'\\''`)}'`);
+const q = (s) => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(s) ? s : `'${String(s).replace(/'/g, `'\\''`)}'`);
 const dry = a['dry-run'] === true;
 
 const taskId = str('task', '').toLowerCase();
@@ -42,7 +43,9 @@ const pt = path.resolve(home(str('panel-tools', '~/Buildo-scratch/panel-tools'))
 const laneDir = path.resolve(home(str('lane-dir', `~/Buildo-scratch/lanes-${date.replace(/-/g, '')}/${lane}`)));
 const specGiven = a.spec && a.spec !== true ? path.resolve(home(String(a.spec))) : null;
 const waitMs = Number(str('wait-ms', '240000'));
-const here = path.dirname(new URL(import.meta.url).pathname);
+if (!Number.isFinite(waitMs) || waitMs < 0) usage('--wait-ms must be a non-negative number');
+if (!/^\d{1,3}$/.test(stage)) usage('--stage must be a number');
+const here = path.dirname(fileURLToPath(import.meta.url));
 const briefScript = path.join(here, 'backlog-brief.mjs');
 const jobScript = path.join(REPO, 'scripts/board/board-commit.zsh');
 
@@ -50,7 +53,7 @@ const sh = (cwd, argv) => spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'ut
 const git = (...g) => sh(board, ['git', '-c', 'core.quotepath=false', ...g]);
 
 // ---- preflight: everything that can be checked, before the first write ----
-const bin = str('backlog-bin', process.env.BACKLOG_BIN || [path.join(board, 'node_modules/.bin/backlog'), path.join(REPO, 'node_modules/.bin/backlog')].find((c) => fs.existsSync(c)) || path.join(REPO, 'node_modules/.bin/backlog'));
+const bin = path.resolve(home(str('backlog-bin', process.env.BACKLOG_BIN || [path.join(board, 'node_modules/.bin/backlog'), path.join(REPO, 'node_modules/.bin/backlog')].find((c) => fs.existsSync(c)) || path.join(REPO, 'node_modules/.bin/backlog'))));
 if (!fs.existsSync(bin)) refuse(`backlog binary not found at ${bin} (pass --backlog-bin)`);
 if (!fs.existsSync(board) || git('rev-parse', '--git-dir').status !== 0) refuse(`board ${board} is not a git checkout`);
 const t = readItems(board).find((x) => x.id === taskId);
@@ -58,19 +61,21 @@ if (!t) refuse(`${taskId} not found under ${path.join(board, 'backlog/tasks')}`)
 const status = String(t.fm.status).toUpperCase();
 if (status !== 'LATER' && status !== 'WAITS') refuse(`task ${taskId} is not LATER or WAITS (status ${status}); only a waiting task is launched`);
 for (const p of [path.join(main, 'node_modules'), path.join(main, 'mobile/node_modules')]) if (!fs.existsSync(p)) refuse(`node_modules source ${p} not found (pass --main)`);
-for (const p of [path.join(pt, 'brief.mjs'), briefScript, ...(specGiven ? [specGiven] : [])]) if (!fs.existsSync(p)) refuse(`${p} not found`);
+for (const p of [path.join(pt, 'brief.mjs'), briefScript, ...(specGiven ? [specGiven] : []), ...(a['no-launchd'] === true ? [jobScript] : [])]) if (!fs.existsSync(p)) refuse(`${p} not found`);
 if (!path.isAbsolute(wt) || !fs.existsSync(path.dirname(wt))) refuse(`worktree parent ${path.dirname(wt)} does not exist`);
 if (fs.existsSync(wt)) refuse(`worktree ${wt} already exists`);
 if (git('check-ref-format', `refs/heads/${branch}`).status !== 0) refuse(`branch name ${branch} is not a valid git branch name`);
 if (git('show-ref', '--verify', '--quiet', `refs/heads/${branch}`).status === 0) refuse(`branch ${branch} already exists`);
-const dirty = git('status', '--porcelain').stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/'));
+const st = git('status', '--porcelain');
+if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);
+const dirty = st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !/(^|\/)node_modules\/?$/.test(p)); // the node_modules links of a worktree are untracked (the .gitignore pattern has a trailing slash and a link is not a directory)
 if (dirty.length) refuse(`board checkout ${board} is dirty outside backlog/: ${dirty.slice(0, 5).join(', ')}${dirty.length > 5 ? ', ...' : ''}`);
 
 // ---- the commands, printed (dry-run) or run; one code path for both ----
 const fmt = (cwd, argv, env, out) => `cd ${q(cwd)} && ${env ? `${Object.entries(env).map(([k, v]) => `${k}=${q(v)}`).join(' ')} ` : ''}${argv.map(q).join(' ')}${out ? ` > ${q(out)}` : ''}`;
-const undo = `backlog task edit ${taskId} -s LATER -a ""`;
+const undo = fmt(board, [bin, 'task', 'edit', taskId, '-s', 'LATER', '-a', '']);
 let taken = false;
-const fail = (what, r) => { process.stderr.write(`backlog-lane: FAILED at ${what}: ${String((r && (r.stderr || r.stdout)) || '').trim().split('\n')[0]}${taken ? `; the task is already taken on the board, undo with: ${undo}` : ''}\n`); process.exit(1); };
+const fail = (what, r) => { process.stderr.write(`backlog-lane: FAILED at ${what}: ${(r && r.error && r.error.message) || String((r && (r.stderr || r.stdout)) || '').trim().split('\n')[0]}${taken ? `; the task is already taken on the board, undo with: ${undo}` : ''}\n`); process.exit(1); };
 const step = (what, cwd, argv, { env, out, must = true } = {}) => {
   console.log(`$ ${fmt(cwd, argv, env, out)}`);
   if (dry) return { status: 0, stdout: '', stderr: '' };
@@ -101,20 +106,21 @@ if (!dry) {
   if (!now || String(now.fm.status).toUpperCase() !== 'RUNNING' || !asList(now.fm.assignee).includes(`@lane-${lane}`)) refuse(`after the board commit ${taskId} is not RUNNING for @lane-${lane}; undo with: ${undo}`);
 }
 
-// 3. worktree, links, plan copy
+// 3. worktree, links, plan copy; a throw from here on still names the undo command
+try {
 const head = dry ? '<board HEAD after the take commit>' : git('rev-parse', 'HEAD').stdout.trim();
 step('worktree add', board, ['git', 'worktree', 'add', '-b', branch, wt, head]);
 step('link node_modules', board, ['ln', '-s', path.join(main, 'node_modules'), path.join(wt, 'node_modules')]);
 step('link mobile/node_modules', board, ['ln', '-s', path.join(main, 'mobile/node_modules'), path.join(wt, 'mobile/node_modules')]);
 const plan = path.join(board, '.cursor/active_task.md');
 if (dry || fs.existsSync(plan)) {
-  if (!dry) fs.mkdirSync(path.join(wt, '.cursor'), { recursive: true });
+  step('make .cursor', board, ['mkdir', '-p', path.join(wt, '.cursor')]);
   step('copy plan', board, ['cp', plan, path.join(wt, '.cursor/active_task.md')]);
 }
 
 // 4. G1 ticket
 const g1 = path.join(laneDir, `G1-${taskId}.md`);
-if (!dry) fs.mkdirSync(laneDir, { recursive: true });
+step('make lane dir', board, ['mkdir', '-p', laneDir]);
 const g1r = step('G1 ticket', wt, ['node', briefScript, '--task', taskId, '--lane', lane, '--stage', stage, '--root', wt, '--date', date], { out: g1 });
 
 // 5. task.json and the brief
@@ -150,3 +156,4 @@ const briefOut = path.join(laneDir, 'BRIEF.md');
 step('brief.mjs', laneDir, ['node', path.join(pt, 'brief.mjs'), '--spec', specPath, '--out', briefOut]);
 if (dry) { console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
 console.log(`BRIEF-FILE: ${briefOut} sha256=${sha256(fs.readFileSync(briefOut))}`);
+} catch (e) { fail('write', { stderr: String(e && e.message) }); }

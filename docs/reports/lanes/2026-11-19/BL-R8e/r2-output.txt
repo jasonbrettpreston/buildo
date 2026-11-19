@@ -1,0 +1,59 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/boardmove-v2/build-r8/r8e/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 14284 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23875 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32818 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42101 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 51428 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 61372 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 65175 chars, answer 5591 chars, 105s
+# Adversarial review — `scripts/analysis/backlog-lane.mjs` (lens: refusals-before-write, dry-run parity, quoting)
+
+Line numbers are for the added file as posted (1–152).
+
+---
+
+- **[CRITICAL]** (lines 97, 101): Two `refuse(...)` calls sit **after the board take** (line 88) and after the launchd kickstart. `refuse` exits **3** and prints `backlog-lane: refused: …`. The header (line 13) states the contract explicitly: *"Refusals (exit 3, one line, **before any write**)… A failure after the take exits **1** and prints the command that undoes the take."* Both of these paths have already written to the board (task is `RUNNING`, `@lane-<name>` assigned, board dirty), yet report as a clean refusal. A caller that branches on exit 3 ⇒ "nothing happened, safe to retry/relaunch" will be wrong twice: the task stays taken with a lane nobody is running, and the undo command it was told to run is only printed, not acted on. Fix: use the `fail(...)` path (exit 1) for both, so `taken`/undo messaging is consistent with the rest of the post-take failures — `fail('board commit', {stderr: 'timeout …'})`-style, or add a `refuseAfterWrite(m)` that exits 1 and appends `${undo}`.
+
+- **[HIGH]** (lines 44, 97): `const waitMs = Number(str('wait-ms','240000'))` is never validated. `--wait-ms abc` ⇒ `NaN`; `Date.now() - t0 >= NaN` is **always false**, and the `for(;;)` loop at 94 never terminates. The board is already taken, the process hangs forever, and the operator never sees the undo hint. Fix: `if (!Number.isFinite(waitMs) || waitMs < 0) usage('--wait-ms must be a non-negative integer')` — and do it at parse time, before preflight, since `str()` returns the raw string (`Number('') === 0`, so `--wait-ms` with no value shouldn't silently become 0 either).
+
+- **[HIGH]** (line 45): `const here = path.dirname(new URL(import.meta.url).pathname)` uses the **URL pathname, not a filesystem path**. Any space or non-ASCII character in the install path is percent-encoded (`…/Buildo scratch/…` → `…/Buildo%20scratch/…`), so `briefScript` (line 46) points at a nonexistent file and preflight refuses with the misleading `…/Buildo%20scratch/…/backlog-brief.mjs not found` (line 61). The checkouts in this very repo live under `Buildo-scratch`; a single space in a parent directory silently disables the tool. Fix: `import { fileURLToPath } from 'node:url'; const here = path.dirname(fileURLToPath(import.meta.url));`
+
+- **[HIGH]** (lines 47, 61, 90): `jobScript` (`scripts/board/board-commit.zsh`) is computed but **never preflighted**, yet it is the *only* thing `--no-launchd` runs. With a missing/stale `REPO` the sequence is: take the task (write) → `zsh -f <missing>` → exit 1. Line 12 promises refusals cover "backlog binary **or an input missing**"; this input is missing from that list. Same class: the `launchctl` job label itself is never verified (`launchctl print gui/<uid>/com.maxbld.board-commit`), so a job that isn't loaded also degrades to a post-take failure. Both are checkable before the first write. Fix: add `jobScript` to the line-61 loop, and when `--no-launchd` is absent, `if (sh(board,['launchctl','print',label]).status !== 0) refuse(...)`.
+
+- **[HIGH]** (lines 109–112): The `.cursor/active_task.md` copy is **best-effort, not a refusal**. Header line 8 documents it as step 3 unconditionally, but a real run silently skips the copy if the file is absent (`fs.existsSync(plan)` false), producing a worktree the G1 ticket and the brief both claim contains the plan. Meanwhile `dry ||` makes dry-run *always* print the `cp`. So dry-run and real run disagree in exactly the case that matters (missing input), and the missing input is never surfaced. Fix: preflight `if (!fs.existsSync(plan)) refuse('…/.cursor/active_task.md not found')` in the preflight block (before the take), then drop the `dry ||` guard.
+
+- **[MEDIUM]** (lines 111, 117): Dry-run prints neither `mkdir -p <wt>/.cursor` nor `mkdir -p <laneDir>`, both of which the real run **does** execute. A user replaying the printed `cd … && … > <laneDir>/G1-task-N.md` and `… --out <laneDir>/BRIEF.md` by hand gets `No such file or directory` on the redirection. That defeats the stated purpose of dry-run ("prints every command the real run executes"). Fix: route the mkdirs through `step('mkdir lane dir', …, ['mkdir','-p', laneDir])` / `step('mkdir .cursor', …)` so both paths go through one printer.
+
+- **[MEDIUM]** (line 71): `const undo = \`backlog task edit ${taskId} -s LATER -a ""\`` is **not a runnable inverse of the take**. The take ran `bin` with `cwd: board` (line 88); the undo names a bare `backlog` (may not be on PATH, may be a *different* repo's binary) and has no `cd`. Printed into an error message the operator will paste verbatim, that is at best a no-op and at worst edits a different backlog. It is also the one printed "command" that bypasses `fmt`/`q` entirely. Fix: `const undo = fmt(board, [bin,'task','edit',taskId,'-s','LATER','-a','']);`
+
+- **[MEDIUM]** (lines 73, 77): `spawnSync`'s `.error` is never inspected. On `ENOENT`/`EACCES` (missing `zsh`, `ln`, `node`, `launchctl`, or a `cwd` that vanished) `r.status` is `null`, `r.stdout`/`r.stderr` are `null`, so `fail` prints `backlog-lane: FAILED at take: ` — **empty reason** — and exits 1. The operator gets no diagnostic at all. Same hole in `sh` (line 49): a missing `git` makes line 55 refuse with `board … is not a git checkout`, which is a lie. Fix: in `fail`, `const msg = r?.error?.message || String(r?.stderr || r?.stdout || '').trim().split('\n')[0]`; consider `.error` in `git()` callers.
+
+- **[MEDIUM]** (lines 117, 78, 147, 152): Every write *after* the take is unguarded `fs.*` — `fs.mkdirSync(laneDir)` (117), `fs.writeFileSync(out, …)` (78), `fs.writeFileSync(specPath, …)` (147), `fs.readFileSync(briefOut)` (152). Any of these throwing (EACCES on `--lane-dir`, ENOSPC, brief.mjs exiting 0 without writing the file) dumps a multi-line stack trace and exits 1 **without** the `taken`/undo hint that is the entire point of the post-take contract. `--lane-dir /Volumes/readonly/x` is trivially reachable. Fix: wrap the post-take region in try/catch → `fail('write', {stderr: e.message})`, and preflight writability of `laneDir`'s nearest existing ancestor.
+
+- **[MEDIUM]** (lines 56, 126): Nothing in the preflight block is inside a `try`. `readItems(board)` (56) and `parseFM(...)` over `backlog/milestones/*` (126) throw on malformed YAML/front-matter, turning a should-be one-line refusal into a stack trace with exit 1 — and 126 in particular runs **after** the take. Fix: catch parse failures in preflight and `refuse('could not parse …: ' + e.message)`; move the milestone lookup before line 88.
+
+- **[MEDIUM]** (line 36, 150): `stage` is completely unvalidated (`str('stage','1')`) and is passed positionally into the brief argv: `[…,'--stage', stage,'--root', wt,…]`. `--stage --root` re-points the following token and scrambles `brief.mjs`'s argument parse. Not shell injection (argv, no `shell:true` — good), but it is argv-level injection into a tool whose output becomes the run's brief. Fix: `if (!/^\d+$/.test(stage)) usage('--stage must be an integer')`.
+
+- **[LOW]** (line 66): `git('status','--porcelain').stdout` is destructively trusted — `.status` is never checked. If `git` fails (index lock held by the board-commit job, which this script has *just kicked off in other invocations*), `stdout` may be empty and the board-dirty refusal silently passes, letting `git worktree add` operate on a half-broken index after the take. Fix: `const st = git('status','--porcelain'); if (st.status !== 0) refuse(...)`.
+
+- **[LOW]** (line 63): Refusal only checks `fs.existsSync(wt)`. A worktree **registered** in `git worktree list --porcelain` but whose directory was deleted, or one registered at a different path for the same branch, passes preflight and blows up at line 106 *after* the take. Fix: also `if (/worktree ${wt}$/m.test(git('worktree','list','--porcelain').stdout)) refuse(...)`.
+
+- **[LOW]** (line 53): `--backlog-bin` is the one path option that skips `home()`/`path.resolve` — `str()` returns it raw, so `--backlog-bin '~/Buildo/node_modules/.bin/backlog'` fails `fs.existsSync` and refuses (and the printed command in dry-run would contain a literal `~`). Same for `process.env.BACKLOG_BIN`. Fix: `path.resolve(home(...))` like every other path option.
+
+- **[LOW]** (line 26): `q()`'s "safe" character class includes `~`. It is unreachable today only because every path is `path.resolve`d to an absolute form; the moment someone passes an unresolved relative `~/…` (see above), `fmt` prints it unquoted and the shell expands it, so the printed command no longer equals what `spawnSync` runs. Drop `~` from the class.
+
+- **[NIT]** (line 62): `!path.isAbsolute(wt)` is dead — line 38 already applied `path.resolve`. Left in, it advertises a guard that does not exist (the real missing guard is "`wt` must not be inside `board`").
+
+- **[NIT]** (line 73): `.split('\n')[0]` throws away the informative lines — git and node put the actionable detail on line 2+ ("fatal: … is a worktree"). Consider the last non-empty line instead of the first.
+
+- **[NIT]** (line 152): `sha256(fs.readFileSync(briefOut))` passes a **Buffer**; if `backlog-lib.sha256` expects a string it will either throw or hash `[object Uint8Array]`. Also unguarded against `brief.mjs` exiting 0 without producing the file (see the MEDIUM above). Verify the helper's contract and add an existence check before hashing.
+
+---
+
+**Verdict.** The skeletal shape is right — one `step()` choke point for print/execute, argv-only `spawnSync`, and a real preflight block — but the contract the file advertises in its own header is broken in three places that matter: the two timeout/verification refusals at lines 97 and 101 exit 3 *after* the board write, so an orchestrator keyed on exit codes will treat a taken task as untouched; two documented inputs (`board-commit.zsh`, `.cursor/active_task.md`) are not preflighted and one of them degrades to a silent no-op rather than a refusal; and the undo command it prints is not the inverse of the command it ran. Dry-run is close to honest but omits the two `mkdir`s it actually performs and prints a `cp` the real run may skip. The quoting helper is sound and argv construction is injection-safe, but `import.meta.url.pathname` will silently brick the tool under any path containing a space. Fix the exit-code contract, the NaN wait loop, the URL decoding, and the two missing preflight checks, and this is a solid one-command launcher; ship it as-is and the first `--wait-ms` typo leaves a task RUNNING on the board with nobody to blame.
+
+---
+⏱  112888ms (112.9s)
+📊 Tokens — total: 26887, input: 4555, output: 22332, reasoning: 19302

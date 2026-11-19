@@ -71,6 +71,7 @@ describe('backlog-lane refusals (AC #2): exit 3, one line, nothing written', () 
     refused(lane(f), /dirty outside backlog\/.*stray\.txt/);
     fs.rmSync(path.join(f.board, 'stray.txt'));
     fs.appendFileSync(path.join(f.board, 'backlog/milestones/m-0 - foundations.md'), '\nmore\n');
+    fs.symlinkSync(f.main, path.join(f.board, 'mobile/node_modules'));
     expect(lane(f, ['--dry-run']).status).toBe(0);
   });
   it('refuses a missing backlog binary, a bad lane name, a missing task and a missing input', () => {
@@ -177,7 +178,7 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
   it('refuses after the wait when the job commit never lands, naming the state and the recovery command (exit 3, one line)', () => {
     const f = fixture({ hook: true });
     const r = lane(f, ['--no-launchd', '--wait-ms', '1500']);
-    refused(r, /board commit did not land within 1500 ms.*backlog task edit task-\d+ -s LATER -a ""/);
+    refused(r, /board commit did not land within 1500 ms.*backlog task edit task-\d+ -s LATER -a ''/);
     expect(fs.existsSync(f.wt)).toBe(false);
   });
 });

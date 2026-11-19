@@ -1,0 +1,72 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of docs/reports/reviews/task-310/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9773 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19351 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29214 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 39092 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 42470 chars, answer 6816 chars, 75s
+## Findings
+
+- **[CRITICAL]** (line 98, step 4): **There is no rollback for the board take.** The take (RUNNING + assignee + note) is a committed mutation; everything after it — launchd commit, worktree add, two `ln`, plan copy, `backlog-brief.mjs`, `brief.mjs` — can fail. The plan names no compensating action, and AC#2 (line 12) then makes every retry refuse because the task is no longer LATER/WAITS. The failure mode is "board says a lane owns task-N, no lane exists, operator hand-edits the board" — precisely the eight-manual-steps problem the task was opened to kill. Fix: either reorder so the only irreversible step is last, or write a launch marker (`backlog/.lane/task-N.json` with intent + pid) that the refusal logic recognises as a resumable half-launch, plus a `--abort` that reverts status/assignee and removes the marker/worktree.
+
+- **[CRITICAL]** (line 12 vs line 97): **The dirty check excludes `backlog/`, and the take commits `backlog/` wholesale.** A leftover partial take from a crashed/killed previous run (or a hand edit by another agent) is invisible to preflight and gets swept into *this* lane's commit, attributing another lane's board change to the wrong assignee and the wrong commit message. Fix: make the commit path-scoped (`git commit -- backlog/tasks/task-N.md <note-file>`), and have preflight refuse when `backlog/` has any modification not produced by this invocation.
+
+- **[HIGH]** (line 98, step 4): **"backlog/ clean and HEAD advanced" does not prove this task's commit landed.** Any other lane's concurrent commit, or an unrelated backlog/ commit by the board-commit job, satisfies the predicate. The tool then creates the worktree from a head that does not contain the take and prints a BRIEF-FILE for a task that never went RUNNING — the orchestrator launches an agent against a stale board with no error. Fix: capture the pre-take head, and after the wait assert `git diff --name-only <old-head>..<new-head>` includes the task file, and re-read the task via `backlog` to confirm status/assignee.
+
+- **[HIGH]** (line 97–98): **Preflight and mutation are not atomic; there is no lock.** Two lanes launched inside the same window both pass status/worktree/branch checks, both kickstart the job, and interleave writes in the shared board checkout. The launchd job may serialise the commits; nothing serialises the tool. Fix: take an exclusive lock (`backlog/.lane-launch.lock`, `O_EXCL`) around preflight→worktree-creation, release in `finally`; and re-read the task immediately before the take, aborting if its content hash changed since preflight.
+
+- **[HIGH]** (line 97, step 3): **Preflight validates too little to guarantee "refuse before any write".** It checks the backlog binary, status, worktree parent/existence, branch, and dirt — but not: that `--board` is a git repo; that the board repo is the *same* repo the lane is supposed to build (a `--worktree ../other-repo` silently produces a board clone); that `backlog-brief.mjs` and `panel-tools/brief.mjs` exist at the resolved cwd; that both `node_modules` link targets are directories; that the plan/spec source file exists. Each omission fails *after* the take, i.e. into the CRITICAL #1 deadlock. Fix: enumerate every input the plan's step list consumes and check all of them in preflight with a named one-line refusal per item.
+
+- **[HIGH]** (line 97): **Status is read during preflight but consumed during take — classic TOCTOU.** Another agent (or a second invocation) can take the task in between; the tool then re-takes it, overwriting the assignee and note of a lane that is already running. Fix: fold the status/assignee assertion into the take command itself (compare-and-set on the stored status) or re-read and abort on mismatch as in the locking finding.
+
+- **[HIGH]** (line 95, line 98): **No signal handling during the up-to-4-minute wait.** Ctrl-C, a `kill`, or the parent shell dying leaves the board taken and kicked off with no worktree and no message about what happened; the next run refuses (status RUNNING). Fix: SIGINT/SIGTERM handler that either completes the rollback (if the commit has not landed) or prints the exact recovery command (if it has), and never exits leaving the lock file held.
+
+- **[MEDIUM]** (line 98, step 4): **A fixed 4-minute window is both too short and too blunt.** launchd kickstarts are delayed by sleep, thermal throttling, and job backlogs; a take that lands at minute 5 arrives after the tool has already refused, leaving the deadlock. Conversely a genuinely broken job costs the operator 4 minutes to learn nothing. Fix: configurable timeout with a longer default, detect job failure early by reading the launchd exit status/log instead of only polling git, and re-check state once more before emitting the refusal.
+
+- **[MEDIUM]** (line 98): **The worktree is cut from the *local* board head with no fetch.** Nothing verifies the board checkout is level with its remote, so the lane can be born on a stale base while the board is already behind origin — and the later `board-ff` on close will either fail or force a rebase dance. This is an unverified premise the plan never states: "local board HEAD is an acceptable base for a lane". Fix: `git -C <board> fetch` and refuse (or fast-forward) when HEAD is behind the tracking branch, or explicitly branch from `origin/<default>`.
+
+- **[MEDIUM]** (line 96 vs line 95): **`BACKLOG_LANE_NO_LAUNCHD=1` is a production code path that also disables the thing being waited on.** If it leaks into an operator's environment (exported in a shell profile, inherited by a wrapper), every launch kicks nothing, waits the full timeout, and refuses *after* the board take. Fix: when the launchd path is disabled, the tool must do the commit inline (or skip the wait and report the pending commit), never silently wait for a job it did not start; and gate the flag behind an explicit `--no-launchd`.
+
+- **[MEDIUM]** (line 98): **`--lane`/`--branch` are not validated before being interpolated into an assignee string, a git branch name, and a filesystem path.** `--lane ../../x`, a leading `-`, or a `/`-containing name either escapes the worktree root or produces a branch `git` rejects half-way through the sequence. Fix: `^[a-z0-9][a-z0-9._-]*$` for `--lane`, `git check-ref-format --branch` for `--branch`, and reject `..`/absolute components in `--worktree`.
+
+- **[MEDIUM]** (line 96, step 2): **The printed dry-run command is not the executed command.** The real run is argv+cwd; the print is a shell-quoted string. They can diverge, and since the plan never pins the `cwd` of each step, the operator who copy-pastes the dry-run output gets different behaviour — `backlog-brief.mjs` and `panel-tools/brief.mjs` need to run in different directories, and nothing says which. Fix: make cwd a mandatory field of every step, print `cd <dir> && <cmd>` (or `git -C`), and add a test that re-parses the printed string into (argv, cwd) and asserts equality with the real step list.
+
+- **[MEDIUM]** (line 98): **The two `ln`s are performed without verifying the targets.** A symlink to a missing or wrong `node_modules` succeeds silently and the lane dies later inside an unrelated test run. Sharing `node_modules` across worktrees also means a `pnpm i` in the main checkout mutates the running lane underneath it. Fix: assert both targets are directories during preflight, and document (or eliminate) the shared-state hazard.
+
+- **[MEDIUM]** (line 98): **"The plan copy" has no source, destination, or no-plan case.** This very task is `(no plan id)` with `Documents: (none)` — so the no-plan path is certain to be hit on day one, and the plan doesn't say whether the copy is skipped, what `backlog-brief.mjs` receives instead, or whether the copy lands inside the new worktree (making it dirty at birth, so the lane's first `git add -A` commits it). Fix: name both paths, define the no-plan behaviour, and preflight-check the source.
+
+- **[MEDIUM]** (line 96 vs line 11): **Flags disagree between the AC and the plan.** AC#1 specifies `--task --lane --board --worktree --branch`; step 4 quietly adds `--spec`. Either `--spec` is in scope and must be in the AC and tested, or it is scope creep into the review round. Likewise `BACKLOG_LANE_WAIT_MS` and `BACKLOG_LANE_NO_LAUNCHD` are undeclared config surfaces in a plan that promises "no config key". Fix: reconcile the flag/env surface with the AC before plan lock.
+
+- **[MEDIUM]** (line 95, step 1 / line 99, step 5): **"Green through the real hooks" is not achievable in a temp board repo.** A freshly `git init`-ed temp repo has no `core.hooksPath` and no board-commit hook installed, so the test exercises the mock, not the hooks; the assertion "real take through BACKLOG_LANE_NO_LAUNCHD" silently proves nothing about the production path. Fix: install the repo's hooks into the temp board (copy or `core.hooksPath`) and assert their presence, otherwise downgrade the claim in the AC.
+
+- **[LOW]** (line 1, line 20, line 13): **AC#3 requires "repo review round r1 on the plan", but there is no plan artifact** — the header says "no plan id" and Documents is "(none)", so the review is judging five summary lines. Either the plan file failed to attach (a bug in `backlog-brief.mjs`) or AC#3 is unsatisfiable as written. Both need resolving before the review round is claimed.
+
+- **[LOW]** (lines 23–92): **The decisions block is dumped, not filtered.** Nine byte-identical lines (RR-0087/0088/0092/0099/0012/0060/0080/0081/0086 — all "INC5 recapture commit 068a51af0"), RR-0005 duplicating RR-0044, IDs out of order (RR-0012 between RR-0143 and RR-0144; RR-0028 mid-list), and titles truncated mid-word ("page-level lot information in increme"). The rulings that actually constrain this task (RR-0210 McLane naming, RR-0208 gates, RR-0212/0219 plan v8) are buried. This is a defect in `backlog-brief.mjs`, not the plan, but it degrades every review that consumes it: dedupe, sort by id/date, filter by task labels, stop truncating.
+
+- **[LOW]** (line 5 vs line 12): **Sequencing blind spot.** The task's own board state is RUNNING with `@lane-BL-R8e`, which the finished tool must refuse — so the tool cannot be used to launch its own review, and this context was still produced by the manual path pointed at in line 1. Say so explicitly and plan the dogfood run for after close, otherwise step 5's "dry-run proofs against the real board" will be run against a task that the real run must reject.
+
+- **[LOW]** (line 98): **The BRIEF-FILE line is the only machine contract and its format is unpinned.** The orchestrator parses a string; the sha256 covers a file the orchestrator could edit between print and agent start. Fix: pin the exact format in AC#1 (path and hash as separate fields), and have the agent verify the hash on entry.
+
+- **[NIT]** (line 95): **The red-proof method assumes the pre-commit hook tolerates a red suite.** "Commit attempt with only test, task-310 file and context file staged" either bypasses hooks or proves the suite isn't run on commit; state which, and prefer a captured failure artifact over a commit that pollutes history.
+
+- **[NIT]** (line 97): **All refusals use exit 3**, collapsing "expected preflight refusal" and "bad arguments" into one code. Scripted callers cannot distinguish them. Use 2 for usage errors, 3 for refusals, and consider `--json`.
+
+## Verdict
+
+The plan is directionally right — one ordered step list reused for dry-run and execution is the correct shape, and the test-first structure is sound — but it is not plan-locked-ready because it models only the happy path and the six *pre*-write refusals, and says nothing about the far more likely class of failures *after* the first irreversible write. The board take is a committed mutation with no compensating action, the dirty check deliberately ignores the directory the take modifies, and the wait predicate cannot distinguish "our commit" from "someone else's commit"; together those three turn any mid-sequence failure into a RUNNING task with no lane and no retry path — the manual board edit the task exists to eliminate. Add the rollback/resume marker, scope the commit to the task file, lock and re-verify around the take, and fix the preflight checklist so nothing can fail after the point of no return, and this becomes a solid plan; without those, I would expect the first week of use to produce more manual board edits than the eight steps it replaces.
+
+VERDICT: FAIL on plan-readiness.
+Top 3 operational blockers:
+- No rollback/resume for the post-take failure path (CRITICAL #1 + HIGH #4/#5/#7).
+- Unscoped `backlog/` commit plus a dirty check that skips `backlog/` — cross-lane board contamination (CRITICAL #2).
+- Wait predicate doesn't prove this task's commit landed; worktree can be cut from a head without the take (HIGH #3).
+
+Top 3 unverified data premises (with verification):
+- "Board repo == the repo the lane builds in." Verify: `git -C <board> rev-parse --show-toplevel` equals the expected code repo, and that `backlog/` is inside it.
+- "Local board HEAD is an acceptable lane base." Verify: `git -C <board> fetch && git -C <board> rev-list --count HEAD..@{u}` — expect 0, or define the ff behaviour.
+- "The board-commit job only commits backlog/ changes belonging to the current take." Verify: inspect `com.maxbld.board-commit`'s commit invocation — if it is `git add backlog/ && git commit`, CRITICAL #2 is confirmed, not hypothetical.
+
+---
+⏱  84024ms (84.0s)
+📊 Tokens — total: 18727, input: 4300, output: 14427, reasoning: 11051

@@ -3,11 +3,11 @@ id: TASK-310
 title: >-
   R8e One-command lane launch: backlog-lane.mjs takes the task on the board,
   cuts the worktree and writes the brief
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R8e'
 created_date: '2026-11-19T13:05:00Z'
-updated_date: '2026-11-19T13:09:00Z'
+updated_date: '2026-11-19T13:22:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -15,6 +15,8 @@ dependencies: []
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L950
   - scripts/analysis/backlog-brief.mjs#L6
+  - docs/reports/lanes/2026-11-19/BL-R8e/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-R8e/TRIAGE.md
 type: build
 project: McIncrement
 ordinal: 20012
@@ -28,9 +30,9 @@ Operator 2026-11-19: "you now need to manually change the board or add a task - 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 scripts/analysis/backlog-lane.mjs --task task-N --lane <name> [--board <dir>] [--worktree <dir>] [--branch <name>] does the launch in one run: takes the task on the board checkout (RUNNING, assignee @lane-<name>, note with worktree and branch), kickstarts com.maxbld.board-commit and waits for the commit, creates the lane worktree from that head with both node_modules links and the plan copy, writes the G1 ticket (backlog-brief.mjs) and the lane brief (panel-tools/brief.mjs from a task.json the tool writes from the task), and prints the BRIEF-FILE line with its sha256
-- [ ] #2 Refuses when the task is not LATER or WAITS, when the worktree exists, or when the board checkout is dirty outside backlog/ (observable refusal text)
-- [ ] #3 Red tests first on a temp project in src/tests/backlog/ (the launchd and worktree steps mocked behind a --dry-run that prints the commands), green through the real hooks; repo review round r1 on the plan in review mode before code
+- [x] #1 scripts/analysis/backlog-lane.mjs --task task-N --lane <name> [--board <dir>] [--worktree <dir>] [--branch <name>] does the launch in one run: takes the task on the board checkout (RUNNING, assignee @lane-<name>, note with worktree and branch), kickstarts com.maxbld.board-commit and waits for the commit, creates the lane worktree from that head with both node_modules links and the plan copy, writes the G1 ticket (backlog-brief.mjs) and the lane brief (panel-tools/brief.mjs from a task.json the tool writes from the task), and prints the BRIEF-FILE line with its sha256
+- [x] #2 Refuses when the task is not LATER or WAITS, when the worktree exists, or when the board checkout is dirty outside backlog/ (observable refusal text)
+- [x] #3 Red tests first on a temp project in src/tests/backlog/ (the launchd and worktree steps mocked behind a --dry-run that prints the commands), green through the real hooks; repo review round r1 on the plan in review mode before code
 <!-- AC:END -->
 
 ## Definition of Done
@@ -61,4 +63,12 @@ Operator 2026-11-19: "you now need to manually change the board or add a task - 
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8e in ~/Buildo-wt-r8e, branch wf2/r8e-lane-launch), RR-0240
+
+2026-11-19 BL-R8e: script and 16 tests landed in 67032d6a6 (red.out: 16 failed, no module; commit.out: 16 passed, hooks green); r1 plan review and r2 output review triaged in docs/reports/lanes/2026-11-19/BL-R8e/TRIAGE.md; fixes folded in the second commit; dry-run proof in the lane dir dryrun.out (task-310 refused as RUNNING, task-14 LATER printed all commands).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+backlog-lane.mjs launches a lane in one command (take, kickstart and wait, worktree, links, plan copy, G1 ticket, task.json, brief.mjs, BRIEF-FILE line); refusals exit 3; 16 tests red then green through the hooks (67032d6a6); dry-run proven on the real board; real launchctl run UNVERIFIED.
+<!-- SECTION:FINAL_SUMMARY:END -->
