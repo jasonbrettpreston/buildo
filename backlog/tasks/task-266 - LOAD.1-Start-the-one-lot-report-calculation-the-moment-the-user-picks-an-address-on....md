@@ -3,11 +3,11 @@ id: TASK-266
 title: >-
   LOAD.1 Start the one-lot report calculation the moment the user picks an
   address on...
-status: RUNNING
+status: WAITS
 assignee:
   - '@lane-BL-LOAD1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:49:00Z'
+updated_date: '2026-11-19T22:06:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -34,6 +34,9 @@ references:
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md
   - >-
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/storage-policy/REVIEW.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD1/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD1/PLAN.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD1/IMPACT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -60,8 +63,8 @@ who (plan text): lane
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
 - [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
 - [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
 - [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
@@ -83,6 +86,19 @@ who (plan text): lane
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC#1, stage 2) Pre-register the expected moves, committed alone: next prereg for the owning row, round claimed by mkdir in ~/Buildo-scratch/ids (highest claim round-197).
+2. (AC#2, done in stage 1) Failing tests C1 to C9 plus the T7 rewrite are written into docs/reports/lanes/2026-11-19/BL-LOAD1/PLAN.md section 4 and reviewed at plan altitude by repo review round r1 (TRIAGE.md).
+3. (AC#3) write_scope declared in the stage-2 brief: ~/Buildo-wt-load1 and the lane directory.
+4. (AC#4, stage 2) PLAN panel with the full lens set, not one generic pass (stage 1 ran one template round only).
+5. (AC#5, stage 2) A grounder re-executes every claim of the fold.
+6. (AC#6, stage 2) Step 0 measurement (C8, lookups rebuild cost), then red attempt (tests and task file only, red.out), then green landing of src/lib/parcels/report-compute.ts, the one route expression at route.ts:134, the exported pageForVerdict, generated files and notes, through the real hooks.
+7. (AC#7, stage 2) OUTPUT panel record committed with the work.
+8. (AC#8) No McFrontend build in LOAD.1; the queue rows for LOAD.2 and LOAD.4 are theirs. Not built: record write ST.P1, stamp check ST.P2, web path, LOAD.2, LOAD.4, tester surface, off-thread compute, 5.11.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -103,4 +119,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-266 · Backlog; o
 2026-11-19 taken on the board at lane launch (lane BL-LOAD1, worktree /Users/brettpreston_macmini/Buildo-wt-load1, branch wf1/inc1b-load1), RR-0240
 
 2026-11-19 taken on the board at lane launch (lane BL-LOAD1, worktree /Users/brettpreston_macmini/Buildo-wt-load1, branch wf1/inc1b-load1), RR-0240
+
+Dated note 2026-11-19 (lane BL-LOAD1, stage 1; prior text kept): the measured plan and impact map are in docs/reports/lanes/2026-11-19/BL-LOAD1/ (PLAN.md, IMPACT.md, REPORT.md, TRIAGE.md, r1-plan.txt). LOAD.1 at its smallest: one added step at src/app/api/parcels/lookup/route.ts:134, 'stored page, else computed page' by the same pure core the step uses (materializeRows), projected by the shared src/lib/report-projection/project.ts; no write, no new key. U1 ANSWERED: W's build shared the adapter (project.ts takes rows in memory); only a row mapping is new. U2: feasible in code (core exported, pure, synchronous; no request-time entry exists, that is LOAD.1's build); STORAGE lane times 0.1 to 33.6 s as built, median 10.9 s, 0.24 s without the garden-suite split (page binds only detached_house and detached_houseplex today); blocks one instance; platform time limit, image load of the core and memory are UNVERIFIED. U3: no tester marker exists, profiles.is_admin does; MB-94 part (f) is not built and no task owns it. task-348 is PARTLY ruled: decision-79 (MORNING-DECISIONS.md:1061; MCBYLAWS-QUEUE.md:786, the cite :785 is one line off) rules WHO sees numbers before MB-38 (testers and admins only); WHEN the gate exists and WHAT marks a session is not ruled; under answer A LOAD.1 is dark code. Correction to BL-W: W's null is four causes (switch off, no parcel, not stored, stale), so the compute checks the switch itself. Decision draft D-1 (narrows task-348): A keep the one switch only; B1 also admit a signed-in admin (recommended, after an image-load proof); B2 part (f) forward. Stage 2 size GUESS about one day, about 7 files. Files: src/app/api/parcels/lookup/route.ts, src/lib/parcels/report-page.ts, src/lib/parcels/report-compute.ts, src/tests/customer-report-compute.logic.test.ts, src/tests/customer-report-read.logic.test.ts, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, docs/reports/generated/127-surface-registry.md, scripts/steps/_schema/src-sql-ledger.json, scripts/steps/_schema/consumer-registry.json, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md. Stage 1 plan done; stage 2 build waits on the orchestrator.
 <!-- SECTION:NOTES:END -->
