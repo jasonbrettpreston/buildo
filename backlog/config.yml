@@ -1,0 +1,29 @@
+project_name: "McIncrement plan"
+default_status: "LATER"
+statuses: ["LATER", "WAITS", "RUNNING", "BUILT", "OPERATOR", "MERGED", "FROZEN", "DROPPED", "DONE"]
+labels: []
+date_format: yyyy-mm-dd
+max_column_width: 20
+auto_open_browser: false
+default_port: 6421
+remote_operations: false
+auto_commit: false
+filesystem_only: false
+bypass_git_hooks: false
+check_active_branches: false
+active_branch_days: 30
+task_prefix: "task"
+zero_padded_ids: 0
+types: ["build", "record", "decision", "check", "push", "db-rehearsal", "db-go", "night", "fix", "db-run"]
+projects: ["McBylaws", "McFrontend", "McIncrement"]
+definition_of_done:
+  - "The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — \"Quote the rule first\" (.cursor/MCBYLAWS-QUEUE.md:107)"
+  - "The tests were written first and proven red, then green — \"Every lock is proven in BOTH directions\" (docs/specs/00-architecture/08_agents.md:462)"
+  - "The work is committed through the real hooks, none bypassed — \"Red tests first, then the code, through the real hooks.\" (docs/specs/00-architecture/08_agents.md:490)"
+  - "The named test is green before the task is called done — \"Never declare a task done until\" (CLAUDE.md:32)"
+  - "Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — \"A ruling enters a row as a verbatim dated note.\" (docs/specs/00-architecture/137_mcqueue.md:109)"
+  - "The task file and its queue row are updated in the same commit as the work — \"The status line changes in the same commit as the work.\" (docs/specs/00-architecture/137_mcqueue.md:84)"
+  - "DONE carries its evidence (commit sha, test, hook result) — \"The work landed and the evidence exists\" (docs/specs/00-architecture/137_mcqueue.md:63)"
+  - "Nothing was added that the card or ruling did not name — \"no change adds a tool, field or rule its card or ruling did not name\" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)"
+  - "The principles the task serves are named — \"Each task names the ones it serves.\" (.cursor/MCBYLAWS-QUEUE.md:104)"
+  - "The close-out reply ends with one STATUS line and at most one question — \"Every reply ends with one line\" (docs/specs/00-architecture/08_agents.md:505)"

@@ -1,0 +1,10 @@
+imported: 2026-11-19
+snapshot: docs/reports/plan-import/raw/2026-11-19/ (SHA256SUMS sha256 6ba17a5440183e239e092714d553b94e0a4c44f6b0565d23db65de2f8c894103)
+loader: scripts/analysis/plan-to-backlog.mjs
+tasks: 304
+drafts: 16
+milestones: 15
+decisions: 68
+docs: 17
+report: docs/reports/plan-import/2026-11-19-import-report.md
+The loader refuses to run while backlog/ exists; this file records that the one-time import happened.
