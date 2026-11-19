@@ -3,17 +3,18 @@ id: TASK-326
 title: >-
   R11 Increment 1·B operator answers: semi placeholder decision, verified
   recommendations for the web footer and the LOAD.1 dependency
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R11'
 created_date: '2026-11-19T15:20:00Z'
-updated_date: '2026-11-19T15:25:00Z'
+updated_date: '2026-11-19T15:31:00Z'
 labels:
   - follow-up
 milestone: m-1
 dependencies: []
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1041
+  - docs/reports/lanes/2026-11-19/BL-R11/REPORT.md
 type: record
 project: McIncrement
 ordinal: 28012
@@ -27,9 +28,9 @@ Operator 2026-11-19 (MORNING-DECISIONS.md:1041): "1 y 2 provide a recommendation
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 task-323 closed DONE with the operator decision (RR-0264) entered through G2, naming task-323, task-319 and task-209; task-319 carries the Scope now line (page, mock and link only in 1·B)
-- [ ] #2 task-324 carries a Recommendation line verified by the review round (where the E.2 web footer is built), status OPERATOR
-- [ ] #3 task-325 carries a Recommendation line verified by the review round (how LOAD.1 lets the search page drive the report now, what is deferred to ST.P1), status OPERATOR
+- [x] #1 task-323 closed DONE with the operator decision (RR-0264) entered through G2, naming task-323, task-319 and task-209; task-319 carries the Scope now line (page, mock and link only in 1·B)
+- [x] #2 task-324 carries a Recommendation line verified by the review round (where the E.2 web footer is built), status OPERATOR
+- [x] #3 task-325 carries a Recommendation line verified by the review round (how LOAD.1 lets the search page drive the report now, what is deferred to ST.P1), status OPERATOR
 <!-- AC:END -->
 
 ## Definition of Done
@@ -60,3 +61,9 @@ Operator 2026-11-19 (MORNING-DECISIONS.md:1041): "1 y 2 provide a recommendation
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R11, worktree /Users/brettpreston_macmini/Buildo-wt-r11, branch wf2/inc1b-r11), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in commit fdee2569c (hooks: GATE OK, POLICY CHECKS OK): decision-76 (RR-0264) via G2 naming task-323/319/209, task-323 DONE, task-319 Scope now line; task-324 and task-325 carry Recommendation lines from review r1 (task-325 with U1-U3 UNVERIFIED), both status OPERATOR. Reports in docs/reports/lanes/2026-11-19/BL-R11/.
+<!-- SECTION:FINAL_SUMMARY:END -->

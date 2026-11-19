@@ -1,0 +1,32 @@
+# TRIAGE: BL-R11 review round r1 (task-326), r1-review.txt (25 findings), one round
+Substrate: DeepSeek review, adjudicated by the tool-bearing lane against opened lines (rule 12). Worktree ~/Buildo-wt-r11 at b354ac34e.
+
+| # | Finding (short) | Verdict | Opened line / reason |
+|---|---|---|---|
+| 1 | doc-2 and doc-16 "ENOENT" in the context yet cited | KEEP (defect noted; claims re-opened) | both files exist: backlog/docs/increments/doc-2 - Increment-S-requirements.md:79,:148 (E.2 row) and backlog/docs/doc-16 - McStorage-policy-v2.md:108,:118; the context generator ran against a path that did not resolve (brief generator defect, not fixed here: infra freeze). Excerpts added to the context fold so the record carries them |
+| 2 | web report route notFound vs "search drives report" | KEEP | src/app/(maxbld)/parcel-tool/[parcelId]/page.tsx:18 notFound while MAXBLD_WEB_LIVE false; src/app/api/parcels/lookup/route.ts header "CONSUMER (mobile)" and mobile/src/hooks/useParcelLookup.ts: Candidate 2 is scoped to the app (mobile) search page and the lookup route; web stays off (RR-0170, ONE-35 b) |
+| 3 | adapter core rows to page response owned by nobody; lock L1 | KEEP | src/lib/parcels/report-page.ts:12-26 (producer NONE), :15-16 (L1); no opened task names the rows-to-page adapter. Folded: named as open item U1 (owner to be fixed at the LOAD.1 build-pass panel); the adapter is a new customer-side module that imports nothing from report-preview-live, so L1 is not breached; reuse of project.ts logic would need an L1 dated note, flagged. Recommendation marked UNVERIFIED for U1 |
+| 4 | AC1 (semi) has no plan steps in the review | REJECT | brief line 12 asks the round for the two candidate recommendations; AC1 is a record-only G2 entry of the operator's answer (RR-0264), no recommendation to verify |
+| 5 | RR-0264/RR-0265 absent from the context | KEEP (minor) | rows exist in ~/Buildo-scratch/plan-gen/rulings-register.json (ids RR-0264, RR-0265) after the context was generated; added to the context fold |
+| 6 | four context lines end with the word undefined | REJECT for this task | generator defect already recorded by R10 (context "Found by the R10 validation pass"); no candidate relies on those lines; reported to the orchestrator |
+| 7 | RR-0174 35 s listed in force | REJECT for this task | generator supersession defect; neither candidate cites 35 s (they cite RR-0176); reported |
+| 8 | no rollback or kill switch for Candidate 2 | KEEP | nothing is written, so rollback is the switch: slot returns null (report-page.ts:23-26), the approved miss text shows; the switch is named by the build lane as a settings row (Airtight V3, switches as data); MB-94 (f) not landed (MCBYLAWS-QUEUE.md:685): made a stated dependency of the tester-scope step |
+| 9 | editing a locked plan outside plan-review; --check | REJECT in part, KEEP in part | plan lives in Backlog and is loaded once by the import script (context ruling "loaded once by an import script", MORNING-DECISIONS.md:843); task edits through the CLI are the record (R10 did the same). KEPT: dependency edits are made only after the operator confirms, and each changed task still carries its own panel and build pass owed |
+| 10 | "task-267/268 unchanged" contradicts the (d) split | KEEP | task-268 description pass criterion (d); fixed: task-268 changes (clause moves), task-267 wait mechanism (response, not record poll) to be confirmed at its build pass, UNVERIFIED |
+| 11 | hazard: unauthenticated hammering | REJECT the premise, KEEP the budget | route.ts:9-17 auth first, entitlement before any parcel DB work, meter on a hit; route.ts:91-92 rate limit parcels-lookup 30 a minute per uid. KEPT: a per-request time budget falling back to the miss text, and verifying the platform limit (policy Concurrency row UNVERIFIED) at the build pass |
+| 12 | footer pattern: footerNode export, F01 schema, FE-31 | KEEP | StaticBinding.tsx:175 footerNode is not exported (grep); scripts/surfaces/parcel_product/F01/surfaces/*.json has no footer (grep "footer": 0 hits); SearchBinding builds its tree in code (SearchBinding.tsx:219). Folded: same shape built in the search tree, not an import; whether a descriptor edit is also needed is U-note |
+| 13 | footer.copyright shared | KEEP | key only at scripts/surfaces/platform_shared/F16/surfaces/web_login.content.json:61; web search content is mobile_parcel_search.content.json (shared with the app). Folded: add the key to the search content, no cross-surface sharing assumed |
+| 14 | footer links exist? | KEEP (verified now) | src/lib/auth/host-policy.ts:51-53 rows /help /terms /privacy routeClass public; pages under src/app/(maxbld)/parcel-tool/(static)/{help,terms,privacy}; cited |
+| 15 | "four keys" vs five items | KEEP | v8 footer: legal sentence, 3 links, copyright (search.txt:323): exact key set listed |
+| 16 | doc-16 row S stale and relied on | KEEP | doc-16:108 quoted in full; the Tasks column ("LOAD.1 to LOAD.3") is stale (LOAD.3 dropped, task-267 note); the "nothing" stored clause is the one relied on |
+| 17 | timings from uncommitted scratch scripts | KEEP | figures are the STORAGE-ONDEMAND lane's MEASURED values (REPORT.md section 0), not re-run here: marked UNVERIFIED in the recommendation |
+| 18 | policy invariants inert in 1·B | KEEP | one line added: purge, tracked refresh, stamp guard and no-record-for-unopened resume when ST.P1 lands |
+| 19 | prior R10 text not attached | KEEP | old text quoted in the context fold |
+| 20 | cites outside the repo unfalsifiable | REJECT | operator words are only in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md; G2 resolves that cite form (backlog-decision.mjs citedText); lane reports go to the repo |
+| 21 | Option B dismissal rhetorical, web surface | KEEP | reason now cites RR-0265 and the surface is stated (app) |
+| 22 | operator quote garbled | REJECT | MORNING-DECISIONS.md:1041 opened: verbatim "1 y 2 provide a recommendation 3. recommendation - we do want ..." |
+| 23 | truncated titles, duplicate decision rows | REJECT for this task | generator output, out of scope |
+| 24 | repeated RR-0005 quote | REJECT | nit, generator |
+| 25 | Dependencies (none) clarifier | REJECT | nit; task-326 has no dependencies |
+
+Folded into the context file ("## Review r1 fold") and into the two Recommendation lines. Candidate 1: all KEPT items were checkable and are checked: verified. Candidate 2: direction verified; U1 (adapter owner), U2 (platform time limit), U3 (MB-94 f switch not landed) stay UNVERIFIED.
