@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-A6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:53:00Z'
+updated_date: '2026-11-19T21:12:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -94,5 +94,9 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0307 · task-320 · Backlog; o
 
 Scope now: the line is built against the existing entitlement read; nothing of MF-47 checkout, no price ids, no DB job (RR-0307)
 
-Files: mobile/app/(app)/parcel-tool/, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/hooks/, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.*, scripts/surfaces/search-golden-capture.ts, src/app/api/parcels/entitlement/, src/tests/surfaces/, mobile/__tests__/, mobile/src/generated/surfaces/, src/tests/fixtures/surfaces/mobile_parcel_search/, .cursor/MCFRONTEND-QUEUE.md, docs/reports/reviews/task-320/context-2026-11-19.md (the list is refined after STEP B)
+Files: mobile/app/(app)/parcel-tool/, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/constants/parcelSearch.ts, mobile/src/hooks/, mobile/src/lib/parcelSearchCore.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/src/lib/persistFilter.ts, mobile/src/lib/schemas.ts, mobile/src/generated/surfaces/, mobile/__tests__/fixtures/, src/components/surfaces/web/SearchBinding.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.*, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/_schema/census/mobile-product.json, src/tests/fixtures/surfaces/mobile_parcel_search/, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surfaces/, .cursor/MCFRONTEND-QUEUE.md
+
+2026-11-19 BL-A6 STEP B done: research, binding table and operator list in docs/reports/reviews/task-320/context-2026-11-19.md (Plan steps under review); r1 triaged (TRIAGE.md in the lane dir). Owning row: MF-35. Stop conditions do not hold. Red tests: src/tests/surfaces/search-reports-left.logic.test.ts, src/tests/surfaces/search-web-binding.ui.test.tsx (e).
+
+Files (final): mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/constants/parcelSearch.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/lib/parcelSearchCore.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/src/lib/persistFilter.ts, mobile/src/lib/schemas.ts, src/components/surfaces/web/SearchBinding.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.{content,descriptor}.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, scripts/surfaces/_schema/census/{contracts,mobile-product}.json, src/tests/fixtures/surfaces/mobile_parcel_search/*, mobile/__tests__/fixtures/*, mobile/src/generated/surfaces/mobile_parcel_search.json, docs/reports/generated/127-surface-*.md, src/tests/surfaces/{search-reports-left.logic,search-web-binding.ui,surface-validate.logic,surface-conformance.logic}.test.ts, .cursor/MCFRONTEND-QUEUE.md
 <!-- SECTION:NOTES:END -->

@@ -24,5 +24,8 @@ export interface QueryShape {
   queryKey: readonly unknown[];
 }
 
+// SRCH.A6 (task-320): ['parcel-entitlement'] is the reports-left count; a count kept from a previous session would be a wrong number, so it is not persisted.
+const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];
+
 export const shouldDehydrateQueryFn = (query: QueryShape): boolean =>
-  query.queryKey[0] !== 'user-profile';
+  !NOT_PERSISTED.includes(String(query.queryKey[0]));

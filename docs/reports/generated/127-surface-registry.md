@@ -23,7 +23,7 @@ There are **94 surfaces, 71 contracts and 6 jobs** in it today.
 
 The standard it serves rests on one idea: **one contract per surface, and the descriptor is the contract.** A single declaration per thing drives the tables it may touch, the API shape it returns, how it renders on web, on mobile and in the admin console, the checks that must pass, and the golden captures that pin its behaviour. Everything downstream is a projection of that one declaration.
 
-That only works if a human can *review the declaration before it becomes code*. Without a document like this one, the declaration is 137 JSON files nobody reads together, and the estate keeps its current failure mode. The measured example: `/api/leads/view` is a live, 153-line metered endpoint with 44 passing test cases and **zero callers**, and the paywall copy downstream of it is unreachable in production. Every individual artifact was green. Nothing held the join between *"a contract exists"* and *"a surface calls it"* — so nobody saw it for months. **16 contracts in this registry have no caller today**, and §3 renders each of them as an orphan rather than leaving them to be discovered later.
+That only works if a human can *review the declaration before it becomes code*. Without a document like this one, the declaration is 137 JSON files nobody reads together, and the estate keeps its current failure mode. The measured example: `/api/leads/view` is a live, 153-line metered endpoint with 44 passing test cases and **zero callers**, and the paywall copy downstream of it is unreachable in production. Every individual artifact was green. Nothing held the join between *"a contract exists"* and *"a surface calls it"* — so nobody saw it for months. **15 contracts in this registry have no caller today**, and §3 renders each of them as an orphan rather than leaving them to be discovered later.
 
 ### 0.3 How it works
 
@@ -767,7 +767,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Gate.** auth class **entitled** (The route resolves the user context and then hard-403s unless subscription_status is one of trial/active/past_due/admin_managed — a signed-in but lapsed user cannot reach the search at all.) · session **required** · entitlement subscription_status · flag none · device permission none
 
-**Calls.** `/api/parcels/lookup` — idiom: hook
+**Calls.** `/api/parcels/lookup` · `/api/parcels/entitlement` — idiom: hook
 
 **Components owned.** —
 
@@ -1079,7 +1079,7 @@ MATCH-TYPE ENUM (declared, not yet emitted). The five resolution types this cont
 
 **What it is.** Tells a signed-in MaxBLD user which plan they hold and how many of this month's reports they have used and have left, and when the count resets, so the search page can say "N of 20 reports left" and the Account page can show the month's use.
 
-**What it reads and writes.** It reads 3 tables — `entitlements` (the caller's `parcel_tool` row), `logic_variables` (the two monthly allowances) and `usage_events` (the distinct lots opened this billing month) — and writes nothing. Every value, including the reports left and the limit-reached flag, is computed on the server. No `parcel_tool` row is a 200 with every field null. No caller yet: MF-35 (the search line), MF-52 (Account) and MF-49 (the app gate) read it when they build.
+**What it reads and writes.** It reads 3 tables — `entitlements` (the caller's `parcel_tool` row), `logic_variables` (the two monthly allowances) and `usage_events` (the distinct lots opened this billing month) — and writes nothing. Every value, including the reports left and the limit-reached flag, is computed on the server. No `parcel_tool` row is a 200 with every field null. One caller today: the app search page line "N of M reports left until <date>" (SRCH.A6, task-320, a follow-up to MF-35; operator RR-0307) through mobile/src/hooks/useParcelLookup.ts; MF-52 (Account) and MF-49 (the app gate) read it when they build.
 
 **Under Spec 126.** A CONTRACT descriptor of archetype `QUERY`, born converted-shape: its response is an explicit `.strict()` whitelist of six fields, its auth class is authenticated, its rate bucket is per uid, `outputs.writes` is none and it is never a gate (the lookup's 403 `REPORT_LIMIT_REACHED` is the gate).
 
@@ -1087,7 +1087,7 @@ MATCH-TYPE ENUM (declared, not yet emitted). The five resolution types this cont
 
 **Gate.** auth class **authenticated** (classifyRoute covers /api/parcels (authenticated) and the handler calls getCurrentUserContext first; null -> 401.)
 
-**Called by.** **nothing — orphan contract**
+**Called by.** `mobile/src/hooks/useParcelLookup.ts`
 
 **Emits.** —
 
@@ -1131,7 +1131,7 @@ MATCH-TYPE ENUM (declared, not yet emitted). The five resolution types this cont
 | 14 | `offers` | `none` | It renders no sponsored placement and reads no placement inventory. — `src/app/api/parcels/entitlement/route.ts — read in full` |
 | 15 | `metering` | `none` | A read of the plan and the counts is not a report and is never counted; the lookup meters reports (contract_parcels_lookup). — `src/app/api/parcels/entitlement/route.ts — read in full; no usage_events INSERT` |
 | 16 | `config` | `logic_variables` | The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed). — `src/lib/entitlements/index.ts:408-411`, `scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial` |
-| 17 | `sharing` | `none` | No surface renders it yet; MF-35 (the search line "N of 20 reports left"), MF-52 (Account) and MF-49 bind to it when they build. — `.cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)` |
+| 17 | `sharing` | `sole` | Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build. — `mobile/src/hooks/useParcelLookup.ts:96`, `.cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |

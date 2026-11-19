@@ -25,6 +25,7 @@ import {
 } from '@/constants/parcelSearch';
 import { REPORT_HEX as R } from '@/constants/reportPage';
 import { diffCandidateAddress, parcelSearchRoute, type AddressSegment, type SearchSituation } from '@/lib/parcelSearchMatch';
+import { formatResetDate, reportsLeftShown } from '@/lib/parcelSearchCore';
 
 /** The generated slice: the descriptor's config values and the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
 export const SEARCH_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string> } = slice;
@@ -42,14 +43,16 @@ export type PropsNode = { component: string; props: Record<string, unknown>; chi
 export type Child = PropsNode | Ref | Template;
 
 /** P35-D14 a: the closed list of derived names (patterns), declared in the descriptor's deviation entry. */
-export const DERIVED_NAMES = [/^input$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
+export const DERIVED_NAMES = [/^input$/, /^candidate_count$/, /^reset_date$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
 
 /** SRCH.DAYLIGHT (task-322): the prop colours are the report's Daylight hexes (reportPage.ts REPORT_HEX, twins of the report-* keys of mobile/tailwind.config.js); the dark PARCEL_SEARCH_HEX stays for the Account screen and the shelf. */
 const H = { primary: R.amber, onPrimary: R.ink, check: R.ink, textMuted: R.muted, placeholder: R.muted } as const;
 
 const CONTRACT = 'contract_parcels_lookup';
+const ENTITLEMENT = 'contract_parcels_entitlement';
 const content = (key: string): Ref => ({ content: key });
 const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
+const entitlement = (field: string): Ref => ({ contract: `${ENTITLEMENT}.${field}` });
 const derived = (name: string): Ref => ({ derived: name });
 const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
 
@@ -86,6 +89,19 @@ const pill = (s: SearchSituation): PropsNode =>
 
 /** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block. */
 const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
+
+/**
+ * SRCH.A6 (task-320; RR-0307; small-pages-v8 search.html:267): "6 of 10 reports left until 9 Dec 2026". The three values are served by the entitlement
+ * read (reportsLeft, reportsLimit; resetsOn written by the derived name reset_date) and shown as served. Drawn only when the read answered with all
+ * three; loading, a failed read and no plan draw no line (v8 draws none).
+ */
+const reportsLeft = (s: SearchSituation): PropsNode[] =>
+  reportsLeftShown(s.entitlement)
+    ? [node('Text', { key: 'reports-left', testID: 'parcel-search-reports-left', className: L.allowance }, [{
+      text: content('search.reports_left'),
+      vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: derived('reset_date') },
+    }])]
+    : [];
 
 const chips = (s: SearchSituation): PropsNode[] =>
   s.recent.length === 0
@@ -215,6 +231,7 @@ export function searchProps(s: SearchSituation): PropsNode {
     }, [node('View', { key: 'column', testID: 'parcel-search-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
       header(),
       pill(s),
+      ...reportsLeft(s),
       legal(),
       ...chips(s),
       ...notices(s),
@@ -229,9 +246,13 @@ export type BindingData = { contract: Record<string, unknown>; derived: Record<s
 /** The values the refs of `searchProps(s)` resolve against: the lookup response and its 429 detail, and the derived values. */
 export function searchData(s: SearchSituation): BindingData {
   return {
-    contract: { [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } } },
+    contract: {
+      [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } },
+      ...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit } } : {}),
+    },
     derived: {
       input: s.input,
+      ...(reportsLeftShown(s.entitlement) ? { reset_date: formatResetDate(s.entitlement.resetsOn) } : {}),
       candidate_count: s.candidates.length,
       recent: s.recent,
       label: s.candidates.map((c) => c.address || c.parcelId),

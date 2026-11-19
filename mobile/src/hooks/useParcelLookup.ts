@@ -14,7 +14,12 @@ import * as Sentry from '@sentry/react-native';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
 import { useAuthStore } from '@/store/authStore';
-import { ConsumerParcelLookupResultSchema, type ConsumerParcelLookupResult } from '@/lib/schemas';
+import {
+  ConsumerParcelLookupResultSchema,
+  ParcelToolEntitlementSchema,
+  type ConsumerParcelLookupResult,
+  type ParcelToolEntitlement,
+} from '@/lib/schemas';
 
 // Sentinel for deterministic schema-drift failures — short-circuits the retry guard so a
 // malformed server response doesn't generate duplicate Sentry events (mirrors useLeadDetail).
@@ -81,6 +86,32 @@ export function useParcelLookup(parcelId: string | undefined) {
     queryFn: () => fetchParcelLookup({ parcelId: parcelId! }),
     enabled: !!parcelId && !!accessToken,
     staleTime: 60_000,
+    retry: shouldRetryParcelLookup,
+  });
+}
+
+/**
+ * SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count, read from GET /api/parcels/entitlement (the line "N of M reports left
+ * until <date>"). A display, never a gate. Parsed through the Zod boundary like the lookup; a drifted shape is the same ParcelLookupSchemaError. No
+ * retry on 401/403/429 or drift (the line is simply absent); never persisted across a restart (mobile/src/lib/persistFilter.ts); re-read on focus.
+ */
+export async function fetchParcelEntitlement(): Promise<ParcelToolEntitlement> {
+  const raw = await fetchWithAuth<{ data: unknown }>('/api/parcels/entitlement');
+  const parsed = ParcelToolEntitlementSchema.safeParse(raw.data);
+  if (!parsed.success) {
+    Sentry.captureException(parsed.error, { extra: { context: 'useParcelEntitlement Zod parse' } });
+    throw new ParcelLookupSchemaError('Parcel entitlement response failed schema validation');
+  }
+  return parsed.data;
+}
+
+export function useParcelEntitlement() {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  return useQuery({
+    queryKey: ['parcel-entitlement'],
+    queryFn: fetchParcelEntitlement,
+    enabled: !!accessToken,
+    staleTime: 0,
     retry: shouldRetryParcelLookup,
   });
 }

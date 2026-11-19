@@ -159,6 +159,8 @@ export const PARCEL_SEARCH_LAYOUT = {
     'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft',
   /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as small pages v8 (.legal). */
   legal: 'mt-3 text-[13px] leading-[18px] font-normal text-report-muted',
+  /** SRCH.A6 (task-320): the reports-left line under the box, v8 .small: one small centred muted line. */
+  allowance: 'mt-3 text-center text-[13px] leading-[18px] font-normal text-report-muted',
   chipRow: 'mt-3 flex-row flex-wrap gap-2',
   chip:
     'min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky',

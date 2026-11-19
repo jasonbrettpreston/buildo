@@ -260,7 +260,7 @@ A search box where someone types a Toronto street address and gets back the lot.
 
 **3. Which contracts, and who calls them?**
 
-Calls 1: `/api/parcels/lookup` (idiom: hook)
+Calls 2: `/api/parcels/lookup` · `/api/parcels/entitlement` (idiom: hook)
 
 **4. What gate, role or entitlement stands in front of it?**
 
@@ -464,7 +464,7 @@ Tells a signed-in MaxBLD user which plan they hold and how many of this month's 
 
 **3. Which contracts, and who calls them?**
 
-**Nothing calls it.** An orphan contract — the exact shape this registry exists to surface.
+Called by 1: `mobile/src/hooks/useParcelLookup.ts`
 
 **4. What gate, role or entitlement stands in front of it?**
 

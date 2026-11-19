@@ -45,7 +45,7 @@
 
 import type { ParcelCandidate, ConsumerParcelLookupResult } from '@/lib/schemas';
 import { ApiError, RateLimitError } from '@/lib/errors';
-import { parcelSearchPath } from './parcelSearchCore';
+import { parcelSearchPath, type EntitlementLine } from './parcelSearchCore';
 
 // ── The Toronto-only rule (operator ruling 2026-09-16 (b)) ──────────────────
 //
@@ -317,6 +317,8 @@ export type SearchSituation = {
   selectedParcelId: string | null;
   /** Where the outcome navigates (unique, map kinds), else null: the screen's effect pushes it. */
   route: string | null;
+  /** SRCH.A6 (task-320): the served count fields the reports-left line binds; absent or null (loading, read failed, no plan) draws no line. */
+  entitlement?: EntitlementLine | null;
 };
 
 /** The situation of one render, from the hook's values (rows 14, 16; the truth table in parcelSearchMatch.test.ts). */
@@ -331,6 +333,8 @@ export function buildSearchSituation(args: {
   selectedParcelId: string | null;
   cap: number;
   minQueryLen: number;
+  /** SRCH.A6: the entitlement read's data, undefined while loading or after a failed read. */
+  entitlement?: EntitlementLine | null;
 }): SearchSituation {
   const { debounced, data, error, isFetching } = args;
   const outcome = deriveMatchType(debounced, error ? undefined : data);
@@ -349,5 +353,7 @@ export function buildSearchSituation(args: {
     recent: [...args.recent],
     selectedParcelId: selected,
     route: parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query: debounced }),
+    // Only when a read answered: the key is left off otherwise so every other situation is unchanged.
+    ...(args.entitlement ? { entitlement: { reportsLeft: args.entitlement.reportsLeft, reportsLimit: args.entitlement.reportsLimit, resetsOn: args.entitlement.resetsOn } } : {}),
   };
 }

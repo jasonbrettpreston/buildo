@@ -478,5 +478,34 @@
     "recent": [],
     "selectedParcelId": null,
     "route": "/(app)/parcel-tool/disambiguate?q=26%20Hurlingham%20Cres&kind=unlinked"
+  },
+  "reports_left": {
+    "input": "",
+    "query": "",
+    "outcome": "idle",
+    "isFetching": false,
+    "errors": {
+      "rateLimited": false,
+      "retryAfterSeconds": null,
+      "entitlement": false,
+      "unexpected": false,
+      "schemaDrift": false
+    },
+    "candidates": [],
+    "overCap": false,
+    "showMiss": false,
+    "showPrompt": true,
+    "recent": [
+      "Queen & Spadina",
+      "26 Hurlingham Cres",
+      "Bathurst St"
+    ],
+    "selectedParcelId": null,
+    "route": null,
+    "entitlement": {
+      "reportsLeft": 6,
+      "reportsLimit": 10,
+      "resetsOn": "2026-12-09T00:00:00.000Z"
+    }
   }
 }

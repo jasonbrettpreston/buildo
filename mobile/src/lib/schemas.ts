@@ -439,3 +439,15 @@ export const ConsumerParcelLookupResultSchema = z.object({
 export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
 export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;
 export type ParcelCandidate = z.infer<typeof ParcelCandidateSchema>;
+
+// SRCH.A6 (task-320; RR-0307): GET /api/parcels/entitlement (contract_parcels_entitlement, src/app/api/parcels/entitlement/types.ts). A plain object, not
+// .strict(): the contract is additive_only because an installed app does not redeploy with the server. Every field is null when the user holds no plan.
+export const ParcelToolEntitlementSchema = z.object({
+  status: z.string().nullable(),
+  reportsUsed: z.number().int().nonnegative().nullable(),
+  reportsLimit: z.number().int().positive().nullable(),
+  reportsLeft: z.number().int().nonnegative().nullable(),
+  reportsLimitReached: z.boolean().nullable(),
+  resetsOn: z.string().datetime().nullable(),
+});
+export type ParcelToolEntitlement = z.infer<typeof ParcelToolEntitlementSchema>;

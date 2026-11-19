@@ -13,7 +13,7 @@
 // open `disambiguate` (MF-53). MaxBLD is its own product (Spec 116 OD5): nothing here may reference a lead-gen concept, and the query is
 // never logged or tracked.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import {
   SEARCH_CANDIDATE_LIMIT,
@@ -23,7 +23,7 @@ import {
   searchData,
   searchProps,
 } from '@/components/surfaces/SearchBinding';
-import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
 import { openHelp } from '@/lib/maxbldHelp';
 import { useRecentSearchesStore } from '@/store/recentSearchesStore';
@@ -47,6 +47,15 @@ export default function ParcelSearchScreen() {
     setSelectedParcelId(null);
   }, [debounced]);
 
+  // SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count (GET /api/parcels/entitlement) and re-reads it each time this screen gains
+  // focus, so the number is current after a report was produced. A failed read or no plan leaves `data` undefined or null: no line (v8 draws none).
+  const { data: entitlement, refetch: refetchEntitlement } = useParcelEntitlement();
+  useFocusEffect(
+    useCallback(() => {
+      void refetchEntitlement();
+    }, [refetchEntitlement]),
+  );
+
   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).
   const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));
 
@@ -62,8 +71,9 @@ export default function ParcelSearchScreen() {
       selectedParcelId,
       cap: SEARCH_CANDIDATE_LIMIT,
       minQueryLen: SEARCH_MIN_QUERY_LEN,
+      entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOn: entitlement.resetsOn } : null,
     }),
-    [input, debounced, data, error, isFetching, recent, selectedParcelId],
+    [input, debounced, data, error, isFetching, recent, selectedParcelId, entitlement],
   );
 
   // A search is recorded only when it opens a page (P35-D16 a): the lot, SELECT, the map page. One navigation, one record.

@@ -53,8 +53,8 @@ const textsOf = (n: unknown, s: WebSituation): string[] => {
 };
 
 describe('(a) every web golden renders with its situation', () => {
-  it('10 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error', () => {
-    expect(GOLDENS).toHaveLength(10);
+  it('11 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error', () => {
+    expect(GOLDENS).toHaveLength(11); // SRCH.A6 (task-320, dated 2026-11-19): 10 -> 11, the new state reports_left
     for (const g of GOLDENS) {
       const s = SITUATIONS[g.situation] as WebSituation;
       expect(searchWebTree(s)).toEqual(g.props);
@@ -141,5 +141,20 @@ describe('(d) RED: gaps are loud', () => {
     expect(() => renderToStaticMarkup(provided(h(SearchBinding, { tree: ref, content: C, data: searchWebData(s) })))).toThrow('unresolved ref');
     const act = { component: 'Button', props: { key: 'x', size: 'lg', onClick: { action: 'delete_everything' } }, children: [] };
     expect(() => renderToStaticMarkup(provided(h(SearchBinding, { tree: act, content: C, data: searchWebData(s) })))).toThrow('unknown action "delete_everything"');
+  });
+});
+
+// SRCH.A6 (task-320; RR-0307): the reports-left line, executed through the real web binding (the root run executes this; the mobile tree is
+// executed by search-golden-capture.ts --check, and the mobile jest cases are not run by the hook: UNVERIFIED).
+describe("(e) the reports-left line renders the v8 copy from the served fields only", () => {
+  it("the new state shows exactly \"6 of 10 reports left until 9 Dec 2026\" with no placeholder left, and an undrawn state shows no such line", () => {
+    const s = SITUATIONS.reports_left as WebSituation;
+    const { container } = render(provided(bind(s)));
+    const line = container.querySelector("[data-testid=parcel-search-reports-left], #parcel-search-reports-left");
+    expect(line?.textContent).toBe("6 of 10 reports left until 9 Dec 2026");
+    expect(line?.textContent).not.toContain("{");
+    cleanup();
+    const none = render(provided(bind(SITUATIONS.static as WebSituation)));
+    expect(none.container.textContent).not.toContain("reports left");
   });
 });

@@ -23,7 +23,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
 import { footerNode, type FooterLayout, type FooterSection } from './footerNode';
-import { diffCandidateAddress, parcelSearchPath, type AddressSegment, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
+import { diffCandidateAddress, formatResetDate, parcelSearchPath, reportsLeftShown, type AddressSegment, type EntitlementLine, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
 
 export type Ref = { content: string } | { contract: string } | { derived: string };
 export type Template = { text: Ref; vars: Record<string, Ref> };
@@ -43,6 +43,8 @@ export type WebSituation = {
   recent: string[];
   selectedParcelId: string | null;
   route: string | null;
+  /** SRCH.A6 (task-320): the served count fields of the reports-left line; absent or null draws no line. Inert on the web until MAXBLD_WEB_LIVE flips (LS.12, task-287). */
+  entitlement?: EntitlementLine | null;
 };
 
 /** The web base path of the parcel tool pages (Spec 126 §11b.3 dated note 2026-11-11: the app's route name, §11b.7 A2/A4). */
@@ -65,6 +67,8 @@ export const WEB_SEARCH_LAYOUT = {
   footerLink: 'rounded-xl text-zinc-300',
   footerLegal: 'text-[13px] leading-[18px] font-normal text-zinc-400',
   footerCopyright: 'text-[13px] leading-[18px] font-normal text-zinc-400',
+  /** SRCH.A6 (task-320): the reports-left line under the box (v8 .small). */
+  allowance: 'mt-3 text-center text-[13px] leading-[18px] font-normal text-zinc-400',
   chipRow: 'mt-3 gap-2',
   chip: 'rounded-full font-mono text-xs font-normal',
   notice: 'mt-3 rounded-xl',
@@ -90,8 +94,10 @@ const L = WEB_SEARCH_LAYOUT;
 const HELP_PATH = '/help';
 
 const CONTRACT = 'contract_parcels_lookup';
+const ENTITLEMENT = 'contract_parcels_entitlement';
 const content = (key: string): Ref => ({ content: key });
 const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
+const entitlement = (field: string): Ref => ({ contract: `${ENTITLEMENT}.${field}` });
 const derived = (name: string): Ref => ({ derived: name });
 const node = (component: string, props: Record<string, unknown>, children: WebNode['children'] = []): WebNode => ({ component, props, children });
 
@@ -136,6 +142,15 @@ export const SEARCH_FOOTER: FooterSection = {
 };
 const SEARCH_FOOTER_LAYOUT: FooterLayout = { footer: L.footer, links: L.footerLinks, link: L.footerLink, legal: L.footerLegal, line: L.footerLegal, copyright: L.footerCopyright };
 const footer = (): WebNode => footerNode(SEARCH_FOOTER, SEARCH_FOOTER_LAYOUT, 'parcel-search') as WebNode;
+
+/** SRCH.A6 (task-320; RR-0307; v8 search.html:320): the mobile line, the same refs; drawn only when the read answered with all three served fields. */
+const reportsLeft = (s: WebSituation): WebNode[] =>
+  reportsLeftShown(s.entitlement)
+    ? [node('Text', { key: 'reports-left', testID: 'parcel-search-reports-left', className: L.allowance }, [{
+      text: content('search.reports_left'),
+      vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: derived('reset_date') },
+    }])]
+    : [];
 
 const chips = (s: WebSituation): WebNode[] =>
   s.recent.length === 0
@@ -236,6 +251,7 @@ export function searchWebTree(s: WebSituation): WebNode {
     node('Stack', { key: 'column', testID: 'parcel-search-column', className: L.column }, [
       header(),
       pill(s),
+      ...reportsLeft(s),
       ...chips(s),
       ...notices(s),
       ...addressList(s),
@@ -250,9 +266,13 @@ export type WebBindingData = { contract: Record<string, unknown>; derived: Recor
 /** The values the refs of `searchWebTree(s)` resolve against (the mobile binding's searchData, the same keys). */
 export function searchWebData(s: WebSituation): WebBindingData {
   return {
-    contract: { [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } } },
+    contract: {
+      [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } },
+      ...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit } } : {}),
+    },
     derived: {
       input: s.input,
+      ...(reportsLeftShown(s.entitlement) ? { reset_date: formatResetDate(s.entitlement.resetsOn) } : {}),
       candidate_count: s.candidates.length,
       recent: s.recent,
       label: s.candidates.map((c) => c.address || c.parcelId),

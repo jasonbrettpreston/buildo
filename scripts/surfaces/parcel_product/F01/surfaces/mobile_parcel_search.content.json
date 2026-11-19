@@ -20,6 +20,7 @@
   "search.outside_toronto": "Lots are only available in Toronto.",
   "search.prompt": "Type at least 3 characters to search.",
   "search.ratelimit": "Too many searches. Try again in {seconds}s.",
+  "search.reports_left": "{left} of {allowance} reports left until {reset}",
   "search.retry.label": "Retry the search",
   "search.retry.text": "Try again",
   "search.schema_drift": "We couldn’t read the response for that address. This is our problem, not yours — it has been reported.",

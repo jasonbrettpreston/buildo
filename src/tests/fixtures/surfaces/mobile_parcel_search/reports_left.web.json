@@ -1,0 +1,358 @@
+{
+  "surface": "mobile_parcel_search",
+  "state": "hit",
+  "target": "web",
+  "covers": [
+    "hit"
+  ],
+  "situation": "reports_left",
+  "props": {
+    "component": "Stack",
+    "props": {
+      "key": "screen",
+      "testID": "parcel-search-screen",
+      "className": "min-h-screen w-full bg-zinc-950"
+    },
+    "children": [
+      {
+        "component": "Stack",
+        "props": {
+          "key": "column",
+          "testID": "parcel-search-column",
+          "className": "mx-auto w-full max-w-md px-4 pb-24"
+        },
+        "children": [
+          {
+            "component": "Stack",
+            "props": {
+              "key": "header",
+              "className": "items-center pt-10 pb-6"
+            },
+            "children": [
+              {
+                "component": "Title",
+                "props": {
+                  "key": "wordmark",
+                  "className": "text-2xl font-bold tracking-tight text-zinc-100"
+                },
+                "children": [
+                  {
+                    "content": "search.wordmark.max"
+                  },
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "wordmark-accent",
+                      "component": "span",
+                      "className": "text-2xl font-bold tracking-tight text-amber-500"
+                    },
+                    "children": [
+                      {
+                        "content": "search.wordmark.bld"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "tagline",
+                  "className": "mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                },
+                "children": [
+                  {
+                    "content": "search.tagline"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Group",
+            "props": {
+              "key": "pill",
+              "className": "flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1"
+            },
+            "children": [
+              {
+                "component": "TextInput",
+                "props": {
+                  "key": "input",
+                  "testID": "parcel-search-input",
+                  "className": "flex-1 ph-no-capture",
+                  "size": "lg",
+                  "variant": "unstyled",
+                  "value": {
+                    "derived": "input"
+                  },
+                  "onChange": {
+                    "action": "change_input"
+                  },
+                  "placeholder": {
+                    "content": "search.input.placeholder"
+                  },
+                  "ariaLabel": {
+                    "content": "search.input.label"
+                  },
+                  "ariaDescription": {
+                    "content": "search.input.hint"
+                  },
+                  "autoComplete": "off"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "component": "Text",
+            "props": {
+              "key": "reports-left",
+              "testID": "parcel-search-reports-left",
+              "className": "mt-3 text-center text-[13px] leading-[18px] font-normal text-zinc-400"
+            },
+            "children": [
+              {
+                "text": {
+                  "content": "search.reports_left"
+                },
+                "vars": {
+                  "left": {
+                    "contract": "contract_parcels_entitlement.reportsLeft"
+                  },
+                  "allowance": {
+                    "contract": "contract_parcels_entitlement.reportsLimit"
+                  },
+                  "reset": {
+                    "derived": "reset_date"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "component": "Group",
+            "props": {
+              "key": "chips",
+              "className": "mt-3 gap-2"
+            },
+            "children": [
+              {
+                "component": "Button",
+                "props": {
+                  "key": "chip-Queen & Spadina",
+                  "testID": "parcel-search-suggestion-Queen & Spadina",
+                  "size": "lg",
+                  "variant": "outline",
+                  "color": "gray",
+                  "className": "rounded-full font-mono text-xs font-normal",
+                  "ariaLabel": {
+                    "text": {
+                      "content": "search.chip.label"
+                    },
+                    "vars": {
+                      "query": {
+                        "derived": "recent.0"
+                      }
+                    }
+                  },
+                  "onClick": {
+                    "action": "set_input",
+                    "value": {
+                      "derived": "recent.0"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "derived": "recent.0"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "chip-26 Hurlingham Cres",
+                  "testID": "parcel-search-suggestion-26 Hurlingham Cres",
+                  "size": "lg",
+                  "variant": "outline",
+                  "color": "gray",
+                  "className": "rounded-full font-mono text-xs font-normal",
+                  "ariaLabel": {
+                    "text": {
+                      "content": "search.chip.label"
+                    },
+                    "vars": {
+                      "query": {
+                        "derived": "recent.1"
+                      }
+                    }
+                  },
+                  "onClick": {
+                    "action": "set_input",
+                    "value": {
+                      "derived": "recent.1"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "derived": "recent.1"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "chip-Bathurst St",
+                  "testID": "parcel-search-suggestion-Bathurst St",
+                  "size": "lg",
+                  "variant": "outline",
+                  "color": "gray",
+                  "className": "rounded-full font-mono text-xs font-normal",
+                  "ariaLabel": {
+                    "text": {
+                      "content": "search.chip.label"
+                    },
+                    "vars": {
+                      "query": {
+                        "derived": "recent.2"
+                      }
+                    }
+                  },
+                  "onClick": {
+                    "action": "set_input",
+                    "value": {
+                      "derived": "recent.2"
+                    }
+                  }
+                },
+                "children": [
+                  {
+                    "derived": "recent.2"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Text",
+            "props": {
+              "key": "prompt",
+              "testID": "parcel-search-prompt",
+              "className": "mt-10 text-center text-base font-normal text-zinc-500"
+            },
+            "children": [
+              {
+                "content": "search.prompt"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "component": "Stack",
+        "props": {
+          "key": "footer",
+          "testID": "parcel-search-footer",
+          "component": "footer",
+          "className": "mt-auto w-full gap-3 border-t border-zinc-800 px-4 py-6"
+        },
+        "children": [
+          {
+            "component": "Text",
+            "props": {
+              "key": "footer-legal-0",
+              "testID": "parcel-search-legal",
+              "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+            },
+            "children": [
+              {
+                "content": "search.legal"
+              }
+            ]
+          },
+          {
+            "component": "Group",
+            "props": {
+              "key": "footer-links",
+              "className": "gap-2"
+            },
+            "children": [
+              {
+                "component": "Button",
+                "props": {
+                  "key": "footer-0",
+                  "testID": "parcel-search-link-/terms",
+                  "href": "/terms",
+                  "size": "lg",
+                  "variant": "subtle",
+                  "color": "gray",
+                  "className": "rounded-xl text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "footer.terms"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "footer-1",
+                  "testID": "parcel-search-link-/privacy",
+                  "href": "/privacy",
+                  "size": "lg",
+                  "variant": "subtle",
+                  "color": "gray",
+                  "className": "rounded-xl text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "footer.privacy"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "footer-2",
+                  "testID": "parcel-search-link-/help",
+                  "href": "/help",
+                  "size": "lg",
+                  "variant": "subtle",
+                  "color": "gray",
+                  "className": "rounded-xl text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "footer.help"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Text",
+            "props": {
+              "key": "footer-copyright-0",
+              "testID": "parcel-search-copyright",
+              "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+            },
+            "children": [
+              {
+                "content": "footer.copyright"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "bec876840dd4dc23",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "635d6202293de5ec"
+    }
+  }
+}

@@ -50,8 +50,8 @@ describe('T1 one builder, three users', () => {
 });
 
 describe('T2 the web search tree ends with the footer node, five items in the v8 order', () => {
-  it('ten goldens: the last child of the screen is the footer', () => {
-    expect(GOLDENS).toHaveLength(10);
+  it('eleven goldens: the last child of the screen is the footer', () => {
+    expect(GOLDENS).toHaveLength(11); // SRCH.A6 (task-320; dated 2026-11-19): 10 -> 11, the state hit (golden reports_left)
     for (const f of GOLDENS) {
       const g = rj(`${SEARCH_DIR}/${f}`);
       const tree = searchWebTree(SITUATIONS[g.situation] as WebSituation) as unknown as Json;

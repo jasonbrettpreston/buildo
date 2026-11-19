@@ -217,8 +217,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "c30390405a516189",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "94299a5118def243"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "bec876840dd4dc23",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "635d6202293de5ec"
     }
   }
 }

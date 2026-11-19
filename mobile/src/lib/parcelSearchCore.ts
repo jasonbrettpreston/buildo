@@ -62,3 +62,34 @@ export function diffCandidateAddress(query: string, address: string): AddressSeg
     return { text: run, differs: isWord && !typed.has(run.toLowerCase()) };
   });
 }
+
+// ── The reports-left line (SRCH.A6, task-320; operator RR-0307, MORNING-DECISIONS.md:1182) ─────────────────────────────────────────
+//
+// GET /api/parcels/entitlement serves the count (src/app/api/parcels/entitlement/types.ts): the server computes reportsLeft, reportsLimit and the
+// reset instant (FE-05); the page only shows them. `EntitlementLine` is the three served fields the line binds, nothing else.
+
+/** The served fields the reports-left line binds (every one null when the user has no plan or the read could not count). */
+export type EntitlementLine = { reportsLeft: number | null; reportsLimit: number | null; resetsOn: string | null };
+
+// Display names of the twelve months, written as the v8 line shows them ("9 Dec 2026"). A fixed table, not Intl: the same text on every device.
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+const ISO_INSTANT = /^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+
+/**
+ * The served reset instant written as "<day> <Mon> <year>" from the instant's own UTC calendar date (no time-zone conversion, no clock, no date
+ * arithmetic: the characters of the served string are re-written). Null for anything that is not an ISO instant with a real month and day.
+ */
+export function formatResetDate(iso: unknown): string | null {
+  const m = typeof iso === 'string' ? ISO_INSTANT.exec(iso) : null;
+  if (!m) return null;
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const name = MONTH_NAMES[month - 1];
+  if (!name || day < 1 || day > 31) return null;
+  return `${day} ${name} ${m[1]}`;
+}
+
+/** True only when all three served fields are present (a served 0 counts as present) and the date can be written; else no line is drawn. */
+export function reportsLeftShown(e: EntitlementLine | null | undefined): e is EntitlementLine {
+  return !!e && e.reportsLeft !== null && e.reportsLeft !== undefined && e.reportsLimit !== null && e.reportsLimit !== undefined && formatResetDate(e.resetsOn) !== null;
+}
