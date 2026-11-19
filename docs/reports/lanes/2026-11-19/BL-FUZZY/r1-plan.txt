@@ -1,0 +1,118 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of docs/reports/reviews/task-333/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10243 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20876 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31236 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 37749 chars, answer 3675 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 37749 chars, answer 14376 chars, 75s
+# Adversarial review — task-333 plan (SRCH.FUZZY) + review context
+
+The document under review is a generated review context whose only substantive content is the **"Plan steps under review"** block. The document is also the *code* in one sense: the generator emitted it, and it has its own defects that materially degrade this review (see the last section). Findings on the plan first.
+
+---
+
+## Findings on the plan
+
+- **[CRITICAL]** (plan step 2, the SQL literal): `levenshtein(...) <= (SELECT variable_value FROM logic_variables WHERE variable_key = '...')`. `logic_variables.variable_value` is not shown to be `integer`; the seeds are JSON (`scripts/seeds/logic_variables.json:6656`), so the column is almost certainly `jsonb` or `text`. `integer <= jsonb/text` has no operator; the statement either raises `operator does not exist` on every no_match, or (if `text`) does a **lexicographic** comparison — `"10" <= "2"` is true — silently inverting the threshold. The plan's "Missing variable = NULL = no rows" reasoning only holds for a numeric comparison. **Fix:** verify the column type (`information_schema.columns`), then read the value once in JS, coerce with `Number(...)`, validate `Number.isInteger` and `> 0`, and pass as `$3::int`. Do not put the subquery in the hot SQL.
+
+- **[CRITICAL]** (plan step 2 + "Module home" paragraph): AC#1 says "no second matcher"; the plan says "no second matcher, no new home needed" and then **writes the matcher SQL a second time** inside `src/lib/admin/parcel-lookup.ts`. `scripts/lib/compute/enrich-heritage.js:121` contains that SQL as a JS string; copying the text is by definition a second home and the two copies will drift at the first threshold/normalization change. The "module is the DB function" argument is false — there is no named DB function today, only SQL text plus `normalize_address()` plus a config row. **Fix:** add a migration defining `find_fuzzy_address_candidates(p_num text, p_street text, p_limit int) RETURNS SETOF …`, have `enrich-heritage.js` and `parcel-lookup.ts` both call it. That is the only way AC#1 is literally satisfiable.
+
+- **[CRITICAL]** (plan step 2, `ORDER BY ...`): the plan leaves the ordering as a literal ellipsis. `LIMIT 10` with **no `ORDER BY`** is non-deterministic: the candidate set the user sees for the same query changes across plan/scan order, and the test asserting "text_candidates" with row contents will be flaky. **Fix:** specify `ORDER BY levenshtein(normalize_address(street_name_normalized), normalize_address($2)), street_name_normalized, addr_num_normalized, parcel_id` (add id as the final tie-break) before implementation.
+
+- **[HIGH]** (plan step 2, `$2`): the plan never defines what `$2` is. The pipeline matcher compares `normalize_address(parcel_address)` to `normalize_address(point_address)` — **full addresses**. The search SQL compares `normalize_address(street_name_normalized)` to `normalize_address($2)` — presumably a street-only token. Two problems: (a) if `$2` is the raw user input ("41 Derwin Road"), the distance to "DERWIN" is ~6 and nothing ever matches; (b) the seed threshold 2 was tuned for full-address comparison, not 6–12-character street names, so transferring it is unvalidated. **Fix:** state `$2` = the street token from `parseFreeTextAddress`, and re-derive the threshold against street-name-only distances with real data (see verification queries).
+
+- **[HIGH]** (plan step 2 vs Grounding §"the web's TS mirror"): the plan routes the query through `parseFreeTextAddress`/`address.ts` first, then normalizes **again** with SQL `normalize_address()`. Two different normalizers ("mirror of `scripts/lib/address-normalizers.js`" — a mirror is not the same code) sit on the two sides of the Levenshtein. Any drift (abbreviation table, punctuation, suffix order) inflates distance and silently kills matches, or makes the exact probe and the fuzzy probe disagree. **Fix:** pass the *raw* parsed street token to SQL and normalize only in SQL, or prove the TS mirror byte-identical to `normalize_address` with a table-driven test.
+
+- **[HIGH]** (plan step 2, "Uses idx_parcels_address (num first)"): the selectivity claim is wrong in spirit. `addr_num_normalized = '41'` matches house number 41 on **every street in Toronto** — hundreds to low thousands of rows. The index gives you that scan; it gives you *nothing* for the `levenshtein` filter, which is evaluated row-by-row on every one of them, on the **no_match hot path** of every search. A user hammering mistyped addresses is a cheap CPU amplification. **Fix:** add a cheap prefilter that is indexable — `street_name_normalized % $2` with `pg_trgm` + GIN, or `soundex`/`metaphone` equality, or at minimum first-letter equality (`left(street_name_normalized,1) = left(...,1)`) — before the `levenshtein` predicate. Benchmark before and after with a realistic street name.
+
+- **[HIGH]** (plan step 2, `SELECT parcel_id, address`): "Returns candidates in the existing shape" is asserted but the SELECT list is only two columns. The existing candidate shape (the unlinked probe / the candidates page renderer) almost certainly carries more (ward, lot, address components, whatever B.1 renders). Returning a narrower row will produce `undefined` in the UI or a type error, and AC#3 says the copy is unchanged — so nothing on the page will be adapted to hide the gap. **Fix:** copy the exact column list and row-mapper from the existing unlinked probe; add a test that the fuzzy candidate object is `deepEqual`-shaped to an existing candidate.
+
+- **[HIGH]** (plan step 2, `addr_num_normalized = $1`): the fix only rescues **street-name** typos. "14 Derwin Road" (wrong house number) still `no_match`. The task title is "mis-typed address", the acceptance criterion names a street typo, but the operator's words (RR-0277) are general. If the house number is exact-matched, this is a silent scope narrowing that will generate the next operator ticket. **Fix:** either state the boundary explicitly in the plan and in a dated note, or drop the number equality and let the street match drive candidate resolution (with the number shown to the user so they can self-correct).
+
+- **[HIGH]** (plan step 2, config variable): reusing `enrich_heritage_address_levenshtein_threshold` couples search sensitivity to heritage-enrichment tuning. Someone fixing a heritage false positive by lowering the threshold silently changes the customer-facing search candidates. It is also a hidden second source of truth (the search now depends on a pipeline seed row existing in every environment). **Fix:** introduce a `search_address_fuzzy_threshold` variable, or document the coupling as an explicit, reviewed decision — and note the tension with AC#3 "No new field" (a config row is arguably not a *field*, but say so out loud).
+
+- **[HIGH]** (plan step 2, error handling): the plan does not say whether the new probe is wrapped in `try/catch`. A DB error (missing `fuzzystrmatch` in a test/CI environment, bad config cast, missing function after a heritage migration rollback) will propagate out of `resolveAddress` and turn every legitimate `no_match` into a 500. **Fix:** wrap the probe, log at WARN with the query and parsed inputs, return zero rows. The search must degrade to today's behaviour, never worse.
+
+- **[HIGH]** (plan step 2, "Missing variable = NULL = no rows (no literal fallback)"): silent disable with no observability. If the seed row is absent in staging/prod, fuzzy matching is off and nobody knows; the routing test (if it seeds the variable) still passes. This violates the project's own "observability" principle. **Fix:** emit a counter/log line when the variable is absent or non-numeric, and assert presence in the test setup.
+
+- **[HIGH]** (AC#3 not covered by the plan): the plan has three steps, none of which regenerate the parity lock and goldens "by the repo scripts". If the candidates route now fires for a previously-`no_match` address, any golden keyed on that address changes. **Fix:** add step 4 — run the repo's parity/golden regeneration scripts and commit the diff; name the scripts.
+
+- **[HIGH]** (plan step 1 test strategy): `search-routing.logic.test.ts` is a *logic* test — task-318's report says "no routing code changed" and red was proven by mutating `classifyRows`. The new behaviour lives in `parcel-lookup.ts` and needs a database. The plan does not say how the test reaches the SQL: pg-mem (which will not have `fuzzystrmatch` or `normalize_address`), a container, a seeded fixture DB? Without this, step 1 is not implementable and the "red first" claim is unprovable. **Fix:** name the test harness and where the extension/function/seed-variable come from; if pg-mem, the cheap-prefilter suggestion above becomes mandatory because pg-mem likely can't run `levenshtein` at all.
+
+- **[HIGH]** (plan step 2, `$2` length): user input is unbounded. fuzzystrmatch's Levenshtein variants truncate/limit around 255 bytes and are O(n·m); a 10 KB pasted string on the no_match path is a cheap CPU burn and can return silently wrong distances on truncated input. **Fix:** reject/truncate `$2` to a documented maximum (e.g. 120 chars) before the query, and return `no_match` for over-long input.
+
+- **[HIGH]** (Grounding §): the operator's words are "the **permit pipeline** - address spec". The plan grounds the reused matcher in **Spec 61 heritage properties**, after arguing the permit/60 link_coa tiers are equality-only. The argument is plausible, but it means the thing being reused is not what the operator named. Per RR-0190 (orchestrator recommendations must cite or be marked UNVERIFIED), this interpretation must not be presented as settled. **Fix:** mark the heritage-matcher choice UNVERIFIED in the plan, and state in one line why the permit address spec cannot resolve DERWIN/DERWYN — or raise it to the operator.
+
+- **[MEDIUM]** (plan step 2, `normalize_address()` dependency): `normalize_address()` is defined in `migrations/170_create_heritage_tables.sql:21`. Using it from the search path creates an undeclared cross-module dependency: rolling back or renaming a heritage migration breaks search. Also verify `provolatile = 'i'` — if it is `STABLE`/`VOLATILE` it cannot be used in any functional index and cannot be constant-folded, which affects your perf story. **Fix:** add the function's volatility and ownership to the plan's assumptions; if it is not IMMUTABLE, make it so in the same migration that defines the shared matcher.
+
+- **[MEDIUM]** (plan step 1, boundary test): "a nonsense street gets no rows" is not a threshold boundary — nonsense is distance ≫ 2. Test the actual boundary: a street at distance exactly 2 matches, distance 3 does not. Otherwise the test passes even if the threshold is ignored entirely (e.g., if the predicate is dropped and any row with number 41 is returned).
+
+- **[MEDIUM]** (plan step 2, semantics): with `LIMIT 10`, a fuzzy hit on **one** parcel still sets `resolution = text_candidates`. The user is sent to "choose your lot" for a single near-miss. AC#1 literally asks for this, but it is worth one line in the plan acknowledging the single-candidate UX, because the next operator complaint will be "why am I choosing from one?". Also note: `text_candidates` is an existing enum value only if verified — if it is not, adding it is "a new field" and brushes AC#3.
+
+- **[MEDIUM]** (plan step 2, ambiguity of the rescue): a fuzzy hit can also mean the **exact matcher is broken** (abbreviation/suffix normalisation bug), not that the user typo'd. The plan has no way to distinguish "typo rescue" from "exact matcher defect being masked". **Fix:** log both the raw query and the matched parcel address when the fuzzy probe fires; a cluster of log lines where the distance is 0 after different normalisation is a bug signal, not a typo.
+
+- **[MEDIUM]** (plan step 2, false-positive rate): threshold 2 on short street names is loose. "DERWIN" is distance 1 from "DERWYN" but also from "DERWENT"-ish truncations, "DERVIN", "TERWIN", etc.; on a 4-letter street, distance 2 matches a large fraction of the street-name vocabulary. No plan step samples real Toronto street names to quantify this. **Fix:** run the sampling query below and set the threshold (or a length-scaled threshold) from data, not from the heritage default.
+
+- **[MEDIUM]** (rollback): the plan does not state one. Today the change is revert-only (read path, no writes, no migration) — say so. **But** if you adopt the recommended shared DB function, rollback now needs a DOWN migration and a deploy ordering story (old code + new function is fine; new code + missing function is a 500 on every no_match — coordinate the two). Note that the current plan's *rollback* is only trivially safe *because* it is a second matcher; fixing AC#1 costs you a migration.
+
+- **[LOW]** (plan step 2, short-circuit guard): "a query without a house number never runs the fuzzy read". If this is implemented implicitly (NULL `$1` → `= NULL` → zero rows), a future refactor that drops the number predicate would suddenly fuzzy-match street-only across the city. **Fix:** make it an explicit code guard before the call, plus the boundary test.
+
+- **[LOW]** (plan step 1, `exact 0, typeahead 0, unlinked 0`): these are asserted, not verified. If typeahead uses a prefix/trigram match, "Derwin" may already prefix-match "DERWYN" and the miss never reaches the new code — changing the plan's premise. Verify against the current implementation before relying on the ordering.
+
+---
+
+## Findings on the review context document itself (it is generated code)
+
+- **[HIGH]** (§Document sections): all three documents — `doc-2 - Increment-S-requirements.md` (the AC source, cited at `:27`), its Elements section, and `doc-16 - McStorage-policy-v2.md#L108` — are marked `not readable: ENOENT`. The reviewer is asked to validate acceptance criteria against documents it is structurally forbidden from reading. If those files are genuinely missing from the repo, the AC citations are unverifiable and the task cannot be review-locked. **Fix:** fail the context generation loudly on ENOENT rather than emitting a reviewable-looking document.
+
+- **[HIGH]** (§Decisions naming this task): "(none)", while **RR-0277** is the operative ruling quoted verbatim in the Plan section. The generated context's own decision-indexing is incomplete precisely for the decision that authorizes the work. Fix the generator's index before the lane relies on it.
+
+- **[MEDIUM]** (§Decisions in force): a dozen distinct RR ids (RR-0087, 0088, 0092, 0099, 0012, 0060, 0080, 0081, 0086, …) all render with the identical title "INC5 recapture commit 068a51af0, not push-ready". That is a copy/paste-or-lookup generator defect; the list is not trustworthy as an index. Same generator family as the acknowledged `undefined` quote rows and the stale LOAD.1–LOAD.3 / 35 s lines that the document itself flags as superseded by RR-0176.
+
+- **[LOW]** (§Compliance codes in use): the enumeration stops at "task-317 to task-325" but the task under review is **task-333**. The claim "no 1·B task carries a comp: label" does not cover the task being reviewed. Stale range.
+
+---
+
+## Verification steps the plan should run before implementation
+
+```sql
+-- 1. Type of the threshold variable (drives the cast in the SQL)
+SELECT data_type FROM information_schema.columns
+WHERE table_name = 'logic_variables' AND column_name = 'variable_value';
+
+-- 2. Do the claimed columns and index actually exist, and in what order?
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'parcels'
+  AND column_name IN ('addr_num_normalized','street_name_normalized','address');
+SELECT indexdef FROM pg_indexes WHERE tablename = 'parcels' AND indexname = 'idx_parcels_address';
+
+-- 3. Is normalize_address usable in a functional index / safe to constant-fold?
+SELECT provolatile, proname FROM pg_proc WHERE proname = 'normalize_address';
+
+-- 4. Extension present?
+SELECT extname FROM pg_extension WHERE extname = 'fuzzystrmatch';
+
+-- 5. Selectivity of the "num first" scan (the perf claim)
+SELECT count(*) FROM parcels WHERE addr_num_normalized = '41';
+
+-- 6. False-positive rate of threshold 2 on real street names
+SELECT count(*) AS within_2
+FROM (SELECT DISTINCT street_name_normalized FROM parcels) s
+WHERE levenshtein(normalize_address('DERWIN'), normalize_address(s.street_name_normalized)) <= 2;
+
+-- 7. Is `text_candidates` an existing resolution value, or a new one?
+--    grep -rn "text_candidates" src/  (do not assume)
+```
+
+---
+
+## Overall verdict
+
+**FAIL on plan-readiness.** The plan's central claim — "reuse the same module, no second matcher" — is contradicted by its own step 2, which copies the SQL into a second file; that alone blocks AC#1. Layered on top: the threshold subquery's type is unknown and, on the most likely schema, either hard-errors on every no_match or compares lexicographically; `$2` is undefined while the two sides of the Levenshtein are normalized by two different (acknowledged "mirror") normalizers and represent different things (street vs full address); the `ORDER BY` is a literal ellipsis; the SELECT list does not obviously match the "existing shape"; the "uses the index" claim papers over a city-wide house-number scan on the hot path; AC#3 (parity lock + goldens) has no plan step; and the test harness cannot exercise a DB read from a `*.logic.test.ts`. The operator's words name the *permit* address spec, and the plan quietly substitutes the *heritage* matcher without the UNVERIFIED marking RR-0190 requires. Separately, the review context itself cannot read its own requirement documents (ENOENT), omits the operative ruling from its decision index, and duplicates a dozen decision titles — so even a perfect reviewer is reviewing against a partially blind source.
+
+Top 3 blockers: (1) second-matcher contradiction vs AC#1; (2) threshold variable type/threshold-transfer/ORDER BY/SELECT-shape unresolved; (3) no test harness, no AC#3 step, heritage-vs-permit ruling interpretation unmarked.
+
+---
+⏱  79569ms (79.6s)
+📊 Tokens — total: 24719, input: 10936, output: 13783, reasoning: 9349

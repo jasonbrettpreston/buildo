@@ -1,0 +1,61 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fuzzy/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10274 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20482 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31089 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 39837 chars, answer 1659 chars, 60s
+## Adversarial review — SRCH.FUZZY / task-333
+
+Line numbers below are the **new-file** positions from the diff hunks (`parcel-lookup.ts` hunk starts at +284; `route.ts` at +97; test hunk at +176).
+
+---
+
+### 1. False candidates: short street names + exact house number is an unguarded collision factory
+- **[HIGH]** (`src/lib/admin/parcel-lookup.ts:297`): `levenshtein(normalize_address(street_name_normalized), normalize_address($2)) <= threshold` with the house number held **exact** and no length/prefix guard. `enrich_heritage_address_levenshtein_threshold` is tuned for the permit pipeline, which compares a *whole normalized address* (~20+ chars); here the operand is a bare street token (~5–10 chars). Levenshtein distance is absolute, not relative, so the same threshold is roughly twice as permissive in relative terms on this operand.
+  Concrete failure: threshold 3 → `MAIN`/`ELM` distance 3, `OAK`/`OAKS` distance 1, `PINE`/`PINEHURST` distance 4. Query "1 Oak Road" and you will be offered 1 Elm Road, 1 Oaks Road, 1 Pine Road — **same house number, wrong lot, one click away in the candidates list**. The `ORDER BY` puts the best first but does not remove the wrong ones, and there is no confidence floor (`near.length > 0` at :302 accepts whatever survives).
+  Why it matters: this is the exact failure the lens calls out. A wrong lot in the cost tool means a wrong report for a real address.
+  Fix: make the bar relative and structural — `levenshtein(...) <= LEAST(threshold, GREATEST(1, ceil(length(normalize_address($2)) / 4.0)))`, plus a hard requirement that the first 1–2 characters match (or `similarity()` via `pg_trgm` above ~0.5). Also consider `levenshtein_less_equal(...)` so rows past the threshold exit early.
+- **[MEDIUM]** (`:297`): suffix/plural/directional differences are *not* mis-typings. `OAK ST` vs `OAK AVE` after `normalize_address` is a small distance and will be offered as a candidate. Different street type, same number = different lot. Fix: compare the street *type* separately (equal or excluded), and treat a suffix-only difference as a non-match unless the bare name matches exactly.
+- **[MEDIUM]** (`:293`–`:299`): no jurisdiction/suburb filter. If `parcels` spans more than one locality (or has duplicated street names across suburbs), the same number+similar name in a different suburb is a wrong candidate. Fix: constrain by the parcel table's locality/state columns, or document that `parcels` is single-jurisdiction and assert it.
+
+### 2. `truncated` is silently dropped on the fuzzy path
+- **[HIGH]** (`:303`): the early `return` sets `{ match, candidates, resolution, lotMap }` — **no `truncated`**. Every other branch is explicit about it (the route's direct-id literal at `route.ts:~99` sets `truncated: false`). So when the matcher hits `LIMIT 10` (`:299`), the response can never say "there were more". Two consequences: (a) the user gets a silently clipped candidate list and no "refine your search" affordance; (b) the response shape diverges from the other `text_candidates` producer — if the client zod-parses the envelope with `truncated` required, this is a parse failure rather than a degraded UX.
+  Fix: `truncated: near.length >= 10` (and verify how the typeahead branch computes it so the semantics match exactly).
+
+### 3. No error isolation: a matcher failure 500s the *common* path
+- **[HIGH]** (`:293`–`:301`): the new read is unguarded, and it introduces three new runtime dependencies on the consumer connection — `levenshtein()` (needs `fuzzystrmatch` installed in a schema on the search_path), `normalize_address()` (migration 170 — claimed to exist, but the diff adds **no migration**, only a regenerated ledger JSON), and the `logic_variables` table. If any of those is absent, this throws for **every search miss**, which is the ordinary case, not an edge case. Previously a miss was a clean `no_match`.
+  Fix: verify in CI against a real DB that the extension + function + table exist on the *consumer* connection (the permit pipeline may well be a different database); wrap the read in try/catch and degrade to `no_match` with a logged warning, so a search-miss never becomes a 500.
+- **[LOW]** (`:298`): a missing/renamed variable yields `NULL` → no rows → feature silently off with no telemetry. The comment rationalises this ("no literal fallback"), but nobody will notice the feature is dead. Log once per process when the variable is absent.
+
+### 4. Threshold comparison is untyped and unguarded against multi-row
+- **[HIGH]** (`:298`): `levenshtein(...) <= (SELECT variable_value FROM logic_variables ...)`. `variable_value` on a generic key/value table is usually `text` (or `jsonb`). `integer <= text` has no operator in Postgres; you either get a plan-time `operator does not exist: integer <= text`, or you're relying on a cast that only exists in assignment context. Nothing in this diff proves the column type, and **the tests cannot catch it** because `dbQuery` is fully mocked (see §7). Fix: `<= (SELECT variable_value::int FROM ...)`, and assert the type in a migration/integration test.
+- **[MEDIUM]** (`:298`): the scalar subquery assumes `variable_key` is unique. Without a unique index, a duplicated key raises `more than one row returned by a subquery`. Fix: `LIMIT 1` with a deterministic `ORDER BY`, or rely on a documented unique constraint and say so.
+- **[NIT]** (`:297`, `:299`): `normalize_address($2)` is a constant recomputed per row, and `levenshtein(...)` is computed twice per row (WHERE + ORDER BY). Hoist `normalize_address($2)` into a CTE/`CROSS JOIN` and/or sort by the selected expression. On the miss path it's tolerable; combined with §5 it isn't free.
+
+### 5. Unbounded scan on an unauthenticated route
+- **[MEDIUM]** (`:296`–`:297`): the exact path is indexed on `(addr_num_normalized, street_name_normalized)`; the fuzzy condition is **not sargable**, so for a common house number (`1`, `2`, `100`) the planner reads *every* parcel with that number and runs `levenshtein` on each. `q` is capped at 120 chars, so an attacker can send `?q=1+<117 chars>` repeatedly and force a wide scan + per-row function calls per request. The commit message's "hot path is unchanged" is true for hits and false for misses under load. Fix: prefilter by street prefix (`street_name_normalized LIKE left($2,1) || '%'`) or a trigram index, and confirm the route is rate-limited.
+
+### 6. Normalization assumption is asserted, not verified
+- **[MEDIUM]** (`:297`): the comparison assumes `street_name_normalized` is a *bare* street token with suffix/prefix directions already stripped (so that it lines up with `parseFreeTextAddress`'s `streetName`). If it retains `RD`/`ROAD`, every comparison carries a constant offset of ~3 and the threshold means something different than it does in the pipeline — either the feature never fires or it becomes very loose. The exact-query evidence suggests it is bare, but that's inference. Add a comment-backed assertion (or an integration test) that pins the column's shape; otherwise a future normalizer change silently breaks the matcher's calibration.
+
+### 7. Tests only prove the mock; the defects above are invisible to them
+- **[HIGH]** (`src/tests/search-routing.logic.test.ts:~179`–`:215`): `dbQuery` is mocked, so nothing here validates SQL — column existence, `variable_value` typing, `levenshtein`/`normalize_address` availability, `ORDER BY` alias resolution, or NULL-threshold behaviour. The `sql` assertion checks only that the string contains the variable key and `LIMIT 10` — it would still pass if the query never ran against a real Postgres.
+- **[MEDIUM]** (`~:190`): the positive test asserts *distance 1* behaviour only. There is **no negative test for the core risk**: an unrelated street with the same house number must not appear. Add `state.fuzzy` cases proving `41 Elm Road` is not offered for `41 Oak Road` (whatever guard you adopt from §1).
+- **[MEDIUM]** (`~:205`): no test for the missing-variable case (NULL threshold → `no_match`), and no test for the `LIMIT 10`/`truncated` behaviour.
+- **[LOW]** (`:25`–`:37`): the mock's fuzzy matcher is a fragile literal regex mirrored from the resolved SQL; reformatting the query breaks the test rather than the code. Prefer matching on a stable marker (e.g. the variable key).
+- **[LOW]** (`~:183`): `expect(dbQuery.mock.calls.map(...)).toEqual([false,false,false,true])` pins the exact number of queries. Adding a read anywhere upstream turns this into a false failure — assert "the lev read is last and the others precede it" instead.
+- **[LOW]** (`~:179`): no test that the admin caller (no `opts`) never issues the matcher read. The lens explicitly asks for "admin path unchanged"; the code satisfies it (`opts.matchMistyped` undefined), but there's no regression guard.
+
+### 8. Minor
+- **[NIT]** (`:299`): `ORDER BY ... address ...` references the output alias from `displayAddress`, which shadows any `parcels.address` input column. Postgres resolves to the output name, so it works — but it's a trap for the next editor. Comment it or use an unambiguous name.
+- **[NIT]** (`:303`): the fuzzy results bypass whatever mapping/dedupe helper the typeahead branch uses for candidates. Confirm they carry identical fields (and no duplicates by `parcel_id`); the consumer's candidates renderer should not have to know there are two producers of `text_candidates`.
+- **[NIT]** (`:292`): `if (opts.matchMistyped && num)` — `num` is a string, so `'0'` is truthy. Irrelevant for house number 0, but if `parseFreeTextAddress` can return whitespace/`''` this is only accidentally correct. Normalize to an explicit `num !== ''`.
+
+---
+
+**Verdict.** The change is correctly scoped: it sits strictly after exact/typeahead/unlinked, is gated on `opts.matchMistyped` so the admin path is untouched, and the new read is index-driven by the house number. The problem is that every *risk* the feature introduces — a permissive absolute distance on short street tokens producing wrong-lot candidates at the identical house number, a clipped result set that never reports truncation, an untyped cast to a key/value string column that may not even be an integer, and three new hard runtime dependencies (extension, function, table) with no error isolation — is invisible to a test suite that mocks the database and asserts only on the absence of false negatives. Ship it behind the flag if you must, but before it serves real users: add the length/prefix guard, set `truncated`, cast the threshold, wrap the read so a miss can never 500, and add a real-Postgres integration test plus a negative test that a same-number, different-street query yields nothing.
+
+---
+⏱  73131ms (73.1s)
+📊 Tokens — total: 16066, input: 3289, output: 12777, reasoning: 10071
