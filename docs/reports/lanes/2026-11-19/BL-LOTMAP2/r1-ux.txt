@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of docs/reports/reviews/task-362/context-2026-11-19.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — lane plan step 2 "multi_parcel state adds a Text node (testID parcel-lotmap-pick-hint) after the Continue button" vs design "choose-lot.html:278 `<button class="btn p" disabled aria-describedby="pick-hint">Choose a lot</button><p class="small" id="pick-hint">`" — the person reads the hint under a control the plan calls Continue, while the design puts it under the greyed "Choose a lot" button, so if that is not the same node the line floats away from the button it explains, and if the built label is Continue the person reads a button name the design does not draw — place the hint immediately under the disabled button and keep the label "Choose a lot" as the mock writes it
+BUG severity=HIGH — lane plan step 2 "adds a Text node (testID parcel-lotmap-pick-hint)" vs design "aria-describedby="pick-hint"" — a screen reader user on the disabled button hears only "Choose a lot, dimmed" and never the instruction, because nothing in the plan ties the line to the control the way the mock does — give the disabled button an accessibilityHint (or label) carrying the same content key so the relation survives on device
+DEFER severity=MED — lane plan step 1 "a rejecting openBrowserAsync is caught and logged (console.warn), not thrown" — the person taps "Get help with an address", the sheet does not open, and the screen shows nothing at all, so the tap looks broken; design silent — do not invent a screen, but raise the silent help failure to the operator as design-silent before it is built as log-only
+DEFER severity=MED — lane plan step 4 "Android Custom Tab has no Done button (system back)" vs design "search.html:235 in-app browser sheet (B10): Help, Terms, Privacy open the web page with Done" — an Android person opens Help and finds no Done, only system back, a visible departure from the approved words — keep it in the close-out as a departure put to the operator, not as a settled fact
+DEFER severity=LOW — lane plan step 2 "layout class pickHint in constants/lotMap.ts (the helpPrompt text classes, centred)" vs design "`<p class="small" id="pick-hint">`" — the hint may end up sized and coloured as the help prompt instead of the mock's small line, and the pasted design carries no CSS so the fit cannot be judged here — diff pickHint against the v8 `small` rule in choose-lot.html before goldens are written
+REJECT — lane plan step 2 "select.hint = "Pick a lot on the map or in the list."" — looks like copy sitting in a key, but the string matches the approved design line word for word — harmless and correct against "Pick a lot on the map or in the list."
+
+VERDICT: FAIL on the person's experience
+States checked: first view many lots before a pick, after a pick, help sheet opened and closed on iOS, help sheet on Android, help open failure, return from sheet, repeat visit to the page   Dead ends found: 1
+
+---
+⏱  22051ms (22.1s)
+📊 Tokens — total: 24491, input: 20295, output: 4196, reasoning: 3508

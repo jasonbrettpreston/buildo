@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lotmap2/review-input.diff (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — mobile/src/lib/maxbldHelp.ts "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" — when openBrowserAsync rejects (no Custom Tab/browser on the device, sheet already presenting) the press ends as a silent no-op: no visible message, no fallback to Linking, and console.warn is invisible in a release build, so Help fails closed with zero user or operator trace — choose an explicit degrade path (a visible toast, or fall back to Linking.openURL with the same fragment) and keep the typed address out of both.
+DEFER severity=LOW — mobile/src/lib/maxbldHelp.ts "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — there is no in-flight guard, so a double tap on the same Help link issues two openBrowserAsync calls and the second sheet presentation can reject and be logged as a failure though the first sheet did open — hold a module-level in-flight flag and ignore presses while a sheet is open.
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx "const awaitingPick = (s: LotMapSituation): boolean => s.route === null;" — the predicate is not scoped to the choose arm: accessibilityHint is emitted wherever continueButton renders with route null, while pickHint() is emitted only in that arm, so any other arm (loading, rate_limited_zero, intersection, cannot see those arms in this diff) that still renders Continue would announce "Pick a lot on the map or in the list." with no visible hint and no real aria-describedby target, and the golden test that pins this is unrun locally per AC4 — gate both the hint and the accessibilityHint on the choose arm so the two cannot diverge.
+REJECT — mobile/src/lib/maxbldHelp.ts "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — a malformed query (a lone surrogate) makes encodeURIComponent throw, and a rejecting sheet call also throws — both the helpUrl evaluation and the await sit inside the try, so openHelp never rejects and a caller that does not await it cannot produce an unhandled rejection.
+REJECT — mobile/src/lib/maxbldHelp.ts "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" — the error text of openBrowserAsync can carry the full URL, address included (iOS "Unable to open URL ...#topic=lot_match&q=5%20Elm%20St") — the error object is dropped and only the topic interpolated; maxbldHelp.test.ts asserts JSON.stringify(warn.mock.calls) does not contain '5 Elm St'.
+
+VERDICT: PASS on error-path safety
+Paths walked: Help press on lot map and on search page, openBrowserAsync rejection, encodeURIComponent throw on a malformed q, double tap / double submit on the Help link, empty q on the fragment, loading / rate_limited_zero / intersection / too_many_lots arms for the pick hint, sheet dismissal resolution (no state to reconcile, no write or counted event, so no key needed)   Unguarded: 1
+```
+
+---
+⏱  41581ms (41.6s)
+📊 Tokens — total: 23665, input: 16019, output: 7646, reasoning: 6960

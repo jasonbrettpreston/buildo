@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T22:45:00Z'
+updated_date: '2026-11-19T23:01:00Z'
 labels:
   - S
   - loose-ends
@@ -143,4 +143,6 @@ task-351 (BL-RESET): built but unowned/unproven: (1) the limit wall resetsOn (sr
 2026-11-19 (orchestrator, relayed from lane BL-PROOF3, task-363, which could not write while this file's header was broken): three leftovers of the proof runner, tied up by: NONE: (1) an --out folder that exists but is read-only still exits 1 via writeFile (scripts/analysis/proof-slice.mjs); (2) timeoutMs on non-argv rows is not rejected; (3) an oversized timeoutMs is not capped. Also: the front matter of task-266 and task-343 was broken by a hand conflict resolution (lane BL-TRIAGE) and repaired in d0d930d65; backlog doctor did not detect it; task-307 and task-308 carry a duplicated updated_date key (not repaired).
 
 BL-SEMI3 (task-361) loose ends 2026-11-19: (1) abort/cancel of the abandoned answered lookup is not built; (2) no log line on a Continue timeout, failed Continue or empty-id return; (3) answer changed while Continue runs still opens the report for the pressed answer; (4) after a timeout the built error copy says check your connection, carry into the D-1 ruling.
+
+BL-LOTMAP2 (task-362) leftovers: (1) operator item: a Help sheet that fails to open shows nothing (design silent, RR-0233); (2) operator item: the Help row moves up one line when the pick hint goes after a pick; (3) mobile jest cases for task-362 (lotMapPage.behaviour, parcelSearchScreen.behaviour, maxbldHelp, lotMapScreens.golden) not run locally, CI owed; (4) mobile tsc fails here on missing modules in shared mobile/node_modules (environment).
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/lotmap2/review-input.diff (model: deepseek-reasoner)
+
+DEFER severity=NIT — AC6 "fidelity pins quote the mock (choose-lot.html:278)" — mobile/__tests__/lotMapScreens.golden.test.ts:138 "task-362 AC2, AC6 (choose-lot.html:278 `<button class=\"btn p\" disabled aria-describedby=\"pick-hint\">Choose a lot</button><p class=\"small\" id=\"pick-hint\">Pick a lot on the map or in the list.</p>`)" — the pin's quote drops `type="button" ` from the pasted mock line, so it is not a verbatim quote — re-quote the mock exactly, `type="button"` included.
+DEFER severity=LOW — AC4 "typecheck clean, mobile jest not run by the hook (UNVERIFIED unless CI/device)" — NONE (no typecheck or jest output appears in the pasted material) — clean typecheck cannot be seen from the diff, only the test sources that would exercise it — attach the CI/typecheck run to the task record before merge.
+DEFER severity=LOW — search.html:235 "in-app browser sheet (B10): Help, Terms, Privacy open the web page with Done" — mobile/src/lib/maxbldHelp.ts:24 "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the diff covers the openHelp path only, whether the Terms and Privacy links use the same sheet cannot be seen — confirm the two other links' path or record them as out of scope.
+REJECT — AC3 "goldens by repo scripts only" — the change is accused of hand-editing a golden by adding a case to mobile/__tests__/lotMapScreens.golden.test.ts — that file holds named-case assertions, the pins still read "S-screen ok (17 surfaces, 100 goldens)" and no owed golden artifact is in the diff.
+REJECT — design choose-lot.html:278 "aria-describedby=\"pick-hint\"" — the change is accused of announcing the hint twice (visible Text plus accessibilityHint) — the mock itself pairs the visible `<p id="pick-hint">` with aria-describedby, so the pairing mirrors the design.
+MET — AC1 — mobile/src/lib/maxbldHelp.ts:24 "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" with "import * as WebBrowser from 'expo-web-browser';" replacing the Linking import, no Linking.openURL left in the file.
+MET — AC2 — mobile/src/components/surfaces/LotMapBinding.tsx:250 "...(awaitingPick(s) ? [pickHint()] : [])," drawn directly after the continue button under the same s.route === null predicate that sets accessibilityState.disabled.
+MET — AC5 (rejection caught, address never logged) — mobile/src/lib/maxbldHelp.ts:26 "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" the catch swallows the rejection and logs the topic only, matching "The query is never logged or tracked".
+MET — AC5 (every caller covered) — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:144 "it('task-362 AC5: the address list report link opens Help in the in-app browser sheet ..." and the lot map press in mobile/__tests__/lotMapPage.behaviour.test.tsx:161, both pinned to the sheet URL.
+MET — design choose-lot.html:278 order — mobile/__tests__/lotMapScreens.golden.test.ts:145 "expect(keys.indexOf('pick-hint')).toBe(keys.indexOf('continue') + 1);" hint sits under the button, before the help row.
+MET — count pins moved as data — src/tests/surfaces/surface-validate.logic.test.ts:91 "S-sbind ok (17 surfaces, 426 strings)" with the dated 425 -> 426 comment for the one new string select.hint.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  59640ms (59.6s)
+📊 Tokens — total: 28093, input: 16055, output: 12038, reasoning: 11154

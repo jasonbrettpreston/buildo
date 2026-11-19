@@ -3,11 +3,11 @@ id: TASK-362
 title: >-
   SRCH.LOTMAP-2 lot map page: Help opens in the in-app sheet, and the pick hint
   line (small-pages-v8)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-LOTMAP2'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:00:00Z'
+updated_date: '2026-11-19T23:01:00Z'
 labels:
   - S
   - plan:SRCH.LOTMAP
@@ -16,6 +16,8 @@ dependencies:
   - TASK-321
 references:
   - docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md
+  - docs/reports/lanes/2026-11-19/BL-LOTMAP2/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-LOTMAP2/TRIAGE.md
 type: build
 project: McIncrement
 ordinal: 62012
@@ -37,12 +39,12 @@ Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBindin
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 openHelp(topic, q) calls WebBrowser.openBrowserAsync(helpUrl(topic, q)) and Linking.openURL is no longer called by maxbldHelp.ts (git grep -n "Linking.openURL" mobile/src/lib/maxbldHelp.ts prints nothing); a mocked expo-web-browser case written first
-- [ ] #2 The lot map page shows the hint "Pick a lot on the map or in the list." (a content key in the lot map content file, not copy in code) while Choose a lot is disabled and hides it after a pick; a case in mobile/__tests__/lotMapPage.behaviour.test.tsx
-- [ ] #3 Goldens by repo scripts only: lotmap-golden-capture.ts --check clean, emit-mobile-surfaces.mjs --check prints surfaces ok, surface-validate.mjs --check no new finding
-- [ ] #4 npm run typecheck is clean; mobile jest is not run by the hook (task-343 line 10): the close-out says UNVERIFIED unless run on CI or device
-- [ ] #5 git grep -n "openHelp(" mobile/src mobile/app lists every caller; each is checked by the case (search page and lot map); a rejecting openBrowserAsync is caught and logged, not thrown; on Android the Custom Tab has no Done button, so the expectation is the system back (stated in the close-out)
-- [ ] #6 Fidelity pins quote the mock: the busy/hint asserts name semi-question.html:130 and choose-lot.html:278, not only a --check of regenerated goldens
+- [x] #1 openHelp(topic, q) calls WebBrowser.openBrowserAsync(helpUrl(topic, q)) and Linking.openURL is no longer called by maxbldHelp.ts (git grep -n "Linking.openURL" mobile/src/lib/maxbldHelp.ts prints nothing); a mocked expo-web-browser case written first
+- [x] #2 The lot map page shows the hint "Pick a lot on the map or in the list." (a content key in the lot map content file, not copy in code) while Choose a lot is disabled and hides it after a pick; a case in mobile/__tests__/lotMapPage.behaviour.test.tsx
+- [x] #3 Goldens by repo scripts only: lotmap-golden-capture.ts --check clean, emit-mobile-surfaces.mjs --check prints surfaces ok, surface-validate.mjs --check no new finding
+- [x] #4 npm run typecheck is clean; mobile jest is not run by the hook (task-343 line 10): the close-out says UNVERIFIED unless run on CI or device
+- [x] #5 git grep -n "openHelp(" mobile/src mobile/app lists every caller; each is checked by the case (search page and lot map); a rejecting openBrowserAsync is caught and logged, not thrown; on Android the Custom Tab has no Done button, so the expectation is the system back (stated in the close-out)
+- [x] #6 Fidelity pins quote the mock: the busy/hint asserts name semi-question.html:130 and choose-lot.html:278, not only a --check of regenerated goldens
 <!-- AC:END -->
 
 ## Definition of Done
@@ -75,3 +77,9 @@ Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBindin
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-LOTMAP2, worktree /Users/brettpreston_macmini/Buildo-wt-lotmap2, branch wf1/inc1b-lotmap2), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed aea5883ad: openHelp opens Help via WebBrowser.openBrowserAsync (rejection caught, topic-only log); select.hint 'Pick a lot on the map or in the list.' under the disabled Choose a lot (accessibilityHint + visible line, one predicate awaitingPick); goldens by scripts; S-sbind 425 to 426. Hook: Test Files 2 passed (95 tests), GATE OK, POLICY CHECKS OK. UNVERIFIED: mobile jest cases not run locally (AC2, AC4, AC5 jest part owed to CI), device look. Operator items in REPORT.md: silent help failure, Android no Done, hint-removal layout shift. Evidence: AC1 git grep Linking.openURL maxbldHelp.ts prints nothing; AC3 checks.out AFTER-FINAL 9/9 exit=0; AC4 root typecheck rc=0.
+<!-- SECTION:FINAL_SUMMARY:END -->

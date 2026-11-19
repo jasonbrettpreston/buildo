@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of docs/reports/reviews/task-362/context-2026-11-19.md (model: deepseek-reasoner)
+
+DEFER severity=MED — "openHelp calls WebBrowser.openBrowserAsync(helpUrl(topic,q)); a rejection is caught and logged (console.warn), not thrown" — the plan never says the returned promise is awaited or returned, so a literal `try { void WebBrowser.openBrowserAsync(...) } catch` would let the rejection escape unlogged, which is the bug being fixed — require `await WebBrowser.openBrowserAsync(...)` inside the try (openHelp async) or `.catch(err => console.warn(...))`, and make the mocked test reject.
+
+DEFER severity=LOW — "Linking import removed" — acceptance #1 only greps `Linking.openURL`, so any other `Linking.` member in maxbldHelp.ts would become an unresolved identifier when the import is dropped — grep `Linking\.` in the file and confirm line 19 is the only use before removing the import.
+
+DEFER severity=LOW — "only while s.route === null" — the hint's visibility is keyed to `s.route`, but the plan does not establish that `route` is the pick flag rather than the multi_parcel state discriminator; if it is the latter, the hint never renders — derive the hint and the disabled state from the same pick field so the "shown at open, gone after a card press" test proves the condition.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  56469ms (56.5s)
+📊 Tokens — total: 31386, input: 20279, output: 11107, reasoning: 10814
