@@ -30,7 +30,7 @@ import { scanScope, allowSet, deadScopeLines, RULE_FILE, ALLOW_REL } from './lit
 import { buildSummary, parseRefLines, isZeroSha } from './pre-push-summary.mjs';
 import { collectRef, heldCount, worktreeScan, pendingCount } from './summary-collect.mjs';
 import { scanDbTargetsInFiles, isDbScopePath } from './db-target.mjs';
-import { queueCheck, MF_QUEUE_PATH, FE_REGISTER } from './mcbylaws-queue-check.mjs';
+import { queueCheck, idLedgerErrors, MF_QUEUE_PATH, FE_REGISTER } from './mcbylaws-queue-check.mjs';
 
 const CANNOT = 'FAIL:X:cannot-decide';
 const DOCS = 'docs/specs/01-pipeline';
@@ -261,9 +261,11 @@ function staged(cwd) {
   if (!res.ok) return ['FAIL:H:cannot-decide'];
   const { policy } = res;
   const paths = allPaths(entries);
+  // CHK.7 (task-4): ids this staged diff introduces have a repo claim and no number repeats (queue rows, migrations).
+  const idLines = idLedgerErrors({ cwd, entries });
   // Fast path: nothing staged is Layer 2/3, in literal scope or in DB scope, and no glob list needs the tree.
   const touches = paths.some((p) => { const c = classify(policy, p); return c.layer23 || c.literalScope || isDbScopePath(p) || isFrontend(policy, p); });
-  if (!touches) return [];
+  if (!touches) return idLines;
   const tracked = listTracked(cwd, 'HEAD');
   if (tracked === null) return ['FAIL:H:cannot-decide'];
   // O67-12: a deleted path has no worktree file and a rename's OLD path is gone too; scan the live paths only.
@@ -278,6 +280,7 @@ function staged(cwd) {
     ...dbLines(cwd, '', db),
     ...deadScopeLines(policy, tracked),
     ...externalArmLines(cwd, policy, 'commit'),
+    ...idLines,
   ];
 }
 

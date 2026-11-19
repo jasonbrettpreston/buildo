@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CHK7'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:58:00Z'
+updated_date: '2026-11-19T14:01:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -69,6 +69,19 @@ who (plan text): lane
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC1) Pre-register the expected moves in the context file (red cases, the one function, the one wiring), committed with the work. Rule: .cursor/MCBYLAWS-QUEUE.md:109.
+2. (AC2, AC4, AC5) Plan review round r1 (repo review tool, review mode, plan template) on the context file with these steps appended; triage every finding KEEP/REJECT in TRIAGE.md; fold only KEPT defects. Rule: 08_agents.md:465, :334, :458.
+3. (AC3) Write scope: ~/Buildo-scratch/lanes-20261119/inc1a/chk7 and ~/Buildo-wt-chk7, claimed with lanes.mjs.
+4. (AC6) Red: add src/tests/mcbylaws-id-ledger.logic.test.ts with cases (new queue row below the next-free counter passes; new row at or above it fails; a repeated heading number fails; a new migration whose number a queue row names passes; no queue row fails; a migration number already in the tree fails; the existing queue cases still pass). Stage only the test, the task-4 file and the context file; the pre-commit related run refuses it: that output is red.out.
+5. (AC6) Green: add idLedgerErrors to scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs (one function, ids listed in its header, one FAIL line per id naming where seen) and call it from staged() in scripts/analysis/mcbylaws/gate.mjs (the pre-commit --staged flag, index read). Real commit through the hooks: commit.out. npm run typecheck.
+6. (AC7) One output review on the diff, one lens (false positives on ids in prose and dated notes); triage; fix commit only for KEPT defects. Reports into docs/reports/lanes/2026-11-19/BL-CHK7/ in a last docs commit, --add-ref on task-4.
+7. (AC8) Not applicable: no McFrontend build; the queue-row-first rule is not touched. The closed-status-word half is out of scope (R9 note, Scope now).
+Out of scope: status words, card ids (no repo claim record: Spec 137:51), FE/M/prereg ids, any new tool.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
