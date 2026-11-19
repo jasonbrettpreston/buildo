@@ -3,11 +3,11 @@ id: TASK-68
 title: >-
   PROOF.TOOL Page-proof tool (build-approach 4.2: no live-lot renderer exists):
   one...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-PROOF'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:48:00Z'
+updated_date: '2026-11-19T20:50:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -97,4 +97,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0303 · task-68 · Backlog; op
 Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-68 · Backlog; operator, verbatim: "I would agree")
 
 Scope now: runs the group F checks that exist and prints the design-fit check as not built (RR-0306); it does not build or wait for CHK.6
+
+2026-11-19 taken on the board at lane launch (lane BL-PROOF, worktree /Users/brettpreston_macmini/Buildo-wt-proof, branch wf2/inc1b-proof), RR-0240
 <!-- SECTION:NOTES:END -->
