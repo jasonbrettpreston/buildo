@@ -3,9 +3,10 @@ id: TASK-340
 title: >-
   A.6 reports-left line (task-320) waits on the web checkout (task-71): build it
   now from the existing entitlement read?
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T20:13:00Z'
+updated_date: '2026-11-19T20:53:00Z'
 labels:
   - S
   - gap
@@ -45,3 +46,15 @@ Recommendation: build A.6 now against the existing entitlement read, and drop ta
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0307 · task-340 · Backlog; operator, verbatim: "it appears we will need it so we should build it")
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Answered by the operator 2026-11-19 (RR-0307, decision-92): 'it appears we will need it so we should build it' (MORNING-DECISIONS.md:1182). A.6 (task-320) is built now from the existing entitlement read, compliant and researched first; task-320's dependency on task-71 is dropped; nothing of MF-47 checkout, no price ids, no DB job.
+<!-- SECTION:FINAL_SUMMARY:END -->

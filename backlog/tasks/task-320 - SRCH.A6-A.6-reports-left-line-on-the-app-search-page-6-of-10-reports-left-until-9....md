@@ -7,13 +7,12 @@ status: RUNNING
 assignee:
   - '@lane-BL-A6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:52:00Z'
+updated_date: '2026-11-19T20:53:00Z'
 labels:
   - S
   - plan:SRCH.A6
 milestone: m-1
-dependencies:
-  - TASK-71
+dependencies: []
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#S/SRCH.A6
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md sha256=0f3d8ba74a49
@@ -74,6 +73,12 @@ element ids delivered: A.6
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. STEP A records: RR-0307 decision, task-340 closed, dependency on task-71 removed. 2. STEP B research (design states, rules, data and null cases, contract declaration sites, owning MF row) into the context file; binding table; one review round (r1) triaged. 3. STEP C only if no stop condition: red tests, line, goldens by repo scripts, generator checks before and after, pins as data, green commit through real hooks. 4. Output review (one lens), reports into docs/reports/lanes/2026-11-19/BL-A6/, close.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -84,4 +89,10 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-320 · Backlog; o
 2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-340 (A.6 and the web checkout); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
 
 2026-11-19 taken on the board at lane launch (lane BL-A6, worktree /Users/brettpreston_macmini/Buildo-wt-a6, branch wf1/inc1b-a6), RR-0240
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0307 · task-320 · Backlog; operator, verbatim: "it appears we will need it so we should build it")
+
+Scope now: the line is built against the existing entitlement read; nothing of MF-47 checkout, no price ids, no DB job (RR-0307)
+
+Files: mobile/app/(app)/parcel-tool/, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/hooks/, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.*, scripts/surfaces/search-golden-capture.ts, src/app/api/parcels/entitlement/, src/tests/surfaces/, mobile/__tests__/, mobile/src/generated/surfaces/, src/tests/fixtures/surfaces/mobile_parcel_search/, .cursor/MCFRONTEND-QUEUE.md, docs/reports/reviews/task-320/context-2026-11-19.md (the list is refined after STEP B)
 <!-- SECTION:NOTES:END -->
