@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CHK1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:57:00Z'
+updated_date: '2026-11-19T14:05:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -70,6 +70,18 @@ who (plan text): lane
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Read G3 (check-backlog-task.mjs), its tests, .husky/commit-msg, rulings MORNING-DECISIONS.md:744,750-751,871,980-983 (AC #6 grounding).
+2. Plan review r1 in review mode on the context file (plan altitude, AC #2 #4), TRIAGE.md KEEP/REJECT, fold KEPT only (AC #5).
+3. Red first: src/tests/backlog/check-task-files.logic.test.ts on a temp repo (cases: pass inside declaration, fail outside naming file and Files: line, WARN with no Files: line, exemptions docs-only and backlog-only and always-allowed paths, glob and prefix forms, no trailer passes); commit attempt with test + task file + context file only; hook refuses -> red.out (AC #6).
+4. Green: scripts/hooks/check-task-files.mjs (git mode, staged diff, own glob-to-regex, no new dependency) + one line in .husky/commit-msg after G3; real commit through hooks -> commit.out; typecheck.
+5. Files: line on task-3 itself (first use) naming these paths.
+6. One output review, one lens (error paths, path matching edges), triaged; fix commit only for KEPT defects.
+7. Reports (REPORT.md, TRIAGE.md, review outputs) copied to docs/reports/lanes/2026-11-19/BL-CHK1/ in last docs commit (AC #7, rule 19); --add-ref; close -s BUILT.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -78,4 +90,6 @@ who (plan text): lane
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): KEPT, narrowed to git mode: G3 scripts/hooks/check-backlog-task.mjs:25-33 checks that a code commit names its task and the file is in the diff, but never which files the task declares, so nothing covers this. Lane mode is dropped: backlog-lane.mjs (R8e 4e8c498a4) gives each lane its own worktree and gate.mjs write-scope is scratch (re-use ruling MORNING-DECISIONS.md:750-751, build-in-repo MORNING-DECISIONS.md:744). Absorbs INFRA.4 (task-10). Scope now: a repo hook script that reads the commit range and fails when a changed file is outside the Files: line of the task named by the Task: trailer (declaration home recommended under the six criteria: a Files: line in the task description; the launching lane logs it as a card).
 
 2026-11-19 taken on the board at lane launch (lane BL-CHK1, worktree /Users/brettpreston_macmini/Buildo-wt-chk1, branch wf1/inc1a-chk1), RR-0240
+
+Files: scripts/hooks/check-task-files.mjs, src/tests/backlog/check-task-files.logic.test.ts, .husky/commit-msg, backlog/tasks/, docs/reports/reviews/task-3/, docs/reports/lanes/
 <!-- SECTION:NOTES:END -->
