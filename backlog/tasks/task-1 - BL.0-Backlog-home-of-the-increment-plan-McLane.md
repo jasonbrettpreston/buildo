@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T05:27:00Z'
+updated_date: '2026-11-19T05:28:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -82,4 +82,6 @@ who (plan text): lane
 2026-11-19 BL-R4 commit 1: OUTPUT panel BL.0 (four DeepSeek lenses, round-2 in docs/reports/panels/BL.0.json); six kept defects fixed in G1/G2/G3 with red tests (src/tests/backlog/backlog-gates-hardening.logic.test.ts).
 
 2026-11-19 BL-R4 commit 2 (R4): Spec 137 McLane dated note (section 1, plus a homes row in section 2), Spec 08 dated notes (section 10.1, TKT-1), CLAUDE.md managed Backlog block and Prime Directive 12, the two queue-head notes. Counts as loaded: 304 tasks, 16 drafts, 68 decisions.
+
+2026-11-19 BL-R4 commit 3: eight follow-up drafts draft-17 to draft-24 (relevancy pass R7, queue-row corrections, held-unruled 11, CO.2 self-fold, check-partial-staging middle dot, backlog.md install R5, board 6421 R6, inc1a-checks re-cut R7), label follow-up, milestone m-0.
 <!-- SECTION:NOTES:END -->
