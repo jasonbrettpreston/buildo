@@ -1,7 +1,7 @@
 ---
 id: TASK-121
 title: 6c.5a recut the staged MB-94 (c) tree to the Spec 126 R-2 literal...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-MB94C'
 created_date: '2026-11-19T04:57:00Z'
@@ -57,14 +57,14 @@ Files: src/lib/admin/report-preview-live/project.ts, scripts/surfaces/_schema/se
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -95,3 +95,9 @@ Files: src/lib/admin/report-preview-live/project.ts, scripts/surfaces/_schema/se
 Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-121 · Backlog; operator, verbatim: "task 341 approved")
 BLOCKED at the commit gate (lane BL-MB94C 2026-11-19): recut is built and green on the related run (3 files, 102 tests) but the commit is refused by the McBylaws frontend arm: FAIL:C:no-mf-task (needs a 'McFrontend-Task: MF-nn' trailer; scripts/analysis/mcbylaws/cite-arms.mjs:150) and FAIL:P:no-record (panel.mjs:82-84, a prereg record for that MF task). No MF id was given in the brief; lane stopped per BRIEF.md:10. Tree is staged and uncommitted in ~/Buildo-wt-mb94c2; patch at ~/Buildo-scratch/lanes-20261119/inc1b/mb94c/recut-staged.patch.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Recut landed in 56945a128 (code, tests, regenerated json and goldens, MF-85 queue note), reports in 91d742029. Hook: related run 102 tests passed, POLICY CHECKS OK. Departure fixed: staged tree required a stamp and no gate; literal is stored.length===0. All --check generators clean. Filed under MF-85 by orchestrator reading (not an operator ruling). AC 1,5,8 imported generic: not applicable to this recut (no new prereg or panel record by order; MF-85 records exist).
+<!-- SECTION:FINAL_SUMMARY:END -->
