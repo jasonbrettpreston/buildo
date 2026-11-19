@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-INFRA5'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:59:00Z'
+updated_date: '2026-11-19T14:00:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -66,6 +66,16 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Review round r1 on these plan steps (review mode on the G1 context file); triage in TRIAGE.md; fold only KEPT defects.
+2. Red: write src/tests/backlog/lane-claims.logic.test.ts (claim then overlap refused naming the holder; release; expired claim ignored; check and owner answer; symlinked path resolves to the same claim; same JSON shape lane/paths/expires; registry path by env LANES_FILE). Commit attempt with only test + task-8 file + context file staged; refusal output is red.out.
+3. Green: scripts/analysis/lane-claims.mjs, one module with CLI (claim, release, list, check, owner), ported from the scratch lanes.mjs: same JSON shape, same overlap rule, same TTL (12 h default, --ttl-h), mkdir lock + atomic write, realpath of nearest existing ancestor for claimed and checked paths; no dependency, no hook edit, no pack cache. Real commit through the hooks; hook tail is commit.out; npm run typecheck.
+4. Output review (one lens: locking, concurrent writers, realpath edge cases) on the diff; triage; fix commit only for KEPT defects.
+5. Reports into docs/reports/lanes/2026-11-19/BL-INFRA5/ in a last docs commit with Task: task-8; --add-ref; check the AC that hold with evidence (pack-cache AC not applicable, dropped by pass 2); final summary; status BUILT.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
