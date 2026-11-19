@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R16'
 created_date: '2026-11-19T21:03:00Z'
-updated_date: '2026-11-19T21:15:00Z'
+updated_date: '2026-11-19T21:17:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -26,7 +26,7 @@ Scope now: record-only. Lane BL-W (task-123 stage 1, docs/reports/lanes/2026-11-
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 four OPERATOR tasks in m-1, each with a plain explanation, Grounded and Recommendation lines stating verified or UNVERIFIED
+- [x] #1 one OPERATOR task per unruled decision (two: D1, D3) in m-1, each with a plain explanation, Grounded and Recommendation lines stating verified or UNVERIFIED; ruled decisions (D2, D4) recorded with their cite
 - [x] #2 task-123, 266, 267 carry a dated note naming the OPERATOR tasks; backlog doctor clean
 <!-- AC:END -->
 
