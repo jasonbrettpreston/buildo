@@ -8,7 +8,7 @@ status: BUILT
 assignee:
   - '@lane-BL-LOTFIX'
 created_date: '2026-11-19T20:04:00Z'
-updated_date: '2026-11-19T20:12:00Z'
+updated_date: '2026-11-19T20:14:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -29,7 +29,7 @@ ordinal: 38012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Grounded (station suite on the window-6 head b3b9a4e04, ~/Buildo-scratch/push-station/fail/b3b9a4e043b760e0d25e60acbf836e0edb9027c7.fail; five test files, 6 cases): (1) src/tests/gate-consumer-registry.infra.test.ts T3 and T5: consumer-registry.json is stale against its generation sources (980 rows on disk, 982 built); (2) `node scripts/surfaces/surface-validate.mjs --check` on that head prints two findings: SV-SBIND mobile_parcel_disambiguation_map/multi_parcel_2.mobile.json and multi_parcel_3plus.mobile.json: unknown contract field contract_parcels_lookup.map.lots.N.frontageStreet; (3) the same finding fails src/tests/surfaces/contract-binding.logic.test.ts (FE-32 b), surface-conformance.logic.test.ts (C-1), surface-validate.logic.test.ts (FE-13) and mcfront-proof.infra.test.ts (canary b). Cause to confirm by the lane: task-336 added frontageStreet and hasFootprint to the lot-map lookup (RR-0284, RR-0289) without declaring them in the lookup contract the goldens bind to, and the consumer registry was not regenerated on the final head. Scope now: declare the two fields where the contract is declared, regenerate the generated files with their own scripts, no behaviour change, no new field. Task-336 stays BUILT; its push (window 6) waits on this repair.
 
-Files: scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, scripts/steps/_schema/consumer-registry.json, docs/specs/01-pipeline/56_source_massing.md, docs/specs/01-pipeline/62_source_centreline.md, docs/reports/reviews/task-338/, docs/reports/lanes/2026-11-19/BL-LOTFIX/
+Files: scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, scripts/steps/_schema/consumer-registry.json, docs/specs/01-pipeline/56_source_massing.md, docs/specs/01-pipeline/62_source_centreline.md, docs/reports/reviews/task-338/, docs/reports/lanes/2026-11-19/BL-LOTFIX/, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -63,6 +63,8 @@ Files: scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.des
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-LOTFIX, worktree /Users/brettpreston_macmini/Buildo-wt-lotfix, branch wf1/inc1b-lotfix), RR-0240
+
+Follow-up (orchestrator): the two real-tree pins surface-validate.logic.test.ts:86 and surface-conformance.logic.test.ts:247 moved 414 -> 418 strings: the four card-line keys lot.lead.house, lot.lead.house_faces, lot.lead.no_building, lot.lead.no_building_faces in mobile_parcel_disambiguation_map.content.json:5-8 (git diff 2b01c2237^ 56e96eed5: 4 added, 0 removed; lot.faces added then removed). Every other number in the full line equals the real output.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
