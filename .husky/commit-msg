@@ -4,4 +4,5 @@ bash scripts/hooks/check-lesson-routing.sh "$1" && \
 node scripts/hooks/check-spec-diff.mjs "$1" && \
 node scripts/hooks/check-backlog-task.mjs "$1" && \
 node scripts/hooks/check-integrate-verification.mjs "$1" && \
-node scripts/analysis/mcbylaws/gate.mjs --commit-msg "$1"
+node scripts/analysis/mcbylaws/gate.mjs --commit-msg "$1" && \
+node scripts/analysis/policy-checks.mjs --commit-msg "$1"

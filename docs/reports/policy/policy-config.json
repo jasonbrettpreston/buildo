@@ -1,0 +1,5 @@
+{
+  "_note": "Data the policy checks read (docs: scripts/analysis/policy-checks.mjs). chk5_tables: the McStorage record tables CHK.5 enforces, each { name, producers[globs], stamp_columns[], read_guard[], verified, verified_source }. It is EMPTY on purpose: the all-lot headline table was replaced by the 2026-11-18 ruling (MORNING-DECISIONS.md:704) and its opened-lot successor has no name yet, so CHK.5 prints WAITS. Add the entry when that table's migration is claimed, with verified:true and a verified_source read from the schema; the producers must include the step, the TRK-1 a background refresh and the PRG-1 a purge (MORNING-DECISIONS.md:738). A producer or table added here needs a policy-ledger row with a dated-note ruling id.",
+  "chk5_tables": [],
+  "chk5_replaced_tables": ["parcel_maxbld_scenarios"]
+}

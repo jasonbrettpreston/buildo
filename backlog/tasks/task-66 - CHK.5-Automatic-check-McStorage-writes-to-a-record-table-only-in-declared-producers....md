@@ -5,9 +5,9 @@ title: >-
   producers;...
 status: BUILT
 assignee:
-  - '@lane'
+  - '@lane-BL-R7a'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:58:00Z'
+updated_date: '2026-11-19T12:05:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -75,10 +75,20 @@ who (plan text): lane
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Re-cut 5d7cede90 onto 957d83b88 (apply patch, hand-merge .husky/commit-msg with G3 line kept).
+2. Run the three CHK.5 tests and typecheck green.
+3. Commit through the real hooks with Task: task-66.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-18 (M-246, prior text kept; RR-0195 · task-66 · Backlog; operator, verbatim: "Push them.  We need to make some progress")
 
 Dated note 2026-11-18 (M-246, prior text kept; RR-0196 · task-66 · Backlog; operator, verbatim: "dont do itl... if its going to make another mess")
+
+2026-11-19 re-cut onto 957d83b88 by lane BL-R7a: commit pending (was 5d7cede90 on wf1/inc1a-checks); CHK.5 tests proved by the pre-commit related-tests step; hooks passed
 <!-- SECTION:NOTES:END -->
