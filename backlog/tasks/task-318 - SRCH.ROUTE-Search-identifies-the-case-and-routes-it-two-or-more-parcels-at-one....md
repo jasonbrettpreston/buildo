@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ROUTE'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:24:00Z'
+updated_date: '2026-11-19T15:34:00Z'
 labels:
   - S
   - plan:SRCH.ROUTE
@@ -73,10 +73,23 @@ who (plan text): lane
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Pre-register the expected moves (AC1): one test file src/tests/search-routing.e2e.logic.test.ts, no other code unless red proves it missing.
+2. Write the failing tests into the plan, reviewed at plan altitude (AC2): case table under Plan steps under review in the context file; one repo review round (AC4, AC5): triage KEEP/REJECT.
+3. write_scope declared in the brief (AC3): lane dir plus ~/Buildo-wt-route.
+4. Red first (AC6): commit attempt with only the test, task file and context file staged -> red.out; then minimal routing code only if a case is proven missing; green through the real hooks -> commit.out.
+5. One output review on the diff (false routes, fixture realism), triaged; OUTPUT record committed with the work (AC7).
+6. McFrontend queue row first (AC8): MF-53 (.cursor/MCFRONTEND-QUEUE.md:394) and MF-84 (:597) already carry the work; this task adds no new row.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): promoted from draft-3 (was DRAFT-3) by R10: RR-0182 'the search identifies two-or-more parcels, a mis-typed address, or a possible semi lot'; no dependency (mostly built: C.14, B.1, D.1 routes). Panel and build pass owed.
 
 2026-11-19 taken on the board at lane launch (lane BL-ROUTE, worktree /Users/brettpreston_macmini/Buildo-wt-route, branch wf1/inc1b-route), RR-0240
+
+2026-11-19 BL-ROUTE: all four cases route today with no code change. Test src/tests/search-routing.logic.test.ts (7 cases + 1 todo). Red proven by mutation of classifyRows (red.out: multi_parcel -> text_candidates). Mis-typed address -> no_match (OPERATOR item, it.todo).
 <!-- SECTION:NOTES:END -->
