@@ -87,7 +87,7 @@ export function reportLayoutProblems(t: PropsNode, archetype = 'REPORT'): string
     }
     if (touch[n.component]) {
       const mins = tk.filter((x) => /(^|:)min-h-/.test(x));
-      if (!touch[n.component]!.some((x) => tk.includes(x)) || mins.length !== 1) out.push(`${at}: ${n.component} min-h tokens ${JSON.stringify(mins)} (need exactly min-h-[44px])`);
+      if (!touch[n.component]!.some((x) => tk.includes(x)) || mins.length !== 1) out.push(`${at}: ${n.component} min-h tokens ${JSON.stringify(mins)} (need exactly one of ${touch[n.component]!.join('|')})`);
     }
     for (const c of n.children) if (isNode(c)) walk(c, n);
   };
@@ -201,7 +201,7 @@ describe('MF-48 mobile REPORT props goldens', () => {
     btn.props.className = String(btn.props.className).replace('min-h-[44px]', 'min-h-11');
     expect(reportLayoutProblems(t)).toEqual([
       'address-address: Text without a report colour',
-      'o1-size-open: Button min-h tokens ["min-h-11"] (need exactly min-h-[44px])',
+      'o1-size-open: Button min-h tokens ["min-h-11"] (need exactly one of min-h-[44px])',
       'legal-line: Text without a size',
       'Card: Card is not in mapping.mobile.REPORT',
       'Card: a child node without a key',

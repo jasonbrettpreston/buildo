@@ -4,11 +4,11 @@ title: >-
   SUITE.FIX-2 Station suite repair on the combined 1·B head: 7 failing cases in
   3 files (FE-09 lock column, FE-07 search parity states, C-2 import boundary,
   C-9m 44 px)
-status: WAITS
+status: BUILT
 assignee:
   - '@lane-BL-SUITEFIX2'
 created_date: '2026-11-19T21:37:00Z'
-updated_date: '2026-11-19T21:50:00Z'
+updated_date: '2026-11-19T21:53:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -26,7 +26,7 @@ Scope now: make the push-station suite green on the board head without weakening
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 the seven cases pass through the pre-commit related run with the three test files staged
+- [x] #1 the seven cases pass through the pre-commit related run with the three test files staged
 - [x] #2 no check is weakened: each change is the code brought to the rule, or a pinned count moved as data with a dated comment naming what moved; a rule-versus-approved-design conflict is reported to the operator, not decided
 <!-- AC:END -->
 
@@ -57,3 +57,9 @@ Scope now: make the push-station suite green on the board head without weakening
 
 C-9m waits on the operator (RR-0309 48 px vs the exact 44 px pin); six of seven fixed in 44789da8c
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Six cases fixed in the first fix commit; C-9m fixed under Option A (min-h-[48px] a second accepted Button size in bindings.json touch_targets.mobile, orchestrator decision MORNING-DECISIONS.md:1227, not an operator ruling; operator may overturn: option B). Related run with surface-conformance.logic.test.ts, register-locks-resolve and search-parity staged passed; see the lane report docs/reports/lanes/2026-11-19/BL-SUITEFIX2/REPORT.md.
+<!-- SECTION:FINAL_SUMMARY:END -->

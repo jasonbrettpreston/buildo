@@ -59,7 +59,7 @@ export function layoutProblems(t: PropsNode, darkChains: { outline: string[]; in
     }
     if (touch[n.component]) {
       const mins = tk.filter((x) => /(^|:)min-h-/.test(x));
-      if (!touch[n.component].some((x) => tk.includes(x)) || mins.length !== 1) out.push(`${at}: ${n.component} min-h tokens ${JSON.stringify(mins)} (need exactly min-h-[44px])`);
+      if (!touch[n.component].some((x) => tk.includes(x)) || mins.length !== 1) out.push(`${at}: ${n.component} min-h tokens ${JSON.stringify(mins)} (need exactly one of ${touch[n.component]!.join('|')})`);
     }
     const chains = n.component === 'Input' ? darkChains.input : n.component === 'Button' && n.props.variant === 'outline' ? darkChains.outline : [];
     for (const c of chains) if (!tk.some((x) => x.startsWith(c))) out.push(`${at}: no ${c} twin`);
@@ -127,7 +127,7 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
     expect(p).toEqual(expect.arrayContaining([
       '100102: no dark:active:bg- twin',
       '100102: a checked card without border-report-ink dark:border-report-ink',
-      '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly min-h-[44px])',
+      '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly one of min-h-[44px])',
       'Card: Card is not in mapping.mobile.SEARCH',
       'Card: a child node without a key',
       'derived name other is not declared',

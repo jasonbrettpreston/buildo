@@ -876,7 +876,7 @@ export const mobileTouchProblems = (tree: Json, at: string, sizes: Record<string
       n += 1;
       const tk = String(o.props?.className ?? '').split(/\s+/).filter(Boolean);
       const mins = tk.filter((x) => /(^|:)min-h-/.test(x));
-      if (mins.length !== 1 || !sizes[o.component]!.includes(mins[0]!)) lines.push(`C-9m ${p}: ${o.component} ${JSON.stringify(mins)} (needs exactly ${sizes[o.component]!.join('|')})`);
+      if (mins.length !== 1 || !sizes[o.component]!.includes(mins[0]!)) lines.push(`C-9m ${p}: ${o.component} ${JSON.stringify(mins)} (needs exactly one of ${sizes[o.component]!.join('|')})`);
     }
     ((o.children ?? []) as Json[]).forEach((c, i) => { if (c && typeof c === 'object' && 'component' in c) walkT(c, `${p}/children/${i}`); });
   };
@@ -884,8 +884,9 @@ export const mobileTouchProblems = (tree: Json, at: string, sizes: Record<string
   return { n, lines };
 };
 
-describe('C-9m the mobile 44 px case (MF-35; min-h-[44px], because NativeWind rem is 14 here and min-h-11 is 38.5 px)', () => {
-  it('the real tree: every Button and Input of every converted mobile golden carries min-h-[44px] and no other min-h-', () => {
+describe('C-9m the mobile 44 px case (MF-35; min-h-[44px] or another listed size of at least 44 px, because NativeWind rem is 14 here and min-h-11 is 38.5 px)', () => {
+  it('the real tree: every Button and Input of every converted mobile golden carries exactly one min-h- token and it is on the touch_targets.mobile list', () => {
+    // Dated 2026-11-19 (task-353 SUITE.FIX-2): the Button list is min-h-[44px] and min-h-[48px] (the semi page, task-319, RR-0309 :1199; orchestrator decision MORNING-DECISIONS.md:1227); Input stays min-h-[44px] only.
     const conv = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json')).converted as string[];
     let n = 0;
     for (const id of conv) {
@@ -899,17 +900,24 @@ describe('C-9m the mobile 44 px case (MF-35; min-h-[44px], because NativeWind re
     console.log(`C-9m: ${n} sized nodes`);
     expect(n).toBeGreaterThan(0);
   });
-  it('RED: a chip without min-h-[44px], min-h-11, and min-h-[44px] with sm:min-h-8', () => {
+  it('RED: a chip without min-h-[44px], min-h-11, min-h-[44px] with sm:min-h-8, and sizes not on the list (40, 46 px; 48 px on an Input); the listed 48 px Button passes', () => {
     const tree = { component: 'View', props: {}, children: [
       { component: 'Button', props: { className: 'rounded-full px-3' }, children: [] },
       { component: 'Button', props: { className: 'min-h-11' }, children: [] },
       { component: 'Input', props: { className: 'min-h-[44px] sm:min-h-8' }, children: [] },
       { component: 'Input', props: { className: 'flex-1 min-h-[44px]' }, children: [] },
+      { component: 'Button', props: { className: 'mt-6 min-h-[48px] w-full' }, children: [] },
+      { component: 'Button', props: { className: 'min-h-[46px]' }, children: [] },
+      { component: 'Button', props: { className: 'min-h-[40px]' }, children: [] },
+      { component: 'Input', props: { className: 'min-h-[48px]' }, children: [] },
     ] };
-    expect(mobileTouchProblems(tree, 'g', B.touch_targets.mobile)).toEqual({ n: 4, lines: [
-      'C-9m g/children/0: Button [] (needs exactly min-h-[44px])',
-      'C-9m g/children/1: Button ["min-h-11"] (needs exactly min-h-[44px])',
-      'C-9m g/children/2: Input ["min-h-[44px]","sm:min-h-8"] (needs exactly min-h-[44px])',
+    expect(mobileTouchProblems(tree, 'g', B.touch_targets.mobile)).toEqual({ n: 8, lines: [
+      'C-9m g/children/0: Button [] (needs exactly one of min-h-[44px]|min-h-[48px])',
+      'C-9m g/children/1: Button ["min-h-11"] (needs exactly one of min-h-[44px]|min-h-[48px])',
+      'C-9m g/children/2: Input ["min-h-[44px]","sm:min-h-8"] (needs exactly one of min-h-[44px])',
+      'C-9m g/children/5: Button ["min-h-[46px]"] (needs exactly one of min-h-[44px]|min-h-[48px])',
+      'C-9m g/children/6: Button ["min-h-[40px]"] (needs exactly one of min-h-[44px]|min-h-[48px])',
+      'C-9m g/children/7: Input ["min-h-[48px]"] (needs exactly one of min-h-[44px])',
     ] });
   });
 });
