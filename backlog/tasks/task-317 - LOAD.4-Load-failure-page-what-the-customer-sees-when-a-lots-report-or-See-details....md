@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T20:13:00Z'
 labels:
   - S
   - plan:LOAD.4
@@ -79,4 +79,8 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): promoted from draft-16 (was DRAFT-16) by R10: RR-0179 '2. Add it as a task using the othr mini pages as a template'; dependency task-267 kept (LOAD.2 first). No element id in doc-2 for this page (design: other small pages as template, small-pages-v8); the follow-up row to MF-62 is claimed by the build lane. Panel and build pass owed.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-317 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
+
+2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-341 (the LOAD chain and the two 6c tasks); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
 <!-- SECTION:NOTES:END -->

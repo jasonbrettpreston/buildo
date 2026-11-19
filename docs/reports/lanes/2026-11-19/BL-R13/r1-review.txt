@@ -1,0 +1,110 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of docs/reports/reviews/task-339/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9909 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20778 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32059 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42693 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53679 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 53998 chars, answer 11749 chars, 90s
+## Adversarial review — `docs/reports/reviews/task-339/context-2026-11-19.md` (+ template)
+
+Note on citation: the artifact is generator output with no stable line numbers, so I cite by section heading, acceptance-criterion number, and quoted anchor. That absence is itself a defect (see LOW, near the end).
+
+---
+
+### CRITICAL
+
+- **[CRITICAL]** (Plan steps, candidates 1–3 vs Acceptance #1): The task's headline deliverable — "the C.12 placeholder-address ruling entered" / RR-0299 naming task-321 and task-15 — has **no candidate at all**. Candidates cover A.6 (task-320/71), the LOAD chain (266/267/317/123/122/121), and PROOF.TOOL (68/67). C.12/task-321/task-15 is discussed only in the Description. Acceptance #1 is therefore unachievable from the plan under review. Fix: add Candidate 0 for C.12 (what the placeholder email is, where it renders, when it is replaced), or mark task-339 BLOCKED on the missing ruling.
+
+- **[CRITICAL]** (Plan steps, closing rule "Record-only: no code, no status change of any existing task" vs Acceptance #1 and Candidate 1/3 Option A): The document contradicts itself inside one page. Criterion #1 requires the lane to make "task-321 no longer depends on task-15"; Candidate 1 Option A says "remove task-320's dependency on task-71"; Candidate 3 Option A says "remove task-68's dependency on task-67"; Candidate 1 also says "build A.6 now". All four are status/dependency changes or build work. The lane's own rule and the increment's "no scope creep" principle forbid them. Fix: pick one — either the lane is record-only and the *new OPERATOR task* carries the removal instruction, or drop the record-only constraint and re-scope with an authorised plan.
+
+- **[CRITICAL]** (Candidate 2, "Option A (recommended) … Landing still goes through a push (push 7 for 121/122, push 9 for 123 as planned)"): The recommendation claims it unblocks 1·B "from push 9 timing to now", but it explicitly leaves the push schedule untouched — 123 still lands push 9, which is exactly the gate RR-0271 names for 1·B completion. Authoring earlier is not completion earlier. The stated purpose ("so 1·B can finish") is not served by the recommended option. Fix: either recommend re-sequencing the pushes too (and say which), or restate the benefit honestly as "parallelism only; 1·B still completes after push 9" and let the operator decide on the real trade.
+
+### HIGH
+
+- **[HIGH]** (Storage set-up, bullets 1–2 vs Milestone "Problems" and RR-0176): The document ships the superseded 35 s / 35,000 ms / "LOAD.1 to LOAD.3" text as the increment's storage ground truth, while its own Problems block says RR-0176 killed both. A reviewer using the Storage set-up section to verify #1/#3 verifies against a dead rule — precisely the "wrong reviewer context" failure RR-0208 names. Fix: make the generator refuse to emit a block whose supersession it has already detected, or strike the text inline with the superseding RR id.
+
+- **[HIGH]** (Document sections: "Requirements … (not readable: ENOENT)", "McFrontend elements … (not readable: ENOENT)", "McStorage policy … (not readable: ENOENT)"): Three of three required documents are missing and the brief proceeds anyway, while `## Documents` (header) says "(none)" and `## Documents` (footer) names them. Acceptance #1/#3 depend on doc-2 and doc-16. Silent degradation, no fail-closed, no BLOCKED state. Fix: ENOENT on a doc named in acceptance criteria must fail the brief (or set `status: BLOCKED`), not emit a review context.
+
+- **[HIGH]** ("Decisions in force" header: "the ones this task names carry the operator's words"): The task names RR-0299 and RR-0300; neither is in the ~70-title list. RR-0298 (required by Acceptance #2) appears nowhere in the document except the criterion. `## Decisions naming this task — (none)` contradicts the Description citing them. Either the ids do not exist — in which case the Description is fabricated grounding — or the list assembly is broken. Fix: resolve RR-0298/0299/0300 to real register rows before this brief is issued.
+
+- **[HIGH]** (Description "Recommendation: UNVERIFIED until this task review round" vs Acceptance #3 vs RR-0232): Criterion #3 requires each blocker's OPERATOR task to state "verified (the review round) or UNVERIFIED and why". The three candidates supply no reproducible verification artefact — no command, no output, no diff, no query result, no reviewer file. "Grounded (file:line)" is a reading, not a verification. The review round cannot promote these to "verified" from this document. Fix: each candidate carries a Verification block with the exact command and its output (or is explicitly UNVERIFIED with the missing check named).
+
+- **[HIGH]** (Description, operator verbatim "verified as per MCDecision/McLane" vs RR-0210, which is in the Decisions list): RR-0210 says "McDecision is not adopted"; the task's governing verification protocol is therefore ambiguous, and the plan steps never reconcile it. Which process produces "verified"? Fix: state the governing protocol in the plan steps and note that the operator's word "MCDecision" is superseded by RR-0210's naming.
+
+- **[HIGH]** (Candidates 1–3, "Grounding (file:line)" blocks): The overwhelming majority of grounding points into `~/Buildo-scratch/...` — `BUILD-PASS.md:15`, `DESIGN.md:18`, `AUDIT.md:159-163`, `lanes-20261117/...`, `git -C ~/Buildo-wt-mb94c`. RR-0208 (in force) names exactly this as the failure mode: "the failure is scratch work, made-up responses and wrong reviewer context"; RR-0203 requires a committed raw snapshot. Scratch is mutable, uncommitted and unauditable, so none of these citations can support a "verified" recommendation. Fix: ground in committed paths (repo `:line` or committed snapshot) or mark UNVERIFIED.
+
+- **[HIGH]** (Candidate 3 Option A vs Acceptance #3): #3 requires CHK.6 to become an OPERATOR task in m-1. Candidate 3 explicitly leaves task-67 "LATER" in **m-0** and says "no new task is created now". The recommendation fails the acceptance criterion by construction. Fix: either amend #3 to allow CHK.6 to stay m-0, or create the OPERATOR task.
+
+- **[HIGH]** (Candidate 3, quoting task-68 "Reuses the group F checks (CHK.4 …, CHK.5 …, CHK.6 design fit: it runs them, it does not rebuild them)"): The Decisions list carries "2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and **CHK.4**". So task-68's text already reuses a dropped check — the same "reuses checks that don't exist" root cause the candidate diagnoses for CHK.6, sitting in the same quoted sentence, unflagged. Fix: extend Option A to strike CHK.4 from task-68's text and state whether any other dropped INFRA.2/CHK.4 references remain in the PROOF family.
+
+- **[HIGH]** (Candidate 2 Option A, "121/122 are re-cut on the current origin tip in a lane worktree"; Candidate 1 Option A "build A.6 now"): RR-0190 (in force) requires "an authorized plan for any repo worktree they write". This task is authorised as record-only, not as a build plan. Both recommendations propose writes to repo worktrees (`wf1/mb94c-1117`, the mcfrontend search page) with no authorisation and no blast radius. Fix: name the authorising plan id, or downgrade to "operator approval required to open a lane".
+
+- **[HIGH]** (Candidate 2, "the staged tree is 5 files, +79 -4 … branch wf1/mb94c-1117 shown [behind 108]"): The recommendation re-cuts 108 commits of drift on a protected worktree and asserts it as safe with zero conflict analysis, then reuses the stale diffstat as the work estimate — which is invalid once re-cut. Blast radius: `not_in_engine_population` on *every lot with no stored Layer 3 rows* (a display change across the whole population). No rollback path stated. Fix: name the rollback (revert commit / re-run from the staged tree), state the expected conflict surface, and re-estimate after re-cut.
+
+### MEDIUM
+
+- **[MEDIUM]** (Candidate 2, "task-62 (push 6) is DONE …, so 121 and 122 are held only by their place in 6c"): Immediately contradicted two lines later by task-121 "READY to author after push 6 … no ruling needed" and task-122 "BLOCKED by 6c.5a (R-B) and WAITING on 6.43". If 121 is READY and 122 is blocked only by 121, then RR-0154 (in the same document: "When a task completes the next ready task starts at once … nothing waits idle") already mandates pulling them — no operator decision is needed, and the recommend-a-ruling framing is wrong. `6.43` is never defined. Fix: either cite RR-0154 and start the work under existing authority, or show what rule overrides it.
+
+- **[MEDIUM]** (Candidate 1, "The MF-47 branch and migration 322 are already on origin and dev (:336)" vs task-320's plan text "waits the MF-47 plan data (Stripe price ids from the operator, DB job 322)"): If 322 is on origin, the residual blocker is Stripe price ids + checkout only. The candidate states both without resolving them. Fix: enumerate exactly what remains (price ids, session action, price-map entry, CSP, webhook drill) and drop "DB job 322" from the blocker if it is shipped.
+
+- **[MEDIUM]** (Candidate 1 Option A vs "Open edges … what the line shows for a user with no entitlement row … is a front-end design question for the operator"): Until MF-47 lands (m-2), essentially every live user has no entitlement row, so every field is null (`types.ts:11-17`). Option A therefore ships the undesigned null state to production and cannot be implemented as described without the operator's answer — so the claim "Pulls forward: nothing" is wrong; it pulls forward a design decision. Fix: make the null-state rendering part of the recommendation with a stated default (hide the line / show "reports available after checkout"), or make Option A conditional on that ruling.
+
+- **[MEDIUM]** (Candidate 3, "RS-12 does not exist: … lists RS-0..RS-9 and RS-11"): The supporting list skips **RS-10** with no explanation, and the existence claim rests on `find, depth 4` with no command output. A partial header list plus a depth-limited find does not establish non-existence, which RR-0190 requires be file:line or UNVERIFIED. Fix: quote the full `find` and explain RS-10, or mark the absence UNVERIFIED.
+
+- **[MEDIUM]** (Candidate 1, "No page reads it yet (grep of src, mobile, scripts/surfaces …)"): A negative grep claim with no pattern and no output. If the pattern missed a read path, the "nothing renders it" premise used to size risk is wrong. Fix: inline the grep and its (empty) output.
+
+- **[MEDIUM]** (Candidate 1 live-data premises): "The monthly limit (the 10)", "the period end", "migration 322 DONE on dev 2026-11-16" are read from *files*, not from the live DB. `DONE on dev` ≠ on origin ≠ on prod. Needed queries: `select variable_key, variable_value from logic_variables where variable_key like 'parcel_tool_report_limit%'`; `select count(*), count(current_period_end) from parcel_tool_usage`; `select max(version) from schema_migrations`. All three are UNVERIFIED premises per Axis 2.
+
+- **[MEDIUM]** (Candidates 2 and 3, option sets): Both are non-exhaustive and so violate RR-0137's "optimised holistically". Candidate 2 never considers re-homing 121/122 *within the plan* (a row re-label, no work pulled forward) — only early execution or dropping 123's dependency. Candidate 3 never considers narrowing CHK.6's design-fit scope to the 65 search elements for slice S, which would remove the blocker cheaply. Fix: add the re-sequence option to both.
+
+- **[MEDIUM]** (Document structure: two `## Documents` headings, one "(none)" and one naming three files): Duplicate headings with contradictory content; a reader or a downstream parser cannot tell which is authoritative. Same defect class as the duplicate ruling titles: RR-0005 and RR-0044 are byte-identical ("Operator direction: page-level lot information in increme"), and eleven distinct RR ids share "2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready". One-row-per-ruling identity (RR-0190) is broken, so "which ruling governs?" is unanswerable. Fix: dedupe at generation time and fail the brief on duplicate titles.
+
+- **[MEDIUM]** ("Decisions in force" lists RR-0174 and RR-0176 with no supersession mark): The Problems block knows RR-0176 supersedes RR-0174; the in-force list does not. Fix: render `SUPERSEDED BY RR-0176` inline.
+
+- **[MEDIUM]** (Storage set-up, four bullets ending `"undefined"`; Register rulings, four lines ending `"undefined"`): A known generator defect is re-emitted verbatim into the review input — a quote slot where the generator had no quote. Fix: `--check` lint that fails on the literal `"undefined"` in a quote position (RR-0203 already requires a `--check` mode).
+
+- **[MEDIUM]** (Register rulings citations: RR-0144, RR-0145, RR-0166, RR-0170 all cite `MORNING-DECISIONS.md:738`): Four distinct operator answers cannot occupy one line unless it is a block, and nothing says so. A verifier following the citation lands on the wrong ruling. Fix: cite the block with sub-anchors (`:738#ONE-12`) or give each answer its own line.
+
+- **[MEDIUM]** (Milestone header "m-1 Increment 1·B Search" vs description "Increment S (re-opened, scenario slice)" vs objectives "Search comes before increment 1" vs documents keyed `elements-by-inc.json#S`): S and 1·B are used interchangeably without ever being declared the same increment. Acceptance #3 and the candidates also mix m-0 (CHK.6) and m-1. Fix: state the alias once, and tag every task reference with its milestone.
+
+### LOW / NIT
+
+- **[LOW]** ("Increment objectives … the 65 designed search elements … (doc-2:27) '| id | element | where | status | deliverers | built |'"): The citation is a table *header row*, not the content claimed; the "65" is unsupported by the quote, and the file is ENOENT anyway.
+
+- **[LOW]** (Milestone "Problems": "doc-16 section 5 row S still reads LOAD.1 to LOAD.3"): A known defect is reported but no acceptance criterion owns fixing it and this record-only task cannot. It will be re-reported next round. Fix: append a criterion or log a follow-up task id.
+
+- **[LOW]** (Candidate 2, "est GUESS 2 days" for 1.3 W): A pulled-forward estimate explicitly labelled a guess is used to argue feasibility; no basis given. Low cost to state the basis or mark UNVERIFIED.
+
+- **[LOW]** (Candidate 1, "The period end ('9 Dec 2026') … resetsOn from reportPeriod(current_period_end or created_at, now)"): The `or created_at` fallback means a row whose `current_period_end` is NULL (trial, or webhook missed) shows a reset date derived from row creation — a silently wrong date, not an error. Name the fallback rendering or drop it.
+
+- **[LOW]** (Compliance: "None named: no 1·B task (task-12, 13, 14, 68, 69, 266, 267, 268, and … task-317 to task-325) carries a comp: label"): A negative claim with no command, over a task set that omits 320/321 which are the subjects of criteria #1/#4. Fix: quote the check.
+
+- **[LOW]** (Prior reviews: "(none)"): RR-0257 says 1·B starts as a validation pass of "the prior panel records"; the brief shows none, and the Description asserts "the prior panel records" exist. Contradiction unremarked.
+
+- **[NIT]** (Document sections, "not readable: ENOENT; read it at Requirements: backlog/… (not readable: ENOENT; read it at McFrontend elements: the Elements section of that doc (backlog/…"): Unbalanced parentheses, truncated path, and a self-referential "read it at itself" instruction. Generator templating bug; produces unparseable output.
+
+- **[NIT]** (Description, operator verbatim "the recommendation - whether but the issue and the recommendation is verified"): The sentence is unintelligible and the doc's reading — "two checks: issue and recommendation" — is the orchestrator's interpretation. RR-0190 requires orchestrator readings to be labelled as such, not folded into operator words.
+
+- **[NIT]** (Whole artifact): No line numbers, so a review reply naming a ruling cannot satisfy RR-0190's file:line requirement against this file. Emit numbered lines or stable anchors.
+
+### Review template (`.claude/review-templates/plan-review-deepseek.md`)
+
+- **[HIGH]** (Template "Axes" applied to task-339): This task executes nothing — no DB, no deploy, no network, no user. Axis 1's failure-mode catalogue (partial commits, FK 23502, webhook double-delivery, cache poisoning, migration DOWN) has **no referent**, while the material risks here (citation integrity, criterion coverage, generator integrity, scratch-grounding) fall under the Gemini axes the template forbids the reviewer to touch. Invoking this template guarantees a review that finds nothing real and misses the real findings. Fix: gate template selection on task class (record/plan tasks → Gemini axes; build tasks → DeepSeek axes).
+
+- **[MEDIUM]** ("I am reviewing a plan-locked Active Task" vs severity guide "CRIT … Must fix before plan-lock"): Every must-fix severity is unactionable once the plan is locked; no "fix after lock" path is defined. Fix: add a post-lock severity path (amend-and-re-lock, or follow-up task).
+
+- **[MEDIUM]** (Template system persona "You are NOT responsible for: … contract / API / boundary analysis" vs Axis 1 "Lost migrations (DOWN block fires accidentally)"): Migrations are simultaneously a data-integrity mode and a schema contract. The boundary as written produces duplicated or contradictory findings across the DeepSeek and Gemini runs. Fix: assign migration lifecycle to exactly one reviewer.
+
+- **[NIT]** (`{{DATA_CONTEXT}}`): No fallback rule when the invocation supplies none. The reviewer is told to be specific about live state and simultaneously forbidden to hallucinate it — an unresolvable instruction that degenerates Axis 2 into "list every assumption". Fix: define the no-context behaviour ("every premise becomes UNVERIFIED PREMISE with a proposed query").
+
+---
+
+### Overall verdict
+
+This is a review context that is itself unreviewable. Three inputs are ENOENT, the document contradicts itself on whether it is record-only (it recommends four edits and two builds), the recommended options for the three candidates either fail the acceptance criteria by construction (CHK.6 in m-0; C.12 absent entirely) or do not achieve their stated purpose (Candidate 2 leaves push 9 as the gate), and almost every "Grounded (file:line)" points into `~/Buildo-scratch`, which RR-0208 names as the failure mode the current process exists to eliminate. The generator clearly detects defects in its own source (the Problems block names the superseded 35 s cap and the `"undefined"` quotes) and then re-emits them as ground truth, which means the review round is being asked to verify acceptance criteria against text the brief already knows is wrong — so no amount of reviewer diligence converts these recommendations to "verified". The correct outcome is FAIL: block task-339, fix the generator's fail-closed and supersession handling, resolve RR-0298/0299/0300 in the register, add the missing C.12 candidate, and re-run under the Gemini axes rather than this one.
+
+---
+⏱  99025ms (99.0s)
+📊 Tokens — total: 32287, input: 13691, output: 18596, reasoning: 13818

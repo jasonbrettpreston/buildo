@@ -5,7 +5,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T20:13:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -85,4 +85,8 @@ who (plan text): fresh lane (no builder context) with the page-proof tool; opera
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): dependency fixed: depends-on was 12, 69, 267, 68; now also 317 (LOAD.4), 318 (SRCH.ROUTE), 319 (SRCH.SEMI), 320 (SRCH.A6), 321 (SRCH.C12), 322 (SRCH.DAYLIGHT). Grounds: its text proves candidate list, lot map, semi question and the loading screen from the pick, and holistic-audit/AUDIT.md:159 'each PROOF.n waits for the slice's C-n check task, the slice's content tasks ... and PROOF.TOOL'. Chain to the report increment: 267 -> 266 -> 123 (1.3, m-3) and 265 (ST.P1, m-13); to 1·A: 68 -> 66 (BUILT), 67 (m-0). Open OPERATOR questions in m-1 (task-323, 324, 325) go to the answer page (RR-0154).
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-268 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
+
+2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-342 (PROOF.TOOL and CHK.6; and, through task-267, task-341); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
 <!-- SECTION:NOTES:END -->

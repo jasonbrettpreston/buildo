@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T20:13:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -86,4 +86,8 @@ who (plan text): one lane; claim an ID by mkdir before it starts (ID ledger)
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): dependency fixed: depends-on was 62, 65, 66, 67; now 62, 66, 67. TASK-65 CHK.4 is DROPPED (decision-69 'drop INFRA.2 guard.mjs and CHK.4', duplicate of report-no-maths MF-16; RR-0152); TASK-66 CHK.5 is BUILT and TASK-67 CHK.6 is LATER (kept); TASK-62 push 6 kept (the tool runs on the test stack after push 6, plan dependsOn 6.43). The description still says 'Reuses ... CHK.4': read it as the report-no-maths check MF-16, not a task. Proof task: no designed element (supporting function: PROOF slice S). Plan status 'approved S1/S2/Q-H4 a'; panel and build pass owed (readiness).
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-68 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
+
+2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-342 (PROOF.TOOL and CHK.6); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
 <!-- SECTION:NOTES:END -->

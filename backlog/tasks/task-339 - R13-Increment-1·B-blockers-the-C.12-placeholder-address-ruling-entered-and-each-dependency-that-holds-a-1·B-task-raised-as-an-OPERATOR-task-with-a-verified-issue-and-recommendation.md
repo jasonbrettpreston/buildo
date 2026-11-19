@@ -4,17 +4,19 @@ title: >-
   R13 Increment 1·B blockers: the C.12 placeholder-address ruling entered, and
   each dependency that holds a 1·B task raised as an OPERATOR task with a
   verified issue and recommendation
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R13'
 created_date: '2026-11-19T20:07:00Z'
-updated_date: '2026-11-19T20:07:00Z'
+updated_date: '2026-11-19T20:14:00Z'
 labels:
   - follow-up
 milestone: m-1
 dependencies: []
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1155
+  - docs/reports/lanes/2026-11-19/BL-R13/REPORT.md
+  - docs/reports/reviews/task-339/context-2026-11-19.md
 type: record
 ordinal: 39012
 ---
@@ -27,10 +29,10 @@ Operator 2026-11-19, verbatim: "Those dependencies are not listed as operator ta
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 RR-0299 entered as a Backlog decision through G2 naming task-321 and task-15; task-321 no longer depends on task-15 and carries a Scope now line (placeholder address until launch)
-- [ ] #2 RR-0300 and RR-0298 entered as Backlog decisions through G2
-- [ ] #3 Each remaining blocker (A.6 and MF-47; the LOAD chain and the 6c tasks 121 and 122; PROOF.TOOL and CHK.6) is an OPERATOR task in m-1 with Grounded: and Recommendation: lines, each stating verified (the review round) or UNVERIFIED and why
-- [ ] #4 Every held 1·B task (320, 266, 267, 317, 68, 268) carries a dated note naming the OPERATOR task it waits on
+- [x] #1 RR-0299 entered as a Backlog decision through G2 naming task-321 and task-15; task-321 no longer depends on task-15 and carries a Scope now line (placeholder address until launch)
+- [x] #2 RR-0300 and RR-0298 entered as Backlog decisions through G2
+- [x] #3 Each remaining blocker (A.6 and MF-47; the LOAD chain and the 6c tasks 121 and 122; PROOF.TOOL and CHK.6) is an OPERATOR task in m-1 with Grounded: and Recommendation: lines, each stating verified (the review round) or UNVERIFIED and why
+- [x] #4 Every held 1·B task (320, 266, 267, 317, 68, 268) carries a dated note naming the OPERATOR task it waits on
 <!-- AC:END -->
 
 ## Definition of Done
@@ -47,8 +49,28 @@ Operator 2026-11-19, verbatim: "Those dependencies are not listed as operator ta
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. RR-0299, RR-0300, RR-0298 through backlog-decision.mjs (decisions 85-87), then task-321: clear the dependency on task-15, append the Scope now line (AC 1, 2).
+2. Ground the three blockers (A.6/MF-47, LOAD chain 121/122/123, PROOF.TOOL/CHK.6) with file:line; write the candidate recommendations into the review context file; one review round r1; TRIAGE.md; fold KEPT.
+3. Create three OPERATOR tasks in m-1 (type decision) with the plain explanation, Grounded and Recommendation (verified by review r1 or UNVERIFIED) (AC 3).
+4. Dated note on tasks 320, 266, 267, 317, 68, 268 naming the OPERATOR task each waits on (AC 4).
+5. backlog doctor, one docs commit with trailer Task: task-339, reports into docs/reports/lanes/2026-11-19/BL-R13/, close task-339 BUILT.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R13, worktree /Users/brettpreston_macmini/Buildo-wt-r13, branch wf2/inc1b-r13), RR-0240
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-339 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0298 · task-339 · Backlog; operator, verbatim: "you need to run the launch script - do not change the status manually")
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+RR-0299/0300/0298 entered (decisions 85-87); task-321 dependency on task-15 cleared with the Scope now note (status LATER unchanged); OPERATOR tasks 340 (A.6), 341 (LOAD chain), 342 (PROOF.TOOL) in m-1 with Grounded and Recommendation (verified by review r1 of task-339, UNVERIFIED items stated); dated notes on 320, 266, 267, 317, 68, 268. Docs commit carries Task: task-339; sha in docs/reports/lanes/2026-11-19/BL-R13/REPORT.md hand-back. backlog doctor clean.
+<!-- SECTION:FINAL_SUMMARY:END -->

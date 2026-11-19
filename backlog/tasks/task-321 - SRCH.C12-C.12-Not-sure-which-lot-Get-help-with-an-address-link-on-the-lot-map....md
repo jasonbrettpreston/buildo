@@ -7,13 +7,12 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T20:08:00Z'
 labels:
   - S
   - plan:SRCH.C12
 milestone: m-1
-dependencies:
-  - TASK-15
+dependencies: []
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#S/SRCH.C12
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md sha256=0f3d8ba74a49
@@ -79,4 +78,8 @@ element ids delivered: B.7, C.12
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): promoted from draft-2 (was DRAFT-2) by R10: RR-0182 builds C.12 help link as its own task; dependency added: task-15 (LS.6, the operator support inbox address the plan text says it needs). Elements B.7 C.12. Panel and build pass owed.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0299 · task-321 · Backlog; operator, verbatim: "C12 - is a fake email address until launch")
+
+2026-11-19 (R13, RR-0299, MORNING-DECISIONS.md:1155): Scope now: the help link is built against the placeholder support address until launch (RR-0299); the real address is set at launch by LS.6 (task-15). Ground: the variable logic_variables.maxbld_support_inbox already exists (migrations/314_maxbld_support_inbox.sql:15-17 inserts it; SUPPORT_INBOX_KEY at src/lib/surfaces/maxbld-support.ts:13); the migration seeds it EMPTY ("" as JSONB, 314:7 and :17), so until a value is set the page shows no contact links; the built page web_help reads it (scripts/surfaces/parcel_product/F06/surfaces/web_help.descriptor.json:204). Status unchanged (LATER; the launch script takes it, RR-0298).
 <!-- SECTION:NOTES:END -->

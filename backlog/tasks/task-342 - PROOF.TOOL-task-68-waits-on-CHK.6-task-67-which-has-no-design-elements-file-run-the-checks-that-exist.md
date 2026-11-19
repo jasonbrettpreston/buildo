@@ -1,0 +1,47 @@
+---
+id: TASK-342
+title: >-
+  PROOF.TOOL (task-68) waits on CHK.6 (task-67), which has no design-elements
+  file: run the checks that exist?
+status: OPERATOR
+assignee: []
+created_date: '2026-11-19T20:13:00Z'
+updated_date: '2026-11-19T20:13:00Z'
+labels:
+  - S
+  - gap
+  - plan:PROOF.TOOL
+  - operator
+milestone: m-1
+dependencies: []
+references:
+  - scripts/analysis/report-schema.mjs
+  - docs/reports/lanes/2026-11-19/BL-R9/REPORT.md
+priority: low
+type: decision
+ordinal: 42012
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+In plain words: the page-proof tool (task-68 PROOF.TOOL) is meant to run all the automatic checks on a search page, including a "design fit" check (task-67 CHK.6) that does not exist yet because it needs a list of the designed report elements that no task is asked to write. The question is whether the proof tool waits for that check or runs the checks that exist and says plainly that design fit is not yet built.
+
+Grounded: yes. task-68 depends on task-62 (DONE), task-66 CHK.5 (BUILT) and task-67 CHK.6 (LATER, m-0); task-268 PROOF.S depends on 12, 69, 267 and 68. task-68 text: "CHK.6 design fit: it runs them, it does not rebuild them". task-67 note: blocked on the report-design-elements file, "no task in the eleven produces that file" (docs/reports/lanes/2026-11-19/BL-R9/REPORT.md:13). RS-12 does not exist: scripts/analysis/report-schema.mjs gates are RS-0 to RS-9 and RS-11 (header :25-28; gate('RS-9') :346, gate('RS-11') :360; there is no RS-10 gate; no report-design-elements file in the repo or in ~/Buildo-scratch, find to depth 4). CHK.6's design is ~/Buildo-scratch/lanes-20261117/checks/repo-drafts/DESIGN.md:18 (D1-D5 over the designed report elements; the file is "a design task, GUESS 0.5 d" on task-67). Slice S already allows a design-fit row that is not automatic: task-268 "(e) compliance rows marked AUTO-PASS, REVIEWED-PASS or GAP ... GAP not accepted by the operator means not DONE"; ~/Buildo-scratch/lanes-20261117/holistic-audit/AUDIT.md:159-163. CHK.6 checks the report declaration, and the search pages are not report declarations, so for slice S the row is reviewed either way. task-68's text still names the dropped CHK.4; read it as the report-no-maths check MF-16 (task-68 note, R10).
+
+Recommendation: PROOF.TOOL runs the checks that exist (CHK.5, the report checks, the harness, the key compare, the storage probes) and prints the design-fit row as GAP "CHK.6 not built"; drop task-68's dependency on task-67 once you approve. PROOF.S then needs a REVIEWED-PASS by a fresh reviewer for that row or your acceptance of the GAP (its own rule). task-67 stays LATER and separate; no new task is created now. Pulls forward: nothing. Cost: the design-fit row of PROOF.S is manual until CHK.6 exists. Alternative (not recommended): first a task to fill report-design-elements.json (0.5 d design task needing your confirmation of the design references), then RS-12, then PROOF.TOOL; that pulls a group F (1·A) design task into 1·B. Verified by review r1 of task-339 (docs/reports/lanes/2026-11-19/BL-R13/r1-review.txt, TRIAGE.md).
+<!-- SECTION:DESCRIPTION:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
+- [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+<!-- DOD:END -->

@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:45:00Z'
+updated_date: '2026-11-19T20:13:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -91,4 +91,8 @@ who (plan text): lane
 Dated note 2026-11-19 (M-246, prior text kept; RR-0271 · task-266 · Backlog; operator, verbatim: "2. y")
 
 2026-11-19 R12 (task-327, RR-0271, decision-79; operator, verbatim: "2. y", MORNING-DECISIONS.md:1061; prior text kept): scope of LOAD.1 after the ST.P1 split (task-325 Option A, verified by review r1 of task-326): LOAD.1 carries the compute half for the app search page: on the pick, the lookup route runs the one-lot pure core and feeds the page response; no write, no read first; numbers show only inside the tester and admin gate until MB-38 shadow passes (.cursor/MCBYLAWS-QUEUE.md:785). Dependencies now: task-123 only (task-265 dropped). U1 (who owns the rows-to-page-response adapter), U2 (inline one-lot compute against the route time limit) and U3 (MB-94 part f, the tester gate, has not landed, .cursor/MCBYLAWS-QUEUE.md:685) stay UNVERIFIED, carried from R11 (docs/reports/lanes/2026-11-19/BL-R11/REPORT.md section 3).
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-266 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
+
+2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-341 (the LOAD chain and the two 6c tasks); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
 <!-- SECTION:NOTES:END -->

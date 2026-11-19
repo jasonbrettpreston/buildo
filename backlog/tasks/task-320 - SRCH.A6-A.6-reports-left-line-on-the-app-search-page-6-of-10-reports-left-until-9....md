@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T20:13:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -78,4 +78,8 @@ element ids delivered: A.6
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): promoted from draft-5 (was DRAFT-5) by R10: RR-0182 builds A.6 reports-left line as its own task; dependency task-71 (LS.1 MF-47 checkout, waits operator Stripe price ids) kept. Follow-up row to MF-35 claimed by the build lane. Panel and build pass owed.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-320 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
+
+2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-340 (A.6 and the web checkout); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
 <!-- SECTION:NOTES:END -->
