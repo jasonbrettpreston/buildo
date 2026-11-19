@@ -3,11 +3,11 @@ id: TASK-266
 title: >-
   LOAD.1 Start the one-lot report calculation the moment the user picks an
   address on...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-LOAD1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:13:00Z'
+updated_date: '2026-11-19T21:31:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -99,4 +99,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-266 · Backlog; o
 Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-266 · Backlog; operator, verbatim: "task 341 approved")
 
 2026-11-19 (R16, task-347, RR-0300): OPERATOR task-348 (D1) decides who sees real numbers before launch; LOAD.1's compute must sit behind the same gate as W (the web live switch) or the tester gate, or numbers computed here would show at the flip before MB-38. D2 is ruled: a lot with no current stored result is a miss in W and LOAD.1 computes at the pick (MORNING-DECISIONS.md:704-705, :1057, :1061). Status and dependencies unchanged.
+
+2026-11-19 taken on the board at lane launch (lane BL-LOAD1, worktree /Users/brettpreston_macmini/Buildo-wt-load1, branch wf1/inc1b-load1), RR-0240
 <!-- SECTION:NOTES:END -->
