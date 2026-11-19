@@ -1,0 +1,89 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1a/infra5/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10574 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20750 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30940 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 40759 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 52718 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 62778 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 62778 chars, answer 11125 chars, 105s
+# Adversarial review — `scripts/analysis/lane-claims.mjs`
+
+Lens applied: mkdir-lock correctness under concurrent writers, atomic-write durability, and `realpath` canonicalisation edge cases.
+
+---
+
+## CRITICAL
+
+- **[CRITICAL]** (lines 27, 33): **Lock reclamation is check-then-act, and release is ownership-blind — two writers can hold the lock simultaneously.** Process A dies leaving `.lock` with a dead pid. B reads the pid, sees it dead, and *before* its `rmSync` at line 27 runs, C does the same. B removes the stale dir and re-`mkdir`s with B's pid; C's `rmSync(lockDir, {recursive:true, force:true})` then deletes **B's live lock**, and C re-creates it. Both B and C now run `fn()`. Because `mutate` (line 42) reads and rewrites the whole file, the second `renameSync` silently discards the first writer's claim. Symmetrically, line 33 removes the lock unconditionally with no token check, so a process whose lock was reclaimed (line 28's 10 s mtime path, or a stolen dead-pid lock) deletes whoever holds it now on the way out. This is a mutual-exclusion violation, not a performance issue. Fix: never `rm` a lock you inspected. Rename the stale dir to a unique name first (`renameSync(lockDir, `${lockDir}.stale.${process.pid}.${Date.now()}`)`) so exactly one reclaimer wins, and on both reclaim and release verify an ownership token (pid + boot id/start time) inside the dir before removing; if the token differs, leave it alone.
+
+- **[CRITICAL]** (lines 38–40): **`real()` does not canonicalise `.`/`..` in the non-existent suffix, so overlapping claims can be spelled past each other.** When `realpathSync(q)` fails, the code walks to the nearest *existing* ancestor and appends the remaining components **verbatim**. Trace `norm('/a/b/../c')` where `/a` exists and `/a/b` does not: `realpathSync('/a/b/../c')` → ENOENT; `basename` = `c`, `dirname` = `/a/b/..` → also ENOENT; `basename` = `..`, `dirname` = `/a/b` → ENOENT; `basename` = `b`, `dirname` = `/a` → resolves. Result: `/a/b/../c` — the `..` survives. So `claim L1 /a/notexist/../shared` does **not** overlap a stored `/a/shared` at line 45, and once `/a/notexist` is created the claimed path *is* `/a/shared`. Fix: after resolving the ancestor, lexically normalise the appended remainder against the realpath'd prefix (`path.posix.normalize(realAncestor + '/' + rest.join('/'))`, or resolve segments one at a time), and reject any path that still contains `.` or `..` after normalisation.
+
+---
+
+## HIGH
+
+- **[HIGH]** (lines 16, 23, 35–36): **`FILE` is never canonicalised, so the lock name and the target file are derived from the raw env string.** `LANES_FILE=~/link-to-lanes.json` and `LANES_FILE=~/real/lanes.json` (same inode) produce two different `.lock` directories and bypass mutual exclusion entirely. Worse: `writeJsonAtomic` (line 36) `renameSync`s over `FILE`, which **replaces a symlink with a regular file** instead of writing through it — after the first write, the two spellings diverge into two independent registries, silently. The module already has `norm`; use it once at startup: `const FILE = norm(process.env.LANES_FILE || ...)` (and refuse if it doesn't resolve), so the lock and the target are always the same physical path.
+
+- **[HIGH]** (line 23): **The lock is created before the registry's parent directory is ensured — the tool is entirely unusable on a fresh host.** Nothing calls `mkdirSync(dirname(FILE), {recursive:true})`. `mkdirSync('~/Buildo-scratch/panel-tools/lanes.json.lock')` throws `ENOENT`, which line 25 rethrows because `ENOENT !== 'EEXIST'`, and line 73 maps to exit 3. Every command (`claim`, `release`, `list`, `check`, `owner`) fails until a human creates `~/Buildo-scratch/panel-tools/`. Fix: `mkdirSync(dirname(FILE), { recursive: true })` before the first lock attempt.
+
+- **[HIGH]** (lines 23–25): **The acquire path has no retry for the mkdir/pid-write window.** If the dir is removed between `mkdirSync` and `writeFileSync(`${lockDir}/pid`)` (exactly the reclaim race above), the write throws `ENOENT`, line 25 rethrows a non-`EEXIST` code, and the caller dies with exit 3 and a confusing message. Fix: catch `ENOENT` from the pid write, `rmSync` your own half-made dir, and `continue` the loop instead of throwing.
+
+- **[HIGH]** (lines 35–36, 42): **No `fsync` + fail-closed reader = one bad write bricks the registry permanently.** `writeFileSync(tmp)` + `renameSync` gives atomicity of the *name*, not durability of the *content*; after a power loss or kernel panic the rename can be visible while the new file's data is not, leaving a 0-byte `lanes.json`. `readJson` (line 35) only tolerates `ENOENT`, so a zero-length file throws → line 73 → exit 3 for **every** command with no automatic recovery, and the design explicitly forbids treating it as empty. Fix: `fsyncSync` the temp fd (and the directory) before/after the rename, keep the previous version as `${FILE}.bak` via a second rename, and add an explicit recovery path for unparsable input (quarantine to `${FILE}.corrupt.<ts>` and exit 3 with a clear message) instead of a dead end.
+
+---
+
+## MEDIUM
+
+- **[MEDIUM]** (lines 27–28): **The `continue` branches bypass the `waitMs` deadline.** Lines 27 and 28 `continue` *before* the `if (Date.now() - t0 > waitMs)` check on line 29, so a `rmSync` that keeps failing to change the outcome (or a lock that is continuously re-created with an unreadable pid) loops forever with no timeout. The documented 30 s bound is not a bound. Fix: hoist the deadline check to the top of the loop body, before any `continue`.
+
+- **[MEDIUM]** (lines 18, 26): **PID reuse turns a stale lock into a permanent one.** `alive(pid)` only asks "does some process with this number exist"; after a reboot or a crashed long-dead run, the pid is very likely recycled by an unrelated process, so the dead lock is never reclaimed and every writer burns the full 30 s and exits 3. Recovery requires a manual `rm -rf`. Fix: store a per-acquisition token (pid + process start time from `ps -o lstart`, or a boot id) and treat a mismatched token as stale. Relatedly, `parseInt` on a torn pid file yields a plausible-but-wrong pid (`'1'` from `'12345'`), which also reads as alive.
+
+- **[MEDIUM]** (lines 8–9, 73): **Lock timeout, write failure, and corrupt registry all exit 3.** The header contract says 3 = "registry unreadable". A caller that retries or alerts on 3 can't distinguish "someone else is holding the lock for 30 s" (transient, retry) from "the JSON is garbage" (permanent, needs a human). Fix: distinct exit codes (e.g. 4 = lock unavailable) or include a `kind` field on stderr.
+
+- **[MEDIUM]** (line 74): **`process.exit()` immediately after `console.log()` truncates output on a pipe.** Node's stdio to a pipe is asynchronous; `lane-claims.mjs list | jq` can see a truncated or empty document, and `check` can exit 1 with no JSON explaining why. Fix: set `process.exitCode = ...` and let the process drain.
+
+- **[MEDIUM]** (lines 39–40, 45): **Empty and root paths collapse to the same key, and relative paths are never absolutised.** `norm('/')` → `''` (the trailing-slash strip eats the root), so `claim L /` and `claim L ""` store the same value; and `overlaps('', '/anything')` is **true** (`b.startsWith('' + '/')`), so a stray `claim L ""` makes the empty path conflict with every absolute path in the registry for the whole TTL. Separately, a non-existent relative path (`claim L build/out` before `build/` exists) stays relative through `real()`'s fallback and can never overlap another lane's absolute claim. Fix: reject empty paths, `path.resolve()` every input before `norm`, and special-case `/` instead of mapping it to `''`.
+
+- **[MEDIUM]** (lines 43, 51, 63–64): **`ttlH` is not validated as finite.** `--ttl-h Infinity` (or `Number('1e400')`) passes `ttl > 0` on line 64, so line 51 computes `expires = Infinity`, which `JSON.stringify` serialises as `null` — the entry is then invisible to `readLive` (line 55, `null > now` is false) and to `mutate`'s prune, i.e. the claim is silently written and silently ignored. Programmatically, `claim(lane, paths, null)` gives `expires = now` and returns `{ok:true}` for a claim that vanishes on the next call. Fix: `Number.isFinite(ttlH) && ttlH > 0` in both the CLI and the exported function.
+
+- **[MEDIUM]** (lines 38–39, 45): **Re-normalising stored paths at compare time makes a claim's identity mutable.** The header says paths are resolved "at claim AND compare time", but that means the *stored* path is re-resolved when checking. If `/proj/link` was a real directory at claim time and later becomes a symlink, the stored claim silently retargets; conversely if the claimed path is deleted, `real()` falls back to the literal string, which no longer matches its previously-resolved form — so a stale claim stops blocking anything while still occupying the registry. Fix: store the canonical form once and compare canonically; only re-resolve the *incoming* path, and record the claim-time canonical string for diagnostics.
+
+- **[MEDIUM]** (line 39): **Case is not folded, so case-insensitive filesystems bypass overlap detection on macOS.** `realpathSync` does not canonicalise case on APFS/HFS+, so `/Users/me/Proj` and `/Users/me/proj` (same directory) compare unequal and both lanes get the claim. Fix: on `process.platform === 'darwin' || 'win32'`, fold case before comparison (or note the limitation loudly, since this module appears to target macOS paths).
+
+- **[MEDIUM]** (line 50): **Repeated `norm()` inside the dedupe predicate puts `realpath` syscalls in an O(n²) loop, inside the lock.** `mine.paths.some((x) => norm(x) === norm(p))` calls `norm` twice per element per path, each potentially 2–40 `realpathSync` syscalls; line 45 is a further triple loop doing the same. Under a shared registry this stretches lock hold time, which directly feeds the 30 s timeout and the reclaim races above. Fix: normalise the input paths and the stored paths exactly once per operation, then compare strings/sets.
+
+---
+
+## LOW / NIT
+
+- **[LOW]** (line 36): **Orphaned temp files and no directory fsync.** `${f}.tmp.${pid}` is never cleaned up if the process dies between write and rename, and the temp name is not unique across two concurrent runs of the same pid namespace (containers). Use `mkdtemp`-style uniqueness or unlink in a `finally`, and `fsync` the parent directory after the rename.
+
+- **[LOW]** (line 36): **`writeJsonAtomic` does not preserve mode/ownership.** Every rewrite creates a fresh file with the ambient umask, so a registry deliberately created `0600` silently becomes `0644` after the first `release`. Fix: `chmodSync` the temp file to the existing file's mode (or `openSync` with an explicit mode) before the rename.
+
+- **[LOW]** (line 23): **A plain file named `lanes.json.lock` is treated as a held lock and then deleted.** `mkdirSync` returns `EEXIST` for a regular file; the pid read fails, the 10 s mtime path fires, and `rmSync(..., {recursive:true, force:true})` removes it. Use `statSync` to confirm it's a directory before reclaiming, and refuse otherwise.
+
+- **[LOW]** (line 23): **If the pid write throws after `mkdirSync` succeeds, the directory leaks with no pid and is only reclaimable after 10 s**, during which every other writer stalls. Wrap the mkdir+writepid pair so a failed write removes the dir it just created.
+
+- **[LOW]** (lines 18, 27): **`alive(0)` and negative pids are meaningless.** `process.kill(0, 0)` addresses the caller's process group and succeeds; a pid file containing `0` or `-1` therefore reads as alive forever. Validate `pid > 1` before `kill`.
+
+- **[LOW]** (lines 26, 45): **No shape validation on registry entries.** A foreign writer (the session hook) that emits `{lane, path, expires}` or omits `paths` causes `c.paths.some` / `for (const q of c.paths)` to throw a `TypeError` inside the lock, surfacing as "registry unreadable" (exit 3) rather than a diagnosable schema error. Validate each entry and skip/report malformed ones.
+
+- **[LOW]** (line 45): **`clashes` can contain duplicates** when several stored paths in the same lane match; the `check`/`claim` output gets noisy and harder to assert on. Dedupe with a `Set` keyed on the lane/pair.
+
+- **[NIT]** (lines 62–63): **`--ttl-h` is spliced out of `a` for *every* command.** A path literally named `--ttl-h` cannot be claimed, and a duplicated flag leaves the second occurrence as a claimed path (`claim L p --ttl-h 5 --ttl-h 6` ends up claiming `--ttl-h` and `6`). Parse flags before positional args and only for `claim`.
+
+- **[NIT]** (line 50): **Re-claiming one path silently renews the whole lane** (`mine.expires` is set unconditionally at line 51), including paths whose TTL should have lapsed. `pathTs` is written at line 50 but never read anywhere in this file — either use it to expire per-path or drop it from the schema.
+
+- **[NIT]** (lines 33, 36, 74): **No signal handling.** Ctrl-C during `fn()` leaves the lock (recoverable via the dead-pid path, but only after a 30 s stall for the next writer) and leaves a `.tmp.<pid>` file behind. Install `process.on('SIGINT'/'SIGTERM')` to unlink the temp and release the lock, or restructure `mutate` so the temp is cleaned in a `finally`.
+
+- **[NIT]** (lines 33, 36): **`renameSync` over an open file fails on Windows** (`EPERM`/`EBUSY`) if a lock-free reader (`readLive`) has it open at that instant, producing a spurious exit 3. Fine if this is macOS-only as the header implies; worth a one-line comment if Windows is ever intended.
+
+---
+
+**Verdict.** The design instincts are right — a directory lock, atomic rename, fail-closed on unparsable JSON, and symmetry between claim-time and compare-time resolution are all the correct choices — but the implementation of the two things this lens cares about is not sound. The lock is not actually mutual exclusion: reclamation is a read-then-delete race (line 27), release is ownership-blind (line 33), and the acquire window can throw instead of retrying (line 23), so two writers can both enter a read-modify-write cycle whose whole-file rename silently drops one claim. The `realpath` story inherits the same optimism as the header comment: it handles symlinked ancestors correctly, but leaves `..` in the non-existent suffix unresolved (line 38), never folds case or absolutises relative inputs (lines 39–40), and never canonicalises the registry path itself (line 16), so the "symlinks cannot hide an overlap" guarantee (GD-1) is only true for paths that already exist and are spelled with absolute, on-disk casing. Add to that a lock directory that cannot be created on a fresh host, a durability story that bricks the registry on a single crash, and a `process.exit` after `console.log`, and the module is not yet safe to point at a shared panel-tools directory. The fixes are all small and local; I'd want lines 16, 23–33, and 38–40 reworked plus a two-process contention test (spawn N writers claiming distinct paths concurrently, assert all N survive) before this rides in the session hook's path.
+
+---
+⏱  110589ms (110.6s)
+📊 Tokens — total: 24178, input: 2524, output: 21654, reasoning: 17637
