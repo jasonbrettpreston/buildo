@@ -4,9 +4,11 @@ title: >-
   R14 Increment 1·B: the task-341 approval entered and its dependency order
   applied; task-342 answered (where the design-elements file comes from,
   measured size, produce now or not)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-R14'
 created_date: '2026-11-19T20:30:00Z'
+updated_date: '2026-11-19T20:32:00Z'
 labels:
   - follow-up
 milestone: m-1
@@ -43,3 +45,9 @@ Operator 2026-11-19, verbatim: "task 341 approved - also create a milestone task
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-R14, worktree /Users/brettpreston_macmini/Buildo-wt-r14, branch wf2/inc1b-r14), RR-0240
+<!-- SECTION:NOTES:END -->
