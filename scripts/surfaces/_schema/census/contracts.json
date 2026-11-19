@@ -22126,6 +22126,8 @@
         "zoning",
         "centroid",
         "outline",
+        "frontageStreet",
+        "hasFootprint",
         "page",
         "target",
         "layout",

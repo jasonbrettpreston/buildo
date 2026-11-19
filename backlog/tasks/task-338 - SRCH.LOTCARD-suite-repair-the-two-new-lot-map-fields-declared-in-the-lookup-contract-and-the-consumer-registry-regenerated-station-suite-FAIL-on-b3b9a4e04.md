@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LOTFIX'
 created_date: '2026-11-19T20:04:00Z'
-updated_date: '2026-11-19T20:05:00Z'
+updated_date: '2026-11-19T20:07:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -49,6 +49,12 @@ Grounded (station suite on the window-6 head b3b9a4e04, ~/Buildo-scratch/push-st
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: declare frontageStreet and hasFootprint in contract_parcels_lookup inputs.field_whitelist (descriptor + census mirror); surface-validate --check every arm ok. 2. AC2: regenerate consumer-registry.json with consumer-registry.mjs --write; --check clean; diff is the two rows. 3. AC3: typecheck rc=0, hooks green on the fix commit, no golden hand-edited, no behaviour change.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

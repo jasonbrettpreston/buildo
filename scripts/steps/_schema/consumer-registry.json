@@ -5213,9 +5213,25 @@
     },
     {
       "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "enrich_centreline",
+      "kind": "table",
+      "key": "parcels.primary_frontage_street_name",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
       "producer": "enrich_parcels",
       "kind": "table",
       "key": "parcels.zoning_zn_string",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/parcels/lot-map.ts",
+      "producer": "link_massing",
+      "kind": "table",
+      "key": "parcel_buildings.parcel_id",
       "value": "any",
       "source": "src_sql"
     },
