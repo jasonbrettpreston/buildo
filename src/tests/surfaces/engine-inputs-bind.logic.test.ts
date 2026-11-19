@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { NOT_IN_ENGINE_POPULATION, pageBindings } from '@/lib/admin/report-preview-live/project';
+import { NOT_IN_ENGINE_POPULATION, pageBindings } from '@/lib/report-projection/project';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- fixture JSON
 const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(process.cwd(), rel), 'utf8'));

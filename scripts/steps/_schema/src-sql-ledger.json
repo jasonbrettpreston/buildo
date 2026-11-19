@@ -1809,56 +1809,15 @@
     },
     "src/lib/admin/report-preview-live/stored-page.ts": {
       "class": "static",
-      "statements": 5,
+      "statements": 1,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
-        "0f97e5ecb408958d",
-        "83cc21ad31fee961",
-        "b1b705ee13f829a0",
-        "f4a6761c3d2146cb",
         "f5730dce47400ed9"
       ],
-      "reads": {
-        "bylaw_resolution_lot_stamps": [
-          "evaluator_version",
-          "lot_gate",
-          "parcel_id",
-          "table_version"
-        ],
-        "parcel_maxbld_scenarios": [
-          "building_type",
-          "catalogue_sha",
-          "content_sha",
-          "field_id",
-          "flags",
-          "increment",
-          "layer2_table_version",
-          "parcel_id",
-          "reason",
-          "settings_sha",
-          "status",
-          "switchboard_sha",
-          "switches",
-          "unit",
-          "value"
-        ],
-        "parcels": [
-          "address_number",
-          "heritage_dataset_version_when_enriched",
-          "id",
-          "is_corner_lot",
-          "is_heritage_designated",
-          "is_in_ravine_protection_area",
-          "linear_name_full",
-          "lot_size_sqm",
-          "parcel_id",
-          "ravine_dataset_version_when_enriched",
-          "zoning_zn_string"
-        ]
-      },
+      "reads": {},
       "writes": {}
     },
     "src/lib/admin/step-output-query.ts": {
@@ -3073,6 +3032,59 @@
           "violations_total"
         ]
       }
+    },
+    "src/lib/report-projection/read-stored.ts": {
+      "class": "static",
+      "statements": 4,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0f97e5ecb408958d",
+        "83cc21ad31fee961",
+        "b1b705ee13f829a0",
+        "f4a6761c3d2146cb"
+      ],
+      "reads": {
+        "bylaw_resolution_lot_stamps": [
+          "evaluator_version",
+          "lot_gate",
+          "parcel_id",
+          "table_version"
+        ],
+        "parcel_maxbld_scenarios": [
+          "building_type",
+          "catalogue_sha",
+          "content_sha",
+          "field_id",
+          "flags",
+          "increment",
+          "layer2_table_version",
+          "parcel_id",
+          "reason",
+          "settings_sha",
+          "status",
+          "switchboard_sha",
+          "switches",
+          "unit",
+          "value"
+        ],
+        "parcels": [
+          "address_number",
+          "heritage_dataset_version_when_enriched",
+          "id",
+          "is_corner_lot",
+          "is_heritage_designated",
+          "is_in_ravine_protection_area",
+          "linear_name_full",
+          "lot_size_sqm",
+          "parcel_id",
+          "ravine_dataset_version_when_enriched",
+          "zoning_zn_string"
+        ]
+      },
+      "writes": {}
     },
     "src/lib/stripe/parcel-checkout.ts": {
       "class": "static",

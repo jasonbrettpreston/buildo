@@ -5,8 +5,8 @@
 // operator D-7 a). The twin of scripts/lib/compute/maxbld/catalogue.js canonicalJson + sha256 + seedShas over the same committed seed files
 // (the scope.ts / storey-extract.js twin pattern): src/tests/admin-report-preview-live.logic.test.ts asserts both give the same hex.
 import crypto from 'node:crypto';
-import catalogue from '../../../../scripts/seeds/bylaw/layer3-catalogue.json';
-import switchboard from '../../../../scripts/seeds/bylaw/switchboard.json';
+import catalogue from '../../../scripts/seeds/bylaw/layer3-catalogue.json';
+import switchboard from '../../../scripts/seeds/bylaw/switchboard.json';
 
 /** Deterministic JSON: object keys sorted recursively, arrays keep their order, undefined is null (catalogue.js canonicalJson). */
 export function canonicalJson(x: unknown): string {

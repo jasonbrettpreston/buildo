@@ -12,16 +12,14 @@
 //   4. the lot stamp and the stored rows are read by that id; while parcel_maxbld_scenarios is absent (it lands at MB-35) the read refuses
 //      cleanly through to_regclass and every option takes the not-evaluated path ("a declared read that refuses cleanly", the MB-86 precedent).
 // No write, no usage_events, no openReport, no entitlement read (the preview is unmetered, plan section 4).
-import type { QueryResult, QueryResultRow } from 'pg';
 import { ParcelLookupQuerySchema } from '@/app/api/admin/parcels/lookup/types';
 import { logError, logInfo } from '@/lib/logger';
-import { CURRENT_SEED_SHAS, type SeedShas } from './seed-shas';
-import { pageBindings, projectStoredPage, type Lineage, type LotStamp, type PageResponse, type StoredRow } from './project';
+import type { SeedShas } from '@/lib/report-projection/seed-shas';
+import type { Lineage, PageResponse } from '@/lib/report-projection/project';
+import { readStoredPage, type Queryable } from '@/lib/report-projection/read-stored';
 
-/** A pg Pool or PoolClient: anything exposing parameterised `query`. */
-export interface Queryable {
-  query<R extends QueryResultRow = QueryResultRow>(queryText: string, values?: unknown[]): Promise<QueryResult<R>>;
-}
+// The pg handle type moved with the shared read (MB-44 W share-out); re-exported so the admin callers and tests keep their import.
+export type { Queryable };
 
 const TAG = '[admin/report-preview]';
 export const PREVIEW_SWITCH_KEY = 'maxbld_internal_preview_enabled';
@@ -49,23 +47,6 @@ export async function readPreviewSwitch(db: Queryable): Promise<boolean> {
   }
 }
 
-/** The parcels columns the page binds (declared `parcels:<column>` sources). The parcels read is ONE static statement (the src SQL ledger
- *  witnesses it; no interpolated text), so every bound column must be in its select list: a new parcels-sourced page field fails here at load. */
-const PARCEL_COLUMNS: string[] = [...new Set(pageBindings().flatMap((b) => (b.source.kind === 'parcels' ? [b.source.column] : [])))];
-// K2: a heritage / ravine yes-no column is NOT NULL DEFAULT false, so a never-enriched lot would read "No"; the lineage column nulls it (the page then shows the dash).
-const PARCEL_SQL = `SELECT id, parcel_id, zoning_zn_string, lot_size_sqm, is_corner_lot,
-       CASE WHEN heritage_dataset_version_when_enriched IS NULL THEN NULL ELSE is_heritage_designated END AS is_heritage_designated,
-       CASE WHEN ravine_dataset_version_when_enriched IS NULL THEN NULL ELSE is_in_ravine_protection_area END AS is_in_ravine_protection_area,
-       NULLIF(TRIM(COALESCE(address_number, '') || ' ' || COALESCE(linear_name_full, '')), '') AS address
-  FROM parcels WHERE parcel_id = $1 LIMIT 1`;
-const PARCEL_SELECTED = ['lot_size_sqm', 'is_corner_lot', 'is_heritage_designated', 'is_in_ravine_protection_area'];
-for (const c of PARCEL_COLUMNS) if (!PARCEL_SELECTED.includes(c)) throw new Error(`MB-93: page field source parcels:${c} is not in the static parcels read`);
-const STAMP_SQL = 'SELECT lot_gate, table_version, evaluator_version FROM bylaw_resolution_lot_stamps WHERE parcel_id = $1 LIMIT 1';
-const TABLE_SQL = "SELECT to_regclass('public.parcel_maxbld_scenarios') IS NOT NULL AS present";
-const ROWS_SQL = `SELECT building_type, field_id, increment, status, value, unit, reason, flags, content_sha,
-       catalogue_sha, switchboard_sha, settings_sha, layer2_table_version, switches
-  FROM parcel_maxbld_scenarios WHERE parcel_id = $1 ORDER BY building_type, field_id`;
-
 /**
  * One admin preview read. `uid` is the admin the page already verified (requireAdminPage); it is logged, never used for access.
  * Every attempt logs one `maxbld_internal_preview_view` line with its outcome; a thrown read is logged with logError and rethrown.
@@ -86,23 +67,12 @@ export async function storedPageResponse(db: Queryable, rawParcelId: unknown, op
     return { outcome: 'off' };
   }
   try {
-    const p = (await db.query<Record<string, unknown>>(PARCEL_SQL, [parcelId])).rows[0];
-    if (!p) {
+    const stored = await readStoredPage(db, parcelId, opts.current);
+    if (!stored) {
       log('not_found', { parcelId });
       return { outcome: 'not_found', parcelId };
     }
-    const id = Number(p.id);
-    const stamp = (await db.query<LotStamp>(STAMP_SQL, [id])).rows[0] ?? null;
-    const present = Boolean((await db.query<{ present: boolean }>(TABLE_SQL)).rows[0]?.present);
-    const rows = present ? (await db.query<StoredRow>(ROWS_SQL, [id])).rows : null;
-    const columns: Record<string, unknown> = {};
-    for (const c of PARCEL_COLUMNS) columns[c] = p[c];
-    const { response, lineage } = projectStoredPage({
-      lot: { id, parcel_id: String(p.parcel_id), address: (p.address as string | null) ?? null, zoning: (p.zoning_zn_string as string | null) ?? null, columns },
-      stamp,
-      rows,
-      current: opts.current ?? CURRENT_SEED_SHAS,
-    });
+    const { response, lineage } = stored;
     log('ok', {
       parcelId,
       freshness: lineage.freshness.verdict,

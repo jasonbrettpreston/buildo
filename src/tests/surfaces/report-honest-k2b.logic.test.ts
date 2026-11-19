@@ -7,9 +7,9 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { formatTextRule, TEXT_RULES } from '@/lib/admin/report-preview-live/format';
-import { CURRENT_SEED_SHAS } from '@/lib/admin/report-preview-live/seed-shas';
-import { pageBindings, projectStoredPage, type StoredRow } from '@/lib/admin/report-preview-live/project';
+import { formatTextRule, TEXT_RULES } from '@/lib/report-projection/format';
+import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
+import { pageBindings, projectStoredPage, type StoredRow } from '@/lib/report-projection/project';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- page table JSON
 const ROOT = process.cwd();

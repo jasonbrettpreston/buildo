@@ -16,9 +16,9 @@
 // - A value is sent only for a stored `computed` number (or a finite parcels number) that the FE-05 formatter accepts; anything else is left out
 //   and the page shows the ruled null dash. The admin lineage lists each bound field's true status and reason, so no dash is unexplained.
 // - Freshness (D-7 a): current / out of date (naming what moved and what is lost) / not stored / gated, and the implausible lot-size flag (fold 7).
-import reportPage from '../../../../scripts/surfaces/_schema/report-page.json';
-import decl from '../../../../scripts/surfaces/_schema/report-v2.decl.json';
-import presentation from '../../../../scripts/surfaces/_schema/report-presentation.json';
+import reportPage from '../../../scripts/surfaces/_schema/report-page.json';
+import decl from '../../../scripts/surfaces/_schema/report-v2.decl.json';
+import presentation from '../../../scripts/surfaces/_schema/report-presentation.json';
 import { CONFIDENCE_ORDER, PAGE_RULES, formatPageRule, formatTextRule, TEXT_RULES } from './format';
 import type { SeedShas } from './seed-shas';
 

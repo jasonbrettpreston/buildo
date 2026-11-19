@@ -18,9 +18,9 @@ import { createRequire } from 'node:module';
 
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
 
-import { formatPageRule, PAGE_RULES, SQFT_PER_M2, TEXT_RULES } from '@/lib/admin/report-preview-live/format';
-import { CURRENT_SEED_SHAS } from '@/lib/admin/report-preview-live/seed-shas';
-import { pageBindings, pageOptions, projectStoredPage, type StoredRow, type LotStamp } from '@/lib/admin/report-preview-live/project';
+import { formatPageRule, PAGE_RULES, SQFT_PER_M2, TEXT_RULES } from '@/lib/report-projection/format';
+import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
+import { pageBindings, pageOptions, projectStoredPage, type StoredRow, type LotStamp } from '@/lib/report-projection/project';
 import { readPreviewSwitch, storedPageResponse, PREVIEW_SWITCH_KEY, type Queryable } from '@/lib/admin/report-preview-live/stored-page';
 import { buildPage } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
@@ -32,6 +32,8 @@ const req = createRequire(path.join(ROOT, 'package.json'));
 const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 const readJsonl = (rel: string): Json[] => fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n').filter((l) => l.trim() !== '').map((l) => JSON.parse(l));
 const DIR = 'src/lib/admin/report-preview-live';
+// MB-44 W share-out (task-123): the pure core (project, format, seed-shas) and the stored read moved here, shared by the admin preview and the customer read module.
+const PROJ = 'src/lib/report-projection';
 const PAGE = readJson('scripts/surfaces/_schema/report-page.json');
 const PAGE_KEYS = new Set<string>((PAGE.sections as Json[]).flatMap((s) => [...(s.field ? [s.field] : []), ...((s.parts ?? []) as Json[]).filter((p) => p.field).map((p) => p.key)]));
 
@@ -133,9 +135,9 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', () 
     const lock = fs.readFileSync('src/tests/surfaces/report-no-maths.logic.test.ts', 'utf8');
     const dirs = JSON.parse(((/const DIRS = (\[[^\]]*\])/.exec(lock) as RegExpExecArray)[1] as string).replace(/'/g, '"')) as string[];
     expect(dirs.length).toBe(4);
-    for (const d of dirs) expect(DIR.startsWith(d)).toBe(false);
-    expect(fs.readFileSync(`${DIR}/format.ts`, 'utf8')).not.toMatch(/^\s*import\b|require\(/m);
-    expect(fs.existsSync(`${DIR}/format.ts`)).toBe(true);
+    for (const d of dirs) { expect(DIR.startsWith(d)).toBe(false); expect(PROJ.startsWith(d)).toBe(false); }
+    expect(fs.readFileSync(`${PROJ}/format.ts`, 'utf8')).not.toMatch(/^\s*import\b|require\(/m);
+    expect(fs.existsSync(`${PROJ}/format.ts`)).toBe(true);
   });
 });
 
@@ -443,7 +445,7 @@ describe('L1: the import fence (the producer stays admin-only and unmetered)', (
     expect(app.filter((f) => IMPORTS_PRODUCER.test(fs.readFileSync(f, 'utf8')))).toEqual([]);
   });
   it('the producer imports no meter, entitlement, usage or consumer lookup module, and writes nothing', () => {
-    for (const f of walk(DIR)) {
+    for (const f of [...walk(DIR), ...walk(PROJ)]) {
       const src = fs.readFileSync(f, 'utf8');
       const imports = [...src.matchAll(/from '([^']+)'/g)].map((m) => m[1] as string);
       for (const i of imports) expect(i, `${f} imports ${i}`).not.toMatch(/entitlement|usage|openReport|consumer-lookup|api\/parcels\/lookup|parcel-tool/);
