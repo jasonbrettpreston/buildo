@@ -11,6 +11,7 @@
   "select.none": "Choose a lot",
   "select.lot": "Continue with Lot {letter}",
   "select.label": "Open the report for the chosen lot",
+  "select.hint": "Pick a lot on the map or in the list.",
   "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
   "unlinked.heading": "No lot linked yet",
   "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",

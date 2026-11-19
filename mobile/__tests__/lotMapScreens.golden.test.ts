@@ -135,6 +135,22 @@ describe('the page rules (named cases)', () => {
       expect(cont.children[0]).toMatchObject({ children: [{ content: 'select.none' }] });
     }
   });
+  it('task-362 AC2, AC6 (choose-lot.html:278 `<button type="button" class="btn p" disabled aria-describedby="pick-hint">Choose a lot</button><p class="small" id="pick-hint">Pick a lot on the map or in the list.</p>`): the hint is the content key select.hint, drawn only while Choose a lot is disabled in the choose-a-lot state, and the button points at it', () => {
+    expect(LOT_MAP_SLICE.content['select.hint']).toBe('Pick a lot on the map or in the list.');
+    for (const k of ['multi_parcel_2', 'multi_parcel_3plus_none']) {
+      const t = lotMapProps(situation(k));
+      const hint = byTestID(t, 'parcel-lotmap-pick-hint')!;
+      expect(hint.children).toEqual([{ content: 'select.hint' }]);
+      expect(byTestID(t, 'parcel-lotmap-continue')!.props.accessibilityHint).toEqual({ content: 'select.hint' });
+      const col = nodes(t).find((n) => n.props.testID === 'parcel-lotmap-column')!;
+      const keys = col.children.filter(isNode).map((n) => n.props.key);
+      expect(keys.indexOf('pick-hint')).toBe(keys.indexOf('continue') + 1); // directly under the button, before the help row
+    }
+    for (const k of ['multi_parcel_2_lot_b', 'unlinked', 'unlinked_no_pin', 'intersection', 'too_many_lots', 'loading', 'rate_limited_zero']) {
+      const t = lotMapProps(situation(k));
+      expect([k, byTestID(t, 'parcel-lotmap-pick-hint'), byTestID(t, 'parcel-lotmap-continue')?.props.accessibilityHint]).toEqual([k, undefined, undefined]);
+    }
+  });
   it('a picked lot: its card checked, "Continue with Lot B", the route = the search page\'s unique route = the REPORT surface route', () => {
     const s = situation('multi_parcel_2_lot_b');
     expect([s.selectedParcelId, s.selectedLetter]).toEqual(['PCL-B2', 'B']);

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LOTMAP2'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:47:00Z'
+updated_date: '2026-11-19T23:00:00Z'
 labels:
   - S
   - plan:SRCH.LOTMAP
@@ -32,7 +32,7 @@ Cause (opened on head f65b64674): (1) mobile/src/lib/maxbldHelp.ts:19 `void Link
 Rule or design line: approved design Daylight v8 (~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md:347 C.11); the help topic names stay as built (lot_match, address_match are an orchestrator reading, task-343 line 7; not in this task).
 Reuse: the existing openHelp helper and the existing expo-web-browser use; no new component.
 
-Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBinding.tsx, scripts/surfaces/parcel_product/ (the lot map content file), mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts, docs/reports/lanes/
+Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBinding.tsx, mobile/src/constants/lotMap.ts, mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json, mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts, mobile/__tests__/maxbldHelp.test.ts, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/fixtures/surfaces/, src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map/, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, docs/reports/lanes/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -58,6 +58,17 @@ Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBindin
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC1) Red: change mobile/__tests__/maxbldHelp.test.ts to mock expo-web-browser and expect openBrowserAsync(helpUrl) and no Linking.openURL; then maxbldHelp.ts calls WebBrowser.openBrowserAsync (same pattern as useSubscribeCheckout.ts:61), rejection caught and logged not thrown.
+2. (AC2) Red: lotMapPage.behaviour case: hint 'Pick a lot on the map or in the list.' shown while Choose a lot is disabled, hidden after a card pick; golden-test pin quoting choose-lot.html:278. Then content key select.hint in mobile_parcel_disambiguation_map.content.json, hint node in LotMapBinding multi_parcel state when route is null.
+3. (AC3) Goldens by scripts only: lotmap-golden-capture --write then emit-mobile-surfaces --write; surface-validate S-sbind 425 to 426 as data with dated comment in surface-conformance and surface-validate tests.
+4. (AC4) npm run typecheck; mobile jest not run locally, UNVERIFIED unless CI/device.
+5. (AC5) git grep openHelp( callers: disambiguate.tsx (lot map) and parcel-tool/index.tsx (search) both pass open_help: openHelp; covered by the maxbldHelp case; Android Custom Tab has no Done button, system back is the expectation (close-out).
+6. (AC6) Pins name choose-lot.html:278; semi-question.html:130 busy is a semi page item already pinned at semiQuestionPage.behaviour.test.tsx:102 (not a lot map element).
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

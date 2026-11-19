@@ -57,6 +57,8 @@ export const LOT_MAP_LAYOUT = {
   semiSelect: 'mt-6 min-h-[48px] w-full rounded-xl',
   semiRetry: 'mt-3 min-h-[48px] w-full rounded-xl bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border',
   semiLoadingText: 'mt-6 text-base font-normal text-report-muted',
+  // task-362 (choose-lot.html:278 `<p class="small" id="pick-hint">`, 13px muted): the hint under the disabled Choose a lot button, centred like the help row.
+  pickHint: 'mt-2 w-full text-center text-xs font-normal text-report-soft',
   helpRow: 'mt-3 flex-row flex-wrap items-center justify-center gap-1',
   helpPrompt: 'text-xs font-normal text-report-soft',
   helpLink: S.report,

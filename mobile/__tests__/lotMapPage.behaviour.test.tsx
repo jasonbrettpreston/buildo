@@ -23,6 +23,9 @@ jest.mock('react-native-safe-area-context', () => {
   const { View } = jest.requireActual('react-native');
   return { SafeAreaView: View, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
 });
+// task-362 (AC1, AC5): the lot map page's Help link reaches the in-app browser sheet (small-pages-v8 choose-lot.html:279, search.html:235), not Linking.
+const mockOpenBrowser = jest.fn();
+jest.mock('expo-web-browser', () => ({ openBrowserAsync: (u: string) => mockOpenBrowser(u) }));
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
@@ -53,6 +56,7 @@ const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: j
 const parts = (name: string) => screen.UNSAFE_root.findAll((n: { props: Record<string, unknown>; type: unknown }) => n.props.rnmPart === name && typeof n.type !== 'string');
 
 beforeEach(() => {
+  mockOpenBrowser.mockReset().mockResolvedValue({ type: 'dismiss' });
   mockPush.mockClear(); mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true;
   mockCalls.length = 0;
   mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
@@ -153,5 +157,25 @@ describe('the real mount (disambiguate.tsx)', () => {
     render(<Page />);
     fireEvent.press(screen.getByTestId('parcel-lotmap-retry'));
     expect(refetch).toHaveBeenCalled();
+  });
+  it('task-362 AC2 (choose-lot.html:278 <p class="small" id="pick-hint">): "Pick a lot on the map or in the list." shows while Choose a lot is disabled and is gone after a pick', () => {
+    mockParams = { q: '5 Elm St' };
+    mockHook = { data: input('multi_parcel_2').data, isFetching: false, error: null, refetch: jest.fn() };
+    render(<Page />);
+    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityState).toMatchObject({ disabled: true });
+    expect(screen.getByTestId('parcel-lotmap-pick-hint')).toBeTruthy();
+    expect(screen.getByText('Pick a lot on the map or in the list.')).toBeTruthy();
+    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityHint).toBe('Pick a lot on the map or in the list.'); // aria-describedby="pick-hint"
+    fireEvent.press(screen.getByTestId('parcel-lotmap-card-PCL-A1'));
+    expect(screen.queryByTestId('parcel-lotmap-pick-hint')).toBeNull();
+    expect(screen.queryByText('Pick a lot on the map or in the list.')).toBeNull();
+    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityHint).toBeUndefined();
+  });
+  it('task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet with the lot_match topic and the typed address', () => {
+    mockParams = { q: '5 Elm St' };
+    mockHook = { data: input('multi_parcel_2').data, isFetching: false, error: null, refetch: jest.fn() };
+    render(<Page />);
+    fireEvent.press(screen.getByTestId('parcel-lotmap-help'));
+    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=lot_match&q=5%20Elm%20St']]);
   });
 });

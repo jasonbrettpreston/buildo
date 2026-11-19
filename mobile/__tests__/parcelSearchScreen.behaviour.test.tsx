@@ -11,6 +11,9 @@ import * as React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 const mockPush = jest.fn();
+// task-362 (AC5): the search page's "Report incorrect address match" reaches the in-app browser sheet, not Linking.
+const mockOpenBrowser = jest.fn();
+jest.mock('expo-web-browser', () => ({ openBrowserAsync: (u: string) => mockOpenBrowser(u) }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock('react-native-safe-area-context', () => {
   const { View } = jest.requireActual('react-native');
@@ -37,6 +40,7 @@ const type = (text: string) => { fireEvent.changeText(screen.getByTestId('parcel
 beforeEach(() => {
   jest.useFakeTimers();
   mockPush.mockClear();
+  mockOpenBrowser.mockReset().mockResolvedValue({ type: 'dismiss' });
   mockCalls.length = 0;
   mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
   useRecentSearchesStore.getState().reset();
@@ -136,5 +140,14 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     act(() => { jest.advanceTimersByTime(400); });
     expect(mockCalls).toContain('Bathurst St');
     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
+  });
+  it('task-362 AC5: the address list report link opens Help in the in-app browser sheet with the topic and the typed address (search.html:235)', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: list };
+    type('Bathurst St');
+    fireEvent.press(screen.getByTestId('parcel-search-report'));
+    expect(mockOpenBrowser).toHaveBeenCalledTimes(1);
+    expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=address_match&q=Bathurst%20St');
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });
