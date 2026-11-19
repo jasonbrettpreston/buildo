@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12129 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23728 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34003 chars, answer 3024 chars, 45s
+BUG severity=HIGH — Storage set-up, LOAD.1 "Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1)" — plan step 1 "For a held lot skip W and the compute entirely (page null, pageSource none, computeMs null)" — the plan adds behaviour no pasted clause or design line names (the pasted minimum design says only "send page null (meter stays semi_pending)") and removes LOAD.1's pick-time compute — limit step 1 to withholding the page and keep the pick compute, or attach an operator ruling that names the skip
+BUG severity=HIGH — AC#3 "src/tests/parcels-lookup-page.logic.test.ts T-B3 cases that served a page for an unsure lot are updated; the file is green through the hook" — plan findings "nothing to update there (to be re-verified)" — the AC is discharged only by an unverified premise and a TODO, and no plan step runs or updates parcels-lookup-page.logic.test.ts although the Files list names it — add a step that runs that file and updates T-B3, or record the verified result as the AC#3 evidence
+BUG severity=HIGH — AC#4 "useParcelLookup(parcelId, semi) sends semi=answered only when the route param is exactly 'answered' (case in mobile/__tests__/useParcelLookup.test.ts)" — plan step 3 "Client: useParcelLookup(parcelId, semi?) sends semi=answered only when the route param is exactly the string 'answered'" — the required case in mobile/__tests__/useParcelLookup.test.ts is not in the plan and no UNVERIFIED statement is committed — add the case and the UNVERIFIED line to step 3
+BUG severity=HIGH — AC#5 "The report screen renders the loading state, not the miss text, on the settled render that precedes the semi redirect (case in mobile/__tests__/semiQuestionPage.behaviour.test.tsx or a new report-screen test; same UNVERIFIED rule)" — plan step 4 "Report screen: while needsSemiQuestion is true (data settled, unsure, not answered) the screen shows the loading state, not the miss text" — behaviour only, no test file or case named — name the test file and case and mark UNVERIFIED if not run
+BUG severity=HIGH — AC#8 "End-to-end case: answer then Continue then the report screen renders the page and the lot is counted exactly once (route test with semi=answered plus the lotForm.ts:41 route string pinned)" — plan step 3 "semi-question.tsx call site unchanged" — no step pins the lotForm.ts:41 route string, so half the end-to-end case has no deliverable — add a test that pins reportRouteAfterAnswer's "?semi=answered"
+DEFER severity=MED — AC#6 "shows the page-null branch" — plan step 1 "The meter chain is unchanged: it still labels semi_pending (not_evaluated first, as today)" — with the hold placed before W and the meter line untouched, the AC#6 grep on semi_pending will not evidence the page-null branch, and npm run typecheck is nowhere in the plan — state in step 1 where the page-null assignment sits relative to the semi_pending label and add the typecheck and grep evidence step
+DEFER severity=LOW — plan step 3 "query key unchanged ['parcel-lookup', parcelId] (Spec 99 §4)" — Spec 99 §4 is not in the pasted context, cannot see it — paste Spec 99 §4 or drop the citation so the query-key claim is verifiable
+REJECT — Note on the flag, task scope "an unsure (possible semi) lot's report page is not sent until the semi question is answered" — the plan is accused of serving the page on a client-asserted ?semi=answered with no answer given — the review r1 CRITICAL was REJECTED with reason: "the flag can only make the caller's own lot count, never skip a count" and "nothing reads lotFormOverride; the semi calculation is 7.25, task-209", with the stored-answer requirement on task-209/213
+MET — AC#1 — plan step 2 — held lot, no flag, W returns a page, data.page null, meter semi_pending, openReport not called, window mocked to prove compute not called
+MET — AC#2 — plan step 2 — semi=answered returns the page and counts once, no evaluated option stays not_evaluated, second lookup already_counted
+MET — design of the fix (minimum), server — plan step 1 — "held = lotForm?.unsure === true && semi !== 'answered'", page null, meter stays semi_pending, meter rules unchanged
+MET — design of the fix (minimum), client hook — plan step 3 — semi=answered sent only when the route param is exactly 'answered'
+MET — design of the fix (minimum), report screen — plan step 4 — loading state while needsSemiQuestion is true and data is settled, redirect effect unchanged
+MET — AC#7 — plan step 3 — report screen passes its route param, semi-question.tsx call site unchanged, no other data.page null reader touched
+MET — RR-0182 "the semi calculation stays in Increment 7 (7.25)" — plan step 5 — the semi flag stays a client flag and the answer has no effect on the report until 7.25
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+
+---
+⏱  46758ms (46.8s)
+📊 Tokens — total: 22551, input: 12543, output: 10008, reasoning: 8778

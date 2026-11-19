@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10910 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22387 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33233 chars, answer 0 chars, 45s
+BUG severity=HIGH — plan step 3 "query key unchanged ['parcel-lookup', parcelId] (Spec 99 §4)" — semi is a request parameter that changes the response (page vs page null) but is kept out of the cache key, so the semi-question page's call (no semi, "semi-question.tsx call site unchanged") and the report screen's call (semi=answered) share one entry: the answered report can read the held page-null for up to staleTime 60 s, and a background refetch from either screen can overwrite a good page with the held null — add semi to the key, or invalidate ['parcel-lookup', parcelId] at reportRouteAfterAnswer / when the answer is stored, and pin that in the mobile test.
+DEFER severity=MED — plan step 1 "read lotForm first (one indexed read, independent of the page)" — a new read is put ahead of W, the compute and the meter with no stated failure behaviour or log, so a throwing read now fails the whole lookup before the meter decision and records nothing — state what a read failure does (log it and treat the lot as not held, or return the existing error path) so a held lot cannot be silently mislabelled or an error swallowed.
+DEFER severity=MED — plan step 4 "while needsSemiQuestion is true (data settled, unsure, not answered) the screen shows the loading state, not the miss text" — needsSemiQuestion is false exactly on the ?semi=answered render, so when that render still holds a settled page-null (previous data or the cache hit above) the miss text renders and the UX-2c flash is fixed only for the first visit — also gate the loading state on the query's fetching/previous-data state while semi=answered and data.page is null.
+DEFER severity=LOW — plan AC3 premise "nothing to update there (to be re-verified)" — an AC is closed on an unverified premise while AC3 requires "the file is green through the hook"; if any T-B3 case reaches unsure:true via a fixture the file goes red after the route change — run the file before lock and replace "to be re-verified" with the observed result.
+REJECT — plan step 1 "held = lotForm?.unsure === true && semi !== 'answered'" — a caller who appends semi=answered reads an unsure lot's page without answering, which looks like RC-2 narrowed rather than closed — accepted by the task design and the prior ruling: the same branch "counts once", so RR-0278 holds, and the flag moves to a stored answer when 7.25 lands (GAP.12, task-213).
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The semi flag is a response-affecting request parameter but the React Query key stays ['parcel-lookup', parcelId], so held and answered responses collide in cache and the report can be served or overwritten with page null.
+- The new pre-page lotForm read has no stated error handling or logging, so its failure now aborts the lookup before the meter decision.
+- The loading-state rule keys on needsSemiQuestion, which is false on the semi=answered render, so the miss text can still flash for a settled page-null there.
+
+---
+⏱  59273ms (59.3s)
+📊 Tokens — total: 23150, input: 12490, output: 10660, reasoning: 9950

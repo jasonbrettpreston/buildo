@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10621 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21167 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32022 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43048 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53471 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 63973 chars, answer 0 chars, 90s
+DEFER severity=MED — mobile/src/hooks/useParcelLookup.ts "queryKey: ['parcel-lookup', parcelId]," — the queryFn closes over semi but the key does not, so a mount at ?semi=answered over a fresh cache entry sends no flagged request, and if useSetParcelLookup's stored entry is missing or was fetched unflagged the answered lot renders the stored page null as the miss text and nothing counts, and semi-question.tsx is not in this diff so this cannot be seen. Fix: pin the stored entry to the flagged response, or add the semi sentinel to the key or invalidate it when the answer is stored.
+
+DEFER severity=MED — mobile/app/(app)/parcel-tool/[parcelId].tsx "data: data && !ask ? { page: data.page ?? null } : undefined, isError: isError && !ask" — a settled held 200 is mapped to the loading view with the error view suppressed, and "askedRef.current = true;" is set before "router.replace(semiQuestionRoute(parcelId));" with no reset, so a replace that does not land leaves a spinner with no retry and no question. Fix: reset askedRef and fall back to the error view with onRetry when the replace fails.
+
+DEFER severity=MED — src/app/api/parcels/lookup/route.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — the report screen's semi=answered load is now a counting request, so a lost response plus the hook's "retry: shouldRetryParcelLookup," resends the counted lookup, and whether that resend gets the page back on already_counted or is refused by the allowance check cannot be seen in this diff. Fix: assert the check order in the AC#2 second-lookup case, already_counted before the allowance check.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/[parcelId].tsx "if (isFetching || !ask || askedRef.current || !parcelId) return;" — isFetching covers background refetches, so a focus refetch of a cached held entry defers the question for the whole retry chain while the screen shows the new loading view. Fix: gate on settled data, or use isPending instead of isFetching.
+
+REJECT — src/app/api/parcels/lookup/route.ts "semi !== 'answered'" — looks like any caller can pass semi=answered and skip the hold. Handled per the task-319 ruling, the flag can only make the caller's own lot count, never skip a count, and parcelLookupParams forwards only the exact route sentinel.
+
+REJECT — mobile/app/(app)/parcel-tool/[parcelId].tsx "const semiParam = typeof semi === 'string' ? semi : undefined;" — a repeated param ?semi=answered&semi=answered looks like it could be read as answered. Handled, an array becomes undefined, which asks rather than skips.
+
+REJECT — src/app/api/parcels/lookup/route.ts "const lotForm = await readLotForm(parcelRef);" — moving the lot form read ahead of the page read looks like a new 500 on the hit path. Handled, only 42P01 degrades to null per the plan and any other error already threw to the same 500 catch, so it fails closed with no page and no count.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (lotForm/page/compute throws, client error view while ask), empty (null lotForm, page null, missing or stray semi), retry (shouldRetryParcelLookup on the newly counted request, refetch button), timeout (compute skipped for held lots, background refetch vs redirect), double-submit (askedRef single redirect, repeat semi=answered lookup), degrade (hold fails closed, no-lotForm fails open to prior behaviour), idempotency (meter keyed on lot per month, query-key dedup)   Unguarded: 4
+
+---
+⏱  103073ms (103.1s)
+📊 Tokens — total: 33323, input: 14576, output: 18747, reasoning: 17870

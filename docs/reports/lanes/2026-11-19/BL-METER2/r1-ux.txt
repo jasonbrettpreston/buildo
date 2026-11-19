@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11044 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23071 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34590 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45933 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 57227 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 68636 chars, answer 0 chars, 90s
+BUG severity=HIGH — plan item 3: "query key unchanged ['parcel-lookup', parcelId] (Spec 99 §4)" vs task: "a refresh of an answered lot keeps showing it" — the report screen's pre-answer held lookup caches page null under the same key the post-answer lookup uses, so on Continue the fresh cache is served with no fetch and the person who just answered sees the miss text ("No report for this lot yet.") and no report — invalidate or write the ['parcel-lookup', parcelId] entry when the answer is stored, before Continue, so the post-answer lookup runs with semi=answered.
+
+DEFER severity=MED — plan item 1: "For a held lot skip W and the compute entirely (page null, pageSource none, computeMs null)" vs design "Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1)" and RR-0178 "McStorage policy v2 computes at the search pick" — the person passes the pick loading screen for a lot whose compute the plan skips, then waits again after answering; cannot see whether the pick screen is skipped for a held lot — confirm the held pick does not sit on the loading animation with nothing to load.
+
+DEFER severity=MED — plan item 4: "while needsSemiQuestion is true (data settled, unsure, not answered) the screen shows the loading state, not the miss text" and "existing redirect effect unchanged" vs UX-2c "reportScreenState (ReportBinding.tsx:400-401) shows the miss text on that render" — if the client's unsure or the exact param value differs from the server's hold ("held = lotForm?.unsure === true && semi !== 'answered'"), the page is withheld while needsSemiQuestion is false, so the person gets the miss text and no redirect, with nothing to do — confirm both sides read the same unsure source and the same exact 'answered' value.
+
+DEFER severity=MED — RR-0176: "the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap)" — a held lot in the loading state has no report to load, so if the redirect does not fire the person watches an animation that can never show the open button — the held screen needs a visible way forward or a bounded wait; confirm the redirect always fires on the settled held render.
+
+DEFER severity=LOW — AC7: "no other reader of data.page null (ReportBinding.tsx:400-401 miss text) changes" and plan item 3: "semi-question.tsx call site unchanged" — the route now sends page null to every caller for an unsure lot, so any other screen the person reaches (the semi question page, the search hand-off) that read the page now has none; cannot see whether it shows report content or a no-report line — walk each call site once on a device.
+
+REJECT — "reportRouteAfterAnswer builds `?semi=answered`" and plan item 3 "sends semi=answered only when the route param is exactly the string 'answered'" — a person who returns to the report screen without the param (back, re-pick from search) is asked the semi question again and the report is withheld again — matches the approved minimum fix, which forwards only the report route param.
+
+REJECT — plan item 5: "the semi flag stays a client flag (answer has no effect on the report until 7.25)" — the person answers the question and the report is identical either way — matches RR-0182 "the semi calculation stays in Increment 7 (7.25)".
+
+VERDICT: FAIL on the person's experience
+States checked: first view on a held lot, loading (held), redirect to semi question, answered return, repeat visit with param (refresh), re-entry without param (back, re-pick), empty (unsure false, no report); error and offline not drawn by the change   Dead ends found: 2
+
+---
+⏱  97151ms (97.2s)
+📊 Tokens — total: 30145, input: 12506, output: 17639, reasoning: 16779

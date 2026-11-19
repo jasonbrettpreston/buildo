@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9940 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21141 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32910 chars, answer 0 chars, 45s
+BUG severity=HIGH — plan step 3 "query key unchanged ['parcel-lookup', parcelId] (Spec 99 §4)" — the response now varies on semi but the cache key does not: a held null cached under that key is served to the ?semi=answered mount for up to the 60 s staleTime, and a no-flag request still in flight when the answer lands writes null over the answered result, so the report screen shows the miss text and the redirect effect sends the user back to the question — key the query by semi or invalidate ['parcel-lookup', parcelId] when the answered result is stored, and cancel in-flight no-flag queries on answer.
+
+BUG severity=MED — plan step 1 "held = lotForm?.unsure === true && semi !== 'answered'" — a lotForm read that fails or returns empty evaluates held=false, so a possible-semi lot's page is built, sent and counted: the new gate fails open on the single read it depends on — treat a read error as held (or return a retryable failure with page null) and log it, reserving held=false for a confirmed row whose unsure is false.
+
+BUG severity=MED — plan step 4 "while needsSemiQuestion is true (data settled, unsure, not answered) the screen shows the loading state, not the miss text" — the branch keys on settled success data only, so an errored lookup (network, 500, time-out) has unsure undefined and falls through to the miss text, telling the user there is no report for a lot that may have one, with no retry — add an isError branch that renders the load-failure state (RR-0179) with a retry, and reach the miss text only on a successful null page.
+
+DEFER severity=MED — plan step 2 "a second lookup the same month is already_counted" — the plan proves only the sequential repeat; a double tap or a client retry after a time-out puts two semi=answered requests in flight and both can read "not counted" before either writes — cannot see the meter write: require it to be a conditional upsert on (parcel, month) with a unique key, and add the concurrent case to the gate test.
+
+DEFER severity=MED — plan step 5 "Not built: RC-1 evaluated-option gate (no owner)" — with semi=answered on an unsure lot that has no evaluated option the route returns the page while the meter stays not_evaluated, a page sent and not counted, and AC2 "a negative case with no evaluated option stays not_evaluated" pins that hole as correct — return page null when hasEvaluatedOption is false, or name the gap and its owner in the test title and the lane report, so a sent page is always a counted page.
+
+REJECT — plan step 1 "For a held lot skip W and the compute entirely (page null, pageSource none, computeMs null)" — a multi-second LOAD.1 compute still running for an unsure lot looked like a time-out and duplicate-work risk — the held path costs one indexed read, returns a stable null, and repeats before the answer are identical and uncounted.
+
+REJECT — review context "treating ?semi=answered as proof is safe today because the answer has no effect on the report" — a caller re-sending the flag to release the page looks like a bypass — until 7.25 the flag can only count the caller's own lot, the repeat is already_counted, and the stored-answer read is on task-213 (GAP.12).
+
+VERDICT: FAIL on error-path safety
+Paths walked: held lot lookup, semi=answered lookup, repeat lookup same month, concurrent or double semi=answered request, failed or empty lotForm read, deep link or refetch after answer, in-flight no-flag response after answer, report screen errored query, report screen settled loading state, retry after time-out   Unguarded: 3
+
+---
+⏱  50653ms (50.7s)
+📊 Tokens — total: 21856, input: 12507, output: 9349, reasoning: 8506

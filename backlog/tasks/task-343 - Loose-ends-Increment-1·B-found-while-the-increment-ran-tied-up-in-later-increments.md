@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T23:01:00Z'
+updated_date: '2026-11-19T23:21:00Z'
 labels:
   - S
   - loose-ends
@@ -147,4 +147,6 @@ BL-SEMI3 (task-361) loose ends 2026-11-19: (1) abort/cancel of the abandoned ans
 BL-LOTMAP2 (task-362) leftovers: (1) operator item: a Help sheet that fails to open shows nothing (design silent, RR-0233); (2) operator item: the Help row moves up one line when the pick hint goes after a pick; (3) mobile jest cases for task-362 (lotMapPage.behaviour, parcelSearchScreen.behaviour, maxbldHelp, lotMapScreens.golden) not run locally, CI owed; (4) mobile tsc fails here on missing modules in shared mobile/node_modules (environment).
 
 Dated note 2026-11-19 (M-246; loose ends from LOAD.1 stage 2, lane BL-LOAD1B, task-266; launch preconditions, NOT fixed in LOAD.1): (1) the core requires the 7.4 MB docs/reference/bylaw-layer2-input.json and ESM .mjs files; the Cloud Run image copies only public, standalone, static, migrations and scripts (Dockerfile:29-33) on node:20-alpine (Dockerfile:15): not proven to load there, to be proven before the web live switch flips (LS.12). (2) The compute is synchronous: it blocks one instance for 3.9 to 15.9 s per lot here (golden 25, no SQL; 33.6 s measured by the STORAGE lane) as built; no deadline, no single-flight. (3) The app retries a failed lookup three more times (mobile/src/hooks/useParcelLookup.ts:52-59), so one failing compute can run four times. (4) The platform request timeout is unknown (cloudbuild.yaml sets no --timeout). (5) Suggested, not built: a reason code logged for each null return of computeCustomerPageResponse, and the entry added to the growth-locked src SQL ledger interpolated set (30th file, scripts/analysis/src-sql-ledger.mjs) needs the operator's review.
+
+task-360 (BL-METER2) loose ends: (1) race UNVERIFIED: a no-flag lookup in flight from the semi question page resolving after Continue could overwrite the answered cache entry with page null (useParcelLookup key excludes semi); (2) RC-1 evaluated-option gate still has no owner; (3) mobile jest of useParcelLookup.test.ts and reportScreen.mount.behaviour.test.tsx not run locally: CI/device; (4) S-sbind pin reads 426, brief said 425.
 <!-- SECTION:NOTES:END -->

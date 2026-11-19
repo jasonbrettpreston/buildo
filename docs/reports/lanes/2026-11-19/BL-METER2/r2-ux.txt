@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10998 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22249 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33449 chars, answer 0 chars, 45s
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/[parcelId].tsx "isError: isError && !ask" vs design "the report screen shows the loading state while needsSemiQuestion is true and data is settled" — while the question is owed the person can only ever see the spinner, so a lookup that also failed can never surface the error state with Retry, only an indefinite loading screen — keep isError as it was and guard only the data branch with !ask, the design asks for the loading state on the settled held render, not for hiding failure.
+
+DEFER severity=MED — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return mockHook; } }));" vs design "After this task the report of such a lot appears only after the answer, and a refresh of an answered lot keeps showing it." — the answered state the person actually reaches after answering and tapping Continue is only exercised with a mocked hook, so if the semi page's stored answered result is not under the report key the person lands on "No report for this lot yet." and no test here would show it — pin the answer then Continue then report path (the lotForm.ts:41 route string plus the seeded lookup cache) as AC #8 asks.
+
+REJECT — src/app/api/parcels/lookup/route.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — it looks like a person can add semi=answered themselves and read the unsure lot's report without ever answering, and be counted for it — the design adjudicated exactly this: "treating ?semi=answered as proof is safe today because the answer has no effect on the report ... and the flag can only make the caller's own lot count, never skip a count."
+
+REJECT — mobile/src/hooks/useParcelLookup.ts "return semi === 'answered' ? { parcelId, semi: 'answered' } : { parcelId };" — a person whose param is "Answered" or "answered " with a stray space is sent back to the question they already answered — harmless and intended: design "a stray param asks, never skips: lotForm.ts needsSemiQuestion", and the same screen shows the loading state, never the miss text, before it asks again.
+
+REJECT — mobile/app/(app)/parcel-tool/[parcelId].tsx "data: data && !ask ? { page: data.page ?? null } : undefined" — the person briefly sees the loading copy for a lot that is not loading but about to be asked a question — matches approved text "#5 The report screen renders the loading state, not the miss text, on the settled render that precedes the semi redirect" and "No new string", so no copy departure.
+
+VERDICT: PASS on the person's experience
+States checked: first view/loading, held unsure lot settled (loading then redirect once), answered lot (semi=answered, report shown, no redirect), clear lot with page null (miss text), error, retry, offline/cached answered lot, back from report, repeat visit of an answered lot, stray semi param, semi question screen (cannot see)   Dead ends found: 0
+
+---
+⏱  48312ms (48.3s)
+📊 Tokens — total: 23266, input: 14575, output: 8691, reasoning: 7966

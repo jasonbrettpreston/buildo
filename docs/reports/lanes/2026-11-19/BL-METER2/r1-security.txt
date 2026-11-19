@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9896 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20264 chars, answer 313 chars, 30s
+Surfaces touched: money (report meter counting and charge), entitlements (post-answer report page, report metering); no auth, PII or admin surfaces in the pasted material.
+
+DEFER severity=MED — plan step 1 "held = lotForm?.unsure === true && semi !== 'answered'" — the hold is decided entirely by two request-supplied values, so a direct caller that omits lotForm or sends semi=answered still receives a possible-semi lot's page without the question, meaning the "anyone calling the lookup directly" half of RC-2 is not closed, only the count is guaranteed — fix: derive unsure from the stored lot record on the server (the indexed read already planned) and keep the client value only as the answer marker — rationale: no free page (the meter still counts a produced report) and the answer changes no report content until 7.25 (task-209), so blast radius is bounded, but the AC1 premise "not sent until the semi question is answered" only holds for a cooperating client.
+
+REJECT — review context "the flag is the task-319 stage 2 design, so it can only make a lot count, never skip the count" — sending ?semi=answered to skip the hold looks like an authz bypass on another user's report — it is not: the meter is keyed to the caller's own lot, the flag can only cause a count, never skip one, and nothing reads the answer until 7.25.
+
+REJECT — AC #2 "a second lookup the same month is already_counted" — replaying semi=answered to (re)fetch the page or charge twice — not exploitable: the second same-month lookup returns already_counted and the count is capped at one per lot per month.
+
+REJECT — plan step 3 "query key unchanged ['parcel-lookup', parcelId]" — one cache entry serves both the flagged (page present) and unflagged (page null) lookup, so an answered report could be read back to a call site that never sent the flag — not exploitable: the cache is per client session and holds only that user's own parcel data, the worst case is the 60 s stale null page already filed as SE-1 under another lens.
+
+DEFER severity=LOW — "mobile/src/lib/lotForm.ts:41 reportRouteAfterAnswer builds `?semi=answered`" — step 3 now forwards that marker to the server, so "this lot was flagged possible-semi and answered" lands in query strings, browser history, Referer and server access logs — rationale: low sensitivity today, but if a stored answer replaces the flag at 7.25 do not carry it in the URL; put it in the POST body.
+
+DEFER severity=LOW — review context "with semi=answered the existing branch counts once" — cannot see src/app/api/parcels/lookup/route.ts or the meter, so whether "once" is keyed on the session user or on request-supplied fields is unchecked; if request-supplied, replay under a fresh key re-counts — rationale: cannot see, needs the grounder to check the count key.
+
+VERDICT: PASS on exploitability
+Surfaces touched: money, entitlements
+
+---
+⏱  32605ms (32.6s)
+📊 Tokens — total: 18024, input: 12497, output: 5527, reasoning: 4847

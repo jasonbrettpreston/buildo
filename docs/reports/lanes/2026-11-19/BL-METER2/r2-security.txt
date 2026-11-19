@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10026 chars, answer 0 chars, 15s
+Surfaces: money, entitlements.
+
+REJECT — src/app/api/parcels/lookup/route.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — any direct API caller sends semi=answered and receives an unsure lot's page without having answered the question — it is not a free page: that is the counted branch (one count per lot per month, 403 REPORT_LIMIT_REACHED past allowance), unsure comes from the server's readLotForm and not from request text, so the flag can only make the caller's own lot count.
+REJECT — mobile/src/hooks/useParcelLookup.ts "return semi === 'answered' ? { parcelId, semi: 'answered' } : { parcelId };" — client normalisation looks like it is the gate, so a crafted deep link ?semi=answered would skip the question — the load-bearing check is server side on the raw query text ("semi !== 'answered'"), and a stray, absent or wrongly cased param only holds the page, it never unholds one.
+REJECT — src/app/api/parcels/lookup/route.ts "let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);" — semi=answered lets a caller force the multi-second one-lot compute on demand, a cheap CPU amplification — pre-existing and unchanged: before this hunk any stored miss (clear lot included) already reached computeCustomerPageResponse, and the parcels-lookup:${uid} 30/min limit still bounds it.
+DEFER severity=LOW — src/app/api/parcels/lookup/route.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — the semi question gate is answered by request text, so it is forgeable by anyone who can call the lookup — harmless only while nothing reads the answer (IN-2, semi calculation 7.25/task-209); the dated note must make GAP.12/task-213 read a stored answer, and this flag must not become the entitlement proof then.
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts "expect(meterLog()).toMatchObject({ meter: 'semi_pending', lot_form_unsure: true, semi_answered: false })" — the meter's derivation of semi_answered and the per-user uid, the two things replay and double-charge turn on, are outside the pasted hunk — cannot see; the added cases assert counted once and already_counted on a second lookup the same month, which is the property a replay would break.
+
+VERDICT: PASS on exploitability
+Surfaces touched: money, entitlements
+
+---
+⏱  27354ms (27.4s)
+📊 Tokens — total: 19140, input: 14566, output: 4574, reasoning: 4000

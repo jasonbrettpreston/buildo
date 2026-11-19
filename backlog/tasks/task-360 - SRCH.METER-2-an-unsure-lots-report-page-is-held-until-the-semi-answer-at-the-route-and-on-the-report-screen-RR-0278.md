@@ -3,11 +3,11 @@ id: TASK-360
 title: >-
   SRCH.METER-2 an unsure lot's report page is held until the semi answer, at the
   route and on the report screen (RR-0278)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-METER2'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:19:00Z'
+updated_date: '2026-11-19T23:21:00Z'
 labels:
   - S
   - plan:SRCH.METER
@@ -17,6 +17,7 @@ dependencies:
   - TASK-319
 references:
   - docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md
+  - docs/reports/lanes/2026-11-19/BL-METER2/REPORT.md
 type: build
 project: McIncrement
 ordinal: 60012
@@ -45,14 +46,14 @@ Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 In src/tests/parcel-lookup-gate.infra.test.ts a red-first case: an unsure lot, no semi flag, producer returns a page, parcel_tool holder: response data.page is null and the log meter is semi_pending and openReport is not called; red before the route change, green after (pre-commit related run)
-- [ ] #2 Same file: the same lot with semi=answered returns the page and counts once (meter counted; the stub parcel carries a costMenu line with a numeric total so hasEvaluatedOption holds, and a negative case with no evaluated option stays not_evaluated, the ruled 1 b 2 a); a second lookup the same month is already_counted
-- [ ] #3 src/tests/parcels-lookup-page.logic.test.ts T-B3 cases that served a page for an unsure lot are updated; the file is green through the hook
+- [x] #1 In src/tests/parcel-lookup-gate.infra.test.ts a red-first case: an unsure lot, no semi flag, producer returns a page, parcel_tool holder: response data.page is null and the log meter is semi_pending and openReport is not called; red before the route change, green after (pre-commit related run)
+- [x] #2 Same file: the same lot with semi=answered returns the page and counts once (meter counted; the stub parcel carries a costMenu line with a numeric total so hasEvaluatedOption holds, and a negative case with no evaluated option stays not_evaluated, the ruled 1 b 2 a); a second lookup the same month is already_counted
+- [x] #3 src/tests/parcels-lookup-page.logic.test.ts T-B3 cases that served a page for an unsure lot are updated; the file is green through the hook
 - [ ] #4 useParcelLookup(parcelId, semi) sends semi=answered only when the route param is exactly 'answered' (case in mobile/__tests__/useParcelLookup.test.ts); mobile jest is not run by the hook (task-343 line 10), so say UNVERIFIED unless run on CI or device
 - [ ] #5 The report screen renders the loading state, not the miss text, on the settled render that precedes the semi redirect (case in mobile/__tests__/semiQuestionPage.behaviour.test.tsx or a new report-screen test; same UNVERIFIED rule)
-- [ ] #6 npm run typecheck is clean; git grep -n "semi_pending" src/app/api/parcels/lookup/route.ts shows the page-null branch
-- [ ] #7 git grep -n "useParcelLookup(" mobile prints every call site; each passes the semi param only where it has the route param (report screen); no other reader of data.page null (ReportBinding.tsx:400-401 miss text) changes
-- [ ] #8 End-to-end case: answer then Continue then the report screen renders the page and the lot is counted exactly once (route test with semi=answered plus the lotForm.ts:41 route string pinned)
+- [x] #6 npm run typecheck is clean; git grep -n "semi_pending" src/app/api/parcels/lookup/route.ts shows the page-null branch
+- [x] #7 git grep -n "useParcelLookup(" mobile prints every call site; each passes the semi param only where it has the route param (report screen); no other reader of data.page null (ReportBinding.tsx:400-401 miss text) changes
+- [x] #8 End-to-end case: answer then Continue then the report screen renders the page and the lot is counted exactly once (route test with semi=answered plus the lotForm.ts:41 route string pinned)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -79,4 +80,12 @@ Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.t
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-METER2, worktree /Users/brettpreston_macmini/Buildo-wt-meter2, branch wf1/inc1b-meter2), RR-0240
+
+AC4 and AC5 left unchecked: mobile jest cases written (useParcelLookup.test.ts parcelLookupParams; reportScreen.mount.behaviour.test.tsx held report screen) but not run by the hook (task-343 line 10): UNVERIFIED until CI or device. AC8 route half proven by the hook run, mobile half UNVERIFIED.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed e37346052: route holds an unsure lot's page until semi=answered (stored read and compute both skipped, meter semi_pending); report screen forwards its semi param and shows loading, not the miss text, while the question is owed. Hook result: Test Files 4 passed, Tests 129 passed, GATE OK. RC-1 left, no owner.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12144 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24000 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35457 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 47382 chars, answer 0 chars, 60s
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts "vi.mocked(readCustomerPageResponse).mockResolvedValue(null);" — inside the clear-lot case this sets a persistent implementation (not `Once`), unlike its neighbours "vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true })", so it can leak into later cases in the same describe (e.g. "a report produced for the found lot counts once") if the file resets with clearAllMocks rather than resetAllMocks — use `mockResolvedValueOnce(null)` to match the local pattern.
+
+DEFER severity=NIT — src/tests/parcel-lookup-gate.infra.test.ts "vi.mocked(readCustomerPageResponse).mockResolvedValue(null);" — in the held-lot case the mock is dead setup: a held (unsure, unanswered) lot never calls readCustomerPageResponse, which the very next asserts confirm ("expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();") — drop the stub or add an explicit `expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();` to give it purpose.
+
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts "vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));" — replaces the whole module with one export, whereas the neighbour report-page mock preserves the originals ("return { ...a, readCustomerPageResponse: vi.fn(a.readCustomerPageResponse) };"); if report-compute has any other export consumed in this import graph it silently becomes undefined — mirror the async-orig spread pattern.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  64805ms (64.8s)
+📊 Tokens — total: 27266, input: 14559, output: 12707, reasoning: 12289
