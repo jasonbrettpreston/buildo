@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SEMI2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:14:00Z'
+updated_date: '2026-11-19T21:17:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -104,4 +104,6 @@ Recommendation: approve the mock as drawn and answer the four small questions in
 2026-11-19 taken on the board at lane launch (lane BL-SEMI2, worktree /Users/brettpreston_macmini/Buildo-wt-semi1b2, branch wf1/inc1b-semi2), RR-0240
 
 Stage 2 (lane BL-SEMI2, MF-93): semi page built to the approved mock with the heading spanning the cards; meter flag semi=answered wired (contract, route, client). Red proven in red.out; green commit follows. Mobile jest cases written, not run (UNVERIFIED).
+
+Output review r2 (meter lens): two findings kept and fixed (page left during the Continue fetch, replace outside the try); the rest rejected with lines in TRIAGE.md.
 <!-- SECTION:NOTES:END -->

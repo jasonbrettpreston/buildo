@@ -30,6 +30,8 @@ export default function SemiQuestionScreen() {
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<unknown>(null);
   const submittingRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const situation = useMemo(
     () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected }),
@@ -49,16 +51,20 @@ export default function SemiQuestionScreen() {
   const continueToReport = useCallback(async (route: string) => {
     if (submittingRef.current) return;
     submittingRef.current = true;
+    let result;
     try {
-      const result = await fetchParcelLookup({ parcelId: id, semi: 'answered' });
-      queryClient.setQueryData(['parcel-lookup', id], result);
-      redirectedRef.current = true;
-      router.replace(route);
+      result = await fetchParcelLookup({ parcelId: id, semi: 'answered' });
     } catch (e) {
-      setSubmitError(e);
+      if (mountedRef.current) setSubmitError(e);
+      return;
     } finally {
       submittingRef.current = false;
     }
+    // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
+    if (!mountedRef.current) return;
+    queryClient.setQueryData(['parcel-lookup', id], result);
+    redirectedRef.current = true;
+    router.replace(route);
   }, [id, queryClient, router]);
 
   const actions = useMemo(
