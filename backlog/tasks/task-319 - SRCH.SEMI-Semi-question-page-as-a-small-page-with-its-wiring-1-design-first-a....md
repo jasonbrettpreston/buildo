@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SEMI2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:58:00Z'
+updated_date: '2026-11-19T21:03:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -82,11 +82,7 @@ element ids delivered: D.9, D.10
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Ground: read the built semi page (SemiQuestionBinding.tsx, semiQuestion.ts, content and descriptor files), the v8 template and its build (choose-lot, choose-lot-states) and the Daylight token table.
-2. Element table D.1-D.7 (content key, v8 component, token), appended to the context file; review round r1 (review mode); TRIAGE.md; fold KEPT.
-3. Mock: lane-dir build-semi.mjs reads the v8 CSS and icon paths read-only and writes semi-question.html (default, picked, five D.7 states), copy verbatim from the built content file only.
-4. DELTA.md: built vs mock, files, goldens, MF row, meter call site for RR-0278 with file:line.
-5. Docs commit with the context file, reports, mock and task file (no code); task notes Grounded and Recommendation; status WAITS.
+1. Pre-register: MF-93 and round 196 claimed in the id ledger, prereg-MF-93-1.json committed alone, queue row MF-93 with status line and dated notes on MF-84 and MF-92. 2. Failing tests first (route cases in parcel-lookup-gate.infra.test.ts, semi-question-design.logic.test.ts on the goldens, mobile jest cases), reviewed at plan altitude in the context file. 3. write_scope declared in the context file. 4. Repo review round on the plan (r1-plan.txt), triaged in TRIAGE.md. 5. Grounder: every claim in the fold re-executed on this head. 6. Build red first (red.out) then green through the real hooks (commit.out): page to the approved mock with the heading spanning the cards width, meter flag semi=answered in contract, route and client. 7. Output review (meter counts once, only for a produced report), panel record docs/reports/panels/MF-93.json with the work. 8. McFrontend row MF-93 first (step 1).
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
