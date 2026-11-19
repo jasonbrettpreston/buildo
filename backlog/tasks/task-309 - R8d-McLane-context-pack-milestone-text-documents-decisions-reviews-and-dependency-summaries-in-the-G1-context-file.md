@@ -54,3 +54,8 @@ Operator 2026-11-19 (RR-0235): "We need them linked with all the relevant data -
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8d in ~/Buildo-wt-r8d, branch wf2/r8d-context-pack)
 <!-- SECTION:NOTES:END -->
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: add ## Milestone (milestone file body by the task milestone id, whole body incl. Documents when present; absent milestone = one stated line). 2. AC2: add ## Document sections: links from documentation: and the milestone Documents section; #L range, section title, or first 12 KB; 12 KB per block, 120 KB total, cap stated in file; each block headed path + line range and ended (read the rest at <path>); unreadable file = stated line, never a crash. 3. AC3: add ## Decisions naming this task: every decision whose title/body names task id, any plan:<id> label or ROW id (word-bounded) or an RR id the task body names, with quote and cite. 4. AC4: add ## Prior reviews and lane reports (reviews/<id>/*.md except the file written; lanes/*/*/REPORT.md naming the id; task and each dependency) and ## Dependencies (id, title, status, Final Summary section). 5. AC5: red = commit attempt with only src/tests/backlog/backlog-brief-context.logic.test.ts + task + context file; plan review r1 triaged before code; green commit through hooks; one added line in the printed brief; one output review round.
+<!-- SECTION:PLAN:END -->
