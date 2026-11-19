@@ -333,6 +333,22 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I 
     expect(r.status).toBe(200);
     expect(inserts()).toHaveLength(0);
   });
+  it('the parcelId path of an unsure lot counts nothing either (same lot, same rule on both entrances)', async () => {
+    vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
+    const r = await call('parcelId=P-45');
+    expect(r.status).toBe(200);
+    expect(meterCalls()).toBe(0);
+    expect(meterLog()).toMatchObject({ meter: 'semi_pending' });
+  });
+  it('a lot map response (multi_parcel) never asks the producer and never reaches the meter', async () => {
+    vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [{ parcelId: 'A', address: '5 Elm St' }, { parcelId: 'B', address: '5 Elm St' }], truncated: false, resolution: 'multi_parcel', lotMap: { kind: 'multi_parcel', parcelIds: ['A', 'B'], num: '5', truncated: false } } as never);
+    vi.mocked(resolveLotMap).mockResolvedValue({ address: null, pin: { lat: 43.6, lng: -79.4 }, truncated: false, lots: [], neighbours: [] });
+    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(r.status).toBe(200);
+    expect(r.body.data?.parcel).toBeNull();
+    expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();
+    expect(meterCalls()).toBe(0);
+  });
   it('candidates, a miss, a lot map and a dangling id never ask the producer and never reach the meter (page null, parcel null)', async () => {
     vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [{ parcelId: 'A', address: 'a' }, { parcelId: 'B', address: 'b' }], truncated: false, resolution: 'text_candidates', lotMap: null } as never);
     expect((await call('q=x%20st')).body.data?.parcel).toBeNull();
