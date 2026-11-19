@@ -37,6 +37,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
 9. **Library Docs:** Use the Context7 MCP server (`resolve-library-id` → `get-library-docs`) before writing code against any external library. Prevents hallucinated API calls against outdated versions.
 10. **Spec-First, No Assumptions:** Before explaining or acting on how any script, chain, migration, schema, or table behaves — including debugging and ops, not just planning — READ the governing spec first (find it via `docs/specs/00-architecture/00_system_map.md`). Cite it. Never infer behavior from a name or guess; if no spec exists, read the code. An unverified claim about system behavior is a defect.
 11. **Execution Provider (Spec 08 §B/§C):** resolve `EXECUTION_PROVIDER` at task start (`--provider` > env > default `claude`), **state it in the Active Task header and in the Green Light evidence**. `deepseek` routes the *execution* step only (code/tests written by `node scripts/deepseek-exec.js --brief <file> --provider=deepseek`; the brief's front matter declares `write_scope`; registry files in `exec-policy.json` `registry_reserved` are edited by the orchestrator at landing, never by the engine). Downgrade to `claude` **with a logged reason** whenever the engine is unavailable, the step is a verification seat, or the step touches money/auth/PII/migrations. Verification seats never route to a tool-less substrate, under any provider value.
+12. **Task First (McLane, Spec 137 McLane note 2026-11-19):** The task is read before any brief, plan or status answer (`backlog task view task-N --plain`); briefs come from `scripts/analysis/backlog-brief.mjs`; a code commit names its task (`Task: task-N`, scripts/hooks/check-backlog-task.mjs).
 
 ### Execution Order Constraint
 > 1. Read `docs/specs/00_engineering_standards.md` AND the relevant feature spec before generating the Active Task.
@@ -165,3 +166,27 @@ Every new spec MUST include `## Operating Boundaries` (Target Files, Out-of-Scop
 | Admin UI + API route (same admin-only feature) | **Cross-Domain** | `.claude/domain-crossdomain.md` |
 | API route consumed by the Expo app | **Cross-Domain** | `.claude/domain-crossdomain.md` |
 | Doc-only changes, specs, reports | Either — follow whichever domain the documented work belongs to | — |
+
+<!-- BACKLOG.MD GUIDELINES START -->
+<!-- backlog.md-instructions-version: 1.55.3 -->
+<CRITICAL_INSTRUCTION>
+
+## Backlog.md Workflow
+
+This project uses Backlog.md for task and project management.
+
+**At the beginning of each conversation in this project, run `backlog instructions overview` before answering or taking action. Re-read it only if you have not read it yet in the current conversation.**
+
+Use the overview to decide whether to search, read, create, or update Backlog tasks.
+
+Before task lifecycle actions, read the matching detailed guide:
+- `backlog instructions task-creation` before creating or splitting tasks
+- `backlog instructions task-execution` before planning, changing status or assignee, adding a plan or implementation notes, or implementing task work
+- `backlog instructions task-finalization` before checking acceptance criteria, writing final summaries, or moving tasks to terminal statuses
+
+Use `backlog <command> --help` before running unfamiliar commands. Help shows options, fields, and examples.
+
+Do not edit Backlog task, draft, document, decision, or milestone markdown files directly. Use the `backlog` CLI so metadata, relationships, and history stay consistent.
+
+</CRITICAL_INSTRUCTION>
+<!-- BACKLOG.MD GUIDELINES END -->
