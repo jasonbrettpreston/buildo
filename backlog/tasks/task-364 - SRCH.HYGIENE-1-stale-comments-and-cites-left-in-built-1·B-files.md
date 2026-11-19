@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HYG'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:23:00Z'
+updated_date: '2026-11-19T23:26:00Z'
 labels:
   - S
   - plan:SRCH.HYGIENE
@@ -58,8 +58,16 @@ Also (review r1 LOW, KEPT): correct the stale cites on records by dated note, no
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: reword src/app/api/parcels/entitlement/route.ts header line 6 (comment only): the reports-left line of the app search page reads it; no allowance number. 2. AC2: reword mobile/src/lib/lotForm.ts header lines 8-9: the answer travels as a route param (OVERRIDE_PARAM) and the report does not apply it yet (7.25, task-209); no reader of lotFormEffective outside lotForm.ts. 3. AC4: reword mobile/app/(app)/parcel-tool/semi-question.tsx header line 9: opening reads the report's own cache entry (no extra request); Continue issues the one answered lookup. 4. Records cites: dated note by CLI on task-343 and task-348 (and a lane-report cite note) giving the cites on this head; no rewrite. 5. AC3: git diff filtered to comment lines only; npm run typecheck; checks before/after; plan and output compliance lens, adjudicated in TRIAGE.md. Red-first does not apply (comment-only).
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-HYG, worktree /Users/brettpreston_macmini/Buildo-wt-hyg, branch wf1/inc1b-hyg), RR-0240
+
+Comment lines changed in entitlement/route.ts:6, lotForm.ts:8-9, semi-question.tsx:9; diff proof: only // lines in source files; typecheck clean. Red-first not applicable (comment only).
 <!-- SECTION:NOTES:END -->

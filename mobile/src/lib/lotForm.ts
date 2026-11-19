@@ -5,7 +5,8 @@
 // SEMI-B · the pure rules of the pre-report semi question (operator "semi all y" and "semi ask a", 2026-11-13). The server names the lot's form and an
 // `unsure` flag (the view parcel_lot_form, migration 320); the app asks the one question ONLY when unsure is true; clear semis and clear detached lots
 // go straight to the report. The answer is the owner's input `lot_form_user_override` (O-12: the pipeline never reads it; there is no server store):
-// it travels as a route param to the report, which applies it through `lotFormEffective` (P5.7). "Not sure" writes nothing: the semi view is the
+// it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`
+// (P5.7); the effect is the semi calculation of 7.25 (task-209). "Not sure" writes nothing: the semi view is the
 // detected form, and the post-report "This isn't a semi" correction stays.
 import type { ConsumerParcelLookupResult, ParcelLotForm } from '@/lib/schemas';
 

@@ -3,7 +3,7 @@
 //
 // GET /api/parcels/entitlement — the caller's parcel_tool plan and this billing month's report counts (MF-45, the
 // entitlement read contract; operator 2026-11-11 "4. will we need to build this later.. we have the tokens now").
-// Read by the search page line "N of 20 reports left" and the Account page. A display, never a gate: the lookup's
+// Read by the app search page's reports-left line (the left count, the allowance and the served reset label) and the Account page. A display, never a gate: the lookup's
 // 403 REPORT_LIMIT_REACHED is the gate. Every value is server-computed (FE-05).
 //
 // Auth: getCurrentUserContext FIRST await (Spec 90 §11; route-guard '/api/parcels'). No entitlement guard: it reports

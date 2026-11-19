@@ -6,7 +6,7 @@
 // Surface S-093 `mobile_parcel_semi_question` — the one-question page before the report (operator "semi ask a", 2026-11-13), on the MF-53 "choose your
 // lot" pattern (disambiguate.tsx). The mount file of a converted surface: hooks, the redirect effect and the callbacks only; everything it shows comes
 // from the binding (SemiQuestionBinding.tsx), the shared renderer and the content file. It reads the SAME query as the report (['parcel-lookup', id]),
-// so it makes no extra request. Nothing is selected at open. The answer is the owner's lot_form_user_override, carried to the report as a route param
+// so opening it adds no lookup of its own; the one lookup it issues is the answered one on Continue (below). Nothing is selected at open. The answer is the owner's lot_form_user_override, carried to the report as a route param
 // (lotForm.ts; O-12: the pipeline never reads it, no server store); Continue REPLACES this page with the report so Back from the report never returns here.
 // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first fetches the same lookup with the one flag `semi: 'answered'`, which lets the server count
 // the lot once its report is produced, stores the result in the report's cache entry, then opens the report. A failed fetch shows the built error
