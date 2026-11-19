@@ -3,9 +3,11 @@ id: TASK-345
 title: >-
   CHK.6a Fill report-design-elements.json from elements-by-inc.json and land
   RS-12 (one lane, 117 elements)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-CHK6A'
 created_date: '2026-11-19T20:36:00Z'
+updated_date: '2026-11-19T20:41:00Z'
 labels:
   - F
   - plan:CHK.6
@@ -50,3 +52,9 @@ Scope now: produce the design-elements file CHK.6 (task-67) needs, and land RS-1
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-CHK6A, worktree /Users/brettpreston_macmini/Buildo-wt-chk6a, branch wf1/inc1b-chk6a), RR-0240
+<!-- SECTION:NOTES:END -->
