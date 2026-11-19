@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -43,7 +43,7 @@
                 "component": "View",
                 "props": {
                   "key": "pill",
-                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
@@ -52,7 +52,7 @@
                       "key": "search-icon",
                       "icon": "Search",
                       "size": 16,
-                      "color": "#a1a1aa"
+                      "color": "#4d4841"
                     },
                     "children": []
                   },
@@ -61,7 +61,7 @@
                     "props": {
                       "key": "query",
                       "testID": "parcel-lotmap-query",
-                      "className": "flex-1 px-2 py-3 text-base font-normal text-zinc-100",
+                      "className": "flex-1 px-2 py-3 text-base font-normal text-report-ink",
                       "numberOfLines": 1
                     },
                     "children": [
@@ -93,7 +93,7 @@
                           "key": "clear-icon",
                           "icon": "X",
                           "size": 16,
-                          "color": "#a1a1aa"
+                          "color": "#4d4841"
                         },
                         "children": []
                       }
@@ -113,7 +113,7 @@
                     "component": "Text",
                     "props": {
                       "key": "heading",
-                      "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400",
+                      "className": "text-base font-semibold text-report-ink",
                       "role": "header"
                     },
                     "children": [
@@ -136,7 +136,7 @@
                 "props": {
                   "key": "map-frame",
                   "testID": "parcel-lotmap-map",
-                  "className": "mt-4 w-full overflow-hidden rounded-xl border border-[#2a2a2c]",
+                  "className": "mt-4 w-full overflow-hidden rounded-[20px] bg-report-card shadow-report-card",
                   "importantForAccessibility": "no-hide-descendants",
                   "accessibilityElementsHidden": true
                 },
@@ -151,7 +151,7 @@
                       "initialRegion": {
                         "derived": "region"
                       },
-                      "userInterfaceStyle": "dark",
+                      "userInterfaceStyle": "light",
                       "customMapStyle": {
                         "derived": "map_style"
                       },
@@ -170,7 +170,7 @@
                           "holes": {
                             "derived": "lots.0.polygons.0.holes"
                           },
-                          "strokeColor": "#f59e0b",
+                          "strokeColor": "#9a4a07",
                           "fillColor": "rgba(245,158,11,0.12)",
                           "strokeWidth": 2,
                           "tappable": true,
@@ -193,7 +193,7 @@
                           "holes": {
                             "derived": "lots.1.polygons.0.holes"
                           },
-                          "strokeColor": "#f59e0b",
+                          "strokeColor": "#9a4a07",
                           "fillColor": "rgba(245,158,11,0.12)",
                           "strokeWidth": 2,
                           "tappable": true,
@@ -226,14 +226,14 @@
                             "component": "View",
                             "props": {
                               "key": "marker-chip",
-                              "className": "min-w-[24px] items-center rounded-full bg-[#18181b] px-2 py-1 border border-[#f59e0b]"
+                              "className": "min-w-[24px] items-center rounded-full bg-report-card px-2 py-1 border border-report-amber-ink"
                             },
                             "children": [
                               {
                                 "component": "Text",
                                 "props": {
                                   "key": "marker-letter",
-                                  "className": "text-xs font-bold text-[#f59e0b]"
+                                  "className": "text-xs font-bold text-report-amber-ink"
                                 },
                                 "children": [
                                   {
@@ -265,14 +265,14 @@
                             "component": "View",
                             "props": {
                               "key": "marker-chip",
-                              "className": "min-w-[24px] items-center rounded-full bg-[#18181b] px-2 py-1 border border-[#f59e0b]"
+                              "className": "min-w-[24px] items-center rounded-full bg-report-card px-2 py-1 border border-report-amber-ink"
                             },
                             "children": [
                               {
                                 "component": "Text",
                                 "props": {
                                   "key": "marker-letter",
-                                  "className": "text-xs font-bold text-[#f59e0b]"
+                                  "className": "text-xs font-bold text-report-amber-ink"
                                 },
                                 "children": [
                                   {
@@ -291,7 +291,7 @@
                           "coordinate": {
                             "derived": "pin"
                           },
-                          "pinColor": "#f4f4f5",
+                          "pinColor": "#1d1b18",
                           "tracksViewChanges": false
                         },
                         "children": []
@@ -306,7 +306,7 @@
                   "key": "card-PCL-A1",
                   "testID": "parcel-lotmap-card-PCL-A1",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -355,7 +355,7 @@
                             "component": "Text",
                             "props": {
                               "key": "card-title",
-                              "className": "font-mono text-[11px] font-semibold uppercase tracking-widest text-[#f59e0b]"
+                              "className": "text-[12px] font-semibold uppercase tracking-wider text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -374,33 +374,11 @@
                             "component": "Text",
                             "props": {
                               "key": "card-area",
-                              "className": "mt-1 text-base font-semibold text-zinc-100"
+                              "className": "mt-1 text-base font-semibold text-report-ink"
                             },
                             "children": [
                               {
                                 "contract": "contract_parcels_lookup.map.lots.0.area"
-                              }
-                            ]
-                          },
-                          {
-                            "component": "Text",
-                            "props": {
-                              "key": "card-facts",
-                              "className": "mt-1 text-sm font-normal text-zinc-400"
-                            },
-                            "children": [
-                              {
-                                "text": {
-                                  "content": "lot.facts"
-                                },
-                                "vars": {
-                                  "frontage": {
-                                    "contract": "contract_parcels_lookup.map.lots.0.frontage"
-                                  },
-                                  "zoning": {
-                                    "contract": "contract_parcels_lookup.map.lots.0.zoning"
-                                  }
-                                }
                               }
                             ]
                           }
@@ -416,7 +394,7 @@
                   "key": "card-PCL-B2",
                   "testID": "parcel-lotmap-card-PCL-B2",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -465,7 +443,7 @@
                             "component": "Text",
                             "props": {
                               "key": "card-title",
-                              "className": "font-mono text-[11px] font-semibold uppercase tracking-widest text-[#f59e0b]"
+                              "className": "text-[12px] font-semibold uppercase tracking-wider text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -484,33 +462,11 @@
                             "component": "Text",
                             "props": {
                               "key": "card-area",
-                              "className": "mt-1 text-base font-semibold text-zinc-100"
+                              "className": "mt-1 text-base font-semibold text-report-ink"
                             },
                             "children": [
                               {
                                 "contract": "contract_parcels_lookup.map.lots.1.area"
-                              }
-                            ]
-                          },
-                          {
-                            "component": "Text",
-                            "props": {
-                              "key": "card-facts",
-                              "className": "mt-1 text-sm font-normal text-zinc-400"
-                            },
-                            "children": [
-                              {
-                                "text": {
-                                  "content": "lot.facts"
-                                },
-                                "vars": {
-                                  "frontage": {
-                                    "contract": "contract_parcels_lookup.map.lots.1.frontage"
-                                  },
-                                  "zoning": {
-                                    "content": "lot.null"
-                                  }
-                                }
                               }
                             ]
                           }
@@ -542,7 +498,7 @@
                     "component": "Text",
                     "props": {
                       "key": "continue-text",
-                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
+                      "className": "text-base font-bold text-report-ink"
                     },
                     "children": [
                       {
@@ -560,7 +516,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "d2532a599443bebd",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "24b9ca4fc1e5eae9",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "33e4e665d090b1b5"
     }
   }

@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -50,7 +50,7 @@
                     "component": "Text",
                     "props": {
                       "key": "wordmark",
-                      "className": "text-2xl font-bold tracking-tight text-zinc-100",
+                      "className": "text-2xl font-bold tracking-tight text-report-ink",
                       "role": "header"
                     },
                     "children": [
@@ -61,7 +61,7 @@
                         "component": "Text",
                         "props": {
                           "key": "wordmark-accent",
-                          "className": "text-2xl font-bold tracking-tight text-[#f59e0b]"
+                          "className": "text-2xl font-bold tracking-tight text-report-amber-ink"
                         },
                         "children": [
                           {
@@ -75,7 +75,7 @@
                     "component": "Text",
                     "props": {
                       "key": "tagline",
-                      "className": "mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                      "className": "mt-1 text-[12px] font-semibold uppercase tracking-widest text-report-muted"
                     },
                     "children": [
                       {
@@ -89,7 +89,7 @@
                 "component": "View",
                 "props": {
                   "key": "pill",
-                  "className": "flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                  "className": "flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
@@ -98,7 +98,7 @@
                       "key": "search-icon",
                       "icon": "Search",
                       "size": 18,
-                      "color": "#71717a"
+                      "color": "#4d4841"
                     },
                     "children": []
                   },
@@ -107,7 +107,7 @@
                     "props": {
                       "key": "input",
                       "testID": "parcel-search-input",
-                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]",
+                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft",
                       "value": {
                         "derived": "input"
                       },
@@ -117,7 +117,7 @@
                       "placeholder": {
                         "content": "search.input.placeholder"
                       },
-                      "placeholderTextColor": "#52525b",
+                      "placeholderTextColor": "#4d4841",
                       "autoCapitalize": "none",
                       "autoCorrect": false,
                       "returnKeyType": "search",
@@ -129,35 +129,6 @@
                       }
                     },
                     "children": []
-                  },
-                  {
-                    "component": "Button",
-                    "props": {
-                      "key": "account",
-                      "testID": "parcel-search-account",
-                      "variant": "default",
-                      "size": "icon",
-                      "className": "min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary",
-                      "accessibilityRole": "button",
-                      "accessibilityLabel": {
-                        "content": "search.account.label"
-                      },
-                      "onPress": {
-                        "action": "open_account"
-                      }
-                    },
-                    "children": [
-                      {
-                        "component": "Icon",
-                        "props": {
-                          "key": "account-icon",
-                          "icon": "User",
-                          "size": 16,
-                          "color": "#472a00"
-                        },
-                        "children": []
-                      }
-                    ]
                   }
                 ]
               },
@@ -166,7 +137,7 @@
                 "props": {
                   "key": "legal",
                   "testID": "parcel-search-legal",
-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-zinc-400"
+                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
                 },
                 "children": [
                   {
@@ -180,15 +151,15 @@
                   "key": "entitlement",
                   "testID": "parcel-search-entitlement",
                   "icon": "Lock",
-                  "iconClassName": "text-[#f59e0b]",
-                  "className": "mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]"
+                  "iconClassName": "text-report-amber-ink",
+                  "className": "mt-3 rounded-xl bg-report-card border-report-button-border"
                 },
                 "children": [
                   {
                     "component": "AlertDescription",
                     "props": {
                       "key": "entitlement-text",
-                      "className": "text-xs font-normal text-zinc-300"
+                      "className": "text-sm font-normal text-report-muted"
                     },
                     "children": [
                       {
@@ -206,7 +177,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ffcb8625e03b1c7b",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "c4d024b19bc6e0c6",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "94299a5118def243"
     }
   }

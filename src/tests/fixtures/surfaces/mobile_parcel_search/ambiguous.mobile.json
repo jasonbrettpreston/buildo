@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -50,7 +50,7 @@
                     "component": "Text",
                     "props": {
                       "key": "wordmark",
-                      "className": "text-2xl font-bold tracking-tight text-zinc-100",
+                      "className": "text-2xl font-bold tracking-tight text-report-ink",
                       "role": "header"
                     },
                     "children": [
@@ -61,7 +61,7 @@
                         "component": "Text",
                         "props": {
                           "key": "wordmark-accent",
-                          "className": "text-2xl font-bold tracking-tight text-[#f59e0b]"
+                          "className": "text-2xl font-bold tracking-tight text-report-amber-ink"
                         },
                         "children": [
                           {
@@ -75,7 +75,7 @@
                     "component": "Text",
                     "props": {
                       "key": "tagline",
-                      "className": "mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                      "className": "mt-1 text-[12px] font-semibold uppercase tracking-widest text-report-muted"
                     },
                     "children": [
                       {
@@ -89,7 +89,7 @@
                 "component": "View",
                 "props": {
                   "key": "pill",
-                  "className": "flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                  "className": "flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
@@ -98,7 +98,7 @@
                       "key": "search-icon",
                       "icon": "Search",
                       "size": 18,
-                      "color": "#71717a"
+                      "color": "#4d4841"
                     },
                     "children": []
                   },
@@ -107,7 +107,7 @@
                     "props": {
                       "key": "input",
                       "testID": "parcel-search-input",
-                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]",
+                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft",
                       "value": {
                         "derived": "input"
                       },
@@ -117,7 +117,7 @@
                       "placeholder": {
                         "content": "search.input.placeholder"
                       },
-                      "placeholderTextColor": "#52525b",
+                      "placeholderTextColor": "#4d4841",
                       "autoCapitalize": "none",
                       "autoCorrect": false,
                       "returnKeyType": "search",
@@ -129,35 +129,6 @@
                       }
                     },
                     "children": []
-                  },
-                  {
-                    "component": "Button",
-                    "props": {
-                      "key": "account",
-                      "testID": "parcel-search-account",
-                      "variant": "default",
-                      "size": "icon",
-                      "className": "min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary",
-                      "accessibilityRole": "button",
-                      "accessibilityLabel": {
-                        "content": "search.account.label"
-                      },
-                      "onPress": {
-                        "action": "open_account"
-                      }
-                    },
-                    "children": [
-                      {
-                        "component": "Icon",
-                        "props": {
-                          "key": "account-icon",
-                          "icon": "User",
-                          "size": 16,
-                          "color": "#472a00"
-                        },
-                        "children": []
-                      }
-                    ]
                   }
                 ]
               },
@@ -166,7 +137,7 @@
                 "props": {
                   "key": "legal",
                   "testID": "parcel-search-legal",
-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-zinc-400"
+                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
                 },
                 "children": [
                   {
@@ -187,7 +158,7 @@
                       "key": "chip-Queen & Spadina",
                       "testID": "parcel-search-suggestion-Queen & Spadina",
                       "variant": "outline",
-                      "className": "min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                      "className": "min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky",
                       "accessibilityRole": "button",
                       "accessibilityLabel": {
                         "text": {
@@ -211,7 +182,7 @@
                         "component": "Text",
                         "props": {
                           "key": "chip-text",
-                          "className": "font-mono text-xs font-normal text-zinc-400"
+                          "className": "text-[15px] font-semibold text-report-ink"
                         },
                         "children": [
                           {
@@ -235,7 +206,7 @@
                     "component": "Text",
                     "props": {
                       "key": "rail",
-                      "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
+                      "className": "text-[12px] font-semibold uppercase tracking-wider text-report-soft"
                     },
                     "children": [
                       {
@@ -247,7 +218,7 @@
                     "component": "Text",
                     "props": {
                       "key": "badge",
-                      "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-[#f59e0b]"
+                      "className": "text-[12px] font-semibold uppercase tracking-wider text-report-amber-ink"
                     },
                     "children": [
                       {
@@ -270,7 +241,7 @@
                   "key": "100100",
                   "testID": "parcel-candidate-100100",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -297,14 +268,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100100-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -316,7 +287,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100100-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -328,7 +299,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100100-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -340,7 +311,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100100-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -352,7 +323,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100100-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -372,7 +343,7 @@
                   "key": "100102",
                   "testID": "parcel-candidate-100102",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-primary dark:border-primary active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": true
@@ -399,14 +370,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100102-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -418,7 +389,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100102-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -430,7 +401,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100102-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -442,7 +413,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100102-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -454,7 +425,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100102-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -470,7 +441,7 @@
                           "key": "check",
                           "icon": "Check",
                           "size": 16,
-                          "color": "#f59e0b"
+                          "color": "#1d1b18"
                         },
                         "children": []
                       }
@@ -484,7 +455,7 @@
                   "key": "100104",
                   "testID": "parcel-candidate-100104",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -511,14 +482,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100104-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -530,7 +501,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100104-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -542,7 +513,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100104-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -554,7 +525,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100104-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -566,7 +537,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100104-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -586,7 +557,7 @@
                   "key": "100001",
                   "testID": "parcel-candidate-100001",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -613,14 +584,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100001-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -632,7 +603,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100001-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -644,7 +615,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100001-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -656,7 +627,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100001-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -668,7 +639,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100001-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -688,7 +659,7 @@
                   "key": "100010",
                   "testID": "parcel-candidate-100010",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -715,14 +686,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100010-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -734,7 +705,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100010-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -746,7 +717,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100010-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -758,7 +729,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100010-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -770,7 +741,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100010-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -790,7 +761,7 @@
                   "key": "100106",
                   "testID": "parcel-candidate-100106",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -817,14 +788,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100106-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -836,7 +807,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100106-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -848,7 +819,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100106-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -860,7 +831,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100106-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -872,7 +843,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100106-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -892,7 +863,7 @@
                   "key": "100108",
                   "testID": "parcel-candidate-100108",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -919,14 +890,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100108-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -938,7 +909,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100108-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -950,7 +921,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100108-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -962,7 +933,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100108-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -974,7 +945,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100108-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -994,7 +965,7 @@
                   "key": "100110",
                   "testID": "parcel-candidate-100110",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -1021,14 +992,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100110-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -1040,7 +1011,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100110-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1052,7 +1023,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100110-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1064,7 +1035,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100110-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1076,7 +1047,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100110-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1096,7 +1067,7 @@
                   "key": "100112",
                   "testID": "parcel-candidate-100112",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -1123,14 +1094,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100112-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -1142,7 +1113,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100112-1",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1154,7 +1125,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100112-2",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1166,7 +1137,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100112-3",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1178,7 +1149,7 @@
                             "component": "Text",
                             "props": {
                               "key": "100112-4",
-                              "className": "text-base font-normal text-zinc-100"
+                              "className": "text-base font-normal text-report-ink"
                             },
                             "children": [
                               {
@@ -1198,7 +1169,7 @@
                   "key": "100114",
                   "testID": "parcel-candidate-100114",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -1225,14 +1196,14 @@
                         "component": "Text",
                         "props": {
                           "key": "card-text",
-                          "className": "flex-1 text-base font-normal text-zinc-100"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
                             "component": "Text",
                             "props": {
                               "key": "100114-0",
-                              "className": "text-base font-semibold text-[#f59e0b]"
+                              "className": "text-base font-semibold text-report-amber-ink"
                             },
                             "children": [
                               {
@@ -1271,7 +1242,7 @@
                     "component": "Text",
                     "props": {
                       "key": "select-text",
-                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
+                      "className": "text-base font-bold text-report-ink"
                     },
                     "children": [
                       {
@@ -1285,7 +1256,7 @@
                       "key": "select-icon",
                       "icon": "ArrowRight",
                       "size": 16,
-                      "color": "#472a00"
+                      "color": "#1d1b18"
                     },
                     "children": []
                   }
@@ -1312,7 +1283,7 @@
                     "component": "Text",
                     "props": {
                       "key": "report-text",
-                      "className": "text-xs font-normal text-zinc-400 underline"
+                      "className": "text-xs font-semibold text-report-ink underline"
                     },
                     "children": [
                       {
@@ -1327,7 +1298,7 @@
                 "props": {
                   "key": "refine",
                   "testID": "parcel-search-refine",
-                  "className": "mt-3 text-center text-xs font-normal text-zinc-400"
+                  "className": "mt-3 text-center text-xs font-normal text-report-soft"
                 },
                 "children": [
                   {
@@ -1343,7 +1314,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ffcb8625e03b1c7b",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "c4d024b19bc6e0c6",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "94299a5118def243"
     }
   }

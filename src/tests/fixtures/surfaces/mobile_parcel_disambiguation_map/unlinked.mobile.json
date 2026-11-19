@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -43,7 +43,7 @@
                 "component": "View",
                 "props": {
                   "key": "pill",
-                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
@@ -52,7 +52,7 @@
                       "key": "search-icon",
                       "icon": "Search",
                       "size": 16,
-                      "color": "#a1a1aa"
+                      "color": "#4d4841"
                     },
                     "children": []
                   },
@@ -61,7 +61,7 @@
                     "props": {
                       "key": "query",
                       "testID": "parcel-lotmap-query",
-                      "className": "flex-1 px-2 py-3 text-base font-normal text-zinc-100",
+                      "className": "flex-1 px-2 py-3 text-base font-normal text-report-ink",
                       "numberOfLines": 1
                     },
                     "children": [
@@ -93,7 +93,7 @@
                           "key": "clear-icon",
                           "icon": "X",
                           "size": 16,
-                          "color": "#a1a1aa"
+                          "color": "#4d4841"
                         },
                         "children": []
                       }
@@ -107,15 +107,15 @@
                   "key": "unlinked",
                   "testID": "parcel-lotmap-unlinked",
                   "icon": "MapPin",
-                  "iconClassName": "text-zinc-400",
-                  "className": "mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]"
+                  "iconClassName": "text-report-muted",
+                  "className": "mt-3 rounded-xl bg-report-card border-report-button-border"
                 },
                 "children": [
                   {
                     "component": "Text",
                     "props": {
                       "key": "unlinked-heading",
-                      "className": "text-base font-semibold text-zinc-100",
+                      "className": "text-base font-semibold text-report-ink",
                       "role": "header"
                     },
                     "children": [
@@ -128,7 +128,7 @@
                     "component": "AlertDescription",
                     "props": {
                       "key": "unlinked-text",
-                      "className": "text-sm font-normal text-zinc-300"
+                      "className": "text-sm font-normal text-report-muted"
                     },
                     "children": [
                       {
@@ -150,7 +150,7 @@
                 "props": {
                   "key": "map-frame",
                   "testID": "parcel-lotmap-map",
-                  "className": "mt-4 w-full overflow-hidden rounded-xl border border-[#2a2a2c]",
+                  "className": "mt-4 w-full overflow-hidden rounded-[20px] bg-report-card shadow-report-card",
                   "importantForAccessibility": "no-hide-descendants",
                   "accessibilityElementsHidden": true
                 },
@@ -165,7 +165,7 @@
                       "initialRegion": {
                         "derived": "region"
                       },
-                      "userInterfaceStyle": "dark",
+                      "userInterfaceStyle": "light",
                       "customMapStyle": {
                         "derived": "map_style"
                       },
@@ -175,94 +175,16 @@
                     },
                     "children": [
                       {
-                        "component": "Polygon",
-                        "props": {
-                          "key": "neighbour-PCL-N1-0",
-                          "coordinates": {
-                            "derived": "neighbours.0.polygons.0.coordinates"
-                          },
-                          "holes": {
-                            "derived": "neighbours.0.polygons.0.holes"
-                          },
-                          "strokeColor": "#52525b",
-                          "fillColor": "rgba(161,161,170,0.08)",
-                          "strokeWidth": 1,
-                          "tappable": true,
-                          "onPress": {
-                            "action": "select",
-                            "parcelId": {
-                              "contract": "contract_parcels_lookup.map.neighbours.0.parcelId"
-                            }
-                          }
-                        },
-                        "children": []
-                      },
-                      {
-                        "component": "Polygon",
-                        "props": {
-                          "key": "neighbour-PCL-N2-0",
-                          "coordinates": {
-                            "derived": "neighbours.1.polygons.0.coordinates"
-                          },
-                          "holes": {
-                            "derived": "neighbours.1.polygons.0.holes"
-                          },
-                          "strokeColor": "#52525b",
-                          "fillColor": "rgba(161,161,170,0.08)",
-                          "strokeWidth": 1,
-                          "tappable": true,
-                          "onPress": {
-                            "action": "select",
-                            "parcelId": {
-                              "contract": "contract_parcels_lookup.map.neighbours.1.parcelId"
-                            }
-                          }
-                        },
-                        "children": []
-                      },
-                      {
                         "component": "Marker",
                         "props": {
                           "key": "pin",
                           "coordinate": {
                             "derived": "pin"
                           },
-                          "pinColor": "#f4f4f5",
+                          "pinColor": "#1d1b18",
                           "tracksViewChanges": false
                         },
                         "children": []
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "component": "Button",
-                "props": {
-                  "key": "continue",
-                  "testID": "parcel-lotmap-continue",
-                  "variant": "default",
-                  "className": "mt-4 min-h-[44px] w-full rounded-xl",
-                  "disabled": true,
-                  "accessibilityRole": "button",
-                  "accessibilityState": {
-                    "disabled": true
-                  },
-                  "accessibilityLabel": {
-                    "content": "select.label"
-                  },
-                  "onPress": null
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "continue-text",
-                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
-                    },
-                    "children": [
-                      {
-                        "content": "select.none"
                       }
                     ]
                   }
@@ -276,7 +198,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "d2532a599443bebd",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "24b9ca4fc1e5eae9",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "33e4e665d090b1b5"
     }
   }

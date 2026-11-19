@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -44,7 +44,7 @@
                 "component": "View",
                 "props": {
                   "key": "pill",
-                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1"
+                  "className": "mt-2 flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
@@ -53,7 +53,7 @@
                       "key": "search-icon",
                       "icon": "Search",
                       "size": 16,
-                      "color": "#a1a1aa"
+                      "color": "#4d4841"
                     },
                     "children": []
                   },
@@ -62,7 +62,7 @@
                     "props": {
                       "key": "query",
                       "testID": "parcel-lotmap-query",
-                      "className": "flex-1 px-2 py-3 text-base font-normal text-zinc-100",
+                      "className": "flex-1 px-2 py-3 text-base font-normal text-report-ink",
                       "numberOfLines": 1
                     },
                     "children": [
@@ -94,7 +94,7 @@
                           "key": "clear-icon",
                           "icon": "X",
                           "size": 16,
-                          "color": "#a1a1aa"
+                          "color": "#4d4841"
                         },
                         "children": []
                       }
@@ -110,7 +110,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "d2532a599443bebd",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "24b9ca4fc1e5eae9",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "33e4e665d090b1b5"
     }
   }

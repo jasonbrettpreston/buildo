@@ -101,25 +101,6 @@
                   "autoComplete": "off"
                 },
                 "children": []
-              },
-              {
-                "component": "Button",
-                "props": {
-                  "key": "account",
-                  "testID": "parcel-search-account",
-                  "size": "lg",
-                  "variant": "filled",
-                  "color": "yellow",
-                  "className": "rounded-full",
-                  "onClick": {
-                    "action": "open_account"
-                  }
-                },
-                "children": [
-                  {
-                    "content": "search.account.label"
-                  }
-                ]
               }
             ]
           },
@@ -166,7 +147,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ffcb8625e03b1c7b",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "c4d024b19bc6e0c6",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "94299a5118def243"
     }
   }
