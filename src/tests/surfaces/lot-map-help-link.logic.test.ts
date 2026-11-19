@@ -49,11 +49,31 @@ describe('SRCH.C12: the two v8 strings', () => {
 });
 
 describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get help with an address"', () => {
-  it.each(WITH_ROW)('%s: after the Continue button, one row: the prompt text and the link button to Help with topic lot_match', (name) => {
+  // Dated 2026-11-19 (task-362 SRCH.LOTMAP-2; small-pages-v8 choose-lot.html:278-279): the designed order is the Choose a lot button, then the hint
+  // line "Pick a lot on the map or in the list." while nothing is picked, then the help row. Golden multi_parcel_2 is nothing picked: the tail is
+  // [continue, pick-hint, help-row]. Golden multi_parcel_3plus has a lot picked: the tail is [continue, help-row] and there is no hint.
+  const NOTHING_PICKED = ['multi_parcel_2'];
+  const PICKED = ['multi_parcel_3plus'];
+  it.each(NOTHING_PICKED)('%s: nothing picked: the tail is the button, the hint line, then the help row', (name) => {
+    const col = column(golden(name));
+    expect(col.slice(-3).map((c) => c.props.key)).toEqual(['continue', 'pick-hint', 'help-row']);
+    expect(col.at(-2)!.props.testID).toBe('parcel-lotmap-pick-hint');
+    expect(col.at(-2)!.children).toEqual([{ content: 'select.hint' }]);
+    expect(content['select.hint']).toBe('Pick a lot on the map or in the list.');
+  });
+  it.each(PICKED)('%s: a lot picked: the tail is the button then the help row, no hint line', (name) => {
+    const col = column(golden(name));
+    expect(col.slice(-2).map((c) => c.props.key)).toEqual(['continue', 'help-row']);
+    expect(allByTestId(golden(name).props, 'parcel-lotmap-pick-hint')).toEqual([]);
+  });
+  it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+    expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+  });
+  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
     const col = column(golden(name));
     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
     expect(at).toBeGreaterThan(-1);
-    const row = col[at + 1]!;
+    const row = col[at + (NOTHING_PICKED.includes(name) ? 2 : 1)]!;
     expect(row.component).toBe('View');
     expect(row.props.testID).toBe('parcel-lotmap-help-row');
     const [prompt, link] = row.children as Json[];

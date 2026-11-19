@@ -145,7 +145,12 @@ describe('the page rules (named cases)', () => {
       const col = nodes(t).find((n) => n.props.testID === 'parcel-lotmap-column')!;
       const keys = col.children.filter(isNode).map((n) => n.props.key);
       expect(keys.indexOf('pick-hint')).toBe(keys.indexOf('continue') + 1); // directly under the button, before the help row
+      expect(keys.slice(-3)).toEqual(['continue', 'pick-hint', 'help-row']);
     }
+    // A picked lot: button, then the help row, no hint (choose-lot.html draws the hint only at line 278, the nothing-picked state).
+    const picked = nodes(lotMapProps(situation('multi_parcel_2_lot_b'))).find((n) => n.props.testID === 'parcel-lotmap-column')!.children.filter(isNode).map((n) => n.props.key);
+    expect(picked.slice(-2)).toEqual(['continue', 'help-row']);
+    expect(picked).not.toContain('pick-hint');
     for (const k of ['multi_parcel_2_lot_b', 'unlinked', 'unlinked_no_pin', 'intersection', 'too_many_lots', 'loading', 'rate_limited_zero']) {
       const t = lotMapProps(situation(k));
       expect([k, byTestID(t, 'parcel-lotmap-pick-hint'), byTestID(t, 'parcel-lotmap-continue')?.props.accessibilityHint]).toEqual([k, undefined, undefined]);

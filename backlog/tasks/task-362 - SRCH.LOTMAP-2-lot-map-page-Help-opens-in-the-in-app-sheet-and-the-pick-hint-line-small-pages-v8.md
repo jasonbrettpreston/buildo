@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-LOTMAP2'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T23:01:00Z'
+updated_date: '2026-11-19T23:25:00Z'
 labels:
   - S
   - plan:SRCH.LOTMAP
@@ -34,7 +34,7 @@ Cause (opened on head f65b64674): (1) mobile/src/lib/maxbldHelp.ts:19 `void Link
 Rule or design line: approved design Daylight v8 (~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md:347 C.11); the help topic names stay as built (lot_match, address_match are an orchestrator reading, task-343 line 7; not in this task).
 Reuse: the existing openHelp helper and the existing expo-web-browser use; no new component.
 
-Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBinding.tsx, mobile/src/constants/lotMap.ts, mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json, mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts, mobile/__tests__/maxbldHelp.test.ts, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/fixtures/surfaces/, src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map/, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, docs/reports/lanes/
+Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBinding.tsx, mobile/src/constants/lotMap.ts, mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json, mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts, mobile/__tests__/maxbldHelp.test.ts, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/fixtures/surfaces/, src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map/, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/lot-map-help-link.logic.test.ts, docs/reports/lanes/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -76,6 +76,8 @@ Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBindin
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-LOTMAP2, worktree /Users/brettpreston_macmini/Buildo-wt-lotmap2, branch wf1/inc1b-lotmap2), RR-0240
+
+2026-11-19 station fix: src/tests/surfaces/lot-map-help-link.logic.test.ts pinned the help row right after Continue; brought to the designed order (choose-lot.html:278-279): nothing picked = continue, pick-hint, help-row; picked = continue, help-row. Mobile golden case also asserts both tails.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
