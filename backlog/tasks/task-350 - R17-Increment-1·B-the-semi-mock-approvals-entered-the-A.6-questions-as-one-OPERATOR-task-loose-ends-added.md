@@ -7,10 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-R17'
 created_date: '2026-11-19T21:24:00Z'
-updated_date: '2026-11-19T21:24:00Z'
+updated_date: '2026-11-19T21:34:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-19/BL-R17/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-R17/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-R17/r1-review.txt
 type: record
 ordinal: 50012
 ---
@@ -23,9 +27,9 @@ Scope now: record-only. (1) Enter through G2 the operator's two semi mock approv
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 the two approvals entered through backlog-decision.mjs with verbatim quotes and cites
-- [ ] #2 one OPERATOR task in m-1 for the A.6 questions with a plain explanation, Grounded and Recommendation lines per question stating verified or UNVERIFIED
-- [ ] #3 loose-end lines appended to task-343; backlog doctor clean
+- [x] #1 the two approvals entered through backlog-decision.mjs with verbatim quotes and cites
+- [x] #2 one OPERATOR task in m-1 for the A.6 questions with a plain explanation, Grounded and Recommendation lines per question stating verified or UNVERIFIED
+- [x] #3 loose-end lines appended to task-343; backlog doctor clean
 <!-- AC:END -->
 
 ## Definition of Done
@@ -41,6 +45,12 @@ Scope now: record-only. (1) Enter through G2 the operator's two semi mock approv
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: enter RR-0308 (decision-93) and RR-0309 (decision-94) through backlog-decision.mjs naming task-319; dated note on task-319 (done). 2. Coordinator change: enter RR-0310 (decision-95, naming task-320 and task-351) and create task-351 (build, LATER, m-1) holding the reset-date grounding; sort the eight A.6 questions; ground the three real unruled ones; one review round r1, TRIAGE.md, fold KEPT; create ONE OPERATOR task for them (AC2). 3. AC3: append the loose-end lines to task-343 with --append-notes, count the tied up by: NONE lines; backlog doctor; one docs commit with Task: task-350; REPORT.md and gate.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

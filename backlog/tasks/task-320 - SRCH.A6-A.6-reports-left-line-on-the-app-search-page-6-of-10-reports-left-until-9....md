@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-A6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:19:00Z'
+updated_date: '2026-11-19T21:29:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -108,6 +108,8 @@ Files (final): mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/sur
 2026-11-19 BL-A6 output review r2 triaged (TRIAGE.md): five KEPT items fixed in the follow-up commit.
 
 AC evidence 2026-11-19 (BL-A6): #1 no prereg written: no new MF id was claimed; the expected moves (state hit, 424 -> 425 strings, 98 -> 100 goldens, admin-media 69 -> 70) are in the context file 'Plan steps under review' and the pins carry dated comments; generic McBylaws prereg criterion does not apply to a follow-up on MF-35 (prereg-MF-35-1.json read, rules RULED). #2 failing tests written into the plan section and reviewed at plan altitude (context file, r1-plan.txt). #3 write_scope in the brief (BRIEF.md Write scope). #4 plan review by DeepSeek reasoner, one round, in the lens set of the repo review template, r1-plan.txt. #5 every r1 finding opened and triaged KEEP/REJECT with file:line (TRIAGE.md). #6 red attempt refused (red.out, typecheck stage), green e311411de through the real hooks (commit.out). #7 output review r2 (r2-output.txt, TRIAGE.md) committed with the work in docs/reports/lanes/2026-11-19/BL-A6/. #8 row MF-35 (DONE) owns A.6; dated note added to the row; gate accepted McFrontend-Task: MF-35.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0310 · task-320 · Backlog; operator, verbatim: "your recommendation is approved")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
