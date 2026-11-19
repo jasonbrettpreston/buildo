@@ -3,8 +3,7 @@
   "state": "empty",
   "target": "mobile",
   "covers": [
-    "empty",
-    "parcelsearch_toronto_only"
+    "empty"
   ],
   "situation": "empty",
   "props": {
@@ -336,7 +335,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "17efc748dba71d69",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ffcb8625e03b1c7b",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "94299a5118def243"
     }
   }

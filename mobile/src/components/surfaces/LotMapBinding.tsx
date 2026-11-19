@@ -209,8 +209,8 @@ const body = (s: LotMapSituation): PropsNode[] => {
     case 'multi_parcel':
       return [
         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [
-          node('Text', { key: 'rail', className: L.rail, role: 'header' }, [content('map.rail')]),
-          node('Text', { key: 'badge', className: L.badge }, [{ text: content('map.badge'), vars: { count: derived('lot_count') } }]),
+          // GAP.13 C.1 (v8 choose-lot.html:265): one plain heading with the existing lot_count replaces the rail and the badge.
+          node('Text', { key: 'heading', className: L.rail, role: 'header' }, [{ text: content('map.heading'), vars: { count: derived('lot_count') } }]),
         ]),
         ...mapView(s),
         ...cards(s),

@@ -51,7 +51,7 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
     show(k);
     expect(screen.getByTestId('parcel-search-input')).toBeTruthy();
     expect(screen.getByText('BLD')).toBeTruthy();
-    expect(screen.getByText('Lot & Zoning Intelligence')).toBeTruthy();
+    expect(screen.getByText('Lot Intelligence')).toBeTruthy();
     expect(screen.getByLabelText('Account')).toBeTruthy();
   });
   it('host props: keyboardShouldPersistTaps, the shelf padding, the top safe-area edge, the 448 column (rows 1-4)', () => {

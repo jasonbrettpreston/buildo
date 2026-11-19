@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GAP13'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:34:00Z'
+updated_date: '2026-11-19T15:38:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -112,5 +112,11 @@ Scope result of grounding: BUILT = A.1, C.1. NO WORK = C.6 (RR-0172 map road lab
 
 2026-11-19 taken on the board at lane launch (lane BL-GAP13, worktree /Users/brettpreston_macmini/Buildo-wt-gap13, branch wf1/inc1b-gap13), RR-0240
 
-Files: src/tests/surfaces/search-follow-ups.logic.test.ts; mobile/__tests__/surfaceRenderer.smoke.test.tsx; src/tests/surfaces/parcel-legacy-oracle.logic.test.ts; scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json; scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json; mobile/src/components/surfaces/LotMapBinding.tsx; scripts/surfaces/search-golden-capture.ts; mobile/src/generated/surfaces/mobile_parcel_search.json; mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json; mobile/__tests__/fixtures/surfaces; src/tests/fixtures/surfaces/mobile_parcel_search; src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map; .cursor/MCFRONTEND-QUEUE.md; docs/reports/reviews/task-12/context-2026-11-19.md
+Files: src/tests/surfaces/search-follow-ups.logic.test.ts, mobile/__tests__/surfaceRenderer.smoke.test.tsx, src/tests/surfaces/parcel-legacy-oracle.logic.test.ts, scripts/surfaces/parcel_product/F01/surfaces/, scripts/surfaces/search-golden-capture.ts, mobile/src/components/surfaces/LotMapBinding.tsx, mobile/src/generated/surfaces/, mobile/__tests__/fixtures/surfaces/, src/tests/fixtures/surfaces/mobile_parcel_search/, src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map/, .cursor/MCFRONTEND-QUEUE.md
+
+2026-11-19 BL-GAP13 scope after grounding (r1 triaged): BUILD A.1 and C.1 with the MF-35 and MF-53 dated notes; NO WORK C.6 (RR-0172, map road labels; UNVERIFIED on device) and C.10 (built: LotMapBinding.tsx polygon tappable, lotMapPage.behaviour.test.tsx:85); OPERATOR A.11, C.5, C.7 (Grounded and Recommendation below, added at close). Red tests: src/tests/surfaces/search-follow-ups.logic.test.ts.
+
+OPERATOR items (not built; each with Grounded and Recommendation).
+A.11 Clear (x) in the search box. Grounded: v8 shows the x only in App frames (small-pages-v8/search.html:291 and :304; web frame :313 has an empty box); the FE-07 parity lock (src/tests/surfaces/search-parity.golden.test.ts:25-47) requires web and mobile goldens to carry the same refs, actions and testIDs; mapping.web.SEARCH is closed (scripts/surfaces/_schema/bindings.json: Stack, Group, Title, Text, TextInput, Button, Alert, Loader), so a web twin needs a component the table lacks; the app side needs no new action (set_input with an empty value exists, SurfaceRenderer.tsx:119-120). Recommendation (UNVERIFIED by repo review, one round not run on it): rule one of (a) add Mantine CloseButton (already in touch_targets.web) to mapping.web.SEARCH and ship both targets, (b) record a mobile-only exception in the parity lock; build follows in one small commit.
+C.5 building footprint layer and C.7 card lead line (has the house / faces the street). Grounded: choose-lot.html:306 names the fields (footprint presence from the massing join; primary_frontage_street_name); neither is in the map descriptor field_whitelist (mobile_parcel_disambiguation_map.descriptor.json inputs.field_whitelist, pinned by the new root test) and src/lib/parcels/lot-map.ts:26 CONSUMER_MAP_COLS is locked both ways (consumer-parcel-lookup.infra.test.ts:208); search-1b-adj/REPORT.md GAP.13-d and -f. Recommendation (UNVERIFIED): rule the data read (serve the primary building outline and the street name through the lookup contract, with the DATA CHECK on the rehearsal stack first), then one build task covers C.5, C.7 and the card accessibility label; the 'faces the street' rule question was withdrawn (MORNING-DECISIONS.md:774) so the lead line follows the design words only.
 <!-- SECTION:NOTES:END -->

@@ -1,6 +1,5 @@
 {
-  "map.rail": "Ambiguous parcel boundary",
-  "map.badge": "{count} lots matched",
+  "map.heading": "This address covers {count} lots. Which one do you mean?",
   "map.clear.label": "Back to search",
   "lot.letter": "Lot {letter}",
   "lot.facts": "{frontage} • {zoning}",
