@@ -3,11 +3,11 @@ id: TASK-11
 title: >-
   INFRA.6 Spec 08 dated note (DRAFT only, not applied): seat K as a lens of Spec
   08...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-INFRA6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:14:00Z'
+updated_date: '2026-11-19T14:15:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -18,6 +18,8 @@ dependencies: []
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#F/INFRA.6
   - docs/specs/00-architecture/08_agents.md#L379 sha256=81ced38b6b87
+  - docs/reports/lanes/2026-11-19/BL-INFRA6/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-INFRA6/TRIAGE.md
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low
@@ -43,10 +45,10 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
 - [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
 - [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
 - [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
 - [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
 - [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
@@ -83,3 +85,9 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 
 2026-11-19 BL-INFRA6: section 5.8 (08_agents.md:249-254) is a WF6 decision-trail audit, so it does not make the note redundant; full DRAFT (not applied) dated note written after :253 (one paragraph, M-246 form, prior text kept, no rule text change, no new role/seat/template). Review r1 (review mode, plan template) triaged in docs/reports/lanes/2026-11-19/BL-INFRA6/TRIAGE.md; 4 KEPT items folded.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Dated note (DRAFT, not applied) landed on lane branch wf1/inc1a-infra6 in cc37e5c51 through real hooks (GATE OK, POLICY CHECKS OK); review r1 triaged, 4 KEPT folded. AC 1,3,4,6,7,8 not applicable to a docs-only note; AC 2,5 held by the review round and the triage.
+<!-- SECTION:FINAL_SUMMARY:END -->
