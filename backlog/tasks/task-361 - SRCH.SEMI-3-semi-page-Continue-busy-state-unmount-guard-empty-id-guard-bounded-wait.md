@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SEMI3'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:34:00Z'
+updated_date: '2026-11-19T22:40:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -31,7 +31,7 @@ In plain words: today a person who taps Continue sees no sign that anything is h
 Cause (opened on head f65b64674): (1) mobile/src/components/surfaces/SemiQuestionBinding.tsx continueButton (:89-100) has no busy state (grep busy: 0 hits in the binding and semiQuestion.ts) although the approved mock draws it (~/Buildo-scratch/lanes-20261119/inc1b/semi2/semi-question.html:130 `.btn.p[aria-busy="true"]`, and v8 choose-lot.html:132). (2) mobile/app/(app)/parcel-tool/semi-question.tsx:32-33 `const mountedRef = useRef(true); useEffect(() => () => { mountedRef.current = false; }, []);` never sets the ref true in the effect body, so an effect cleanup followed by a re-run (Fast Refresh, or StrictMode if ever turned on; grep StrictMode over mobile: 0 hits, so production is not hit) leaves it false and Continue never navigates (:62 `if (!mountedRef.current) return;`).
 Rule or design line it breaks: the approved semi mock (RR-0308, RR-0309) draws the busy style; task-319 stage 2 "Continue ... then opens the report".
 
-Files: mobile/src/components/surfaces/SemiQuestionBinding.tsx, mobile/src/lib/semiQuestion.ts, mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, mobile/__tests__/semiQuestionScreens.golden.test.ts, scripts/surfaces/parcel_product/, docs/reports/lanes/
+Files: mobile/src/components/surfaces/SemiQuestionBinding.tsx, mobile/src/lib/semiQuestion.ts, mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, mobile/__tests__/semiQuestionScreens.golden.test.ts, mobile/__tests__/fixtures/semiQuestion.situations.json, scripts/surfaces/parcel_product/, docs/reports/lanes/
 
 Added after the lens run (BL-LENSES, DeepSeek lenses on 9fea46277; grounded on head f65b64674): (3) semi-question.tsx continueToReport calls fetchParcelLookup({ parcelId: id, semi: 'answered' }) with `id` possibly '' (the sibling hook is guarded, useParcelLookup(id || undefined)) (LX-R2, LX-E4); (4) the same call has no timeout or AbortController, so a request that never settles leaves submittingRef true and every later Continue tap silently ignored (LX-E1; whether fetchWithAuth bounds the wait is UNVERIFIED, no timeout found in mobile/src/lib by grep).
 <!-- SECTION:DESCRIPTION:END -->
@@ -60,6 +60,12 @@ Added after the lens run (BL-LENSES, DeepSeek lenses on 9fea46277; grounded on h
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Confirm on head 0eaa22fc0: UX-4 no busy (grep busy 0), CR-1 mountedRef never set true in effect body, LX-R2 id may be empty, LX-E1 no bound on the wait. 2. Red tests first in semiQuestionPage.behaviour.test.tsx (busy node state, StrictMode remount still navigates, empty id never fetches, never-settling fetch ends in error and next Continue works) and a golden case for the busy state. 3. Fix: semi-question.tsx (submitting state, effect-body mountedRef, empty-id guard, bounded wait helper in semiQuestion.ts); SemiQuestionBinding.tsx busy node state and the v8 .btn.p[aria-busy] opacity .85 class in lotMap.ts. 4. Regenerate the semi golden by its script, then emit-mobile-surfaces --write; surface-validate and all checks clean. 5. typecheck; mobile jest UNVERIFIED locally. 6. Lenses at plan and output, adjudicated in TRIAGE.md. 7. Rebase on wf2/board, land with Task: task-361.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

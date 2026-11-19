@@ -19,7 +19,7 @@ import type { SemiAnswer } from '@/lib/lotForm';
 import type { ConsumerParcelLookupResult } from '@/lib/schemas';
 
 type Json = Record<string, unknown>;
-type Input = { parcelId: string; data?: ConsumerParcelLookupResult; error?: string; isFetching?: boolean; selected?: SemiAnswer | null };
+type Input = { parcelId: string; data?: ConsumerParcelLookupResult; error?: string; isFetching?: boolean; selected?: SemiAnswer | null; submitting?: boolean };
 const MOBILE = path.resolve(__dirname, '..');
 const REPO = path.resolve(MOBILE, '..');
 const rj = (p: string): Json => JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -34,7 +34,7 @@ const errorOf = (kind: string | undefined): unknown =>
 const situation = (name: string): SemiQuestionSituation => {
   const i = fixture.inputs[name];
   if (!i) throw new Error(`no input ${name}`);
-  return buildSemiQuestionSituation({ parcelId: i.parcelId, data: i.data, error: errorOf(i.error), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selected: i.selected ?? null });
+  return buildSemiQuestionSituation({ parcelId: i.parcelId, data: i.data, error: errorOf(i.error), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selected: i.selected ?? null, submitting: i.submitting ?? false });
 };
 
 const isNode = (v: unknown): v is PropsNode => typeof v === 'object' && v !== null && 'component' in v;
@@ -138,6 +138,19 @@ describe('the page rules (named cases)', () => {
       expect([k, s.state, s.answers, s.navigate]).toEqual([k, 'redirect', [], parcelSearchRoute('unique', { parcelId: 'PCL-S1', query: '' })]);
       expect(semiQuestionProps(s).props.navigate).toBe('/(app)/parcel-tool/PCL-S1');
     }
+  });
+  // SRCH.SEMI-3 (task-361, UX-4): the busy Continue. The approved mock draws only the rule `.btn.p[aria-busy="true"] { opacity:.85; cursor:progress }`
+  // (semi-question.html:130; v8 choose-lot.html:132), no busy section; so a named case, not a new golden state. Idle trees carry no busy key.
+  it('Continue is busy only while submitting: accessibilityState busy true and the opacity .85 class; idle Continue has no busy key and the idle class', () => {
+    const idle = byTestID(semiQuestionProps(situation('ask_yes')), 'parcel-semi-continue')!;
+    const busy = byTestID(semiQuestionProps(situation('ask_yes_busy')), 'parcel-semi-continue')!;
+    expect(situation('ask_yes').busy).toBe(false);
+    expect(situation('ask_yes_busy').busy).toBe(true);
+    expect(idle.props.accessibilityState).toEqual({ disabled: false });
+    expect(String(idle.props.className)).not.toContain('opacity');
+    expect(busy.props.accessibilityState).toEqual({ disabled: false, busy: true });
+    expect(String(busy.props.className)).toContain('opacity-[0.85]');
+    expect(semiQuestionProblems(semiQuestionProps(situation('ask_yes_busy')), situation('ask_yes_busy'))).toEqual([]);
   });
   it('no data and not fetching replaces with the Lookup route; a stale pick outside the ask state is dropped', () => {
     expect(situation('redirect_no_data').navigate).toBe(PARCEL_TAB_ROUTE.lookup);

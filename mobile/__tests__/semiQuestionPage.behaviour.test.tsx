@@ -11,6 +11,7 @@
 require('react-native-css-interop/test');
 import * as React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
 
 jest.mock('react-native-safe-area-context', () => {
   const { View } = jest.requireActual('react-native');
@@ -96,6 +97,72 @@ describe('the question page (semi-question.tsx)', () => {
     await act(async () => { done(data(form(true))); });
     await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
     expect(mockFetchLookup).toHaveBeenCalledTimes(1);
+  });
+  // SRCH.SEMI-3 (task-361; findings UX-4, CR-1, LX-R2, LX-E1 of BL-TRIAGE/VERDICTS.md).
+  it('semi-question.html:130 `.btn.p[aria-busy="true"]`: while Continue is pending the Continue node is busy; it is idle again after the report opens', async () => {
+    let done: (v: unknown) => void = () => undefined;
+    mockFetchLookup.mockReturnValue(new Promise((r) => { done = r; }));
+    mockHook = { ...mockHook, data: data(form(true)) };
+    render(<Question />);
+    fireEvent.press(screen.getByTestId('parcel-semi-answer-yes'));
+    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).not.toHaveProperty('busy');
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).toMatchObject({ busy: true });
+    await act(async () => { done(data(form(true))); });
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+  });
+  it('a screen whose effects ran cleanup and then again (Fast Refresh, StrictMode) still opens the report after the lookup resolves', async () => {
+    mockHook = { ...mockHook, data: data(form(true)) };
+    render(<React.StrictMode><Question /></React.StrictMode>);
+    fireEvent.press(screen.getByTestId('parcel-semi-answer-no'));
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    await waitFor(() => expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=detached']]));
+  });
+  it('leaving the page while the lookup runs opens nothing', async () => {
+    let done: (v: unknown) => void = () => undefined;
+    mockFetchLookup.mockReturnValue(new Promise((r) => { done = r; }));
+    mockHook = { ...mockHook, data: data(form(true)) };
+    const view = render(<Question />);
+    fireEvent.press(screen.getByTestId('parcel-semi-answer-yes'));
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    view.unmount();
+    await act(async () => { done(data(form(true))); });
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockSetQueryData).not.toHaveBeenCalled();
+  });
+  it('an empty parcel id never calls the lookup and never navigates', async () => {
+    mockParams = {};
+    mockHook = { ...mockHook, data: data(form(true)) };
+    render(<Question />);
+    fireEvent.press(screen.getByTestId('parcel-semi-answer-yes'));
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    await act(async () => { await Promise.resolve(); });
+    expect(mockFetchLookup).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+  it('a Continue whose lookup never settles ends in the built error state after the bounded wait, and the next Continue works', async () => {
+    jest.useFakeTimers();
+    try {
+      mockFetchLookup.mockReturnValueOnce(new Promise(() => undefined));
+      mockHook = { ...mockHook, data: data(form(true)) };
+      render(<Question />);
+      fireEvent.press(screen.getByTestId('parcel-semi-answer-yes'));
+      fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS - 1); });
+      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
+      await act(async () => { jest.advanceTimersByTime(1); });
+      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
+      fireEvent.press(screen.getByTestId('parcel-semi-retry'));
+      expect(screen.getByTestId('parcel-semi-answer-yes').props.accessibilityState).toMatchObject({ checked: true });
+      expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).not.toHaveProperty('busy');
+      fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+      await act(async () => { await Promise.resolve(); });
+      expect(mockFetchLookup).toHaveBeenCalledTimes(2);
+      expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=semi_half']]);
+    } finally {
+      jest.useRealTimers();
+    }
   });
   it('a failed fetch at Continue shows the built error state, does not navigate, and Try again brings the question back with the answer still chosen', async () => {
     mockFetchLookup.mockRejectedValue(new Error('boom'));
