@@ -1,0 +1,100 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of docs/reports/reviews/task-3/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9883 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20724 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30770 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 36040 chars, answer 5465 chars, 60s
+## Adversarial review — `docs/reports/reviews/task-3/context-2026-11-19.md`
+
+This file is a generated review-context bundle. The only thing resembling code in it is the **"Plan steps under review (lane BL-CHK1)"** block (steps 1–7 for `scripts/hooks/check-task-files.mjs`). Line refs are by block/step because the artifact is generated prose; document-level findings cite the section heading.
+
+---
+
+### A. The gate cannot enforce the thing it exists to enforce
+
+- **[CRITICAL]** (step 3 + step 5): The hook reads the task file **from the index** (`git show :path`) *and* always allows the task file itself. A single commit can therefore rewrite its own `Files:` line to `Files: .` and stage any code it likes — the declaration and the thing being declared are authorised by the same commit. This is a self-attesting gate. Fix: read the task file from `HEAD:` (or `HEAD^:`), and refuse (exit 1) when the staged task file differs from `HEAD` in its `Files:` line in the same commit as code changes. Fail closed, not open.
+
+- **[CRITICAL]** (step 5): `docs/reports/lanes/` is always allowed, **unscoped**. Given the milestone deliverable is "task status computed from evidence", any commit may silently rewrite or delete any historical lane report — the evidence corpus is writable by the process it evidences. It is also allowed whether or not the commit touches the task. Fix: `docs/reports/lanes/**/<task>/`, or the exact lane directory named in the task file, and never allow deletions there.
+
+- **[CRITICAL]** (step 3, WARN path): "None: print one WARN line, exit 0." A task with no `Files:` line passes everything. Combined with acceptance criterion #3 (`write_scope` declared in the brief), the check cannot enforce criterion #3 at all — it only enforces it for tasks that already comply. The gate is opt-in. Fix: exit 1 for a code commit with no declaration (behind a `--strict` flag if you need a rollout window), or emit the WARN *and* fail.
+
+- **[CRITICAL]** (step 1): "Exit 0 when no backlog/tasks dir." Deleting, renaming, or vendoring the tasks directory globally disables the check. A gate that fails open on the absence of its own configuration is not a gate. Fix: no tasks dir ⇒ exit 1 on any staged code file.
+
+- **[HIGH]** (step 1): The CODE allowlist is hard-coded to `src/, scripts/, mobile/, migrations/`. Files **outside** those prefixes are exempt from scope checking entirely — including `.husky/commit-msg` (i.e. the hook can be unwired in a commit the hook never inspects), `package.json`, `.github/workflows/`, `docs/specs/`, and any future top-level dir (`packages/`, `tools/`, `infra/`). The check cannot police its own installation and has a supply-chain hole. Fix: invert the predicate — everything is code except an explicit `docs/`-style allowlist, and put `.husky/`, `.github/`, and `package.json` on a hard-fail list regardless of declaration.
+
+- **[HIGH]** (step 1): Local `.husky/commit-msg` only. `git commit --no-verify` bypasses it; any GitHub squash/rebase merge never runs client hooks at all; a second clone without `core.hooksPath` set bypasses it. The milestone says "every commit checked automatically". Fix: run the same script in CI against the pushed range and make CI required, or the gate is advisory decoration.
+
+- **[HIGH]** (title/description vs. plan): The full title specifies *"git mode compares a commit range with the globs the slice declares (Slice-Files trailer or `--declared`)"* and *"lane mode delegates to panel-tools/gate.mjs write-scope step"*. The plan implements an index-based **single-commit** check keyed on a body `Files:` line, with no range, no `Slice-Files` trailer, no `--declared`, and lane mode dropped ("git mode only"). That is a different component from the one specified, and no ruling in the context authorises the narrowing. Fix: either implement the titled contract or record an explicit operator ruling for the simplification in the plan text; a reviewer cannot approve a scope reduction the task itself forbids.
+
+- **[HIGH]** (step 4): Nothing bounds how broad a declaration may be. `Files: src` or `Files: .` or `Files: *` is a legal grant, and nothing reviews or caps the `Files:` line. The gate validates the commit against the declaration but never validates the declaration against anything (lane, task area, previous version). Fix: reject entries that resolve to a repo root or a bare top-level dir; diff the `Files:` line against `HEAD` and require the widening to be its own commit (which is what acceptance criterion #1 already demands — "Pre-register … committed alone" — and the plan has no check for).
+
+- **[MEDIUM]** (step 1, merge exemption): "Exit 0 on a merge commit" is the cheapest possible bypass: `git checkout -b x; commit; git merge --no-ff x` and none of the merged content is ever scope-checked. Merge time is exactly when divergent scope lands. Fix: for merges, check `HEAD..MERGE_HEAD` (or `merge-base..HEAD`) rather than exiting.
+
+---
+
+### B. Matching logic — the parts most likely to be silently wrong
+
+- **[HIGH]** (step 4): "An entry with glob characters (`* ? [`)" is treated as a glob, but the converter only understands `**`, `*`, `?` "with every other character escaped" — so `[` is escaped to a literal `\[` and a pattern like `src/api/[a-z]*.ts` can **never** match. Silent false FAIL (annoying) or, if `[` appears in an always-allowed set, silent false pass. Fix: either implement character classes or drop `[` from the "is a glob" test so it is treated as a literal filename.
+
+- **[HIGH]** (step 4): Escaping order is not stated. The classic bug is *replace globs with regex, then escape* (which escapes the `.*` you just inserted) or *escape, then replace* with no anchoring. Worse, if `.` in a filename is not escaped, `Files: src/app.config.js` compiles to `src/app.config.js` where every `.` is `any char` — an over-permissive match, i.e. a false PASS on a scope violation. The test list contains no filename with a `.` or `+` or `(`, so this ships green. Fix: specify the exact algorithm, anchor with `^…$`, and add a test with `src/a.b.c.ts` plus a would-be impostor path `src/aXbYc.ts` that must fail.
+
+- **[HIGH]** (step 4): Empty-entry footgun. `Files:` with trailing whitespace matches `/^Files:\s*(.+)$/m` by backtracking (`\s*` yields one space to `(.+)`), and `Files: a, ,b` or a trailing comma produces `""` entries after split/trim. If entry matching is implemented as `p.startsWith(entry)` rather than `p === entry || p.startsWith(entry + '/')`, the empty entry grants **every file in the repo**. The test list only covers "empty `Files:` value", not empty *array elements*. Fix: reject empty entries explicitly (`if (!entry) continue` — or better, error), and state the boundary predicate verbatim in the plan.
+
+- **[MEDIUM]** (step 4): `**` semantics are under-specified. `src/**` vs `src/**/*` vs `src/**/x.ts` where `x.ts` is directly under `src/` (zero directories). Naive `**` → `.*` handles zero-depth; naive `**/` → `.*/` requires at least one slash and silently fails. `*` is stated as "within one segment" but `?` is "one char" — does `?` cross `/`? Fix: state the exact regex for each, and add a zero-depth test.
+
+- **[MEDIUM]** (step 3): `^Files:` is matched **anywhere in the body**, first occurrence wins. A task whose prose, AC text, or a fenced code block contains a literal `Files:` line — e.g. this very plan's step 3, which contains `/^Files:\s*(.+)$/m` — gets the wrong declaration, or a bogus one from a documentation example. Fix: anchor to front matter (`^---$` block) or a `## Files` heading, and take only the first line under it.
+
+- **[MEDIUM]** (step 2): "the `Task: task-N` trailer" assumes exactly one. A commit carrying two `Task:` trailers is checked against an arbitrary one; a developer can name whichever task has the broadest `Files:` line. Fix: reject multiple trailers, and cross-check the task id against the branch name / `backlog/` staged paths.
+
+- **[LOW]** (step 4): Entries with a leading `./`, backslashes, an absolute path, or `..` are not normalised. Fix: normalise to POSIX relative, reject absolute and leading `./`.
+
+---
+
+### C. Failure behaviour of the hook itself
+
+- **[MEDIUM]** (step 1): `git diff --cached` on an unborn branch (first commit, `git checkout --orphan`) fails with `fatal: ambiguous argument 'HEAD'`. Behaviour is unspecified: crash (blocks a legitimate commit) or catch-and-exit-0 (fail open). Fix: use `git diff --cached --name-only $(git hash-object -t tree /dev/null)` or detect the unborn HEAD explicitly.
+
+- **[MEDIUM]** (step 3): If the commit **deletes** the task file, `git show :path` errors. If the commit renames it, the `task-N - *` pathspec matches zero paths. Neither path is in the test list. Fix: explicit "task file absent from index ⇒ exit 1 with a clear message" (or a documented allow for a task-deletion commit), plus a test.
+
+- **[MEDIUM]** (step 3): `git show :<path>` with a path containing spaces must be passed as an argv element (`execFile`), not through a shell. The plan says "run `git show :path`" without specifying. A shell string here is a quoting bug and potentially an injection point if the trailer regex is looser than `task-\d+`. Fix: `execFileSync('git', ['show', `:${p}`])` and state the trailer regex explicitly rather than "same as G3".
+
+- **[MEDIUM]** (step 2): Coupling to "the same regexp as G3" with no shared module and a hard ordering dependency ("after the G3 line"). Reorder `.husky/commit-msg`, and this check's no-trailer branch silently passes everything. Fix: extract the trailer parser into one module both hooks import; treat a missing trailer as exit 1 here.
+
+- **[MEDIUM]** (step 7): No test for the hook's own error paths — git missing, index locked, unreadable task file, malformed glob. Each is either fail-open or fail-closed by accident. Fix: add a test asserting exit 1 on any internal error, and `helpers.ts` must be given a path; it is currently an unqualified filename that may not exist.
+
+- **[LOW]** (step 6): Prints one violation and exits. A commit with 40 out-of-scope files will be fixed one round-trip at a time. Fix: print all violations, one per line.
+
+- **[NIT]** (step 3): WARN lines from a *passing* commit-msg hook are routinely swallowed by IDEs and `git commit -q`. A warning nobody sees is worse than nothing — it creates the impression the declaration exists.
+
+---
+
+### D. Defects in this generated document (bug in `backlog-brief.mjs`, not just cosmetics)
+
+- **[HIGH]** (Documents §, the three `(not readable: ENOENT …)` blocks): The generator parsed the bullet `- Requirements: backlog/docs/increments/doc-1 - …` as a *path* including the label prefix, so the path contains `Requirements: `. It then re-emits the whole failure sentence **as the section heading**, producing self-referential nonsense: *"read it at Requirements: backlog/docs/…"* — the reader is told to read the file at the same unreadable path. Three headings are corrupted this way. Fix: split `- Label: path` on the first `: ` and read only the path; on ENOENT emit a fixed-format notice, not a heading built from the failure text. This also breaks idempotency: re-running the generator over its own output will nest another layer of "not readable: …".
+
+- **[MEDIUM]** (Documents §): The ENOENT text is interpolated into a markdown H3 unescaped. A document title containing `#`, a backtick, or `---` injects structure into the review context that a panel reviewer will read as authoritative. Fix: escape headings; never interpolate free text into structure.
+
+- **[MEDIUM]** (Documents §): The `docs/reports/plan-import/raw/…` and `~/Buildo-scratch/…` paths are read as given. Nothing rejects `../` or absolute paths in a document entry — a task row can make the generator read arbitrary files into a context bundle that is committed. Fix: `path.resolve` + prefix assertion against the repo root.
+
+- **[MEDIUM]** (Decisions §): *"RR-0195 … Push the ready Increment 1·A commits … overriding inc6-guard rule 2"* and *"RR-0196 … CHK.5 and CHK.3 are not pushed before push 6; rule 2 stands"* are **directly contradictory** and are listed with no resolution marker, no ordering, and no indication of which supersedes. A reviewer or lane reading this can legitimately act on the dead one. Same class of problem: nine identical "INC5 recapture commit 068a51af0" rows (RR-0012/0060/0080/0081/0086/0087/0088/0092/0099), and `RR-0014` with no title at all. Fix: apply the relevancy filter the document itself claims (RR-0214), dedupe by title+date, and annotate superseded rulings.
+
+- **[MEDIUM]** (header): `status: RUNNING … labels: … evidence:ready, unverified` while *"Plan text at the snapshot: NOT COMPLETE"* and the plan text says `OPEN: where a slice declares its files`. The task is simultaneously running, evidence-ready, unverified, incomplete, and blocked on the exact question the plan silently answers (`Files:`). Fix: pick one state; the OPEN question is a blocking question and should gate the build.
+
+- **[LOW]** (Documents §): `### backlog/docs/increments/doc-1 … lines 1-13 of 13` — the whole file is shown *and* followed by "(read the rest at …)". Off-by-one in the truncation notice. Same section claims a 120 KB / 12 KB cap with no accounting and no omitted-block notices — the reader cannot tell whether anything was dropped.
+
+- **[LOW]** (Acceptance criteria / References): `sha256=11bfda56fd34` is truncated to 12 hex chars but labelled `sha256`; there is no way from this document to verify it. State it as `sha256:11bfda56fd34… (truncated)`.
+
+- **[NIT]** (header): `Estimate: MEASURED: under 0.1 s per range; build GUESS 0.25 d` — a measured figure for a range mode that the plan does not implement, next to a guess. Neither is evidence.
+
+- **[NIT]** (Acceptance criteria #1, #2, #4, #5, #7): None are satisfied on the face of this document. There is no `rules[]` pre-registration, no failing test written *into the plan* (step 7 is a list of test *cases*, not red tests), no lens-set panel record, no grounder re-execution output, no OUTPUT panel record. If this document is the submitted plan, it fails its own gate.
+
+---
+
+### Verdict
+
+As a plan, this is a plausible small hook hiding two structural problems: it self-authorises (declaration and commit come from the same index, and the task file is always writable) and it fails open at every convenient point (no tasks dir, no code file, no trailer, no declaration, merge commit). The hand-rolled glob-to-regex is the highest-risk surface — the test list conspicuously omits dots in filenames, `[` classes, empty entries, and `**` zero-depth, which are precisely the four ways it silently becomes over-permissive. Separately, the plan implements a materially different component from the one the task title specifies (range + Slice-Files trailer + `--declared` + lane-mode delegation) with no recorded ruling for the narrowing. I would not mark this plan-locked: fix the index-vs-HEAD read, the unscoped `docs/reports/lanes/` allowance, the WARN-and-pass branch, invert the code-file predicate, and add the four missing glob tests before any code is written — and get the generation bugs in `backlog-brief.mjs` (ENOENT headings, contradictory RR-0195/0196) fixed in the same pass, because a context bundle that tells the reviewer to read a file at a path that doesn't exist is how the next review gets made up.
+
+---
+⏱  73566ms (73.6s)
+📊 Tokens — total: 21943, input: 8891, output: 13052, reasoning: 9102

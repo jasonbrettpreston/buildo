@@ -3,11 +3,11 @@ id: TASK-3
 title: >-
   CHK.1 Automatic check: scope (a slice changes only its declared files): lane
   mode...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-CHK1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:10:00Z'
+updated_date: '2026-11-19T14:11:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -22,6 +22,7 @@ references:
   - >-
     ~/Buildo-scratch/lanes-20261117/inc-plan/checks/PANEL.md#L2
     sha256=b30b7f626bca
+  - docs/reports/lanes/2026-11-19/BL-CHK1/REPORT.md
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low
@@ -47,12 +48,12 @@ who (plan text): lane
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
 - [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
 - [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
 - [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
 - [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
@@ -94,4 +95,12 @@ who (plan text): lane
 Files: scripts/hooks/check-task-files.mjs, src/tests/backlog/check-task-files.logic.test.ts, .husky/commit-msg, backlog/tasks/, docs/reports/reviews/task-3/, docs/reports/lanes/
 
 2026-11-19 lane BL-CHK1: output review r2 (one lens) triaged; KEPT: renamed and deleted task file handling (fixed, test-first).
+
+2026-11-19 BL-CHK1: AC #1, #3, #4, #5, #8 not applicable after the R9 narrowing (brief/panel/pre-registration parts dropped; no work invented). #2, #6, #7 checked with evidence in docs/reports/lanes/2026-11-19/BL-CHK1/REPORT.md.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+CHK.1 git-mode scope check landed: scripts/hooks/check-task-files.mjs wired after G3 in .husky/commit-msg; commits 978e64e1c (feat, 15 tests green through hooks) and fb21775c6 (fix after review r2, 16 green). Report: docs/reports/lanes/2026-11-19/BL-CHK1/REPORT.md
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,0 +1,47 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1a/chk1/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10023 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20496 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30780 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41230 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55114 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65412 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 69927 chars, answer 6068 chars, 105s
+## Adversarial review — `scripts/hooks/check-task-files.mjs`
+
+I checked the matcher maths first, because if that's broken nothing else matters. The core is actually right: prefix entries get a real directory boundary (`f === p || f.startsWith(p + '/')`, L36 — `src/tests` correctly does *not* match `src/tests-backup/x.ts`), `**/` compiles to `(?:.*/)?` so `a/**/b` matches `a/b` as claimed, `*`→`[^/]*`, `?`→`[^/]`, and the escape class on L28 covers `. + ^ $ { } ( ) | [ ] \`. No ReDoS-worthy shape on realistic inputs. Everything below is error handling, false positives, or silent pass-throughs.
+
+---
+
+- **[HIGH]** (L17, L42–L47, L57): `git()` ignores `status` and `error` entirely, and `stdout` is `null` (not `''`) when the spawn itself fails. Two divergent failure modes, both bad: if `git diff --cached` (L47) exits non-zero — locked index, corrupt index, a `git` shim/alias in CI, `GIT_INDEX_FILE` pointing somewhere unreadable — you get `stdout === ''` → `staged = []` → `return 0` at L48, i.e. **the guard silently passes with no diagnostic at all**. If `git` isn't found at all, `spawnSync` returns `stdout: null`, and L42's `.stdout.trim()` throws a `TypeError`, so the commit dies with a Node stack trace instead of a policy message. Same for L57 (`body.status` is checked there, but `body.stdout` on the success path is unguarded). Fix: make `git()` a hard wrapper — `const r = spawnSync(...); if (r.error || r.status !== 0) { stderr.write(...); process.exit(2); } return r.stdout ?? '';` — and let callers that genuinely want fail-open opt out explicitly. A scope gate that no-ops because git hiccuped is worse than no gate, because the logs say it ran.
+
+- **[MEDIUM]** (L56–L57): `git show :${taskFile}` failing returns `0` — silent pass. The reachable case isn't exotic: stage a *deletion* of the task file (`git rm backlog/tasks/task-3 - x.md`) alongside your code, and `:path` fails because the path is no longer in the index. The task file matches L54 (`staged` includes deleted paths), so you get past the `!taskFile` check and then bail out at L57 with no output. That's a one-command bypass of the entire check. Fix: on non-zero status, fall back to `git show HEAD:${taskFile}`, and if that also fails, fail closed with a message naming the path — do not pass silently.
+
+- **[MEDIUM]** (L54, L66): renaming the task file (i.e. editing its title) blocks the commit with a bogus violation. `--no-renames` (L47) deliberately yields both sides of a rename, so a title change stages `backlog/tasks/task-3 - Old.md` (delete) and `backlog/tasks/task-3 - New.md` (add). `staged.find` (L54) matches one of them; the other is not `=== taskFile`, is not under `docs/reports/reviews/<id>/` or `docs/reports/lanes/`, and is not in the `Files:` line — so L67 flags it as "outside the Files: line of task-3" and exits 1. The author's own comment says "both sides count", but the `always()` predicate only ever whitelists one side. Fix: `always` should accept any staged path with the task prefix, e.g. `f.toLowerCase().startsWith(`${dir}${id} -`) || f.toLowerCase() === `${dir}${id}.md``, not just the single path returned by `find`.
+
+- **[MEDIUM]** (L47, L67): `git diff --cached` is the whole index, but the commit may not be. `git commit -- src/a.ts` commits only the named paths (bypassing the index for them); any other pre-staged file in the index is not part of this commit, yet it lands in `staged` and is reported as out of scope, blocking a legitimate commit. Conversely the commit's own paths may be under-declared in the index snapshot. Fix: derive the checked set from the paths git is actually committing (e.g. honour `GIT_INDEX_FILE`/`commit -o` pathspec behaviour, or at minimum document that partial commits are unsupported and print a hint when `# Changes to be committed` vs `# Changes not staged` disagree).
+
+- **[MEDIUM]** (L48): the code gate `^(src|scripts|mobile|migrations)\//` lets entire categories of code-equivalent change through unchecked — `package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.ts`, `Dockerfile`, `.github/workflows/*`, `.husky/*`. A commit touching only those exits at L48 and is never scope-checked, while the same files *are* enforced if a `src/` file happens to be in the same commit. That asymmetry is exploitable (split the dependency/CI change into its own commit) and confusing. If it's intentional, the header comment should say so; otherwise add `package.json|package-lock.json|.*\.config\.(m?[jt]s)|Dockerfile|\.github/` to the alternation.
+
+- **[LOW]** (L60): `split(',')` with no escape hatch means a path containing a comma can never be declared — it becomes two entries, neither of which matches, and the failure message tells the author to "Declare it on the task" with no way to do so. Either support `\,`/quoted entries or reject a `Files:` line containing a comma-adjacent path with a clear "commas are not supported in paths" message.
+
+- **[LOW]** (L35–L36): `replace(/^\.\//, '')` strips exactly one `./`, and nothing validates the resulting prefix. Three malformed-but-plausible entries silently become matchers that can never match, producing a wall of "outside the Files: line" errors with no hint that the *declaration* is the problem: `././src` (→ `./src`), `/src` (→ leading slash), and `.` or `/` (→ `p === ''`, then `f === '' || f.startsWith('/')`, always false). Add a guard: if `p === ''` or `p.startsWith('/')` or `p.startsWith('./')`, emit a diagnostic naming the bad entry and skip it (or fail).
+
+- **[LOW]** (L50): `fs.readFileSync(msgFile, 'utf8')` is unguarded. If husky passes a path that doesn't exist, is a directory, or is relative to a different cwd, the process throws an unhandled `ENOENT` and exits 1 with a stack trace — the author sees a Node crash, not "check-task-files: cannot read commit message file". Wrap it and route through the same usage path as L41.
+
+- **[LOW]** (L59): `^Files:` is column-0 only, so a `Files:` line written as a list item (`- Files: src/a.ts`) or inside a fenced block is either invisible (→ the L62 WARN claims the task "has no Files: line", which is false and unhelpful) or, if a stray column-0 `Files:` appears earlier in the description/quoted text, the *wrong* line wins because L59 takes the first match. At minimum, make the WARN distinguish "no `Files:` line found" from "found but unparseable", and name the line number it matched so the author can see which one won.
+
+- **[NIT]** (L24–L27): `a**/b` (double-star not preceded by `/`) compiles to `^a(?:.*/)?b$`, which matches `ab` — a cross-segment collapse the header doesn't describe. `x/**` doesn't match `x` itself and `x/**/` matches nothing but `x/`. None of these are reachable from the documented syntax, but silently compiling a surprising regex is worse than rejecting the entry.
+
+- **[NIT]** (L66): case handling is inconsistent — L54 lowercases both sides for the task-file lookup, but `always()` and every `matcher()` are case-sensitive. On a case-insensitive filesystem (macOS, this repo), `docs/reports/reviews/Task-3/` is not whitelisted, and `Files: Src/A.ts` never matches `src/a.ts`.
+
+- **[NIT]** (L43–L44): merge detection is `MERGE_HEAD` only, copied from G3. `git cherry-pick` / `git revert` don't create it, so replaying someone else's commit runs the full scope check against *their* task id and *their* file list. Mostly benign (L55 usually bails because the task file isn't staged), but worth a comment so the next person doesn't "fix" it into a security hole.
+
+---
+
+**Verdict:** the matcher itself is careful and correct — prefix boundaries are real boundaries, `**/` handles the zero-directory case, and the escaping is complete — so the interesting failures are all on the error path. The design is deliberately fail-open at five or six points, but the code doesn't distinguish *deliberate* fail-open (no `Files:` line, no trailer, no code files) from *accidental* fail-open (`git diff` failed, `git show :path` failed, task file renamed), and every accidental one is silent. That's the core defect: a gate whose documented behaviour when it can't do its job is indistinguishable from it doing its job. Fix the `git()` wrapper to fail loudly on command failure, fall back to `HEAD:path` when the index copy is gone, and widen `always()` to cover all task-file spellings — and the remaining items are polish.
+
+---
+⏱  108188ms (108.2s)
+📊 Tokens — total: 25064, input: 2158, output: 22906, reasoning: 20638
