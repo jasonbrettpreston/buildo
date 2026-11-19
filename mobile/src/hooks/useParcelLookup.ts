@@ -9,7 +9,8 @@
 // ConsumerParcelLookupResultSchema. A drifted server shape re-throws to the ErrorBoundary; network
 // errors (ApiError/RateLimitError/NetworkError) stay in `isError` for inline handling.
 
-import { useQuery } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react-native';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
@@ -88,6 +89,19 @@ export function useParcelLookup(parcelId: string | undefined) {
     staleTime: 60_000,
     retry: shouldRetryParcelLookup,
   });
+}
+
+/**
+ * Store an answered lookup under the report's own cache key. SUITE.FIX-2 (task-353, 2026-11-19): the semi question page (a mount file) used to call
+ * useQueryClient itself (9fea46277); a mount may import only framework packages, binding modules and @/hooks/ (bindings.json mount_internal, FE-31 C-2),
+ * so the one setQueryData call lives here, the same key as useParcelLookup.
+ */
+export function useSetParcelLookup() {
+  const queryClient = useQueryClient();
+  return useCallback(
+    (parcelId: string, result: ConsumerParcelLookupResult) => { queryClient.setQueryData(['parcel-lookup', parcelId], result); },
+    [queryClient],
+  );
 }
 
 /**

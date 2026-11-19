@@ -24,7 +24,10 @@ const SENTINEL = 'FE-01';
 // Dated 2026-11-09 (MF-37): FE-32 and FE-33 join it because their locks landed in the MF-37 code commit (7ad4ec42c) while the rows stay OWED
 // until the operator approves the flip (plan v3 section 7 step 8); the flip commit removes both ids. The list then shrinks back to empty.
 // Dated 2026-11-09 (MF-37 flip; operator "a, 1-3 approved"): FE-32 and FE-33 are RULED, so the list is empty again.
-const FLIP_PENDING: readonly string[] = [];
+// Dated 2026-11-19 (task-353 SUITE.FIX-2): FE-39 joins it. Its lock src/tests/surfaces/engine-inputs-bind.logic.test.ts landed in commit 40cbd77b1 (MB-94 (c)
+// recut to the Spec 126 R-2 literal, task-121, 6c.5a) while the row stays OWED until the operator approves the flip (the MF-37 pattern above); the flip
+// commit removes the id and the list shrinks back to empty.
+const FLIP_PENDING: readonly string[] = ['FE-39'];
 
 type Row = { status: string; locks: string[] };
 

@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SUITEFIX2'
 created_date: '2026-11-19T21:37:00Z'
-updated_date: '2026-11-19T21:38:00Z'
+updated_date: '2026-11-19T21:45:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -41,6 +41,12 @@ Scope now: make the push-station suite green on the board head without weakening
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: A) FE-09 register-locks test: FE-39 on FLIP_PENDING as dated data (lock landed 40cbd77b1, row OWED until operator flip); B) FE-07 search parity: 11 states, reports_left added as dated data (task-320, both targets tracked); C-2) move the semi mount's useQueryClient into useSetParcelLookup in @/hooks (9fea46277 cause), jest mock follows. Prove by the pre-commit related run with the changed tests staged. 2. AC2: C-9m (3 semi Button goldens at min-h-[48px], RR-0309 approved 48 px vs the exact-44 pin) is a rule-versus-approved-design conflict: reported to the operator as an item, not decided; leave red. Checks before/after in checks.out; review round r1 on the context file.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

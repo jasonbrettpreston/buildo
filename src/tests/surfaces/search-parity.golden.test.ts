@@ -81,9 +81,11 @@ const STATES: Json[] = rj(DESCRIPTOR).states;
 const pair = (golden: string): [Json, Json] => [rj(path.join(DIR, `${golden}.web.json`)), rj(path.join(DIR, `${golden}.mobile.json`))];
 
 describe('FE-07 search parity: web vs mobile goldens of mobile_parcel_search', () => {
-  it('the descriptor declares both targets and all 10 states have a web and a mobile golden', () => {
+  it('the descriptor declares both targets and all 11 states have a web and a mobile golden', () => {
     expect(rj(DESCRIPTOR).identity.platforms).toEqual(['mobile', 'web']);
-    expect(STATES.map((s) => s.golden)).toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'static']);
+    // Dated 2026-11-19 (task-353 SUITE.FIX-2): 10 -> 11 states. SRCH.A6 (task-320, commit ace05ccee; operator RR-0307) added the state `hit` with the
+    // golden `reports_left` (reports_left.web.json and reports_left.mobile.json, both tracked, so the web/mobile pair the loop below checks holds).
+    expect(STATES.map((s) => s.golden)).toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'static', 'reports_left']);
     for (const s of STATES) for (const t of ['web', 'mobile']) expect(fs.existsSync(path.join(DIR, `${s.golden}.${t}.json`)), `${s.golden}.${t}`).toBe(true);
   });
   it('every state: the same refs, actions, block order and situation on both targets (non-vacuous)', () => {

@@ -12,11 +12,10 @@
 // the lot once its report is produced, stores the result in the report's cache entry, then opens the report. A failed fetch shows the built error
 // state and does not navigate; Try again clears it and the chosen answer is still there.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
-import { fetchParcelLookup, useParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+import { fetchParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
 import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
 import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
@@ -27,7 +26,7 @@ export default function SemiQuestionScreen() {
   const id = typeof parcelId === 'string' ? parcelId : '';
   const [selected, setSelected] = useState<SemiAnswer | null>(null);
   const { data, isFetching, error, refetch } = useParcelLookup(id || undefined);
-  const queryClient = useQueryClient();
+  const storeLookup = useSetParcelLookup();
   const [submitError, setSubmitError] = useState<unknown>(null);
   const submittingRef = useRef(false);
   const mountedRef = useRef(true);
@@ -62,10 +61,10 @@ export default function SemiQuestionScreen() {
     }
     // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
     if (!mountedRef.current) return;
-    queryClient.setQueryData(['parcel-lookup', id], result);
+    storeLookup(id, result);
     redirectedRef.current = true;
     router.replace(route);
-  }, [id, queryClient, router]);
+  }, [id, storeLookup, router]);
 
   const actions = useMemo(
     () => ({

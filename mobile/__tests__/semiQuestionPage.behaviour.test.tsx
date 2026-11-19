@@ -26,13 +26,12 @@ type Hook = { data?: unknown; isFetching: boolean; isError?: boolean; error: unk
 let mockHook: Hook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
 const mockCalls: Array<string | undefined> = [];
 const mockFetchLookup = jest.fn();
+// SRCH.SEMI stage 2 (task-319): Continue stores the answered lookup in the report's cache entry (through useSetParcelLookup since task-353; same key and value).
+const mockSetQueryData = jest.fn();
 jest.mock('@/hooks/useParcelLookup', () => {
   class ParcelLookupSchemaError extends Error {}
-  return { ParcelLookupSchemaError, fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; } };
+  return { ParcelLookupSchemaError, fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; }, useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result) };
 });
-// SRCH.SEMI stage 2 (task-319): Continue stores the answered lookup in the report's cache entry.
-const mockSetQueryData = jest.fn();
-jest.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ setQueryData: (...a: unknown[]) => mockSetQueryData(...a) }) }));
 jest.mock('@/components/surfaces/ReportPageHost', () => {
   const { View } = jest.requireActual('react-native');
   const R = jest.requireActual('react');
