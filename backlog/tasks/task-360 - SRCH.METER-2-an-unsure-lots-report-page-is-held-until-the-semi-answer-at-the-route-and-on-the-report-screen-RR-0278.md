@@ -3,9 +3,11 @@ id: TASK-360
 title: >-
   SRCH.METER-2 an unsure lot's report page is held until the semi answer, at the
   route and on the report screen (RR-0278)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-METER2'
 created_date: '2026-11-19T22:30:00Z'
+updated_date: '2026-11-19T23:08:00Z'
 labels:
   - S
   - plan:SRCH.METER
@@ -66,3 +68,9 @@ Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.t
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-METER2, worktree /Users/brettpreston_macmini/Buildo-wt-meter2, branch wf1/inc1b-meter2), RR-0240
+<!-- SECTION:NOTES:END -->
