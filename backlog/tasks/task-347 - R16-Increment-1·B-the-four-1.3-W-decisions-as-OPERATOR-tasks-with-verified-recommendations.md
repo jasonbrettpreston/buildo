@@ -3,11 +3,11 @@ id: TASK-347
 title: >-
   R16 Increment 1·B: the four 1.3 W decisions as OPERATOR tasks with verified
   recommendations
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R16'
 created_date: '2026-11-19T21:03:00Z'
-updated_date: '2026-11-19T21:14:00Z'
+updated_date: '2026-11-19T21:15:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -26,8 +26,8 @@ Scope now: record-only. Lane BL-W (task-123 stage 1, docs/reports/lanes/2026-11-
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 four OPERATOR tasks in m-1, each with a plain explanation, Grounded and Recommendation lines stating verified or UNVERIFIED
-- [ ] #2 task-123, 266, 267 carry a dated note naming the OPERATOR tasks; backlog doctor clean
+- [x] #1 four OPERATOR tasks in m-1, each with a plain explanation, Grounded and Recommendation lines stating verified or UNVERIFIED
+- [x] #2 task-123, 266, 267 carry a dated note naming the OPERATOR tasks; backlog doctor clean
 <!-- AC:END -->
 
 ## Definition of Done
@@ -55,3 +55,9 @@ Scope now: record-only. Lane BL-W (task-123 stage 1, docs/reports/lanes/2026-11-
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R16, worktree /Users/brettpreston_macmini/Buildo-wt-r16, branch wf2/inc1b-r16), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Two OPERATOR tasks created in m-1 (task-348 D1, task-349 D3), each with plain explanation, Grounded and Recommendation (both UNVERIFIED, reasons stated); D2 and D4 found already ruled (MORNING-DECISIONS.md:704-705; .cursor/MCFRONTEND-QUEUE.md:363) and recorded as notes. AC#1 reads four tasks; the brief orders no task for a ruled decision, so two were made. Notes on task-123, 266, 267, 343; backlog doctor clean. Commit d9fda5735 (hook GATE OK, POLICY CHECKS OK). Review r1 triaged.
+<!-- SECTION:FINAL_SUMMARY:END -->
