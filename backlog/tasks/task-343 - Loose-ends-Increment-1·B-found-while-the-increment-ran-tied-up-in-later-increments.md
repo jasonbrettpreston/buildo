@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T22:13:00Z'
+updated_date: '2026-11-19T22:27:00Z'
 labels:
   - S
   - loose-ends
@@ -131,4 +131,6 @@ CHK.6 design-fit check and its elements file (task-67, task-345): not built; ope
 2026-11-19 (R18, task-355) loose end, from the no-plan research (task-357): the app cannot tell the two 403 refusals of the lookup apart, SUBSCRIPTION_REQUIRED and REPORT_LIMIT_REACHED, because ApiError holds a status and a message only (mobile/src/lib/errors.ts:14-21; mobile/src/lib/parcelSearchMatch.ts:295-300), so a person who used every report reads the subscription notice. Severity: visible. tied up by: the limit wall loose end above (NONE); task-357 builds a read-based rule for its own trigger only.
 
 task-351 (BL-RESET): built but unowned/unproven: (1) the limit wall resetsOn (src/features/leads/api/error-mapping.ts:34-38) is still a raw instant, its screen must use a server label; (2) formatDateDmy still prints Sept on the lot-size page (operator item in docs/reports/lanes/2026-11-19/BL-RESET/REPORT.md); (3) mobile jest and device look of the reports-left line not run (CI after push).
+
+2026-11-19 loose ends from task-356 (BL-BOX): the v8 mock (~/Buildo-scratch/mcfrontend/small-pages-v8/content.json:97 and search.html:265, :278, :318) still draws 'Enter lot address'; backlog/docs/increments/doc-2 - Increment-S-requirements.md:31 and :100 (A.2) still say 'Enter lot address'.
 <!-- SECTION:NOTES:END -->
