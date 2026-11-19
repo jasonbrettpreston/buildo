@@ -3,11 +3,11 @@ id: TASK-346
 title: >-
   R15 Increment 1·B: the task-342 answer entered (proof tool without the
   design-fit check); task-68 unblocked
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R15'
 created_date: '2026-11-19T20:46:00Z'
-updated_date: '2026-11-19T20:47:00Z'
+updated_date: '2026-11-19T20:48:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -23,8 +23,8 @@ Scope now: record-only. Operator 2026-11-19 (RR-0306, ~/Buildo-scratch/queues-20
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 decision entered through backlog-decision.mjs with the verbatim quote and cite
-- [ ] #2 task-342 DONE with the decision as final summary; task-68 no longer depends on task-67; backlog doctor clean
+- [x] #1 decision entered through backlog-decision.mjs with the verbatim quote and cite
+- [x] #2 task-342 DONE with the decision as final summary; task-68 no longer depends on task-67; backlog doctor clean
 <!-- AC:END -->
 
 ## Definition of Done
@@ -52,3 +52,9 @@ Scope now: record-only. Operator 2026-11-19 (RR-0306, ~/Buildo-scratch/queues-20
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R15, worktree /Users/brettpreston_macmini/Buildo-wt-r15, branch wf2/inc1b-r15), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Decision-91 entered (quote I would agree, cite MORNING-DECISIONS.md:1178); task-342 DONE; task-68 deps now TASK-62,TASK-66; notes on 67, 345, 343; doctor clean. Commit d2b087e94, hooks GATE OK.
+<!-- SECTION:FINAL_SUMMARY:END -->
