@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PROOF2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T21:02:00Z'
+updated_date: '2026-11-19T21:11:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -57,7 +57,8 @@ slicePart: SUPPORT S3 proof and answer keys
 planNote: holistic-r1: status PLANNED (approved: S1/S2/Q-H4 a, 2026-11-18) (operator answers 2026-11-18 on the answer page (MORNING-DECISIONS.md, "Operator answers saved on the answer page": Q-H1 a, Q-H2 a, Q-H3 a, Q-H4 a, Q-H5 a, S1 a, S2 a))
 who (plan text): one lane; claim an ID by mkdir before it starts (ID ledger)
 
-Files: scripts/surfaces/proof-slice.mjs; scripts/surfaces/proof-slices.json; src/tests/surfaces/proof-slice.logic.test.ts; the task-68 task file (stage 2, scope: minimum tool for slice S); conditional: one dated paragraph in docs/specs/02-web-admin/127_surface_conversion_procedure.md if check-spec-diff.mjs asks. Stage 1 plan: docs/reports/lanes/2026-11-19/BL-PROOF/PLAN.md
+Files: scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json, src/tests/proof-slice.logic.test.ts, docs/specs/02-web-admin/127_surface_conversion_procedure.md
+(Files line: comma-separated for scripts/hooks/check-task-files.mjs; stage 2 scope: minimum tool for slice S; the Spec 127 entry is conditional on check-spec-diff.mjs asking. Stage 1 plan: docs/reports/lanes/2026-11-19/BL-PROOF/PLAN.md)
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -122,4 +123,8 @@ Scope now: runs the group F checks that exist and prints the design-fit check as
 2026-11-19 stage 1 (lane BL-PROOF): the measured minimum plan for slice S is done and reviewed once (r1, TRIAGE.md). Measured today on head 8e0742142: surface-validate, the search, lot map and semi golden --check runs and policy-checks --all are green; CHK.5 prints WAITS (no record table named); the customer report read returns null (src/lib/parcels/report-page.ts:23-26); no 1.6 harness code exists (task-206 merged into draft-15). Minimum tool: one runner over the existing checks, about 300 lines in 3 files, 1 day GUESS. Later stages with their unblockers: screenshots and element check (task-123, task-265, test-stack GO), key compare (task-123, key file), storage probes (task-265, table migration), design fit (task-345 then task-67). One operator draft (D1, accept the four report-page proofs as GAP for 1·B) is in PLAN.md section 6 for the orchestrator. stage 1 plan done; stage 2 build waits on the orchestrator
 
 2026-11-19 taken on the board at lane launch (lane BL-PROOF2, worktree /Users/brettpreston_macmini/Buildo-wt-proof2, branch wf1/inc1b-proof2), RR-0240
+
+Stage 2 (lane BL-PROOF2, 2026-11-19): building the minimum runner per PLAN.md section 5. Red: T1-T7 in src/tests/surfaces/proof-slice.logic.test.ts committed alone first (red.out). Step 0 ids check: only FAIL is round-195 (prereg-MF-91-1.json, another lane's commit in 78f552fbb..67dd69222); this task adds no id kind (ids.out). Mobile jest row: PLAN gives no way to measure it without the runner call lane rule 18 refuses, so it is a NOT BUILT row ('not run by this tool') and no --with-mobile flag is built.
+
+2026-11-19 stage 2: the tool lives under scripts/analysis/ (a runner of checks, not a surface); deviation from PLAN.md section 5 paths, orchestrator decision, flagged to the operator.
 <!-- SECTION:NOTES:END -->
