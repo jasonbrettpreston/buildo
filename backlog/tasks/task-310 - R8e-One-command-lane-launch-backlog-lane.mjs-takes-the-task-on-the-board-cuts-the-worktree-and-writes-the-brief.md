@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-R8e'
 created_date: '2026-11-19T13:05:00Z'
-updated_date: '2026-11-19T13:05:00Z'
+updated_date: '2026-11-19T13:09:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -46,6 +46,16 @@ Operator 2026-11-19: "you now need to manually change the board or add a task - 
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Red first: src/tests/backlog/backlog-lane.logic.test.ts on a temp Backlog project (helpers.ts) cloned as a temp board git repo; cases: refusals (status RUNNING/BUILT/DONE, missing worktree parent, existing worktree dir, existing branch, dirty file outside backlog/, missing backlog binary, each exit 3 with one line); --dry-run prints take, launchctl kickstart, git worktree add, two ln, cp, backlog-brief, brief.mjs commands and a BRIEF-FILE placeholder and writes nothing; generated task.json fields and writeScope with no file entry; real take through BACKLOG_LANE_NO_LAUNCHD=1 (runs the board-commit job script instead of launchctl) with a fake panel-tools dir; a failing board hook gives the 4-minute-wait refusal (BACKLOG_LANE_WAIT_MS short). Red proven by a commit attempt with only test, task-310 file and context file staged (red.out).
+2. Build scripts/analysis/backlog-lane.mjs: one ordered list of steps (argv + cwd) used for both the dry-run print (shell-quoted) and the real run; reuses backlog-lib.mjs (args, readItems, parseFM, asList, descriptionOf, sha256, today); shells out to backlog, launchctl, git, ln, cp, backlog-brief.mjs and panel-tools/brief.mjs; no new dependency, no config key.
+3. Preflight refusals before any write (exit 3): backlog binary, task status LATER/WAITS, worktree parent, worktree exists, branch exists, board dirty outside backlog/.
+4. Take, kickstart, wait (backlog/ clean and HEAD advanced, 4 minute timeout), worktree add from the board HEAD, links, active_task copy, G1 ticket, task.json (or --spec), brief.mjs, print BRIEF-FILE line with sha256.
+5. Green: real commit through the hooks with Task: task-310 (commit.out); typecheck; one output review on the diff with one lens (refusals, dry-run completeness, quoting); triage; fix commit for KEPT defects only; dry-run proofs against the real board (dryrun.out); close AC 1-3 with evidence.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
