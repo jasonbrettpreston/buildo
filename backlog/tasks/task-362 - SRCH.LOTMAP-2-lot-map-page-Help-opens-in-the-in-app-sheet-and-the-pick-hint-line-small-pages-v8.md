@@ -3,9 +3,11 @@ id: TASK-362
 title: >-
   SRCH.LOTMAP-2 lot map page: Help opens in the in-app sheet, and the pick hint
   line (small-pages-v8)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-LOTMAP2'
 created_date: '2026-11-19T22:30:00Z'
+updated_date: '2026-11-19T22:47:00Z'
 labels:
   - S
   - plan:SRCH.LOTMAP
@@ -56,3 +58,9 @@ Files: mobile/src/lib/maxbldHelp.ts, mobile/src/components/surfaces/LotMapBindin
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-LOTMAP2, worktree /Users/brettpreston_macmini/Buildo-wt-lotmap2, branch wf1/inc1b-lotmap2), RR-0240
+<!-- SECTION:NOTES:END -->
