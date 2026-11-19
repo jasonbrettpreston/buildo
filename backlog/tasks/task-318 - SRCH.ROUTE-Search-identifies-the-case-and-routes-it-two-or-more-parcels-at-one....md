@@ -3,11 +3,11 @@ id: TASK-318
 title: >-
   SRCH.ROUTE Search identifies the case and routes it: two or more parcels at
   one...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-ROUTE'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T15:24:00Z'
 labels:
   - S
   - plan:SRCH.ROUTE
@@ -77,4 +77,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): promoted from draft-3 (was DRAFT-3) by R10: RR-0182 'the search identifies two-or-more parcels, a mis-typed address, or a possible semi lot'; no dependency (mostly built: C.14, B.1, D.1 routes). Panel and build pass owed.
+
+2026-11-19 taken on the board at lane launch (lane BL-ROUTE, worktree /Users/brettpreston_macmini/Buildo-wt-route, branch wf1/inc1b-route), RR-0240
 <!-- SECTION:NOTES:END -->
