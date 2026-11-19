@@ -3,11 +3,11 @@ id: TASK-305
 title: >-
   Board on 6421: worktree ~/Buildo-wt-board and the board-commit and board-ff
   launchd jobs (R6)
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R6'
 created_date: '2026-11-19T05:28:00Z'
-updated_date: '2026-11-19T12:59:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -78,6 +78,8 @@ Rules quoted (file:line):
 2026-11-19 R6 BOARD-STATUS decision: the repo board writes its own one-line file ~/Buildo-scratch/backlog-pilot/BOARD-STATUS-6421.txt (format `6421: <sha> <ff|WARN reason> <time>`), because auto-board.zsh rewrites BOARD-STATUS.txt wholly at every rebuild (auto-board.zsh:28-31). Logs: ~/Buildo-wt-board/.board/*.log (gitignored). Note: ff-only on a checkout that is ahead of origin with origin an ancestor reports ff (already up to date); WARN appears only when origin has moved and the branches diverged or backlog/ is dirty.
 
 2026-11-19 pushed: 181aac24b and the job commits landed on origin/wf1/mb-rulings (push fa08e8f24 12:52Z); board-ff fast-forwarded the checkout to fa08e8f24 at 07:52 local
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

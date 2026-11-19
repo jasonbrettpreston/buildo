@@ -3,11 +3,11 @@ id: TASK-8
 title: >-
   INFRA.5 Parallel lanes: lanes.mjs registry (claim lane name -> files/dirs it
   writes; a...
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-INFRA5'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:14:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -89,6 +89,8 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 
 2026-11-19 lane BL-INFRA5: module scripts/analysis/lane-claims.mjs landed (commit eb57bad40) and output-review fixes (r2: lexical resolve of not-yet-existing suffix, registry dir created, finite ttl, lock deadline). Registry path env LANES_FILE, default ~/Buildo-scratch/panel-tools/lanes.json. Advisory single-host lock; hook switch is the orchestrator's step after the push.
 Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-8 · Backlog; operator, verbatim: "y - this is a major improvement")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

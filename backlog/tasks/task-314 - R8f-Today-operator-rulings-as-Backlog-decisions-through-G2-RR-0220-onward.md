@@ -1,11 +1,11 @@
 ---
 id: TASK-314
 title: R8f Today operator rulings as Backlog decisions through G2 (RR-0220 onward)
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R8F'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-19T14:15:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -62,6 +62,8 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-314 · Backlog; o
 Plan step 1-4 executed: decisions.out in lane dir shows G2 exit 0 for decision-71..75; register-table.txt shows 10 kind ruling rows, 5 source operator written, 5 source reading not written (orchestrator words, RR-0190).
 
 AC evidence: 5 decisions written (decision-71..75), G2 exit 0 each (decisions.out), tasks named per decision body; review r1 triaged (TRIAGE.md) before the edits; 5 source-reading rows not written, reason in REPORT.md. Commit e80f97485.
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

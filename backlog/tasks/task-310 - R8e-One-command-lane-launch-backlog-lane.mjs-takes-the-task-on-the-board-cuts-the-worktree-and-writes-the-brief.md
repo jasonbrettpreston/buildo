@@ -3,11 +3,11 @@ id: TASK-310
 title: >-
   R8e One-command lane launch: backlog-lane.mjs takes the task on the board,
   cuts the worktree and writes the brief
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R8e'
 created_date: '2026-11-19T13:05:00Z'
-updated_date: '2026-11-19T14:14:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -67,6 +67,8 @@ Operator 2026-11-19: "you now need to manually change the board or add a task - 
 2026-11-19 BL-R8e: script and 16 tests landed in 67032d6a6 (red.out: 16 failed, no module; commit.out: 16 passed, hooks green); r1 plan review and r2 output review triaged in docs/reports/lanes/2026-11-19/BL-R8e/TRIAGE.md; fixes folded in the second commit; dry-run proof in the lane dir dryrun.out (task-310 refused as RUNNING, task-14 LATER printed all commands).
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0242 · task-310 · Backlog; operator, verbatim: "wasnt the point of this to avoid just that")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

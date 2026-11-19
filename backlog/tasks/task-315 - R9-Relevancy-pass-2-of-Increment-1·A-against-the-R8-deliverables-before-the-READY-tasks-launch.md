@@ -3,11 +3,11 @@ id: TASK-315
 title: >-
   R9 Relevancy pass 2 of Increment 1·A against the R8 deliverables before the
   READY tasks launch
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R9'
 created_date: '2026-11-19T13:37:00Z'
-updated_date: '2026-11-19T13:47:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -63,6 +63,8 @@ Operator 2026-11-19: "and then remaining tasks in incr-1a are still relevant in 
 2026-11-19 taken on the board at lane launch (lane BL-R9, worktree /Users/brettpreston_macmini/Buildo-wt-r9, branch wf2/r9-relevancy2), RR-0240
 
 2026-11-19 AC evidence: AC1 eleven dated notes (CLI) on task-2,3,4,5,8,11,63,67,9,64,66 with cites, status set only on task-9 (MERGED, merged-into task-309); AC2 'Scope now:' on task-2,3,4,5,8,11 (READY by backlog-next, which prints them as LATER); AC3 review r1 in review mode, 29 findings, all triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md. Docs only, no test.
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

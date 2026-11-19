@@ -3,11 +3,11 @@ id: TASK-64
 title: >-
   CHK.3 Automatic check: nothing new without a ruling (new client component
   file, new...
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R7a'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:44:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -95,4 +95,6 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0196 · task-64 · Backlog; op
 2026-11-19 pushed: CHK.3 re-cut landed as 2ba07f464 on origin/wf1/mb-rulings (push fa08e8f24 12:52Z, station PASS 28244 tests)
 
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): KEPT: BUILT stays; no R8 deliverable overlaps it. Fact on the task: 2ba07f464 is on origin/wf1/mb-rulings (git branch -r --contains), pushed in fa08e8f24; the earlier note says not before push 6 (RR-0196, MORNING-DECISIONS.md:825). UNVERIFIED which ruling reversed it; raised to the orchestrator.
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->

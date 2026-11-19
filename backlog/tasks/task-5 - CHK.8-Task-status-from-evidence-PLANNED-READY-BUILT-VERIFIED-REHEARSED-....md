@@ -3,11 +3,11 @@ id: TASK-5
 title: >-
   CHK.8 Task status from evidence: PLANNED / READY / BUILT / VERIFIED /
   REHEARSED /...
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-CHK8'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:14:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -91,6 +91,8 @@ who (plan text): lane
 
 2026-11-19 lane BL-CHK8: check built at scripts/analysis/backlog-status-check.mjs (test src/tests/backlog/backlog-status-check.logic.test.ts). Review r1 (plan) and r2 (output, lens git range edge cases and exit codes) triaged in docs/reports/lanes/2026-11-19/BL-CHK8/TRIAGE.md; KEPT fixes: exit 2 on a non-repo root or a range outside HEAD, annotated trailers, empty diff not docs-only.
 Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-5 · Backlog; operator, verbatim: "y - this is a major improvement")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

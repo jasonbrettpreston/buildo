@@ -3,11 +3,11 @@ id: TASK-2
 title: >-
   CHK.0 Rulings register (plan-gen/rulings-register.json: every operator ruling
   a row...
-status: LATER
+status: MERGED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:15:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -25,6 +25,7 @@ references:
   - >-
     ~/Buildo-scratch/lanes-20261117/inc-plan/checks/PANEL.md#L2
     sha256=b30b7f626bca
+  - task-314
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low
@@ -83,4 +84,6 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-2 · Backlog; ope
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): CHANGED: no scratch register, add-ruling or ruling-gate is built; BL.0 G2 scripts/analysis/backlog-decision.mjs (quote at a resolving cite, 3002ef51c era) and scripts/analysis/decision-log.mjs (R-HK) are the pair, 68 rulings already loaded (R7b note). Rulings after RR-0219 enter through task-314 (R8f, LATER, not built; MORNING-DECISIONS.md:960). (re-use ruling MORNING-DECISIONS.md:750-751). Scope now: build nothing new; confirm task-314 covers the rulings from RR-0220 on, then close this task as covered (MERGED into task-314 once task-314 is DONE).
 
 2026-11-19 (R8f, task-314): the remaining scope of this task (rulings after RR-0219 enter the Backlog decisions) is covered once the task-314 commit lands: five operator rulings RR-0232, RR-0233, RR-0235, RR-0242, RR-0248 written through G2 as decision-71 to decision-75; five reading rows (RR-0223, 0225, 0227, 0238, 0240) held back as orchestrator words. Task-2 can close MERGED into task-314 once task-314 is DONE.
+
+2026-11-19 MERGED into task-314 (R8f landed in push 7b8381cfd): the rulings register and gate live as decision-log + G2; nothing left to build (pass 2 note)
 <!-- SECTION:NOTES:END -->

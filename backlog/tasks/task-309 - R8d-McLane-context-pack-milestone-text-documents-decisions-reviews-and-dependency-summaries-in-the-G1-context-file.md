@@ -3,11 +3,11 @@ id: TASK-309
 title: >-
   R8d McLane context pack: milestone text, documents, decisions, reviews and
   dependency summaries in the G1 context file
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R8d'
 created_date: '2026-11-19T12:52:00Z'
-updated_date: '2026-11-19T14:14:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -61,6 +61,8 @@ Operator 2026-11-19 (RR-0235): "We need them linked with all the relevant data -
 2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8d in ~/Buildo-wt-r8d, branch wf2/r8d-context-pack)
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0235 · task-309 · Backlog; operator, verbatim: "We need them linked with all the relevant data - beyond just the data references")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

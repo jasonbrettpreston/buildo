@@ -3,11 +3,11 @@ id: TASK-306
 title: >-
   R8a Open decisions on the board: OPERATOR status, Grounded and Recommendation
   lines, the three expired McFrontend rows mirrored
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-R8a'
 created_date: '2026-11-19T12:52:00Z'
-updated_date: '2026-11-19T14:14:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 labels:
   - follow-up
   - open-decisions
@@ -66,6 +66,8 @@ Operator 2026-11-19 (RR-0232): "recommendation approved - however the open decis
 Dated note 2026-11-19 (M-246, prior text kept; RR-0232 · task-306 · Backlog; operator, verbatim: "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified).")
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-306 · Backlog; operator, verbatim: "I really only have expertise in the front-end, design of the app, how much storage, timeframes, priorities - beyond that my expertise is limited and I need to rely on yo or the panel or the gates to make sure the rules are followed and we are making prudent decisions")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

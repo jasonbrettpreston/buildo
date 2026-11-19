@@ -3,11 +3,11 @@ id: TASK-11
 title: >-
   INFRA.6 Spec 08 dated note (DRAFT only, not applied): seat K as a lens of Spec
   08...
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-INFRA6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:15:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -85,6 +85,8 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 
 2026-11-19 BL-INFRA6: section 5.8 (08_agents.md:249-254) is a WF6 decision-trail audit, so it does not make the note redundant; full DRAFT (not applied) dated note written after :253 (one paragraph, M-246 form, prior text kept, no rule text change, no new role/seat/template). Review r1 (review mode, plan template) triaged in docs/reports/lanes/2026-11-19/BL-INFRA6/TRIAGE.md; 4 KEPT items folded.
 Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-11 · Backlog; operator, verbatim: "y - this is a major improvement")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

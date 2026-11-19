@@ -3,11 +3,11 @@ id: TASK-4
 title: >-
   CHK.7 Automatic check: ID ledger and closed status words (ids a task
   introduces have a...
-status: BUILT
+status: DONE
 assignee:
   - '@lane-BL-CHK7'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:50:00Z'
+updated_date: '2026-11-19T15:21:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -107,6 +107,8 @@ CHK.7 now runs at push and CI (arm Q) only; header comment of mcbylaws-queue-che
 
 Fix: idLedgerErrors skips the unclaimed judgement when the queue has no Next free id line (no cannot-decide, no WARN); duplicates are still judged.
 Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-4 · Backlog; operator, verbatim: "y - this is a major improvement")
+
+2026-11-19 DONE: closing commits on origin/wf1/mb-rulings (push windows 3 and 4: 62de20da0, 7b8381cfd; station PASS); evidence per the task's final summary
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
