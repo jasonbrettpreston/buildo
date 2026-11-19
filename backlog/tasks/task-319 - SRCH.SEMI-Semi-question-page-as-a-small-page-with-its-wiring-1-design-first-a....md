@@ -3,11 +3,11 @@ id: TASK-319
 title: >-
   SRCH.SEMI Semi question page as a small page, with its wiring: (1) design
   first: a...
-status: WAITS
+status: RUNNING
 assignee:
-  - '@lane-BL-SEMI'
+  - '@lane-BL-SEMI2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:03:00Z'
+updated_date: '2026-11-19T20:58:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -104,4 +104,6 @@ Scope now: page, mock and link only in 1·B (RR-0264); the owner-input store sta
 
 Grounded: the semi question page is already built, elements D.1 to D.7 (doc-2 lines 67-73): mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/components/surfaces/SemiQuestionBinding.tsx:29-117, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json; the link from search is proven by src/tests/search-routing.logic.test.ts:136; the v8 mock for approval is docs/reports/lanes/2026-11-19/BL-SEMI/semi-question.html with the delta list DELTA.md beside it (RR-0184 MORNING-DECISIONS.md:801, RR-0264 :1041-1043).
 Recommendation: approve the mock as drawn and answer the four small questions in DELTA.md section 6 (Q1 chevron, Q2 info icon, Q3 curly apostrophes, Q4 v8 retry and loading form); stage 2 then builds the structural restyle and the meter call after the answer. Checked by one repo review round on the plan (r1-plan.txt, TRIAGE.md); the mock render and the device look are UNVERIFIED.
+
+2026-11-19 taken on the board at lane launch (lane BL-SEMI2, worktree /Users/brettpreston_macmini/Buildo-wt-semi1b2, branch wf1/inc1b-semi2), RR-0240
 <!-- SECTION:NOTES:END -->
