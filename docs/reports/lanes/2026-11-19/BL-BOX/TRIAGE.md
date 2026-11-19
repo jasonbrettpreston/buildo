@@ -17,3 +17,20 @@
 | 14 LOW | hint says "lot", placeholder says "address" | REJECT, noted | out of scope: task says search.input.hint does not move |
 | 15 LOW | fingerprint churn McRecommendation | REJECT | out of scope |
 | 16-18 NIT | truncation, undefined quotes, commit ids | REJECT / noted | cut was in the paste; commit ids in REPORT |
+
+# Round 2: DeepSeek lens set on the diff (r1-compliance.txt, r1-ux.txt), grounded by BL-BOX
+Lenses that ran: compliance and ux (templates read from wf2/board by git show; the worktree was NOT rebased onto wf2/board: the brief forbids history rewriting, so I did not run git rebase; this lane's diff does not touch files the board commit moves, UNVERIFIED by merge). The generic r1-output.txt round also ran earlier (landing came before the lens message reached me). Lenses ran on a path-limited diff.patch (lines cut at 700 chars) with the fixtures given as numstat only.
+| Finding (both lenses) | Verdict | Evidence |
+|---|---|---|
+| Fixtures absent from patch (HIGH/CRITICAL) | REJECT | by design of the payload: git diff --numstat in diff-numstat.txt lists 23 fixtures; search-golden-capture --check "search goldens ok (11)", regen-web "changed 0" |
+| Notes end mid-sentence / unterminated quote (MED) | REJECT | truncation from my cut -c1-700: spec line 146 ends "(loose end, task-343)." ; queue line 148 ends "Task: task-356 (Increment 1·B)." (grep) |
+| old input_sha 9d3ad6a11d376ff2 pinned elsewhere (HIGH) | REJECT | git grep -l 9d3ad6a11d376ff2 finds only docs/reports/reviews/task-356/context-2026-11-19.md; emit --check ok |
+| Items a and b of the operator answer not covered | REJECT | out of scope; task-356 is item c only; a and b are RR-0311 and the no-plan task (task-352 answers) |
+| test asserts data against itself | REJECT | existing pattern (parcelScreens.golden.test.ts:243-248 pre-change); renders are pinned by the 22 goldens |
+| no assertion for search.outside_toronto (RR-0314) | REJECT | already pinned by golden refs mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json:1620 and parcelSearch.situations.json:382; a new test is scope creep (PLAN-PROTOCOL.md:3, DoD 8) |
+| label and placeholder near-identical; vocabulary drift (lot/parcel/address); third rename | REJECT | operator ruled the words (RR-0313); hint is another key (task: does not move); recorded in UX note below |
+| clipping on narrow phone, Dynamic Type | KEPT as UNVERIFIED | in REPORT, line 4 |
+| second copy / locale variant of the content | REJECT | task grounded: one source, F06 landing has none; git grep "Enter lot address" over scripts mobile src finds only oracle:25 |
+| spec/queue note should carry the full path | KEPT, FOLDED | spec line 146 now uses the full repo path; queue row 148 names the key and file by the form `mobile_parcel_search.content.json` as in the BL-GAP13 note (:144), left as is |
+| oracle prose map, can\'t escape, negative grep test, $comment key, describe/comment history | REJECT | pre-existing patterns; out of scope; the first landing attempt already proved the escape needs the backslash (typecheck refusal) |
+| web asserted but only mobile path patched | REJECT | web imports the same file (src/lib/surfaces/maxbld-web.ts:6, :22; task grounding); web goldens moved (11 .web.json) |
