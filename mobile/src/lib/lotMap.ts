@@ -41,10 +41,9 @@ export type LotMapSituation = {
   /** The contract's map block as sent (cards bind to it), or null. */
   map: ParcelLotMap | null;
   lots: Array<{ parcelId: string; letter: string; polygons: MapPolygon[]; marker: MapPoint | null }>;
-  neighbours: Array<{ parcelId: string; polygons: MapPolygon[] }>;
   pin: MapPoint | null;
   region: MapRegion | null;
-  /** The tapped lot or neighbour, or null (nothing selected at open). */
+  /** The tapped lot, or null (nothing selected at open). */
   selectedParcelId: string | null;
   selectedLetter: string | null;
   /** Where Continue goes (the report route of the picked lot), else null (Continue disabled). */
@@ -95,7 +94,6 @@ export function buildLotMapSituation(args: {
     polygons: polygonsOf(l.outline),
     marker: l.centroid ? { latitude: l.centroid.lat, longitude: l.centroid.lng } : null,
   }));
-  const neighbours = (map?.neighbours ?? []).map((n) => ({ parcelId: n.parcelId, polygons: polygonsOf(n.outline) }));
 
   let state: LotMapState;
   let navigate: string | null = null;
@@ -111,7 +109,7 @@ export function buildLotMapSituation(args: {
     navigate = outcome === 'unique' && data.match ? parcelSearchRoute('unique', { parcelId: data.match.parcelId, query }) : PARCEL_TAB_ROUTE.lookup;
   }
 
-  const pickable = state === 'multi_parcel' ? lots : state === 'unlinked' ? neighbours : [];
+  const pickable = state === 'multi_parcel' ? lots : [];
   const selectedParcelId = pickable.some((p) => p.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;
   const selectedLetter = lots.find((l) => l.parcelId === selectedParcelId)?.letter ?? null;
   const drawn = state === 'multi_parcel' || state === 'unlinked';
@@ -122,7 +120,6 @@ export function buildLotMapSituation(args: {
     errors: error != null ? errors : { ...errors, unexpected: false },
     map: drawn || state === 'too_many_lots' || state === 'unlinked_no_pin' ? map : null,
     lots: state === 'multi_parcel' ? lots : [],
-    neighbours: state === 'unlinked' ? neighbours : [],
     pin: drawn && map?.pin ? { latitude: map.pin.lat, longitude: map.pin.lng } : null,
     region: drawn ? regionOf(map?.fit ?? null) : null,
     selectedParcelId,

@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -70,7 +70,7 @@
                           "key": "back-icon",
                           "icon": "X",
                           "size": 16,
-                          "color": "#a1a1aa"
+                          "color": "#4d4841"
                         },
                         "children": []
                       }

@@ -58,7 +58,6 @@ export const WEB_SEARCH_LAYOUT = {
   pill: 'flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1',
   /** ph-no-capture: the analytics client never records the typed address (Spec 100 §2.8; MF-44 security S-7). */
   input: 'flex-1 ph-no-capture',
-  account: 'rounded-full',
   legal: 'mt-3 text-[13px] leading-[18px] font-normal text-zinc-400',
   chipRow: 'mt-3 gap-2',
   chip: 'rounded-full font-mono text-xs font-normal',
@@ -115,9 +114,6 @@ const pill = (s: WebSituation): WebNode =>
       autoComplete: 'off',
     }),
     ...(s.isFetching ? [node('Loader', { key: 'spinner', testID: 'parcel-search-spinner', size: 'sm', color: 'yellow', ariaLabel: content('search.searching') })] : []),
-    node('Button', { key: 'account', testID: 'parcel-search-account', size: 'lg', variant: 'filled', color: 'yellow', className: L.account, onClick: { action: 'open_account' } }, [
-      content('search.account.label'),
-    ]),
   ]);
 
 /** MF-58 (ruling 2026-11-10 items 16 and 5; queue N8 for the web page): the legal line under the address input, before any result block. */
@@ -255,7 +251,6 @@ export type WebActions = {
   retry: () => void;
   select: (parcelId: string) => void;
   push: (route: string) => void;
-  open_account: () => void;
 };
 /** Run-time options of the mount (not in the golden): `disabled` turns off the input and every button (the live switch is off). */
 export type WebRuntime = { disabled?: boolean };
@@ -292,7 +287,7 @@ export function resolveWebValue(v: unknown, ctx: Pick<Ctx, 'content' | 'data'>):
 const handler = (a: unknown, ctx: Ctx): ((e?: unknown) => void) | undefined => {
   if (!isObj(a)) return undefined;
   const name = String(a.action);
-  if (!['change_input', 'set_input', 'retry', 'select', 'push', 'open_account'].includes(name)) throw new Error(`SearchBinding: unknown action "${name}"`);
+  if (!['change_input', 'set_input', 'retry', 'select', 'push'].includes(name)) throw new Error(`SearchBinding: unknown action "${name}"`);
   const f = ctx.actions[name as keyof WebActions];
   if (!f) return undefined;
   switch (name) {

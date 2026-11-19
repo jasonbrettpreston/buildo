@@ -147,51 +147,52 @@ export const PARCEL_SEARCH_HEX = {
 //   - every Text carries an explicit size, weight and colour (the RNR Text base is `text-foreground text-base`).
 // The S-002 hexes are the §6.1 values above; the RNR roles (`bg-primary`, `border-primary`) come from the generated theme (Spec 117 §7 note).
 export const PARCEL_SEARCH_LAYOUT = {
-  screen: 'flex-1 bg-[#0e0e10]',
+  screen: 'flex-1 bg-report-page',
   scroll: 'flex-1',
   column: 'w-full px-4',
   header: 'items-center pt-10 pb-6',
-  wordmark: 'text-2xl font-bold tracking-tight text-zinc-100',
-  wordmarkAccent: 'text-2xl font-bold tracking-tight text-[#f59e0b]',
-  tagline: 'mt-1 font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400',
-  pill: 'flex-row items-center gap-1 rounded-full border border-[#2e2e33] bg-[#18181b] py-1 pl-4 pr-1',
+  wordmark: 'text-2xl font-bold tracking-tight text-report-ink',
+  wordmarkAccent: 'text-2xl font-bold tracking-tight text-report-amber-ink',
+  tagline: 'mt-1 text-[12px] font-semibold uppercase tracking-widest text-report-muted',
+  pill: 'flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1',
   input:
-    'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-zinc-100 shadow-none placeholder:text-[#52525b]',
-  account: 'min-h-[44px] min-w-[44px] rounded-full bg-primary dark:bg-primary',
-  /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as the small-pages draft, zinc-400 for contrast. */
-  legal: 'mt-3 text-[13px] leading-[18px] font-normal text-zinc-400',
+    'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft',
+  /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as small pages v8 (.legal). */
+  legal: 'mt-3 text-[13px] leading-[18px] font-normal text-report-muted',
   chipRow: 'mt-3 flex-row flex-wrap gap-2',
   chip:
-    'min-h-[44px] rounded-full px-3 bg-[#161618] dark:bg-[#161618] border-[#353437] dark:border-[#353437] active:bg-[#27272a] dark:active:bg-[#27272a]',
-  chipText: 'font-mono text-xs font-normal text-zinc-400',
-  notice: 'mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]',
-  noticeText: 'text-xs font-normal text-red-400',
-  /** The notice icon colours: red-400 is the legacy inline #f87171; the entitlement lock is the primary amber. */
-  noticeIcon: 'text-red-400',
-  entitlementIcon: 'text-[#f59e0b]',
-  noticeTextNeutral: 'text-xs font-normal text-zinc-300',
+    'min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky',
+  chipText: 'text-[15px] font-semibold text-report-ink',
+  notice: 'mt-3 rounded-xl bg-report-card border-report-button-border',
+  /** The v8 error banner: the report's refused fill and ring. */
+  noticeError: 'mt-3 rounded-xl bg-report-no-fill border-report-no-ring',
+  noticeText: 'text-sm font-normal text-report-no',
+  /** The notice icon colours: the report's refused colour; the entitlement lock is the amber-as-text ink. */
+  noticeIcon: 'text-report-no',
+  entitlementIcon: 'text-report-amber-ink',
+  noticeTextNeutral: 'text-sm font-normal text-report-muted',
   retry: 'mt-2 min-h-[44px] rounded-xl',
-  retryText: 'text-xs font-semibold text-[#472a00]',
+  retryText: 'text-xs font-semibold text-report-ink',
   listHeader: 'mt-4 flex-row items-center justify-between',
-  rail: 'font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400',
-  badge: 'font-mono text-[11px] font-normal uppercase tracking-widest text-[#f59e0b]',
+  rail: 'text-[12px] font-semibold uppercase tracking-wider text-report-soft',
+  badge: 'text-[12px] font-semibold uppercase tracking-wider text-report-amber-ink',
   card:
-    'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]',
+    'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky',
   cardChecked:
-    'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-primary dark:border-primary active:bg-[#27272a] dark:active:bg-[#27272a]',
+    'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky',
   cardRow: 'w-full flex-row items-center justify-between gap-2',
-  cardText: 'flex-1 text-base font-normal text-zinc-100',
-  segment: 'text-base font-normal text-zinc-100',
-  segmentDiffers: 'text-base font-semibold text-[#f59e0b]',
+  cardText: 'flex-1 text-base font-normal text-report-ink',
+  segment: 'text-base font-normal text-report-ink',
+  segmentDiffers: 'text-base font-semibold text-report-amber-ink',
   select: 'mt-4 min-h-[44px] w-full rounded-xl',
-  selectText: 'text-sm font-semibold uppercase tracking-widest text-[#472a00]',
-  refine: 'mt-3 text-center text-xs font-normal text-zinc-400',
+  selectText: 'text-base font-bold text-report-ink',
+  refine: 'mt-3 text-center text-xs font-normal text-report-soft',
   /** MF-46 follow-up (P35-D18 a, dated 2026-11-12): the "Report incorrect address match" link under SELECT. */
   report: 'mt-2 min-h-[44px] self-center',
-  reportText: 'text-xs font-normal text-zinc-400 underline',
+  reportText: 'text-xs font-semibold text-report-ink underline',
   miss: 'mt-10 items-center',
-  missText: 'mt-2 text-center text-base font-normal text-zinc-400',
-  prompt: 'mt-10 text-center text-base font-normal text-zinc-600',
+  missText: 'mt-2 text-center text-base font-normal text-report-muted',
+  prompt: 'mt-10 text-center text-base font-normal text-report-soft',
 } as const;
 
 /** Icon sizes in px (lucide `size`), the legacy values (Spec 117 §6.1). */

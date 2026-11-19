@@ -37,7 +37,6 @@ export type SurfaceActions = {
   retry: () => void;
   select: (parcelId: string) => void;
   push: (route: string) => void;
-  open_account: () => void;
   /** MF-53: leave the page (the map page's clear button). */
   back: () => void;
   /** MF-46 follow-up (dated 2026-11-12): open Help & Support in the browser with a topic and a value (mobile/src/lib/maxbldHelp.ts). A host
@@ -124,8 +123,6 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
       return () => act.push(String(a.route));
     case 'retry':
       return () => act.retry();
-    case 'open_account':
-      return () => act.open_account();
     case 'back':
       return () => act.back();
     case 'open_help':

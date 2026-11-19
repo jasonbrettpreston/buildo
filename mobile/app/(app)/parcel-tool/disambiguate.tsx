@@ -46,7 +46,6 @@ export default function ParcelDisambiguationScreen() {
       retry: () => void refetch(),
       select: (parcelId: string) => setSelectedParcelId(parcelId),
       push,
-      open_account: () => undefined,
       // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
     }),

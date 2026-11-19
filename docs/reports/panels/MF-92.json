@@ -1,0 +1,13 @@
+{
+  "task": "MF-92",
+  "item": "SRCH.DAYLIGHT (task-322): restyle the built mobile search pages (search + candidate list, choose-your-lot map page, semi question page) to the Daylight small-pages-v8 look with the existing report-* tokens only; remove A.13 (in-bar Account button), B.8 (faint tappable neighbour outlines), C.9 (lot card frontage and zoning line). Style and removals only; no copy change (GAP.13).",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-19",
+  "head": "prereg 1 (round 194)",
+  "cards": [
+    "Operator, verbatim (R-D1, ~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1098-1100): \"Just looking at the small pages - love it! Let's go with modern.\""
+  ],
+  "plan": "PLAN reviewed by the repo review tool in review mode on docs/reports/reviews/task-322/context-2026-11-19.md (section \"Plan steps under review (lane BL-DAYLIGHT)\", token table v8 token to report-* key): round r1 (r1-plan.txt), every finding triaged KEEP or REJECT with the opened line in TRIAGE.md (kept: test scoping to the render trees and layout tables with named exemptions, grep-scope split per acceptance criterion, --check runs on every generator, the search capture script named as a deliverable, a rollback line). Tests first: mobile/__tests__/daylightSearchPages.golden.test.ts and edits to the golden, behaviour and smoke tests in the red commit 7f281e6e0.",
+  "output": "OUTPUT review, one lens (fidelity to v8 and no copy drift) by the repo review tool on the code diff (r2-output.txt), triaged in TRIAGE.md (r2): no defect kept (the CRITICAL was an artefact of how the review patch was assembled; the file is 58 lines). Checks run by the lane: npm run typecheck exit 0; the three golden capture scripts and emit-mobile-surfaces.mjs --check ok (search 10, lotmap 11, semi-question 8, surfaces ok 4 / 29 goldens); the root related-tests run in the commit hook passed (4 files, 77 tests). Mobile jest suites not run by the lane (UNVERIFIED until the push station)."
+}

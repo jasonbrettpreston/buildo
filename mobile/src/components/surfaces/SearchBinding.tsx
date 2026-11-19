@@ -17,13 +17,13 @@
 // FE-05 (a listed binding module): no numeric literal but 0 and 1, no arithmetic; lengths and caps are decided in parcelSearchMatch.ts.
 import slice from '@/generated/surfaces/mobile_parcel_search.json';
 import {
-  PARCEL_SEARCH_HEX as H,
   PARCEL_SEARCH_ICON as I,
   PARCEL_SEARCH_LAYOUT as L,
   SEARCH_BOTTOM_PADDING,
   SEARCH_CANDIDATE_LIMIT,
   SEARCH_MAX_WIDTH,
 } from '@/constants/parcelSearch';
+import { REPORT_HEX as R } from '@/constants/reportPage';
 import { diffCandidateAddress, parcelSearchRoute, type AddressSegment, type SearchSituation } from '@/lib/parcelSearchMatch';
 
 /** The generated slice: the descriptor's config values and the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
@@ -43,6 +43,9 @@ export type Child = PropsNode | Ref | Template;
 
 /** P35-D14 a: the closed list of derived names (patterns), declared in the descriptor's deviation entry. */
 export const DERIVED_NAMES = [/^input$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
+
+/** SRCH.DAYLIGHT (task-322): the prop colours are the report's Daylight hexes (reportPage.ts REPORT_HEX, twins of the report-* keys of mobile/tailwind.config.js); the dark PARCEL_SEARCH_HEX stays for the Account screen and the shelf. */
+const H = { primary: R.amber, onPrimary: R.ink, check: R.ink, textMuted: R.muted, placeholder: R.muted } as const;
 
 const CONTRACT = 'contract_parcels_lookup';
 const content = (key: string): Ref => ({ content: key });
@@ -79,16 +82,6 @@ const pill = (s: SearchSituation): PropsNode =>
     ...(s.isFetching
       ? [node('ActivityIndicator', { key: 'spinner', testID: 'parcel-search-spinner', size: 'small', color: H.primary, accessibilityLabel: content('search.searching') })]
       : []),
-    node('Button', {
-      key: 'account',
-      testID: 'parcel-search-account',
-      variant: 'default',
-      size: 'icon',
-      className: L.account,
-      accessibilityRole: 'button',
-      accessibilityLabel: content('search.account.label'),
-      onPress: { action: 'open_account' },
-    }, [node('Icon', { key: 'account-icon', icon: 'User', size: I.button, color: H.onPrimary })]),
   ]);
 
 /** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block. */
@@ -107,19 +100,19 @@ const chips = (s: SearchSituation): PropsNode[] =>
       onPress: { action: 'set_input', value: derived(`recent.${i}`) },
     }, [node('Text', { key: 'chip-text', className: L.chipText }, [derived(`recent.${i}`)])])))];
 
-const notice = (key: string, testID: string, icon: string, iconClassName: string, textClassName: string, text: Child, extra: PropsNode[] = []): PropsNode =>
-  node('Alert', { key, testID, icon, iconClassName, className: L.notice }, [
+const notice = (key: string, testID: string, icon: string, iconClassName: string, textClassName: string, text: Child, extra: PropsNode[] = [], className: string = L.notice): PropsNode =>
+  node('Alert', { key, testID, icon, iconClassName, className }, [
     node('AlertDescription', { key: `${key}-text`, className: textClassName }, [text]),
     ...extra,
   ]);
 
 const notices = (s: SearchSituation): PropsNode[] => [
   ...(s.outcome === 'outside_toronto'
-    ? [notice('outside-toronto', 'parcel-search-outside-toronto', 'Ban', L.noticeIcon, L.noticeText, content('search.outside_toronto'))]
+    ? [notice('outside-toronto', 'parcel-search-outside-toronto', 'Ban', L.noticeIcon, L.noticeText, content('search.outside_toronto'), [], L.noticeError)]
     : []),
   ...(s.errors.rateLimited
     ? [notice('ratelimit', 'parcel-search-ratelimit', 'AlertTriangle', L.noticeIcon, L.noticeText,
-      { text: content('search.ratelimit'), vars: { seconds: contract('errors.429.retryAfterSeconds') } })]
+      { text: content('search.ratelimit'), vars: { seconds: contract('errors.429.retryAfterSeconds') } }, [], L.noticeError)]
     : []),
   ...(s.errors.entitlement
     ? [notice('entitlement', 'parcel-search-entitlement', 'Lock', L.entitlementIcon, L.noticeTextNeutral, content('search.entitlement'))]
@@ -138,7 +131,7 @@ const notices = (s: SearchSituation): PropsNode[] => [
       }, [
         node('Icon', { key: 'retry-icon', icon: 'RefreshCw', size: I.notice, color: H.onPrimary }),
         node('Text', { key: 'retry-text', className: L.retryText }, [content('search.retry.text')]),
-      ])])]
+      ])], L.noticeError)]
     : []),
 ];
 
@@ -171,7 +164,7 @@ const addressList = (s: SearchSituation): PropsNode[] => {
         onPress: { action: 'select', parcelId: contract(`candidates.${i}.parcelId`) },
       }, [node('View', { key: 'card-row', className: L.cardRow }, [
         node('Text', { key: 'card-text', className: L.cardText }, segments(s, i, c.parcelId)),
-        ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: I.button, color: H.primary })] : []),
+        ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: I.button, color: H.check })] : []),
       ])]);
     }),
     node('Button', {

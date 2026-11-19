@@ -5,7 +5,6 @@
   "list.report": "Report incorrect address match",
   "list.select": "Select",
   "list.select.label": "Open the selected lot",
-  "search.account.label": "Account",
   "search.chip.label": "Search {query}",
   "search.entitlement": "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
   "search.error": "Couldn’t reach the lot service. Check your connection and try again.",

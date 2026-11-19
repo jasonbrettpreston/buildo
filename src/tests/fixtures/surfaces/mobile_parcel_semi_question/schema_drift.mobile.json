@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -69,7 +69,7 @@
                           "key": "back-icon",
                           "icon": "X",
                           "size": 16,
-                          "color": "#a1a1aa"
+                          "color": "#4d4841"
                         },
                         "children": []
                       }
@@ -83,15 +83,15 @@
                   "key": "error",
                   "testID": "parcel-semi-error",
                   "icon": "AlertTriangle",
-                  "iconClassName": "text-red-400",
-                  "className": "mt-3 rounded-xl bg-[#161618] border-[#2a2a2c]"
+                  "iconClassName": "text-report-no",
+                  "className": "mt-3 rounded-xl bg-report-no-fill border-report-no-ring"
                 },
                 "children": [
                   {
                     "component": "AlertDescription",
                     "props": {
                       "key": "error-text",
-                      "className": "text-xs font-normal text-red-400"
+                      "className": "text-sm font-normal text-report-no"
                     },
                     "children": [
                       {

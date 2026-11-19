@@ -9,7 +9,7 @@
   "props": {
     "component": "SafeAreaView",
     "props": {
-      "className": "flex-1 bg-[#0e0e10]",
+      "className": "flex-1 bg-report-page",
       "edges": {
         "top": "additive"
       },
@@ -69,7 +69,7 @@
                           "key": "back-icon",
                           "icon": "X",
                           "size": 16,
-                          "color": "#a1a1aa"
+                          "color": "#4d4841"
                         },
                         "children": []
                       }
@@ -82,7 +82,7 @@
                 "props": {
                   "key": "question",
                   "testID": "parcel-semi-question",
-                  "className": "text-base font-semibold text-zinc-100",
+                  "className": "text-base font-semibold text-report-ink",
                   "role": "header"
                 },
                 "children": [
@@ -97,7 +97,7 @@
                   "key": "answer-yes",
                   "testID": "parcel-semi-answer-yes",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-primary dark:border-primary active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": true
@@ -124,7 +124,7 @@
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "mt-1 text-base font-semibold text-zinc-100"
+                          "className": "mt-1 text-base font-semibold text-report-ink"
                         },
                         "children": [
                           {
@@ -138,7 +138,7 @@
                           "key": "check",
                           "icon": "Check",
                           "size": 16,
-                          "color": "#f59e0b"
+                          "color": "#1d1b18"
                         },
                         "children": []
                       }
@@ -152,7 +152,7 @@
                   "key": "answer-no",
                   "testID": "parcel-semi-answer-no",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -179,7 +179,7 @@
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "mt-1 text-base font-semibold text-zinc-100"
+                          "className": "mt-1 text-base font-semibold text-report-ink"
                         },
                         "children": [
                           {
@@ -197,7 +197,7 @@
                   "key": "answer-not_sure",
                   "testID": "parcel-semi-answer-not_sure",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-xl px-3 py-3 bg-[#18181b] dark:bg-[#18181b] border-[#2a2a2c] dark:border-[#2a2a2c] active:bg-[#27272a] dark:active:bg-[#27272a]",
+                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -224,7 +224,7 @@
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "mt-1 text-base font-semibold text-zinc-100"
+                          "className": "mt-1 text-base font-semibold text-report-ink"
                         },
                         "children": [
                           {
@@ -261,7 +261,7 @@
                     "component": "Text",
                     "props": {
                       "key": "continue-text",
-                      "className": "text-sm font-semibold uppercase tracking-widest text-[#472a00]"
+                      "className": "text-base font-bold text-report-ink"
                     },
                     "children": [
                       {

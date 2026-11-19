@@ -30,7 +30,7 @@ export const LOT_MAP_SLICE: { surface: string; config: Record<string, number>; c
 /** The closed list of derived names (patterns), declared in the S-071 deviation entry. */
 export const LOT_MAP_DERIVED_NAMES = [
   /^query$/, /^lot_count$/, /^region$/, /^pin$/, /^map_style$/, /^letter\.(0|[1-9][0-9]*)$/, /^lots\.(0|[1-9][0-9]*)\.marker$/,
-  /^(lots|neighbours)\.(0|[1-9][0-9]*)\.polygons\.(0|[1-9][0-9]*)\.(coordinates|holes)$/,
+  /^lots\.(0|[1-9][0-9]*)\.polygons\.(0|[1-9][0-9]*)\.(coordinates|holes)$/,
 ];
 
 const CONTRACT = 'contract_parcels_lookup';
@@ -57,14 +57,14 @@ const pill = (): PropsNode =>
     }, [node('Icon', { key: 'clear-icon', icon: 'X', size: Z.icon, color: H.icon })]),
   ]);
 
-const notice = (key: string, icon: string, iconClassName: string, children: Child[]): PropsNode =>
-  node('Alert', { key, testID: `parcel-lotmap-${key}`, icon, iconClassName, className: L.notice }, children as PropsNode[]);
+const notice = (key: string, icon: string, iconClassName: string, children: Child[], className: string = L.notice): PropsNode =>
+  node('Alert', { key, testID: `parcel-lotmap-${key}`, icon, iconClassName, className }, children as PropsNode[]);
 
 const errorNotices = (s: LotMapSituation): PropsNode[] => [
   ...(s.errors.rateLimited
     ? [notice('ratelimit', 'AlertTriangle', L.noticeIcon, [node('AlertDescription', { key: 'ratelimit-text', className: L.noticeText }, [
       { text: content('state.ratelimit'), vars: { seconds: contract('errors.429.retryAfterSeconds') } },
-    ])])]
+    ])], L.noticeError)]
     : []),
   ...(s.errors.entitlement
     ? [notice('entitlement', 'Lock', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
@@ -81,7 +81,7 @@ const errorNotices = (s: LotMapSituation): PropsNode[] => [
         accessibilityLabel: content('retry.label'),
         onPress: { action: 'retry' },
       }, [node('Text', { key: 'retry-text', className: L.retryText }, [content('retry.text')])])]),
-    ])]
+    ], L.noticeError)]
     : []),
 ];
 
@@ -107,11 +107,6 @@ const polygon = (key: string, coords: string, holes: string, stroke: string, fil
 
 const mapView = (s: LotMapSituation): PropsNode[] => {
   if (s.region === null) return [];
-  const neighbourShapes = s.neighbours.flatMap((n, i) => n.polygons.map((_, j) => {
-    const on = n.parcelId === s.selectedParcelId;
-    return polygon(`neighbour-${n.parcelId}-${j}`, `neighbours.${i}.polygons.${j}.coordinates`, `neighbours.${i}.polygons.${j}.holes`,
-      on ? H.neighbourStrokeChecked : H.neighbourStroke, on ? H.neighbourFillChecked : H.neighbourFill, Z.neighbourStroke, `map.neighbours.${i}.parcelId`);
-  }));
   const lotShapes = s.lots.flatMap((l, i) => l.polygons.map((_, j) => {
     const on = l.parcelId === s.selectedParcelId;
     return polygon(`lot-${l.parcelId}-${j}`, `lots.${i}.polygons.${j}.coordinates`, `lots.${i}.polygons.${j}.holes`,
@@ -136,12 +131,12 @@ const mapView = (s: LotMapSituation): PropsNode[] => {
     key: 'map',
     style: { height: Z.mapHeight },
     initialRegion: derived('region'),
-    userInterfaceStyle: 'dark',
+    userInterfaceStyle: 'light',
     customMapStyle: derived('map_style'),
     rotateEnabled: false,
     pitchEnabled: false,
     toolbarEnabled: false,
-  }, [...neighbourShapes, ...lotShapes, ...markers, ...pin])])];
+  }, [...lotShapes, ...markers, ...pin])])];
 };
 
 const cards = (s: LotMapSituation): PropsNode[] =>
@@ -164,9 +159,8 @@ const cards = (s: LotMapSituation): PropsNode[] =>
       node('View', { key: 'card-text' }, [
         node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content('lot.letter'), vars: { letter: derived(`letter.${i}`) } }]),
         node('Text', { key: 'card-area', className: L.cardArea }, [area]),
-        node('Text', { key: 'card-facts', className: L.cardFacts }, [{ text: content('lot.facts'), vars: { frontage, zoning } }]),
       ]),
-      ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.primary })] : []),
+      ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
     ])]);
   });
 
@@ -205,7 +199,7 @@ const body = (s: LotMapSituation): PropsNode[] => {
     case 'unlinked_no_pin':
       return [unlinkedNotice()];
     case 'unlinked':
-      return [unlinkedNotice(), ...mapView(s), ...(s.neighbours.length > 0 ? [continueButton(s)] : [])];
+      return [unlinkedNotice(), ...mapView(s)];
     case 'multi_parcel':
       return [
         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [
@@ -250,7 +244,6 @@ export function lotMapData(s: LotMapSituation): LotMapBindingData {
       map_style: LOT_MAP_STYLE,
       letter: s.lots.map((l) => l.letter),
       lots: s.lots.map((l) => ({ marker: l.marker, polygons: l.polygons })),
-      neighbours: s.neighbours.map((n) => ({ polygons: n.polygons })),
     },
   };
 }

@@ -320,8 +320,6 @@ const ALLOW: Allow[] = [
   { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable#signup-send-code', handler: "setPhoneStage('otp')", count: 1, kind: 'disclosure', audit: 21,
     why: 'the code stage inside the sign-up phone sheet, gated off by PHONE_AUTH_ENABLED' },
   // --- Audited FLAGs the rules reach: a real router call missing a guard; not navigation by state. Owed by the named row. ---
-  { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#account', handler: 'action:open_account', count: 1, kind: 'flag', audit: 45,
-    why: 'owed: MF-44 / MF-52 (Button component={Link} href; unwired while MAXBLD_WEB_LIVE=false, fixed before the switch flips)' },
   { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select', handler: 'action:push', count: 1, kind: 'flag', audit: 46,
     why: 'owed: MF-44 (Button component={Link} href={route}, disabled while route is null; unwired while MAXBLD_WEB_LIVE=false)' },
   // --- Audited OK: a real mechanism the rule's shape reaches. ---

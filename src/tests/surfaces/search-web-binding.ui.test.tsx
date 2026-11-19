@@ -88,7 +88,7 @@ describe('(a) every web golden renders with its situation', () => {
 
 describe('(b) the live switch off: every control disabled', () => {
   it('the input and every button are disabled with runtime.disabled, even with every callback supplied', () => {
-    const all = { change_input: vi.fn(), set_input: vi.fn(), retry: vi.fn(), select: vi.fn(), push: vi.fn(), open_account: vi.fn() };
+    const all = { change_input: vi.fn(), set_input: vi.fn(), retry: vi.fn(), select: vi.fn(), push: vi.fn() };
     render(provided(bind(SITUATIONS.ambiguous as WebSituation, { actions: all, runtime: { disabled: true } })));
     expect((screen.getByTestId('parcel-search-input') as HTMLInputElement).disabled).toBe(true);
     const buttons = screen.getAllByRole('button').concat(screen.getAllByRole('radio'));
@@ -96,8 +96,9 @@ describe('(b) the live switch off: every control disabled', () => {
     for (const b of buttons) expect((b as HTMLButtonElement).disabled).toBe(true);
   });
   it('a button whose action has no callback is disabled (no dead control)', () => {
-    render(provided(bind(WEB_STATIC_SITUATION)));
-    expect((screen.getByTestId('parcel-search-account') as HTMLButtonElement).disabled).toBe(true);
+    render(provided(bind(SITUATIONS.ambiguous as WebSituation)));
+    expect(screen.queryByTestId('parcel-search-account')).toBeNull();
+    for (const b of screen.getAllByRole('button')) expect((b as HTMLButtonElement).disabled).toBe(true);
   });
 });
 

@@ -48,7 +48,6 @@ export default function SemiQuestionScreen() {
         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
       },
       push: (route: string) => router.replace(route),
-      open_account: () => undefined,
       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
     }),
     [refetch, router],

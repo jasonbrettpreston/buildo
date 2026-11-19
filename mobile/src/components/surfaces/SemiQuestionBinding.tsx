@@ -40,14 +40,14 @@ const header = (): PropsNode =>
     }, [node('Icon', { key: 'back-icon', icon: 'X', size: Z.icon, color: H.icon })]),
   ]);
 
-const notice = (key: string, icon: string, iconClassName: string, children: Child[]): PropsNode =>
-  node('Alert', { key, testID: `parcel-semi-${key}`, icon, iconClassName, className: L.notice }, children as PropsNode[]);
+const notice = (key: string, icon: string, iconClassName: string, children: Child[], className: string = L.notice): PropsNode =>
+  node('Alert', { key, testID: `parcel-semi-${key}`, icon, iconClassName, className }, children as PropsNode[]);
 
 const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
   ...(s.errors.rateLimited
     ? [notice('ratelimit', 'AlertTriangle', L.noticeIcon, [node('AlertDescription', { key: 'ratelimit-text', className: L.noticeText }, [
       { text: content('state.ratelimit'), vars: { seconds: contract('errors.429.retryAfterSeconds') } },
-    ])])]
+    ])], L.noticeError)]
     : []),
   ...(s.errors.entitlement
     ? [notice('entitlement', 'Lock', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
@@ -64,7 +64,7 @@ const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
         accessibilityLabel: content('retry.label'),
         onPress: { action: 'retry' },
       }, [node('Text', { key: 'retry-text', className: L.retryText }, [content('retry.text')])])]),
-    ])]
+    ], L.noticeError)]
     : []),
 ];
 
@@ -82,7 +82,7 @@ const cards = (s: SemiQuestionSituation): PropsNode[] =>
       onPress: { action: 'select', parcelId: derived(`answer.${i}`) },
     }, [node('View', { key: 'card-row', className: L.cardRow }, [
       node('Text', { key: 'card-title', className: L.cardArea }, [content(`answer.${a}`)]),
-      ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.primary })] : []),
+      ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
     ])]);
   });
 

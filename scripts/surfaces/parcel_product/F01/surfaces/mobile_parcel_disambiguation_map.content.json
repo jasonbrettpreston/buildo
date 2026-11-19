@@ -2,7 +2,6 @@
   "map.heading": "This address covers {count} lots. Which one do you mean?",
   "map.clear.label": "Back to search",
   "lot.letter": "Lot {letter}",
-  "lot.facts": "{frontage} • {zoning}",
   "lot.null": "—",
   "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}",
   "select.none": "Choose a lot",
