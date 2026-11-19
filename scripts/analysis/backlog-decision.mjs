@@ -28,11 +28,13 @@ export function main(argv) {
   const root = path.resolve(a.root || REPO); const citeRoot = path.resolve(a['cite-root'] || root);
   for (const k of ['title', 'date', 'cite', 'text']) if (!a[k] || a[k] === true) die(`backlog-decision: --${k} is required`);
   if (!a.quote || a.quote === true) die('backlog-decision: refused, no verbatim quote (--quote): a ruling is the operator\'s own words (Spec 137 rule 10)');
+  if (!norm(a.quote)) die('backlog-decision: refused, the quote is empty after whitespace is removed (Spec 137 rule 10)');
   let cited;
   try { cited = citedText(a.cite, citeRoot); } catch (e) { die(`backlog-decision: refused, cite does not resolve: ${e.message}`); }
   if (!norm(cited).includes(norm(a.quote))) die(`backlog-decision: refused, the quote is not found at ${a.cite} (the cited line does not contain it)`);
   if (a['spec-amending']) {
     const [stem, id] = String(a['spec-amending']).split('#');
+    if (!/^[\w.-]+$/.test(stem ?? '') || stem.includes('..')) die(`backlog-decision: refused, --spec-amending stem "${stem}" is not a plain decision-log file name (no path)`);
     const f = path.join(root, 'docs/reports/decisions', `${stem}.md`);
     if (!stem || !id || !fs.existsSync(f) || !new RegExp(`(^|[^\\w-])${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\w-]|$)`).test(fs.readFileSync(f, 'utf8'))) {
       die(`backlog-decision: refused, --spec-amending ${a['spec-amending']} has no decision-log entry in docs/reports/decisions/${stem}.md (scripts/analysis/decision-log.mjs:58); enter it there first`);
@@ -49,7 +51,7 @@ export function main(argv) {
   const id = /(decision-\d+)/i.exec(c.stdout)?.[1];
   if (c.status !== 0 || !id) die(`backlog-decision: backlog decision create failed: ${c.stdout}${c.stderr}`);
   const file = fs.readdirSync(dir).find((f) => f.toLowerCase().startsWith(`${id.toLowerCase()} -`));
-  const tasks = String(a.tasks === true ? '' : a.tasks ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+  const tasks = String(a.tasks === true ? '' : a.tasks ?? '').split(',').map((x) => x.trim()).filter(Boolean).filter((x, i, all) => all.indexOf(x) === i);
   writeDecisionBody(path.join(dir, file), { date: a.date, quote: a.quote, cite: a.cite, text: a.text, tasks, specAmending: a['spec-amending'] });
   for (const t of tasks) {
     const n = bl(bin, root, ['task', 'edit', t, '--append-notes', datedNote({ date: a.date, rr: rrId ?? a.title, task: t, quote: a.quote }), '--plain']);

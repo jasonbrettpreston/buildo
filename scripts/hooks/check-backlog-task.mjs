@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const git = (a) => spawnSync('git', a, { encoding: 'utf8' });
+const git = (a) => spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8' });
 const fail = (m) => { process.stderr.write(`check-backlog-task: ${m}\n`); return 1; };
 
 function check(msgFile) {

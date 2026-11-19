@@ -1,0 +1,32 @@
+{
+  "task": "task-1 (BL.0)",
+  "item": "Backlog-home scripts: loader plan-to-backlog.mjs, backlog-lib.mjs, G1 backlog-brief.mjs, G2 backlog-decision.mjs, G3 check-backlog-task.mjs, backlog-next.mjs",
+  "class": "M",
+  "stage": "R3c",
+  "date": "2026-11-19",
+  "head": "3002ef51c121f8ed0e60e5f0f34094c395688c0b",
+  "commits_reviewed": [
+    "3002ef51c",
+    "84631010b"
+  ],
+  "cards": [],
+  "plan": ".cursor/active_task.md v8.1 sections 1-3 and Execution Plan R3c",
+  "output": "OUTPUT panel, four narrow DeepSeek lenses (spec, security, idempotency, error-paths; Spec 08 section 7 rules 3-4, 08_agents.md:334) on diff-code.txt (62,653 chars), round-2 by the tool-bearing grounder (lane BL-R4). 26 finding groups; 6 KEPT and fixed with red tests first (G2 empty quote, G1 date/lane/stage validation, G2 spec-amending stem, G3 non-ASCII paths, G2 duplicate task list), the rest REJECTED with the opened line (false premises: lockfile and tests; loader run-once hardening; plan-accepted limits).",
+  "seats": [
+    "deepseek-reasoner spec lens",
+    "deepseek-reasoner security lens",
+    "deepseek-reasoner idempotency lens",
+    "deepseek-reasoner error-paths lens",
+    "grounder: BL-R4 (tool-bearing Claude, Sonnet)"
+  ],
+  "verdict": "PASS after fixes",
+  "blockers": [],
+  "followups": [
+    "Hook defect follow-up: check-partial-staging.sh misreads sizes for file names with the middle dot; loader titles should avoid it",
+    "G2: validate every --tasks id before decision create (half-applied state) if it ever bites",
+    "G3: cherry-pick/revert/rebase exemption UNVERIFIED, add if a lane hits it",
+    "Loader hardening items only if a re-import is ever planned"
+  ],
+  "evidence": "Buildo-scratch/lanes-20261119/boardmove-v2/build-r4/ (ROUND2.md, ds-spec.txt, ds-security.txt, ds-idempotency.txt, ds-error-paths.txt, lens-*.md, diff-a.txt, red.out, green.out, green2.out)",
+  "previous": []
+}

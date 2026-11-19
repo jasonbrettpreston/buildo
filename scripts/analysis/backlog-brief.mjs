@@ -15,6 +15,7 @@ const date = a.date && a.date !== true ? a.date : today();
 const taskId = String(a.task === true ? '' : a.task ?? '').toLowerCase();
 const lane = String(a.lane === true ? '' : a.lane ?? '');
 const stage = a.stage && a.stage !== true ? a.stage : '1';
+if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date)) || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/.test(lane) || !/^\d{1,3}$/.test(String(stage))) die('backlog-brief: --date must be YYYY-MM-DD, --lane a plain name (letters, digits, . _ -), --stage a number');
 if (!/^task-\d+$/.test(taskId) || !lane) die('backlog-brief: usage: --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]');
 const t = readItems(root).find((x) => x.id === taskId);
 if (!t) die(`backlog-brief: ${taskId} not found: no such task file under ${path.join(root, 'backlog/tasks')}`);
