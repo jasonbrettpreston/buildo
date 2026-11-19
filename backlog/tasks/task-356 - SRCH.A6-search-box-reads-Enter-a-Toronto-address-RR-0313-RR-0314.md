@@ -1,9 +1,11 @@
 ---
 id: TASK-356
 title: SRCH.A6 search box reads Enter a Toronto address (RR-0313, RR-0314)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-BOX'
 created_date: '2026-11-19T22:02:00Z'
+updated_date: '2026-11-19T22:18:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -83,3 +85,9 @@ Files: scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-BOX, worktree /Users/brettpreston_macmini/Buildo-wt-box, branch wf1/inc1b-box), RR-0240
+<!-- SECTION:NOTES:END -->
