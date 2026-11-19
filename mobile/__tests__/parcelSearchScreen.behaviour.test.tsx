@@ -5,7 +5,7 @@
 // MF-35 · the real search screen (mobile/app/(app)/parcel-tool/index.tsx) with a mocked useParcelSearch and expo-router, fake timers (plan v3 §9;
 // must-survive rows 8, 10, 11, 22, 27, 28): the field shows typed text at once; 400 ms debounce; the mockHook gets '' outside Toronto; unique navigates
 // once and records once; Back with the same query neither re-pushes nor re-records; a candidate tap selects and does not push; SELECT pushes and
-// records; the map kinds push the disambiguate route; a miss, an error and outside Toronto record nothing; the account button opens Account.
+// records; the map kinds push the disambiguate route; a miss, an error and outside Toronto record nothing; there is no in-bar account button (A.13).
 require('react-native-css-interop/test');
 import * as React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
@@ -127,7 +127,7 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     expect(useRecentSearchesStore.getState().recent).toEqual([]);
     expect(mockPush).not.toHaveBeenCalled();
   });
-  it('a chip sets the input (the debounce still applies); the account button opens Account', () => {
+  it('a chip sets the input (the debounce still applies); there is no in-bar account button (A.13)', () => {
     useRecentSearchesStore.getState().add('Bathurst St');
     render(<Screen />);
     fireEvent.press(screen.getByTestId('parcel-search-suggestion-Bathurst St'));
@@ -135,7 +135,6 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     expect(mockCalls).not.toContain('Bathurst St');
     act(() => { jest.advanceTimersByTime(400); });
     expect(mockCalls).toContain('Bathurst St');
-    fireEvent.press(screen.getByTestId('parcel-search-account'));
-    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/account');
+    expect(screen.queryByTestId('parcel-search-account')).toBeNull();
   });
 });

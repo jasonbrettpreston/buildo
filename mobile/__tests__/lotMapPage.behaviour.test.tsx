@@ -49,7 +49,7 @@ const Page = require('../app/(app)/parcel-tool/disambiguate').default as React.C
 type Input = { query: string; data?: unknown; error?: string; isFetching?: boolean; selectedParcelId?: string | null };
 const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/lotMap.situations.json'), 'utf8')) as { goldens: Record<string, { situation: string }>; inputs: Record<string, Input> };
 const input = (k: string): Input => fixture.inputs[k]!;
-const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), open_account: jest.fn(), back: jest.fn() });
+const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn() });
 const parts = (name: string) => screen.UNSAFE_root.findAll((n: { props: Record<string, unknown>; type: unknown }) => n.props.rnmPart === name && typeof n.type !== 'string');
 
 beforeEach(() => {

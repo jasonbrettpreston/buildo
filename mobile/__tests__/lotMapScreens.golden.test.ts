@@ -40,7 +40,7 @@ const situation = (name: string): LotMapSituation => {
   return buildLotMapSituation({ query: i.query, data: i.data, error: errorOf(i.error, name), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selectedParcelId: i.selectedParcelId ?? null });
 };
 export const NAMED_CASES = [
-  'unlinked_no_pin', 'multi_parcel_2_lot_b', 'multi_parcel_3plus_none', 'lot_facts_null', 'unlinked_neighbour_picked', 'unlinked_stale_pick',
+  'unlinked_no_pin', 'multi_parcel_2_lot_b', 'multi_parcel_3plus_none', 'lot_facts_null',
   'redirect_unique', 'redirect_no_match', 'intersection_loading', 'refetching_multi_parcel', 'rate_limited_zero',
 ];
 
@@ -153,17 +153,16 @@ describe('the page rules (named cases)', () => {
     }
     expect(fs.readFileSync(path.join(MOBILE, 'app/(app)/parcel-tool/disambiguate.tsx'), 'utf8')).not.toMatch(/addRecent|useRecentSearchesStore/);
   });
-  it('unlinked: the visible message, the pin and the faint neighbours, nothing picked; a neighbour pick is a tap, a stale pick is dropped', () => {
+  it('unlinked: the visible message and the pin, nothing picked; no faint neighbours, no Continue (B.8 removed, small pages v8)', () => {
     const s = situation('unlinked');
     const t = lotMapProps(s);
     expect(byTestID(t, 'parcel-lotmap-unlinked')).toBeDefined();
-    expect(nodes(t).filter((n) => n.component === 'Polygon')).toHaveLength(2);
+    expect(nodes(t).filter((n) => n.component === 'Polygon')).toHaveLength(0);
     expect(nodes(t).filter((n) => n.component === 'Marker').map((n) => n.props.key)).toEqual(['pin']);
+    expect(byTestID(t, 'parcel-lotmap-continue')).toBeUndefined();
     expect(s.selectedParcelId).toBeNull();
-    const picked = situation('unlinked_neighbour_picked');
-    expect([picked.selectedParcelId, picked.selectedLetter, picked.route]).toEqual(['PCL-N2', null, '/(app)/parcel-tool/PCL-N2']);
-    expect(byTestID(lotMapProps(picked), 'parcel-lotmap-continue')!.children[0]).toMatchObject({ children: [{ content: 'select.label' }] });
-    expect(situation('unlinked_stale_pick').selectedParcelId).toBeNull();
+    expect(Object.keys(s)).not.toContain('neighbours');
+    expect(JSON.stringify(t)).not.toMatch(/neighbour/);
   });
   it('several unlinked addresses: the message only, no map, no Continue (Q5 i)', () => {
     const t = lotMapProps(situation('unlinked_no_pin'));

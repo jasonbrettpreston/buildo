@@ -55,7 +55,7 @@ export function layoutProblems(t: PropsNode, darkChains: { outline: string[]; in
     if (n.component === 'Text') {
       if (!tk.some((x) => /^text-(xs|sm|base|lg|xl|2xl|\[\d+px\])$/.test(x))) out.push(`${at}: Text without a size`);
       if (!tk.some((x) => /^font-(normal|medium|semibold|bold)$/.test(x))) out.push(`${at}: Text without a weight`);
-      if (!tk.some((x) => /^text-(zinc-\d+|red-\d+|\[#[0-9a-f]{6}\])$/.test(x))) out.push(`${at}: Text without a colour`);
+      if (!tk.some((x) => /^text-(zinc-\d+|red-\d+|report-[a-z-]+|\[#[0-9a-f]{6}\])$/.test(x))) out.push(`${at}: Text without a colour`);
     }
     if (touch[n.component]) {
       const mins = tk.filter((x) => /(^|:)min-h-/.test(x));
@@ -63,7 +63,7 @@ export function layoutProblems(t: PropsNode, darkChains: { outline: string[]; in
     }
     const chains = n.component === 'Input' ? darkChains.input : n.component === 'Button' && n.props.variant === 'outline' ? darkChains.outline : [];
     for (const c of chains) if (!tk.some((x) => x.startsWith(c))) out.push(`${at}: no ${c} twin`);
-    if (n.props.role === 'radio' && (n.props.accessibilityState as Json | undefined)?.checked === true && !(tk.includes('border-primary') && tk.includes('dark:border-primary'))) out.push(`${at}: a checked card without border-primary dark:border-primary`);
+    if (n.props.role === 'radio' && (n.props.accessibilityState as Json | undefined)?.checked === true && !(tk.includes('border-report-ink') && tk.includes('dark:border-report-ink'))) out.push(`${at}: a checked card without border-report-ink dark:border-report-ink`);
     for (const c of n.children) if (isNode(c)) walk(c, n);
   };
   walk(t, null);
@@ -119,14 +119,14 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
     const t = searchProps(situations.ambiguous as SearchSituation);
     const col = (t.children[0] as PropsNode).children[0] as PropsNode;
     const card = col.children.find((c) => isNode(c) && c.props.role === 'radio' && (c.props.accessibilityState as Json).checked) as PropsNode;
-    card.props.className = String(card.props.className).replace('dark:border-primary', '').replace('dark:active:bg-[#27272a]', '');
+    card.props.className = String(card.props.className).replace('dark:border-report-ink', '').replace('dark:active:bg-report-sky', '');
     const other = col.children.find((c) => isNode(c) && c.props.role === 'radio' && !(c.props.accessibilityState as Json).checked) as PropsNode;
     other.props.className = String(other.props.className).replace('min-h-[44px]', 'min-h-[44px] sm:min-h-8');
     col.children.push({ component: 'Card', props: {}, children: [{ derived: 'other' }] });
     const p = layoutProblems(t, chains);
     expect(p).toEqual(expect.arrayContaining([
       '100102: no dark:active:bg- twin',
-      '100102: a checked card without border-primary dark:border-primary',
+      '100102: a checked card without border-report-ink dark:border-report-ink',
       '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly min-h-[44px])',
       'Card: Card is not in mapping.mobile.SEARCH',
       'Card: a child node without a key',

@@ -23,7 +23,7 @@ jest.mock('react-native-safe-area-context', () => {
 
 const S = situations as unknown as Record<string, SearchSituation>;
 const actions = (): jest.Mocked<SurfaceActions> => ({
-  change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), open_account: jest.fn(), back: jest.fn(),
+  change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn(),
   // MF-46 follow-up (dated 2026-11-12): the search host passes open_help ("Report incorrect address match" on the address list).
   open_help: jest.fn(),
 });
@@ -47,12 +47,13 @@ describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F
 });
 
 describe('mobile render smoke (FE-33 mobile case)', () => {
-  it.each(GOLDEN_SITUATIONS)('%s renders non-empty with the header, the field and the account button', (k) => {
+  it.each(GOLDEN_SITUATIONS)('%s renders non-empty with the header and the field, and no account button (A.13)', (k) => {
     show(k);
     expect(screen.getByTestId('parcel-search-input')).toBeTruthy();
     expect(screen.getByText('BLD')).toBeTruthy();
     expect(screen.getByText('Lot Intelligence')).toBeTruthy();
-    expect(screen.getByLabelText('Account')).toBeTruthy();
+    expect(screen.queryByLabelText('Account')).toBeNull();
+    expect(screen.queryByTestId('parcel-search-account')).toBeNull();
   });
   it('host props: keyboardShouldPersistTaps, the shelf padding, the top safe-area edge, the 448 column (rows 1-4)', () => {
     show('static');
@@ -102,10 +103,9 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
     expect(a.push).toHaveBeenCalledWith('/(app)/parcel-tool/100102');
     expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
   });
-  it('the account button opens the account page; typing calls change_input with the text', () => {
+  it('typing calls change_input with the text; there is no account button (A.13)', () => {
     const a = show('static');
-    fireEvent.press(screen.getByTestId('parcel-search-account'));
-    expect(a.open_account).toHaveBeenCalledWith();
+    expect(screen.queryByTestId('parcel-search-account')).toBeNull();
     fireEvent.changeText(screen.getByTestId('parcel-search-input'), '26 Hu');
     expect(a.change_input).toHaveBeenCalledWith('26 Hu');
   });

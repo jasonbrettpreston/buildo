@@ -67,6 +67,12 @@ Grounded: yes. doc-2 Built state (backlog/docs/increments/doc-2 - Increment-S-re
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: queue row + MF id claim (blocked: ids dir outside lane scope). 2. Red tests first for AC2-5 (golden/behaviour tests + fixture), commit attempt refused -> red.out. 3. Re-value PARCEL_SEARCH_LAYOUT/LOT_MAP_* to report-* Daylight tokens (AC2); remove A.13 account button (AC3); remove B.8 neighbour outlines (AC4); remove C.9 card facts line (AC5; lot.label copy left to GAP.13); regenerate goldens with repo capture scripts + emit-mobile-surfaces. 4. Green commit through hooks; typecheck. 5. One output review (fidelity to v8, no copy drift), triage, reports into docs/reports/lanes.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
