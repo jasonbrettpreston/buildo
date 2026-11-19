@@ -70,9 +70,14 @@ export function diffCandidateAddress(query: string, address: string): AddressSeg
 
 /** The served fields the reports-left line binds (every one null when the user has no plan or the read could not count). */
 export type EntitlementLine = { reportsLeft: number | null; reportsLimit: number | null; resetsOn: string | null };
+/** The same fields once the line is known to be drawn: all present. */
+export type ShownEntitlement = { reportsLeft: number; reportsLimit: number; resetsOn: string };
 
 // Display names of the twelve months, written as the v8 line shows them ("9 Dec 2026"). A fixed table, not Intl: the same text on every device.
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+// Calendar validity only (no clock): the days of a month, February by the Gregorian leap rule. A date that does not exist (30 Feb) is not written.
+const DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+const daysIn = (month: number, year: number): number => (month === 2 && year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : (DAYS[month - 1] ?? 0));
 const ISO_INSTANT = /^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 /**
@@ -85,11 +90,11 @@ export function formatResetDate(iso: unknown): string | null {
   const month = Number(m[2]);
   const day = Number(m[3]);
   const name = MONTH_NAMES[month - 1];
-  if (!name || day < 1 || day > 31) return null;
+  if (!name || day < 1 || day > daysIn(month, Number(m[1]))) return null;
   return `${day} ${name} ${m[1]}`;
 }
 
 /** True only when all three served fields are present (a served 0 counts as present) and the date can be written; else no line is drawn. */
-export function reportsLeftShown(e: EntitlementLine | null | undefined): e is EntitlementLine {
+export function reportsLeftShown(e: EntitlementLine | null | undefined): e is ShownEntitlement {
   return !!e && e.reportsLeft !== null && e.reportsLeft !== undefined && e.reportsLimit !== null && e.reportsLimit !== undefined && formatResetDate(e.resetsOn) !== null;
 }

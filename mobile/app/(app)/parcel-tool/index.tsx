@@ -27,6 +27,7 @@ import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '
 import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
 import { openHelp } from '@/lib/maxbldHelp';
 import { useRecentSearchesStore } from '@/store/recentSearchesStore';
+import { useAuthStore } from '@/store/authStore';
 
 export default function ParcelSearchScreen() {
   const router = useRouter();
@@ -49,11 +50,14 @@ export default function ParcelSearchScreen() {
 
   // SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count (GET /api/parcels/entitlement) and re-reads it each time this screen gains
   // focus, so the number is current after a report was produced. A failed read or no plan leaves `data` undefined or null: no line (v8 draws none).
-  const { data: entitlement, refetch: refetchEntitlement } = useParcelEntitlement();
+  // After a failed re-read the query keeps its last data: a failed read draws NO line, so the data is dropped when the query is in error (output review r2).
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const { data: entitlementData, isError: entitlementFailed, refetch: refetchEntitlement } = useParcelEntitlement();
+  const entitlement = entitlementFailed ? null : entitlementData;
   useFocusEffect(
     useCallback(() => {
-      void refetchEntitlement();
-    }, [refetchEntitlement]),
+      if (accessToken) void refetchEntitlement({ cancelRefetch: false });
+    }, [accessToken, refetchEntitlement]),
   );
 
   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).

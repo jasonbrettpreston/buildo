@@ -112,9 +112,11 @@ describe('A.6 (d): the pure rules', () => {
     expect(formatResetDate('2026-12-31T23:59:59.999Z')).toBe('31 Dec 2026');
     expect(formatResetDate('2028-02-29T06:30:00.000Z')).toBe('29 Feb 2028');
     expect(formatResetDate('2026-03-10T12:00:00Z')).toBe('10 Mar 2026');
+    expect(formatResetDate('2000-02-29T00:00:00.000Z')).toBe('29 Feb 2000');
+    expect(formatResetDate('2026-04-30T00:00:00.000Z')).toBe('30 Apr 2026');
   });
   it('formatResetDate is null for anything that is not an ISO instant (never a half-written date)', () => {
-    for (const bad of [null, undefined, '', 'tomorrow', '2026-13-01T00:00:00.000Z', '2026-12-32T00:00:00.000Z', '2026-12-09', 12]) {
+    for (const bad of [null, undefined, '', 'tomorrow', '2026-13-01T00:00:00.000Z', '2026-12-32T00:00:00.000Z', '2026-12-09', '2026-02-30T00:00:00.000Z', '2026-04-31T00:00:00.000Z', '2026-02-29T00:00:00.000Z', '2100-02-29T00:00:00.000Z', 12]) {
       expect(formatResetDate(bad as never), String(bad)).toBeNull();
     }
   });
