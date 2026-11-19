@@ -58,6 +58,7 @@ vi.mock('@/lib/parcels/lot-map', async (orig) => ({
 }));
 
 import { GET } from '@/app/api/parcels/lookup/route';
+import { resolveAddress } from '@/lib/admin/parcel-lookup';
 import { parcelSearchPath, type SearchOutcome } from '../../mobile/src/lib/parcelSearchCore';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -204,6 +205,12 @@ describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline
 
   it('no house number: the matcher never runs (street-only stays today\'s typeahead path)', async () => {
     await search('Derwin Road');
+    expect(dbQuery.mock.calls.some((c) => String(c[0]).includes('levenshtein('))).toBe(false);
+  });
+
+  it('the admin call (no options) never runs the matcher: a mis-typed street stays no_match there', async () => {
+    const out = await resolveAddress('41 Derwin Road');
+    expect(out.resolution).toBe('no_match');
     expect(dbQuery.mock.calls.some((c) => String(c[0]).includes('levenshtein('))).toBe(false);
   });
 
