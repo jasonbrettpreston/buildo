@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-C12'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:31:00Z'
+updated_date: '2026-11-19T20:32:00Z'
 labels:
   - S
   - plan:SRCH.C12
@@ -98,6 +98,8 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0299 · task-321 · Backlog; o
 2026-11-19 taken on the board at lane launch (lane BL-C12, worktree /Users/brettpreston_macmini/Buildo-wt-c12, branch wf1/inc1b-c12), RR-0240
 
 AC evidence (lane BL-C12): #1 not applicable as a separate commit: brief fixes one feat commit with the context file (plan and binding table) and the MF-53 note; #2 plan and failing tests in the context file, red.out 8 failed; #3 write scope in the brief; #4 one plan review round r1 (r1-plan.txt, TRIAGE.md) instead of a lens panel per the brief; #5 triage re-opened every cited line; #6 red.out then commit.out 70bf820bf green through the hooks; #7 r2-output.txt in docs/reports/lanes/2026-11-19/BL-C12/; #8 MF-53 row note in .cursor/MCFRONTEND-QUEUE.md. Operator items: placeholder inbox value is a DB job; Help page has no wrong-lot topic. Files: see commit 70bf820bf.
+
+Follow-up 78056a5a4: Help topics lot_match (C.12) and address_match (B.7), an orchestrator reading under the build-with-existing-bindings rule flagged for the operator; S-sbind pins 422 -> 424 (help.lot.prompt, help.address.link). See docs/reports/lanes/2026-11-19/BL-C12/REPORT.md addendum.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

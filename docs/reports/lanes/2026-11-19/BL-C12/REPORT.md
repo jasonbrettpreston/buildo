@@ -40,3 +40,11 @@ r1-plan.txt + TRIAGE.md: 28 findings, KEPT items folded (one help affordance per
 - The task description has no `Files:` line (check-task-files WARN in commit.out); the commit message carries it.
 
 STATUS: ready (commit 70bf820bf plus the reports commit; unpushed). Question: pin move to 420 after BL-LOTFIX, and topic choice for item 2?
+
+## ADDENDUM 2026-11-19 (rebased head; follow-ups from the coordinator)
+Head after the rebase: 9f1158282 (feature), b4a3eb7f6 (reports); the old shas 70bf820bf and 627b69ecb are superseded. New commit 78056a5a4 (this addendum's code) on top; the docs commit follows.
+- Generator checks on the rebased head (checks3.out): emit-mobile-surfaces `surfaces ok (4 surfaces, 29 goldens)`; generate-surface-registry `clean - no drift (171 rows, 171 descriptors)`; consumer-registry `scripts/steps/_schema/consumer-registry.json is fresh`; generate-target-files exit 0; surface-validate all arms ok; lotmap-golden-capture `lotmap goldens ok (11)`.
+- Help topic (ORCHESTRATOR READING under the build-with-existing-bindings rule, flagged for the operator, not an operator ruling): v8 names wrong-lot, which the Help page lacks; built topics are used: C.12 link (lot map) topic lot_match, the three B.7 links topic address_match (web_help.content.json:7, :11). Help page unchanged. Red first: red2.out (a commit attempt with only the test change: `lot-map-help-link.logic.test.ts (16 tests | 6 failed)`), then the change; goldens by lotmap-golden-capture --write and emit-mobile-surfaces --write; MF-53 row note gained a dated line. Items 2 above in this report is superseded for the topic only.
+- Pins 422 -> 424: the two strings are exactly help.lot.prompt and help.address.link (map content file lines 25-26). Both pin tests updated with a dated comment (task-321, RR-0299), prior comments kept. Compared char by char (pin-compare.out): EXPECTED == REAL, IDENTICAL: true; real output ends "S-sbind ok (17 surfaces, 424 strings)".
+- Commit 78056a5a4 related run (commit2-tail.out): "Test Files  3 passed (3) / Tests  111 passed (111)" with surface-validate.logic.test.ts (51 tests) and surface-conformance.logic.test.ts (44 tests) executed; GATE OK; POLICY CHECKS OK (commit-msg): 4 file(s). The task now has a Files: line (CLI).
+STATUS: ready
