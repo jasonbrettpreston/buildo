@@ -258,7 +258,7 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
       [num, streetName],
     );
     const exactTruncated = exact.length > 10; // LIMIT 11 → an 11th row means more exist (Gemini fold); read before the guard narrows
-    const exactG = guardByDirection(exact, typed);
+    const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
     if (exactG.conflict) return conflictList(exactG.rows);
     exact = exactG.rows;
     if (exact.length === 1) {

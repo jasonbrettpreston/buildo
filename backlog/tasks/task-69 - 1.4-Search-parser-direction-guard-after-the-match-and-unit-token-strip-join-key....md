@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PARSER'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:01:00Z'
+updated_date: '2026-11-19T20:10:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -66,6 +66,8 @@ planNote: order: moved from 1 to S (operator 2026-11-18: search pages before inc
 planNote: answers-738: status RULED ONE-12 a: fix both parser defects before launch, two labels + one dated note on Spec 89 line 33; panel + build pass owed; waits push 6 (ONE-12 a (operator answer page, MORNING-DECISIONS.md:738))
 who (plan text): lane
 element ids delivered: A.4, A.5
+
+Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, docs/specs/02-web-admin/89_parcel_cost_model_tool.md, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/reports/reviews/task-69/, docs/reports/lanes/2026-11-19/BL-PARSER/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

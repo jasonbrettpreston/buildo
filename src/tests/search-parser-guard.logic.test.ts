@@ -174,6 +174,15 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
     expect(out.resolution).toBe('multi_parcel');
   });
 
+  it('a truncated exact window (11 rows read) is never narrowed to a false unique', async () => {
+    const rows = Array.from({ length: 11 }, (_, i) => ({ parcel_id: i === 0 ? 'E1' : 'W' + i, address: i === 0 ? '100 Queen St E' : '100 Queen St W' }));
+    state.exact['100|QUEEN'] = rows;
+    const out = await resolveAddress('100 Queen St E', opts);
+    expect(out.resolution).toBe('text_candidates');
+    expect(out.truncated).toBe(true);
+    expect(out.candidates).toHaveLength(10);
+  });
+
   it('narrowing never empties a non-empty result', async () => {
     for (const typed of ['N', 'S', 'E', 'W']) {
       state.exact['100|QUEEN'] = [E, W];
