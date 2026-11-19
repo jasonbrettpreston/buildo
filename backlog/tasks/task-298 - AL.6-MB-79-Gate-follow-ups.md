@@ -5,7 +5,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:10:00Z'
+updated_date: '2026-11-19T12:13:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -79,6 +79,8 @@ queue row: MB-79 (row status WAITS · since 2026-11-12 · expires when the infra
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 (BL-R7b): stays WAITS; operator word owed: the freeze-lift word for this item (plan text 'HELD to freeze lift' / 'HELD under the infra freeze'; no operator words found).
+
+2026-11-19 (BL-R7b, draft-18 part 2): queue row MB-79 (MCBYLAWS-QUEUE.md:398) NOT set DONE: no landing commit grounds it. The loader's LANDED flag rests on commits that mention MB-79 (status.json queueFlags; the commits are queue upkeep, partial parts or the tip, not a completing commit) and the row's own Status line still names open work (Spec 137 137_mcqueue.md:63 'The work landed and the evidence exists'). Row left as is; needs the operator or the row's lane.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
