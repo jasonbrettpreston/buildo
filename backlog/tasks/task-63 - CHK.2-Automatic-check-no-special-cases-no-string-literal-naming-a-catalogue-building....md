@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:09:00Z'
+updated_date: '2026-11-19T13:44:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -79,4 +79,6 @@ who (plan text): lane
 Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-63 · Backlog; operator, verbatim: "yes to re-use obviosouly, yes drop - run the panel as always")
 
 2026-11-19 relevancy pass (R7, RR-0214): KEPT: not replaced by BL.0 (.cursor/active_task.md planNote); shape per MORNING-DECISIONS.md:751 'CHK.2 extends gate E and ledger.mjs'.
+
+2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): KEPT, waiting: extends gate E (scripts/analysis/gates/compute-literals.mjs) and scripts/analysis/gates/ledger.mjs per re-use ruling MORNING-DECISIONS.md:750-751; no R8 deliverable builds it. Waits on push 6 (task-62) and the rollout of the 125 findings (plan text).
 <!-- SECTION:NOTES:END -->

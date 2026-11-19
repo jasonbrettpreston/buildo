@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:09:00Z'
+updated_date: '2026-11-19T13:44:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -70,4 +70,6 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 relevancy pass (R7, RR-0214): KEPT: not replaced by BL.0 (.cursor/active_task.md planNote); Spec 08 dated note, build pass and integration owed.
+
+2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): KEPT: not covered by any R8 deliverable (no Spec 08 note on seat K in R8c 1c47f4c79, which added the lane-reports rule at 08_agents.md:344). Lands after push 6 (landingPush in the description). Scope now: one Spec 08 dated note (M-246 form) naming seat K as a lens of section 5.8 at plan altitude, creating no second role.
 <!-- SECTION:NOTES:END -->

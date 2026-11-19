@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:09:00Z'
+updated_date: '2026-11-19T13:44:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -74,4 +74,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 relevancy pass (R7, RR-0214): KEPT: not replaced by BL.0 (.cursor/active_task.md task-1 planNote 'CHK.1-6, CHK.8, INFRA.1, 4, 5, 6 and QUEUE.PULL are not replaced'); absorbs INFRA.4 (task-10).
+
+2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): KEPT, narrowed to git mode: G3 scripts/hooks/check-backlog-task.mjs:25-33 checks that a code commit names its task and the file is in the diff, but never which files the task declares, so nothing covers this. Lane mode is dropped: backlog-lane.mjs (R8e 4e8c498a4) gives each lane its own worktree and gate.mjs write-scope is scratch (re-use ruling MORNING-DECISIONS.md:750-751, build-in-repo MORNING-DECISIONS.md:744). Absorbs INFRA.4 (task-10). Scope now: a repo hook script that reads the commit range and fails when a changed file is outside the Files: line of the task named by the Task: trailer (declaration home recommended under the six criteria: a Files: line in the task description; the launching lane logs it as a card).
 <!-- SECTION:NOTES:END -->

@@ -3,11 +3,11 @@ id: TASK-9
 title: >-
   INFRA.1 run-panel.mjs: one command builds the CONTEXT block, builds the pack
   under a...
-status: LATER
+status: MERGED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:09:00Z'
+updated_date: '2026-11-19T13:47:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -19,6 +19,7 @@ dependencies:
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#F/INFRA.1
   - ~/Buildo-scratch/panel-tools/PROTOCOL.md#L42 sha256=92d373e05df6
+  - task-309
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low
@@ -31,6 +32,8 @@ ordinal: 1010
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Full title: INFRA.1 run-panel.mjs: one command builds the CONTEXT block, builds the pack under a machine-wide lock (queue, not failure), assembles the question (split over a size budget), runs seats R,C,I,D,G,O,W,X,K on DeepSeek, detects truncated or empty seat replies and re-runs that seat on a smaller question (failed if still truncated), runs check.mjs, writes SEATS.md (every FIX/finding row with an id); --verify <report> refuses PASS unless the report answers every SEATS.md id and check-cites + check-quotes pass
+
+merged-into: task-309
 
 snapshot: docs/reports/plan-import/raw/2026-11-19/ (sequence.json sha256 12b1774a3bf4)
 Estimate: GUESS 1 day (no measured figure)
@@ -74,4 +77,6 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-9 · Backlog; operator, verbatim: "yes to re-use obviosouly, yes drop - run the panel as always")
 
 2026-11-19 relevancy pass (R7, RR-0214): KEPT: not replaced by BL.0 (.cursor/active_task.md planNote); shape per MORNING-DECISIONS.md:751 'INFRA.1 uses scripts/deepseek-exec.js'; the retired scratch run-panel is not ported.
+
+2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): MERGED into task-309 (R8d): the context pack (backlog-brief.mjs, c9f7f40fc and 81b43da8a) is the one-command context; the seats and the re-run of truncated replies belong to scripts/deepseek-exec.js (SUB-ENG-1) per MORNING-DECISIONS.md:751 'INFRA.1 uses scripts/deepseek-exec.js'; run-panel.mjs is retired (2026-11-18) and not ported; the report-answers-every-finding rule is carried by TRIAGE.md in the lane reports (R8c 1c47f4c79). Review r1 named no remaining part. (re-use ruling MORNING-DECISIONS.md:750-751, :750 operator words: 'yes to re-use obviosouly, yes drop - run the panel as always').
 <!-- SECTION:NOTES:END -->
