@@ -124,6 +124,25 @@ describe('backlog-status-check (task-5 CHK.8)', () => {
     expect(bad.stderr).toMatch(/\.\./);
   });
 
+  it('exits 2, not 0, when --root is not a git repo or --range names commits outside HEAD', () => {
+    const none = tmp('chk8-none');
+    expect(check(none).status).toBe(2);
+    const { d, g, commit } = repo();
+    commit('feat(x): a\n', { 'src/a.ts': 'export const a = 1;\n' });
+    g('checkout', '-q', '-b', 'side');
+    commit('feat(x): c on side\n', { 'src/c.ts': 'export const c = 1;\n' });
+    g('checkout', '-q', '-');
+    const o = check(d, ['--range', 'HEAD..side']);
+    expect(o.status).toBe(2);
+  });
+
+  it('reads the task id from a trailer value that carries a note', () => {
+    const { d, commit } = repo();
+    commit('feat(x): a\n\nTask: task-1 (wip, see notes)\n', { 'src/a.ts': 'export const a = 1;\n', [tf(1)]: task(1, 'RUNNING') });
+    const r = check(d);
+    expect(r.status, r.stdout).toBe(0);
+  });
+
   it('a repo with no backlog/tasks directory exits 0 with no findings', () => {
     const { d, commit } = repo();
     commit('feat(x): a\n', { 'src/a.ts': 'export const a = 1;\n' });
