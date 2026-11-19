@@ -3,11 +3,11 @@ id: TASK-317
 title: >-
   LOAD.4 Load-failure page: what the customer sees when a lot's report or See
   details...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T22:30:00Z'
+updated_date: '2026-11-19T23:44:00Z'
 labels:
   - S
   - plan:LOAD.4
@@ -87,4 +87,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-317 · Backlog; o
 Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-317 · Backlog; operator, verbatim: "task 341 approved")
 
 2026-11-19 (task-359, UX-2) built state to replace: after a lot pick the report screen shows 'No report for this lot yet.' with Back only, no address and no reason (mobile/app/(app)/parcel-tool/[parcelId].tsx:34; ReportBinding.tsx:400-401; report-presentation.json:88-89). Until MB-44 W is live every lot shows it (task-348). The failure page must say which lot and why, built from the small pages.
+
+2026-11-19 taken on the board at lane launch (lane BL-LOAD4, worktree /Users/brettpreston_macmini/Buildo-wt-load4, branch wf1/inc1b-load4), RR-0240
 <!-- SECTION:NOTES:END -->
