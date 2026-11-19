@@ -10,7 +10,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FOOTER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T19:54:00Z'
+updated_date: '2026-11-19T20:00:00Z'
 labels:
   - S
   - plan:SRCH.FOOTER
@@ -78,6 +78,12 @@ UNVERIFIED (not run, from task-324): the web search goldens, and whether the F01
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1 new pure module footerNode.ts holds the one footer tree builder moved from StaticBinding.tsx:175; static pages use it, goldens unmoved. 2. AC2 footer node last in the web SearchBinding tree: legal (search.legal), Terms /terms, Privacy /privacy, Help /help, copyright, v8 order; four new footer.* keys in the F01 content file; render half maps Stack component and Button href. 3. AC3 remove the legal node under the input on the web tree only; parity lock amended as named data. 4. AC4 ReportPage footer renders G2 as today then the shared tree: G3 line, three links (G5), copyright (G4); new required footer text prop; no schema part added, mobile report binding untouched. 5. AC5 no mobile source edited; mobile search goldens fingerprint and slice copy move by script only. 6. AC6 red tests first through the hook, then code, web goldens by buildGoldens, pins as data if a count moves, prereg MF-91 docs commit first. Review r1 on the context file before code.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

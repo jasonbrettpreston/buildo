@@ -1,0 +1,14 @@
+{
+  "task": "MF-91",
+  "item": "SRCH.FOOTER (task-332): one shared web footer (footerNode.ts) used by the static pages, the web search page (five v8 items, the legal sentence once, the line under the input removed on the web page only) and the web report page (G2 pending inside it, G3, the three links, the copyright); mobile unchanged.",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-19",
+  "head": "prereg 1 (round 195)",
+  "cards": [
+    "Operator, verbatim (MORNING-DECISIONS.md:1061): \"1. once  -approved\"",
+    "Operator, verbatim (MORNING-DECISIONS.md:1066): \"this is a shared component\""
+  ],
+  "plan": "PLAN reviewed by the repo review tool in review mode on docs/reports/reviews/task-332/context-2026-11-19.md (section \"Plan steps under review (lane BL-FOOTER)\"): round r1, every finding triaged KEEP or REJECT with the opened line in the lane TRIAGE.md (kept: G2 inside the footer, exact diff sets in the parity lock, named errors, hrefs and order per user, no sticky footer). Tests first: src/tests/surfaces/site-footer.logic.test.ts and site-footer.ui.test.tsx in the red attempt.",
+  "output": "OUTPUT review follows the build (one lens: the same footer on all three pages, nothing changed on mobile); recorded in the lane report."
+}
