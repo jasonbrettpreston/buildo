@@ -4,6 +4,7 @@ title: held-unruled items need the operator quoted ruling (11)
 status: Draft
 assignee: []
 created_date: '2026-11-19T05:28:00Z'
+updated_date: '2026-11-19T12:10:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -23,8 +24,8 @@ Eleven plan items loaded as WAITS with the label held-unruled and no invented ru
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Each of the 11 items has the operator verbatim ruling recorded as a Backlog decision (G2) or is left open with a dated reason
-- [ ] #2 INFRA.2 and CHK.4 (DROP proposed) are resolved with the CHK.7 and INFRA.3 relevancy pass
-- [ ] #3 J5, X:J5-go and NOWB-LANE (dropped on Q-H2 a) get the quoted Q-H2 words or are re-opened
+- [x] #2 INFRA.2 and CHK.4 (DROP proposed) are resolved with the CHK.7 and INFRA.3 relevancy pass
+- [x] #3 J5, X:J5-go and NOWB-LANE (dropped on Q-H2 a) get the quoted Q-H2 words or are re-opened
 - [ ] #4 The label held-unruled is removed from each resolved task
 <!-- AC:END -->
 
@@ -41,3 +42,9 @@ Eleven plan items loaded as WAITS with the label held-unruled and no invented ru
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 (BL-R7b): resolved: INFRA.2 and CHK.4 DROPPED (decision-69, MORNING-DECISIONS.md:750-751); J5 7.8, 7.9, 7.23 DROPPED on Q-H2 a (decision-70, MORNING-DECISIONS.md:738, question decisions.json:247-260); label removed on those five. Open: task-131, task-293, task-296, task-297, task-298, task-303 stay WAITS, operator word owed (dated note on each). AC 1 and 4 stay open.
+<!-- SECTION:NOTES:END -->

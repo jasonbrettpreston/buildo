@@ -7,12 +7,12 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T12:10:00Z'
 due_date: '2026-11-26'
 labels:
   - '1'
   - plan:CO.2
   - evidence:planned
-  - unverified
   - comp:PAN
   - comp:FIVE
   - comp:SC
@@ -90,3 +90,9 @@ element ids delivered: B12
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 (BL-R7b, draft-20): self-fold resolved from the snapshot. sequence.json CO.2 entry reads 'Replaces SL-COA-LOCK' and the fold line 'FOLDED into CO.2 (coa: the lock is part of the mechanism build (red first))' is the fold of the lock item SL-COA-LOCK into CO.2; CO.2 is the target, not a folded task. CO.2 stays its own task (docs/reports/plan-import/raw/2026-11-19/sequence.json#CO.2; import report 2026-11-19-import-report.md:122).
+<!-- SECTION:NOTES:END -->

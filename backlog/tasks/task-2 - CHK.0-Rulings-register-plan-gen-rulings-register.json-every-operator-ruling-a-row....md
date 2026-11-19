@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T12:09:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -77,4 +77,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-2 · Backlog; operator, verbatim: "yes to re-use obviosouly, yes drop - run the panel as always")
+
+2026-11-19 relevancy pass (R7, RR-0214): CHANGED: goes through the repo decision log (decision-log.mjs, R-HK) and G2 backlog-decision.mjs; BL.0's loader already loaded the rulings as 68 Backlog decisions; the scratch register and add-ruling.mjs are not built as new tools. Overlaps BL.0 (plan line 90: 'Overlaps CHK.0, CHK.7 and INFRA.3'; MORNING-DECISIONS.md:751 'CHK.0 goes through decision-log.mjs'). Description unchanged (no quotable narrowed scope beyond the ruling).
 <!-- SECTION:NOTES:END -->

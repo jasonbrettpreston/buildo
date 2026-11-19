@@ -4,6 +4,7 @@ title: Relevancy pass of Increment 1A tasks against the Backlog plan (R7)
 status: Draft
 assignee: []
 created_date: '2026-11-19T05:28:00Z'
+updated_date: '2026-11-19T12:10:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -22,9 +23,9 @@ Operator RR-0214 (MORNING-DECISIONS.md:857): after the move every task on the bo
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each of the 16 milestone-F tasks is marked kept, merged into BL.0 (task-1) or changed, through the panel, with the reason on the task
-- [ ] #2 BL.0 overlap with CHK.0, CHK.7 and INFRA.3 is resolved task by task (merge or narrow)
-- [ ] #3 CHK.1-6, CHK.8, INFRA.1, INFRA.4-6 and QUEUE.PULL are confirmed not replaced
+- [x] #1 Each of the 16 milestone-F tasks is marked kept, merged into BL.0 (task-1) or changed, through the panel, with the reason on the task
+- [x] #2 BL.0 overlap with CHK.0, CHK.7 and INFRA.3 is resolved task by task (merge or narrow)
+- [x] #3 CHK.1-6, CHK.8, INFRA.1, INFRA.4-6 and QUEUE.PULL are confirmed not replaced
 - [ ] #4 The same pass is then run milestone by milestone (1B first) and recorded on each task
 <!-- AC:END -->
 
@@ -41,3 +42,9 @@ Operator RR-0214 (MORNING-DECISIONS.md:857): after the move every task on the bo
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 (BL-R7b): AC 1-3 done for m-0: 16 tasks marked (KEPT 9 incl. INFRA.4 already MERGED, CHANGED CHK.0 and CHK.7, MERGED INFRA.3, DROPPED INFRA.2 and CHK.4), QUEUE.PULL is not a task on the board. AC 4 (milestone by milestone, 1B first) stays open.
+<!-- SECTION:NOTES:END -->

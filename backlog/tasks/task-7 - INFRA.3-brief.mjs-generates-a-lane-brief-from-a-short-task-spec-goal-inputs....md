@@ -3,10 +3,11 @@ id: TASK-7
 title: >-
   INFRA.3 brief.mjs: generates a lane brief from a short task spec (goal,
   inputs,...
-status: LATER
+status: MERGED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T12:09:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -17,6 +18,7 @@ dependencies: []
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#F/INFRA.3
   - ~/Buildo-scratch/lanes-20261117/rda-d7/REPORT.md#L22 sha256=6d55bff32131
+  - task-1
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low
@@ -65,3 +67,9 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 relevancy pass (R7, RR-0214): MERGED into task-1: BL.0 overlaps INFRA.3 (.cursor/active_task.md line 90; task-1 planNote); G1 backlog-brief.mjs is the repo form of the lane-brief generator. Merged status set by this pass.
+<!-- SECTION:NOTES:END -->

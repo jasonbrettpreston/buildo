@@ -5,7 +5,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:58:00Z'
+updated_date: '2026-11-19T12:10:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -83,6 +83,12 @@ queue row: MB-76 (row status WAITS · since 2026-11-12 · expires when MB-38 is 
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 (BL-R7b): stays WAITS; operator word owed: the freeze-lift word for this item (plan text 'HELD to freeze lift' / 'HELD under the infra freeze'; no operator words found).
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

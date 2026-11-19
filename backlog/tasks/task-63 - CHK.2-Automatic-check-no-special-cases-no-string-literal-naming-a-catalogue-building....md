@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T12:09:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -77,4 +77,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-63 · Backlog; operator, verbatim: "yes to re-use obviosouly, yes drop - run the panel as always")
+
+2026-11-19 relevancy pass (R7, RR-0214): KEPT: not replaced by BL.0 (.cursor/active_task.md planNote); shape per MORNING-DECISIONS.md:751 'CHK.2 extends gate E and ledger.mjs'.
 <!-- SECTION:NOTES:END -->

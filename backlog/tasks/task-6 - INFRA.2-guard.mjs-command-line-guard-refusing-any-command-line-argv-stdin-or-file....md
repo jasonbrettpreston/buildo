@@ -3,16 +3,15 @@ id: TASK-6
 title: >-
   INFRA.2 guard.mjs: command-line guard refusing any command line (argv, stdin
   or file)...
-status: WAITS
+status: DROPPED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:58:00Z'
+updated_date: '2026-11-19T12:09:00Z'
 due_date: '2026-11-26'
 labels:
   - F
   - plan:INFRA.2
-  - held-unruled
 milestone: m-0
 dependencies: []
 references:
@@ -66,6 +65,14 @@ who (plan text): LANE-TOOLS lane (scratch tooling only, ~/Buildo-scratch/panel-t
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-18 (M-246, prior text kept; 2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and CHK.4 (operator words) · task-6 · Backlog; operator, verbatim: "Of course, yes to re-use obviosouly, yes drop - run the panel as always")
+
+2026-11-19 relevancy pass (R7, RR-0214): DROPPED by MORNING-DECISIONS.md:751 (decision-69; operator words MORNING-DECISIONS.md:750): guard.mjs dropped, lane-guard hook moves into scripts/hooks.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

@@ -3,17 +3,16 @@ id: TASK-65
 title: >-
   CHK.4 Automatic check: no maths in the client (no * / % ** , Math.* or toFixed
   on a...
-status: WAITS
+status: DROPPED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:58:00Z'
+updated_date: '2026-11-19T12:09:00Z'
 due_date: '2026-11-26'
 labels:
   - F
   - plan:CHK.4
   - evidence:planned
-  - held-unruled
 milestone: m-0
 dependencies:
   - TASK-62
@@ -77,6 +76,10 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-65 · Backlog; operator, verbatim: "yes to re-use obviosouly, yes drop - run the panel as always")
+
+Dated note 2026-11-18 (M-246, prior text kept; 2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and CHK.4 (operator words) · task-65 · Backlog; operator, verbatim: "Of course, yes to re-use obviosouly, yes drop - run the panel as always")
+
+2026-11-19 relevancy pass (R7, RR-0214): DROPPED by MORNING-DECISIONS.md:751 (decision-69; operator words MORNING-DECISIONS.md:750): duplicate of report-no-maths (MF-16, FE-05).
 <!-- SECTION:NOTES:END -->
 
 ## Comments

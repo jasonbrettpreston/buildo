@@ -3,9 +3,9 @@ id: TASK-1
 title: BL.0 Backlog home of the increment plan (McLane)
 status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-R7b'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T05:28:00Z'
+updated_date: '2026-11-19T12:09:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -84,4 +84,8 @@ who (plan text): lane
 2026-11-19 BL-R4 commit 2 (R4): Spec 137 McLane dated note (section 1, plus a homes row in section 2), Spec 08 dated notes (section 10.1, TKT-1), CLAUDE.md managed Backlog block and Prime Directive 12, the two queue-head notes. Counts as loaded: 304 tasks, 16 drafts, 68 decisions.
 
 2026-11-19 BL-R4 commit 3: eight follow-up drafts draft-17 to draft-24 (relevancy pass R7, queue-row corrections, held-unruled 11, CO.2 self-fold, check-partial-staging middle dot, backlog.md install R5, board 6421 R6, inc1a-checks re-cut R7), label follow-up, milestone m-0.
+
+2026-11-19 BL-R7b: R7 record work started (relevancy pass, held items, CO.2, queue rows)
+
+2026-11-19 relevancy pass (R7, RR-0214): m-0 (increment F) passed: 16 tasks marked, QUEUE.PULL is not a task on the board (grep of task list for 'pull' finds none); m-1 (1.B) is next. AC 7 stays unchecked (the milestone-by-milestone pass continues).
 <!-- SECTION:NOTES:END -->

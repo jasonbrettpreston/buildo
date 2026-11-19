@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T12:09:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -74,4 +74,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-18 (M-246, prior text kept; RR-0152 · task-4 · Backlog; operator, verbatim: "yes to re-use obviosouly, yes drop - run the panel as always")
+
+2026-11-19 relevancy pass (R7, RR-0214): CHANGED: extends mcbylaws-queue-check.mjs, no new tool (MORNING-DECISIONS.md:751); the closed-status-word half is now carried by the configured Backlog statuses and gate G3 (plan sections 1 and 3; overlap named at .cursor/active_task.md line 90), the ID-ledger half stays. Description unchanged (narrowed scope is the orchestrator's reading, not a quotable plan sentence).
 <!-- SECTION:NOTES:END -->

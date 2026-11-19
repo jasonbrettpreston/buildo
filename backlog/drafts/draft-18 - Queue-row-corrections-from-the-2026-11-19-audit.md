@@ -4,6 +4,7 @@ title: Queue-row corrections from the 2026-11-19 audit
 status: Draft
 assignee: []
 created_date: '2026-11-19T05:28:00Z'
+updated_date: '2026-11-19T12:10:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -42,3 +43,9 @@ Three McFrontend rows are past expires 2026-11-16 and ten rows are LANDED but no
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 (BL-R7b): part 1 not touched: MF rows MCFRONTEND-QUEUE.md:61 (MF-08), :203 (MF-22), :348 (MF-49) need the operator word (renew or drop); part 2 recorded in the second R7 docs commit.
+<!-- SECTION:NOTES:END -->
