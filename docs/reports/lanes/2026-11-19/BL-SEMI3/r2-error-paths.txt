@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/semi3/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11024 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22804 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34218 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46094 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 58948 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 71697 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 83617 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 94101 chars, answer 2162 chars, 120s
+BUG severity=HIGH — mobile/app/(app)/parcel-tool/semi-question.tsx:62 "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the answered lookup is a counted event (the file's own note says "the server has counted or not") and it carries no idempotency key, so a request still running at 60 s times out, `finally` releases `submittingRef`, Try again plus a second Continue sends a second answered lookup for the same answer (the new test even asserts "expect(mockFetchLookup).toHaveBeenCalledTimes(2)"), and one answer can be counted twice — attach a stable per-answer request key to the answered lookup and have the server dedup on it, or reuse the settled outcome of the first call instead of re-issuing.
+
+DEFER severity=MED — mobile/src/lib/semiQuestion.ts:28 "const timer = setTimeout(() => reject(new SemiContinueTimeoutError()), ms);" — the timer is not cleared when the screen unmounts, so after the person leaves the 60 s timer still fires and the catch/finally run against an unmounted component; both are guarded so nothing updates, but the timer and closure live for the full window — return a cancel handle from boundedWait and clear it in the screen's effect cleanup, AbortSignal itself is triaged out.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:57 "if (submittingRef.current) return;" — two quick Continue taps look like they could double-fetch and double-count — handled, the ref is set synchronously before the first await so the second press is ignored, and the busy test asserts one lookup per press.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:56 "if (!id) return;" — an empty parcel id leaves the enabled Continue inert with no feedback — handled as fail-closed, no lookup, no count, no navigation, and the ask state cannot render without lookup data because useParcelLookup is already guarded with `id || undefined`.
+
+REJECT — mobile/src/lib/semiQuestion.ts:31 "(e) => { clearTimeout(timer); reject(e); }" — a first request that settles or rejects after the timeout could throw unhandled or write a late state — handled, the then handlers no-op on the already-settled promise, the late rejection is attached so it is not unhandled, and the timeout path never reaches the post-await store and replace.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:71 "if (!mountedRef.current) return;" — leaving the page mid-lookup could store the lookup and open the report behind the person — handled, the guard skips both store and replace, and the unmount test asserts "expect(mockSetQueryData).not.toHaveBeenCalled()".
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:68 "if (mountedRef.current) setSubmitting(false);" — a never-settling lookup could leave Continue busy forever and the latch stuck — handled, boundedWait rejects at SEMI_CONTINUE_WAIT_MS, `finally` resets `submittingRef` in every case and clears busy when mounted; the fake-timer test asserts the next Continue works.
+
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:32 "mountedRef.current = true;" — an effect cleanup followed by a re-run (StrictMode, Fast Refresh) could leave the guard false and Continue never navigate — handled, the body sets it true on every run, and the StrictMode test asserts the report still opens.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (Continue lookup rejection, 60 s timeout error state), empty (empty parcel id), retry (Try again then second Continue), time-out (SEMI_CONTINUE_WAIT_MS bound, late settle), double-submit (second tap while busy), unmount mid-flight, StrictMode cleanup and re-run   Unguarded: 1 (answered-lookup repeat has no client idempotency key, server dedup cannot see)
+
+---
+⏱  121359ms (121.4s)
+📊 Tokens — total: 37195, input: 13036, output: 24159, reasoning: 23241

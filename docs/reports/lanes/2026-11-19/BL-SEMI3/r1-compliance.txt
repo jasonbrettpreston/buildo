@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of docs/reports/reviews/task-361/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11571 chars, answer 0 chars, 15s
+BUG severity=HIGH — AC#7 "Fidelity pin quotes the mock: the busy case names semi-question.html:130 `.btn.p[aria-busy=\"true\"]`" — plan step 3 "class L.semiSelectBusy (= semiSelect + opacity-[0.85], the v8 rule)" — the plan routes the busy look to choose-lot.html:132 and never pins semi-question.html:130 anywhere in the new busy case or its descriptor state — in plan step 4 name the pin exactly: busy state descriptor/case must record semi-question.html:130 `.btn.p[aria-busy="true"]` (not the v8 choose-lot file) as its fidelity source.
+DEFER severity=MED — AC#6 "A Continue whose lookup never settles ends in the error state after a bounded wait and the next Continue tap works (fake-timer case written first); submittingRef is reset on that path" — plan "Tests first: behaviour test cases for busy, StrictMode remount, empty id, never-settling fetch with fake timers" — only the timeout half is cased, no named case asserts the second Continue tap actually re-fires the lookup (the "next tap works" clause) — add one named fake-timer case: first tap times out into the error state, second tap calls fetchParcelLookup again with the same id.
+DEFER severity=MED — AC#3 "node scripts/surfaces/semi-question-golden-capture.ts --check is clean after any new state, and node scripts/surfaces/surface-validate.mjs --check prints no new finding" — plan step 4 "New golden state `busy` ... through the golden capture script" — the plan names the capture script but no step runs either `--check` (capture or surface-validate) nor records their clean output — add both commands (with `node_modules/.bin/tsx --tsconfig mobile/tsconfig.json` for the capture) as a verification step with their output in the close-out.
+DEFER severity=MED — AC#4 "npm run typecheck is clean; mobile jest is not run by the hook (task-343 line 10): the close-out says UNVERIFIED unless run on CI or device" — plan lists no typecheck or close-out step, tests first "behaviour test cases" only — the plan never commits to the typecheck run nor to the UNVERIFIED wording for the mobile jest cases — add "npm run typecheck clean" and "mobile jest UNVERIFIED (not run)" to the close-out step.
+MET — AC#1 — plan step 3 "Continue gets accessibilityState {disabled:false, busy:true}" — busy accessibilityState plus the mock's opacity look, with the busy case in the behaviour test listed under "Tests first".
+MET — AC#2 — plan step 1 "mountedRef: effect body sets true, cleanup false" — ref is re-set in the effect body and a StrictMode remount case is named under "Tests first".
+MET — AC#5 — plan step 1 "continueToReport: `if (!id) return;` before the latch" — early return before fetchParcelLookup, with the empty-id case written first.
+MET — RR-0184 "also need a semi question page similar to a min page" — plan step 3 "class L.semiSelectBusy (= semiSelect + opacity-[0.85]" — the busy look is an addition to the existing small-page style, no new page or component kind ("Not touched: ... any component kind").
+MET — RR-0308 / RR-0309 "Mock looks good" / "Mock approved. Looks good!" — plan step 4 "unchanged otherwise so existing goldens do not move" — only the mock's own drawn busy rule is added; no unapproved visual change to the approved mock.
+REJECT — RR-0176 "no 35 s cap" — the plan could be accused of capping the report wait with SEMI_CONTINUE_WAIT_MS=30000 — RR-0176 governs the loading screen's animation and report/See details wait, not the semi page's answered lookup, so a bounded fetch latch on the semi page is outside its scope.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  24223ms (24.2s)
+📊 Tokens — total: 26093, input: 21310, output: 4783, reasoning: 3853

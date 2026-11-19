@@ -3,11 +3,11 @@ id: TASK-361
 title: >-
   SRCH.SEMI-3 semi page Continue: busy state, unmount guard, empty-id guard,
   bounded wait
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SEMI3'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:43:00Z'
+updated_date: '2026-11-19T22:45:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -16,6 +16,7 @@ dependencies:
   - TASK-319
 references:
   - docs/reports/lanes/2026-11-19/BL-TRIAGE/VERDICTS.md
+  - docs/reports/lanes/2026-11-19/BL-SEMI3/REPORT.md
 type: build
 project: McIncrement
 ordinal: 61012
@@ -38,13 +39,13 @@ Added after the lens run (BL-LENSES, DeepSeek lenses on 9fea46277; grounded on h
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 While Continue is pending the Continue Button node carries accessibilityState busy true (and the approved busy look); a case in mobile/__tests__/semiQuestionPage.behaviour.test.tsx written first
-- [ ] #2 mountedRef is set true inside the effect body; a case that remounts the screen (cleanup then re-run) and still sees Continue navigate after the lookup resolves
-- [ ] #3 Semi goldens are regenerated only by the repo script: node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --check is clean after any new state, and node scripts/surfaces/surface-validate.mjs --check prints no new finding
-- [ ] #4 npm run typecheck is clean; mobile jest is not run by the hook (task-343 line 10): the close-out says UNVERIFIED unless run on CI or device
-- [ ] #5 continueToReport returns early when id is empty and never calls fetchParcelLookup with an empty parcelId (case written first)
-- [ ] #6 A Continue whose lookup never settles ends in the error state after a bounded wait and the next Continue tap works (fake-timer case written first); submittingRef is reset on that path
-- [ ] #7 Fidelity pin quotes the mock: the busy case names semi-question.html:130 `.btn.p[aria-busy="true"]`
+- [x] #1 While Continue is pending the Continue Button node carries accessibilityState busy true (and the approved busy look); a case in mobile/__tests__/semiQuestionPage.behaviour.test.tsx written first
+- [x] #2 mountedRef is set true inside the effect body; a case that remounts the screen (cleanup then re-run) and still sees Continue navigate after the lookup resolves
+- [x] #3 Semi goldens are regenerated only by the repo script: node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --check is clean after any new state, and node scripts/surfaces/surface-validate.mjs --check prints no new finding
+- [x] #4 npm run typecheck is clean; mobile jest is not run by the hook (task-343 line 10): the close-out says UNVERIFIED unless run on CI or device
+- [x] #5 continueToReport returns early when id is empty and never calls fetchParcelLookup with an empty parcelId (case written first)
+- [x] #6 A Continue whose lookup never settles ends in the error state after a bounded wait and the next Continue tap works (fake-timer case written first); submittingRef is reset on that path
+- [x] #7 Fidelity pin quotes the mock: the busy case names semi-question.html:130 `.btn.p[aria-busy="true"]`
 <!-- AC:END -->
 
 ## Definition of Done
@@ -74,3 +75,9 @@ Added after the lens run (BL-LENSES, DeepSeek lenses on 9fea46277; grounded on h
 
 BL-SEMI3 2026-11-19: all four defects confirmed on head 0eaa22fc0 and fixed. Busy = accessibilityState busy plus the mock rule opacity .85 (semi-question.html:130; the mock draws no busy section). Wait bound SEMI_CONTINUE_WAIT_MS = 60000 is a timeframe: operator item in the lane report. Not built: failed-Continue state (D-1), abort of the abandoned request, logging, answer change mid-flight (loose ends on task-343).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Four defects confirmed on 0eaa22fc0 and fixed: busy Continue (accessibilityState busy + mock rule opacity .85, semi-question.html:130), mountedRef set true in the effect body, empty-id guard, 60 s bounded wait ending in the built error state. Commits 9b43c7e7d (red cases) and 033bf0cbf (fix). Hooks: GATE OK, POLICY CHECKS OK, typecheck clean, all 9 generated/golden checks clean. Mobile jest cases written but NOT run (UNVERIFIED); busy look on device UNVERIFIED; 60 s value is an operator item. D-1 failed-Continue state untouched.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/semi3/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10748 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22523 chars, answer 0 chars, 30s
+```
+DEFER severity=MED — mobile/src/lib/semiQuestion.ts:16 "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — after the tap the person's only visible change is a slightly dimmed button, held for up to a minute with no cancel and no progress cue, and nothing tells them how long it has been — the mock draws only the rule "semi-question.html:130 `.btn.p[aria-busy=\"true\"]` { opacity:.85; cursor:progress }" with no busy text, so the duration is design silent (RR-0233 operator item); surface the 60 s value for the operator's ruling in the lane report
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:58 "if (!id) return;" — in the empty-id state the Continue button is drawn enabled, and pressing it produces nothing at all, no busy, no message, a silent no-response — design silent, and the state needs a parcel id missing from the route to be reached, so a silent return is acceptable for now
+DEFER severity=LOW — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:145 "Couldn't reach the lot service. Check your connection and try again." — a person whose Continue timed out after 60 s is told to check a connection that may be perfectly fine — D-1 is unruled and the brief forbids a new string, so the built error copy stands; carry this example into the D-1 ruling
+DEFER severity=LOW — mobile/__tests__/semiQuestionScreens.golden.test.ts:150 "expect(String(busy.props.className)).toContain('opacity-[0.85]');" — the person's only visible sign the tap registered is one Tailwind arbitrary class, and no case in the diff shows it rendered (jest not run locally, close-out UNVERIFIED on device), so a class that does not take effect puts the person back to "nothing happens" — verify the busy look once on a device or CI screen before close-out
+REJECT — semi-question.html:130 ".btn.p[aria-busy=\"true\"] { opacity:.85; cursor:progress }" — a busy Continue with no spinner and no busy text looks like a barely dimmed button — that matches the approved mock, which draws no busy section and no busy text (RR-0308/RR-0309)
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:59 "if (submittingRef.current) return;" — a second tap while the lookup runs gets no acknowledgement — the plan triage ruled out disabling Continue while busy and the mock draws no other busy cue, so the silence is by design
+VERDICT: PASS on the person's experience
+States checked: first view, loading lookup, ask with no answer (Continue disabled), ask with answer idle, ask with answer and answered lookup running (busy, drawn by this change), timeout after the bounded wait (error with Try again, answer preserved), failed lookup (unchanged, D-1), redirect, empty parcel id, leaving the page mid lookup, retry after timeout   Dead ends found: 0 (one silent no-op in the empty-id state, DEFER)
+```
+
+---
+⏱  39214ms (39.2s)
+📊 Tokens — total: 20341, input: 13035, output: 7306, reasoning: 6598

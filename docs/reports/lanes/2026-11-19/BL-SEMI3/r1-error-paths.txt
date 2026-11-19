@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of docs/reports/reviews/task-361/context-2026-11-19.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11119 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23018 chars, answer 0 chars, 30s
+BUG severity=HIGH — PLAN 1 "the fetch wrapped in boundedWait(promise, SEMI_CONTINUE_WAIT_MS=30000) from semiQuestion.ts that rejects with SemiContinueTimeoutError" — the bound abandons the promise without aborting it, so after a timed-out Continue the person can tap again and start a second in-flight answered lookup while the first still settles, and the fetch-and-count runs twice with no idempotency key named on either request — thread an AbortController into fetchParcelLookup, abort it in finally, and key the lookup by parcelId plus answered so a repeat is a no-op.
+
+BUG severity=MED — plan "mountedRef: effect body sets true, cleanup false." — the unmount guard only skips state writes, the in-flight lookup is not aborted, so leaving the semi page leaves a request that still produces and counts the report for an abandoned screen — abort the pending lookup in the effect cleanup, not just flip the ref.
+
+BUG severity=MED — plan "continueToReport: `if (!id) return;` before the latch" — with an empty id the handler returns before any state change, so the button stays enabled and every tap is a silent no-op with no log and no visible change — disable Continue when id is falsy and log the empty-id path (or reuse the existing error state).
+
+DEFER severity=MED — plan "which lands in the existing catch -> setSubmitError -> the existing built error state (no new string)" and "Not touched: the failed-Continue state (open design question D-1)" — the timeout, a network failure and a parse failure all collapse into one state whose retry affordance is an open design question this plan says it does not touch, so acceptance #6 "the next Continue tap works" is unverified — confirm the error state renders an enabled Continue (or retry control) with busy false, else add the retry affordance.
+
+DEFER severity=MED — RR-0176 "the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap)" — a fixed 30 s cap turns a slow but succeeding answered lookup into an error and invites exactly the duplicate retry in finding 1, so the bound needs to match the no-cap ruling or keep the busy state instead of erroring — verify the bound against RR-0176 and retry only on a real failure.
+
+DEFER severity=LOW — plan "finally resets submittingRef" — only the finally is stated to check mounted, the catch's setSubmitError is not, and the boundedWait timer is not stated to be cleared, so a timeout firing after the fetch settled or after unmount still reaches the catch and writes state — clearTimeout in finally and guard the catch with mountedRef.
+
+REJECT — task "every later Continue tap silently ignored" — this looks like the double-tap race is left open — it is handled, the plan's submittingRef latch is set synchronously before the await and reset in finally, so a second tap during the pending wait is ignored and works again after the bounded wait.
+
+VERDICT: FAIL on error-path safety
+Paths walked: lookup failure to catch to error state, empty-id tap, retry after timeout and after error, 30 s bounded wait, unmount during pending lookup, double-submit during pending and after timeout, meter count idempotency
+Unguarded: 4
+
+---
+⏱  43177ms (43.2s)
+📊 Tokens — total: 29544, input: 21274, output: 8270, reasoning: 7545
