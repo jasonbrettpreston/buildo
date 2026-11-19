@@ -3,11 +3,11 @@ id: TASK-5
 title: >-
   CHK.8 Task status from evidence: PLANNED / READY / BUILT / VERIFIED /
   REHEARSED /...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-CHK8'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:44:00Z'
+updated_date: '2026-11-19T13:58:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -79,4 +79,6 @@ who (plan text): lane
 2026-11-19 relevancy pass (R7, RR-0214): KEPT: not replaced by BL.0 (.cursor/active_task.md planNote); status from evidence stays its own check (BL.0 loads status, it does not compute it).
 
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): CHANGED, narrowed (R7b said KEPT): status words are the Backlog statuses (backlog/config.yml:3), backlog-next.mjs (BL.0 3002ef51c, R8a 40aecea1c) lists what to take, and ~/Buildo-scratch/queues-20261113/status-evidence.mjs does not exist (never built). G3 (check-backlog-task.mjs:25-33) never reads a task status, which is the remaining gap. Scope now: one read-only repo check that flags a task at BUILT or DONE with no commit carrying its Task: trailer, and a Task: trailer naming a task that is not RUNNING; no seven-word computed status, no queue-row comparison (the plan lives in Backlog, RR-0205).
+
+2026-11-19 taken on the board at lane launch (lane BL-CHK8, worktree /Users/brettpreston_macmini/Buildo-wt-chk8, branch wf1/inc1a-chk8), RR-0240
 <!-- SECTION:NOTES:END -->
