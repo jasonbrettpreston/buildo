@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LOTCARD'
 created_date: '2026-11-19T15:57:00Z'
-updated_date: '2026-11-19T16:03:00Z'
+updated_date: '2026-11-19T16:16:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -28,6 +28,9 @@ ordinal: 37012
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Operator 2026-11-19 (RR-0284, decision-84): "if it a small change lets do it - we have the data - why not". Grounded: yes - choose-lot.html:306 names the two card fields; neither is in the 14-entry map descriptor whitelist (search-follow-ups.logic.test.ts) nor in CONSUMER_MAP_COLS (lot-map.ts:26, locked by consumer-parcel-lookup.infra.test.ts:208); the data exists (massing join; primary_frontage_street_name). Recommendation: one build task after the data check; UNVERIFIED until its review round.
+
+RR-0289 (MORNING-DECISIONS.md:1117): massing is reliable for presence only; a footprint reads 'has the house', none reads 'no building'.
+Files: src/lib/parcels/lot-map.ts, src/lib/parcels/consumer-lookup.ts, src/app/api/parcels/lookup/types.ts, mobile/src/lib/schemas.ts, mobile/src/components/surfaces/LotMapBinding.tsx, mobile/src/constants/lotMap.ts, mobile/src/generated/surfaces/, mobile/__tests__/fixtures/, scripts/surfaces/parcel_product/F01/surfaces/, scripts/surfaces/_schema/census/mobile-product.json, scripts/steps/_schema/src-sql-ledger.json, scripts/analysis/lot-map-data-check.mjs, src/tests/, docs/reports/, .cursor/MCFRONTEND-QUEUE.md, backlog/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -61,4 +64,6 @@ Per context-2026-11-19.md 'Plan steps under review (lane BL-LOTCARD)': red tests
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-LOTCARD, worktree /Users/brettpreston_macmini/Buildo-wt-lotcard, branch wf1/inc1b-lotcard), RR-0240
+
+RR-0289 (MORNING-DECISIONS.md:1117) supersedes plan step 4: footprint -> 'has the house', none -> 'no building', presence only. Cite carried into the context file, the MF-53 dated note and the content keys.
 <!-- SECTION:NOTES:END -->

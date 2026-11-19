@@ -148,11 +148,15 @@ const cards = (s: LotMapSituation): PropsNode[] =>
     const area = fact(lot.area, `map.lots.${i}.area`);
     const frontage = fact(lot.frontage, `map.lots.${i}.frontage`);
     const zoning = fact(lot.zoning, `map.lots.${i}.zoning`);
-    // C.7 (RR-0284, choose-lot.html:306): the street phrase whenever the street is populated; "has the house" only when a footprint is present;
-    // where massing returns none, nothing is said about the house.
+    // C.7 (RR-0284; RR-0289, MORNING-DECISIONS.md:1117, massing is reliable for presence only): a footprint says "has the house", none says
+    // "no building" (choose-lot.html:306); the street phrase when the street is populated. A response without the field (an older server or a
+    // cached one) says neither: the plain lot letter.
+    const known = lot.hasFootprint !== undefined;
     const house = lot.hasFootprint === true;
-    const street = lot.frontageStreet != null;
-    const leadKey = house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house') : street ? 'lot.lead.faces' : 'lot.letter';
+    const street = typeof lot.frontageStreet === 'string' && lot.frontageStreet.trim() !== '';
+    const leadKey = !known ? 'lot.letter'
+      : house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house')
+        : street ? 'lot.lead.no_building_faces' : 'lot.lead.no_building';
     return node('Button', {
       key: `card-${l.parcelId}`,
       testID: `parcel-lotmap-card-${l.parcelId}`,
@@ -164,7 +168,7 @@ const cards = (s: LotMapSituation): PropsNode[] =>
       onPress: { action: 'select', parcelId: contract(`map.lots.${i}.parcelId`) },
     }, [node('View', { key: 'card-row', className: L.cardRow }, [
       node('View', { key: 'card-text' }, [
-        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } }]),
+        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } }]),
         node('Text', { key: 'card-area', className: L.cardArea }, [area]),
       ]),
       ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),

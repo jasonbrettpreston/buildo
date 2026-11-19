@@ -142,12 +142,13 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
   const LEADS = {
     'lot.letter': 'Lot {letter}',
     'lot.lead.house': 'Lot {letter} · has the house',
-    'lot.lead.faces': 'Lot {letter} · faces {street}',
+    'lot.lead.no_building': 'Lot {letter} · no building',
+    'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
   };
-  it('the four lead keys carry the v8 words in the content file and the slice; nothing says "no building"', () => {
+  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
-    expect(Object.values(mapContent).filter((v) => /no building|at the back/.test(v))).toEqual([]);
+    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
   });
   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
@@ -157,14 +158,21 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
     return { key: refs[0]!, street: street && JSON.parse(street) };
   };
-  it('two lots: A has a footprint and a street (both phrases), B has neither (plain "Lot B": nothing about the house)', () => {
+  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
-    expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.letter', street: null });
+    expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
   });
-  it('three lots cover the other variants: house only, faces only, both', () => {
+  it('three lots cover the other variants: house only, no building with a street, and a lot whose response lacks both fields (older or cached server: plain letter)', () => {
     expect(leadKey('multi_parcel_3plus', 0).key).toBe('lot.lead.house');
-    expect(leadKey('multi_parcel_3plus', 1)).toEqual({ key: 'lot.lead.faces', street: { contract: 'contract_parcels_lookup.map.lots.1.frontageStreet' } });
-    expect(leadKey('multi_parcel_3plus', 2).key).toBe('lot.lead.house_faces');
+    expect(leadKey('multi_parcel_3plus', 1)).toEqual({ key: 'lot.lead.no_building_faces', street: { contract: 'contract_parcels_lookup.map.lots.1.frontageStreet' } });
+    expect(leadKey('multi_parcel_3plus', 2)).toEqual({ key: 'lot.letter', street: null }); // C has neither field: says neither house nor building
+  });
+  it('a response without the field says neither house nor building: the plain lot letter (older or cached server)', () => {
+    const fx = rj('mobile/__tests__/fixtures/lotMap.situations.json');
+    expect(fx.inputs.lot_facts_null.data.map.lots.every((l: Json) => !('hasFootprint' in l))).toBe(true);
+    const binding = fs.readFileSync(path.join(ROOT, 'mobile/src/components/surfaces/LotMapBinding.tsx'), 'utf8');
+    expect(binding).toContain("const known = lot.hasFootprint !== undefined;");
+    expect(binding).toContain("!known ? 'lot.letter'");
   });
   it('the map draws a lot with a footprint in its own fill tier, never in the selected tier unless picked', () => {
     const g = rj(`${GOLD}/${MAP}/multi_parcel_2.mobile.json`);
@@ -188,6 +196,12 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
     expect(src).toContain('55322');
     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
   });
+  it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+    const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+    expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+    for (const bad of ['postgres://u@127.0.0.1:54322/db', 'postgres://u@db.example.com:55322/db', 'postgres://u@127.0.0.1:55322/db?host=db.example.com', 'http://127.0.0.1:55322/db', 'garbage'])
+      expect([bad, refuse(bad) !== null]).toEqual([bad, true]);
+  });
   it('MF-53 carries the 2026-11-19 SRCH.LOTCARD dated note with the ruling verbatim and keeps the earlier notes', () => {
     const queue = fs.readFileSync(path.join(ROOT, '.cursor/MCFRONTEND-QUEUE.md'), 'utf8');
     const start = queue.indexOf('\n**MF-53 ');
@@ -195,5 +209,7 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
     expect(r).toContain('lane BL-LOTCARD, task-336');
     expect(r).toContain("if it a small change let's do it - we have the data - why not");
     expect(r).toContain('Dated note 2026-11-19 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-GAP13');
+    expect(r).toContain('RR-0289');
+    expect(r).toContain('should be reliable to say something is there');
   });
 });

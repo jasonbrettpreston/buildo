@@ -240,7 +240,7 @@
                             "derived": "lots.2.polygons.0.holes"
                           },
                           "strokeColor": "#9a4a07",
-                          "fillColor": "rgba(245,158,11,0.24)",
+                          "fillColor": "rgba(245,158,11,0.12)",
                           "strokeWidth": 2,
                           "tappable": true,
                           "onPress": {
@@ -533,7 +533,7 @@
                             "children": [
                               {
                                 "text": {
-                                  "content": "lot.lead.faces"
+                                  "content": "lot.lead.no_building_faces"
                                 },
                                 "vars": {
                                   "letter": {
@@ -634,14 +634,11 @@
                             "children": [
                               {
                                 "text": {
-                                  "content": "lot.lead.house_faces"
+                                  "content": "lot.letter"
                                 },
                                 "vars": {
                                   "letter": {
                                     "derived": "letter.2"
-                                  },
-                                  "street": {
-                                    "contract": "contract_parcels_lookup.map.lots.2.frontageStreet"
                                   }
                                 }
                               }
@@ -715,7 +712,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "a31c42ebf80a0548",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "620c5a3d85281f76",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
     }
   }

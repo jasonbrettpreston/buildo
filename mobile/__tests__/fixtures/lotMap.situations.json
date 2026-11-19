@@ -339,9 +339,7 @@
                     ]
                   ]
                 ]
-              },
-              "frontageStreet": "Elm St",
-              "hasFootprint": true
+              }
             }
           ],
           "neighbours": []
