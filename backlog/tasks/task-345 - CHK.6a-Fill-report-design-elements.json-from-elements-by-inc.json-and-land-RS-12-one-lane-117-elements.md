@@ -3,11 +3,10 @@ id: TASK-345
 title: >-
   CHK.6a Fill report-design-elements.json from elements-by-inc.json and land
   RS-12 (one lane, 117 elements)
-status: RUNNING
-assignee:
-  - '@lane-BL-CHK6A'
+status: LATER
+assignee: []
 created_date: '2026-11-19T20:36:00Z'
-updated_date: '2026-11-19T20:41:00Z'
+updated_date: '2026-11-19T20:42:00Z'
 labels:
   - F
   - plan:CHK.6
@@ -57,4 +56,6 @@ Scope now: produce the design-elements file CHK.6 (task-67) needs, and land RS-1
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-CHK6A, worktree /Users/brettpreston_macmini/Buildo-wt-chk6a, branch wf1/inc1b-chk6a), RR-0240
+
+2026-11-19 HELD: launched by the script, not built. Operator: "That's a large build." The RR-0303 condition ("if it isnt a big job") is not met in the operator's words; waits for the operator's decision on task-342.
 <!-- SECTION:NOTES:END -->
