@@ -1,0 +1,58 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1a/chk8/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11707 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23213 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34283 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44524 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55443 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 63895 chars, answer 2213 chars, 90s
+Reviewed `scripts/analysis/backlog-status-check.mjs` (file-relative line numbers, 1–89). Focus per the lens: git range handling, trailer parsing, exit codes, and false positives/negatives of findings (a) and (b).
+
+---
+
+- **[HIGH]** (line 75–76): Finding (b) iterates `commits` (built only from `git log HEAD` at line 29) and filters by `rangeShas`. Any commit in `--range` that is *not reachable from HEAD* (e.g. `--range HEAD..somebranch`, `--range otherB..HEAD` when `otherB` has side commits, or a tag pointing elsewhere) is in `rangeShas` but never visited. The loop silently checks nothing and the summary prints `range: 0 commit(s)` even though `rev-list` returned N. This is a silent false negative: the tool claims it checked a range it did not. Fix: enumerate the range directly with `git rev-list <range>` → `git rev-list --format`/`git show --format` per sha, or at minimum assert every `rangeSha` was seen in `commits` and exit 2 otherwise.
+
+- **[HIGH]** (lines 65–84 combined): The primary check is largely toothless against the realistic violation. Finding (a) is skipped whenever `newest.has(t.id)` is true (line 65) — i.e. whenever *any* commit in all of HEAD history ever carried `Task: task-N`. But the normal lifecycle gives a task RUNNING-era trailer commits while it is being built. Scenario: commit1 `Task: task-2` while status RUNNING; commit2 flips status to BUILT with **no trailer**. (a): `newest.has('task-2')` → skip. (b): commit1 was RUNNING → `continue`; commit2 has no trailer so it is never examined. Result: 0 findings, yet the closing commit has no `Task:` trailer — exactly what the check exists to catch. The check never ties the *status transition* to a trailer on the same commit. Fix: require that the newest commit touching the task file (or the commit that set BUILT/DONE) carries the trailer, not that *some* historical commit does.
+
+- **[HIGH]** (lines 42–43): When `origin/wf1/mb-rulings` is absent (fresh clone, CI checkout without that remote ref, non-standard remote name, shallow clone) `range` falls back to `HEAD` (line 37), and finding (b) scans **entire** history. Combined with line 82 (`newest.get(id) === c.sha`) every historical BUILT closing commit that is no longer the global newest (tasks reopened, follow-up commits, cherry-picks) becomes a `FAIL`. In CI this turns "clean" into a wall of false positives, and it also spawns 2 git processes per trailer commit over full history (line 52/56) — minutes on a large repo. Fix: require an explicit `--range` when the base ref is missing (exit 2 or a loud WARN), and/or bound the default to `HEAD`'s recent history only.
+
+- **[MED]** (lines 68–69): Docs-only classification uses `git diff-tree --root --no-commit-id --name-only -r <last>`. For a **merge commit**, `diff-tree` emits *no* output without `-m`/`-c`, so `files` is empty, `!files.some(...)` is true, and a code-bearing merge is downgraded from `FAIL` to `WARN`. Same downgrade on any `diff-tree` error (stdout empty). Fix: detect merge parents (`%P` has >1) and handle them explicitly (FAIL, or diff against first parent with `-m --first-parent`), and check `git diff-tree` exit status before trusting empty output.
+
+- **[MED]** (lines 82, 34–35): `newest` is the global first-seen trailer commit across all of `HEAD`, not scoped to the range and not topology-aware. Two failure modes: (1) With a bounded `--range a..b`, a task whose BUILT closing commit is at `b` but which has a *later* trailer commit outside the range is flagged `FAIL` ("was BUILT at that commit, not RUNNING") even though, in that range, it *was* the closing commit. (2) `git log` orders by committer date; after a rebase/merge a side-branch commit can carry a newer date and be chosen as "newest" over the true tip. Use `--topo-order` and compute "newest" within the same commit set being evaluated (or note the limitation).
+
+- **[MED]** (line 82): Any commit that re-states `Task: task-N` after the task is already BUILT (follow-up fix, doc touch that keeps the trailer, cherry-pick) becomes the new "newest", demoting the real closing commit to "not newest" → `FAIL`. The docs-only WARN exemption in (a) does not apply here. Real-world false positive on any reopened/re-touched BUILT task. Fix: allow BUILT/DONE on *any* commit that is not followed (topologically) by a RUNNING-era trailer, or restrict the "own closing commit" test to status transitions.
+
+- **[MED]** (line 29, `key=Task`): Git's pretty-format trailer `key=` filter matches the token case-sensitively; a `task: task-1` or `TASK: task-1` trailer is silently dropped, so finding (a) reports `FAIL ... no commit on HEAD carries a "Task: task-1" trailer` for a task that *does* have one. Fix: post-filter all trailers (`%(trailers,valueonly)` with keys) and compare `.toLowerCase()`, or standardize the token.
+
+- **[MED]** (line 32): `vals.split(/\s+/)` treats every whitespace-separated token as a task id. A trailer value like `Task: task-1 (wip)` or `Task: task-1, task-2` yields spurious ids (`(wip)`, `task-1,`), which then hit `statusAt` → `null` → `FAIL b ... names no task file`. False positive driven by ordinary commit-message formatting. Fix: parse values with a `^task-\d+$` filter before use.
+
+- **[MED]** (line 65 vs line 32): `newest` keys are lowercased trailer values (`task-1`), but `newest.has(t.id)` uses the raw frontmatter `id` (tests author `id: TASK-1`). This only works because `readItems` must be lowercasing the id — an undocumented coupling. Any `id`/filename mismatch (`TASK-5` vs `task-5`, or an id form differing from the filename convention) makes **every** BUILT/DONE task falsely `FAIL`. Normalize explicitly (`String(t.id).toLowerCase()`) rather than relying on the library.
+
+- **[MED]** (lines 18, 28): `git()` never inspects `spawnSync().error`. If git is not installed, or `--root` points at a nonexistent/non-repo directory, `.status` is `null`, `hasHead` is `false`, `rangeShas` is empty, and (assuming `readItems` returns `[]` for a missing dir) the script prints `0 finding(s)` and exits **0**. A misconfigured invocation silently reports clean. Fix: check `res.error`, and verify `root` exists and `rev-parse --git-dir` succeeds; exit 2 on failure.
+
+- **[MED]** (line 57): `parseFM(shown.stdout)` runs on *historical* file content. Older schema versions or malformed historical frontmatter can throw; the uncaught exception exits **1** with a stack trace but no `FAIL` line — indistinguishable from a legitimate finding to any caller keying on the exit code. Also, a historical file lacking `status` yields `''` and the message `was  at that commit` (double space), which is confusing. Wrap in try/catch and emit a distinct `FAIL`/exit code.
+
+- **[MED]** (lines 19, 68–69): The `CODE` allowlist `^(src|scripts|mobile|migrations)/` under-detects code. Commits touching only `package.json`, `vitest.config.*`, root config, `.github/`, `lib/`, or new top-level source dirs are classified "docs-only" and downgraded from `FAIL` to `WARN`. Invert the logic: treat anything outside `docs/`, `backlog/`, and `*.md` as code.
+
+- **[MED] (shallow history)** (lines 29, 42): In a shallow/partial clone, `git log HEAD` stops at the shallow boundary, so a real `Task:` trailer commit beyond it is invisible → false `FAIL` from finding (a); `merge-base` may also fail, falling back to full (truncated) history. Detect `rev-parse --is-shallow-repository` and exit 2 (or WARN loudly) rather than emitting false findings against truncated history.
+
+- **[LOW]** (lines 24, 46): `process.exit(2)` immediately after `process.stderr.write` can truncate buffered output when stderr is a pipe (the common CI case), so the usage message may be lost. Set `process.exitCode = 2` and `return`/fall through instead of hard `exit()`.
+
+- **[LOW]** (line 40 vs 22): `--range a...b` (three-dot) passes `includes('..')` and is fed to `rev-list` as a symmetric difference, which the docs (line 8–9) say is not supported and can include non-HEAD commits (compounding the HIGH above). Also `..` / `...` (both empty) silently yield an empty range and exit 0. Validate the two-dot form precisely.
+
+- **[LOW]** (lines 64, 80, 82): Status comparisons are case-sensitive (`'RUNNING'`, `'BUILT'`, `'DONE'`). Lowercase/mixed-case statuses in frontmatter would cause either a false skip in (a) or a false `FAIL b` ("was built at that commit"). Normalize to upper-case on read.
+
+- **[LOW]** (line 37–48): When `hasHead` is false, `range` remains the literal `'HEAD'` and the summary prints `range: 0 commit(s) (HEAD)`, which looks like a successful scan of HEAD rather than "no commits". Print `(no HEAD)` when `!hasHead`.
+
+- **[NIT]** (tests, `commit`/`repo` helpers): tests strip `GIT_*` and never set `GIT_COMMITTER_DATE`, so multiple commits land in the same second. `newest` and the "allows BUILT only on the newest" test depend on `git log` ordering under tied timestamps, which is version/platform dependent — flake risk. Pin deterministic dates per commit.
+
+- **[NIT]** (line 22): Unknown/typo'd options (e.g. `--rnage`) and a valueless `--root` (line 17, `a.root === true`) are silently ignored/coerced to `REPO` rather than rejected with exit 2, making a mistyped invocation look successful.
+
+---
+
+Overall verdict: the happy path and the author's own test cases are solid, but the check measures the wrong thing for its headline rule. Finding (a) only fires when a task was *never* named by any trailer, so the realistic violation — a RUNNING-era trailer exists but the BUILT/DONE transition commit lacks one — passes silently (HIGH). Finding (b)'s `--range` support is only partially real: commits outside HEAD's ancestry are dropped without notice, and the "newest trailer commit" is computed globally over date-ordered `git log` rather than topologically within the evaluated set, producing both false positives (bounded ranges, re-touched BUILT tasks, merge/clock-skew ordering) and false negatives (merge commits downgraded to WARN). The default-range fallback to full history when `origin/wf1/mb-rulings` is missing is the most likely production failure mode — it will generate piles of false FAILs and run slowly in any CI checkout lacking that ref. The exit-code contract is mostly honored, but a missing git binary or bad `--root` yields a clean exit 0, and a parseFM throw masquerades as a FAIL (exit 1) with no FAIL line. Fix the status-transition/trailer binding, scope "newest" to the evaluated commit set with topo order, reject/guard the no-base-ref case, and harden the git wrapper's error handling before wiring this anywhere near a push gate.
+
+---
+⏱  101503ms (101.5s)
+📊 Tokens — total: 25228, input: 4818, output: 20410, reasoning: 17564
