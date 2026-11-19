@@ -1,10 +1,11 @@
 ---
 id: TASK-351
 title: SRCH.A6 reset date served as a Toronto-time label (RR-0310)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-RESET'
 created_date: '2026-11-19T21:29:00Z'
-updated_date: '2026-11-19T21:29:00Z'
+updated_date: '2026-11-19T21:52:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -82,4 +83,6 @@ Files: src/lib/entitlements/index.ts, src/app/api/parcels/entitlement/types.ts, 
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-19 (M-246, prior text kept; RR-0310 · task-351 · Backlog; operator, verbatim: "your recommendation is approved")
+
+2026-11-19 taken on the board at lane launch (lane BL-RESET, worktree /Users/brettpreston_macmini/Buildo-wt-reset, branch wf1/inc1b-reset), RR-0240
 <!-- SECTION:NOTES:END -->
