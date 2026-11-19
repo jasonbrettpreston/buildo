@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MB94C'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:41:00Z'
+updated_date: '2026-11-19T20:45:00Z'
 due_date: '2026-11-26'
 labels:
   - 6c
@@ -31,6 +31,7 @@ references:
   - >-
     ~/Buildo-scratch/lanes-20261117/inc-plan/6/BUILD-PASS.md#L1
     sha256=1f885a4c8126
+  - docs/reports/lanes/2026-11-19/BL-MB94C/REPORT.md
 documentation:
   - backlog/docs/increments/doc-9 - Increment-6c-requirements.md
 priority: high
