@@ -188,6 +188,8 @@ describe('T-B3 (5) the imports', () => {
     const lib = read('src/lib/parcels/report-page.ts');
     expect(lib).toContain("import { buildPage, pageViewOf } from '@/lib/surfaces/report/core';");
     expect(lib).not.toMatch(/from '[^']*report-preview-live/);
-    expect(lib).not.toMatch(/from '@\/lib\/db\//); // no read until a producer lands (MB-44)
+    // MB-44 W (task-123): the customer read module reads the stored lot through the shared read in src/lib/report-projection/ and the pool; never the admin dir
+    expect([...lib.matchAll(/from '(@\/lib\/db\/[^']*)'/g)].map((m) => m[1])).toEqual(['@/lib/db/client']);
+    expect(lib).toMatch(/from '@\/lib\/report-projection\/read-stored'/);
   });
 });

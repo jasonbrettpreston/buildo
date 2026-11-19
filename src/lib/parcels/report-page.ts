@@ -6,10 +6,17 @@
 // page response ({page, values, hidden, not_evaluated}, the input of MF-57's buildPage) and, when there is one, sends the mobile page view
 // pageViewOf(buildPage(response), {target: 'mobile'}) as `page`. The core checks the tree and the view and throws on any problem (fail closed: the
 // route's catch makes it a 500, never a half page).
-// The customer producer is NONE today: no stored per-lot report exists for customers until MB-44 (McBylaws queue, WAITS MB-38), so it answers null
-// for every lot and the app shows the approved miss text. It reads nothing: a declared read that refuses cleanly (the MB-86 / MB-93 precedent).
-// MB-44 plugs its producer in here; the tester feed of MB-94 part (f) (EI-D2 b) lands with that part behind its own switch and import fence. The
-// admin preview producer (src/lib/admin/report-preview-live/) is never imported here (lock L1, src/tests/admin-report-preview-live.logic.test.ts).
+// MB-44 W (task-123, 1.3; operator "1. it has to happen now - read the objectives", MORNING-DECISIONS.md:789, and "task 341 approved", :1160): the
+// customer producer is W below. It is gated by the one web live switch (MAXBLD_WEB_LIVE, pinned false until LS.12), so with the switch off it answers
+// null for every lot and reads no lot data. With it on it reads the lot's STORED results through the shared read in src/lib/report-projection/ (the same
+// SQL and projection as the admin preview, shared OUT of the admin producer so lock L1 stays true: this module never imports it) and answers a page only
+// when the stored record is current (or the lot is gated); a missing or stale record is a miss (null), which LOAD.1 reads as "compute". W holds no
+// user check, meters nothing and writes nothing: the callers (session, plan, rate limit, meter) run around it. The tester feed of MB-94 part (f) lands
+// behind its own switch and import fence.
+import { pool } from '@/lib/db/client';
+import { logWarn } from '@/lib/logger';
+import { readStoredPage, type StoredPage } from '@/lib/report-projection/read-stored';
+import { MAXBLD_WEB_LIVE } from '@/lib/surfaces/maxbld-web';
 import { buildPage, pageViewOf } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
 import { ReportPageViewSchema, type ReportPageView } from '@/app/api/parcels/lookup/types';
@@ -19,10 +26,37 @@ type Json = Record<string, unknown>;
 /** The page view target the app renders (report-layout.json targets). */
 const MOBILE_TARGET = 'mobile';
 
-/** The customer page producer. Null for every lot until MB-44 (no customer report data exists yet). `parcelRef` is parcels.parcel_id. */
+const TAG = '[parcels/report-page]';
+
+/**
+ * What a lot's stored freshness verdict becomes for a customer: ONE place, so a different ruling is a one-branch change (plan D2).
+ * current and gated serve the page (a gated lot is a deliberate all-not-evaluated page, not a miss); out_of_date is a miss (a stale record is never
+ * served, doc-16 section 4); not_stored is a miss (no record yet: LOAD.1 computes at the pick). D2 (what a no-record lot shows): to show the
+ * "Not yet evaluated" page for a lot with no record instead, change the `not_stored` branch to `return stored.response`.
+ */
+function pageForVerdict(stored: StoredPage): Json | null {
+  switch (stored.lineage.freshness.verdict) {
+    case 'current':
+    case 'gated':
+      return stored.response as unknown as Json;
+    case 'out_of_date':
+      return null;
+    case 'not_stored': // D2
+      return null;
+  }
+}
+
+/**
+ * The customer page producer (W). `parcelRef` is parcels.parcel_id. Null = a miss: the switch is off, no such parcel, or no current stored record.
+ * A thrown query propagates (the route's catch makes it a 500); it is never read as a miss.
+ */
 export async function readCustomerPageResponse(parcelRef: string): Promise<Json | null> {
-  void parcelRef;
-  return null;
+  if (!MAXBLD_WEB_LIVE) return null;
+  const stored = await readStoredPage(pool, parcelRef);
+  if (stored === null) return null;
+  const { verdict, not_stored_reason } = stored.lineage.freshness;
+  if (verdict === 'not_stored' && not_stored_reason === 'table_absent') logWarn(TAG, 'scenario table absent: every lot is a miss', { reason: not_stored_reason });
+  return pageForVerdict(stored);
 }
 
 /** One producer response to the mobile page view, through MF-57's core (it throws a ReportRenderError on any problem), parsed by the strict view
