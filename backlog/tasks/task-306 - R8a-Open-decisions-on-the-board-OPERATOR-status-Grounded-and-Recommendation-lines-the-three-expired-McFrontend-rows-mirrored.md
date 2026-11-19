@@ -3,11 +3,11 @@ id: TASK-306
 title: >-
   R8a Open decisions on the board: OPERATOR status, Grounded and Recommendation
   lines, the three expired McFrontend rows mirrored
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R8a'
 created_date: '2026-11-19T12:52:00Z'
-updated_date: '2026-11-19T13:02:00Z'
+updated_date: '2026-11-19T13:07:00Z'
 labels:
   - follow-up
   - open-decisions
@@ -29,10 +29,10 @@ Operator 2026-11-19 (RR-0232): "recommendation approved - however the open decis
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every task that waits on the operator word is status OPERATOR (the six held items task-131, 293, 296, 297, 298, 303 first), with the two lines Grounded: and Recommendation: in its description (RR-0232)
-- [ ] #2 MF-08, MF-22 and MF-49 are mirrored as OPERATOR tasks in their milestones (grounded from their queue rows), each with Grounded: and Recommendation:
-- [ ] #3 Spec 137 rule 13 gains a dated note: an open decision reaches the operator only with Grounded: and Recommendation: lines; backlog-next.mjs lists OPERATOR tasks that lack them (red test first)
-- [ ] #4 Repo review round r1 on the plan of this task, triaged, before any change
+- [x] #1 Every task that waits on the operator word is status OPERATOR (the six held items task-131, 293, 296, 297, 298, 303 first), with the two lines Grounded: and Recommendation: in its description (RR-0232)
+- [x] #2 MF-08, MF-22 and MF-49 are mirrored as OPERATOR tasks in their milestones (grounded from their queue rows), each with Grounded: and Recommendation:
+- [x] #3 Spec 137 rule 13 gains a dated note: an open decision reaches the operator only with Grounded: and Recommendation: lines; backlog-next.mjs lists OPERATOR tasks that lack them (red test first)
+- [x] #4 Repo review round r1 on the plan of this task, triaged, before any change
 <!-- AC:END -->
 
 ## Definition of Done
@@ -62,3 +62,15 @@ Operator 2026-11-19 (RR-0232): "recommendation approved - however the open decis
 3. Six held tasks task-131,293,296,297,298,303 to status OPERATOR with Grounded: and Recommendation: lines (AC1).
 4. Mirror MF-08, MF-22, MF-49 as OPERATOR queue-row tasks in their milestones with the two lines; commit 2 (AC2).
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+AC1: six held tasks set to OPERATOR with Grounded:/Recommendation: (node scripts/analysis/backlog-next.mjs OPERATOR section lists them ok). AC2: task-311 (MF-08), task-312 (MF-22), task-313 (MF-49) created, milestone m-8 (placement UNVERIFIED as increment ownership, stated in each Grounded). AC3: Spec 137 rule 13 dated note + backlog-next OPERATOR section, red proven (red.out: 3 failed) then green in commit 27f0c7009 (3 passed, GATE OK). AC4: review r1 in review mode on the context file (r1-plan.txt), triaged in TRIAGE.md; every Recommendation marked UNVERIFIED because r1 tested routing, not answers.
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Commit 1 27f0c7009 (test, backlog-next OPERATOR section, Spec 137 rule 13 note, context file) through the real hooks, 3 tests passed; commit 2 carries the nine task records. Recommendations UNVERIFIED (r1 did not verify answers).
+<!-- SECTION:FINAL_SUMMARY:END -->

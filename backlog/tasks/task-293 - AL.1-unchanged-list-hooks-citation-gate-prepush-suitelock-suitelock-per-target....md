@@ -3,11 +3,11 @@ id: TASK-293
 title: >-
   AL.1 unchanged list (hooks citation gate, prepush suitelock, suitelock per
   target,...
-status: WAITS
+status: OPERATOR
 assignee:
   - '@operator'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:10:00Z'
+updated_date: '2026-11-19T13:07:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -62,6 +62,9 @@ planNote: lane-tools: note Lane-tooling items INFRA.1-INFRA.6 sit in F (not froz
 note: Includes INFRA-prepush-suitelock (Freeze exception: pre-push hook does not check SUITE.lock). Includes INFRA-suitelock-per-target (Freeze exception: machine-wide SUITE.lock versus a per-target). Includes INFRA-gate-copy-drift (Freeze exception: rehearsal-gate-optA.zsh is a copy that can drift from the). Includes INFRA-mig327-numbering (Freeze exception: migration 327 numbering defect class (a lower number erased). Includes INFRA-validatecatalogue-runpath (Freeze exception: validateCatalogue is not called on the run path).
 who (plan text): operator
 plan source tags: ROW:INFRA-hooks-citation-gate ROW:INFRA-prepush-suitelock ROW:INFRA-suitelock-per-target ROW:INFRA-gate-copy-drift ROW:INFRA-mig327-numbering ROW:INFRA-validatecatalogue-runpath
+
+Grounded: yes. Plan text 'HELD to freeze lift' for the six older items (hooks citation gate, prepush suitelock, suitelock per target, gate copy drift, mig327 numbering, validatecatalogue runpath); the 2026-11-18 ruling lifted the infra freeze for the named list only, and these six are not on it (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725 "the infra freeze is lifted for the named list only"). The standing freeze rule: fix an infra gap only when it blocks a project commit (memory infra-freeze-project-first, operator 2026-11-02; MB-79 row text 'land only if it blocks a project commit', ~/Buildo-scratch/queues-20261113/MB-REVIEW-20261117.md:121). Whether any of the six blocks a project commit now was not measured by this lane: UNVERIFIED. Operator scope (RR-0233, plan-gen/rulings-register.json cite MORNING-DECISIONS.md:925): "front-end, design of the app, how much storage, timeframes, priorities". The word owed is a priority and timeframe call (when the freeze lifts for this item).
+Recommendation: keep AL.1 held after launch (do not lift the freeze for it); lift only for an item that is shown to block a project commit (MB-REVIEW-20261117.md:121 "Hold to freeze lift"). The decision is a priority and timeframe call (RR-0233). UNVERIFIED: review r1 of task-306 (r1-plan.txt) tested the routing of this item, not the answer.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

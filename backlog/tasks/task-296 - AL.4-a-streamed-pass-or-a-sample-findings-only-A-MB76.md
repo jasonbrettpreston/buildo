@@ -1,11 +1,11 @@
 ---
 id: TASK-296
 title: AL.4 + ; a streamed pass or a sample, findings only (A-MB76)
-status: WAITS
+status: OPERATOR
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:10:00Z'
+updated_date: '2026-11-19T13:07:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -56,6 +56,9 @@ planNote: L: status HELD to freeze lift (optimize-L final status)
 planNote: storage-policy: title + ; a streamed pass or a sample, findings only (A-MB76) (no stored all-lot table)
 who (plan text): lane
 queue row: MB-76 (row status WAITS · since 2026-11-12 · expires when MB-38 is done · next: Hold until MB-38 (waits: MB-38 headline records)); the row stays the record (Spec 137 rule 2) and the lane edits the row and this task in the same commit (rule 3)
+
+Grounded: yes. Row MB-76 (.cursor/MCBYLAWS-QUEUE.md:174) reads WAITS MB-31 first run; the plan task's row text reads 'expires when MB-38 is done ... Hold until MB-38 (waits: MB-38 headline records)'; the review keeps it held and says the overlap with MF-80 (McTest L3b lot sweep) is unproven (~/Buildo-scratch/queues-20261113/MB-REVIEW-20261117.md:119 "Do not merge into MF-80 yet: all four seats say overlap is unproven"). Plan text 'HELD to freeze lift' (task-296). No operator word on file for the freeze lift. Operator scope (RR-0233, plan-gen/rulings-register.json cite MORNING-DECISIONS.md:925): "front-end, design of the app, how much storage, timeframes, priorities". The word owed is a priority and timeframe call (when the freeze lifts for this item).
+Recommendation: hold until MB-38 headline records are done, then compare the MF-80 L3b scope first and merge only if it covers all lots (MB-REVIEW-20261117.md:119); no freeze lift needed for it now. UNVERIFIED: review r1 of task-306 (r1-plan.txt) tested the routing of this item, not the answer.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

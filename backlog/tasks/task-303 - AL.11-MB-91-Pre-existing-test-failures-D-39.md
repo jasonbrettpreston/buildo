@@ -1,11 +1,11 @@
 ---
 id: TASK-303
 title: AL.11 MB-91 Pre-existing test failures (D-39)
-status: WAITS
+status: OPERATOR
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:10:00Z'
+updated_date: '2026-11-19T13:07:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -50,6 +50,9 @@ planNote: L: estimate GUESS unscheduled; not on the launch path (PLAN-PROTOCOL 5
 planNote: L: status HELD to freeze lift (optimize-L final status)
 who (plan text): lane
 queue row: MB-91 (row status LATER · since 2026-11-17 · expires when the infra freeze lifts · next: Hold; refresh pgTAP/test:db failure count first); the row stays the record (Spec 137 rule 2) and the lane edits the row and this task in the same commit (rule 3)
+
+Grounded: yes. Row MB-91 reads 'LATER ... expires when the infra freeze lifts ... Hold; refresh pgTAP/test:db failure count first' (task-303 description); the review: "yes in principle: 4 pgTAP and 5 test:db cases fail on the tip; count not refreshed", verdict RE-DATE (~/Buildo-scratch/queues-20261113/MB-REVIEW-20261117.md:132). The count refresh needs the test stack, which this lane does not touch: UNVERIFIED today. Operator scope (RR-0233, plan-gen/rulings-register.json cite MORNING-DECISIONS.md:925): "front-end, design of the app, how much storage, timeframes, priorities". The word owed is a priority and timeframe call (when the freeze lifts for this item).
+Recommendation: refresh the failure count (first step, owned by a lane with the test stack), then hold under the freeze (MB-REVIEW-20261117.md:132 "Refresh the count; hold under the freeze"). UNVERIFIED: review r1 of task-306 (r1-plan.txt) tested the routing of this item, not the answer.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

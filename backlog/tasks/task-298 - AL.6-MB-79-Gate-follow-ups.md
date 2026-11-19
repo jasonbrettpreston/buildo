@@ -1,11 +1,11 @@
 ---
 id: TASK-298
 title: AL.6 MB-79 Gate follow-ups
-status: WAITS
+status: OPERATOR
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:13:00Z'
+updated_date: '2026-11-19T13:07:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -47,6 +47,9 @@ planNote: L: estimate GUESS unscheduled; not on the launch path (PLAN-PROTOCOL 5
 planNote: L: status HELD to freeze lift (optimize-L final status)
 who (plan text): lane
 queue row: MB-79 (row status WAITS · since 2026-11-12 · expires when the infra-freeze is lifted · next: Per item: land only if it blocks a project commit; else hold. Refresh per-item status in the row (waits: infra freeze; most items at stage 1)); the row stays the record (Spec 137 rule 2) and the lane edits the row and this task in the same commit (rule 3)
+
+Grounded: yes. Row MB-79 reads 'WAITS ... expires when the infra-freeze is lifted ... Per item: land only if it blocks a project commit; else hold. Refresh per-item status in the row (waits: infra freeze; most items at stage 1)' (task-298 description); the review: "Hold to freeze lift; becomes the home of MB-81, MB-106 (a) and the empty-red-evidence card" (~/Buildo-scratch/queues-20261113/MB-REVIEW-20261117.md:121). No operator word on file for the lift. Operator scope (RR-0233, plan-gen/rulings-register.json cite MORNING-DECISIONS.md:925): "front-end, design of the app, how much storage, timeframes, priorities". The word owed is a priority and timeframe call (when the freeze lifts for this item).
+Recommendation: hold to the freeze lift; land an item only if it blocks a project commit (row text above; MB-REVIEW-20261117.md:121). UNVERIFIED: review r1 of task-306 (r1-plan.txt) tested the routing of this item, not the answer.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

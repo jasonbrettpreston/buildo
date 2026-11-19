@@ -1,11 +1,11 @@
 ---
 id: TASK-297
 title: AL.5 MB-74 Rule map out of the Layer 2 version
-status: WAITS
+status: OPERATOR
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:10:00Z'
+updated_date: '2026-11-19T13:07:00Z'
 due_date: '2026-11-26'
 labels:
   - AL
@@ -57,6 +57,9 @@ planNote: L: status HELD under the infra freeze (optimize-L final status)
 note: Waits MB-18 items a, c, d, e, h, i and k (queue).
 who (plan text): lane
 queue row: MB-74 (row status WAITS (unverified 2026-11-14) · since 2026-11-01 · expires when INC5-NIGHT is done · next: Operator: build now (freeze exception) or hold with new date); the row stays the record (Spec 137 rule 2) and the lane edits the row and this task in the same commit (rule 3)
+
+Grounded: yes. Row MB-74 reads 'WAITS (unverified 2026-11-14) ... expires when INC5-NIGHT is done ... next: Operator: build now (freeze exception) or hold with new date' (task-297 description). The defect still bites: on 11-13 the M-516 register row moved table_version 816e514b to e7e74d42 and broke 3 tests (MORNING-DECISIONS.md:86, cited by ~/Buildo-scratch/queues-20261113/MB-REVIEW-20261117.md:120), not re-verified in code. INC5-NIGHT is finished (push 5 landed, D6 closed; draft-9 description), so the expiry event has happened. Operator scope (RR-0233, plan-gen/rulings-register.json cite MORNING-DECISIONS.md:925): "front-end, design of the app, how much storage, timeframes, priorities". The word owed is a priority and timeframe call (when the freeze lifts for this item).
+Recommendation: hold under the infra freeze; the operator picks a window after push 6 (needs a protected-path window) (MB-REVIEW-20261117.md:120 "Hold under the infra freeze; operator picks a window after push 6"); re-date the row to that window. UNVERIFIED: review r1 of task-306 (r1-plan.txt) tested the routing of this item, not the answer.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
