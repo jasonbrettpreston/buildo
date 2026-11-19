@@ -7,10 +7,13 @@ status: RUNNING
 assignee:
   - '@lane-BL-R16'
 created_date: '2026-11-19T21:03:00Z'
-updated_date: '2026-11-19T21:05:00Z'
+updated_date: '2026-11-19T21:14:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-19/BL-R16/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-R16/TRIAGE.md
 type: record
 ordinal: 47012
 ---
@@ -40,6 +43,12 @@ Scope now: record-only. Lane BL-W (task-123 stage 1, docs/reports/lanes/2026-11-
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: read PLAN.md and IMPACT.md of BL-W, re-ground D1 to D4 against the code and registers, one review round (r1) on the context file, TRIAGE.md, fold. 2. AC1: create OPERATOR tasks in m-1 for the decisions no register rules (D1, D3); record D2 and D4 as already ruled with verbatim words and cites. 3. AC2: dated notes on task-123, 266, 267 (no status change), loose-end lines on task-343, backlog doctor, one docs commit, REPORT.md copied to docs/reports/lanes/2026-11-19/BL-R16/.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

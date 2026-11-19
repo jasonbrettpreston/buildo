@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T20:48:00Z'
+updated_date: '2026-11-19T21:13:00Z'
 labels:
   - S
   - loose-ends
@@ -104,4 +104,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0302 · task-343 · Backlog; o
 2026-11-19 BL-LOOSE: wiring check written into the description (WIRING.md, TRIAGE.md in docs/reports/lanes/2026-11-19/BL-LOOSE/); WAITS: open until every line is tied up.
 
 CHK.6 design-fit check and its elements file (task-67, task-345): not built; operator: a large build, a missing field is seen on the page (RR-0305, RR-0306). Severity: hidden. tied up by: task-345 when the operator schedules it.
+
+2026-11-19 (R16, task-347) loose ends from the 1.3 W decisions, one line each, tied up by: (1) the web report mount (replace the deliberate failure at src/app/(maxbld)/parcel-tool/[parcelId]/page.tsx:19-20 with the real page over W's output) has no owner in any task text (doc-2:82 lists 'LS.12 1.3 MB-44' as deliverers; none of them builds it), severity medium, tied up by task-285 L.7 if the operator answers A on task-349, else task-123. (2) Spec 126 R-2 (:809) still says 'until MB-38 fills all lots', which MORNING-DECISIONS.md:704-705 removed; the dated note is owed, severity low, tied up by task-123 stage 2 doc commit. (3) The carrier of the What-we-checked wiring (ruled, X-4 a, .cursor/MCFRONTEND-QUEUE.md:363) is open between task-123 (its title) and task-267, severity low, tied up by the orchestrator's dated note before task-123 stage 2 closes. (4) LOAD.1 compute must sit behind the same gate as W (the web live switch) or the tester gate, severity medium, tied up by task-266 after the operator answers task-348. (5) The G1 context-pack generator reads no file whose name has spaces (ENOENT on doc-2, doc-4, doc-16 in docs/reports/reviews/task-347/context-2026-11-19.md) and prints Dependencies and References as none, severity low, tied up by NONE (infra freeze: a gap only if it blocks a project commit; record only).
 <!-- SECTION:NOTES:END -->
