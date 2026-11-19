@@ -3,10 +3,10 @@ id: TASK-325
 title: >-
   LOAD.1 waits for ST.P1, which ships at push 12 with MB-38 (m-13): does 1B
   finish before launch?
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T14:56:00Z'
-updated_date: '2026-11-19T15:29:00Z'
+updated_date: '2026-11-19T15:45:00Z'
 labels:
   - S
   - gap
@@ -56,4 +56,12 @@ Grounded: task-266 LOAD.1 depends on task-123 (1.3 W read module, m-3) and task-
 2026-11-19 1·B validation (R10, RR-0257, task-316): created by R10: LOAD.1 waits for ST.P1 at push 12 (OPERATOR, timeframe), Grounded and Recommendation in the description.
 
 2026-11-19 R11 (task-326, RR-0265, RR-0232): operator direction "we do want the search page to function now to drive the report which we need to validate in the next increments" (MORNING-DECISIONS.md:1041); Recommendation line replaced by the review r1 version (split ST.P1 at the record write; U1 to U3 UNVERIFIED); status stays OPERATOR for the operator word; dependencies not yet edited.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0271 · task-325 · Backlog; operator, verbatim: "2. y")
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Decided 2026-11-19 (decision-79, RR-0271; operator, verbatim: "2. y", MORNING-DECISIONS.md:1061): Option A, ST.P1 (task-265) split at the record write; LOAD.1 (task-266) carries the compute half for the app search page; task-266 depends on task-123 only, task-265 on task-82, task-259, task-266.
+<!-- SECTION:FINAL_SUMMARY:END -->

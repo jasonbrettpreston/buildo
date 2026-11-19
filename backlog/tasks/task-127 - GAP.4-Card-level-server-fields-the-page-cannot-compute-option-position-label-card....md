@@ -7,6 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T15:44:00Z'
 due_date: '2026-11-26'
 labels:
   - '1'
@@ -72,3 +73,9 @@ element ids delivered: B1, B2, B6, B9, B10, G2, B9.23
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-127 · Backlog; operator, verbatim: "this is a shared component")
+<!-- SECTION:NOTES:END -->

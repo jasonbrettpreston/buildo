@@ -7,6 +7,7 @@ status: LATER
 assignee:
   - '@lane-R'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T15:45:00Z'
 due_date: '2026-11-26'
 labels:
   - L
@@ -15,8 +16,9 @@ labels:
   - missing-ref
 milestone: m-13
 dependencies:
-  - TASK-259
   - TASK-82
+  - TASK-259
+  - TASK-266
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#L/ST.P1
 documentation:
@@ -66,3 +68,11 @@ who (plan text): lane (MB-38 build, McBylaws lane R / McFrontend producer MB-93)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0271 · task-265 · Backlog; operator, verbatim: "2. y")
+
+2026-11-19 R12 (task-327, RR-0271, decision-79; operator, verbatim: "2. y", MORNING-DECISIONS.md:1061; prior text kept): after the split at the record write (task-325 Option A), ST.P1 keeps the record write, the read-before-compute at the same call site and the stamp, at push 12 with MB-38; the compute half moves to LOAD.1 (task-266). Dependencies now: task-82, task-259, task-266.
+<!-- SECTION:NOTES:END -->

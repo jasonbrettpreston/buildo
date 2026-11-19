@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T15:45:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -16,7 +16,6 @@ labels:
 milestone: m-1
 dependencies:
   - TASK-123
-  - TASK-265
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#S/LOAD.1
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md sha256=0f3d8ba74a49
@@ -88,4 +87,8 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): KEPT (deps task-123 1.3 m-3, task-265 ST.P1 m-13): plan storage-policy dependsOn 1.3,ST.P1; RR-0178 builds W now. Chain: 123 -> 122 (6c.8a) -> 62 (push 6); 265 -> 259 (L.6), 82 (5.11). task-265 lands at push 12 (its landingPush), so 1·B completes only then unless ST.P1 is built earlier: raised as OPERATOR task-325 (timeframe), dependency not changed. Page element: supporting function of G.2 processing screen. Panel and build pass owed.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0271 · task-266 · Backlog; operator, verbatim: "2. y")
+
+2026-11-19 R12 (task-327, RR-0271, decision-79; operator, verbatim: "2. y", MORNING-DECISIONS.md:1061; prior text kept): scope of LOAD.1 after the ST.P1 split (task-325 Option A, verified by review r1 of task-326): LOAD.1 carries the compute half for the app search page: on the pick, the lookup route runs the one-lot pure core and feeds the page response; no write, no read first; numbers show only inside the tester and admin gate until MB-38 shadow passes (.cursor/MCBYLAWS-QUEUE.md:785). Dependencies now: task-123 only (task-265 dropped). U1 (who owns the rows-to-page-response adapter), U2 (inline one-lot compute against the route time limit) and U3 (MB-94 part f, the tester gate, has not landed, .cursor/MCBYLAWS-QUEUE.md:685) stay UNVERIFIED, carried from R11 (docs/reports/lanes/2026-11-19/BL-R11/REPORT.md section 3).
 <!-- SECTION:NOTES:END -->

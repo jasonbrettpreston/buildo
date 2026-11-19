@@ -7,14 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-R12'
 created_date: '2026-11-19T15:37:00Z'
-updated_date: '2026-11-19T15:37:00Z'
+updated_date: '2026-11-19T15:45:00Z'
 labels:
   - follow-up
 milestone: m-1
 dependencies: []
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1061
-  - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1065
+  - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1066
 type: record
 project: McIncrement
 ordinal: 29012
@@ -46,6 +46,16 @@ Operator 2026-11-19 (MORNING-DECISIONS.md:1061, :1065): "1. once  -approved 2. y
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Review round r1 (review mode, plan template) on this plan, the new task text, the MF row text and the dependency edits; triage KEEP/REJECT with the opened line (TRIAGE.md); fold KEPT.
+2. Create the SRCH.FOOTER build task in m-1 through the CLI (type build, labels S and plan:SRCH.FOOTER, AC, refs, depends-on task-127); claim MF-91 in the id ledger (mkdir) and add the MF-91 row and the Next free id bump (MF-92) to .cursor/MCFRONTEND-QUEUE.md in the neighbouring row form.
+3. G2 decisions through scripts/analysis/backlog-decision.mjs: RR-0270 (task-324, task-287, new task), RR-0273 (new task, task-127, task-324), RR-0271 (task-325, task-266, task-265, task-123); set task-324 and task-325 DONE with the decision as final summary.
+4. Dependency edits through the CLI: task-287 add the new task; task-266 to task-123; task-265 to task-82,task-259,task-266; append the scope notes; backlog doctor clean.
+5. One docs commit through the real hooks (Task: task-327), then the lane reports in the repo, task-327 closed.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

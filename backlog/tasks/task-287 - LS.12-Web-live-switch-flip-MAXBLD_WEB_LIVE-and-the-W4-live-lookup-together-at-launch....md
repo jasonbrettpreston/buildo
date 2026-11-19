@@ -7,6 +7,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T15:45:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -26,6 +27,7 @@ dependencies:
   - TASK-123
   - TASK-285
   - TASK-264
+  - TASK-332
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#1-2/LS.12
   - >-
@@ -85,3 +87,9 @@ who (plan text): lane
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0270 · task-287 · Backlog; operator, verbatim: "1. once  -approved")
+<!-- SECTION:NOTES:END -->

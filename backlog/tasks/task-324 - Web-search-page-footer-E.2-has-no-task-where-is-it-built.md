@@ -1,10 +1,10 @@
 ---
 id: TASK-324
 title: 'Web search page footer (E.2) has no task: where is it built?'
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T14:56:00Z'
-updated_date: '2026-11-19T15:29:00Z'
+updated_date: '2026-11-19T15:45:00Z'
 labels:
   - S
   - gap
@@ -55,4 +55,14 @@ Grounded: doc-2 Elements E.2 'Web footer: legal line, Terms of Service, Privacy 
 2026-11-19 1·B validation (R10, RR-0257, task-316): created by R10: element E.2 web footer has no task (OPERATOR), Grounded and Recommendation in the description.
 
 2026-11-19 R11 (task-326, RR-0233, RR-0232): the operator asked for a recommendation (MORNING-DECISIONS.md:1041); Recommendation line replaced by the one verified by review r1 of task-326; status stays OPERATOR for the operator word.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0270 · task-324 · Backlog; operator, verbatim: "1. once  -approved")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-324 · Backlog; operator, verbatim: "this is a shared component")
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Decided 2026-11-19 (decision-77, RR-0270; operator, verbatim: "1. once  -approved", MORNING-DECISIONS.md:1061): E.2 is its own McFrontend task, task-332 SRCH.FOOTER (row MF-91); the legal sentence shows once on the web search page, in the footer; LS.12 (task-287) depends on task-332. The footer is one shared component (decision-78, RR-0273).
+<!-- SECTION:FINAL_SUMMARY:END -->
