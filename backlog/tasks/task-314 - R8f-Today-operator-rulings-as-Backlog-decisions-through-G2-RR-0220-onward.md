@@ -1,9 +1,11 @@
 ---
 id: TASK-314
 title: R8f Today operator rulings as Backlog decisions through G2 (RR-0220 onward)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-R8F'
 created_date: '2026-11-19T13:07:00Z'
+updated_date: '2026-11-19T14:11:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -42,3 +44,9 @@ Review r1 of task-308 (build-r8/r8c/r1-review.txt, HIGH): the Decisions in force
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-R8F, worktree /Users/brettpreston_macmini/Buildo-wt-r8f, branch wf2/r8f-decisions), RR-0240
+<!-- SECTION:NOTES:END -->
