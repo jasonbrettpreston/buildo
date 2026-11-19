@@ -7,10 +7,12 @@ status: RUNNING
 assignee:
   - '@lane-BL-R18'
 created_date: '2026-11-19T21:44:00Z'
-updated_date: '2026-11-19T21:51:00Z'
+updated_date: '2026-11-19T22:03:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-19/BL-R18/REPORT.md
 type: record
 ordinal: 55012
 ---
@@ -40,6 +42,12 @@ Scope now: record-only. Enter RR-0311, RR-0312, RR-0313 through G2; close task-3
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Enter RR-0311..RR-0314 through backlog-decision.mjs (naming task-352, task-320); close task-352 DONE (AC1). 2. Research the no-plan page (b) and the search box wording (c) with file:line. 3. One review round on the two task texts, TRIAGE.md, fold KEPT. 4. Create the two build tasks in m-1 (LATER, build), loose ends on task-343, doctor, one docs commit (AC2).
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

@@ -3,9 +3,10 @@ id: TASK-352
 title: >-
   A.6 reports-left line: three design questions (zero left, no plan,
   outside-Toronto order)
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T21:32:00Z'
+updated_date: '2026-11-19T21:52:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -56,3 +57,21 @@ Recommendation: A, as a stated deviation: small effect, one slot in every state.
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0311 · task-352 · Backlog; operator, verbatim: "a. show zero left")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0312 · task-352 · Backlog; operator, verbatim: "b. with no plan - it needs to an error page that inludes a way to sign up")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0313 · task-352 · Backlog; operator, verbatim: "c. can't we put in the search box. Enter a Toronto address")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0314 · task-352 · Backlog; operator, verbatim: "yes.")
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Answered by the operator 2026-11-19 (MORNING-DECISIONS.md:1216, :1223). (1) zero left is shown, as built: RR-0311 decision-96. (2) no plan: an error page that includes a way to sign up: RR-0312 decision-97. (3) the search box reads 'Enter a Toronto address': RR-0313 decision-98; the outside-Toronto notice stays: RR-0314 decision-99. Build tasks for (2) and (3) are created by task-355.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T21:33:00Z'
+updated_date: '2026-11-19T22:03:00Z'
 labels:
   - S
   - loose-ends
@@ -121,4 +121,12 @@ CHK.6 design-fit check and its elements file (task-67, task-345): not built; ope
 2026-11-19 (R17, task-350) loose end, from BL-PROOF2 (REPORT.md item 3): the proof runner (scripts/analysis/proof-slice.mjs) is called only by hand from PROOF.S; no hook, station step or CI job calls it. Severity: hidden. tied up by: task-268 (PROOF.S runs it as its acceptance command).
 2026-11-19 (R17, task-350) loose end, from BL-PROOF2 (BL-PROOF/PLAN.md:66, :107): no key file for the 25 lots' report numbers was found (.cursor/MCBYLAWS-QUEUE.md:87 names the cases); the answer-key compare is blocked on it. Severity: hidden. tied up by: NONE (task-123 unblocks the compare, none owns the key file). UNVERIFIED location of the inc-1 key.
 2026-11-19 (R17, task-350) loose end, from BL-W (docs/reports/lanes/2026-11-19/BL-W/REPORT.md UNVERIFIED): the MB-44 status line "WAITS MB-38 ... expires 2026-11-19" (.cursor/MCBYLAWS-QUEUE.md:777, BL-W PLAN.md:75) has no known renewer; the cohort rows against CURRENT_SEED_SHAS, the stamp table contents and the lot_gate value list are unchecked; the gate-accepted MF id and prereg-MB-44-k are owed. Severity: hidden. tied up by: task-123 (stage 2 live checks and gate records).
+
+2026-11-19 (R18, task-355) loose end, from the no-plan research (task-357): the web search page shows a no-plan user the same one-line notice and a disabled box, with no path to the plans page (src/lib/surfaces/maxbld-web.ts:32-35; page.tsx:13-14). Severity: visible once the live switch flips. tied up by: MF-86 (the plans page, .cursor/MCFRONTEND-QUEUE.md:630-631) for the page; the wiring from the notice to the plans page: NONE.
+
+2026-11-19 (R18, task-355) loose end, from the search box wording (task-356): the scratch design source small-pages-v8 still draws placeholder "Enter lot address" (search.html:265, :278, :318; content.json:97; build.mjs source) and will disagree with the built box after task-356. Severity: record only. tied up by: NONE (the mock is outside the repo; whoever regenerates small-pages-v8 changes the one word).
+
+2026-11-19 (R18, task-355) loose end, from review r1 of task-355: the context pack generator prints the literal "undefined" after the cite of four Storage set-up lines and joins nine ruling ids to one title (docs/reports/reviews/task-355/context-2026-11-19.md:20-30, :172-175). Severity: hidden (a lane reading the pack may cite the wrong ruling). tied up by: NONE (the generator is scripts/analysis/backlog-brief.mjs).
+
+2026-11-19 (R18, task-355) loose end, from the no-plan research (task-357): the app cannot tell the two 403 refusals of the lookup apart, SUBSCRIPTION_REQUIRED and REPORT_LIMIT_REACHED, because ApiError holds a status and a message only (mobile/src/lib/errors.ts:14-21; mobile/src/lib/parcelSearchMatch.ts:295-300), so a person who used every report reads the subscription notice. Severity: visible. tied up by: the limit wall loose end above (NONE); task-357 builds a read-based rule for its own trigger only.
 <!-- SECTION:NOTES:END -->
