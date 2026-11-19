@@ -1,0 +1,57 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/route/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10903 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21997 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32924 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45439 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54913 chars, answer 1752 chars, 75s
+# Adversarial review — `src/tests/search-routing.logic.test.ts`
+
+## Findings
+
+- **[HIGH]** (line 65 + lines 102/110/129/140/148/160): `BASE` is both the *input* to `parcelSearchPath` and the *expected* prefix, so the test is a tautology for the base path. Worse, `'/(app)/parcel-tool'` contains a route group — in both Next App Router and Expo Router, `(app)` is stripped from the URL, so the real prefix is `/parcel-tool`, not `/(app)/parcel-tool`. The test cannot detect a wrong base because it feeds in whatever base it then asserts. If the app ever passes the real `/parcel-tool` from `parcelSearchRoute`, every expected string here is wrong but still green. **Fix:** assert against the literal the production caller actually uses (import/derive it from the same constant), and drop the route-group segment unless it is genuinely part of the URL.
+
+- **[HIGH]** (lines 132–133): The only "proof" the mount redirects a semi lot is a substring scrape of `[parcelId].tsx`. `toContain('needsSemiQuestion(data')` passes on a *comment*, a dead branch, or `if (!needsSemiQuestion(data))`. `toContain('router.replace(semiQuestionRoute(parcelId))')` passes if that call sits in any unrelated function, is commented out, or fires unconditionally. This does not prove "redirect fires iff `unsure === true`, before render." **Fix:** load and drive the real decision (or at minimum parse the guard/order with an AST), or replace this with a real render test in `mobile/__tests__`.
+
+- **[HIGH]** (line 67): `asksSemi` is a *local reimplementation* of `needsSemiQuestion` (`d.lotForm?.unsure === true`). Every semi assertion in lines 130/141/149/161 tests this copy, not `lotForm.ts:24-27`. If the real function also keys off `detected === 'semi_half'` (line 144's "clear semi" case has `detected: 'semi_half', unsure: false`), the copy diverges and the test asserts a false model while the mount does something else. **Fix:** import and call the real helper (the header admits the reason it isn't loaded), or add a contract test asserting parity.
+
+- **[HIGH]** (line 81): The test calls `parcelSearchPath` with a hand-built `{ parcelId: data.match?.parcelId ?? null, query: q }`, but the header (line 65 comment) says the *page* goes through `parcelSearchRoute` in `parcelSearchMatch.ts`, which is explicitly **not loaded** ("their own locks are jest tests... UNVERIFIED here"). So the actual routing binding the app uses is untested; the test proves a function the page may not call, with inputs the page may not pass. **Fix:** exercise the real route binding, or state clearly that only `parcelSearchPath` is under test.
+
+- **[HIGH]** (line 119): For candidates, only `c.address` is asserted; `parcelId` (the field a user clicks to select a candidate) is never checked. A candidate row with a null or mis-mapped `parcelId` would break selection while this test stays green, even though `Data.candidates` declares `{ parcelId; address }`. **Fix:** assert `data.candidates.map(c => c.parcelId)`.
+
+- **[MEDIUM]** (lines 50–57): `resolveLotMap` is mocked unconditionally to return two fixed lots regardless of arguments, and the call args are never asserted. A route that resolves the lot map for the wrong address (or passes wrong ids) still produces `['5112332','5427844']` at line 101. The header claims this proves the "two or more lots at one address -> the lot map" case, but it only proves pass-through of a canned payload. **Fix:** assert `resolveLotMap` was called with the parsed keys/address, and gate the return on that.
+
+- **[MEDIUM]** (lines 34–35): The `unlinked` and `typeahead` matchers are param-agnostic; the unlinked params are never asserted at all (only the typeahead ones, line 116). A route that binds the wrong number/street to the unlinked query passes. Also, because `unlinked` is matched by a fragment (`NOT EXISTS (SELECT 1 FROM parcel_address_points`) before `typeahead`, statement ordering is a hidden coupling: reorder the real SQL and the mock silently returns the wrong branch. **Fix:** assert `readParams` for the unlinked query and match statements more narrowly.
+
+- **[MEDIUM]** (line 116): `JSON.stringify(params) === JSON.stringify(['DERWYN%', null])` cannot distinguish `null` from `undefined` (both serialize to `null` in an array), so a fixture that passes `undefined` or omits the second param is indistinguishable from the real `null` — a realism hole. And `.some(...)` over all calls means the assertion passes if *any* query ran with those params, including an extra/wrongly-placed call; there is no negative assertion that `multi_parcel`/`unique` cases never run the typeahead. **Fix:** compare against `null` explicitly (e.g. `toStrictEqual`) and add negative call assertions.
+
+- **[MEDIUM]** (line 51 vs line 106): The header (line 15) says unlinked "-> the same map page **with the pin**", but the pin is never asserted. The mocked `resolveLotMap` pin (line 51) is unrelated to the `latitude/longitude` in `state.unlinked` (line 106), so it's unclear which source the route uses and the test proves neither. **Fix:** assert the actual pin source on the unlinked response.
+
+- **[MEDIUM]** (lines 36–37): The parcels-by-id branch returns a row for *any* `params[0]`, so a bug that fetches the wrong parcel id (or a non-existent one) is invisible here — only the route string happens to encode the id. `lot_size_sqm: 327.12` and `__display_address: 'row address'` are invented values that may not match a real joined `fetchParcelById` row shape; if the real query joins for `__display_address`, the single-table regex `/FROM parcels WHERE parcel_id = \$1/` is fragile (a JOIN/alias change throws "unexpected statement"). **Fix:** key the parcel row by id and return `NO_ROWS` for unknown ids; mirror the real column set.
+
+- **[MEDIUM]** (lines 136–142): The title claims "an **older server** or an absent view (no lotForm block)", but the mock can only produce "view returned no rows" → `lotForm: null`. There is no simulation of an older server that omits the `lotForm` key entirely, and `toBeNull()` would actually fail if the key were absent (`undefined !== null`) — so the "older server" half of the title is untested. **Fix:** split into two cases, one producing a response with no `lotForm` key at all, and assert the mount's guard handles `undefined`.
+
+- **[MEDIUM]** (lines 95–102): Sample 9 is "two lots **printing one address**", but the route distinguishes nothing about the address — it just counts rows. A route that treats *any* two rows (even two different addresses) as `multi_parcel` passes. The C.14 requirement (two+ lots at the *same* address) is not actually proven. **Fix:** add a counter-case with two rows at different addresses and assert it does not route to `disambiguate?kind=multi_parcel`.
+
+- **[MEDIUM]** (lines 42–43): `pool.query` returning `rowCount: 0` and `withTransaction` throwing encode the assumption "no entitlement → unmetered lead_gen path, no meter write", but nothing asserts the response reflects that (no `metered` flag checked) or that no meter write occurred. If the route gained a meter write via `pool.query`, the test wouldn't notice. **Fix:** assert `withTransaction`/meter paths were not called and that the response carries the expected entitlement/metering fields.
+
+- **[LOW]** (lines 98, 156): `readParams(0)` assumes the exact query is call index 0 and pins nothing about the statement text or total call count. A route that runs an extra query first, or re-runs the exact query, goes unnoticed. **Fix:** assert the statement text at call 0 and the total number of DB calls.
+
+- **[LOW]** (line 78): `headers: { get: () => null }` supplies no headers; any locale/CSRF/version-header behaviour the route reads is untested.
+
+- **[LOW]** (line 61 + line 68): Reaching across the monorepo boundary via `../../mobile/src/lib/parcelSearchCore` and `readFileSync(MOUNT)` is brittle: the root test depends on mobile source layout, and if `[parcelId].tsx` is renamed/moved the read throws (loud, but not the intended failure). This is the source of the "root typecheck cannot resolve" hack in the header. **Fix:** promote the shared routing helpers into a package both sides import.
+
+- **[LOW]** (line 79): `expect(res.status).toBe(200)` inside the shared `search()` helper forces every case to 200; it masks a route that should return 4xx for some input and prevents testing error statuses.
+
+- **[NIT]** (line 25): `NO_ROWS` is a single shared array reference returned for every empty result; any route that mutates query results would leak across tests. Return a fresh `[]`.
+
+- **[NIT]** (line 168): The only coverage of the "mis-typed street -> candidates" claim is an `it.todo`, which never runs. It's honest, but the file's title block implies coverage that does not exist; keep it in the lane report, not the test, or convert to a skipped-with-reason.
+
+## Overall verdict
+
+The test is well-intentioned and the DB-by-statement mock is a reasonable pattern, but it substantially overstates what it proves. The base path is circular and likely wrong (`(app)` is not a URL segment), the semi-redirect — the entire point of the "semi" cases — is verified only by a local reimplementation plus a substring scrape that would pass on a comment or a negated guard, and the real routing binding (`parcelSearchRoute`) is explicitly not exercised. Several assertions would stay green under genuine bugs: candidate `parcelId` is unchecked, `resolveLotMap` is fed a canned payload ignoring its arguments, the unlinked pin is never asserted, and the "two lots at one address" distinction is never probed. As a regression net for SRCH.ROUTE this is closer to documentation than verification; the highest-value fixes are to drive the real `needsSemiQuestion`/`parcelSearchRoute`, assert the base path the app actually uses, and tighten the param- and arg-level assertions.
+
+---
+⏱  85234ms (85.2s)
+📊 Tokens — total: 21022, input: 4044, output: 16978, reasoning: 14500

@@ -3,11 +3,11 @@ id: TASK-318
 title: >-
   SRCH.ROUTE Search identifies the case and routes it: two or more parcels at
   one...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-ROUTE'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:36:00Z'
+updated_date: '2026-11-19T15:37:00Z'
 labels:
   - S
   - plan:SRCH.ROUTE
@@ -27,6 +27,7 @@ references:
   - /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/fe-built/BUILT.md
   - .cursor/MCFRONTEND-QUEUE.md#L394
   - .cursor/MCFRONTEND-QUEUE.md#L597
+  - docs/reports/lanes/2026-11-19/BL-ROUTE/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -51,14 +52,14 @@ Files: src/tests/search-routing.logic.test.ts, docs/reports/reviews/task-318/, d
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -95,3 +96,9 @@ Files: src/tests/search-routing.logic.test.ts, docs/reports/reviews/task-318/, d
 
 2026-11-19 BL-ROUTE: all four cases route today with no code change. Test src/tests/search-routing.logic.test.ts (7 cases + 1 todo). Red proven by mutation of classifyRows (red.out: multi_parcel -> text_candidates). Mis-typed address -> no_match (OPERATOR item, it.todo).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Routing test src/tests/search-routing.logic.test.ts proves lot map, unlinked, candidates, semi route and one-lot report on sweep addresses; no routing code changed. Commits 28554fe1a and d22c3823f through the real hooks (8 passed, 1 todo). Red proven by classifyRows mutation (red.out). Mis-typed address stays no_match: OPERATOR item. Report: docs/reports/lanes/2026-11-19/BL-ROUTE/REPORT.md
+<!-- SECTION:FINAL_SUMMARY:END -->
