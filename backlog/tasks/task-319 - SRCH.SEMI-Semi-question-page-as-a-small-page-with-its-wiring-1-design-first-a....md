@@ -3,11 +3,11 @@ id: TASK-319
 title: >-
   SRCH.SEMI Semi question page as a small page, with its wiring: (1) design
   first: a...
-status: LATER
+status: RUNNING
 assignee:
-  - '@lane'
+  - '@lane-BL-SEMI'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:59:00Z'
+updated_date: '2026-11-19T19:56:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -88,4 +88,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0264 · task-319 · Backlog; o
 Scope now: page, mock and link only in 1·B (RR-0264); the owner-input store stays at its later increment home (GAP.12 task-213)
 
 2026-11-19 from SRCH.METER (task-334): the lookup route never counts an unsure lot (the semi answer is a client param); when the semi question is answered and the report produced, the count belongs to this page: add the meter call after the answer (RR-0278, one row per lot per month)
+
+2026-11-19 taken on the board at lane launch (lane BL-SEMI, worktree /Users/brettpreston_macmini/Buildo-wt-semi1b, branch wf1/inc1b-semi), RR-0240
 <!-- SECTION:NOTES:END -->
