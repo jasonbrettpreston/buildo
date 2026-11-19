@@ -3,11 +3,11 @@ id: TASK-12
 title: >-
   GAP.13 Search follow-ups to the current design: the ruled tagline 'Lot
   Intelligence'...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-GAP13'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:38:00Z'
+updated_date: '2026-11-19T15:42:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -42,6 +42,10 @@ references:
   - /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-1b-bp/q2.md
   - .cursor/MCFRONTEND-QUEUE.md#L133
   - .cursor/MCFRONTEND-QUEUE.md#L394
+  - docs/reports/lanes/2026-11-19/BL-GAP13/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-GAP13/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-GAP13/r1-plan.txt
+  - docs/reports/lanes/2026-11-19/BL-GAP13/r2-output.txt
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -67,26 +71,26 @@ element ids delivered: A.1, A.11, C.1, C.5, C.6, C.7, C.10
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
-- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
 - [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
-- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
@@ -120,3 +124,9 @@ OPERATOR items (not built; each with Grounded and Recommendation).
 A.11 Clear (x) in the search box. Grounded: v8 shows the x only in App frames (small-pages-v8/search.html:291 and :304; web frame :313 has an empty box); the FE-07 parity lock (src/tests/surfaces/search-parity.golden.test.ts:25-47) requires web and mobile goldens to carry the same refs, actions and testIDs; mapping.web.SEARCH is closed (scripts/surfaces/_schema/bindings.json: Stack, Group, Title, Text, TextInput, Button, Alert, Loader), so a web twin needs a component the table lacks; the app side needs no new action (set_input with an empty value exists, SurfaceRenderer.tsx:119-120). Recommendation (UNVERIFIED by repo review, one round not run on it): rule one of (a) add Mantine CloseButton (already in touch_targets.web) to mapping.web.SEARCH and ship both targets, (b) record a mobile-only exception in the parity lock; build follows in one small commit.
 C.5 building footprint layer and C.7 card lead line (has the house / faces the street). Grounded: choose-lot.html:306 names the fields (footprint presence from the massing join; primary_frontage_street_name); neither is in the map descriptor field_whitelist (mobile_parcel_disambiguation_map.descriptor.json inputs.field_whitelist, pinned by the new root test) and src/lib/parcels/lot-map.ts:26 CONSUMER_MAP_COLS is locked both ways (consumer-parcel-lookup.infra.test.ts:208); search-1b-adj/REPORT.md GAP.13-d and -f. Recommendation (UNVERIFIED): rule the data read (serve the primary building outline and the street name through the lookup contract, with the DATA CHECK on the rehearsal stack first), then one build task covers C.5, C.7 and the card accessibility label; the 'faces the street' rule question was withdrawn (MORNING-DECISIONS.md:774) so the lead line follows the design words only.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed 3d76daa0e on wf1/inc1b-gap13 (not pushed): A.1 tagline Lot Intelligence and C.1 heading with the existing lot_count, MF-35 and MF-53 dated notes (amends plan.v4:72). Hook result: commit.out 'Tests 15 passed (15)', 'POLICY CHECKS OK (commit-msg): 5 file(s)'. AC evidence: #1 pre-registration commit 9415ac389 (docs only); #2 failing tests in the plan (context file, Folded after r1) reviewed by r1-plan.txt; #3 write scope claimed via lanes.mjs (BL-GAP13: ~/Buildo-wt-gap13 and the lane scratch dir); #4 repo review r1 (deepseek-review.js review mode, TRIAGE.md) plus the 2026-11-17 panel search-1b/p1/SEATS.md; #5 every finding opened and triaged KEEP/REJECT by the tool-bearing lane (TRIAGE.md); #6 red.out (6 failed, commit refused) then green commit.out; #7 reports in docs/reports/lanes/2026-11-19/BL-GAP13/; #8 queue rows MF-35 and MF-53 carry the dated notes (no new MF id claimed; trailer McFrontend-Task: MF-53 required by the McBylaws arm C/P gate). NOT BUILT, OPERATOR: A.11 Clear (web parity), C.5 and C.7 (data not served); NO WORK: C.6, C.10. See REPORT.md.
+<!-- SECTION:FINAL_SUMMARY:END -->

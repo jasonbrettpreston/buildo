@@ -1,0 +1,73 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gap13/out.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10780 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21729 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32280 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43420 chars, answer 57 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 43420 chars, answer 11343 chars, 75s
+## Adversarial review — GAP.13 (task-12 / MF-53 Increment 1·B)
+
+Scope check first: the **texts** are right. `search.tagline` = "Lot Intelligence" and `map.heading` = "This address covers {count} lots. Which one do you mean?" match the lens citations character-for-character. Everything below is about what the commit *didn't* ship alongside them.
+
+---
+
+### CRITICAL
+
+- **[CRITICAL]** (`mobile/src/generated/surfaces/mobile_parcel_search.json`, `.../mobile_parcel_disambiguation_map.json` — **absent from the diff**): The commit changes the *source* content files and the binding, but never regenerates the emitted mobile slices the app and the tests actually read. Consequences, all in this same commit:
+  - `mobile/__tests__/surfaceRenderer.smoke.test.tsx:54` now asserts `getByText('Lot Intelligence')`, but the renderer reads the slice, which still carries `"Lot & Zoning Intelligence"` → **red test**.
+  - `search-follow-ups.logic.test.ts:27-28` reads `searchSlice['search.tagline']` and `mapSlice['map.heading']` and asserts both equal the new strings → **red test on both sides**.
+  - Worse, at runtime `LotMapBinding.tsx:213` now calls `content('map.heading')` while the slice has no such key. `map.rail`/`map.badge` nodes were deleted, so the multi-lot header resolves to nothing (or the raw key, depending on your renderer's fallback). **The choose-your-lot screen loses its heading on device.**
+  
+  Fix: run `scripts/surfaces/emit-mobile-surfaces.mjs --write` and commit the two slice files in the same commit as the content change. There is no defensible reason for the emitter run to be in a follow-up.
+
+- **[CRITICAL]** (`src/tests/fixtures/surfaces/mobile_parcel_search/*.mobile.json` — **absent from the diff**): The commit introduces the writer that exists *because these goldens' fingerprints move with the content file* ("no writer existed for these ten goldens and their fingerprints move with the content file", `search-golden-capture.ts:5-6`), changes that content file, and then doesn't regenerate them. `search-follow-ups.logic.test.ts:96-101` asserts every committed golden's fingerprint equals the current `sha16` of its content+descriptor — that assertion fails for all ten. Either the artefacts were regenerated out-of-band (then they belong in this commit per the generated-artefacts-committed-with-source rule) or they weren't (then the test is red and the writer is theatre). Fix: run `search-golden-capture.ts --write` and commit the ten goldens.
+
+- **[CRITICAL]** (`src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map/multi_parcel_3plus.mobile.json` — **absent from the diff**): Only `multi_parcel_2.mobile.json` is regenerated. But the binding change (`LotMapBinding.tsx:212-213`) applies to the whole `'multi_parcel'` case, and the test at `search-follow-ups.logic.test.ts:76` explicitly iterates `['multi_parcel_2', 'multi_parcel_3plus']` asserting one `Text` node with `map.heading`. The 3plus golden still has the rail + badge pair, so that test fails *and* the "no remaining consumer" assertion at line 84 (`used.filter(k => k === 'map.rail' || k === 'map.badge')`) fails against the stale file. Fix: regenerate every map golden via `lotmap-golden-capture.ts`, not just the one you eyeballed.
+
+---
+
+### HIGH
+
+- **[HIGH]** (`scripts/surfaces/search-golden-capture.ts:30`): `--write` **cannot bootstrap**. `goldenText()` reads `situation` out of the very golden it is about to overwrite (`rj(path.join(DIR, `${s.golden}.mobile.json`))`). Delete or corrupt a golden — the exact scenario a writer exists for — and `--write` throws `ENOENT` instead of recreating it. The situation must come from the descriptor (or a committed state→situation map), not from the output file. As written the writer is a re-formatter, not a generator.
+
+- **[HIGH]** (`scripts/surfaces/search-golden-capture.ts` — no `package.json`/CI change in the diff): Nothing runs this script. `lotmap-golden-capture.ts` and the others are presumably wired into an npm script or `screen-checks.mjs`; this sibling is not, so the ten search goldens will drift silently from the next content edit until someone remembers the hand-typed `tsx --tsconfig mobile/tsconfig.json …` incantation in the header. Fix: add the npm script (`goldens:search`) and call its `--check` from the same CI step that runs the siblings.
+
+- **[HIGH]** (`.cursor/MCFRONTEND-QUEUE.md`, MF-35 dated note 2026-11-19): The note says `search.tagline` is "read by the mobile **and the web binding**", then two sentences later declares A.11 (web parity) unbuilt. Both cannot be true. If the web binding really does read this content file, the web page's tagline changed in this commit with no web golden regenerated and no parity check — an FE-07 parity-lock violation hiding behind a note that calls the work "one content value, no component". If the surface is mobile-only, the note is factually wrong and will mislead the next reader. Fix: state which surface(s) read the key, and either regenerate the web twin or say explicitly "no web reader; A.11 is the web page, not this string".
+
+- **[HIGH/MEDIUM]** (`LotMapBinding.tsx:213`, `map.lot_count`): The new heading asserts a *count* for an address whose lot list can be truncated — `map.truncated` is in the descriptor whitelist (`search-follow-ups.logic.test.ts:110`). If `lot_count` is `map.lots.length`, the heading says "This address covers 30 lots" for an address with 45 lots and a capped response. That is a silent falsehood on the primary decision screen, and it breaks the honest-data lock. The old badge ("{count} lots matched") had exactly the same latent bug, but it was a badge; a sentence that reads as fact is worse. Fix: either derive from an untruncated total, or suppress the count when `map.truncated` is set — and say which in the note, because right now the note claims "count = the existing derived name `lot_count`" as if that settles it.
+
+---
+
+### MEDIUM
+
+- **[MEDIUM]** (`LotMapBinding.tsx:213`): The heading reuses `L.rail` — `font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400`. A 58-character sentence in uppercase, 11px mono, wide tracking is a legibility regression, and it is semantic debt: the class is named for the element you just retired. Meanwhile `L.badge` and its amber `#f59e0b` token are now unreferenced in this surface with nothing in the diff removing them or asserting they're gone — the new test only polices *content keys*, not classes (`search-follow-ups.logic.test.ts:76-86`). Fix: give the heading its own class, delete `L.badge`, and add a class-level assertion (or extend the existing token audit) so a dead token can't hide.
+
+- **[MEDIUM]** (`scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json` — **not touched**): You removed two content keys and added one. If the descriptor enumerates content keys (or the binding has a required-keys list), it now either declares retired keys (dangling) or fails to declare `map.heading` (undeclared read). The new test cross-checks goldens ↔ content file only; nothing checks descriptor ↔ content. Verify and, if the descriptor carries a key list, update it in this commit.
+
+- **[MEDIUM]** (`search-follow-ups.logic.test.ts` — `row()` helper, ~lines 118-125): Asserts on queue *prose* by substring, and one of the assertions looks wrong on the visible evidence: `expect(r).toContain('Dated note 2026-11-09 (M-246, prior text kept; MaxBLD page layouts')` — the MF-35 row's 2026-11-09 note in this very diff begins "MF-35 · McFrontend queue · push-17 lane; operator, verbatim: …". If that is the only 2026-11-09 note in the row, this test fails. Also `row()` returns `''` when the header isn't found, so a rename turns every assertion into a confusing string-mismatch rather than "row not found". Fix: assert on the presence of the *new* note and the *superseded* string only, and `throw` in `row()` when `start === -1`.
+
+- **[MEDIUM]** (`scripts/surfaces/search-golden-capture.ts:44-50`): `--write` rewrites the whole document with exactly 7 keys. Any additional key the existing search goldens carry (extra `covers` entries, notes, per-state annotations) is silently dropped — and dropped in a 10-file diff that no one will read line by line. Fix: `Object.assign` over the parsed existing doc (or diff-check that only `props`/`fingerprint` changed) so `--write` can only touch what it owns.
+
+- **[MEDIUM]** (`search-follow-ups.logic.test.ts:37-44`, `contentRefs`): Only recognises a content ref shaped `{content: 'k'}` — `keys.length === 1`. A ref that carries vars at the same level (`{content: 'k', vars: {...}}`) is invisible, which makes both the dead-key and the dangling-ref assertions silently pass over it. Today the binding happens to emit `{text: {content, vars}}`, so you're testing the current shape, not the rule. Fix: `if (typeof o.content === 'string') return [o.content].concat(Object.values(o).flatMap(contentRefs))`.
+
+---
+
+### LOW / NIT
+
+- **[LOW]** (`search-golden-capture.ts:52-57`): In `--write` mode a stray golden still sets `process.exitCode = 1`, so the script prints "wrote 10 goldens" *and* fails. Wrap in a script and the wrapper aborts after a successful write. Also: writes are not atomic per-run; a throw mid-loop leaves a half-regenerated fixture directory.
+- **[LOW]** (`search-golden-capture.ts:22`): `const states = … as {name; golden}[]` — a state without `golden` yields `path.join(DIR, 'undefined.mobile.json')`. Guard and name the offending state.
+- **[LOW]** (`search-golden-capture.ts:34`): `[CONTENT, DESCRIPTOR].sort()` is a no-op for these two paths; it reads as if ordering matters when it doesn't. Drop it or comment why.
+- **[LOW]** (`search-golden-capture.ts:13`): `@ts-expect-error` on the `report-checks.mjs` import is a self-destructing directive — the day that helper gets a `.d.ts`, this becomes a compile error. `@ts-ignore`/typed shim, or give the helper types.
+- **[LOW]** (`search-golden-capture.ts:9`): `__dirname` in a `.ts` run through `tsx` depends on the repo's module mode; siblings set precedent, but confirm this script actually executes rather than crashing on the first run (`scripts/surfaces/search-golden-capture.ts --check` should be run once in CI to prove it is not dead code).
+- **[LOW]** (`search-follow-ups.logic.test.ts:30-31`): `goldenFiles()` globs **every** `.json` in the fixture dir. Add a `*.web.json` (or a manifest) and the fingerprint loop at line 98 dereferences `rj(f).fingerprint.files` on a file that has no fingerprint → `TypeError`, not a clean failure. Filter on `.mobile.json`.
+- **[LOW]** (`search-follow-ups.logic.test.ts:52-60`): Grepping `surfaceRenderer.smoke.test.tsx` and `parcel-legacy-oracle.logic.test.ts` as raw text asserts that a *source file contains a string*. It will fire on a harmless rename of a local variable in either test and proves nothing about behaviour. The smoke test already fails on its own; this is duplicate, brittle coverage.
+- **[NIT]** (`search-follow-ups.logic.test.ts:110`): Pinning the whole `field_whitelist` array, order included, duplicates the descriptor verbatim. If the list is ever reordered for readability the tripwire fires and someone "fixes" it by pasting the new order, which is the opposite of the intent. Pin the *set* and add the "why" (C.5/C.7) to the assertion message.
+
+---
+
+**Verdict:** the copy work is correct and the lens's items (1) and (2) are satisfied in the source files — but this commit is red on arrival. It changes a content file and a binding while omitting the generated mobile slices and nine of the ten affected goldens, so the tests it adds cannot pass and the multi-lot header renders empty on device; the new writer can't create a missing golden and nothing invokes it; and the MF-35 note quietly asserts a web reader for a value it simultaneously declares unbuilt on web. Regenerate the slices and all goldens, wire `search-golden-capture --check` into CI, fix `goldenText` to source the situation from the descriptor, and resolve the web-parity sentence in the note — then this is a one-hour commit instead of a broken one.
+
+---
+⏱  76095ms (76.1s)
+📊 Tokens — total: 24402, input: 10122, output: 14280, reasoning: 11113
