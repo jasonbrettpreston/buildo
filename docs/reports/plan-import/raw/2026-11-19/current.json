@@ -1,0 +1,1494 @@
+[
+ {
+  "page": "A Search page",
+  "id": "A.1",
+  "element": "Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title)",
+  "where": "Wordmark and tagline on top of the page; no visible page title",
+  "main": "secondary",
+  "fields": "content keys search.wordmark.max/bld, search.tagline",
+  "status": "AVAILABLE",
+  "sweep_id": "1.15",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:264 \"MaxBLD, Lot Intelligence\"",
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:326 \"a visually hidden h1 keeps the page outline\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:7 \"Tagline: ratify\"",
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:24 \"Lot & Zoning Intelligence\"",
+    "~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:140 \"On origin, search.tagline still reads\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:213 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "Design tagline is Lot Intelligence; origin content still reads Lot & Zoning Intelligence (a value change owed, no task)",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.2",
+  "element": "Search box: one pill, placeholder Enter lot address, search icon",
+  "where": "The one input (Google-simple); typing starts a search",
+  "main": "main",
+  "fields": "parcels.addr_num_normalized + street_name_normalized; address_points.linear_name_normalized",
+  "status": "AVAILABLE",
+  "sweep_id": "1.01",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:265 \"Enter lot address\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1061 \"the app search placeholder becomes\"",
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:14 \"Enter lot address\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:107 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; placeholder already on origin",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.3",
+  "element": "Typeahead resolution of the typed text (street-prefix, up to 10)",
+  "where": "Candidates appear for an unclear address (see page B)",
+  "main": "main",
+  "fields": "address_points, parcel_address_points",
+  "status": "AVAILABLE",
+  "sweep_id": "1.02",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:265 \"Search a Toronto address\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:117 \"Typeahead resolution\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:118 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep, not drawn in the v8 search frames",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.4",
+  "element": "Typed street direction (E/W/N/S) kept in the match",
+  "where": "A typed direction narrows the match to that side of the street",
+  "main": "secondary",
+  "fields": "parser, parcels.street_name_normalized",
+  "status": "AVAILABLE",
+  "sweep_id": "1.03",
+  "tasks": [
+   "1.4"
+  ],
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/gap-register/REGISTER.md:26 \"Typed street direction (E/W/N/S) is dropped\"",
+    "~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22 \"Not built until ruled\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:129 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "behaviour, not drawn; defect on the sweep, fix pending a ruling (ONE-SITTING row 12 says Not built until ruled)",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.5",
+  "element": "Unit number typed after the address",
+  "where": "Typed unit number is accepted (the ruled text tells the user to add one)",
+  "main": "secondary",
+  "fields": "parser; address_points.address_full unit marker (277 live points)",
+  "status": "NOT-BUILT",
+  "sweep_id": "1.04",
+  "tasks": [
+   "1.4"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot-states.txt:288 \"Add a unit number or pick a nearby address\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/gap-register/REGISTER.md:27 \"the parser cannot take one\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:34 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "behaviour, not drawn",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.6",
+  "element": "Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026",
+  "where": "One small centred muted line: count left, allowance, reset date",
+  "main": "secondary",
+  "fields": "entitlements (current_period_end), usage_events",
+  "status": "NOT-BOUND",
+  "sweep_id": "1.14",
+  "tasks": [
+   "SRCH.A6"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:267 \"reports left until\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:502 \"Question back (the\"",
+    "~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:8 \"Report count reset: billing date or the 1st of the month?\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:67 \"Status: **NOT-BOUND**\""
+  },
+  "diff_vs_sweep": "design line carries the allowance (10) and the reset date; sweep traced N of 20 with no date",
+  "missed": "partial",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.7",
+  "element": "Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q=",
+  "where": "Tap a chip to search it again",
+  "main": "secondary",
+  "fields": "none (device store, Zustand + MMKV)",
+  "status": "AVAILABLE",
+  "sweep_id": "1.05",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:273 \"Recent searches\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:573 \"P35-D16 a: recent searches on the phone\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:140 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; the v8 web frame also draws chips (the ruling is phone-only)",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.8",
+  "element": "Searching state: query in the box, the word Searching, clear button",
+  "where": "Search in progress",
+  "main": "secondary",
+  "fields": "content key search.searching",
+  "status": "AVAILABLE",
+  "sweep_id": "1.12",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:291 \"Searching</span>\""
+   ],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:23 \"search.searching\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:192 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep (states list)",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.9",
+  "element": "Outside Toronto state: Lots are only available in Toronto.",
+  "where": "Plain message under the box",
+  "main": "secondary",
+  "fields": "client-side check, content key search.outside_toronto",
+  "status": "AVAILABLE",
+  "sweep_id": "1.11",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:305 \"Lots are only available in Toronto.\""
+   ],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:17 \"Lots are only available in Toronto.\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:181 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.10",
+  "element": "Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+  "where": "Muted line at the foot of the page",
+  "main": "secondary",
+  "fields": "content key search.legal",
+  "status": "AVAILABLE",
+  "sweep_id": "1.13",
+  "tasks": [
+   "LS.6"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:269 \"This is an estimate, not 100% accurate.\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073 \"2 one disclaimer everywhere: yes\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:202 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; lawyer check owed",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.11",
+  "element": "Clear (x) button inside the box",
+  "where": "Clears the query",
+  "main": "secondary",
+  "fields": "none (UI)",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:291 \"Clear search\""
+   ],
+   "ruling": [],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED in the sweep (UI control)",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.12",
+  "element": "Bottom tab bar: Lookup, Tracked Lots, Account (app)",
+  "where": "Three tabs on every signed-in app screen; Lookup active",
+  "main": "secondary",
+  "fields": "none (navigation)",
+  "status": "AVAILABLE",
+  "sweep_id": "6.02",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:88 \"Tracked Lots\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:73 \"B1: web top bar Lookup\"",
+    "origin:.cursor/MCFRONTEND-QUEUE.md:345 \"MaxBLD mobile app: a separate Expo project\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:589 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "sweep traced the transitional parcel shelf (6.02), not the MaxBLD tab bar of MF-49 (status LATER)",
+  "missed": "partial",
+  "removed": false
+ },
+ {
+  "page": "A Search page",
+  "id": "A.13",
+  "element": "In-bar Account button (MF-35 builds it amber)",
+  "where": "Not drawn in v8; yes or no is open",
+  "main": "secondary",
+  "fields": "content key search.account.label",
+  "status": "AVAILABLE",
+  "sweep_id": "1.15",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/small-pages-index.txt:65 \"In-bar Account button\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:139 \"Lookup account button: MF-35 builds it amber\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:213 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "sweep counts it inside 1.15; the design does not draw it",
+  "missed": "",
+  "removed": true
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.1",
+  "element": "Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick",
+  "where": "The user picks one printed address from the list, then Select opens the report",
+  "main": "main",
+  "fields": "address_points.address_full, linear_name_normalized (typeahead join)",
+  "status": "AVAILABLE",
+  "sweep_id": "1.06",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:574 \"P35-D17 a: the address list is the search page\"",
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:2 \"list.badge\"",
+    "~/Buildo-scratch/mcfrontend/layouts/README.md:72 \"Radio cards:\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:151 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "NOT DRAWN in v8 (no candidate frame in search.html or choose-lot-states.html); sourced from the 2026-11-10 ruling and the origin content keys",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.2",
+  "element": "Select button after the pick (Select, Open the selected lot)",
+  "where": "One button; disabled until a candidate is chosen",
+  "main": "main",
+  "fields": "content keys list.select, list.select.label",
+  "status": "AVAILABLE",
+  "sweep_id": "1.08",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:7 \"list.select.label\"",
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:574 \"SELECT disabled until a pick\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:161 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "NOT DRAWN in v8; same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.3",
+  "element": "Candidate row area line (locality, e.g. Downtown Toronto)",
+  "where": "Nothing: no area line under the addresses",
+  "main": "secondary",
+  "fields": "parcels.neighbourhood_id -> neighbourhoods.name",
+  "status": "NOT-BOUND",
+  "sweep_id": "1.07",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:572 \"P35-D15 b: NO area line under the addresses\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:45 \"Status: **NOT-BOUND**\""
+  },
+  "diff_vs_sweep": "REMOVED: ruled out by P35-D15 b; sweep status NOT-BOUND",
+  "missed": "",
+  "removed": true
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.4",
+  "element": "Needs-more-info notice: That looks like an intersection. Type a house number to see the lots.",
+  "where": "Neutral notice (info icon) under the box; the query stays in the box",
+  "main": "main",
+  "fields": "none (message only)",
+  "status": "AVAILABLE",
+  "sweep_id": "2.14",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot-states.txt:266 \"That looks like an intersection.\""
+   ],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:398 \"the honest no-map state\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:383 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.5",
+  "element": "Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address.",
+  "where": "Neutral notice under the box",
+  "main": "main",
+  "fields": "parcels (more than 10 lots per key)",
+  "status": "AVAILABLE",
+  "sweep_id": "2.11",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot-states.txt:288 \"This address has many lots.\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:13 \"This address has many lots. Add a unit number or pick a nearby address.\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:361 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; the origin text More than 10 lots match changes with MF-53 (design text is the ruled A25 text); sweep measured 0 reachable keys",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.6",
+  "element": "Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it.",
+  "where": "Error banner (alert icon) naming the address found; link report it",
+  "main": "main",
+  "fields": "address_points not linked in parcel_address_points",
+  "status": "AVAILABLE",
+  "sweep_id": "2.09",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot-states.txt:277 \"No lot linked yet\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:13 \"Choose-your-lot states 2 and 3 (no lot linked; more than 10 lots)?\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:340 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "design draws the message only; sweep also traced the pin and 25 m neighbour outlines (2.10), which the frame does not draw",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.7",
+  "element": "Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message",
+  "where": "Secondary text link to Help and Support prefilled with the topic",
+  "main": "secondary",
+  "fields": "logic_variables.maxbld_support_inbox (empty on dev)",
+  "status": "SERVED-NOT-POPULATED",
+  "sweep_id": "1.09",
+  "tasks": [
+   "SRCH.C12"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot-states.txt:267 \"Get help with an address\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:575 \"P35-D18 a\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:56 \"Status: **SERVED-NOT-POPULATED**\""
+  },
+  "diff_vs_sweep": "design uses Get help with an address on all three frames; sweep traced Report incorrect address match (1.09) and the unlinked report it link (2.13): inbox value empty",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.8",
+  "element": "Faint tappable neighbour outlines on the unlinked state",
+  "where": "Nothing drawn in v8",
+  "main": "secondary",
+  "fields": "parcels.geom within 25 m (settings parcel_map_neighbour_radius_m 25)",
+  "status": "AVAILABLE",
+  "sweep_id": "2.10",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot-states.txt:271 \"Address found, no lot linked\""
+   ],
+   "ruling": [],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:351 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "REMOVED from the design frame (the unlinked state is a banner only)",
+  "missed": "",
+  "removed": true
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.9",
+  "element": "No-match state: No parcel found for that address.",
+  "where": "Plain message",
+  "main": "secondary",
+  "fields": "content key search.miss",
+  "status": "AVAILABLE",
+  "sweep_id": "1.10",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:16 \"No parcel found for that address.\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:171 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "NOT DRAWN in v8; same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "B Address confusion",
+  "id": "B.10",
+  "element": "Intersection on the map (corner lots at the centreline node)",
+  "where": "Nothing: the intersection state is a message only",
+  "main": "secondary",
+  "fields": "toronto_centreline, parcels.is_corner_lot",
+  "status": "NOT-BUILT",
+  "sweep_id": "2.15",
+  "tasks": [
+   "LS.11"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot-states.txt:266 \"Type a house number to see the lots.\""
+   ],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:451 \"Intersection searches on the map page\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:236 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "not in the design frames; MF-60 row stays LATER",
+  "missed": "",
+  "removed": true
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.1",
+  "element": "Heading: This address covers 2 lots. Which one do you mean?",
+  "where": "Plain heading over the map",
+  "main": "main",
+  "fields": "count of matched lots",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:265 \"This address covers\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1066 \"plain heading\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED; new text of the 2026-11-11 ruling, MF-53 follow-up owed",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.2",
+  "element": "Search pill on top (clear returns to search); hidden h1 Choose your lot",
+  "where": "The query stays visible; x goes back",
+  "main": "secondary",
+  "fields": "none",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:6 \"Choose your lot\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"search pill on top\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.3",
+  "element": "Map: each matched lot outlined (amber), neighbours in zinc",
+  "where": "A drawn map of the lots at the address",
+  "main": "main",
+  "fields": "parcels.geom",
+  "status": "AVAILABLE",
+  "sweep_id": "2.02",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:266 \"Map: Lot A faces the street\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"Lot outlines and markers in amber\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:269 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.4",
+  "element": "Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber",
+  "where": "Letter on each lot; the selected lot is darker",
+  "main": "main",
+  "fields": "parcels.centroid_lat, centroid_lng",
+  "status": "AVAILABLE",
+  "sweep_id": "2.03",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"Lot outlines and markers in amber\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:279 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.5",
+  "element": "Building footprint on each lot (or none), drawn on the map",
+  "where": "See which lot has the house",
+  "main": "main",
+  "fields": "building footprint presence (massing join)",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"the map shows each lot’s building footprint (or none)\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED; new in the 2026-11-11 ruling, MF-53 follow-up owed",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.6",
+  "element": "Address pin and the street name drawn on the road (Dunmore Lane)",
+  "where": "Where the typed address sits",
+  "main": "secondary",
+  "fields": "address_points.latitude, longitude; street name",
+  "status": "AVAILABLE",
+  "sweep_id": "2.07",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:264 \"Dunmore Lane\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"the address pin and the street name\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:320 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "pin same as sweep; the street label is NOT TRACED",
+  "missed": "partial",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.7",
+  "element": "Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back",
+  "where": "One radio card per lot; says which lot has the house and which faces the street",
+  "main": "main",
+  "fields": "footprint presence (massing join); parcels.primary_frontage_street_name",
+  "status": "UNDESIGNED-DATA",
+  "sweep_id": "1.18",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:266 \"has the house\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"each card reads\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:97 \"Status: **UNDESIGNED-DATA**\""
+  },
+  "diff_vs_sweep": "NEW fields: sweep 1.18 traced primary_frontage_street_name as UNDESIGNED-DATA (non-null on 480,489 lots); footprint presence NOT TRACED; MF-53 follow-up owed",
+  "missed": "partial",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.8",
+  "element": "Lot card size line: 1,614 sq ft · 150 m²",
+  "where": "Lot size in both units",
+  "main": "main",
+  "fields": "parcels.lot_size_sqft, lot_size_sqm",
+  "status": "AVAILABLE",
+  "sweep_id": "2.04",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:275 \"1,614 sq ft\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"then the size\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:289 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.9",
+  "element": "Lot card frontage and zoning string (7.6m • CR 2.5 style)",
+  "where": "Nothing: the card shows the line and the size only",
+  "main": "secondary",
+  "fields": "parcels.frontage_m, zoning_zn_string",
+  "status": "AVAILABLE",
+  "sweep_id": "2.05",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:276 \"Lot B ·\""
+   ],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:392 \"one lot card per matched lot with lot area, frontage and zoning\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:299 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "REMOVED from the design card (sweep 2.05 frontage and 2.06 zoning, both AVAILABLE; the MF-53 row text still lists them)",
+  "missed": "",
+  "removed": true
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.10",
+  "element": "Selection shared by map tap and card (radiogroup Choose a lot)",
+  "where": "Tap a lot on the map or its card; both select the same lot",
+  "main": "main",
+  "fields": "parcelId (client state)",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:124 \"aria-checked\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"Tapping a lot on the map or its card selects it\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED; map-tap selection is an owed MF-53 follow-up",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.11",
+  "element": "Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list.",
+  "where": "One amber button that opens processing",
+  "main": "main",
+  "fields": "content keys, routes",
+  "status": "AVAILABLE",
+  "sweep_id": "2.12",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:301 \"Continue with Lot A\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:301 \"Continue with Lot\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:372 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.12",
+  "element": "Link: Not sure which lot? Get help with an address",
+  "where": "Secondary link to Help prefilled",
+  "main": "secondary",
+  "fields": "logic_variables.maxbld_support_inbox (empty on dev)",
+  "status": "NOT-BOUND",
+  "sweep_id": "2.13",
+  "tasks": [
+   "SRCH.C12"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:279 \"Not sure which lot?\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:575 \"P35-D18 a\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:226 \"Status: **NOT-BOUND**\""
+  },
+  "diff_vs_sweep": "design wording replaces Report incorrect lot match; inbox value empty",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.13",
+  "element": "Loading, error, rate-limit, entitlement, schema-drift states of the map page",
+  "where": "Not drawn in the lot frames",
+  "main": "secondary",
+  "fields": "content keys",
+  "status": "AVAILABLE",
+  "sweep_id": "2.17",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:392 \"Error, loading, rate-limit, entitlement, schema-drift states\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:393 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; not drawn in v8",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "C Lot confusion (lot map)",
+  "id": "C.14",
+  "element": "Routing: one printed address over two or more lots opens this page (shown only then)",
+  "where": "The page appears only when an address matches two or more lots",
+  "main": "main",
+  "fields": "parcels exact keys; parcel_address_points",
+  "status": "AVAILABLE",
+  "sweep_id": "2.01",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"Shown only when an address matches two or more lots.\""
+   ],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:141 \"multi_parcel\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:258 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep (1,402 exact keys; 1,332 have lots over about 500 m apart)",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.1",
+  "element": "Page shown only when the lot is unsure (before the report)",
+  "where": "A one-question page between search and the report, only for an unsure lot",
+  "main": "main",
+  "fields": "view parcel_lot_form.unsure",
+  "status": "AVAILABLE",
+  "sweep_id": "3.02",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:599 \"semi ask a - and we need a new mini page\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:458 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "NO RENDERING in v8, v10 or v11; source is the MF-84 row and the descriptor content",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.2",
+  "element": "Lot form on the lookup hit (detected, basis, unsure)",
+  "where": "Drives whether the page appears",
+  "main": "secondary",
+  "fields": "parcel_lot_form.detected, basis, unsure",
+  "status": "AVAILABLE",
+  "sweep_id": "3.01",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:123 \"the semi question now works in the app\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:447 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; no rendering",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.3",
+  "element": "Question: Is this house one half of a semi-detached pair?",
+  "where": "Heading question",
+  "main": "main",
+  "fields": "content key question.title",
+  "status": "AVAILABLE",
+  "sweep_id": "3.03",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:3 \"Is this house one half of a semi-detached pair?\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:468 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; no rendering",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.4",
+  "element": "Three answers: Yes, it is one half of a semi; No, it is detached; Not sure",
+  "where": "Radio answers",
+  "main": "main",
+  "fields": "content keys answer.yes, answer.no, answer.not_sure",
+  "status": "AVAILABLE",
+  "sweep_id": "3.03",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:6 \"Not sure\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:468 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; no rendering",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.5",
+  "element": "Continue button (Choose an answer when none picked; Open the report with this answer)",
+  "where": "One button, disabled until an answer",
+  "main": "main",
+  "fields": "content keys select.none, select.go, select.label",
+  "status": "AVAILABLE",
+  "sweep_id": "3.03",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:9 \"Open the report with this answer\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:468 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; no rendering",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.6",
+  "element": "Back to search link",
+  "where": "Back control",
+  "main": "secondary",
+  "fields": "content key back.label",
+  "status": "AVAILABLE",
+  "sweep_id": "3.03",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:2 \"Back to search\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:468 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; no rendering",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.7",
+  "element": "Question-page states: loading, error, rate limit, entitlement, schema drift",
+  "where": "Same states as the search page",
+  "main": "secondary",
+  "fields": "content keys state.*",
+  "status": "AVAILABLE",
+  "sweep_id": "3.08",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:13 \"Too many searches\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:478 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; no rendering",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.8",
+  "element": "Owner answer stored (a reopened lot does not ask again)",
+  "where": "The answer is remembered for the lot",
+  "main": "main",
+  "fields": "no column; parcel_user_inputs has no lot-form field",
+  "status": "BOUND-NOT-STORED",
+  "sweep_id": "3.04",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:646 \"owner answer storage = ship precondition\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:406 \"Status: **BOUND-NOT-STORED**\""
+  },
+  "diff_vs_sweep": "BOUND-NOT-STORED; ship precondition of increment 7; no plan task names the store",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.9",
+  "element": "Input: distance from your wall to the shared line, with an assumed default and an assumption line",
+  "where": "A number the owner can enter; the default is shown as an assumption until answered",
+  "main": "main",
+  "fields": "no column (no ex_wall_distance_m)",
+  "status": "NOT-BUILT",
+  "sweep_id": "3.06",
+  "tasks": [
+   "SRCH.SEMI"
+  ],
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:644 \"MF-89 Semi input\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:427 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "MF-89 row LATER; 7.25 names only the wall-distance assumption lines on the renovation card; the input control has no task",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.10",
+  "element": "Semi override applied in the report",
+  "where": "Report reflects the owner answer",
+  "main": "main",
+  "fields": "none stored",
+  "status": "NOT-BUILT",
+  "sweep_id": "3.07",
+  "tasks": [
+   "SRCH.SEMI",
+   "7.25"
+  ],
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:600 \"the owner answer stored when APP-RENO lands\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:437 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "7.25 binds semi renovation outputs onto the renovation card",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "D Semi question page",
+  "id": "D.11",
+  "element": "Evidence columns linked_parcel_count, best_shared_len_m",
+  "where": "Not shown to the user",
+  "main": "secondary",
+  "fields": "parcel_lot_form.linked_parcel_count, best_shared_len_m",
+  "status": "STORED-NOT-SERVED",
+  "sweep_id": "3.05",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:415 \"View evidence columns\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:416 \"Status: **STORED-NOT-SERVED**\""
+  },
+  "diff_vs_sweep": "STORED-NOT-SERVED by intent (sweep owner: none, intentional)",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "E Web search pages",
+  "id": "E.1",
+  "element": "W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account)",
+  "where": "Web version of the search page at 1280",
+  "main": "main",
+  "fields": "as page A",
+  "status": "SERVED-NOT-POPULATED",
+  "sweep_id": "4.01",
+  "tasks": [
+   "LS.12"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:314 \"MF-44: the same parts under the web top bar.\""
+   ],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:309 \"MaxBLD web pages: the web route\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:491 \"Status: **SERVED-NOT-POPULATED**\""
+  },
+  "diff_vs_sweep": "live lookup off by ruling until MB-44",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "E Web search pages",
+  "id": "E.2",
+  "element": "Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright",
+  "where": "Footer on the web search page",
+  "main": "secondary",
+  "fields": "none",
+  "status": "AVAILABLE",
+  "sweep_id": "4.05",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:323 \"Terms of Service\""
+   ],
+   "ruling": [],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:532 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "legal line same as sweep; the three links and copyright NOT TRACED",
+  "missed": "partial",
+  "removed": false
+ },
+ {
+  "page": "E Web search pages",
+  "id": "E.3",
+  "element": "W5 choose your parcel on the web, address list (text_candidates)",
+  "where": "Inline list as the app",
+  "main": "main",
+  "fields": "as 1.02",
+  "status": "SERVED-NOT-POPULATED",
+  "sweep_id": "4.02",
+  "tasks": [
+   "LS.12"
+  ],
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:501 \"W5 choose-your-parcel on the web\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:502 \"Status: **SERVED-NOT-POPULATED**\""
+  },
+  "diff_vs_sweep": "served, not populated until the web live switch",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "E Web search pages",
+  "id": "E.4",
+  "element": "W5 on the web for several lots, no lot linked and intersection (map)",
+  "where": "Map page on the web",
+  "main": "main",
+  "fields": "parcels.geom etc.",
+  "status": "NOT-BUILT",
+  "sweep_id": "4.03",
+  "tasks": [
+   "LS.11"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/choose-lot.txt:306 \"web states also at 1280\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/gap-register/REGISTER.md:54 \"W5 choose-your-parcel on the web for multi_parcel\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:512 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "NOT-BUILT; LS.11 lists W5 on the web as pending a gap ruling, not a build step",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "E Web search pages",
+  "id": "E.5",
+  "element": "W6 web report route /parcel-tool/{lot}",
+  "where": "Where Continue and Select land on the web",
+  "main": "main",
+  "fields": "route",
+  "status": "NOT-BUILT",
+  "sweep_id": "4.04",
+  "tasks": [
+   "LS.12",
+   "1.3"
+  ],
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/gap-register/REGISTER.md:33 \"/parcel-tool/<lot> is not found for every lot\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:522 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "NOT-BUILT",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "E Web search pages",
+  "id": "E.6",
+  "element": "Recent-search chips on the web frame",
+  "where": "Chips drawn on the web state (the 2026-11-10 ruling covers the phone only)",
+  "main": "secondary",
+  "fields": "none ruled for the web",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/search.txt:313 \"5 · Web · Web, signed in\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:573 \"P35-D16 a: recent searches on the phone\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED for the web",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "F Landing (search entry and sample)",
+  "id": "F.1",
+  "element": "Hero call to action: Start free trial (to /signup); no search box on the landing page",
+  "where": "The landing page has no search entry; the button starts a trial",
+  "main": "main",
+  "fields": "content, plan settings",
+  "status": "NOT-BUILT",
+  "sweep_id": "5.01",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/landing-v11.txt:514 \"Start free trial\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/gap-register/REGISTER.md:67 \"No search entry on the landing page\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:545 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "consistent with the sweep (NOT-BUILT, none needed by design)",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "F Landing (search entry and sample)",
+  "id": "F.2",
+  "element": "How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address",
+  "where": "Illustration of the search box with the sample address 24 Sample Avenue",
+  "main": "secondary",
+  "fields": "data map sAddr (made-up address)",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/landing-v11.txt:636 \"Enter a Toronto address\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/landing-v11.txt:36 \"made-up addresses on public sample cards\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED (illustration, not a working search)",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "F Landing (search entry and sample)",
+  "id": "F.3",
+  "element": "Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates",
+  "where": "The hand-off is shown in place",
+  "main": "main",
+  "fields": "MAXBLD_STEPS, MAXBLD_OPTIONS, sample lot A0175",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": [
+   "LS.7"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/landing-v11.txt:1335 \"No View report button, no second report\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1102 \"R-D3 Demo and sample report must work together\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED; the sample is regenerated by LS.7",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "F Landing (search entry and sample)",
+  "id": "F.4",
+  "element": "Landing legal line",
+  "where": "Muted line under the hero",
+  "main": "secondary",
+  "fields": "content",
+  "status": "AVAILABLE",
+  "sweep_id": "5.02",
+  "tasks": [
+   "LS.6"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/landing-v11.txt:530 \"This is an estimate, not 100% accurate.\""
+   ],
+   "ruling": [],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:556 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "F Landing (search entry and sample)",
+  "id": "F.5",
+  "element": "After login the user lands on the search page (never the dashboard)",
+  "where": "Signed-in landing target",
+  "main": "secondary",
+  "fields": "route",
+  "status": "AVAILABLE",
+  "sweep_id": "5.03",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:318 \"target the MaxBLD search page\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:566 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "G Hand-off to the report",
+  "id": "G.1",
+  "element": "Unique match goes straight to the report (no extra page)",
+  "where": "Typing a clear address leads straight to processing then the report",
+  "main": "main",
+  "fields": "parcels.parcel_cost_menu, max_buildable_gfa_sqm",
+  "status": "AVAILABLE",
+  "sweep_id": "7.01",
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/small-pages-index.txt:37 \"Flow:\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:530 \"`unique` goes straight to the report\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:613 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "G Hand-off to the report",
+  "id": "G.2",
+  "element": "Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked)",
+  "where": "Loading story; each fact resolves in turn",
+  "main": "main",
+  "fields": "stored citywide counts row; per-lot lines (heritage, ravine, nearby decisions, lot area, by-law checks)",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": [
+   "1.3"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/small-pages-index.txt:70 \"Processing (after the lot is known)\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:964 \"MF-62: D-1\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED; wiring of What-we-checked is in 1.3 only if gap Q9 is ruled",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "G Hand-off to the report",
+  "id": "G.3",
+  "element": "Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button)",
+  "where": "Pause, ready line, then the report",
+  "main": "main",
+  "fields": "content",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/small-pages-index.txt:70 \"Processing (after the lot is known)\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1074 \"ready line plus a\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "G Hand-off to the report",
+  "id": "G.4",
+  "element": "Skip control during the animation",
+  "where": "Quiet Skip text control",
+  "main": "secondary",
+  "fields": "none",
+  "status": "NOT TRACED",
+  "sweep_id": null,
+  "tasks": "NO TASK",
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/small-pages-index.txt:48 \"Play the processing demo\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1060 \"text control plus the reduce-motion\""
+   ],
+   "status": ""
+  },
+  "diff_vs_sweep": "NOT TRACED",
+  "missed": "whole",
+  "removed": false
+ },
+ {
+  "page": "G Hand-off to the report",
+  "id": "G.5",
+  "element": "Report page for the lot on a hit",
+  "where": "The Building Possibilities Report",
+  "main": "main",
+  "fields": "stored per-lot results",
+  "status": "NOT-BUILT",
+  "sweep_id": "7.02",
+  "tasks": [
+   "MB-44",
+   "1.3"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/small-pages-index.txt:46 \"Open the report\""
+   ],
+   "ruling": [
+    "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:602 \"report page view\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:603 \"Status: **NOT-BUILT**\""
+  },
+  "diff_vs_sweep": "NOT-BUILT: the route returns page null for every lot",
+  "missed": "",
+  "removed": false
+ },
+ {
+  "page": "G Hand-off to the report",
+  "id": "G.6",
+  "element": "Report meter: a hit counts one report; report limit page when exhausted",
+  "where": "Count goes down by one",
+  "main": "secondary",
+  "fields": "usage_events",
+  "status": "AVAILABLE",
+  "sweep_id": "7.03",
+  "tasks": [
+   "LS.12"
+  ],
+  "source": {
+   "rendering": [
+    "~/Buildo-scratch/lanes-20261117/search-delta/src/small-pages-index.txt:49 \"Report limit reached\""
+   ],
+   "ruling": [
+    "origin:.cursor/MCFRONTEND-QUEUE.md:297 \"parcel_tool entitlement\""
+   ],
+   "status": "~/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md:624 \"Status: **AVAILABLE**\""
+  },
+  "diff_vs_sweep": "same as sweep; no plan task for the meter itself",
+  "missed": "",
+  "removed": false
+ }
+]

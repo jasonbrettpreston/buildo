@@ -1,0 +1,445 @@
+{
+ "head": [
+  "Scenario",
+  "What is stored and when",
+  "Main page / See details elements",
+  "Compute for one lot",
+  "Loading-screen coverage",
+  "Proof uses (sample, not all-lot table)",
+  "Tasks"
+ ],
+ "groups": {
+  "1": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44"
+    },
+    {
+     "text": "Page parts shared by all scenarios (header, summary, About this lot, lot-size box, See details rows) are in the same record",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Detached house, flat and pitched roof (options 1, 2)",
+      "one record per (parcel, option) on first open or track, all main and See details values (metric numbers and codes; the price is computed at each open from the size in the record, not stored); the same record is read by later opens and other users",
+      "56 main (SUM, PIC, GAL, VIEW-A, VIEW-S); 28 details. Fields e.g. summary photo (the main image, smaller) · option name · Option 1 pitched: gfa_pitched_m2 · Option 2 flat: gfa_flat_m2; parcels.is_corner_lot · parcels.is_irregular · parcels.is_through_lot · image asset (none drawn); per-scenario image list (MF-38 image_list i",
+      "28 to 67 ms for the type (MEASURED, six types together about 0.35 s without the split)",
+      "inside 35 s",
+      "L3b sample sweep: open N sampled lots, assert record + stamp + equal re-read",
+      "ST.P1, ST.P2, 1.3, L.7, LS.9, 1.6"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 1); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    },
+    {
+     "text": "ST-6 AMENDED (one list, record columns of an opened lot)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:153"
+    },
+    {
+     "text": "ST-3 AMENDED (Layer 3 sizing line and room check for the opened-lot store)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:75"
+    }
+   ]
+  },
+  "3": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Detached houseplex 2 to 4 (option 3)",
+      "one record per (parcel, option) on first open or track, all main and See details values (metric numbers and codes; the price is computed at each open from the size in the record, not stored); the same record is read by later opens and other users (same record as group 1; computed in the same pass)",
+      "18 main (SUM, B3, PIC, GAL, VIEW-A); 23 details. Fields e.g. summary photo (the main image, smaller) · option name · gfa_max_m2; server flag from a data rule (GAP.11); is_headline is not used; parcels.is_corner_lot · parcels.is_irregular · parcels.is_through_lot · image asset (none drawn); per-scenario image list (MF-38",
+      "46 to 65 ms for the type (MEASURED)",
+      "inside 35 s",
+      "same sweep",
+      "same producer; 3.4 binds"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 3); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    },
+    {
+     "text": "ST-6 AMENDED (one list, record columns of an opened lot)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:153"
+    }
+   ]
+  },
+  "4": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "House with a secondary suite (option 4)",
+      "one record per (parcel, option) on first open or track, all main and See details values (metric numbers and codes; the price is computed at each open from the size in the record, not stored); the same record is read by later opens and other users; Suite Size (up to) = basement suite from the fitted footprint, capped at 45 percent",
+      "14 main (SUM, SUITE, PIC, GAL, VIEW-A); 7 details. Fields e.g. summary photo (the main image, smaller) · option name · the card Max build field (design placeholder); suite_interior_sqm = 0.85 x min(footprint_fit_m2, 45% x interior floor area of the fitted house) (lane SUITE-SIZE); parcels.is_corner_lot · parcels.is_irregu",
+      "45 to 63 ms for the type (MEASURED)",
+      "inside 35 s",
+      "same sweep",
+      "GAP.14, 4.1"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 4); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    },
+    {
+     "text": "ST-6 AMENDED (one list, record columns of an opened lot)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:153"
+    }
+   ]
+  },
+  "5": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44"
+    },
+    {
+     "text": "The garden-suite split is 97 percent of the one-lot time: 0.1 to 33.6 s as built, median 10.9 s (20 lots); 0.24 s without it. 35 s covers the 20 measured lots; 5.11 is still needed for the ruled p95 <= 1 s on reads and for owner recompute",
+     "cite": "~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md:37"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Garden suites on the three types",
+      "one record per (parcel, option) on first open or track, all main and See details values (metric numbers and codes; the price is computed at each open from the size in the record, not stored); the same record is read by later opens and other users; split outputs suite_gfa_sqm and main_gfa_with_suite_sqm; garden-suite price computed at open",
+      "18 main (SUM, GS-HS, GS-HC, GS-SS, GS-SC); 1 details. Fields e.g. summary photo (the main image, smaller) · option name · main_gfa_with_suite_sqm + suite_gfa_sqm (face ruling MORNING-DECISIONS.md:235); main_gfa_with_suite_sqm; cost line for the house with a suite (not yet evaluated); suite_gfa_sqm",
+      "48 to 75 ms a type without the split; 0.1 to 33.6 s as built (MEASURED)",
+      "35 s covers 20 of 20 measured lots (max 33.6 s); not the loaded-host or larger-pool tail (UNMEASURED)",
+      "100-lot timing for 5.11 (cohort lots plus random lots)",
+      "5.3, 5.6, 5.11"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 5); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    },
+    {
+     "text": "ST-3 AMENDED (Layer 3 sizing line and room check for the opened-lot store)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:75"
+    }
+   ]
+  },
+  "6": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Renovation rows exist only where the owner has entered the house (ST-4); on entry they are computed and stored with the stamp for that lot; no screen covers it, the card shows \"updating\"",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:112"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Renovations RA, RE, RI, RB, RF",
+      "owner-entered rows stored for that lot on entry (third trigger); no row without input",
+      "14 main (SUM, ADD, PIC, GAL, VIEW-A); 0 details. Fields e.g. summary photo (the main image, smaller) · option name · the renovation card Max build field (design placeholder); renovation addition size (RA; computed at owner entry, ST-4); parcels.is_corner_lot · parcels.is_irregular · parcels.is_through_lot · image asset ",
+      "proxy 28 to 75 ms a type (UNVERIFIED, rows not built); a lot-size override recomputes all six types incl. the split",
+      "none: \"updating\" state",
+      "one-lot re-evaluation check (R6-CHECK)",
+      "6c.6 (309 form for that lot until MB-38, then ST.P1), R6-CARD, R6-COST, ST.P3"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 6); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-4 AMENDED (owner input is the third trigger, stored with stamp)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:105"
+    },
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    }
+   ]
+  },
+  "7": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Semi renovation: same path as group 6 from the owner footprint and storeys; the one-lot semi time is measured in 7.26",
+     "cite": "~/Buildo-scratch/plan-gen/sequence.json (task 7.26)"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Semi-detached renovation",
+      "owner-entered rows for the semi lot on entry, with stamp",
+      "3 main (R+26, R+27, R+28); 1 details. Fields e.g. parcel_lot_form view; S-093 content; semi envelope rows; renovation cost lines; owner input stored; default value",
+      "not built (UNMEASURED)",
+      "none: \"updating\"",
+      "7.26 one-lot semi time",
+      "7.25, 7.26, GAP.12"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 7); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-4 AMENDED (owner input is the third trigger, stored with stamp)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:105"
+    },
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    }
+   ]
+  },
+  "8": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Sixplex uses the houseplex option with units 5 to 6 and the route field; same record",
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 8)"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Sixplex (5 to 6 units)",
+      "one record per (parcel, option) on first open or track, all main and See details values (metric numbers and codes; the price is computed at each open from the size in the record, not stored); the same record is read by later opens and other users (houseplex record with units and route)",
+      "2 main (R+31, R+32); 1 details. Fields e.g. sixplex route field (catalogue row at increment 8); route; CoA size",
+      "not built; houseplex row 46 to 65 ms as a proxy (UNVERIFIED)",
+      "inside 35 s",
+      "sample sweep; long form for a bounded cohort only",
+      "8.15, 8.36, CO.S7"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 8); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    },
+    {
+     "text": "ST-6 AMENDED (one list, record columns of an opened lot)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:153"
+    }
+   ]
+  },
+  "9": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "CoA size reads CoA records at request time; the u fit is a setting, so a u change moves the settings sha and stored records recompute on open (no refill)",
+     "cite": "~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md (table 1, C4)"
+    }
+   ],
+   "rows": [],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    }
+   ]
+  },
+  "10": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Proof: the MB-28 proof set keeps the 309 long form (bounded cohort, sized by ST-3); McProof and the sweeps use samples; no all-lot table",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:132"
+    }
+   ],
+   "rows": [],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    },
+    {
+     "text": "ST-3 AMENDED (Layer 3 sizing line and room check for the opened-lot store)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:75"
+    }
+   ]
+  },
+  "S": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44"
+    },
+    {
+     "text": "Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1)",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Search first",
+      "nothing stored by search; the pick starts the first-open compute for the lot",
+      "33 main (A.2, A.3, B.1, B.2, B.4); 27 details. Fields e.g. parcels.addr_num_normalized + street_name_normalized; address_points.linear_name_normalized; address_points, parcel_address_points; address_points.address_full, linear_name_normalized (typeahead join); content keys list.select, list.select.label",
+      "n/a",
+      "LOAD.1 starts, LOAD.2 waits, LOAD.3 sets 35 s",
+      "none",
+      "LOAD.1, LOAD.2, LOAD.3"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group S); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    }
+   ]
+  },
+  "6c": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "Renovation rows exist only where the owner has entered the house (ST-4); on entry they are computed and stored with the stamp for that lot; no screen covers it, the card shows \"updating\"",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:112"
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      "Owner inputs and one-lot re-evaluation (INC-6c)",
+      "the owner input starts the compute-and-store path (MB-89 one-lot run) and stores the rows with stamp for that lot",
+      "4 main (H0, C2, R+24, R+25); 0 details. Fields e.g. parcels.lot_size_sqm · lot_area_m2 · range bounds 500-50,000 sq ft: no field (logic variables max_build_lot_min_sqm / max_build_lot_max_sqm or the MB-42 vocab key, owed); parcels.lot_size_sqm · parcels.lot_size_source · entered_at; user-input fields (existing ",
+      "UNMEASURED until built",
+      "none: \"updating\"",
+      "J6 one-lot rehearsal",
+      "6c.6, 6c.9, 6c.10, ST.P3"
+     ],
+     "cite": "~/Buildo-scratch/lanes-20261117/req-elements/elements-by-inc.json (group 6c); ~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md section 2; ~/Buildo-scratch/lanes-20261117/storage-outcome/measure.md:6"
+    }
+   ],
+   "st": [
+    {
+     "text": "ST-4 AMENDED (owner input is the third trigger, stored with stamp)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:105"
+    },
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    }
+   ]
+  },
+  "L": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "MB-38 builds the record table and the producer ST.P1 with no all-lot fill (the L.5b fill is dropped, the id stays for the table migration GO; 60 days gone); the stamp check is ST.P2; shadow on the 20,000-lot sample stays and writes no records",
+     "cite": "origin:.cursor/MCBYLAWS-QUEUE.md:731"
+    },
+    {
+     "text": "Cost for the opened lot = rate x escalation x adjustment x the record's size, by Spec 88 lineCost at each open, not stored in the record (M-67 kept; ST.C1)",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704"
+    },
+    {
+     "text": "Tracked Lots values stored on track (LS.4)",
+     "cite": "~/Buildo-scratch/lanes-20261117/storage-ondemand/REPORT.md (table 1, C5)"
+    }
+   ],
+   "rows": [],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    },
+    {
+     "text": "ST-6 AMENDED (one list, record columns of an opened lot)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:153"
+    },
+    {
+     "text": "ST-3 AMENDED (Layer 3 sizing line and room check for the opened-lot store)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:75"
+    }
+   ]
+  },
+  "AL": {
+   "lines": [
+    {
+     "text": "McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill",
+     "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md"
+    },
+    {
+     "text": "MB-75 and MB-76 have no launch need and read a sample or a stream, not a stored all-lot table",
+     "cite": "~/Buildo-scratch/queues-20261113/MB-REVIEW-20261117.md:89"
+    }
+   ],
+   "rows": [],
+   "st": [
+    {
+     "text": "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)",
+     "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126"
+    }
+   ]
+  }
+ }
+}

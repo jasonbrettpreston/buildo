@@ -1,0 +1,38 @@
+{
+ "inc": [
+  {
+   "text": "Foundations first: lane tooling, the eight automatic policy checks, the rulings register with its rebuild gate, and task status from evidence, so every later slice is checked in seconds and statuses cannot drift",
+   "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:724",
+   "quote": "Operator, verbatim: \"y - add these taks to our first incrememnt which is confusing search first, launch shared and increment 1\""
+  }
+ ],
+ "deliverable": [
+  {
+   "text": "Every commit checked automatically against the policies (scope, no special cases, nothing new without a ruling, no client maths, McStorage, design fit, ID and status words); task status computed from evidence; panels run through one command with truncation re-runs and a seat digest",
+   "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725",
+   "quote": "Ruling: the infra freeze is lifted for the named list only: eight automatic checks (scope; no special cases; nothing new without a ruling; n"
+  }
+ ],
+ "specs": [
+  {
+   "name": "Spec 08 agent architecture (panels, DeepSeek substrate, failure modes)",
+   "path_or_link": "origin:docs/specs/00-architecture/08_agents.md"
+  },
+  {
+   "name": "PROTOCOL.md",
+   "path_or_link": "~/Buildo-scratch/panel-tools/PROTOCOL.md"
+  },
+  {
+   "name": "Build approach (panel-compiled)",
+   "path_or_link": "~/Buildo-scratch/lanes-20261117/build-approach/REPORT.md"
+  },
+  {
+   "name": "inc6-guard RULES.md",
+   "path_or_link": "~/Buildo-scratch/inc6-guard/RULES.md"
+  },
+  {
+   "name": "MORNING-DECISIONS.md",
+   "path_or_link": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md"
+  }
+ ]
+}

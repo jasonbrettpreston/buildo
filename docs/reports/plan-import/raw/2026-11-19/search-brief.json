@@ -1,0 +1,47 @@
+{
+ "inc": [
+  {
+   "text": "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built",
+   "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673",
+   "quote": "Operator, verbatim: \"because we have done this plan by increments what about the \"This Lot\" information (Main page) and details as well as t"
+  }
+ ],
+ "deliverable": [
+  {
+   "text": "A user types any Toronto address, resolves address or lot confusion through the designed pages (choose your lot, and the three states: intersection, no lot linked, many lots), and lands on the report",
+   "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682",
+   "quote": "Readings: (1) Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form). (2) Q-GAP-2 \"Most space\": every option, a tie goes to the l"
+  },
+  {
+   "text": "The search pages follow the Daylight product standard (small pages v8); today they are still old dark on origin (mobile/src/constants/parcelSearch.ts:58)",
+   "cite": "~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100",
+   "quote": "R-D1 Daylight is the product standard: small pages (v8), landing (v10+), report (B v3: summary + concept gallery), demo "
+  }
+ ],
+ "specs": [
+  {
+   "name": "Spec 89 parcel cost model tool (search parser rules)",
+   "path_or_link": "origin:docs/specs/02-web-admin/89_parcel_cost_model_tool.md"
+  },
+  {
+   "name": "Spec 126 MaxBLD surface standard",
+   "path_or_link": "origin:docs/specs/02-web-admin/126_maxbld_surface_standard.md"
+  },
+  {
+   "name": "Current search (latest rendering + later rulings)",
+   "path_or_link": "~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md"
+  },
+  {
+   "name": "MORNING-DECISIONS.md",
+   "path_or_link": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md"
+  },
+  {
+   "name": "McFrontend phase1 open-questions.md (search and small-pages rulings)",
+   "path_or_link": "~/Buildo-scratch/mcfrontend/phase1/open-questions.md"
+  },
+  {
+   "name": "PROTOCOL.md",
+   "path_or_link": "~/Buildo-scratch/panel-tools/PROTOCOL.md"
+  }
+ ]
+}

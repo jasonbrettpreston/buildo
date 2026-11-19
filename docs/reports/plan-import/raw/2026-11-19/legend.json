@@ -1,0 +1,210 @@
+{
+ "AV3": {
+  "name": "McDonald's Airtight V3: the step standard (Spec 122/124/132 path); no exception paths; calcs as data, switches, tests first",
+  "cite": "origin:docs/specs/01-pipeline/124_step_standard_policy.md:250",
+  "quote": "The step handbook is Spec 132",
+  "also": [
+   {
+    "text": "Fold Airtight V3 + the 11 cards into the two queues",
+    "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:332",
+    "quote": "Fold Airtight V3 + the 11 cards into the two queues"
+   },
+   {
+    "text": "## Airtight V3 (pipeline steps, folded 2026-11-15)",
+    "cite": "origin:.cursor/MCBYLAWS-QUEUE.md:1293",
+    "quote": "## Airtight V3 (pipeline steps, folded 2026-11-15)"
+   },
+   {
+    "text": "through the governing process (MCINC, McProof, Airtight V3, McBylaws), grounded",
+    "cite": "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:119",
+    "quote": "through the governing process (MCINC, McProof, Airtight V3, McBylaws), grounded"
+   }
+  ]
+ },
+ "BYL": {
+  "name": "McBylaws process: by-law step conversion; queue row first; no code names a zone, scenario or regulation id (M-61)",
+  "cite": "origin:.cursor/MCBYLAWS-QUEUE.md:100",
+  "quote": "McBylaws is the conversion of the by-law step under Spec 122/124 and the Spec 132 handbook",
+  "also": [
+   {
+    "text": "No code names a zone, a scenario or a regulation id",
+    "cite": "origin:.cursor/MCBYLAWS-QUEUE.md:100",
+    "quote": "No code names a zone, a scenario or a regulation id"
+   }
+  ]
+ },
+ "RDG": {
+  "name": "Every reading we made ourselves carries a confidence and an evidence pointer (M-481)",
+  "cite": "origin:docs/specs/01-pipeline/69a_mcbylaw_register.md:624",
+  "quote": "Each reading row of the switchboard carries a confidence (high, medium, medium-low or low) and an evidence pointer",
+  "also": [
+   {
+    "text": "Every reading we made ourselves that the by-law text does not settle beyond doubt",
+    "cite": "~/Buildo-scratch/mcbylaws/CONFIDENCE-REGISTER.md:5",
+    "quote": "Every reading we made ourselves that the by-law text does not settle beyond doubt"
+   }
+  ]
+ },
+ "DDV": {
+  "name": "Data-driven validation: test readings against permits, CoA and past research before asking the operator (operator 2026-10-31)",
+  "cite": "~/.claude/projects/-Users-brettpreston-macmini/memory/data-driven-bylaw-validation.md:3",
+  "quote": "Validate by-law readings with permit/CoA data and past research before asking the operator to judge",
+  "also": []
+ },
+ "MCP": {
+  "name": "McProof: scope and answer key first, hand-derived from the by-law text; disputed items walked one at a time (Spec 08 11.8 MCINC-1)",
+  "cite": "origin:docs/specs/00-architecture/08_agents.md:486",
+  "quote": "Scope and answer key (McProof first)",
+  "also": []
+ },
+ "MAP": {
+  "name": "McIncrement impact map measured on the current origin tip (MCINC-2) and one decision list (MCINC-3)",
+  "cite": "origin:docs/specs/00-architecture/08_agents.md:487",
+  "quote": "One impact map, measured on the current origin tip",
+  "also": [
+   {
+    "text": "One decision list. Every ruling the map needs goes to the operator at once",
+    "cite": "origin:docs/specs/00-architecture/08_agents.md:489",
+    "quote": "One decision list. Every ruling the map needs goes to the operator at once"
+   }
+  ]
+ },
+ "BLD": {
+  "name": "Build on the tip: red tests first, then code, through the real hooks (MCINC-4)",
+  "cite": "origin:docs/specs/00-architecture/08_agents.md:490",
+  "quote": "Build on the tip. Red tests first, then the code, through the real hooks.",
+  "also": []
+ },
+ "HS": {
+  "name": "Hooks plus the full suite on the current origin tip before anything is called ready (MCINC-4)",
+  "cite": "origin:docs/specs/00-architecture/08_agents.md:490",
+  "quote": "The full suite runs on the current origin tip before",
+  "also": []
+ },
+ "NIGHT": {
+  "name": "At most one Layer 2 night per increment; close only when green in the loop (MCINC-5, MCINC-6)",
+  "cite": "origin:docs/specs/00-architecture/08_agents.md:491",
+  "quote": "At most one Layer 2 night per increment",
+  "also": [
+   {
+    "text": "Close. The increment is green in the loop",
+    "cite": "origin:docs/specs/00-architecture/08_agents.md:492",
+    "quote": "Close. The increment is green in the loop"
+   }
+  ]
+ },
+ "RH": {
+  "name": "Rehearse every DB job on the local test stack, with the real hooks, before the go (MCINC-7; Spec 137 rule 9)",
+  "cite": "origin:docs/specs/00-architecture/08_agents.md:495",
+  "quote": "Rehearse every DB job before the go",
+  "also": [
+   {
+    "text": "Every DB job is rehearsed on the local test stack first (MCINC-7: the real commit hooks run on the rehearsal), then runs under the operator's go",
+    "cite": "origin:docs/specs/00-architecture/137_mcqueue.md:106",
+    "quote": "Every DB job is rehearsed on the local test stack first (MCINC-7: the real commit hooks run on the rehearsal), then runs under the operator's go"
+   }
+  ]
+ },
+ "GO": {
+  "name": "Operator-typed GO on dev, one DB job at a time",
+  "cite": "~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:84",
+  "quote": "Typed GOs on dev, one at a time (Spec 137 rule 9)",
+  "also": [
+   {
+    "text": "The DB writer is ONE lane, runs on an operator go, and holds the DB lock",
+    "cite": "origin:docs/specs/00-architecture/137_mcqueue.md:106",
+    "quote": "The DB writer is ONE lane, runs on an operator go, and holds the DB lock"
+   }
+  ]
+ },
+ "ID": {
+  "name": "Claim every MF, FE, MB, migration, prereg round, D and M number in the ID ledger before use (MCINC-8)",
+  "cite": "origin:docs/specs/00-architecture/08_agents.md:496",
+  "quote": "Every MF, FE, MB, migration, prereg round, D and M number is claimed in",
+  "also": []
+ },
+ "PUSH": {
+  "name": "Pushes are the operator only: own terminal y, one y and one suite per push; one push per landing set",
+  "cite": "~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:83",
+  "quote": "Every push needs your own terminal y (pre-push gate fails without a tty)",
+  "also": [
+   {
+    "text": "One push per landing set",
+    "cite": "origin:docs/specs/00-architecture/08_agents.md:492",
+    "quote": "One push per landing set"
+   }
+  ]
+ },
+ "STAT": {
+  "name": "One status line per row, replaced in the same commit as the work (Spec 137 rules 1 and 3)",
+  "cite": "origin:docs/specs/00-architecture/137_mcqueue.md:45",
+  "quote": "Every row has ONE status line, REPLACED when the status changes, never appended.",
+  "also": [
+   {
+    "text": "The status line changes in the same commit as the work",
+    "cite": "origin:docs/specs/00-architecture/137_mcqueue.md:84",
+    "quote": "The status line changes in the same commit as the work"
+   }
+  ]
+ },
+ "DN": {
+  "name": "A ruling enters its row as a verbatim dated note, prior text kept (M-246; Spec 137 rule 10)",
+  "cite": "origin:docs/specs/00-architecture/137_mcqueue.md:109",
+  "quote": "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept.",
+  "also": []
+ },
+ "FIT": {
+  "name": "Design-fit gate: every stored or built value maps to a designed McFrontend element or a named supporting function; every designed number bound, served, populated",
+  "cite": "~/Buildo-scratch/panel-tools/PROTOCOL.md:25",
+  "quote": "DESIGN FIT (seat X, operator 2026-11-17, mandatory in every research, optimisation and build-pass panel)",
+  "also": [
+   {
+    "text": "report-v2.decl.json is generated from the catalogue",
+    "cite": "~/Buildo-scratch/panel-tools/PROTOCOL.md:25",
+    "quote": "report-v2.decl.json is generated from the catalogue"
+   }
+  ]
+ },
+ "PAN": {
+  "name": "Panel lenses on every plan item: compliance, grounding, reality, options, regression, integration, surrounding work, then final check",
+  "cite": "~/Buildo-scratch/panel-tools/PROTOCOL.md:9",
+  "quote": "The seven lenses below on every plan item, in subject groups",
+  "also": [
+   {
+    "text": "FINAL CHECK (seat F, last, before anything reaches the operator)",
+    "cite": "~/Buildo-scratch/panel-tools/PROTOCOL.md:27",
+    "quote": "FINAL CHECK (seat F, last, before anything reaches the operator)"
+   }
+  ]
+ },
+ "FIVE": {
+  "name": "Five principles: standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep",
+  "cite": "~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3",
+  "quote": "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep",
+  "also": []
+ },
+ "SC": {
+  "name": "Simplicity guard: a task is added only if it fills one of the nine slice parts or one supporting function, with a source",
+  "cite": "~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:25",
+  "quote": "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.",
+  "also": []
+ },
+ "STO": {
+  "name": "McStorage rulings ST-1..ST-8: headline record per (parcel, option); detail on demand; long form for bounded cohorts only",
+  "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130",
+  "quote": "persists one headline record per (parcel, option)",
+  "also": [
+   {
+    "text": "No per-field Layer 3 row is written for all lots.",
+    "cite": "~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:133",
+    "quote": "No per-field Layer 3 row is written for all lots."
+   }
+  ]
+ },
+ "REN": {
+  "name": "Relay check: a claim that nothing covers it is checked by a grep of the full record and the search is quoted",
+  "cite": "~/Buildo-scratch/panel-tools/PROTOCOL.md:48",
+  "quote": "Orchestrator relay check (operator 2026-11-17",
+  "also": []
+ }
+}

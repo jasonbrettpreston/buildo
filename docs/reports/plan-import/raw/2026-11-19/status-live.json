@@ -1,0 +1,79 @@
+{
+ "_note": "Live status overrides (orchestrator, with evidence). Updated 2026-11-18 (BOARD-FIX: D7 statuses).",
+ "6.7": {
+  "status": "DONE",
+  "evidence": "D6 closed 11:54:13, locks released (night/dev/night.log)"
+ },
+ "6.8": {
+  "status": "DONE",
+  "evidence": "push 5 landed 13:53:03; origin/wf1/mb-rulings = 154e7b13f"
+ },
+ "6.9": {
+  "status": "DONE",
+  "evidence": "TIP_PIN/PIN filled 154e7b13f; recap BLOCKS.sha256 12 files digest 9c8bf9201ff1; mig330 14 files digest 3f6886198a04"
+ },
+ "6.10": {
+  "status": "DONE",
+  "evidence": "rehearsal PASS 13:54 (mig330/REHEARSAL.pass: blocks 3f6886198a04, hooks rc 0, 3 rows added, restore exact, test stack left with 330 applied)"
+ },
+ "6.11": {
+  "status": "DONE",
+  "evidence": "operator GO; dev c1-c4 PASS 13:55:08 (mig330/dev/job.log); dblock released"
+ },
+ "6.12": {
+  "status": "DONE",
+  "evidence": "COMPARISON PASS 13:56 (recap/compare-dev-test-20261117.out): c1 fingerprint, 9 table counts and mmap equal"
+ },
+ "6.13": {
+  "status": "DONE 2026-11-18 07:53",
+  "evidence": "c1 PASS, c2 PASS 02:11 (624,325 rows, rerun zero), c3 stopped 02:12 at the predicted rowpair check; after the operator correction c3 PASS 07:53 (lotpair 07bc on all rows, golden 25 150/150, storage 730 MiB), c4 closed (teststack/c3.console.2, c4.console)"
+ },
+ "6.44": {
+  "status": "WAITING",
+  "evidence": "orchestrator removes D7/mig-330 job trees after their commits land (operator 2 y)"
+ },
+ "6.7a": {
+  "status": "READY (D7 done)",
+  "evidence": "D7 finished: ~/Buildo-scratch/mcbylaws/inc6/recap/REHEARSAL.pass rehearsed_at=2026-11-18T14:38:48Z (hooks_rc=0); 6.13 DONE 07:53, 6.14 DONE 14:38Z; the suite lock D7 held is released; commit not yet made; goes first in the push-6 chain after Part B"
+ },
+ "6.7b": {
+  "status": "DONE",
+  "evidence": "NIGHT-RECORD.md with D/G folds; combined L2+L3 1,434.02 MiB = 86.9% of 1,650 (orchestrator read-only read)"
+ },
+ "6.7c": {
+  "status": "DONE",
+  "evidence": "OUTPUT panel PASS-WITH-FOLDS, 0 blocker, 6 seats + F (output-panel/VERDICT.md; check.mjs PASS sha 60ed8a1396ae)"
+ },
+ "6.16": {
+  "status": "DONE (superseded)",
+  "evidence": "ruling 2 corrected 2026-11-18: rows carry LOT_TV 07bc0ba7, not 70bcf425"
+ },
+ "6.21": {
+  "status": "READY (D7 done)",
+  "evidence": "D7 finished: ~/Buildo-scratch/mcbylaws/inc6/recap/REHEARSAL.pass rehearsed_at=2026-11-18T14:38:48Z (hooks_rc=0); 6.13 DONE 07:53, 6.14 DONE 14:38Z; its own record still lands it one MB-67 note covering 6.21 and 6.37, after 6.15 (6.15 is READY, not yet landed); text drafting state not re-checked"
+ },
+ "6.37": {
+  "status": "READY (D7 done)",
+  "evidence": "D7 finished: ~/Buildo-scratch/mcbylaws/inc6/recap/REHEARSAL.pass rehearsed_at=2026-11-18T14:38:48Z (hooks_rc=0); 6.13 DONE 07:53, 6.14 DONE 14:38Z; its own record still lands it same note as 6.21, after 6.15 (6.15 is READY, not yet landed); text drafting state not re-checked"
+ },
+ "6.39": {
+  "status": "READY (D7 done)",
+  "evidence": "D7 finished: ~/Buildo-scratch/mcbylaws/inc6/recap/REHEARSAL.pass rehearsed_at=2026-11-18T14:38:48Z (hooks_rc=0); 6.13 DONE 07:53, 6.14 DONE 14:38Z; its own record still lands it inside the Part B commit 6.15 (6.15 is READY, not yet landed); text drafting state not re-checked"
+ },
+ "6.14": {
+  "status": "DONE 2026-11-18 14:38Z",
+  "evidence": "REHEARSAL.pass written (hooks_rc=0, step-validate --staged rc=0, gate --ci rc=0, explained_diffs 18/18, blocks 50c2d767; recap/REHEARSAL.pass)"
+ },
+ "6.13a": {
+  "status": "DONE 2026-11-18",
+  "evidence": "operator ruling-2 correction logged (MORNING-DECISIONS 2026-11-18); c3.zsh edited + re-pinned (only c3.zsh changed); r-restore not run"
+ },
+ "6.15": {
+  "status": "READY (D7 done)",
+  "evidence": "D7 finished: ~/Buildo-scratch/mcbylaws/inc6/recap/REHEARSAL.pass rehearsed_at=2026-11-18T14:38:48Z (hooks_rc=0); 6.13 DONE 07:53, 6.14 DONE 14:38Z; deps 6.14 and 6.16 are DONE; not yet run (no Part B commit exists in the record)"
+ },
+ "6.17": {
+  "status": "READY (D7 done)",
+  "evidence": "D7 finished: ~/Buildo-scratch/mcbylaws/inc6/recap/REHEARSAL.pass rehearsed_at=2026-11-18T14:38:48Z (hooks_rc=0); 6.13 DONE 07:53, 6.14 DONE 14:38Z; dep 6.13 is DONE; note not yet landed"
+ }
+}

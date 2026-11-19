@@ -1,0 +1,3183 @@
+{
+ "generated": "2026-11-18",
+ "origin_tip": "154e7b13f",
+ "groups": {
+  "1": {
+   "summary": "The report page parts are built once and shared by every scenario: the REPORT core, the web v21 page (ReportPage, Daylight keys), the mobile binding and host, the summary, the See-details sheets, the lot-view drawing component, the picture and image selection, the ad slot, What we checked, Add lot size, the admin preview and the Daylight tokens. The two detached cards o1 and o2 bind the size, storeys, footprint and homes fields; every cost, CoA, neighbour, setback, coverage, FSI, height and wall-height part renders ruled pending text because no field is declared or served. The customer producer returns null for every lot until MB-44, so everything renders on goldens and the admin preview only. Not built: the gallery, the side view, summary photos, the units switch, the heart, share, the extra lot rows.",
+   "counts": {
+    "BUILT": 29,
+    "BUILT-NO-DATA": 38,
+    "NOT BUILT": 11
+   },
+   "built_components": 14,
+   "components": [
+    {
+     "id": "F-REPORT-CORE",
+     "name": "REPORT core: buildTree/assertTree/viewOf, buildPage/assertPage/pageViewOf, declaration and layout table",
+     "renders": [
+      "A0",
+      "R+4",
+      "R+6",
+      "R+7",
+      "R+14"
+     ],
+     "files": [
+      "src/lib/surfaces/report/core.ts",
+      "src/lib/surfaces/report/data.ts",
+      "scripts/surfaces/_schema/report-v2.decl.json",
+      "scripts/surfaces/_schema/report-presentation.json",
+      "scripts/surfaces/_schema/report-layout.json",
+      "scripts/surfaces/_schema/report-tree.schema.json",
+      "scripts/surfaces/_schema/report-v2-seed/row-presentation.json"
+     ],
+     "schema": "report-v2.decl.json (declared fields), report-presentation.json (content registry: texts, status_text), report-layout.json (closed layout table per target), report-tree.schema.json (node contract)",
+     "fields": "every declared report field by name (decl sections[].fields[]); throws on an unknown field or status",
+     "commit": "c33f4d01a feat(126_maxbld_surface_standard): MF-14 the one REPORT renderer; generator d70cf3d81 MF-13 catalogue-to-report generator (queue row MF-13)",
+     "mf": "MF-14, MF-13, MF-15, MF-16",
+     "tests": [
+      "src/tests/surfaces/report-render.logic.test.ts",
+      "src/tests/surfaces/report-no-maths.logic.test.ts",
+      "src/tests/surfaces/report-generator.logic.test.ts",
+      "src/tests/surfaces/report-golden-parity.logic.test.ts",
+      "src/tests/surfaces/report-binding.logic.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "n/a (no colours)"
+    },
+    {
+     "id": "F-REPORT-WEB",
+     "name": "ReportPage (web v21 report page, Daylight keys) + ReportPageToggles client island",
+     "renders": [
+      "A0",
+      "A1",
+      "A2",
+      "B0",
+      "B1",
+      "B2",
+      "B3",
+      "B5",
+      "B6",
+      "B7",
+      "B8",
+      "B9",
+      "B9.x rows",
+      "B10",
+      "B10.x rows",
+      "B11",
+      "B12",
+      "B13",
+      "B14",
+      "B15",
+      "B16",
+      "C1",
+      "C2",
+      "E1",
+      "F1-F8",
+      "G1-G4",
+      "H0",
+      "R+4",
+      "R+14"
+     ],
+     "files": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportPageToggles.tsx",
+      "scripts/surfaces/_schema/report-page.json",
+      "scripts/surfaces/_schema/report-page.schema.json",
+      "scripts/surfaces/_schema/report-v2-seed/page-text.json"
+     ],
+     "schema": "report-page.json (sections title, address, summary, o1, lot_size, lot_size_entered, o2, ad_o2, o3, soon, lot, legal, footer, sheet; each part is one field, content key or pending)",
+     "fields": "see the per-element table (gfa_pitched_m2, gfa_flat_m2, gfa_max_m2, storeys_max, footprint_max_m2, units_max, unit_count, unit_area_m2, houseplex_bedrooms, units_flat, permitted, lot_size_sqm, is_heritage_designated, is_in_ravine_protection_area, is_corner_lot, lot_size_entry, lot_size_entered_at, ad_scenario_detached_house_flat_or_shallow_roof)",
+     "commit": "def519325 feat(126_maxbld_surface_standard): MF-57 the report page in the approved v21 layout; 3072029dc feat(126_maxbld_surface_standard): MF-83 group 1, the summary section and See details as a sheet; f99faa74d feat(126_maxbld_surface_standard): MF-83 group 2, the lot-view panel (From above); 8d48be5c0 MF-83 group 1b fixes 1-5 and the signed-off wording",
+     "mf": "MF-57, MF-83 (groups 1, 1b, 2), MF-19, MF-85",
+     "tests": [
+      "src/tests/surfaces/report-page.logic.test.ts",
+      "src/tests/surfaces/report-page.ui.test.tsx",
+      "src/tests/surfaces/report-sheet-a11y.ui.test.tsx",
+      "src/tests/surfaces/report-honest.logic.test.ts",
+      "src/tests/surfaces/report-honest-k2.logic.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "DAYLIGHT (colours, summary at top, lot view, See details sheets); gallery not built"
+    },
+    {
+     "id": "F-REPORT-MOBILE",
+     "name": "Mobile REPORT binding + host: reportProps, ReportPageHost (bottom sheet), lot route mount",
+     "renders": [
+      "same page elements as F-REPORT-WEB on the app: A0-H0, R+4, R+6"
+     ],
+     "files": [
+      "mobile/src/components/surfaces/ReportBinding.tsx",
+      "mobile/src/components/surfaces/ReportPageHost.tsx",
+      "mobile/src/constants/reportPage.ts",
+      "mobile/app/(app)/parcel-tool/[parcelId].tsx",
+      "src/lib/parcels/report-page.ts"
+     ],
+     "schema": "the page view of report-page.json (same part roles); reportPage.ts class table of named report-* keys; lookup response `page` block (ReportPageViewSchema, strict)",
+     "fields": "reads parts by role and section by kind, never a field name; texts are server-formatted refs {part: section.index.role}",
+     "commit": "2348a5005 feat(126_maxbld_surface_standard): MF-48 Stage A, the MaxBLD report on mobile on synthetic goldens; 6d438846e feat(126_maxbld_surface_standard): MF-48 Stage B with MF-74; 3072029dc feat(126_maxbld_surface_standard): MF-83 group 1, the summary section and See details as a sheet; f99faa74d feat(126_maxbld_surface_standard): MF-83 group 2, the lot-view panel (From above)",
+     "mf": "MF-48 (Stage A, Stage B), MF-74, MF-83",
+     "tests": [
+      "mobile/__tests__/reportPage.behaviour.test.tsx",
+      "mobile/__tests__/reportScreen.mount.behaviour.test.tsx",
+      "mobile/__tests__/reportScreens.golden.test.ts",
+      "src/tests/surfaces/report-mobile.logic.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings); the customer producer answers null for every lot (miss text) until MB-44",
+     "daylight": "DAYLIGHT (named report-* keys re-valued in mobile/tailwind.config.js; report-page #f4f1eb)"
+    },
+    {
+     "id": "F-REPORT-TREE",
+     "name": "ReportView (admin and pdf tree renderer: field list, Picture figure, ad Slot, What we checked)",
+     "renders": [
+      "B4 (Picture)",
+      "R+5"
+     ],
+     "files": [
+      "src/components/report/ReportView.tsx",
+      "src/app/admin/report-preview/page.tsx"
+     ],
+     "schema": "report-tree.schema.json nodes (field, label, value, status, confidence, provenance, disclosures[]); root slots[]; image node; checked object",
+     "fields": "ViewNode fields as declared in report-v2.decl.json; image node items {scenario, asset_id, alt, caption}",
+     "commit": "c33f4d01a feat(126_maxbld_surface_standard): MF-14 the one REPORT renderer; 8c5888247 feat(126_maxbld_surface_standard): MF-62 \"What we checked\"; 1ce0463d7 feat(126_maxbld_surface_standard): MF-38 report images, single image per option",
+     "mf": "MF-14, MF-38, MF-62, MF-20",
+     "tests": [
+      "src/tests/surfaces/report-view.ui.test.tsx",
+      "src/tests/surfaces/report-checked.logic.test.ts",
+      "src/tests/surfaces/ad-slot.golden.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "MIXED (Item and Block use text-gray-*; Picture caption and Checked use report-* keys)"
+    },
+    {
+     "id": "F-SUMMARY",
+     "name": "Options-at-a-glance summary (FE-41): heading + one linked item per option (label, title, Max build, value, unit)",
+     "renders": [
+      "SUM",
+      "R+1"
+     ],
+     "files": [
+      "src/components/report/ReportPage.tsx",
+      "mobile/src/components/surfaces/ReportBinding.tsx",
+      "scripts/surfaces/_schema/report-page.json"
+     ],
+     "schema": "report-page.json section summary: parts heading (content summary.heading), item.label/title/value/unit as `ref` parts to the option own parts; item.max content summary.max; ne = summary.not_evaluated",
+     "fields": "o1 size.value <- gfa_pitched_m2; o2 size.value <- gfa_flat_m2; o3 size.value <- gfa_max_m2 (by ref); label and title refs (both pending, see B1 and B2)",
+     "commit": "3072029dc feat(126_maxbld_surface_standard): MF-83 group 1, the summary section and See details as a sheet",
+     "mf": "MF-83 group 1 (FE-41)",
+     "tests": [
+      "src/tests/surfaces/report-page.logic.test.ts",
+      "src/tests/surfaces/report-page.ui.test.tsx"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "DAYLIGHT"
+    },
+    {
+     "id": "F-LOTVIEW",
+     "name": "Lot view panel \"From above\" (drawing part, server-built 0..1000 frame) + eligibility rule + one-lot reader",
+     "renders": [
+      "VIEW-A",
+      "R+18"
+     ],
+     "files": [
+      "src/components/report/ReportPage.tsx",
+      "mobile/src/components/surfaces/ReportBinding.tsx",
+      "src/lib/surfaces/report/core.ts",
+      "src/lib/parcels/lot-view-rule.ts",
+      "src/lib/parcels/lot-view.ts",
+      "migrations/325_lot_view_settings.sql"
+     ],
+     "schema": "report-page.json drawing{frame, states, classes} and parts lotview.above/note/caption; four closed states (drawn, outline_shape, outline_edges, outline_unevaluated); settings lotview_* (seed + migration 325)",
+     "fields": "parcel_lot_view outline, edge classes, rectangularity (stored by MB-109, not yet served); drawing.outline/edges/envelope/footprint as sent",
+     "commit": "f99faa74d feat(126_maxbld_surface_standard): MF-83 group 2, the lot-view panel (From above); 5416768ec feat(126_maxbld_surface_standard): MF-83 group 3 TS side: the lot-view eligibility rule and the fail-closed one-lot reader",
+     "mf": "MF-83 groups 2 and 3 (FE-42)",
+     "tests": [
+      "src/tests/surfaces/report-page.ui.test.tsx",
+      "src/tests/parcel-lot-view.logic.test.ts",
+      "mobile/__tests__/reportPage.behaviour.test.tsx"
+     ],
+     "state": "PARTLY: drawing component, rule and reader are ON ORIGIN; the reader is not wired into any response and the table parcel_lot_view is the pipeline task MB-109 (absent)",
+     "daylight": "DAYLIGHT"
+    },
+    {
+     "id": "F-DETAILS-SHEET",
+     "name": "See details as a sheet with its own address (FE-43): Detail dialog, PanelLink, Back; layout key details_view",
+     "renders": [
+      "B9",
+      "B10",
+      "B13",
+      "R+4"
+     ],
+     "files": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportPageToggles.tsx",
+      "scripts/surfaces/_schema/report-layout.json",
+      "mobile/src/components/surfaces/ReportPageHost.tsx"
+     ],
+     "schema": "report-layout.json closed.details_view [inline, sheet]; mobile and web rows sheet, admin and pdf rows inline",
+     "fields": "none (layout key)",
+     "commit": "498d9bd88 MF-83 group 1a; 3072029dc feat(126_maxbld_surface_standard): MF-83 group 1, the summary section and See details as a sheet",
+     "mf": "MF-83 group 1 (FE-43)",
+     "tests": [
+      "src/tests/surfaces/report-page.ui.test.tsx",
+      "mobile/__tests__/reportPage.behaviour.test.tsx"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "DAYLIGHT"
+    },
+    {
+     "id": "F-IMAGES",
+     "name": "Report image selection and the option picture (one image per option; no gallery)",
+     "renders": [
+      "PIC",
+      "B4"
+     ],
+     "files": [
+      "src/lib/surfaces/report-images/select.ts",
+      "scripts/surfaces/_schema/report-images.json",
+      "src/components/report/ReportView.tsx",
+      "src/components/report/ReportPage.tsx",
+      "src/lib/surfaces/report/core.ts"
+     ],
+     "schema": "report-images.json (selectors storeys > corner > frontage band; bands narrow/standard/wide from settings); report-tree image node",
+     "fields": "catalogue:storeys_max, parcels:is_corner_lot, parcels:frontage_m (selector members); image item {scenario, asset_id, alt, caption}",
+     "commit": "1ce0463d7 feat(126_maxbld_surface_standard): MF-38 report images, single image per option",
+     "mf": "MF-38",
+     "tests": [
+      "src/tests/surfaces/report-image-select.logic.test.ts"
+     ],
+     "state": "PARTLY: selection logic and figure are ON ORIGIN; \"Not wired yet\" (the server read of media sets is deferred, default images only); no image asset is drawn",
+     "daylight": "DAYLIGHT (figure fills the Daylight picture box)"
+    },
+    {
+     "id": "F-ADSLOT",
+     "name": "Ad slot (R-17 disclosure, R-34 outside the card): root slots[], ad section, per-scenario slot key",
+     "renders": [
+      "D1"
+     ],
+     "files": [
+      "scripts/surfaces/_schema/ad-contract.json",
+      "src/lib/surfaces/report/core.ts",
+      "src/components/report/ReportView.tsx",
+      "src/components/report/ReportPage.tsx"
+     ],
+     "schema": "ad-contract.json (slot ids, Sponsored label); page section ad_o2 bound to field ad_scenario_detached_house_flat_or_shallow_roof",
+     "fields": "ad_scenario_detached_house_flat_or_shallow_roof (field of the ad section); offers[] served by MF-61 (not built)",
+     "commit": "7b152d7e1 feat(126_maxbld_surface_standard): MF-20 ad slots: the ad contract",
+     "mf": "MF-20 (renderer), MF-40 (admin placements; DONE), MF-61 (serving; WAITS)",
+     "tests": [
+      "src/tests/surfaces/ad-slot.golden.test.ts",
+      "src/tests/surfaces/ad-targeting-keys.logic.test.ts"
+     ],
+     "state": "PARTLY: slot and flat-roof section built; no live offers served; no houseplex slot",
+     "daylight": "DAYLIGHT (ReportPage aside) / MIXED in ReportView Slot"
+    },
+    {
+     "id": "F-CHECKED",
+     "name": "What we checked (loading state): checked tree, paced lines, Skip, ready line",
+     "renders": [
+      "R+5",
+      "G.2",
+      "G.3",
+      "G.4"
+     ],
+     "files": [
+      "src/lib/surfaces/report/core.ts",
+      "src/components/report/ReportView.tsx",
+      "src/lib/parcels/report-check-pace.ts"
+     ],
+     "schema": "loading response checked{summary, groups[{key, lines[]}], dates, skip, ready}; layout details collapsed rows are paced",
+     "fields": "server-formatted check lines (FE-05); settings report_check_min_ms, skip_after",
+     "commit": "8c5888247 feat(126_maxbld_surface_standard): MF-62 \"What we checked\"",
+     "mf": "MF-62",
+     "tests": [
+      "src/tests/surfaces/report-checked.logic.test.ts",
+      "src/tests/report-checked-producer.logic.test.ts"
+     ],
+     "state": "PARTLY: web and admin renderer built; the mobile binding maps lifecycle loading to its approved text only (no checked lines in ReportBinding)",
+     "daylight": "DAYLIGHT keys (report-page bg, report-muted)"
+    },
+    {
+     "id": "F-LOTSIZE",
+     "name": "Add lot size: box C1, after-entry line C2, sheet H0 (width + depth, ft/m), POST /api/parcels/lot-size, FORM descriptors",
+     "renders": [
+      "C1",
+      "C2",
+      "H0"
+     ],
+     "files": [
+      "src/lib/parcels/lot-size-entry.ts",
+      "src/app/api/parcels/lot-size/route.ts",
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry.descriptor.json",
+      "scripts/surfaces/parcel_product/F02/surfaces/report_lot_size_entry_area.descriptor.json",
+      "src/components/report/ReportPage.tsx"
+     ],
+     "schema": "lot-size-entry-contract.json; page flags lot_size_entry_open, lot_size_entered, lot_size_entry_used; migration 324 parcel_user_inputs width_m, depth_m",
+     "fields": "lot_size_sqm, lot_size_entry, lot_size_entered_at, width_m, depth_m (typed_width, typed_depth)",
+     "commit": "c2f4bc3fc feat(126_maxbld_surface_standard): MF-19 Add lot size with the entry switch OFF (v3: 08c3cc0c9 width and depth)",
+     "mf": "MF-19",
+     "tests": [
+      "src/tests/parcels-lot-size-route.infra.test.ts",
+      "src/tests/surfaces/user-entry-precedence.logic.test.ts",
+      "src/tests/surfaces/user-input-provenance.logic.test.ts"
+     ],
+     "state": "ON ORIGIN, entry switch OFF (queue Status BUILT: the 324 DB job and the push are the next steps)",
+     "daylight": "DAYLIGHT"
+    },
+    {
+     "id": "F-PREVIEW",
+     "name": "Admin report preview (/admin/report-preview) + internal preview producer (stored rows -> v21 page payload)",
+     "renders": [
+      "serves the page elements on admin only: B6, B9.1-B9.3, B9.11, B9.19, F5-F7, R+15"
+     ],
+     "files": [
+      "src/app/admin/report-preview/page.tsx",
+      "src/lib/admin/report-preview-live/project.ts",
+      "src/lib/admin/report-preview-live/format.ts",
+      "src/lib/admin/report-preview-live/stored-page.ts",
+      "src/app/admin/report-preview/goldens.ts"
+     ],
+     "schema": "report-page.json page payload {page, values, hidden, not_evaluated}",
+     "fields": "one lot stored Layer 2/3 rows (gfa_*, storeys_max, footprint_max_m2, units_max, confidence parts, heritage, ravine, corner)",
+     "commit": "7833f5a95 feat(126_maxbld_surface_standard): MB-93 internal preview producer; cb059835b feat(126_maxbld_surface_standard): MF-85 K2 report honesty, code part",
+     "mf": "MB-93, MF-14 (T-3), MF-85 K2; MF-73 (wiring) LATER",
+     "tests": [
+      "src/tests/admin-report-preview-live.logic.test.ts",
+      "src/tests/report-preview.ui.test.tsx",
+      "src/tests/report-preview-guard.security.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings) (admin only)",
+     "daylight": "MIXED (page renders ReportView, which mixes gray and report-* keys)"
+    },
+    {
+     "id": "F-DAYLIGHT",
+     "name": "Daylight B tokens: named report-* keys on web (globals.css) and mobile (tailwind.config.js) + contrast test",
+     "renders": [
+      "all report elements (colours)"
+     ],
+     "files": [
+      "src/app/globals.css",
+      "mobile/tailwind.config.js",
+      "mobile/src/constants/reportPage.ts",
+      "src/tests/surfaces/report-colours.logic.test.ts"
+     ],
+     "schema": "the named report-* colour keys (values only, light only)",
+     "fields": "none",
+     "commit": "37fc398a5 MF-83 group 1b, the report colours take the Daylight B values",
+     "mf": "MF-83 group 1b (D-1)",
+     "tests": [
+      "src/tests/surfaces/report-colours.logic.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "DAYLIGHT"
+    },
+    {
+     "id": "F-LOOKUP",
+     "name": "Lookup route page hand-off: /api/parcels/lookup returns parcel payload + `page` view + meter; web report route",
+     "renders": [
+      "R+6 (miss, error states)",
+      "G.1",
+      "G.5",
+      "G.6"
+     ],
+     "files": [
+      "src/app/api/parcels/lookup/route.ts",
+      "src/app/api/parcels/lookup/types.ts",
+      "src/lib/parcels/consumer-lookup.ts",
+      "src/lib/parcels/report-page.ts",
+      "src/app/(maxbld)/parcel-tool/[parcelId]/page.tsx",
+      "src/lib/surfaces/maxbld-web.ts"
+     ],
+     "schema": "ConsumerResponse (strict zod) incl. costMenu, neighbourhood, map, lot_form, page",
+     "fields": "costMenu (old engine, lot-level), neighbourhood, page (null until MB-44), map (multi_parcel/unlinked)",
+     "commit": "628654586 feat(100_mobile_parcel_cost_tool): P23 standalone mobile Parcel Cost Tool; 6d438846e feat(126_maxbld_surface_standard): MF-48 Stage B with MF-74; 82a5e2528 feat(126_maxbld_surface_standard): MF-44 the MaxBLD web pages on synthetic goldens",
+     "mf": "MF-48 Stage B, MF-44, MF-45",
+     "tests": [
+      "src/tests/parcels-lookup-page.logic.test.ts",
+      "src/tests/maxbld-web-pages.logic.test.ts",
+      "src/tests/parcel-lookup-resolution.logic.test.ts"
+     ],
+     "state": "PARTLY: route, whitelist and meter ON ORIGIN; page = null for every customer lot; web report route answers not found while MAXBLD_WEB_LIVE is false",
+     "daylight": "n/a"
+    }
+   ],
+   "mf_ready": [
+    {
+     "row": "MF-19",
+     "title": "Add lot size (width and depth, ft/m, entry switch OFF)",
+     "status": "BUILT",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:177 \"Status: BUILT · since 2026-11-15 · expires 2026-11-22 · next: the 324 DB job\"",
+     "elements": [
+      "C1",
+      "C2",
+      "H0"
+     ],
+     "branch": "ON ORIGIN 08c3cc0c9 (v3), c2f4bc3fc (v1); local wf1/mf19-v3 is a pre-rebase copy; waits the 324 DB job typed GO then the push",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [
+       "6c.22 only corrects the board line"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:5765 \"Board vs reality 4: MF-47 (TASK-2), MF-83 (TASK-4), MF-19 (TASK-162)\""
+      ]
+     }
+    },
+    {
+     "row": "MF-83",
+     "title": "Report Daylight B layout (summary, See-details sheets, lot view, Daylight tokens)",
+     "status": "BUILT",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:581 \"Status: BUILT · since 2026-11-15 · expires 2026-11-22 · next: G1 #3\"",
+     "elements": [
+      "SUM",
+      "VIEW-A",
+      "R+1",
+      "R+4",
+      "R+18"
+     ],
+     "branch": "ON ORIGIN 3072029dc, 37fc398a5, f99faa74d, 8d48be5c0, 5416768ec (group 3); local mf83-daylight and wf1/mf83-g3 are pre-rebase copies; waits the MF83-325 DB job then the push",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "6c.36",
+       "L.12 (drawing builder and wiring, the part MF-83 left to MB-44)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:6759 \"Land MF-83 colour-entry condition on the done-condition\"",
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:13981 \"Lot-view display (conditional on L.2 lot views live)\""
+      ]
+     }
+    },
+    {
+     "row": "MF-85",
+     "title": "Report honesty, data-only part (settings note, unit-size basis, heritage/ravine/corner/confidence on preview)",
+     "status": "RUNNING",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:606 \"Status: RUNNING · since 2026-11-13 · expires 2026-11-22 · next: G1 #5\"",
+     "elements": [
+      "R+14",
+      "R+15",
+      "B9 (notes)",
+      "F5",
+      "F6",
+      "F7"
+     ],
+     "branch": "K2 code part ON ORIGIN cb059835b; laneway scenario card and cost line moved into See details are the next step",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "L.13 (MB-98 merged into MF-85: reason display)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:14002 \"Gated-lot and not-evaluated reason display (MB-98 merged into MF-85)\""
+      ]
+     }
+    },
+    {
+     "row": "MF-61",
+     "title": "Serve live offers into reports; houseplex slot key",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:459 \"Status: WAITS · since 2026-11-11 · expires when the MF-40 DB job runs\"",
+     "elements": [
+      "D1",
+      "D2"
+     ],
+     "branch": "none (not started); waits the MF-40 DB job after MB-86",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-71",
+     "title": "Did the neighbours build bigger? server counts per scenario",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:572 \"Status: WAITS · since 2026-11-12 · expires when MB-94 (e) lands\"",
+     "elements": [
+      "B14",
+      "B15",
+      "B16"
+     ],
+     "branch": "none (not started); waits MB-94 (e)",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "7.2a (reach settings migration; the counts display itself has no task)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:8699 \"Write the MB-94(d) reach-settings migration\""
+      ]
+     }
+    },
+    {
+     "row": "MF-73",
+     "title": "Admin preview wiring over the MB-93 producer",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:705 \"Status: WAITS · since 2026-11-13 · expires 2026-11-20 · next: G1 #7b\"",
+     "elements": [],
+     "branch": "preview page and producer ON ORIGIN (e53cb5e11, 7833f5a95); the wiring waits MB-94 (c)",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-55",
+     "title": "Favourite option heart on the option picture",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:412 \"Status: WAITS · since 2026-11-10 · expires when MF-51 lands\"",
+     "elements": [
+      "R+11"
+     ],
+     "branch": "none; waits MF-51",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-56",
+     "title": "Report share link (public, read-only)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:419 \"Status: WAITS · since 2026-11-10 · expires when the first users are live\"",
+     "elements": [
+      "R+12"
+     ],
+     "branch": "none; moved to after the first users",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-51",
+     "title": "Tracked Lots and CoA alerts (tracked-lots table and API)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:373 \"Status: WAITS · since 2026-11-11 · expires when MF-49 ships · next: Plan then build\"",
+     "elements": [
+      "R+17 (tab bar built; table not built)"
+     ],
+     "branch": "none; the tracked screen shows example rows",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "LS.4 (v1), LS.5 (MF-59 alerts)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:121 \"MF-51 v1 tracked lots: list, API, track toggle\""
+      ]
+     }
+    },
+    {
+     "row": "MF-12",
+     "title": "Goldens: the 13 owed states (52 files)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:98 \"Status: WAITS · since 2026-11-11 · expires when MF-83 lands\"",
+     "elements": [],
+     "branch": "none",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    }
+   ]
+  },
+  "3": {
+   "summary": "The houseplex card o3 exists with the Max build tile, the Size per Unit tile and rows bound to gfa_max_m2, unit_area_m2, unit_count, houseplex_bedrooms and units_flat. Basement, roof, pitched roofs, height, cost and CoA parts are pending text. No Most space tag part and no neighbour block on o3.",
+   "counts": {
+    "BUILT": 13,
+    "BUILT-NO-DATA": 19,
+    "NOT BUILT": 5
+   },
+   "built_components": 1,
+   "components": [
+    {
+     "id": "F-HOUSEPLEX",
+     "name": "Houseplex option section o3 (detached_houseplex): Size per Unit tile, unit rows, basement/bedroom/roof rows, unit-size basis line",
+     "renders": [
+      "B8",
+      "B9.1",
+      "B9.2",
+      "B9.4",
+      "B9.5",
+      "B9.7",
+      "B9.9",
+      "R+19"
+     ],
+     "files": [
+      "scripts/surfaces/_schema/report-page.json",
+      "src/components/report/ReportPage.tsx",
+      "scripts/surfaces/_schema/report-presentation.json"
+     ],
+     "schema": "report-page.json section o3 (scenario detached_houseplex)",
+     "fields": "gfa_max_m2, unit_area_m2, unit_count, houseplex_bedrooms, units_flat, storeys_max, permitted (rows pending: basement, roof, units_pitched, height)",
+     "commit": "def519325 feat(126_maxbld_surface_standard): MF-57 the report page in the approved v21 layout (section); cb059835b feat(126_maxbld_surface_standard): MF-85 K2 report honesty, code part (basis line)",
+     "mf": "MF-57, MF-85",
+     "tests": [
+      "src/tests/surfaces/report-page.logic.test.ts",
+      "src/tests/surfaces/report-honest.logic.test.ts"
+     ],
+     "state": "PARTLY: tiles and rows bound to declared fields; basement, roof, pitched-roof, height, cost and CoA parts pending",
+     "daylight": "DAYLIGHT"
+    }
+   ],
+   "mf_ready": [
+    {
+     "row": "MF-61",
+     "title": "Houseplex ad slot key",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:459 \"Status: WAITS · since 2026-11-11 · expires when the MF-40 DB job runs\"",
+     "elements": [
+      "D2"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-71",
+     "title": "Houseplex neighbour counts (2 Unit / 3+ Unit)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:572 \"Status: WAITS · since 2026-11-12 · expires when MB-94 (e) lands\"",
+     "elements": [
+      "R+20"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "7.2a (settings only)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:8699 \"Write the MB-94(d) reach-settings migration\""
+      ]
+     }
+    }
+   ]
+  },
+  "4": {
+   "summary": "Nothing is built for the secondary-suite card: report-page.json has no section for it.",
+   "counts": {
+    "BUILT": 0,
+    "BUILT-NO-DATA": 0,
+    "NOT BUILT": 18
+   },
+   "built_components": 0,
+   "components": [],
+   "mf_ready": [
+    {
+     "row": "MF-71",
+     "title": "Secondary-suite neighbour counts (description rule)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:572 \"Status: WAITS · since 2026-11-12 · expires when MB-94 (e) lands\"",
+     "elements": [
+      "SS.8",
+      "SS.9"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "7.2a (settings only)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:8699 \"Write the MB-94(d) reach-settings migration\""
+      ]
+     }
+    }
+   ]
+  },
+  "5": {
+   "summary": "Nothing is built for the garden-suite or rear-suite cards: report-page.json has no section for them.",
+   "counts": {
+    "BUILT": 0,
+    "BUILT-NO-DATA": 0,
+    "NOT BUILT": 36
+   },
+   "built_components": 0,
+   "components": [],
+   "mf_ready": [
+    {
+     "row": "MF-71",
+     "title": "Rear-suite neighbour counts (rear_suite_type)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:572 \"Status: WAITS · since 2026-11-12 · expires when MB-94 (e) lands\"",
+     "elements": [
+      "RS-H.8",
+      "RS-H.9",
+      "RS-P.8",
+      "RS-P.9"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "7.2a (settings only)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:8699 \"Write the MB-94(d) reach-settings migration\""
+      ]
+     }
+    }
+   ]
+  },
+  "6": {
+   "summary": "Nothing is built for the renovation cards: report-page.json has no section for them (plan task R6-CARD is held).",
+   "counts": {
+    "BUILT": 0,
+    "BUILT-NO-DATA": 0,
+    "NOT BUILT": 53
+   },
+   "built_components": 0,
+   "components": [],
+   "mf_ready": []
+  },
+  "7": {
+   "summary": "The semi question page (R+26) is built on mobile; the semi renovation cards, the wall-distance input, and the semi-half disclosure are not built.",
+   "counts": {
+    "BUILT": 1,
+    "BUILT-NO-DATA": 0,
+    "NOT BUILT": 4
+   },
+   "built_components": 1,
+   "components": [
+    {
+     "id": "F-SEMI",
+     "name": "Semi question page (S-093): one-question LIST binding, lot-form read, route param carry",
+     "renders": [
+      "D.1",
+      "D.2",
+      "D.3",
+      "D.4",
+      "D.5",
+      "D.6",
+      "D.7",
+      "D.8",
+      "D.11",
+      "R+26"
+     ],
+     "files": [
+      "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+      "mobile/app/(app)/parcel-tool/semi-question.tsx",
+      "src/lib/parcels/lot-form.ts",
+      "mobile/src/lib/semiQuestion.ts",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json",
+      "migrations/320_parcel_lot_form_view.sql"
+     ],
+     "schema": "ConsumerLotForm {detected, basis, unsure} from view parcel_lot_form; mobile_parcel_semi_question content.json",
+     "fields": "parcel_lot_form.lot_form_detected, lot_form_basis, unsure; answer (yes | no | not_sure) carried as a route param (no server store)",
+     "commit": "cfb4dffee feat(78_optimal_lot_configuration): SEMI-B the Spec 78 O-4 semi detector and the one-question page",
+     "mf": "MF-84 (queue Status WAITS: SEMI-323 dev run, then push)",
+     "tests": [
+      "mobile/__tests__/semiQuestionPage.behaviour.test.tsx",
+      "mobile/__tests__/semiQuestionScreens.golden.test.ts",
+      "src/tests/parcel-lot-form.logic.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "OLD DARK v21 (reuses the MF-53 lotMap.ts class table)"
+    }
+   ],
+   "mf_ready": [
+    {
+     "row": "MF-84",
+     "title": "Semi question page (R+26)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:595 \"Status: WAITS · since 2026-11-15 · expires 2026-11-22 · next: G1 #4b\"",
+     "elements": [
+      "R+26"
+     ],
+     "branch": "as group S",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-89",
+     "title": "Semi wall-distance input, override control, assumption line",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:645 \"Status: WAITS · since 2026-11-15 · expires when D-78 lands · next: Author the declared page rows\"",
+     "elements": [
+      "R+28"
+     ],
+     "branch": "none; a ship precondition of increment 7",
+     "plan": {
+      "state": "OVERLAP",
+      "tasks": [
+       "7.25 (S6-PAGE: binds the wall-distance assumption lines)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:8757 \"S6-PAGE: register the semi display words in the shared text registry\""
+      ]
+     }
+    },
+    {
+     "row": "MF-90",
+     "title": "Semi-half disclosure line (second half of MF-90)",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:650 \"Status: WAITS · since 2026-11-15 · expires when D-78 lands · next: Author the display words\"",
+     "elements": [
+      "R+29"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "8.15 (the semi-half line is inside it)"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:11177 \"Sixplex route display words (MF-90 first half)\""
+      ]
+     }
+    }
+   ]
+  },
+  "8": {
+   "summary": "Nothing is built for the sixplex route badge, the CoA-only card or the off-overlay wording (MF-88 and MF-90 wait for the increment 8 build).",
+   "counts": {
+    "BUILT": 0,
+    "BUILT-NO-DATA": 0,
+    "NOT BUILT": 3
+   },
+   "built_components": 0,
+   "components": [],
+   "mf_ready": [
+    {
+     "row": "MF-88",
+     "title": "Route badge CoA approval only",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:636 \"Status: WAITS · since 2026-11-15 · expires when increment 8 stores the route field\"",
+     "elements": [
+      "R+31"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "8.35"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:11196 \"Sixplex route badge (MF-88)\""
+      ]
+     }
+    },
+    {
+     "row": "MF-90",
+     "title": "Sixplex route display words",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:650 \"Status: WAITS · since 2026-11-15 · expires when D-78 lands · next: Author the display words\"",
+     "elements": [
+      "R+33"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "8.34"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:11177 \"Sixplex route display words (MF-90 first half)\""
+      ]
+     }
+    }
+   ]
+  },
+  "S": {
+   "summary": "The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.",
+   "counts": {
+    "BUILT": 42,
+    "BUILT-NO-DATA": 7,
+    "NOT BUILT": 16
+   },
+   "built_components": 7,
+   "components": [
+    {
+     "id": "F-SEARCH-MOBILE",
+     "name": "Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic",
+     "renders": [
+      "A.1",
+      "A.2",
+      "A.7",
+      "A.8",
+      "A.9",
+      "A.10",
+      "A.11 (not built)",
+      "A.13",
+      "B.1",
+      "B.2",
+      "B.7",
+      "B.9",
+      "G.1"
+     ],
+     "files": [
+      "mobile/src/components/surfaces/SearchBinding.tsx",
+      "mobile/app/(app)/parcel-tool/index.tsx",
+      "mobile/src/constants/parcelSearch.ts",
+      "mobile/src/lib/parcelSearchMatch.ts",
+      "mobile/src/lib/parcelSearchCore.ts",
+      "mobile/src/store/recentSearchesStore.ts",
+      "mobile/src/hooks/useParcelLookup.ts",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json"
+     ],
+     "schema": "mobile_parcel_search descriptor + content.json (search.*, list.*); contract_parcels_lookup (candidates, resolution)",
+     "fields": "candidates[].parcelId, candidates[].address; resolution (unique | text_candidates | multi_parcel | unlinked | no_match); config debounce_ms 400, min_query_len 3, recent max 3",
+     "commit": "b51bdead0 feat(126_maxbld_surface_standard): MF-35 conversion of mobile_parcel_search; a06339879 feat(126_maxbld_surface_standard): MF-58 the legal line on the mobile search page; 6b47e871c feat(126_maxbld_surface_standard): MF-46 follow-up, Help & Support contact",
+     "mf": "MF-35, MF-58, MF-46 (follow-up)",
+     "tests": [
+      "mobile/__tests__/parcelSearchScreen.behaviour.test.tsx",
+      "mobile/__tests__/parcelSearchMatch.test.ts",
+      "mobile/__tests__/recentSearchesStore.test.ts",
+      "src/tests/surfaces/search-parity.golden.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device",
+     "daylight": "OLD DARK v21 (screenBg bg-[#0e0e10], searchSurface bg-[#18181b])"
+    },
+    {
+     "id": "F-SEARCH-WEB",
+     "name": "Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch",
+     "renders": [
+      "E.1",
+      "E.5",
+      "A.10"
+     ],
+     "files": [
+      "src/components/surfaces/web/SearchBinding.tsx",
+      "src/app/(maxbld)/parcel-tool/SearchPageClient.tsx",
+      "src/app/(maxbld)/parcel-tool/[parcelId]/page.tsx",
+      "src/lib/surfaces/maxbld-web.ts",
+      "src/app/(maxbld)/parcel-tool/page.tsx"
+     ],
+     "schema": "same mobile_parcel_search content.json; WebSituation",
+     "fields": "candidates[].parcelId, address; recent[]",
+     "commit": "82a5e2528 feat(126_maxbld_surface_standard): MF-44 the MaxBLD web pages on synthetic goldens",
+     "mf": "MF-44",
+     "tests": [
+      "src/tests/surfaces/search-web-binding.ui.test.tsx",
+      "src/tests/maxbld-web-pages.logic.test.ts"
+     ],
+     "state": "PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false",
+     "daylight": "OLD DARK v21 (screen bg-zinc-950, cards bg-zinc-900)"
+    },
+    {
+     "id": "F-LOTMAP",
+     "name": "Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states",
+     "renders": [
+      "B.4",
+      "B.5",
+      "B.6",
+      "B.8",
+      "C.2",
+      "C.3",
+      "C.4",
+      "C.6",
+      "C.8",
+      "C.9",
+      "C.10",
+      "C.11",
+      "C.13",
+      "C.14"
+     ],
+     "files": [
+      "mobile/src/components/surfaces/LotMapBinding.tsx",
+      "mobile/src/lib/lotMap.ts",
+      "mobile/app/(app)/parcel-tool/disambiguate.tsx",
+      "mobile/src/constants/lotMap.ts",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json",
+      "src/app/api/parcels/lookup/types.ts",
+      "src/lib/admin/parcel-lookup.ts"
+     ],
+     "schema": "ConsumerLotMapSchema {address, pin, fit, truncated, lots[], neighbours[]}; mobile_parcel_disambiguation_map content.json",
+     "fields": "lots[].parcelId, area (parcels.lot_size_sqm), frontage (parcels.frontage_m), zoning (parcels.zoning_zn_string), centroid (parcels.centroid_lat/lng), outline (parcels.geom); pin (address_points.latitude/longitude); fit; neighbours[].outline",
+     "commit": "3655da71d feat(126_maxbld_surface_standard): MF-53 the choose-your-lot map page",
+     "mf": "MF-53",
+     "tests": [
+      "mobile/__tests__/lotMapPage.behaviour.test.tsx",
+      "mobile/__tests__/lotMapScreens.golden.test.ts",
+      "src/tests/parcel-lookup-resolution.logic.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE",
+     "daylight": "OLD DARK v21 (pill bg-[#18181b], amber #f59e0b)"
+    },
+    {
+     "id": "F-LOOKUP-RESOLVER",
+     "name": "Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification",
+     "renders": [
+      "A.3",
+      "A.4 (not built)",
+      "C.14",
+      "B.5",
+      "B.6"
+     ],
+     "files": [
+      "src/lib/admin/parcel-lookup.ts",
+      "src/lib/parcels/consumer-lookup.ts",
+      "src/app/api/parcels/lookup/route.ts"
+     ],
+     "schema": "Resolution {match, candidates, resolution, lotMap}",
+     "fields": "parcels.addr_num_normalized, parcels.street_name_normalized, address_points.linear_name_normalized, address_points.address_full, parcel_address_points",
+     "commit": "628654586 feat(100_mobile_parcel_cost_tool): P23 standalone mobile Parcel Cost Tool; 3655da71d feat(126_maxbld_surface_standard): MF-53 the choose-your-lot map page (classification)",
+     "mf": "Spec 89 / Spec 100 P23, MF-53; MF-63 (caps as settings) WAITS",
+     "tests": [
+      "src/tests/parcel-lookup-resolution.logic.test.ts",
+      "src/tests/parcel-lookup.infra.test.ts",
+      "src/tests/parcel-lookup-gate.infra.test.ts"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "n/a"
+    },
+    {
+     "id": "F-SHELL",
+     "name": "Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows)",
+     "renders": [
+      "A.12"
+     ],
+     "files": [
+      "mobile/src/components/parcel/ParcelShelf.tsx",
+      "mobile/app/(app)/parcel-tool/tracked.tsx",
+      "mobile/app/(app)/parcel-tool/account.tsx",
+      "mobile/app/(app)/parcel-tool/_layout.tsx"
+     ],
+     "schema": "S-004 shell_parcel_tool_stack; S-072 mobile_tracked_lots",
+     "fields": "none bound (tracked screen shows example rows per queue MF-51)",
+     "commit": "4c8f30e30 feat(126_maxbld_surface_standard): MaxBLD product surfaces S-002, S-004, S-072",
+     "mf": "S-004, S-072; MF-51/MF-52 not built",
+     "tests": [
+      "src/tests/surfaces/parcel-tool-fence.infra.test.ts"
+     ],
+     "state": "PARTLY: shelf built; tracked and account are stubs",
+     "daylight": "not assessed (not a report or search component)"
+    },
+    {
+     "id": "F-LANDING",
+     "name": "MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target",
+     "renders": [
+      "F.1",
+      "F.2",
+      "F.3",
+      "F.4",
+      "F.5"
+     ],
+     "files": [
+      "scripts/surfaces/parcel_product/F06/surfaces/web_landing.descriptor.json",
+      "scripts/surfaces/parcel_product/F06/surfaces/web_landing.content.json",
+      "src/lib/auth/maxbld-after-sign-in.ts"
+     ],
+     "schema": "web_landing static page contract + content.json",
+     "fields": "content only",
+     "commit": "4501903ea feat(126_maxbld_surface_standard): MF-76 the MaxBLD landing",
+     "mf": "MF-76 (queue Status DONE)",
+     "tests": [
+      "src/tests/surfaces/web-landing.logic.test.ts",
+      "src/tests/surfaces/web-landing.ui.test.tsx"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "not assessed (no report-* keys; web-theme.json amber primary)"
+    },
+    {
+     "id": "F-ADMIN-LOOKUP",
+     "name": "Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search)",
+     "renders": [
+      "admin search over the same resolver (no designed element)"
+     ],
+     "files": [
+      "src/app/admin/parcel-cost/page.tsx",
+      "src/components/admin/ParcelCostTool.tsx",
+      "mobile/src/components/feed/SearchPermitsSheet.tsx",
+      "src/lib/admin/parcel-lookup.ts"
+     ],
+     "schema": "Spec 89 admin lookup",
+     "fields": "same resolver keys as 1.01",
+     "commit": "4b1712fff feat(89_parcel_cost_model_tool): admin Parcel Cost Model Tool",
+     "mf": "Spec 89 (pre-MF)",
+     "tests": [
+      "src/tests/parcel-lookup.infra.test.ts",
+      "src/tests/search-permits-modal.ui.test.tsx"
+     ],
+     "state": "ON ORIGIN (origin/wf1/mb-rulings)",
+     "daylight": "not assessed (admin)"
+    }
+   ],
+   "mf_ready": [
+    {
+     "row": "MF-84",
+     "title": "Semi detector and the one-question page",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:595 \"Status: WAITS · since 2026-11-15 · expires 2026-11-22 · next: G1 #4b\"",
+     "elements": [
+      "D.1",
+      "D.2",
+      "D.3",
+      "D.4",
+      "D.5",
+      "D.6",
+      "D.7",
+      "D.8",
+      "D.11"
+     ],
+     "branch": "ON ORIGIN cfb4dffee (page), 38e7ff302 (SEMI-B2); local semi-o4-b2 and wf1/semi-1113 are pre-rebase copies; waits the SEMI-323 dev run then the push",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [
+       "7.21 (SEMI-326) is a different job"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:8458 \"DB job J1 SEMI-326: semi settings 9.0 m and 50 % only\""
+      ]
+     }
+    },
+    {
+     "row": "MF-60",
+     "title": "Intersection searches on the map page",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:452 \"Status: WAITS · since 2026-11-11 · expires when the first users launch\"",
+     "elements": [
+      "B.10"
+     ],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "LS.11"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:33 \"Search: MF-60 intersection searches stays LATER\""
+      ]
+     }
+    },
+    {
+     "row": "MF-63",
+     "title": "Lookup route caps as admin-editable settings",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:671 \"Status: WAITS · since 2026-11-11 · expires when the first users launch\"",
+     "elements": [
+      "A.3"
+     ],
+     "branch": "none; next: start: Plan and build",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    }
+   ]
+  },
+  "1-2": {
+   "summary": "No report elements of its own. Built or ready in this group: MF-47 checkout, MF-87, MF-52, MF-59 and similar launch rows are listed under McFrontend ready.",
+   "counts": {
+    "BUILT": 0,
+    "BUILT-NO-DATA": 0,
+    "NOT BUILT": 0
+   },
+   "built_components": 0,
+   "components": [],
+   "mf_ready": [
+    {
+     "row": "MF-47",
+     "title": "Web checkout (Stripe plans, portal, migration 322)",
+     "status": "BUILT",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:333 \"Status: BUILT · since 2026-11-14 · expires 2026-11-22\"",
+     "elements": [],
+     "branch": "ON ORIGIN 45b29ef42 (B1 checkout and portal); local mf47-checkout is a pre-rebase copy; waits the MF47-322 dev run and the owner-y push",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "LS.1",
+       "LS.8"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:62 \"MF-47 web checkout: branch built (migration 322 job built)\""
+      ]
+     }
+    },
+    {
+     "row": "MF-86",
+     "title": "Plans, success and cancel pages for checkout",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:615 \"Status: WAITS · since 2026-11-15 · expires when MF-47 is pushed\"",
+     "elements": [],
+     "branch": "none; ruled D-3 c",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-87",
+     "title": "Free-text admin setting card for Stripe price ids",
+     "status": "LATER",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:628 \"Status: LATER · since 2026-11-14 · expires when MF-47 is pushed\"",
+     "elements": [],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "LS.2"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:83 \"MF-87 admin card for the Stripe price ids and portal id\""
+      ]
+     }
+    },
+    {
+     "row": "MF-52",
+     "title": "MaxBLD Account page",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:384 \"Status: WAITS · since 2026-11-11 · expires 2026-11-18 · next: G1 #9\"",
+     "elements": [],
+     "branch": "none (account.tsx is a stub)",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "LS.3"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:101 \"MF-52 MaxBLD Account: profile, plan and reports used\""
+      ]
+     }
+    },
+    {
+     "row": "MF-59",
+     "title": "Tracked-lots CoA alert delivery",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:445 \"Status: WAITS · since 2026-11-11 · expires when MF-49 and MF-51 land\"",
+     "elements": [],
+     "branch": "none",
+     "plan": {
+      "state": "LINKED",
+      "tasks": [
+       "LS.5"
+      ],
+      "cites": [
+       "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:140 \"MF-59 tracked-lots CoA alert delivery\""
+      ]
+     }
+    },
+    {
+     "row": "MF-64",
+     "title": "Admin Control Panel write-time bounds check",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:679 \"Status: WAITS · since 2026-11-11 · expires when public launch happens\"",
+     "elements": [],
+     "branch": "none; next: start: Build",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    },
+    {
+     "row": "MF-68",
+     "title": "Admin Retry cancel shows the 409 message",
+     "status": "WAITS",
+     "status_cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:696 \"Status: WAITS · since 2026-11-12 · expires when the first users launch\"",
+     "elements": [],
+     "branch": "none; next: start: Build",
+     "plan": {
+      "state": "NOT IN PLAN",
+      "tasks": [],
+      "cites": []
+     }
+    }
+   ]
+  }
+ },
+ "elements": {
+  "1": {
+   "B0": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (Option article)",
+    "binding": "fixed layout",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportPage.tsx.txt:165 \"<article id={s.id} data-section=\""
+   },
+   "B1": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "(pending text only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:328 \"option_label: no field carries the position (FE-05 FLAG)\"",
+    "note": "pending parts: label"
+   },
+   "B2": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "(pending text only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:334 \"display_label: declared slot, values owed\"",
+    "note": "pending parts: title"
+   },
+   "B3": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "(pending text only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:874 \"open item 19 (\\\"",
+    "note": "pending parts: tag"
+   },
+   "B4": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-TREE (Picture, filled into the option picture)",
+    "binding": "illustrations[].asset_id / caption via the image node; B4 listed owed in report-page.json",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:43 \"picture and its caption: the reused MF-38 figure\"",
+    "note": "no signed URL yet: nothing drawn"
+   },
+   "B5": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:spec.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:386 \"spec.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:926 \"spec.label\""
+   },
+   "B6": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "gfa_pitched_m2 · content:tile.size.label · content:btn.see_details · gfa_flat_m2",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:391 \"gfa_pitched_m2\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:398 \"tile.size.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:430 \"disclosure_count: no report field declared (brief: undeclare\"",
+    "note": "pending parts: size.count"
+   },
+   "B7": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:tile.cost.label · content:btn.see_details",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:441 \"tile.cost.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:464 \"btn.see_details\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:436 \"MB-86 area_confidence not on origin\"",
+    "note": "pending parts: cost.badge, cost.sub, cost.value, cost.rate"
+   },
+   "B9": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:panel.size.h · content:panel.settings_note · permitted · content:panel.all_numbers · content:btn.hide_details",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:469 \"panel.size.h\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:474 \"panel.settings_note\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:480 \"notes_h: disclosure_count no report field declared (brief: u\"",
+    "note": "pending parts: size.panel.notes_h, size.panel.ver"
+   },
+   "B9.1": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.max_build_size · gfa_pitched_m2 · gfa_flat_m2",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:497 \"row.max_build_size\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:502 \"gfa_pitched_m2\""
+   },
+   "B9.2": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.storeys · storeys_max",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:509 \"row.storeys\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:514 \"storeys_max\""
+   },
+   "B9.3": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.height",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:521 \"row.height\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1061 \"row.height\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:527 \"len1 owed server rule; open item 3\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.11": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.footprint · footprint_max_m2",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:532 \"row.footprint\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:537 \"footprint_max_m2\""
+   },
+   "B9.12": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.coverage",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:544 \"row.coverage\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1084 \"row.coverage\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:550 \"pct0 FE-05 FLAG, no field; open item 5\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.13": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.fsi",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-presentation.json.txt:290 \"Floor space index\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:561 \"fsi2 FE-05 FLAG, no per-option field; open item 5\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.14": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.front_setback",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:566 \"row.front_setback\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1106 \"row.front_setback\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:572 \"len1 owed server rule; open item 3\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.15": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.rear_setback",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:577 \"row.rear_setback\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1117 \"row.rear_setback\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:583 \"no field; open item 5\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.16": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.side_setbacks",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:588 \"row.side_setbacks\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1128 \"row.side_setbacks\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:594 \"len1_each FE-05 FLAG, no field; open item 5\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.17": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.depth",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:599 \"row.depth\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1139 \"row.depth\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:605 \"len1 owed server rule; open item 3\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.18": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.main_wall",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:610 \"row.main_wall\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1150 \"row.main_wall\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:616 \"no field; open item 5\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.19": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.homes · units_max",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:621 \"row.homes\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:626 \"units_max\""
+   },
+   "B10": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:panel.cost.h · content:btn.hide_details",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:644 \"panel.cost.h\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:727 \"btn.hide_details\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:716 \"open item 24\"",
+    "note": "pending parts: cost.panel.note, cost.panel.ver"
+   },
+   "B10.1": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.cost_total",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:649 \"row.cost_total\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1189 \"row.cost_total\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:655 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.2": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.cost_rate",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:660 \"row.cost_rate\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1200 \"row.cost_rate\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:666 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.3": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.cost_area",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:671 \"row.cost_area\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1211 \"row.cost_area\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:677 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.4": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.cost_basis",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:682 \"row.cost_basis\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1222 \"row.cost_basis\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:688 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.5": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.cost_conf",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:693 \"row.cost_conf\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1233 \"row.cost_conf\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:699 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.6": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.cost_excl",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:704 \"row.cost_excl\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1244 \"row.cost_excl\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:710 \"open item 24 (not checked against the MB-86 scope)\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B11": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:var.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:732 \"var.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1272 \"var.label\""
+   },
+   "B12": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:q.bigger",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:737 \"q.bigger\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1277 \"q.bigger\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:743 \"coa_status / coa_gfa_sqm: no report field declared (brief: u\"",
+    "note": "pending parts: bigger.answer"
+   },
+   "B13": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:btn.how",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:748 \"bigger.how\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1288 \"bigger.how\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:754 \"open item 19 (How? steps; lawyer check owed)\"",
+    "note": "pending parts: bigger.how.steps"
+   },
+   "B14": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:q.neighbours",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:759 \"q.neighbours\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1299 \"q.neighbours\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:765 \"nbhd_coa counts: no report field declared (brief: undeclared\"",
+    "note": "pending parts: nbr.answer"
+   },
+   "B15": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "content:row.most_recent",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:770 \"row.most_recent\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:776 \"open item 19 (\\\"",
+    "note": "pending parts: nbr.swipe, nbr.projects"
+   },
+   "B16": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o1/o2)",
+    "binding": "(pending text only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1311 \"open item 14\"",
+    "note": "pending parts: nbr.pointer"
+   },
+   "SUM": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-SUMMARY",
+    "binding": "item.value ref size.value (gfa_pitched_m2 / gfa_flat_m2); item.label and item.title refs (pending); summary photo not built",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:215 \"summary.heading\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:403 \"gfa_pitched_m2\"",
+    "note": "smaller photo is not built (R+2)"
+   },
+   "PIC": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-IMAGES",
+    "binding": "selectors catalogue:storeys_max, parcels:is_corner_lot, parcels:frontage_m (is_irregular and is_through_lot are not selectors)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-images.json.txt:5 \"catalogue:storeys_max\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_surfaces_report-images_select.ts.txt:6 \"Not wired yet\"",
+    "note": "no image asset is drawn; irregular and through-lot variants not in report-images.json"
+   },
+   "GAL": {
+    "fe": "NOT BUILT",
+    "component": "F-IMAGES",
+    "binding": "one image per option; carousel dropped",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:39 \"No carousel, dots or swipe\""
+   },
+   "VIEW-A": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-LOTVIEW",
+    "binding": "drawing part lotview.above; stored parcel_lot_view not served",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:339 \"lotview.above.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_parcels_lot-view.ts.txt:5 \"NOT WIRED into any response\"",
+    "note": "the drawing builder and wiring are MB-44 (plan L.12)"
+   },
+   "VIEW-S": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no side-view part in any option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "A0": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (page frame)",
+    "binding": "fixed layout",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportPage.tsx.txt:374 \"<div data-report-page data-target=\""
+   },
+   "A1": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (title section)",
+    "binding": "content page.title",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:192 \"page.title\""
+   },
+   "A2": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (address section)",
+    "binding": "pending: no report field declared (match.address retired by MF-10)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:204 \"no report field declared (brief: undeclared): match.address \""
+   },
+   "C1": {
+    "fe": "BUILT",
+    "component": "F-LOTSIZE (lot_size section)",
+    "binding": "content ls.title/body/button; shown while flag lot_size_entry_open",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:796 \"ls.title\"",
+    "note": "entry switch OFF"
+   },
+   "C2": {
+    "fe": "BUILT",
+    "component": "F-LOTSIZE (lot_size_entered section)",
+    "binding": "field lot_size_entry; field lot_size_entered_at",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:824 \"lot_size_entry\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:836 \"lot_size_entered_at\"",
+    "note": "entry switch OFF"
+   },
+   "D1": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-ADSLOT (ad_o2)",
+    "binding": "ad section field ad_scenario_detached_house_flat_or_shallow_roof; live offers not served (MF-61 WAITS)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1318 \"ad_scenario_detached_house_flat_or_shallow_roof\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:459 \"Status: WAITS · since 2026-11-11 · expires when the MF-40 DB job runs\""
+   },
+   "D2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no houseplex ad section in report-page.json; slot key ad_scenario_detached_houseplex is owed by MF-61",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:458 \"the houseplex slot key `ad_scenario_detached_houseplex`\""
+   },
+   "E1": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (coming_soon section)",
+    "binding": "content soon.h; items pending (open item 16)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-presentation.json.txt:323 \"Coming soon\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1792 \"open item 16 (the Coming soon list)\""
+   },
+   "F1": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "content lot.h",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-presentation.json.txt:324 \"About this lot\""
+   },
+   "F2": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "field lot_size_sqm",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1813 \"lot_size_sqm\""
+   },
+   "F3": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "pending: frontage / depth: no report field declared",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1826 \"frontage / depth: no report field declared (brief: undeclare\""
+   },
+   "F4": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "pending: zone: no report field declared",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1837 \"zone: no report field declared (brief: undeclared)\""
+   },
+   "F5": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "field is_heritage_designated",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1847 \"is_heritage_designated\""
+   },
+   "F6": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "field is_in_ravine_protection_area",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1859 \"is_in_ravine_protection_area\""
+   },
+   "F7": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "field is_corner_lot",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1871 \"is_corner_lot\""
+   },
+   "F8": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (lot_facts)",
+    "binding": "pending: laneway: no report field declared",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1885 \"laneway: no report field declared (brief: undeclared); NOT N\""
+   },
+   "G1": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (legal)",
+    "binding": "content legal.line",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1896 \"legal.line\""
+   },
+   "G2": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (footer)",
+    "binding": "pending: no data-date field",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1908 \"no data-date field; sources wording not ruled; open item 25\""
+   },
+   "G3": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (footer)",
+    "binding": "content footer.change",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1913 \"footer.change\""
+   },
+   "G4": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (footer)",
+    "binding": "pending: (c) MaxBLD not ruled",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1919 \"open item 25 (\\\""
+   },
+   "H0": {
+    "fe": "BUILT",
+    "component": "F-LOTSIZE (sheet section)",
+    "binding": "field lot_size_sqm (record.value); content sheet.* ; error part pending (server text)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1947 \"lot_size_sqm\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-presentation.json.txt:333 \"Add your lot size\"",
+    "note": "entry switch OFF; sheet takes width and depth, ft/m (range bounds from settings)"
+   },
+   "R+1": {
+    "fe": "BUILT",
+    "component": "F-SUMMARY",
+    "binding": "content summary.heading, summary.max, summary.not_evaluated",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:242 \"summary.not_evaluated\""
+   },
+   "R+2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "summary section parts are label, title, max, value, unit only (no image part)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:234 \"summary.max\""
+   },
+   "R+3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "the only ft / m control is the lot-entry sheet radio pair; no page-wide units switch",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportPage.tsx.txt:343 \"a native radio pair (one tab stop, arrow keys\"",
+    "note": "the sheet unit switch is for entry only"
+   },
+   "R+4": {
+    "fe": "BUILT",
+    "component": "F-DETAILS-SHEET",
+    "binding": "layout key details_view = sheet (mobile, web)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-layout.json.txt:2 \"where See details opens\""
+   },
+   "R+5": {
+    "fe": "BUILT",
+    "component": "F-CHECKED (web, admin); mobile maps loading to its approved text only",
+    "binding": "loading response checked{...}; settings report_check_min_ms and skip_after",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:51 \"What we checked\"",
+    "note": "mobile binding has no checked lines"
+   },
+   "R+6": {
+    "fe": "BUILT",
+    "component": "F-REPORT-MOBILE (lifecycle loading, miss, error); web ReportView",
+    "binding": "content states.lifecycle.loading, miss, error",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_surfaces_ReportBinding.tsx.txt:392 \"LIFECYCLE_CONTENT_KEYS\""
+   },
+   "R+7": {
+    "fe": "BUILT",
+    "component": "F-REPORT-CORE (pending_texts, status_text)",
+    "binding": "content pending_texts estimated, classified",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:4 \"pending_texts\""
+   },
+   "R+8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "lot_facts rows are F2-F8 only (no through lot, irregular, sixplex area, holding, exception rows)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1885 \"laneway: no report field declared (brief: undeclared); NOT N\""
+   },
+   "R+9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no major-street or neighbourhood row in lot_facts",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1885 \"laneway: no report field declared (brief: undeclared); NOT N\""
+   },
+   "R+10": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (tag part on o2)",
+    "binding": "pending tag part; headline flag owed",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:874 \"open item 19 (\\\""
+   },
+   "R+11": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-55 favourite option",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:412 \"Status: WAITS · since 2026-11-10 · expires when MF-51 lands\""
+   },
+   "R+12": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-56 share link",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:419 \"Status: WAITS · since 2026-11-10 · expires when the first users are live\""
+   },
+   "R+13": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "only the FSI row (B9.13, pending) exists; no cap line",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:561 \"fsi2 FE-05 FLAG, no per-option field; open item 5\""
+   },
+   "R+14": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (size.panel.why)",
+    "binding": "content panel.settings_note",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:474 \"panel.settings_note\""
+   },
+   "R+15": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB + F-PREVIEW",
+    "binding": "fields is_heritage_designated, is_in_ravine_protection_area, is_corner_lot; confidence and reason in preview producer",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1847 \"is_heritage_designated\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_admin_report-preview-live_project.ts.txt:142 \"The weakest confidence word among a stored row\"",
+    "note": "customer producer null until MB-44"
+   },
+   "R+16": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no gallery",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:39 \"No carousel, dots or swipe\""
+   },
+   "R+17": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-SHELL (bottom tab bar: Lookup, Tracked Lots, Account)",
+    "binding": "tabs built; tracked-lots table not built",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_parcel_ParcelShelf.tsx.txt:7 \"Account (operator ruling 2026-09-16 (c))\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:373 \"Status: WAITS · since 2026-11-11 · expires when MF-49 ships · next: Plan then build after MF-49 shape settles\""
+   },
+   "R+18": {
+    "fe": "BUILT",
+    "component": "F-LOTVIEW (lotview.note.unevaluated content)",
+    "binding": "content lotview.note.shape / edges / unevaluated",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:367 \"lotview.note.unevaluated\""
+   }
+  },
+  "3": {
+   "B3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no tag part in section o3 (the tag part exists on o2 only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "B0": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (Option article)",
+    "binding": "fixed layout",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportPage.tsx.txt:165 \"<article id={s.id} data-section=\""
+   },
+   "B1": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "(pending text only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1331 \"option_label: no field carries the position (FE-05 FLAG)\"",
+    "note": "pending parts: label"
+   },
+   "B2": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "(pending text only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1337 \"display_label values owed; open item 7; the count must be un\"",
+    "note": "pending parts: title"
+   },
+   "B4": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-TREE (Picture)",
+    "binding": "image node, no signed URL",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:43 \"picture and its caption: the reused MF-38 figure\""
+   },
+   "B5": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:spec.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1389 \"spec.label\""
+   },
+   "B6": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "gfa_max_m2 · content:tile.size.label · content:btn.see_details",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1394 \"gfa_max_m2\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1401 \"tile.size.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1433 \"disclosure_count: no report field declared (brief: undeclare\"",
+    "note": "pending parts: size.count"
+   },
+   "B7": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:tile.cost.label · content:btn.see_details",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1444 \"tile.cost.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1467 \"btn.see_details\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1439 \"MB-86 area_confidence not on origin; open item 1\"",
+    "note": "pending parts: cost.badge, cost.sub, cost.value, cost.rate"
+   },
+   "B8": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "unit_area_m2 · content:tile.unit.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1472 \"unit_area_m2\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1479 \"tile.unit.label\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1485 \"unit_avg_label: content key owed; binds unit_count, not unit\"",
+    "note": "pending parts: unit.sub"
+   },
+   "B9": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:panel.size.h · content:panel.settings_note · permitted · content:panel.all_numbers · content:btn.hide_details",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1511 \"panel.size.h\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1516 \"panel.settings_note\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1522 \"notes_h: disclosure_count no report field declared (brief: u\"",
+    "note": "pending parts: size.panel.notes_h, size.panel.ver"
+   },
+   "B9.1": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.max_build_size · gfa_max_m2",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1539 \"row.max_build_size\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1544 \"gfa_max_m2\""
+   },
+   "B9.2": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.storeys · storeys_max",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1608 \"row.storeys\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1613 \"storeys_max\""
+   },
+   "B9.3": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.height",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1620 \"row.height\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1626 \"len1 owed server rule; open item 3\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.4": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.units · unit_count",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1551 \"row.units\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1556 \"unit_count\""
+   },
+   "B9.5": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.unit_size · unit_area_m2 · content:row.unit_size_basis · content:row.unit_size_basis_value",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1563 \"row.unit_size\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1568 \"unit_area_m2\""
+   },
+   "B9.6": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.basement",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1585 \"row.basement\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1591 \"basement rule: content key owed\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.7": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.bedrooms · houseplex_bedrooms",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1596 \"row.bedrooms\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1601 \"houseplex_bedrooms\""
+   },
+   "B9.8": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.roof",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1631 \"row.roof\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1637 \"no field; open item 6\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B9.9": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.units_flat · units_flat",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1642 \"row.units_flat\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1647 \"units_flat\""
+   },
+   "B9.10": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.units_pitched",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1654 \"row.units_pitched\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1660 \"units_pitched FE-05 FLAG; open item 6\"",
+    "note": "pending parts: size.row.value"
+   },
+   "B10": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:panel.cost.h · content:btn.hide_details",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1676 \"panel.cost.h\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1759 \"btn.hide_details\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1748 \"open item 24\"",
+    "note": "pending parts: cost.panel.note, cost.panel.ver"
+   },
+   "B10.1": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.cost_total",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1681 \"row.cost_total\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1687 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.2": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.cost_rate",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1692 \"row.cost_rate\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1698 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.3": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.cost_area",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1703 \"row.cost_area\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1709 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.4": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.cost_basis",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1714 \"row.cost_basis\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1720 \"MB-86 scenario cost line not on origin\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.5": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.cost_conf",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1725 \"row.cost_conf\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1731 \"MB-86 not on origin; open item 1\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B10.6": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:row.cost_excl",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1736 \"row.cost_excl\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1742 \"open item 24 (not checked against the MB-86 scope)\"",
+    "note": "pending parts: cost.row.value"
+   },
+   "B11": {
+    "fe": "BUILT",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:var.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1764 \"var.label\""
+   },
+   "B12": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-REPORT-WEB (o3)",
+    "binding": "content:q.bigger",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1769 \"q.bigger\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1775 \"CoA fields: no report field declared (brief: undeclared); op\"",
+    "note": "pending parts: bigger.answer"
+   },
+   "SUM": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-SUMMARY (item o3)",
+    "binding": "item.value ref size.value (gfa_max_m2); label and title refs pending; photo not built",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:307 \"size.value\"",
+    "note": "smaller photo not built (R+2)"
+   },
+   "PIC": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-IMAGES",
+    "binding": "selectors storeys_max, is_corner_lot, frontage_m; no asset",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-images.json.txt:5 \"catalogue:storeys_max\""
+   },
+   "GAL": {
+    "fe": "NOT BUILT",
+    "component": "F-IMAGES",
+    "binding": "one image per option",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:39 \"No carousel, dots or swipe\""
+   },
+   "VIEW-A": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-LOTVIEW",
+    "binding": "lotview.above in o3",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1342 \"lotview.above.label\""
+   },
+   "VIEW-S": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no side-view part",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "R+19": {
+    "fe": "BUILT",
+    "component": "F-HOUSEPLEX (unit_size_basis row)",
+    "binding": "content row.unit_size_basis + row.unit_size_basis_value",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1591 \"basement rule: content key owed\""
+   },
+   "R+20": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no nbr.q part in section o3; MF-71 owns the counts",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:572 \"Status: WAITS · since 2026-11-12 · expires when MB-94 (e) lands\""
+   },
+   "R+21": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no uncapped-figure part in o3",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   }
+  },
+  "4": {
+   "SUM": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "the summary mechanism exists (F-SUMMARY) but report-page.json has no option section for this scenario",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SUITE": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "PIC": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "GAL": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "VIEW-A": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "VIEW-S": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.10": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.11": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "SS.12": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   }
+  },
+  "5": {
+   "SUM": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "the summary mechanism exists (F-SUMMARY) but report-page.json has no option section for this scenario",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "GS-HS": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "GS-HC": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "GS-SS": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "GS-SC": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RULING": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "PIC": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "GAL": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "VIEW-A": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "VIEW-S": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.10": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.11": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-H.12": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.10": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.11": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RS-P.12": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "R+22": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "R+23": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   }
+  },
+  "6": {
+   "SUM": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "the summary mechanism exists (F-SUMMARY) but report-page.json has no option section for this scenario",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "ADD": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "PIC": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "GAL": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "VIEW-A": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "VIEW-S": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "shared parts exist in F-REPORT-WEB option sections o1-o3; this scenario has no option section",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RA.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RE.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RI.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RB.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.1": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.8": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "RF.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "R+24": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "R+25": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   }
+  },
+  "7": {
+   "R+26": {
+    "fe": "BUILT",
+    "component": "F-SEMI",
+    "binding": "parcel_lot_form.lot_form_detected / lot_form_basis / unsure; content question.title, answer.yes/no/not_sure",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_semi_question.content.json.txt:3 \"Is this house one half of a semi-detached pair?\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:132 \"parcel_lot_form.unsure\"",
+    "note": "queue Status WAITS (SEMI-323 dev run, then push)"
+   },
+   "R+27": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "R+28": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-89 owns it; queue Status WAITS INC-7 build",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:645 \"Status: WAITS · since 2026-11-15 · expires when D-78 lands · next: Author the declared page rows with the inc-7 build\""
+   },
+   "R+29": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-90 second half; queue Status WAITS INC-8 build",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:650 \"Status: WAITS · since 2026-11-15 · expires when D-78 lands · next: Author the display words and the disclosure line\""
+   },
+   "R+30": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   }
+  },
+  "8": {
+   "R+31": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-88 route badge; queue Status WAITS INC-8",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:636 \"Status: WAITS · since 2026-11-15 · expires when increment 8 stores the route field\""
+   },
+   "R+32": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no section for this scenario in report-page.json (sections: title, address, summary, o1, o2, o3 ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces__schema_report-page.json.txt:1325 \"detached_houseplex\""
+   },
+   "R+33": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-90 display words; queue Status WAITS INC-8",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:650 \"Status: WAITS · since 2026-11-15 · expires when D-78 lands · next: Author the display words and the disclosure line\""
+   }
+  },
+  "S": {
+   "A.1": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE; F-SEARCH-WEB",
+    "binding": "content search.wordmark.max/bld, search.tagline (built text: Lot & Zoning Intelligence)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:24 \"Lot & Zoning Intelligence\"",
+    "note": "tagline wording differs from the design (Lot Intelligence)"
+   },
+   "A.2": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE; F-SEARCH-WEB",
+    "binding": "debounce 400 ms, min 3 chars; parcels.addr_num_normalized + street_name_normalized",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_parcelSearch.ts.txt:19 \"export const SEARCH_DEBOUNCE_MS = 400\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_parcelSearch.ts.txt:26 \"export const SEARCH_MIN_QUERY_LEN = 3\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_admin_parcel-lookup.ts.txt:202 \"WHERE addr_num_normalized = $1 AND street_name_normalized = $2\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:14 \"Enter lot address\""
+   },
+   "A.3": {
+    "fe": "BUILT",
+    "component": "F-LOOKUP-RESOLVER",
+    "binding": "address_points.linear_name_normalized LIKE prefix, retired points excluded, up to 10 candidates",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_admin_parcel-lookup.ts.txt:235 \"ap.linear_name_normalized LIKE $1\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_admin_parcel-lookup.ts.txt:227 \"soft-retired points (retired_at set) are excluded\""
+   },
+   "A.4": {
+    "fe": "NOT BUILT",
+    "component": "F-LOOKUP-RESOLVER",
+    "binding": "parseFreeTextAddress has no direction guard; plan task 1.4",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_admin_parcel-lookup.ts.txt:178 \"export function parseFreeTextAddress\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:10 \"Search parser: direction guard after the match and unit-token strip\""
+   },
+   "A.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no unit-token strip; plan task 1.4",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:10 \"Search parser: direction guard after the match and unit-token strip\""
+   },
+   "A.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no reports-left line in search content or bindings (plan LS.12)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:263 \"the N of 20 reports left line is bound\""
+   },
+   "A.7": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE (recentSearchesStore, MMKV)",
+    "binding": "device store, max 3, newest first",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_parcelSearch.ts.txt:39 \"export const SEARCH_RECENT_MAX = 3\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_store_recentSearchesStore.ts.txt:6 \"Newest first, de-duplicated ignoring case\"",
+    "note": "web keeps no history"
+   },
+   "A.8": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE; F-SEARCH-WEB",
+    "binding": "content search.searching",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:23 \"Searching\""
+   },
+   "A.9": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE",
+    "binding": "content search.outside_toronto; rule in parcelSearchMatch.ts",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:17 \"Lots are only available in Toronto\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_lib_parcelSearchMatch.ts.txt:50 \"The Toronto-only rule\""
+   },
+   "A.10": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE; F-SEARCH-WEB",
+    "binding": "content search.legal",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:15 \"This is an estimate, not 100% accurate.\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_surfaces_SearchBinding.tsx.txt:94 \"the legal line, always shown, under the address input\""
+   },
+   "A.11": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no clear-button key in mobile_parcel_search content (keys: search.account.label, search.chip.label, search.entitlement ...)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:8 \"search.account.label\""
+   },
+   "A.12": {
+    "fe": "BUILT",
+    "component": "F-SHELL (ParcelShelf)",
+    "binding": "tabs Lookup, Tracked Lots, Account",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_parcel_ParcelShelf.tsx.txt:7 \"Account (operator ruling 2026-09-16 (c))\""
+   },
+   "A.13": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE",
+    "binding": "content search.account.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:8 \"search.account.label\""
+   },
+   "B.1": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE; F-SEARCH-WEB",
+    "binding": "candidates[].address as radio cards; differing segment styled (segmentDiffers); nothing pre-checked",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_surfaces_SearchBinding.tsx.txt:168 \"role: 'radio'\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_surfaces_SearchBinding.tsx.txt:146 \"className: seg.differs ? L.segmentDiffers : L.segment\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:181 \"candidates: z.array(ParcelCandidateSchema)\""
+   },
+   "B.2": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE",
+    "binding": "content list.select, list.select.label; candidates[].parcelId",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:7 \"Open the selected lot\""
+   },
+   "B.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "candidate carries parcelId and address only; no neighbourhood",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:181 \"candidates: z.array(ParcelCandidateSchema)\""
+   },
+   "B.4": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (state.intersection)",
+    "binding": "content state.intersection (message only)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:12 \"That looks like an intersection\""
+   },
+   "B.5": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (state.too_many)",
+    "binding": "content state.too_many; map.truncated (more than 10 lots per key)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:15 \"This address has many lots\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:119 \"truncated: z.boolean()\""
+   },
+   "B.6": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (unlinked state)",
+    "binding": "content unlinked.heading, unlinked.body; resolution unlinked",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:13 \"No lot linked yet\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_admin_parcel-lookup.ts.txt:190 \"classifyUnlinked\""
+   },
+   "B.7": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-SEARCH-MOBILE (list.report -> MAXBLD_HELP_URL)",
+    "binding": "content list.report only (candidate list); not under every notice; inbox setting empty",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:5 \"Report incorrect address match\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_lib_maxbldHelp.ts.txt:4 \"MaxBLD Help & Support web page\"",
+    "note": "link is on the candidate list only"
+   },
+   "B.8": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (neighbour outlines)",
+    "binding": "map.neighbours[].outline (unlinked with a pin)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:121 \"neighbours: z.array(ConsumerMapNeighbourSchema)\""
+   },
+   "B.9": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE",
+    "binding": "content search.miss",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_search.content.json.txt:16 \"No parcel found for that address\""
+   },
+   "B.10": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-60 intersection map",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:452 \"Status: WAITS · since 2026-11-11 · expires when the first users launch\""
+   },
+   "C.1": {
+    "fe": "NOT BUILT",
+    "component": "F-LOTMAP (built heading is map.rail Ambiguous parcel boundary and map.badge {count} lots matched)",
+    "binding": "no content key with the text Which one do you mean",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:2 \"Ambiguous parcel boundary\"",
+    "note": "built text differs from the design"
+   },
+   "C.2": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (search pill)",
+    "binding": "pill class in lotMap.ts; content map.clear.label Back to search",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_lotMap.ts.txt:14 \"rounded-full border border-[#2e2e33] bg-[#18181b]\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:4 \"Back to search\""
+   },
+   "C.3": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (Polygon)",
+    "binding": "lots[].outline = parcels.geom; neighbours[].outline",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:110 \"outline: LotOutlineSchema.nullable(), // parcels.geom\""
+   },
+   "C.4": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (Marker)",
+    "binding": "lots[].centroid = parcels.centroid_lat / centroid_lng; content lot.letter",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:109 \"parcels.centroid_lat / centroid_lng (the letter marker)\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:5 \"Lot {letter}\""
+   },
+   "C.5": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "ConsumerMapLot has no footprint field (parcelId, area, frontage, zoning, centroid, outline)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:103 \"export const ConsumerMapLotSchema\""
+   },
+   "C.6": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (address pin)",
+    "binding": "map.pin = address_points.latitude / longitude; street name label not built",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:117 \"pin: LatLngSchema.nullable(), // address_points.latitude / longitude\"",
+    "note": "street name drawn on the road not built"
+   },
+   "C.7": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "built card line is lot.facts = frontage and zoning; no has-the-house or faces-street words",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:6 \"{frontage}\""
+   },
+   "C.8": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (lot card)",
+    "binding": "lots[].area = parcels.lot_size_sqm (the report lot.size rule)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:106 \"area: z.string().nullable(), // parcels.lot_size_sqm\""
+   },
+   "C.9": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (lot card)",
+    "binding": "lots[].frontage = parcels.frontage_m; lots[].zoning = parcels.zoning_zn_string",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:107 \"frontage: z.string().nullable(), // parcels.frontage_m\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:108 \"zoning: z.string().nullable(), // parcels.zoning_zn_string\""
+   },
+   "C.10": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (select)",
+    "binding": "selection by parcelId, content select.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:11 \"Open the report for the chosen lot\""
+   },
+   "C.11": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP (Continue)",
+    "binding": "content select.none, select.lot; hint text not in content",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:10 \"Continue with Lot {letter}\"",
+    "note": "hint Pick a lot on the map or in the list: no content key"
+   },
+   "C.12": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no help link key in mobile_parcel_disambiguation_map content",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:4 \"Back to search\""
+   },
+   "C.13": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP",
+    "binding": "content state.loading, error, ratelimit, entitlement, schema_drift",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_disambiguation_map.content.json.txt:19 \"Too many searches. Try again in\""
+   },
+   "C.14": {
+    "fe": "BUILT",
+    "component": "F-LOTMAP + F-LOOKUP-RESOLVER (classifyRows)",
+    "binding": "resolution multi_parcel: one printed address over several lots",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_admin_parcel-lookup.ts.txt:158 \"resolution: 'multi_parcel'\""
+   },
+   "D.1": {
+    "fe": "BUILT",
+    "component": "F-SEMI (ask band)",
+    "binding": "parcel_lot_form.unsure; redirect when not unsure",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:126 \"`unsure` is the ask band\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_surfaces_SemiQuestionBinding.tsx.txt:5 \"the one-question page before the report\""
+   },
+   "D.2": {
+    "fe": "BUILT",
+    "component": "F-SEMI (lookup lot_form block)",
+    "binding": "parcel_lot_form.lot_form_detected, lot_form_basis, unsure",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:130 \"parcel_lot_form.lot_form_detected\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_parcels_lot-form.ts.txt:5 \"This module only READS\""
+   },
+   "D.3": {
+    "fe": "BUILT",
+    "component": "F-SEMI",
+    "binding": "content question.title",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_semi_question.content.json.txt:3 \"Is this house one half of a semi-detached pair?\""
+   },
+   "D.4": {
+    "fe": "BUILT",
+    "component": "F-SEMI",
+    "binding": "content answer.yes, answer.no, answer.not_sure",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_semi_question.content.json.txt:4 \"Yes, it's one half of a semi\""
+   },
+   "D.5": {
+    "fe": "BUILT",
+    "component": "F-SEMI",
+    "binding": "content select.none, select.go, select.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_semi_question.content.json.txt:9 \"Open the report with this answer\""
+   },
+   "D.6": {
+    "fe": "BUILT",
+    "component": "F-SEMI",
+    "binding": "content back.label",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_semi_question.content.json.txt:2 \"Back to search\""
+   },
+   "D.7": {
+    "fe": "BUILT",
+    "component": "F-SEMI",
+    "binding": "content state.loading, error, ratelimit, entitlement, schema_drift",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F01_surfaces_mobile_parcel_semi_question.content.json.txt:13 \"Too many searches. Try again in\""
+   },
+   "D.8": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-SEMI (route param)",
+    "binding": "answer carried as a route param; no column or server store (O-12)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_app__app__parcel-tool_semi-question.tsx.txt:9 \"carried to the report as a route param\"",
+    "note": "not stored: a reopened lot asks again"
+   },
+   "D.9": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "MF-89 (queue Status WAITS INC-7 build); no wall-distance control",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/MCFRONTEND-QUEUE.origin.txt:645 \"Status: WAITS · since 2026-11-15 · expires when D-78 lands · next: Author the declared page rows with the inc-7 build\""
+   },
+   "D.10": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no report reads the owner answer",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_app__app__parcel-tool_semi-question.tsx.txt:9 \"carried to the report as a route param\""
+   },
+   "D.11": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-SEMI",
+    "binding": "view columns exist; the lookup does not send the evidence columns",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:126 \"The evidence columns of the view are not sent.\""
+   },
+   "E.1": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-SEARCH-WEB",
+    "binding": "same content; no lookup request while MAXBLD_WEB_LIVE = false; web top bar not found in layout",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app__maxbld__parcel-tool_SearchPageClient.tsx.txt:6 \"While the live switch is off it sends NO lookup request\""
+   },
+   "E.2": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "static pages terms, privacy, help exist; the layout holds no footer",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app__maxbld__parcel-tool_layout.tsx.txt:1 \"SPEC LINK\"",
+    "note": "pages exist under (static); no footer links built"
+   },
+   "E.3": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "web W5 pending gap Q2",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:33 \"W5 on the web (S07) pending gap Q2\""
+   },
+   "E.4": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "no web map binding",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/sequence.plan.txt:33 \"W5 on the web (S07) pending gap Q2\""
+   },
+   "E.5": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-LOOKUP (web report route)",
+    "binding": "not found for every lot while the switch is false",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app__maxbld__parcel-tool__parcelId__page.tsx.txt:5 \"while MAXBLD_WEB_LIVE is false, not found for every lot\""
+   },
+   "E.6": {
+    "fe": "NOT BUILT",
+    "component": null,
+    "binding": "the web keeps no search history (no store)",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_surfaces_maxbld-web.ts.txt:26 \"the web keeps no search history\""
+   },
+   "F.1": {
+    "fe": "BUILT",
+    "component": "F-LANDING",
+    "binding": "content hero.cta Start free trial",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F06_surfaces_web_landing.content.json.txt:10 \"hero.cta\""
+   },
+   "F.2": {
+    "fe": "BUILT",
+    "component": "F-LANDING",
+    "binding": "content how.1.title Enter a Toronto address",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F06_surfaces_web_landing.content.json.txt:18 \"Enter a Toronto address\""
+   },
+   "F.3": {
+    "fe": "BUILT",
+    "component": "F-LANDING (sample through the shared report page)",
+    "binding": "content sample.caption, sample.region; web_landing.sample.json",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F06_surfaces_web_landing.content.json.txt:43 \"Sample report. Address and figures are illustrative.\""
+   },
+   "F.4": {
+    "fe": "BUILT",
+    "component": "F-LANDING",
+    "binding": "content footer.legal",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/scripts_surfaces_parcel_product_F06_surfaces_web_landing.content.json.txt:6 \"footer.legal\""
+   },
+   "F.5": {
+    "fe": "BUILT",
+    "component": "F-LANDING (post-login target)",
+    "binding": "safeRedirectPath(raw, {maxbld: true})",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_auth_maxbld-after-sign-in.ts.txt:1 \"the MaxBLD post-login target, never /dashboard\""
+   },
+   "G.1": {
+    "fe": "BUILT",
+    "component": "F-SEARCH-MOBILE + F-LOOKUP",
+    "binding": "resolution unique -> report route; ConsumerResponse costMenu",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:136 \"export const RESOLUTIONS = ['unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match']\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:77 \"costMenu: z.object\""
+   },
+   "G.2": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-CHECKED (web, admin lines; mobile loading text only)",
+    "binding": "checked.groups[].lines, dates; the lot outline drawing is not built; no customer producer",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:54 \"MF-62 follow-up (operator 2026-11-11, the processing sequence\""
+   },
+   "G.3": {
+    "fe": "BUILT",
+    "component": "F-CHECKED (ready line)",
+    "binding": "checked.ready {text, at_ms}",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:56 \"and leaves at --ready; the ready line\""
+   },
+   "G.4": {
+    "fe": "BUILT",
+    "component": "F-CHECKED (Skip)",
+    "binding": "checked.skip {text, after_ms}; href",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:55 \"link shows from --skip\""
+   },
+   "G.5": {
+    "fe": "BUILT-NO-DATA",
+    "component": "F-LOOKUP + F-REPORT-MOBILE",
+    "binding": "response page block in the contract; null for every lot",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_types.ts.txt:186 \"page: ReportPageViewSchema.nullable()\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_lib_parcels_report-page.ts.txt:9 \"The customer producer is NONE today\""
+   },
+   "G.6": {
+    "fe": "BUILT",
+    "component": "F-LOOKUP (meter)",
+    "binding": "usage_events via openReport",
+    "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_app_api_parcels_lookup_route.ts.txt:13 \"openReport (usage_events\""
+   }
+  },
+  "1-2": {}
+ },
+ "daylight": {
+  "F-REPORT-WEB ReportPage + toggles": {
+   "verdict": "DAYLIGHT",
+   "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportPage.tsx.txt:8 \"Colours are the named report-* theme colours\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_tailwind.config.js.txt:23 \"'report-page': '#f4f1eb'\"",
+   "note": "colours Daylight; summary at top, lot view and See-details sheets built; gallery not built"
+  },
+  "F-REPORT-MOBILE ReportBinding + host": {
+   "verdict": "DAYLIGHT",
+   "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_reportPage.ts.txt:29 \"host: 'flex-1 bg-report-page'\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_tailwind.config.js.txt:24 \"'report-card': '#ffffff'\"",
+   "note": "same keys as web; sheet and lot view built; gallery not built"
+  },
+  "F-REPORT-TREE ReportView (admin, pdf)": {
+   "verdict": "MIXED",
+   "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:13 \"text-sm text-gray-600\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportView.tsx.txt:61 \"text-report-ink\"",
+   "note": "field list uses gray utility classes; Picture caption and What we checked use report-* keys"
+  },
+  "F-LOTVIEW lot view panel": {
+   "verdict": "DAYLIGHT",
+   "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_report_ReportPage.tsx.txt:140 \"stroke-report-amber-ink\"",
+   "note": "report-* stroke and fill keys"
+  },
+  "F-SEARCH-MOBILE search page": {
+   "verdict": "OLD DARK v21",
+   "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_parcelSearch.ts.txt:58 \"screenBg: 'bg-[#0e0e10]'\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_parcelSearch.ts.txt:60 \"searchSurface: 'bg-[#18181b]'\"",
+   "note": "dark neutral palette"
+  },
+  "F-SEARCH-WEB search page": {
+   "verdict": "OLD DARK v21",
+   "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/src_components_surfaces_web_SearchBinding.tsx.txt:52 \"screen: 'min-h-screen w-full bg-zinc-950'\"",
+   "note": "dark zinc palette"
+  },
+  "F-LOTMAP map page and F-SEMI semi page": {
+   "verdict": "OLD DARK v21",
+   "cite": "~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_constants_lotMap.ts.txt:14 \"rounded-full border border-[#2e2e33] bg-[#18181b]\" ; ~/Buildo-scratch/lanes-20261117/fe-built/src/mobile_src_components_surfaces_SemiQuestionBinding.tsx.txt:9 \"Classes, hexes and numbers\"",
+   "note": "semi page reuses the map page class table"
+  }
+ }
+}
