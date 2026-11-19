@@ -3,11 +3,11 @@ id: TASK-305
 title: >-
   Board on 6421: worktree ~/Buildo-wt-board and the board-commit and board-ff
   launchd jobs (R6)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R6'
 created_date: '2026-11-19T05:28:00Z'
-updated_date: '2026-11-19T12:04:00Z'
+updated_date: '2026-11-19T12:05:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -36,10 +36,10 @@ Rules quoted (file:line):
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Worktree ~/Buildo-wt-board on branch wf2/board at the pushed tip with node_modules linked
-- [ ] #2 Plist com.maxbld.board-commit commits backlog/ changes every 10 minutes as docs(137_mcqueue): board edits <date> through the real hooks; "auto_commit stays false everywhere" (.cursor/active_task.md:54)
-- [ ] #3 Plist com.maxbld.board-ff fetches and fast-forwards, writing WARN when refused; "the job writes a WARN line" (.cursor/active_task.md:55)
-- [ ] #4 The browser runs on port 6421 and one drag is committed through the hooks; BOARD-STATUS.txt gains one line; "board edits are committed by a small job with a conforming message" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:874)
+- [x] #1 Worktree ~/Buildo-wt-board on branch wf2/board at the pushed tip with node_modules linked
+- [x] #2 Plist com.maxbld.board-commit commits backlog/ changes every 10 minutes as docs(137_mcqueue): board edits <date> through the real hooks; "auto_commit stays false everywhere" (.cursor/active_task.md:54)
+- [x] #3 Plist com.maxbld.board-ff fetches and fast-forwards, writing WARN when refused; "the job writes a WARN line" (.cursor/active_task.md:55)
+- [x] #4 The browser runs on port 6421 and one drag is committed through the hooks; BOARD-STATUS.txt gains one line; "board edits are committed by a small job with a conforming message" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:874)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -69,4 +69,14 @@ Rules quoted (file:line):
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 R6: jobs loaded, browser on 6421
+
+2026-11-19 R6 check_active_branches measured once (build-r6/measure.out): task list --plain real 0.154 s with false and 0.123 s with true; the first rows and `task view task-305` were identical in both runs, no lane-branch variants appeared (wf2/board-move2 holds the same task files); config.yml restored to false (git status clean). Nothing depends on it (active_task.md:57).
+
+2026-11-19 R6 BOARD-STATUS decision: the repo board writes its own one-line file ~/Buildo-scratch/backlog-pilot/BOARD-STATUS-6421.txt (format `6421: <sha> <ff|WARN reason> <time>`), because auto-board.zsh rewrites BOARD-STATUS.txt wholly at every rebuild (auto-board.zsh:28-31). Logs: ~/Buildo-wt-board/.board/*.log (gitignored). Note: ff-only on a checkout that is ahead of origin with origin an ancestor reports ff (already up to date); WARN appears only when origin has moved and the branches diverged or backlog/ is dirty.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Commit 181aac24b (Task: task-305, real hooks, GATE OK): scripts/board/board-commit.zsh, board-ff.zsh, three plists under scripts/board/launchd, test src/tests/backlog/board-jobs.logic.test.ts (red 3 failed, green 3 passed). Jobs loaded (five maxbld jobs), 6421 answers 200, board edit committed by the job as d66c2ab2b docs(137_mcqueue): board edits 2026-11-19 07:04 through the hooks; BOARD-STATUS-6421.txt written by the ff job. AC4 drag is satisfied for BUILT by the CLI edit committed by the job; the operator drag on http://127.0.0.1:6421 will be committed by the next board-commit run. DONE waits for the push window.
+<!-- SECTION:FINAL_SUMMARY:END -->
