@@ -118,6 +118,24 @@ describe('CHK.1 check-task-files (task-3)', () => {
     expect(r.stderr).toContain('src/a.ts');
   });
 
+  it('allows both sides of a task-file rename, and still checks a commit that deletes the task file against its HEAD declaration', () => {
+    const a = repo();
+    fs.writeFileSync(path.join(a.d, TASK), taskText('src/a.ts'));
+    a.g('add', '-A'); a.g('commit', '-qm', 'decl');
+    a.g('mv', TASK, 'backlog/tasks/task-1 - Renamed.md');
+    stage(a.d, a.g, { 'src/a.ts': 'export const a = 3;\n' });
+    expect(check(a.d).status, check(a.d).stderr).toBe(0);
+    const b = repo();
+    fs.writeFileSync(path.join(b.d, 'backlog/tasks/task-2 - Two.md'), taskText());
+    fs.writeFileSync(path.join(b.d, TASK), taskText('src/a.ts'));
+    b.g('add', '-A'); b.g('commit', '-qm', 'decl');
+    b.g('rm', '-q', TASK);
+    stage(b.d, b.g, { 'src/z.ts': 'z\n' });
+    const r = check(b.d);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('src/z.ts');
+  });
+
   it('takes the first Files: line at line start; prose that merely mentions Files: is ignored', () => {
     const { d, g } = repo();
     stage(d, g, { [TASK]: '---\nid: TASK-1\n---\nthe Files: line is described here\nFiles: src/a.ts\nFiles: src/b.ts\n', 'src/b.ts': 'b\n' });

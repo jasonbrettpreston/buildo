@@ -51,9 +51,13 @@ function check(msgFile) {
   if (!m) return 0;
   const id = m[1].toLowerCase();
   const dir = id.startsWith('task') ? 'backlog/tasks/' : 'backlog/drafts/';
-  const taskFile = staged.find((f) => f.toLowerCase().startsWith(`${dir}${id} -`) || f.toLowerCase() === `${dir}${id}.md`);
-  if (!taskFile) return 0;
-  const body = git(['show', `:${taskFile}`]);
+  const isTask = (f) => f.toLowerCase().startsWith(`${dir}${id} -`) || f.toLowerCase() === `${dir}${id}.md`;
+  const taskFiles = staged.filter(isTask);
+  if (taskFiles.length === 0) return 0;
+  // review r2: a rename stages both names and a deletion has no index copy; read the index copy, else the HEAD copy
+  let body = { status: 1, stdout: '' };
+  for (const f of taskFiles) { body = git(['show', `:${f}`]); if (body.status === 0) break; }
+  if (body.status !== 0) for (const f of taskFiles) { body = git(['show', `HEAD:${f}`]); if (body.status === 0) break; }
   if (body.status !== 0) return 0;
 
   const line = /^Files:[ \t]*(.*)$/m.exec(body.stdout);
@@ -63,7 +67,7 @@ function check(msgFile) {
     return 0;
   }
   const allowed = entries.map(matcher);
-  const always = (f) => f === taskFile || f.startsWith(`docs/reports/reviews/${id}/`) || f.startsWith('docs/reports/lanes/');
+  const always = (f) => isTask(f) || f.startsWith(`docs/reports/reviews/${id}/`) || f.startsWith('docs/reports/lanes/');
   const outside = staged.filter((f) => !always(f) && !allowed.some((ok) => ok(f)));
   for (const f of outside) process.stderr.write(`check-task-files: ${f} is outside the Files: line of ${id} (Files: ${entries.join(', ')}). Declare it on the task or move it to its own task.\n`);
   return outside.length ? 1 : 0;

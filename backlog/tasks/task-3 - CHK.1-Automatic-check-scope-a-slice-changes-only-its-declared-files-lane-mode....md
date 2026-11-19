@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CHK1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:05:00Z'
+updated_date: '2026-11-19T14:10:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -92,4 +92,6 @@ who (plan text): lane
 2026-11-19 taken on the board at lane launch (lane BL-CHK1, worktree /Users/brettpreston_macmini/Buildo-wt-chk1, branch wf1/inc1a-chk1), RR-0240
 
 Files: scripts/hooks/check-task-files.mjs, src/tests/backlog/check-task-files.logic.test.ts, .husky/commit-msg, backlog/tasks/, docs/reports/reviews/task-3/, docs/reports/lanes/
+
+2026-11-19 lane BL-CHK1: output review r2 (one lens) triaged; KEPT: renamed and deleted task file handling (fixed, test-first).
 <!-- SECTION:NOTES:END -->
