@@ -37,7 +37,7 @@
 - Rebase: `git rebase wf2/board` = "Current branch wf1/inc1b-meter2 is up to date."
 
 ## Commits
-- e37346052 fix(100_mobile_parcel_cost_tool): an unsure lot's report page is held ... (code, tests, task file). The reports commit follows (sha in the final line of the task summary / git log).
+- e37346052 fix(100_mobile_parcel_cost_tool): an unsure lot's report page is held ... (code, tests, task file). a6434f84e docs(137_mcqueue): BL-METER2 report, triage and lens outputs (reports, task files).
 
 ## Loose ends (one line each, to task-343)
 - Narrow race: a no-flag lookup in flight from the semi question page resolving after Continue could overwrite the answered cache entry with page null (useParcelLookup key excludes semi; semi-question.tsx:71). UNVERIFIED, unowned.
