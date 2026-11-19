@@ -1,11 +1,13 @@
 ---
 id: TASK-331
 title: >-
-  Lot map C.5 footprint layer and C.7 card line need two new data reads: rule
-  them in?
+  Lot map: allow two new data reads (does the lot have a building footprint;
+  which street it fronts) so the map can draw the house footprint and the card
+  can say which lot has the house and which faces the street?
 status: OPERATOR
 assignee: []
 created_date: '2026-11-19T15:43:00Z'
+updated_date: '2026-11-19T15:50:00Z'
 labels:
   - S
   - open-decisions
@@ -43,3 +45,9 @@ Grounded: yes - choose-lot.html:306 names the lot-map card fields: building foot
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 restated in plain words after the operator: "this is unintelligble". Plain question: the choose-your-lot design draws the house footprint on each lot and writes on the card which lot has the house and which faces the street; the lookup that feeds the map does not return those two facts today (whether the lot has a building footprint; the street the lot fronts), and the list of columns it may read is locked. Allow adding those two reads (after a data check on the rehearsal stack), or leave the footprint and the card line off for now?
+<!-- SECTION:NOTES:END -->

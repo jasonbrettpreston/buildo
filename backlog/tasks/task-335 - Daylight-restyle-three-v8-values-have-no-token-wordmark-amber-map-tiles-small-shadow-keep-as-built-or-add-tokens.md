@@ -3,9 +3,10 @@ id: TASK-335
 title: >-
   Daylight restyle: three v8 values have no token (wordmark amber, map tiles,
   small shadow): keep as built or add tokens?
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T15:46:00Z'
+updated_date: '2026-11-19T15:50:00Z'
 labels:
   - S
   - open-decisions
@@ -43,3 +44,15 @@ Grounded: yes - the Daylight restyle (task-322, lane BL-DAYLIGHT) used existing 
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0282 · task-335 · Backlog; operator, verbatim: "Task 335 - y keep as built for now")
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Operator 2026-11-19 (RR-0282): keep as built for now
+<!-- SECTION:FINAL_SUMMARY:END -->

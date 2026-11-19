@@ -3,9 +3,10 @@ id: TASK-330
 title: >-
   Search Clear (x) button A.11: both targets with a web mapping, or a
   mobile-only parity exception?
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T15:43:00Z'
+updated_date: '2026-11-19T15:50:00Z'
 labels:
   - S
   - open-decisions
@@ -43,3 +44,15 @@ Grounded: yes - v8 shows the Clear (x) only in the App frames (search.html:291, 
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-19 (M-246, prior text kept; RR-0281 · task-330 · Backlog; operator, verbatim: "Task-330 is not required. We dont need a clear search.")
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Operator 2026-11-19 (RR-0281): not required; A.11 dropped
+<!-- SECTION:FINAL_SUMMARY:END -->

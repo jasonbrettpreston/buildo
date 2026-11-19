@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-DAYLIGHT'
 created_date: '2026-11-19T14:56:00Z'
-updated_date: '2026-11-19T15:24:00Z'
+updated_date: '2026-11-19T15:50:00Z'
 labels:
   - S
   - gap
@@ -73,4 +73,6 @@ Grounded: yes. doc-2 Built state (backlog/docs/increments/doc-2 - Increment-S-re
 2026-11-19 1·B validation (R10, RR-0257, task-316): created by R10 as a gap: no task or row carried the Daylight restyle of the built search pages (operator 'Let's go with modern', open-questions.md:1098); Grounded and Recommendation lines in the description; task-268 depends on it.
 
 2026-11-19 taken on the board at lane launch (lane BL-DAYLIGHT, worktree /Users/brettpreston_macmini/Buildo-wt-daylight, branch wf1/inc1b-daylight), RR-0240
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0282 · task-322 · Backlog; operator, verbatim: "Task 335 - y keep as built for now")
 <!-- SECTION:NOTES:END -->
