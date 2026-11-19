@@ -3,11 +3,11 @@ id: TASK-327
 title: >-
   R12 Apply the 1·B rulings: shared footer task and MF row, LOAD.1 and ST.P1
   split, decisions
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R12'
 created_date: '2026-11-19T15:37:00Z'
-updated_date: '2026-11-19T15:45:00Z'
+updated_date: '2026-11-19T15:46:00Z'
 labels:
   - follow-up
 milestone: m-1
@@ -15,6 +15,9 @@ dependencies: []
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1061
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1066
+  - docs/reports/lanes/2026-11-19/BL-R12/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-R12/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-R12/r1-review.txt
 type: record
 project: McIncrement
 ordinal: 29012
@@ -28,9 +31,9 @@ Operator 2026-11-19 (MORNING-DECISIONS.md:1061, :1065): "1. once  -approved 2. y
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 task-324 DONE with decision (RR-0270) through G2; the SRCH.FOOTER shared-footer task created in m-1 with its MF queue row and claimed id; LS.12 depends on it; the shared-component ruling (RR-0273) entered through G2 naming the new task, task-127 and task-324
-- [ ] #2 task-325 DONE with decision (RR-0271) through G2; task-266 depends on task-123 only; task-265 depends on task-82, task-259, task-266; scope notes on both; backlog doctor clean
-- [ ] #3 Repo review round r1 in review mode, triaged
+- [x] #1 task-324 DONE with decision (RR-0270) through G2; the SRCH.FOOTER shared-footer task created in m-1 with its MF queue row and claimed id; LS.12 depends on it; the shared-component ruling (RR-0273) entered through G2 naming the new task, task-127 and task-324
+- [x] #2 task-325 DONE with decision (RR-0271) through G2; task-266 depends on task-123 only; task-265 depends on task-82, task-259, task-266; scope notes on both; backlog doctor clean
+- [x] #3 Repo review round r1 in review mode, triaged
 <!-- AC:END -->
 
 ## Definition of Done
@@ -61,4 +64,12 @@ Operator 2026-11-19 (MORNING-DECISIONS.md:1061, :1065): "1. once  -approved 2. y
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-R12, worktree /Users/brettpreston_macmini/Buildo-wt-r12, branch wf2/inc1b-r12), RR-0240
+
+AC1: decisions 77, 78 (docs/reports/lanes/2026-11-19/BL-R12/REPORT.md); task-332 created; MF-91 claimed (ls ids: MF-90 MF-91). AC2: decision-79; doctor clean. AC3: r1-review.txt and TRIAGE.md. Coordinator addition: decisions 80, 81 written; task-328/329 DONE edits skipped (not in this worktree).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Rulings applied in commit ce19eab1b (hooks: GATE OK, POLICY CHECKS OK): decisions 77-81, task-324 and task-325 DONE, task-332 SRCH.FOOTER with row MF-91, dependency edits on task-287, task-266, task-265; report in docs/reports/lanes/2026-11-19/BL-R12/.
+<!-- SECTION:FINAL_SUMMARY:END -->
