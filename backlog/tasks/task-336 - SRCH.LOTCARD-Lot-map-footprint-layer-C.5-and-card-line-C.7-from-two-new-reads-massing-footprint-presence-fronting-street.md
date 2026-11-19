@@ -3,9 +3,11 @@ id: TASK-336
 title: >-
   SRCH.LOTCARD Lot map: footprint layer C.5 and card line C.7 from two new reads
   (massing footprint presence, fronting street)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-LOTCARD'
 created_date: '2026-11-19T15:57:00Z'
+updated_date: '2026-11-19T15:58:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -48,3 +50,9 @@ Operator 2026-11-19 (RR-0284, decision-84): "if it a small change lets do it - w
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-LOTCARD, worktree /Users/brettpreston_macmini/Buildo-wt-lotcard, branch wf1/inc1b-lotcard), RR-0240
+<!-- SECTION:NOTES:END -->
