@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-R7b'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:09:00Z'
+updated_date: '2026-11-19T12:59:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -30,6 +30,9 @@ references:
   - >-
     ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L870
     sha256=f95885fcdc74
+  - docs/reports/lanes/2026-11-19/BL-R7b/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-R7b/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-R7b/r1-relevancy.txt
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low

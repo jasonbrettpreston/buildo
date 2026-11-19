@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R6'
 created_date: '2026-11-19T05:28:00Z'
-updated_date: '2026-11-19T12:52:00Z'
+updated_date: '2026-11-19T12:59:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -15,6 +15,9 @@ dependencies: []
 references:
   - .cursor/active_task.md#L89
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L874
+  - docs/reports/lanes/2026-11-19/BL-R6/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-R6/TRIAGE.md
+  - docs/reports/lanes/2026-11-19/BL-R6/r1-plan.txt
 priority: medium
 type: build
 project: McIncrement

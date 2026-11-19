@@ -1,0 +1,72 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+📋 Reviewing active task plan: .cursor/active_task.md
+
+📐 Template: .claude/review-templates/plan-review-deepseek.md
+📚 Specs: docs/reports/reviews/task-305/context-2026-11-19.md
+[deepseek-review] deepseek-reasoner working… reasoning 8910 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 18684 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28132 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 37212 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 46347 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 55652 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 64999 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 74302 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 84068 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 89351 chars, answer 6206 chars, 150s
+BUG severity=CRIT — §4 “Fresh lane commits” + R6 — nothing in the plan makes a board commit on `wf2/board` an ancestor of `origin/wf1/mb-rulings`: unless the push station rebases *inside* `~/Buildo-wt-board` and force-pushes that HEAD to `wf1/mb-rulings`, the first board commit leaves the local branch permanently diverged, `git merge --ff-only` is refused from then on (“after the push the checkout fast-forwards again” is false), the board stops receiving lane commits and the operator's reprioritisation never reaches any lane — name the exact actor/step (`cd ~/Buildo-wt-board && git rebase origin/wf1/mb-rulings && git push origin HEAD:wf1/mb-rulings`) or run the board checkout on `wf1/mb-rulings` itself and delete the ff-only story.
+
+BUG severity=HIGH — §3 G3 row + Standards test 6 (“task file not in the diff → refused”) — a task's file only changes at take (`-s RUNNING`) and at close (`-s DONE|BUILT`), so every *intermediate* code commit for that task has no task file in its diff and the hook rejects it, locking the lane on its second commit — either relax G3 to “`Task: task-N` names a task whose file is `status: RUNNING` with this lane's assignee”, or put `backlog task edit task-N --modified-file <path>` in G1's take order so the task file rides every commit.
+
+BUG severity=HIGH — R6 (“`auto_commit: true` committed there”) vs §4 (“`auto_commit` stays false everywhere”) and `.cursor/active_task.md:54` — the two are contradictory, and because `backlog/config.yml` lives *inside* `backlog/`, whatever is set there is committed by the board-commit job and propagates to every lane when the branch lands (Backlog's own “Update task TASK-7” messages are then refused by `validate-commit-msg.sh` on every edit) — strike `auto_commit: true`; measure `check_active_branches` through a gitignored root `backlog.config.yml`, never a committed one.
+
+BUG severity=HIGH — §5 (`.husky/commit-msg` + CLAUDE.md block) / R7 — G3 ships repo-wide with the R5 push, so every lane branch cut before the import that re-cuts onto the tip starts having all `src/`/`scripts/` commits rejected, and only `wf1/inc1a-checks` is named as re-cut — R5 must enumerate open lane branches (`git for-each-ref --format='%(refname:short) %(committerdate:short)' refs/heads/wf*`) and record for each: re-cut, exempted, or frozen until re-cut.
+
+BUG severity=HIGH — §1 milestone row (“an unknown value is stored as text”) vs §3 “Not built” (“Backlog's CLI already refuses an unknown status, milestone or priority”) — the plan's own FLAGS measurement contradicts the sole justification for dropping the structural gate; if the CLI is permissive for `status` as well, the 304 imported files end up with no schema validation at all — add one R1 flag case per field (`task create -s GARBAGE`, `-m NOPE`, `-p NOPE`) and keep a ~30-line front-matter validator (id/status/milestone/priority in the allowed sets) if any is accepted.
+
+DEFER severity=MED — §2 (“asserts 303 task files + 17 drafts”) vs R3 (“loaded: 304 tasks, 16 drafts, 32 queue-row tasks”) vs §1 (“42 plan items, 38 rows + 4 dependency targets”) vs §2 report (“the 37 queue-row items whose plan word differed”) — four numbers for one census, and the report is the only verification a one-time load will ever get — derive expected counts from `sequence.json` and state one authoritative set before lock.
+
+DEFER severity=MED — §4 board-commit bullet — a failing pre-commit chain (39.5 s) or a stale `.git/index.lock` leaves board edits uncommitted indefinitely with the WARN going only to a log (BOARD-STATUS gains a line only for ff, AC3) — append the commit outcome to BOARD-STATUS-6421.txt and delete locks older than 15 min.
+
+DEFER severity=MED — §4 / R6 plists — board-commit and board-ff both run `StartInterval 600`, so they fire on the same grid second; an in-flight commit makes ff skip that cycle (its index.lock WARN path), and while the operator is editing that repeats every cycle — stagger the intervals (600 vs 617) or take one `flock` shared by both scripts.
+
+DEFER severity=MED — §1 `held-unruled` + §3 G2 — nothing clears `held-unruled` or moves the status off WAITS when the quoted ruling finally arrives, so the 6 held items stay invisible to `backlog-next.mjs` (which excludes WAITS) for ever — give G2 a `--task`/`--status` pair that removes the label and writes the ruled word in the same note-append.
+
+DEFER severity=MED — §1 due-date row / D3 — every open task gets `snapshot + 7`, so ~240 tasks share one due date and `backlog-next.mjs`'s overdue list becomes the whole board from 2026-11-27 — leave `due` blank for LATER tasks or use the increment/push window's end date.
+
+DEFER severity=MED — §1 refs row (`when: <ids> DONE` / `~/Buildo-scratch/...` forms) — (a) `when:` ids live in a free-text description the operator can edit on the board, so one typo or a renamed id leaves a task LATER for ever with no signal; (b) 436 ref entries include scratch paths that resolve on this machine only and scratch is retired in Phase 2 — have `backlog-next.mjs` label `missing-ref` when a `when:` id has no task file, and count/label the scratch refs at import instead of resolving them silently.
+
+DEFER severity=MED — §5 Spec 137 §3 note (“`since` = the author date of the last commit that changed its `status:` line”) — status changes that land through a merge are invisible to plain `git log`, so after the first lane merge every task reads `since` = import date — use `git log -m --follow -L'/^status:/,+1:<file>'` or store the date in the file.
+
+DEFER severity=MED — §4 “The pilot board stays on 6420 until you retire it” — the pilot rebuilds from queue rows (`auto-board.zsh`), so any drag made on 6420 out of habit is silently discarded — make 6420 read-only or banner it at R6, the day the operator has two boards open.
+
+DEFER severity=MED — §4 ff job — the browser holds task files in memory; a save from a stale editor overwrites an ff-merged lane status change, and board-commit then commits that revert as `docs(137_mcqueue): board edits` (G3-exempt, so nothing flags it) — restart the browser (KeepAlive covers it) after any ff that touched `backlog/`, and have the ff job record which files it changed.
+
+DEFER severity=MED — Effect (“`backlog task list --ready` and the `--next` filter for what to take”) vs §3 (“`--ready` excludes only the final status, M: 182 of 238 on the pilot”) — the Effect sells the operator a filter the plan measures as wrong 76% of the time — drop `--ready` from the Effect and from CLAUDE.md's line, naming `backlog-next.mjs` only.
+
+DEFER severity=MED — §5 Phase 2 (“retirement of the scratch register”) — between R6 and Phase 2 two decision stores exist and only G2's is read by G1 briefs, so a ruling appended to the register silently never reaches a brief (the same misfiling class POSTMORTEM 5 records) — add weekly-snapshot step 4b: list every `RR-` in the register with no Backlog decision, the mirror of 4a's queue-row drift.
+
+DEFER severity=LOW — §2 input row / R2 — any repo-wide formatter or `.gitattributes` conversion touching `docs/reports/plan-import/raw/**` changes a byte and makes the kept loader exit 1 at step 0 permanently — add the raw dir to `.prettierignore` and `.gitattributes` (`-text`) now.
+
+DEFER severity=LOW — R3/R4 ordering — the loader runs at R3 but `backlog.tmp/` only enters `.gitignore` at R4, so a crash mid-load leaves a 300-file tree one `git add -A` away from being committed — move the `.gitignore` line into R3 and `rm -rf backlog.tmp` at loader start.
+
+DEFER severity=NIT — §Standards Rollback (“remove `~/Buildo-wt-board`”) — `rm -rf` on a linked worktree leaves `.git/worktrees/board` behind and blocks re-creating `wf2/board` — use `git worktree remove ~/Buildo-wt-board && git worktree prune`.
+
+REJECT — §2 (“Refuses if `backlog/` exists … no re-import mode”) — non-idempotence reads as a gap but the loader runs once on an unpushed branch where `git reset --hard`/`git revert` is the whole recovery — no idempotency requirement applies.
+
+REJECT — §4 (a 10-minute launchd job running a 39.5 s hook chain) — launchd never starts a second instance of the same job while one is running, so no retry storm or self-overlap is possible; the residue is only the cross-job collision noted above.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- G3's “task file in the same diff” rule rejects every intermediate code commit (the task file only changes at take and at close), so lanes block on their second commit from R5 onward.
+- The board branch's commits have no stated path into `origin/wf1/mb-rulings`; the moment the first board edit lands, the `--ff-only` job can be refused permanently and the operator's board diverges from every lane.
+- `auto_commit: true` in R6 contradicts “false everywhere” in §4 and `.cursor/active_task.md:54`, and because `backlog/config.yml` lives inside `backlog/`, whatever is committed there leaks to every lane when the branch lands.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- Backlog's CLI is claimed to refuse an unknown status/milestone/priority in §3 while §1 records that an unknown milestone is *stored as text* — verify: `d=$(mktemp -d); cd $d; backlog init -q; backlog task create -t probe -m "No Such Milestone" -s GARBAGE; echo exit=$?; grep -H '^status:\|^milestone:' backlog/tasks/task-1*.md`.
+- The loader's asserted counts (303 tasks / 17 drafts) and the queue-row census (42 / 38 / 37 / 32) are mutually inconsistent with the R3 record — verify: `ls backlog/tasks/*.md | wc -l; ls backlog/drafts/*.md | wc -l; grep -rl 'queue-row' backlog/tasks | wc -l; jq '[.tasks[]|select(.queueRow!=null)]|length' docs/reports/plan-import/raw/2026-11-19/sequence.json`.
+- D3's blast radius (how many open tasks get the single `snapshot + 7` due date) is unstated — verify: `jq '[.tasks[]|select((.word|test("^(DONE|DROPPED|FOLDED|MERGED)$")|not) and .expires==null)]|length' docs/reports/plan-import/raw/2026-11-19/sequence.json`.
+
+---
+⏱  154807ms (154.8s)
+📊 Tokens — total: 38231, input: 11713, output: 26518, reasoning: 23787

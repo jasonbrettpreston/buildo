@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-R7a'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T12:52:00Z'
+updated_date: '2026-11-19T12:59:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -27,6 +27,7 @@ references:
   - >-
     ~/Buildo-scratch/lanes-20261117/inc-plan/checks/PANEL.md#L2
     sha256=b30b7f626bca
+  - docs/reports/lanes/2026-11-19/BL-R7a/REPORT.md
 documentation:
   - backlog/docs/increments/doc-1 - Increment-F-requirements.md
 priority: low

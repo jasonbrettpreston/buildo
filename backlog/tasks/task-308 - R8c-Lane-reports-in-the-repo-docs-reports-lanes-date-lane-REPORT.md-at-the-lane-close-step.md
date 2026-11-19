@@ -8,6 +8,11 @@ assignee:
   - '@lane-BL-R8c'
 created_date: '2026-11-19T12:52:00Z'
 updated_date: '2026-11-19T13:02:00Z'
+status: BUILT
+assignee:
+  - '@lane-BL-R8c'
+created_date: '2026-11-19T12:52:00Z'
+updated_date: '2026-11-19T12:59:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -28,9 +33,9 @@ Operator 2026-11-19 (RR-0232), proposal (c) approved. Grounded: yes - 162 task r
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Spec 08 section 7 rule 10 (a) gains a dated note and standing-rules.md a line: a lane close step copies its REPORT.md to docs/reports/lanes/<date>/<lane>/REPORT.md in its last commit
-- [ ] #2 The 2026-11-19 lane reports (build-r6, build-r7a, build-r7b) are copied there and the references of tasks 305, 64, 66 and 1 point at the repo copies
-- [ ] #3 Repo review round r1 on the plan of this task, triaged, before any change
+- [x] #1 Spec 08 section 7 rule 10 (a) gains a dated note and standing-rules.md a line: a lane close step copies its REPORT.md to docs/reports/lanes/<date>/<lane>/REPORT.md in its last commit
+- [x] #2 The 2026-11-19 lane reports (build-r6, build-r7a, build-r7b) are copied there and the references of tasks 305, 64, 66 and 1 point at the repo copies
+- [x] #3 Repo review round r1 on the plan of this task, triaged, before any change
 <!-- AC:END -->
 
 ## Definition of Done
@@ -52,3 +57,24 @@ Operator 2026-11-19 (RR-0232), proposal (c) approved. Grounded: yes - 162 task r
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8c in ~/Buildo-wt-r8c, branch wf2/r8c-lane-reports; the lane has since reported BUILT on its branch, commit 69a9d24cf)
 <!-- SECTION:NOTES:END -->
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Review round r1 of this plan, triage.
+2. Dated note on Spec 08 s7 rule 10 (a).
+3. Copy 2026-11-19 reports with cmp.
+4. --add-ref on tasks 305, 64, 66, 1.
+5. One docs commit, Task: task-308.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+AC1: dated note added at 08_agents.md:344 (after the rule 10 notes of 2026-11-06); the standing-rules.md line is proposed in the lane REPORT.md (file outside write scope, orchestrator applies). AC2: 7 files byte-copied, cmp ok each, under docs/reports/lanes/2026-11-19/{BL-R6,BL-R7a,BL-R7b}; --add-ref (adds, keeps old entries) on tasks 305, 64, 66, 1. AC3: r1 plan review run, 0 KEPT (the tool read .cursor/active_task.md, off-target); TRIAGE in lane dir. Docs-only change: no test.
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Lane reports in the repo: Spec 08 rule 10 (a) dated note, 2026-11-19 reports of BL-R6, BL-R7a, BL-R7b copied with cmp, references of tasks 305, 64, 66, 1 point at the repo copies. standing-rules.md rule 19 proposed in the lane report.
+<!-- SECTION:FINAL_SUMMARY:END -->
