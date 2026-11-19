@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Host-specific (absolute paths for this Mac). Copy to ~/Library/LaunchAgents. BL-R6 task-305. -->
+<plist version="1.0"><dict>
+<key>Label</key><string>com.maxbld.board-commit</string>
+<key>ProgramArguments</key><array><string>/bin/zsh</string><string>-f</string><string>/Users/brettpreston_macmini/Buildo-wt-board/scripts/board/board-commit.zsh</string></array>
+<key>StartInterval</key><integer>600</integer>
+<key>RunAtLoad</key><true/>
+<key>StandardOutPath</key><string>/Users/brettpreston_macmini/Buildo-wt-board/.board/board-commit.out</string>
+<key>StandardErrorPath</key><string>/Users/brettpreston_macmini/Buildo-wt-board/.board/board-commit.out</string>
+</dict></plist>

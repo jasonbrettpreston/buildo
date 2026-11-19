@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Host-specific (absolute paths for this Mac). Copy to ~/Library/LaunchAgents. BL-R6 task-305: the repo board on 6421; the pilot stays on 6420. -->
+<plist version="1.0"><dict>
+<key>Label</key><string>com.maxbld.board-browser-6421</string>
+<key>ProgramArguments</key><array><string>/Users/brettpreston_macmini/Buildo-wt-board/node_modules/.bin/backlog</string><string>browser</string><string>--no-open</string><string>-p</string><string>6421</string></array>
+<key>WorkingDirectory</key><string>/Users/brettpreston_macmini/Buildo-wt-board</string>
+<key>EnvironmentVariables</key><dict><key>PATH</key><string>/opt/homebrew/opt/node@24/bin:/usr/bin:/bin</string></dict>
+<key>KeepAlive</key><true/>
+<key>RunAtLoad</key><true/>
+<key>StandardOutPath</key><string>/Users/brettpreston_macmini/Buildo-wt-board/.board/browser.log</string>
+<key>StandardErrorPath</key><string>/Users/brettpreston_macmini/Buildo-wt-board/.board/browser.log</string>
+</dict></plist>
