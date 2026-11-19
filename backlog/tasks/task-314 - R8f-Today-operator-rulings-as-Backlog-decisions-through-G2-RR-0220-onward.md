@@ -1,7 +1,7 @@
 ---
 id: TASK-314
 title: R8f Today operator rulings as Backlog decisions through G2 (RR-0220 onward)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R8F'
 created_date: '2026-11-19T13:07:00Z'
@@ -13,6 +13,7 @@ dependencies: []
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L885
   - scripts/analysis/backlog-decision.mjs#L1
+  - docs/reports/lanes/2026-11-19/BL-R8F/REPORT.md
 type: record
 project: McIncrement
 ordinal: 21012
@@ -26,9 +27,9 @@ Review r1 of task-308 (build-r8/r8c/r1-review.txt, HIGH): the Decisions in force
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every operator ruling registered today (rulings-register.json rows RR-0220 to RR-0242 and any later row of 2026-11-19 with kind ruling) exists as a Backlog decision written through scripts/analysis/backlog-decision.mjs (G2) with the verbatim quote and the cite; register rows of kind entry are not decisions
-- [ ] #2 Each new decision names the task ids or plan ids it bears on (the R8 tasks, task-1, the held items), so the context pack (task-309) picks it up
-- [ ] #3 Repo review round r1 in review mode on the context file, triaged, before the edits
+- [x] #1 Every operator ruling registered today (rulings-register.json rows RR-0220 to RR-0242 and any later row of 2026-11-19 with kind ruling) exists as a Backlog decision written through scripts/analysis/backlog-decision.mjs (G2) with the verbatim quote and the cite; register rows of kind entry are not decisions
+- [x] #2 Each new decision names the task ids or plan ids it bears on (the R8 tasks, task-1, the held items), so the context pack (task-309) picks it up
+- [x] #3 Repo review round r1 in review mode on the context file, triaged, before the edits
 <!-- AC:END -->
 
 ## Definition of Done
@@ -59,4 +60,12 @@ Plan (lane BL-R8F): 1 Read the 10 ruling rows RR-0220 onward (none has a decisio
 Dated note 2026-11-19 (M-246, prior text kept; RR-0248 · task-314 · Backlog; operator, verbatim: "y - this is a major improvement")
 
 Plan step 1-4 executed: decisions.out in lane dir shows G2 exit 0 for decision-71..75; register-table.txt shows 10 kind ruling rows, 5 source operator written, 5 source reading not written (orchestrator words, RR-0190).
+
+AC evidence: 5 decisions written (decision-71..75), G2 exit 0 each (decisions.out), tasks named per decision body; review r1 triaged (TRIAGE.md) before the edits; 5 source-reading rows not written, reason in REPORT.md. Commit e80f97485.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Five operator rulings (RR-0232, 0233, 0235, 0242, 0248) are Backlog decisions 71 to 75 through G2; five source-reading rows held back as non-operator words; task-2 note added.
+<!-- SECTION:FINAL_SUMMARY:END -->

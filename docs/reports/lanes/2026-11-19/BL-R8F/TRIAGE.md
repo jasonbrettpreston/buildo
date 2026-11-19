@@ -1,0 +1,8 @@
+# TRIAGE r1 (review mode, r1-plan.txt), lane BL-R8F
+KEEP 1 (CRITICAL, kind vs source): real tension, AC#1 says kind ruling; the register marks 5 of the 10 kind-ruling rows source reading. Resolved by the register's own rule (RR-0190, MORNING-DECISIONS.md:813 "close the gap.  fix teh register"; Spec 137 rule 4 137_mcqueue.md:87): only operator words are rulings. The 5 reading rows are NOT written; reason stated in REPORT.md and raised to the orchestrator as the one question.
+KEEP 2 (CRITICAL, enumeration unverifiable): register-table.txt added (id | kind | source | has decision), 32 rows RR-0220..RR-0251, 10 kind ruling, 22 entry, none has a decision file.
+KEEP 3 (CRITICAL, tense in step 2): plan wording changed to TODO/DONE status with evidence in decisions.out.
+REJECT: task-2 note (MEDIUM): ordered by the brief and by task-2's pass-2 note (task-2 note line 62, "MERGED into task-314 once DONE"); not scope creep.
+REJECT: scratch MORNING-DECISIONS.md not in repo (HIGH): G2 cites resolve against that path by design (decision-69 cites it); out of this task's scope.
+REJECT: generator/pack defects (doc-1 ENOENT, truncated titles, sentinel blocks, prior-review substring, injection fencing, timezone, G-term definitions), duplicate titles, RR-0195/0196 supersession, quote policy for "4. y", id allocation, payload caps, rollback: all concern backlog-brief.mjs or earlier rows, not the 5 writes; no code change allowed (brief). Rollback is git revert of the one docs commit.
+REJECT: RR-0014/0028 bodies and "pack picks it up" verification beyond: G2 enforces quote at cite (backlog-decision.mjs:42-44); pickup check run after the writes if cheap (see REPORT.md).
