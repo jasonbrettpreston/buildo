@@ -8,7 +8,7 @@
 // One table of compliance rows for a slice, from scripts/analysis/proof-slices.json. It CALLS the existing checks (argv rows, spawnSync, no shell),
 // READS the push station pass file (suite row; never runs the suite), and prints NOT BUILT rows with the tasks that unblock them.
 // Each command row's full output is written to <out>/<row-id>.txt. Commits nothing; reads and writes no database.
-//   exit 0 every row PASS · 1 any FAIL · 2 usage or bad data file · 3 no FAIL but a row is NOT BUILT or GAP.
+//   exit 0 every row PASS · 1 any FAIL · 2 usage, bad data file or an --out that cannot be created · 3 no FAIL but a row is NOT BUILT or GAP.
 // Caller: the PROOF.S lane (task-268) runs it as its acceptance command; no hook, station step or CI job calls it.
 // The tree it reads is the one the script sits in, never the cwd.
 import { spawnSync } from 'node:child_process';
@@ -44,7 +44,9 @@ export function checkSpec(spec, slice) {
       if (r?.[k] !== undefined && (typeof r[k] !== 'string' || r[k] === '')) problems.push(`${at}: ${k} must be a non-empty string`);
       if (r?.[k] !== undefined && r.argv === undefined) problems.push(`${at}: ${k} is only read on an argv row`);
     }
-    if (r?.suite !== undefined && !(Array.isArray(r.suite.suite_files) && r.suite.suite_files.length > 0)) problems.push(`${at}: suite.suite_files missing`);
+    if (r?.suite !== undefined && (typeof r.suite !== 'object' || r.suite === null || Array.isArray(r.suite))) problems.push(`${at}: suite must be an object`);
+    else if (r?.suite !== undefined && !(Array.isArray(r.suite.suite_files) && r.suite.suite_files.length > 0)) problems.push(`${at}: suite.suite_files missing`);
+    if (r?.timeoutMs !== undefined && !(Number.isInteger(r.timeoutMs) && r.timeoutMs > 0)) problems.push(`${at}: timeoutMs must be a positive integer`);
     if (r?.notbuilt !== undefined && (typeof r.notbuilt !== 'object' || r.notbuilt === null)) problems.push(`${at}: notbuilt must be an object`);
     else if (r?.notbuilt !== undefined) {
       const b = r.notbuilt.blockedBy;
@@ -143,7 +145,7 @@ export function main(argv, io = realIo()) {
   let spec;
   try { spec = JSON.parse(io.readFile(DATA)); } catch (e) { console.error(`proof-slices.json unreadable or malformed: ${e.message}`); return 2; }
   const outDir = path.resolve(a.out);
-  io.mkdir(outDir);
+  try { io.mkdir(outDir); } catch (e) { console.error(`proof-slice: cannot create --out ${outDir} (${e?.code ?? e?.message ?? 'error'})`); return 2; }
   const r = runSlice({ spec, slice: a.slice, run: io.run, readFile: io.readFile, head: io.head, suitePass: a.suitePass, outDir, writeFile: io.writeFile });
   if (r.problems.length) { for (const p of r.problems) console.error(`proof-slice: ${p}`); return 2; }
   io.print(renderTable(r));

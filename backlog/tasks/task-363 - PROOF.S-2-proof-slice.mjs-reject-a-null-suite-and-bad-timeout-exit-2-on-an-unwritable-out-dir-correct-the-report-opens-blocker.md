@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PROOF3'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:34:00Z'
+updated_date: '2026-11-19T22:40:00Z'
 labels:
   - S
   - plan:PROOF.S
@@ -57,8 +57,16 @@ Files: scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json, src
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Red first: add tests for suite null, timeoutMs string/-1, throwing io.mkdir (AC1-3). 2. checkSpec: reject non-object suite, validate timeoutMs as positive integer (AC1,2). 3. main: guard io.mkdir in try/catch, print one proof-slice: line, return 2 (AC3). 4. proof-slices.json report-opens blockedBy -> [task-287]; design-fit row untouched (AC4). 5. Header exit table says unwritable --out is exit 2; real run still exit 3 (AC5). 6. Lenses compliance, code-review, error-paths at plan and output; adjudicate in TRIAGE.md.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-PROOF3, worktree /Users/brettpreston_macmini/Buildo-wt-proof3, branch wf1/inc1b-proof3), RR-0240
+
+Lane BL-PROOF3: suite null, timeoutMs, mkdir guard and report-opens blocker fixed with tests; read-only existing --out dir still exits 1 via writeFile (leftover).
 <!-- SECTION:NOTES:END -->

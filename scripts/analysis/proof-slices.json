@@ -12,7 +12,7 @@
       { "id": "design-fit", "proof": "Design fit (RS-12): every stored value maps to a designed element (RR-0306: printed as not built)", "notbuilt": { "blockedBy": ["task-345", "task-67"] } },
       { "id": "loading-from-pick", "proof": "Loading screen from the search pick: compute starts at the pick, button only when report and See details are loaded", "notbuilt": { "blockedBy": ["task-266", "task-267"] } },
       { "id": "load-failure-page", "proof": "Load-failure page when a lot's report or See details fails to load", "notbuilt": { "blockedBy": ["task-317"] } },
-      { "id": "report-opens", "proof": "The report opens for the lot (hand-off ends at the report); the customer read returns null today", "notbuilt": { "blockedBy": ["task-123"] } },
+      { "id": "report-opens", "proof": "The report opens for the lot (hand-off ends at the report); the customer read returns null today", "notbuilt": { "blockedBy": ["task-287"] } },
       { "id": "screenshots-25-lots", "proof": "(a) One screenshot per golden lot (25) of the scenario page on the test stack", "notbuilt": { "blockedBy": ["task-123", "task-265"] } },
       { "id": "elements-number-or-word", "proof": "(b) Every main and See details element shows a number or the exact words 'Not yet evaluated' on a real lot", "notbuilt": { "blockedBy": ["task-123", "task-265"] } },
       { "id": "key-match", "proof": "(c) Every number equals the McProof key", "notbuilt": { "blockedBy": ["task-123"] } },
