@@ -1,0 +1,79 @@
+$ node scripts/surfaces/emit-mobile-surfaces.mjs --check
+surfaces ok (4 surfaces, 29 goldens)
+exit 0
+$ node scripts/surfaces/generate-surface-registry.mjs --check
+node:internal/modules/cjs/loader:1568
+  throw err;
+  ^
+
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-c12/scripts/surfaces/generate-surface-registry.mjs'
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v24.22.0
+exit 1
+$ node scripts/surfaces/consumer-registry.mjs --check
+node:internal/modules/cjs/loader:1568
+  throw err;
+  ^
+
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-c12/scripts/surfaces/consumer-registry.mjs'
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v24.22.0
+exit 1
+$ node scripts/surfaces/generate-target-files.mjs --check
+node:internal/modules/cjs/loader:1568
+  throw err;
+  ^
+
+Error: Cannot find module '/Users/brettpreston_macmini/Buildo-wt-c12/scripts/surfaces/generate-target-files.mjs'
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v24.22.0
+exit 1
+$ node scripts/surfaces/surface-validate.mjs --check
+SV-SBIND mobile_parcel_disambiguation_map/multi_parcel_2.mobile.json: unknown contract field contract_parcels_lookup.map.lots.0.frontageStreet at /props/children/0/children/0/children/3/children/0/children/0/children/0/children/0/vars/stree
+SV-SBIND mobile_parcel_disambiguation_map/multi_parcel_3plus.mobile.json: unknown contract field contract_parcels_lookup.map.lots.1.frontageStreet at /props/children/0/children/0/children/4/children/0/children/0/children/0/children/0/vars/s
+exit 1
+$ lotmap-golden-capture --check
+lotmap goldens ok (11)
+$ S-sbind count (note + findings)
+S-sbind ok (17 surfaces, 420 strings) findings 2
+$ node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (171 rows, 171 descriptors)
+exit 0
+$ node scripts/analysis/gates/consumer-registry.mjs --check
+scripts/steps/_schema/consumer-registry.json is STALE: {"index":650,"generated":{"consumer":"src/lib/parcels/lot-map.ts","producer":"enrich_centreline","kind":"table","key":"parcels.primary_frontage_street_name","value":"any","source":"src_
+exit 1
+$ node scripts/analysis/generate-target-files.mjs --check
+exit 0

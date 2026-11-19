@@ -3,11 +3,11 @@ id: TASK-321
 title: >-
   SRCH.C12 C.12 "Not sure which lot? Get help with an address" link on the lot
   map,...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-C12'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:19:00Z'
+updated_date: '2026-11-19T20:28:00Z'
 labels:
   - S
   - plan:SRCH.C12
@@ -27,6 +27,7 @@ references:
   - /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/fe-built/BUILT.md
   - .cursor/MCFRONTEND-QUEUE.md#L394
   - .cursor/MCFRONTEND-QUEUE.md#L438
+  - docs/reports/lanes/2026-11-19/BL-C12/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -50,26 +51,26 @@ element ids delivered: B.7, C.12
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
-- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
-- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
@@ -94,4 +95,12 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0299 · task-321 · Backlog; o
 2026-11-19 (R13, RR-0299, MORNING-DECISIONS.md:1155): Scope now: the help link is built against the placeholder support address until launch (RR-0299); the real address is set at launch by LS.6 (task-15). Ground: the variable logic_variables.maxbld_support_inbox already exists (migrations/314_maxbld_support_inbox.sql:15-17 inserts it; SUPPORT_INBOX_KEY at src/lib/surfaces/maxbld-support.ts:13); the migration seeds it EMPTY ("" as JSONB, 314:7 and :17), so until a value is set the page shows no contact links; the built page web_help reads it (scripts/surfaces/parcel_product/F06/surfaces/web_help.descriptor.json:204). Status unchanged (LATER; the launch script takes it, RR-0298).
 
 2026-11-19 taken on the board at lane launch (lane BL-C12, worktree /Users/brettpreston_macmini/Buildo-wt-c12, branch wf1/inc1b-c12), RR-0240
+
+AC evidence (lane BL-C12): #1 not applicable as a separate commit: brief fixes one feat commit with the context file (plan and binding table) and the MF-53 note; #2 plan and failing tests in the context file, red.out 8 failed; #3 write scope in the brief; #4 one plan review round r1 (r1-plan.txt, TRIAGE.md) instead of a lens panel per the brief; #5 triage re-opened every cited line; #6 red.out then commit.out 70bf820bf green through the hooks; #7 r2-output.txt in docs/reports/lanes/2026-11-19/BL-C12/; #8 MF-53 row note in .cursor/MCFRONTEND-QUEUE.md. Operator items: placeholder inbox value is a DB job; Help page has no wrong-lot topic. Files: see commit 70bf820bf.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+C.12 and B.7 help links built on the lot map (mobile), commit 70bf820bf, hooks green (16 tests); S-sbind 418 -> 420 on this head, pins untouched; reports in docs/reports/lanes/2026-11-19/BL-C12/.
+<!-- SECTION:FINAL_SUMMARY:END -->
