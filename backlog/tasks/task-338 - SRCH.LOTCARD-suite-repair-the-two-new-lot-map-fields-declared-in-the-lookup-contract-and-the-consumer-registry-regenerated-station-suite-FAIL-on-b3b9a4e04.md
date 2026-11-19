@@ -8,7 +8,7 @@ status: BUILT
 assignee:
   - '@lane-BL-LOTFIX'
 created_date: '2026-11-19T20:04:00Z'
-updated_date: '2026-11-19T20:14:00Z'
+updated_date: '2026-11-19T20:15:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -65,6 +65,8 @@ Files: scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.des
 2026-11-19 taken on the board at lane launch (lane BL-LOTFIX, worktree /Users/brettpreston_macmini/Buildo-wt-lotfix, branch wf1/inc1b-lotfix), RR-0240
 
 Follow-up (orchestrator): the two real-tree pins surface-validate.logic.test.ts:86 and surface-conformance.logic.test.ts:247 moved 414 -> 418 strings: the four card-line keys lot.lead.house, lot.lead.house_faces, lot.lead.no_building, lot.lead.no_building_faces in mobile_parcel_disambiguation_map.content.json:5-8 (git diff 2b01c2237^ 56e96eed5: 4 added, 0 removed; lot.faces added then removed). Every other number in the full line equals the real output.
+
+Addendum in docs/reports/lanes/2026-11-19/BL-LOTFIX/REPORT.md: per-case table; pin commit 356d10b52, related run 95 passed.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

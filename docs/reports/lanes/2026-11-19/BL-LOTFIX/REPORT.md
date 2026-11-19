@@ -27,3 +27,17 @@ Follow-up for the orchestrator (not done, scope): no lockstep test ties types.ts
 - The pre-commit related run was skipped by the hook ("no staged src/ or scripts/ source files"), so AC3's "related run green" is the hook set passing, not a test run.
 - The census mirror equality is by my diff only; no lock test seen.
 - Task file Files: line added after the fix commit (the hook warned on the commit).
+
+## Addendum: S-sbind pins 414 -> 418 (orchestrator request), commit 356d10b52
+Cause: the four card-line keys in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:5-8 (lot.lead.house, lot.lead.no_building, lot.lead.no_building_faces, lot.lead.house_faces; lot.letter at :4 predates). `git diff 2b01c2237^ 56e96eed5` on that file: 4 added, 0 removed (lot.lead.faces added in 2b01c2237, removed in 56e96eed5). The suite.log diff itself already showed 418 against 414 (suite.log:2995-3000).
+Full-line comparison: real output "...S-screen ok (17 surfaces, 98 goldens) · S-sbind ok (17 surfaces, 418 strings)"; the FE-13 expected line differed only in 414 vs 418 (all other segments identical); C-1 expected the two notes, differing only in 414 vs 418.
+Pins moved with dated comments in surface-validate.logic.test.ts and surface-conformance.logic.test.ts (earlier comments kept).
+Related run in the hook executed both files: "Test Files 2 passed (2), Tests 95 passed (95)" (commit2.out).
+| case | assertion in suite.log | what satisfies it now |
+| consumer-registry T3 | checkRegistryFresh().fresh true (:2905) | consumer-registry.mjs --check "is fresh" |
+| consumer-registry T5 | 980 vs 982 rows (:2924) | registry has 982 rows |
+| contract-binding FE-32 b | sbindArm(ctx).findings equals [] (:2943) | S-sbind ok, no findings |
+| mcfront-proof canary b control | green(runCli(GATE --check)) at test:174 exit 0 (:2965) | surface-validate --check rc=0; the three report locks (genOnly, binding, noMaths) carry no S-sbind count, not run: UNVERIFIED |
+| surface-conformance C-1 | :247 notes (:2985) | 418 pin, hook related run passed |
+| surface-validate FE-13 | whole line (:3012) | 418 pin, hook related run passed |
+Still UNVERIFIED: the full suite (station only); contract-binding, gate-consumer-registry and mcfront-proof were not run by the hook (not related to the staged files).
