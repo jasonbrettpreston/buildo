@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T15:29:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -82,4 +82,8 @@ element ids delivered: D.9, D.10
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): promoted from draft-4 (was DRAFT-4) by R10; dependency DRAFT-3 rewritten to task-318. This is the semi page placeholder: RR-0182 and RR-0184 place the semi question page on the search flow (v8 mock for approval, then built, link to the report); 7.25 (task-209) now depends on this task (dependency fixed on task-209). Parts (2) wall-distance input and (3) owner-answer store conflict with MCBYLAWS-QUEUE.md:94 row 6c and task-213 GAP.12: scope raised as OPERATOR task-323 with a recommendation: page, mock and link only in 1·B. Rows MF-84 (:597 BUILT, awaiting DB job and push), MF-89 (:649), MF-90 (:654) linked.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0264 · task-319 · Backlog; operator, verbatim: "1 y")
+
+Scope now: page, mock and link only in 1·B (RR-0264); the owner-input store stays at its later increment home (GAP.12 task-213)
 <!-- SECTION:NOTES:END -->

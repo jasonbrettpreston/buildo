@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-R11'
 created_date: '2026-11-19T15:20:00Z'
-updated_date: '2026-11-19T15:20:00Z'
+updated_date: '2026-11-19T15:25:00Z'
 labels:
   - follow-up
 milestone: m-1
@@ -45,6 +45,15 @@ Operator 2026-11-19 (MORNING-DECISIONS.md:1041): "1 y 2 provide a recommendation
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. task-323: G2 decision RR-0264 naming task-323, task-319, task-209; task-323 DONE; Scope now line on task-319 (AC1)
+2. task-324: ground E.2 against doc-2, MF-44/46/76, v8 design, repo footer code; candidate recommendation; review round r1; verified Recommendation line, status OPERATOR (AC2)
+3. task-325: ground LOAD.1 against task-266/265/123, doc-16 section 5, the report path in the repo; candidate recommendation; review round r1; verified Recommendation line, status OPERATOR (AC3)
+4. one docs commit through the hooks (Task: task-326), reports commit, close task-326
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

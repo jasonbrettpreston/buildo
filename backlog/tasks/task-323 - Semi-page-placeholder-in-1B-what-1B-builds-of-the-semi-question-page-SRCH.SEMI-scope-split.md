@@ -3,10 +3,10 @@ id: TASK-323
 title: >-
   Semi page placeholder in 1B: what 1B builds of the semi question page
   (SRCH.SEMI scope split)
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T14:56:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-19T15:29:00Z'
 labels:
   - S
   - gap
@@ -35,8 +35,8 @@ Grounded: the semi question page is on the search flow, so the placeholder exist
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Operator answer recorded verbatim through scripts/analysis/backlog-decision.mjs with its cite
-- [ ] #2 task-319 scope and task-213 text updated to the answer (dated note, prior text kept)
+- [x] #1 Operator answer recorded verbatim through scripts/analysis/backlog-decision.mjs with its cite
+- [x] #2 task-319 scope and task-213 text updated to the answer (dated note, prior text kept)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -57,4 +57,12 @@ Grounded: the semi question page is on the search flow, so the placeholder exist
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): created by R10: the semi placeholder scope question (OPERATOR), Grounded and Recommendation in the description.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0264 · task-323 · Backlog; operator, verbatim: "1 y")
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Operator answer "1 y" (MORNING-DECISIONS.md:1041, RR-0264) entered through G2 as decision-76, naming task-323, task-319 and task-209; dated note on each; task-319 carries the line "Scope now: page, mock and link only in 1·B (RR-0264); the owner-input store stays at its later increment home (GAP.12 task-213)". task-213 text unchanged: the ruling leaves the store at its later home. Closed by lane BL-R11 (task-326).
+<!-- SECTION:FINAL_SUMMARY:END -->
