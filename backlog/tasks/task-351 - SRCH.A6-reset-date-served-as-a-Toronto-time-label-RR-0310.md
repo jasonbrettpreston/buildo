@@ -1,11 +1,11 @@
 ---
 id: TASK-351
 title: SRCH.A6 reset date served as a Toronto-time label (RR-0310)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-RESET'
 created_date: '2026-11-19T21:29:00Z'
-updated_date: '2026-11-19T22:11:00Z'
+updated_date: '2026-11-19T22:13:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -15,6 +15,7 @@ dependencies:
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1207
   - docs/reports/lanes/2026-11-19/BL-A6/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-RESET/REPORT.md
 type: build
 ordinal: 51012
 ---
@@ -56,13 +57,13 @@ Files: src/lib/entitlements/index.ts, src/lib/parcels/lot-size-entry.ts, src/app
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An instant between 19:00 and 24:00 Toronto standard time (e.g. 2026-12-09T02:00:00Z) is served the label for the Toronto day (8 Dec 2026); 2026-12-09T05:00:00Z is served 9 Dec 2026; a server test pins both and one instant in daylight time (2026-07-10T03:30:00Z -> 9 Jul 2026)
-- [ ] #2 All twelve months are served as the v8 shape (Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec; September is Sep, not Sept) by a test over twelve instants
-- [ ] #3 Mobile and web print the identical served string: the reports_left mobile and web goldens carry the same text and the root web-binding execution test asserts it
-- [ ] #4 No date arithmetic or formatting on the device: git grep -n -E 'formatResetDate|reset_date|toLocale|Intl\.|getUTC' over mobile/src/lib/parcelSearchCore.ts, both SearchBinding files and mobile/app/(app)/parcel-tool/index.tsx prints nothing for the reset date; DERIVED_NAMES has no reset_date
-- [ ] #5 Goldens do not depend on the machine zone: the label is produced on the server from fixed instants and the goldens hold the served string; the server test passes with TZ=UTC and TZ=Pacific/Auckland
-- [ ] #6 The contract stays additive_only: resetsOn is unchanged on the wire; the new field is in the descriptor whitelist and the census mirror; surface-validate, consumer-registry, generate-target-files and generate-surface-registry --check are clean; S-sbind string count unchanged at 425
-- [ ] #7 Nothing else on the search page moves: the other ten search goldens and the lot map and semi goldens are byte-identical
+- [x] #1 An instant between 19:00 and 24:00 Toronto standard time (e.g. 2026-12-09T02:00:00Z) is served the label for the Toronto day (8 Dec 2026); 2026-12-09T05:00:00Z is served 9 Dec 2026; a server test pins both and one instant in daylight time (2026-07-10T03:30:00Z -> 9 Jul 2026)
+- [x] #2 All twelve months are served as the v8 shape (Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec; September is Sep, not Sept) by a test over twelve instants
+- [x] #3 Mobile and web print the identical served string: the reports_left mobile and web goldens carry the same text and the root web-binding execution test asserts it
+- [x] #4 No date arithmetic or formatting on the device: git grep -n -E 'formatResetDate|reset_date|toLocale|Intl\.|getUTC' over mobile/src/lib/parcelSearchCore.ts, both SearchBinding files and mobile/app/(app)/parcel-tool/index.tsx prints nothing for the reset date; DERIVED_NAMES has no reset_date
+- [x] #5 Goldens do not depend on the machine zone: the label is produced on the server from fixed instants and the goldens hold the served string; the server test passes with TZ=UTC and TZ=Pacific/Auckland
+- [x] #6 The contract stays additive_only: resetsOn is unchanged on the wire; the new field is in the descriptor whitelist and the census mirror; surface-validate, consumer-registry, generate-target-files and generate-surface-registry --check are clean; S-sbind string count unchanged at 425
+- [x] #7 Nothing else on the search page moves: the other ten search goldens and the lot map and semi goldens are byte-identical
 <!-- AC:END -->
 
 ## Definition of Done
@@ -91,4 +92,12 @@ Files: src/lib/entitlements/index.ts, src/lib/parcels/lot-size-entry.ts, src/app
 Dated note 2026-11-19 (M-246, prior text kept; RR-0310 · task-351 · Backlog; operator, verbatim: "your recommendation is approved")
 
 2026-11-19 taken on the board at lane launch (lane BL-RESET, worktree /Users/brettpreston_macmini/Buildo-wt-reset, branch wf1/inc1b-reset), RR-0240
+
+AC evidence (commit 2d3474ee6): AC1/AC2/AC5 src/tests/parcel-reset-label.logic.test.ts green in the hook run (8 tests, TZ=UTC and TZ=Pacific/Auckland child processes); AC3 web execution test search-web-binding.ui.test.tsx (e) and both reports_left goldens carry the ref contract_parcels_entitlement.resetsOnDisplay; AC4 git grep prints nothing; AC6 S-sbind ok 425 strings, registry, consumer-registry, target-files clean; AC7 props of the other goldens unchanged, only the descriptor fingerprint line moves in the ten search goldens (generated). Not run: mobile jest. See docs/reports/lanes/2026-11-19/BL-RESET/REPORT.md.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Served resetsOnDisplay (Toronto date, fixed month names) on GET /api/parcels/entitlement; both search bindings print it; formatResetDate and derived name reset_date removed. Commit 2d3474ee6, hook: 67 test files passed, GATE OK, POLICY CHECKS OK. Mobile jest not run locally. Operator item: Sept on the lot-size page.
+<!-- SECTION:FINAL_SUMMARY:END -->
