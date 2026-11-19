@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CHK8'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T13:58:00Z'
+updated_date: '2026-11-19T14:00:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -72,6 +72,12 @@ who (plan text): lane
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Red test first (temp repos; commit attempt = red.out). 2. Script reads task files (backlog-lib readItems) and git log trailers over HEAD and the range. 3. Finding a: BUILT/DONE with no Task: commit; docs-only close = WARN. 4. Finding b: trailer names a task not RUNNING at that commit (BUILT/DONE ok only on its closing commit). 5. One line per finding, summary, exit 1/0, header says not a hook. 6. Green commit through hooks, typecheck, output review, run on branch, reports into repo.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
