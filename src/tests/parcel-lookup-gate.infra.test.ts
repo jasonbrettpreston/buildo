@@ -40,6 +40,12 @@ vi.mock('@/lib/parcels/lot-form', async (orig) => ({
   ...(await orig<typeof import('@/lib/parcels/lot-form')>()),
   readLotForm: vi.fn(async () => ({ detected: 'detached', basis: 'o4_not_met', unsure: false })),
 }));
+// SRCH.METER (task-334, RR-0278): the meter counts only when a report is produced, so the producer is mocked here; the default (beforeEach) is a
+// produced page, the committed v21 mobile response (src/tests/fixtures/report-page/props/page_v21.mobile.json, the fixture of parcels-lookup-page.logic.test.ts).
+vi.mock('@/lib/parcels/report-page', async (orig) => {
+  const a = await orig<typeof import('@/lib/parcels/report-page')>();
+  return { ...a, readCustomerPageResponse: vi.fn(a.readCustomerPageResponse) };
+});
 const logInfo = vi.fn();
 vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
 
@@ -48,15 +54,20 @@ import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
 import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
 import { assembleConsumerPayload } from '@/lib/parcels/consumer-lookup';
 import { resolveLotMap } from '@/lib/parcels/lot-map';
+import { readLotForm } from '@/lib/parcels/lot-form';
+import { readCustomerPageResponse } from '@/lib/parcels/report-page';
+import fs from 'node:fs';
+import path from 'node:path';
 import { GET } from '@/app/api/parcels/lookup/route';
 
+const GOLDEN = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fixtures/report-page/props/page_v21.mobile.json'), 'utf8')) as { response_fixture: Record<string, unknown> };
 const UID = '00000000-0000-0000-0000-0000000045a1';
 const NOW = new Date('2026-11-20T12:00:00.000Z');
 const PERIOD_END = new Date('2026-12-05T10:00:00.000Z');
 const ROW = { parcel_id: 'P-45', lot_size_sqm: 400, neighbourhood_id: null, __display_address: '5 Elm St' };
 const RAW_Q = '5 elm st secret-typed-text';
 
-type Body = { data: { parcel: unknown; match: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
+type Body = { data: { parcel: unknown; match: unknown; page?: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
 const req = (qs: string): NextRequest => ({ url: `https://x.test/api/parcels/lookup?${qs}`, nextUrl: { pathname: '/api/parcels/lookup' }, headers: { get: () => null } } as unknown as NextRequest);
 const call = async (qs = 'parcelId=P-45'): Promise<{ status: number; body: Body }> => {
   const res = await GET(req(qs));
@@ -120,6 +131,7 @@ const withEvaluatedOption = (...a: Parameters<typeof assembleConsumerPayload>) =
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(assembleConsumerPayload).mockImplementation(withEvaluatedOption);
+  vi.mocked(readCustomerPageResponse).mockResolvedValue(GOLDEN.response_fixture);
   poolQuery.mockReset();
   txQuery.mockReset();
   vi.mocked(fetchParcelById).mockResolvedValue({ ...ROW });
@@ -270,6 +282,66 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
     await call();
     const log = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
     expect(log?.[2]).toMatchObject({ access: 'lead_gen_transitional', meter: 'unmetered' });
+  });
+});
+
+describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I find the address and lot I'm looking for and a report is produced")`, () => {
+  const meterLog = () => (logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup')?.[2] ?? {}) as Record<string, unknown>;
+  beforeEach(() => { ctx(null); parcelTool('active'); });
+  it('a q lookup of one lot with NO report produced (page null) is served and counts nothing, no meter read', async () => {
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(r.status).toBe(200);
+    expect(r.body.data?.parcel).not.toBeNull();
+    expect(meterCalls()).toBe(0);
+    expect(inserts()).toHaveLength(0);
+    expect(meterLog()).toMatchObject({ access: 'parcel_tool', meter: 'not_produced', outcome: 'hit' });
+  });
+  it('the parcelId path with no report produced counts nothing either', async () => {
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    const r = await call('parcelId=P-45');
+    expect(r.status).toBe(200);
+    expect(meterCalls()).toBe(0);
+  });
+  it('an unsure lot (the semi question comes first) counts nothing even with a page, no meter read', async () => {
+    vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
+    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(r.status).toBe(200);
+    expect(r.body.data?.page).not.toBeNull();
+    expect(meterCalls()).toBe(0);
+    expect(meterLog()).toMatchObject({ meter: 'semi_pending', lot_form_unsure: true });
+  });
+  it('a report produced for the found lot counts once: one row keyed on the lot, log meter counted', async () => {
+    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(r.status).toBe(200);
+    expect(r.body.data?.page).not.toBeNull();
+    expect(inserts()).toHaveLength(1);
+    expect(inserts()[0]![1]).toEqual([UID, 'P-45', NOW]);
+    expect(meterLog()).toMatchObject({ meter: 'counted', page: true });
+  });
+  it('a second report for the same lot in the month counts nothing more (already_counted, no insert)', async () => {
+    meter({ used: 1, already: true });
+    const r = await call('parcelId=P-45');
+    expect(r.status).toBe(200);
+    expect(inserts()).toHaveLength(0);
+    expect(meterLog()).toMatchObject({ meter: 'already_counted' });
+  });
+  it('a new lot at the limit with no report produced is served, not refused (nothing to charge)', async () => {
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    meter({ used: 3, already: false });
+    const r = await call();
+    expect(r.status).toBe(200);
+    expect(inserts()).toHaveLength(0);
+  });
+  it('candidates, a miss, a lot map and a dangling id never ask the producer and never reach the meter (page null, parcel null)', async () => {
+    vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [{ parcelId: 'A', address: 'a' }, { parcelId: 'B', address: 'b' }], truncated: false, resolution: 'text_candidates', lotMap: null } as never);
+    expect((await call('q=x%20st')).body.data?.parcel).toBeNull();
+    vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [], truncated: false, resolution: 'no_match', lotMap: null } as never);
+    expect((await call('q=y%20st')).body.data?.parcel).toBeNull();
+    vi.mocked(fetchParcelById).mockResolvedValue(null);
+    expect((await call('parcelId=GONE')).body.data?.parcel).toBeNull();
+    expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();
+    expect(meterCalls()).toBe(0);
   });
 });
 

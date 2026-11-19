@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-METER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:53:00Z'
+updated_date: '2026-11-19T15:54:00Z'
 labels:
   - S
   - plan:SRCH.METER
@@ -27,6 +27,8 @@ ordinal: 35012
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Operator 2026-11-19 (RR-0278, MORNING-DECISIONS.md:1082): "it shouldnt count the report unless the report is produced. I should only be charged a report if I find the address and lot Im looking for and a report is produced". Grounded: yes - for a parcel_tool holder the q lookup runs openReport at route.ts:161 before the semi question shows and before any report is produced (lane BL-ROUTE, task-318). Recommendation: move the meter call to the report production point; UNVERIFIED until the lane review round.
+
+Files: src/app/api/parcels/lookup/route.ts, src/tests/parcel-lookup-gate.infra.test.ts, docs/reports/reviews/task-334/, docs/reports/lanes/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
