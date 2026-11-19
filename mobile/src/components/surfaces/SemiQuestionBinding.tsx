@@ -86,15 +86,17 @@ const cards = (s: SemiQuestionSituation): PropsNode[] =>
     ])]);
   });
 
+// SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: accessibilityState busy and the approved busy look, the rule the mock draws
+// (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85; cursor:progress }`; v8 choose-lot.html:132). The mock draws no busy section and no busy text.
 const continueButton = (s: SemiQuestionSituation): PropsNode =>
   node('Button', {
     key: 'continue',
     testID: 'parcel-semi-continue',
     variant: 'default',
-    className: L.semiSelect,
+    className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect,
     disabled: s.route === null,
     accessibilityRole: 'button',
-    accessibilityState: { disabled: s.route === null },
+    accessibilityState: s.busy ? { disabled: s.route === null, busy: true } : { disabled: s.route === null },
     accessibilityLabel: content('select.label'),
     onPress: s.route === null ? null : { action: 'push', route: s.route },
   }, [node('Text', { key: 'continue-text', className: L.selectText }, [content(s.route === null ? 'select.none' : 'select.go')])]);

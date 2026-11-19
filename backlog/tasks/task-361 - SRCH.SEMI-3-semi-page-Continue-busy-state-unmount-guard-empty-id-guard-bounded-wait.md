@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SEMI3'
 created_date: '2026-11-19T22:30:00Z'
-updated_date: '2026-11-19T22:40:00Z'
+updated_date: '2026-11-19T22:43:00Z'
 labels:
   - S
   - plan:SRCH.SEMI
@@ -71,4 +71,6 @@ Added after the lens run (BL-LENSES, DeepSeek lenses on 9fea46277; grounded on h
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-SEMI3, worktree /Users/brettpreston_macmini/Buildo-wt-semi3, branch wf1/inc1b-semi3), RR-0240
+
+BL-SEMI3 2026-11-19: all four defects confirmed on head 0eaa22fc0 and fixed. Busy = accessibilityState busy plus the mock rule opacity .85 (semi-question.html:130; the mock draws no busy section). Wait bound SEMI_CONTINUE_WAIT_MS = 60000 is a timeframe: operator item in the lane report. Not built: failed-Continue state (D-1), abort of the abandoned request, logging, answer change mid-flight (loose ends on task-343).
 <!-- SECTION:NOTES:END -->

@@ -110,6 +110,7 @@ describe('the question page (semi-question.tsx)', () => {
     expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).toMatchObject({ busy: true });
     await act(async () => { done(data(form(true))); });
     await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).not.toHaveProperty('busy');
   });
   it('a screen whose effects ran cleanup and then again (Fast Refresh, StrictMode) still opens the report after the lookup resolves', async () => {
     mockHook = { ...mockHook, data: data(form(true)) };
@@ -157,9 +158,8 @@ describe('the question page (semi-question.tsx)', () => {
       expect(screen.getByTestId('parcel-semi-answer-yes').props.accessibilityState).toMatchObject({ checked: true });
       expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).not.toHaveProperty('busy');
       fireEvent.press(screen.getByTestId('parcel-semi-continue'));
-      await act(async () => { await Promise.resolve(); });
+      await waitFor(() => expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=semi_half']]));
       expect(mockFetchLookup).toHaveBeenCalledTimes(2);
-      expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=semi_half']]);
     } finally {
       jest.useRealTimers();
     }

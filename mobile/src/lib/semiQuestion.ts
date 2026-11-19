@@ -12,6 +12,27 @@ import type { ConsumerParcelLookupResult } from '@/lib/schemas';
 import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
 import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
 
+/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). */
+export const SEMI_CONTINUE_WAIT_MS = 60_000;
+
+class SemiContinueTimeoutError extends Error {
+  constructor() {
+    super('The answered lookup did not settle in time');
+    this.name = 'SemiContinueTimeoutError';
+  }
+}
+
+/** Resolves or rejects as `p` does, or rejects with SemiContinueTimeoutError after `ms`; the timer is cleared on either settle and a late settle of `p` is handled. */
+export function boundedWait<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new SemiContinueTimeoutError()), ms);
+    p.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 export const SEMI_QUESTION_STATES = ['loading', 'ask', 'error', 'redirect'] as const;
 export type SemiQuestionState = (typeof SEMI_QUESTION_STATES)[number];
 
@@ -25,6 +46,8 @@ export type SemiQuestionSituation = {
   selected: SemiAnswer | null;
   /** Where Continue goes (the report with the answer), else null (Continue disabled). */
   route: string | null;
+  /** Continue's answered lookup is running (SRCH.SEMI-3): true only in the ask state. */
+  busy: boolean;
   /** The redirect state's target (the report; the Lookup route with no data), else null. */
   navigate: string | null;
 };
@@ -36,6 +59,8 @@ export function buildSemiQuestionSituation(args: {
   isFetching: boolean;
   schemaDrift: boolean;
   selected: SemiAnswer | null;
+  /** Continue's answered lookup is running; optional, false when omitted. */
+  submitting?: boolean;
 }): SemiQuestionSituation {
   const { parcelId, data, error, isFetching } = args;
   const errors = classifyParcelSearchError(error, args.schemaDrift);
@@ -56,6 +81,7 @@ export function buildSemiQuestionSituation(args: {
     answers: ask ? [...SEMI_ANSWERS] : [],
     selected,
     route: selected === null ? null : reportRouteAfterAnswer(parcelId, selected),
+    busy: ask && args.submitting === true,
     navigate,
   };
 }
