@@ -449,5 +449,6 @@ export const ParcelToolEntitlementSchema = z.object({
   reportsLeft: z.number().int().nonnegative().nullable(),
   reportsLimitReached: z.boolean().nullable(),
   resetsOn: z.string().datetime().nullable(),
+  resetsOnDisplay: z.string().nullable(),
 });
 export type ParcelToolEntitlement = z.infer<typeof ParcelToolEntitlementSchema>;

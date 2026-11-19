@@ -23,7 +23,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
 import { footerNode, type FooterLayout, type FooterSection } from './footerNode';
-import { diffCandidateAddress, formatResetDate, parcelSearchPath, reportsLeftShown, type AddressSegment, type EntitlementLine, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
+import { diffCandidateAddress, parcelSearchPath, reportsLeftShown, type AddressSegment, type EntitlementLine, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
 
 export type Ref = { content: string } | { contract: string } | { derived: string };
 export type Template = { text: Ref; vars: Record<string, Ref> };
@@ -148,7 +148,7 @@ const reportsLeft = (s: WebSituation): WebNode[] =>
   reportsLeftShown(s.entitlement)
     ? [node('Text', { key: 'reports-left', testID: 'parcel-search-reports-left', className: L.allowance }, [{
       text: content('search.reports_left'),
-      vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: derived('reset_date') },
+      vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') },
     }])]
     : [];
 
@@ -268,11 +268,10 @@ export function searchWebData(s: WebSituation): WebBindingData {
   return {
     contract: {
       [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } },
-      ...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit } } : {}),
+      ...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit, resetsOnDisplay: s.entitlement.resetsOnDisplay } } : {}),
     },
     derived: {
       input: s.input,
-      ...(reportsLeftShown(s.entitlement) ? { reset_date: formatResetDate(s.entitlement.resetsOn) } : {}),
       candidate_count: s.candidates.length,
       recent: s.recent,
       label: s.candidates.map((c) => c.address || c.parcelId),

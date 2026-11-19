@@ -45,7 +45,7 @@ function db(o: { status?: string | null; used?: number; throws?: boolean } = {})
     throw new Error(`unexpected query: ${text}`);
   });
 }
-const NULLS = { status: null, reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null };
+const NULLS = { status: null, reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null, resetsOnDisplay: null };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -78,7 +78,7 @@ describe('T11 GET /api/parcels/entitlement (the entitlement read contract)', () 
     db({ status: 'active', used: 5 });
     const r = await call();
     expect(r.status).toBe(200);
-    expect(r.body.data).toEqual({ status: 'active', reportsUsed: 5, reportsLimit: 20, reportsLeft: 15, reportsLimitReached: false, resetsOn: '2026-12-05T10:00:00.000Z' });
+    expect(r.body.data).toEqual({ status: 'active', reportsUsed: 5, reportsLimit: 20, reportsLeft: 15, reportsLimitReached: false, resetsOn: '2026-12-05T10:00:00.000Z', resetsOnDisplay: '5 Dec 2026' });
   });
   it('used at the limit -> reportsLeft 0, reportsLimitReached true', async () => {
     db({ status: 'trial', used: 20 });

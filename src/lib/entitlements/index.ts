@@ -25,6 +25,7 @@
 
 import type { QueryResult, QueryResultRow } from 'pg';
 import { logWarn } from '@/lib/logger';
+import { formatDateDmyFixed } from '@/lib/parcels/lot-size-entry';
 import seedJson from '../../../scripts/seeds/logic_variables.json';
 
 /** A pg Pool or PoolClient — anything exposing parameterised `query`. */
@@ -620,7 +621,15 @@ export interface ParcelToolUsage {
   reportsLeft: number | null;
   reportsLimitReached: boolean | null;
   resetsOn: string | null;
+  /** resetsOn as the Toronto calendar date, "9 Dec 2026" (SRCH.A6, RR-0310): the page prints it, no date is derived on the device. */
+  resetsOnDisplay: string | null;
 }
+
+/** The Toronto-date label of a period-end instant; null for an instant that is not a valid date (never a throw on the read). */
+const resetLabel = (iso: string): string | null => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : formatDateDmyFixed(d);
+};
 
 /**
  * Reads the caller's parcel_tool plan and this month's report counts, unlocked.
@@ -629,7 +638,7 @@ export interface ParcelToolUsage {
  * failure degrades to null counts with a WARN (the meter itself stays fail-closed).
  */
 export async function readParcelToolUsage(db: Queryable, uid: string): Promise<ParcelToolUsage> {
-  const empty = { reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null };
+  const empty = { reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null, resetsOnDisplay: null };
   if (!isUuid(uid)) return { status: null, ...empty };
   const res = await db.query<ParcelToolRow>(
     `SELECT status, plan_key, current_period_end, created_at, now() AS now
@@ -655,5 +664,6 @@ export async function readParcelToolUsage(db: Queryable, uid: string): Promise<P
     reportsLeft: Math.max(0, u.reportsLimit - u.reportsUsed),
     reportsLimitReached: u.reportsUsed >= u.reportsLimit,
     resetsOn: u.resetsOn,
+    resetsOnDisplay: resetLabel(u.resetsOn),
   };
 }

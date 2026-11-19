@@ -296,7 +296,7 @@ const row = (status: string, plan_key = 'basic') => ({ status, plan_key, current
 
 describe('the read-contract values (readParcelToolUsage): server-computed, FE-05; a display, never a gate', () => {
   it('no parcel_tool row -> every field null (a zero-entitlement user is a legal state)', async () => {
-    await expect(readParcelToolUsage(usageDb({ row: null }), UID)).resolves.toEqual({ status: null, reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null });
+    await expect(readParcelToolUsage(usageDb({ row: null }), UID)).resolves.toEqual({ status: null, reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null, resetsOnDisplay: null });
   });
   it('a status outside the allowed set -> the status, every count null, no count query', async () => {
     const db = usageDb({ row: row('expired') });
@@ -305,7 +305,7 @@ describe('the read-contract values (readParcelToolUsage): server-computed, FE-05
   });
   it('active, 5 used of 20 -> 15 left, not reached, resetsOn = the billing-month end; unlocked read', async () => {
     const db = usageDb({ row: row('active'), used: 5 });
-    await expect(readParcelToolUsage(db, UID)).resolves.toEqual({ status: 'active', reportsUsed: 5, reportsLimit: 20, reportsLeft: 15, reportsLimitReached: false, resetsOn: '2026-12-05T10:00:00.000Z' });
+    await expect(readParcelToolUsage(db, UID)).resolves.toEqual({ status: 'active', reportsUsed: 5, reportsLimit: 20, reportsLeft: 15, reportsLimitReached: false, resetsOn: '2026-12-05T10:00:00.000Z', resetsOnDisplay: '5 Dec 2026' });
     expect(db.texts.some((t) => /FOR UPDATE/.test(t))).toBe(false);
   });
   it('MF-47: a Pro holder reads the Pro allowance (25); Basic reads the plan key allowance', async () => {

@@ -153,6 +153,8 @@ describe("(e) the reports-left line renders the v8 copy from the served fields o
     const line = container.querySelector("[data-testid=parcel-search-reports-left], #parcel-search-reports-left");
     expect(line?.textContent).toBe("6 of 10 reports left until 9 Dec 2026");
     expect(line?.textContent).not.toContain("{");
+    // RR-0310 (task-351): the date is the served Toronto label, the same string the mobile situation carries; no instant reaches the binding
+    expect((searchWebData(s) as { contract: Record<string, unknown> }).contract.contract_parcels_entitlement).toEqual({ reportsLeft: 6, reportsLimit: 10, resetsOnDisplay: "9 Dec 2026" });
     cleanup();
     const none = render(provided(bind(SITUATIONS.static as WebSituation)));
     expect(none.container.textContent).not.toContain("reports left");

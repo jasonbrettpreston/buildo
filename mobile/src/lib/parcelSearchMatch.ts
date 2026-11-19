@@ -354,6 +354,6 @@ export function buildSearchSituation(args: {
     selectedParcelId: selected,
     route: parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query: debounced }),
     // Only when a read answered: the key is left off otherwise so every other situation is unchanged.
-    ...(args.entitlement ? { entitlement: { reportsLeft: args.entitlement.reportsLeft, reportsLimit: args.entitlement.reportsLimit, resetsOn: args.entitlement.resetsOn } } : {}),
+    ...(args.entitlement ? { entitlement: { reportsLeft: args.entitlement.reportsLeft, reportsLimit: args.entitlement.reportsLimit, resetsOnDisplay: args.entitlement.resetsOnDisplay } } : {}),
   };
 }

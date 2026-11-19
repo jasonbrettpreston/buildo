@@ -115,6 +115,14 @@ export const formatDateDmy = (d: Date): string => {
   const get = (t: string): string => parts.find((p) => p.type === t)?.value ?? '';
   return `${get('day')} ${get('month')} ${get('year')}`;
 };
+/** SRCH.A6 reset label (task-351, RR-0310): the Toronto calendar date as the v8 draws it, "9 Dec 2026". Fixed month table over the Toronto calendar parts (Intl en-GB prints "Sept"); formatDateDmy above is unchanged. */
+const FIXED_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+const TORONTO_PARTS = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'America/Toronto' });
+export const formatDateDmyFixed = (d: Date): string => {
+  const parts = TORONTO_PARTS.formatToParts(d);
+  const num = (t: string): number => Number(parts.find((p) => p.type === t)?.value);
+  return `${num('day')} ${FIXED_MONTHS[num('month') - 1]} ${num('year')}`;
+};
 const fill = (key: string, vars: Record<string, string>): string => {
   const t = PAGE[key];
   if (typeof t !== 'string') throw new Error(`report page text ${key} is missing`);

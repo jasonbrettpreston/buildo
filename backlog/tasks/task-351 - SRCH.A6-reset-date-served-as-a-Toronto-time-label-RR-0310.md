@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-RESET'
 created_date: '2026-11-19T21:29:00Z'
-updated_date: '2026-11-19T21:52:00Z'
+updated_date: '2026-11-19T22:11:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -51,7 +51,7 @@ Pattern followed (cites above): server formats dates in America/Toronto with the
 
 Risk, MEASURED on node v24.22.0 (node -e, Intl.DateTimeFormat en-GB, America/Toronto): 2026-09-10T12:00:00Z prints "10 Sept 2026" (the v8 shape is "Sep"; the existing formatDateDmy would print Sept). 2026-12-09T02:00:00Z prints "8 Dec 2026" and 2026-12-09T05:00:00Z prints "9 Dec 2026" (the evening edge). So the label must come from a formatter with a fixed month table over Toronto calendar parts (formatToParts with a numeric month), not the en-GB short name; the existing formatDateDmy is reused only if it is first corrected, which changes its Sept output for the lot-size page: a named reason and a ruling-free fix owed in this task (test all twelve months).
 
-Files: src/lib/entitlements/index.ts, src/app/api/parcels/entitlement/types.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, mobile/src/lib/schemas.ts, mobile/src/lib/parcelSearchCore.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx, mobile/src/generated/surfaces/mobile_parcel_search.json, src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json, src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.web.json, mobile/__tests__/fixtures/parcelSearch.situations.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json, src/tests/surfaces/search-reports-left.logic.test.ts, src/tests/parcels-entitlement.infra.test.ts
+Files: src/lib/entitlements/index.ts, src/lib/parcels/lot-size-entry.ts, src/app/api/parcels/entitlement/types.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, mobile/src/lib/schemas.ts, mobile/src/lib/parcelSearchCore.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx, mobile/src/generated/surfaces/, src/tests/fixtures/surfaces/mobile_parcel_search/, mobile/__tests__/fixtures/parcelSearch.situations.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json, src/tests/surfaces/search-reports-left.logic.test.ts, src/tests/surfaces/search-web-binding.ui.test.tsx, src/tests/parcels-entitlement.infra.test.ts, src/tests/parcel-tool-meter.logic.test.ts, src/tests/parcel-reset-label.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md, docs/reports/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -78,6 +78,12 @@ Files: src/lib/entitlements/index.ts, src/app/api/parcels/entitlement/types.ts, 
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC1,AC2,AC5) Red tests first, then add formatDateDmyFixed beside formatDateDmy in src/lib/parcels/lot-size-entry.ts (Toronto calendar parts, fixed Jan..Dec table; formatDateDmy untouched) and serve resetsOnDisplay from readParcelToolUsage (src/lib/entitlements/index.ts) and the strict route schema (src/app/api/parcels/entitlement/types.ts); server test pins 2026-12-09T02:00Z->8 Dec 2026, 05:00Z->9 Dec 2026, 2026-07-10T03:30Z->9 Jul 2026, twelve months, TZ=UTC and TZ=Pacific/Auckland. 2. (AC6) Contract descriptor field_whitelist, census mirror (contracts.json x2), mobile client schema; additive_only, resetsOn unchanged. 3. (AC3,AC4) Both search bindings bind the reset var to the contract ref contract_parcels_entitlement.resetsOnDisplay; remove formatResetDate, DERIVED_NAMES reset_date and the derived write; situation fixture carries the served label; web binding execution test asserts the same text on web and mobile. 4. (AC5,AC7) Regenerate goldens, mobile slice, registry only by their scripts; other ten search goldens, lot map and semi goldens byte-identical. 5. Checks before and after, typecheck, review round, reports, close.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

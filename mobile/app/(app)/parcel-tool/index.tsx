@@ -75,7 +75,7 @@ export default function ParcelSearchScreen() {
       selectedParcelId,
       cap: SEARCH_CANDIDATE_LIMIT,
       minQueryLen: SEARCH_MIN_QUERY_LEN,
-      entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOn: entitlement.resetsOn } : null,
+      entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null,
     }),
     [input, debounced, data, error, isFetching, recent, selectedParcelId, entitlement],
   );

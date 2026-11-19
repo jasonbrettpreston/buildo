@@ -8,7 +8,7 @@
 // EXISTING entitlement read GET /api/parcels/entitlement (reportsLeft, reportsLimit, resetsOn). Nothing is counted here: the meter is SRCH.METER
 // (task-334); this only SHOWS the served count. Cases:
 //   (a) the copy is the v8 template, one content key, in the content file and the generated mobile slice;
-//   (b) the new state's two goldens carry ONE node with exactly the three bound values (two contract refs and the derived reset_date), no raw text;
+//   (b) the new state's two goldens carry ONE node with exactly the three bound values (three contract refs, among them resetsOnDisplay), no raw text;
 //   (c) a situation with no entitlement data (the ten committed states) carries no such node: an undrawn state renders no line;
 //   (d) the pure rules: formatResetDate writes the served date and nothing else; reportsLeftShown is false unless all three served fields are present;
 //   (e) the declarations: surface descriptor, contract descriptor and the census mirror agree; the state is declared; nothing computed on the client;
@@ -17,7 +17,8 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { formatResetDate, reportsLeftShown } from '../../../mobile/src/lib/parcelSearchCore';
+import * as core from '../../../mobile/src/lib/parcelSearchCore';
+const { reportsLeftShown } = core;
 import { shouldDehydrateQueryFn } from '../../../mobile/src/lib/persistFilter';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- golden JSON
@@ -68,14 +69,14 @@ describe('A.6 (b): the new state binds exactly the three served values', () => {
       expect(tpl.vars).toEqual({
         left: { contract: 'contract_parcels_entitlement.reportsLeft' },
         allowance: { contract: 'contract_parcels_entitlement.reportsLimit' },
-        reset: { derived: 'reset_date' },
+        reset: { contract: 'contract_parcels_entitlement.resetsOnDisplay' },
       });
       // the value refs of the node are exactly these three plus the content key: no other field, no computed value
       expect([...new Set(refsOf(line))].sort()).toEqual([
         `content:${KEY}`,
         'contract:contract_parcels_entitlement.reportsLeft',
         'contract:contract_parcels_entitlement.reportsLimit',
-        'derived:reset_date',
+        'contract:contract_parcels_entitlement.resetsOnDisplay',
       ]);
       expect(JSON.stringify(line)).not.toMatch(/reportsUsed|reportsLimitReached/);
     }
@@ -100,37 +101,26 @@ describe('A.6 (c): an undrawn state renders no line', () => {
   });
   it('the situation of the new state is the idle page with the served values, and no other committed situation carries entitlement data', () => {
     const s = rj('mobile/__tests__/fixtures/parcelSearch.situations.json');
-    expect(s.reports_left.entitlement).toEqual({ reportsLeft: 6, reportsLimit: 10, resetsOn: '2026-12-09T00:00:00.000Z' });
+    expect(s.reports_left.entitlement).toEqual({ reportsLeft: 6, reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' });
     for (const [name, v] of Object.entries(s)) if (name !== 'reports_left' && name !== '$comment') expect((v as Json).entitlement, name).toBeUndefined();
   });
 });
 
 describe('A.6 (d): the pure rules', () => {
-  it('formatResetDate writes the served date as the v8 shows it, with no date arithmetic and no clock', () => {
-    expect(formatResetDate('2026-12-09T00:00:00.000Z')).toBe('9 Dec 2026');
-    expect(formatResetDate('2026-01-01T00:00:00.000Z')).toBe('1 Jan 2026');
-    expect(formatResetDate('2026-12-31T23:59:59.999Z')).toBe('31 Dec 2026');
-    expect(formatResetDate('2028-02-29T06:30:00.000Z')).toBe('29 Feb 2028');
-    expect(formatResetDate('2026-03-10T12:00:00Z')).toBe('10 Mar 2026');
-    expect(formatResetDate('2000-02-29T00:00:00.000Z')).toBe('29 Feb 2000');
-    expect(formatResetDate('2026-04-30T00:00:00.000Z')).toBe('30 Apr 2026');
-  });
-  it('formatResetDate is null for anything that is not an ISO instant (never a half-written date)', () => {
-    for (const bad of [null, undefined, '', 'tomorrow', '2026-13-01T00:00:00.000Z', '2026-12-32T00:00:00.000Z', '2026-12-09', '2026-02-30T00:00:00.000Z', '2026-04-31T00:00:00.000Z', '2026-02-29T00:00:00.000Z', '2100-02-29T00:00:00.000Z', 12]) {
-      expect(formatResetDate(bad as never), String(bad)).toBeNull();
-    }
+  it('the device has no date formatter: formatResetDate is gone and the line binds the served label', () => {
+    expect((core as Json).formatResetDate).toBeUndefined();
   });
   it('reportsLeftShown: all three served fields present shows the line, a served 0 included; any null, or no entitlement, shows nothing', () => {
-    const full = { reportsLeft: 6, reportsLimit: 10, resetsOn: '2026-12-09T00:00:00.000Z' };
+    const full = { reportsLeft: 6, reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' };
     expect(reportsLeftShown(full)).toBe(true);
     expect(reportsLeftShown({ ...full, reportsLeft: 0 })).toBe(true);
     expect(reportsLeftShown({ ...full, reportsLeft: null })).toBe(false);
     expect(reportsLeftShown({ ...full, reportsLimit: null })).toBe(false);
-    expect(reportsLeftShown({ ...full, resetsOn: null })).toBe(false);
-    expect(reportsLeftShown({ reportsLeft: null, reportsLimit: null, resetsOn: null })).toBe(false);
+    expect(reportsLeftShown({ ...full, resetsOnDisplay: null })).toBe(false);
+    expect(reportsLeftShown({ reportsLeft: null, reportsLimit: null, resetsOnDisplay: null })).toBe(false);
     expect(reportsLeftShown(null)).toBe(false);
     expect(reportsLeftShown(undefined)).toBe(false);
-    expect(reportsLeftShown({ ...full, resetsOn: 'not a date' })).toBe(false);
+    expect(reportsLeftShown({ ...full, resetsOnDisplay: '' })).toBe(false);
   });
 });
 
@@ -139,10 +129,10 @@ describe('A.6 (e): the declarations agree and nothing is computed', () => {
     const s = rj(`${SURF}/mobile_parcel_search.descriptor.json`);
     expect(s.inputs.contract_ref).toEqual(['/api/parcels/lookup', '/api/parcels/entitlement']);
     const c = rj(CONTRACT_DESCRIPTOR);
-    expect(c.inputs.field_whitelist).toEqual(expect.arrayContaining(['reportsLeft', 'reportsLimit', 'resetsOn']));
+    expect(c.inputs.field_whitelist).toEqual(expect.arrayContaining(['reportsLeft', 'reportsLimit', 'resetsOn', 'resetsOnDisplay']));
     expect(c.sharing.surfaces).toEqual(['mobile/src/hooks/useParcelLookup.ts:96']);
     expect(c['x-draft'].consumers).toEqual(['mobile/src/hooks/useParcelLookup.ts']);
-    expect(JSON.stringify(s.deviations)).toContain('reset_date');
+    expect(JSON.stringify(s.deviations)).not.toContain('reset_date');
   });
   it('the census mirror of the entitlement contract equals its descriptor (hand-kept mirror, kept in step)', () => {
     const census = Object.values(rj('scripts/surfaces/_schema/census/contracts.json')) as Json[];
@@ -152,7 +142,8 @@ describe('A.6 (e): the declarations agree and nothing is computed', () => {
   it('the bindings compute nothing: no reportsUsed, no arithmetic on the served numbers, in either binding module', () => {
     for (const f of ['mobile/src/components/surfaces/SearchBinding.tsx', 'src/components/surfaces/web/SearchBinding.tsx']) {
       const t = rt(f);
-      expect(t, f).toContain('reset_date');
+      expect(t, f).not.toMatch(/formatResetDate|reset_date/);
+      expect(t, f).toContain('resetsOnDisplay');
       expect(t, f).not.toMatch(/reportsUsed|reportsLimitReached/);
       expect(t, f).not.toMatch(/reportsLimit\s*[-+*/]|[-+*/]\s*reportsLeft|reportsLeft\s*[-+*/]/);
     }
@@ -162,6 +153,7 @@ describe('A.6 (e): the declarations agree and nothing is computed', () => {
     expect(at).toBeGreaterThan(-1);
     const decl = sch.slice(at, sch.indexOf(';', at));
     expect(decl).toMatch(/resetsOn: z\.string\(\)\.datetime\(\)\.nullable\(\)/);
+    expect(decl).toMatch(/resetsOnDisplay: z\.string\(\)\.nullable\(\)/);
     expect(decl).not.toMatch(/\.strict\(\)/);
   });
   it('the app reads the entitlement through one hook, re-read when the search screen gains focus', () => {

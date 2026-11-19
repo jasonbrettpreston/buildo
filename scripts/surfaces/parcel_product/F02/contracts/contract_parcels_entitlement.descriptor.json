@@ -80,7 +80,8 @@
       "reportsLimit",
       "reportsLeft",
       "reportsLimitReached",
-      "resetsOn"
+      "resetsOn",
+      "resetsOnDisplay"
     ],
     "tables": [
       {

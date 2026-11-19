@@ -14,7 +14,8 @@ export const ParcelToolEntitlementResponseSchema = z
     reportsLimit: z.number().int().positive().nullable(),
     reportsLeft: z.number().int().nonnegative().nullable(),
     reportsLimitReached: z.boolean().nullable(),
-    resetsOn: z.string().datetime().nullable(), // the billing-month end, ISO-8601; the page formats it
+    resetsOn: z.string().datetime().nullable(), // the billing-month end, ISO-8601; the instant stays on the wire (additive_only)
+    resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date, "9 Dec 2026" (RR-0310); the page prints it
   })
   .strict();
 export type ParcelToolEntitlementResponse = z.infer<typeof ParcelToolEntitlementResponseSchema>;
