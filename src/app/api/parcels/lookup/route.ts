@@ -100,7 +100,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     // Resolution: direct id (candidate click) bypasses address parsing.
     const resolved = parcelId
       ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
-      : await resolveAddress(q!, { classifyUnlinked: true });
+      : await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });
 
     // The map read runs only on the resolver's own seed (never on the parcelId path).
     const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;

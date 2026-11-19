@@ -15,8 +15,7 @@
 //   an unclear address (a street, no number) -> the candidates list (B.1, in place: no navigation)
 //   a possible semi lot (lotForm.unsure) -> the report route, whose mount replaces it with the semi question page (D.1; the page is task-319)
 //   the plain one-lot case -> the report route, no question
-// Not routed today, so NOT asserted as a route: a MIS-TYPED street (sample 7, "41 Derwin Road") ends in no_match, not candidates (it.todo below;
-// OPERATOR item in the lane report). The intersection (B.4/B.10, LS.11) is not one of the four cases of this task.
+// A MIS-TYPED street (sample 7, "41 Derwin Road") routes to the candidates list through the permit pipeline's address matcher (task-333, last describe). The intersection (B.4/B.10, LS.11) is not one of the four cases of this task.
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 
@@ -26,10 +25,12 @@ const state = {
   exact: {} as Record<string, Row[]>, // 'NUM|STREET' -> parcels rows
   typeahead: [] as Row[],
   unlinked: [] as Row[],
+  fuzzy: [] as Row[], // the permit pipeline's address matcher read (miss case only), keyed by nothing: the case sets the rows
   lotForm: {} as Record<string, Row>, // parcel_id -> parcel_lot_form row
 };
 const dbQuery = vi.fn(async (text: string, params: unknown[] = []): Promise<Row[]> => {
   if (/WHERE addr_num_normalized = \$1 AND street_name_normalized = \$2/.test(text)) return state.exact[`${params[0]}|${params[1]}`] ?? NO_ROWS;
+  if (/levenshtein\(normalize_address\(street_name_normalized\)/.test(text)) return state.fuzzy;
   if (/NOT EXISTS \(SELECT 1 FROM parcel_address_points/.test(text)) return state.unlinked;
   if (/FROM address_points ap\s+JOIN parcel_address_points/.test(text)) return state.typeahead;
   if (/FROM parcel_lot_form/.test(text)) return state.lotForm[String(params[0])] ? [state.lotForm[String(params[0])]!] : NO_ROWS;
@@ -87,6 +88,7 @@ beforeEach(() => {
   state.exact = {};
   state.typeahead = [];
   state.unlinked = [];
+  state.fuzzy = [];
   state.lotForm = {};
 });
 
@@ -174,8 +176,40 @@ describe('SRCH.ROUTE: one route per case', () => {
   });
 });
 
-describe('SRCH.ROUTE: owed, not routed today', () => {
-  // Sample 7: "41 Derwin Road" gives exact 0, typeahead 0 (prefix DERWIN%), unlinked 0 -> no_match; no fuzzy match exists (parcel-lookup.ts:286).
-  // The task text sends a mis-typed address to the candidates page; that needs a design (the matching rule, the copy): OPERATOR item.
-  it.todo('OPERATOR item: a mis-typed street (41 Derwin Road) routes to the candidates page (today: no_match)');
+describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline address matcher, same function)', () => {
+  // The matcher is the pipeline's own pair: normalize_address() + levenshtein() <= the logic variable enrich_heritage_address_levenshtein_threshold
+  // (Spec 61 L13; scripts/lib/compute/enrich-heritage.js:121, :174). It runs only after exact, typeahead and unlinked returned nothing.
+  it('41 Derwin Road (sample 7) -> the candidates page with 41 Derwyn Rd, through the matcher read', async () => {
+    state.fuzzy = [{ parcel_id: '5293897', address: '41 Derwyn Rd' }];
+    const { data, route } = await search('41 Derwin Road');
+    expect(dbQuery.mock.calls.map((c) => String(c[0]).includes('levenshtein('))).toEqual([false, false, false, true]); // exact, typeahead, unlinked, then the matcher
+    expect(readParams(3)).toEqual(['41', 'DERWIN']);
+    const sql = String(dbQuery.mock.calls[3]![0]);
+    expect(sql).toContain("variable_key = 'enrich_heritage_address_levenshtein_threshold'"); // the threshold is the pipeline's variable, no literal
+    expect(sql).toContain('LIMIT 10');
+    expect(data.resolution).toBe('text_candidates');
+    expect(data.match).toBeNull();
+    expect(data.map).toBeNull();
+    expect(data.candidates).toEqual([{ parcelId: '5293897', address: '41 Derwyn Rd' }]);
+    expect(route).toBeNull(); // candidates in place (B.1), the same route outcome as the other candidates cases
+  });
+
+  it('a nonsense street matches nothing and stays no_match', async () => {
+    const { data, route } = await search('41 Qzxqzx Road');
+    expect(readParams(3)).toEqual(['41', 'QZXQZX']);
+    expect(data.resolution).toBe('no_match');
+    expect(data.candidates).toEqual([]);
+    expect(route).toBe(parcelSearchPath('no_match' as SearchOutcome, { parcelId: null, query: '41 Qzxqzx Road' }, BASE));
+  });
+
+  it('no house number: the matcher never runs (street-only stays today\'s typeahead path)', async () => {
+    await search('Derwin Road');
+    expect(dbQuery.mock.calls.some((c) => String(c[0]).includes('levenshtein('))).toBe(false);
+  });
+
+  it('an exact hit never reaches the matcher (hot path unchanged)', async () => {
+    state.exact['41|DERWYN'] = [{ parcel_id: '5293897', address: '41 Derwyn Rd' }];
+    await search('41 Derwyn Road');
+    expect(dbQuery.mock.calls.some((c) => String(c[0]).includes('levenshtein('))).toBe(false);
+  });
 });

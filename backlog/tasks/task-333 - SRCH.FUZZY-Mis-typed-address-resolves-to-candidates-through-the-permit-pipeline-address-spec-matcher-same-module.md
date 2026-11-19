@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FUZZY'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:46:00Z'
+updated_date: '2026-11-19T15:50:00Z'
 labels:
   - S
   - plan:SRCH.FUZZY
@@ -51,6 +51,12 @@ Operator 2026-11-19 (RR-0277, MORNING-DECISIONS.md:1082): "we have resolved this
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Ground (done): the permit pipeline's address matcher is the SQL pair normalize_address() (migration 170 L27) + levenshtein() <= logic variable enrich_heritage_address_levenshtein_threshold (Spec 61 L13, scripts/lib/compute/enrich-heritage.js:121); the web already shares the pipeline join-key normalizer via src/lib/parcels/address.ts (mirror of scripts/lib/address-normalizers.js). No port: the web route calls the same DB function and variable through query(). 2. Red: turn the it.todo in src/tests/search-routing.logic.test.ts into a green-case asserting 41 Derwin Road returns text_candidates (route null, list in place) plus a boundary case (nonsense string stays no_match); commit attempt with only test+task staged = red.out. 3. Wire one static statement behind the no_match tail of resolveAddress in src/lib/admin/parcel-lookup.ts (miss only, number required, LIMIT 10, threshold read from logic_variables, no literal); green commit with Task: task-333 = commit.out. 4. Output review (one lens), triage, close ACs.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

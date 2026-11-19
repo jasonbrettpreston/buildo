@@ -189,8 +189,9 @@ const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(lin
 /**
  * `opts.classifyUnlinked` (MF-53, the consumer route only): on a typeahead miss with a house number, read whether live address points exist
  * with NO lot link (`unlinked`), else `no_match`. The admin call leaves it off and keeps today's two reads (PLAN panel regression MEDIUM-3).
+ * `opts.matchMistyped` (task-333 SRCH.FUZZY, the consumer route only): on that final miss, read the permit pipeline's address matcher (below).
  */
-export async function resolveAddress(q: string, opts: { classifyUnlinked?: boolean } = {}): Promise<Resolution> {
+export async function resolveAddress(q: string, opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {}): Promise<Resolution> {
   const { num, streetName } = parseFreeTextAddress(q);
   if (!streetName) return { match: null, candidates: [], resolution: 'no_match', lotMap: null };
 
@@ -281,6 +282,25 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
         // One printed address: the pin and its neighbours (operator ruling 2026-09-16). Several: the honest message, no map (DECISIONS-v3 Q5 i).
         lotMap: { kind: 'unlinked', address: first.address, pin },
       };
+    }
+  }
+  // 4) task-333 SRCH.FUZZY (RR-0277, "the same approach ... the exact same function"): a mis-typed street, on the miss only (exact, typeahead and
+  //    unlinked above returned nothing, so the hot path is unchanged). The matcher is the permit pipeline's own pair: normalize_address()
+  //    (migration 170) and levenshtein() <= the logic variable enrich_heritage_address_levenshtein_threshold (Spec 61 L13;
+  //    scripts/lib/compute/enrich-heritage.js:121, :174). The house number stays exact (idx_parcels_address leads with it); a missing
+  //    variable gives NULL and no rows (no literal fallback). `$2` is the parsed street token (the consumer q is capped at 120, types.ts:42).
+  if (opts.matchMistyped && num) {
+    const near = await query<{ parcel_id: string; address: string }>(
+      `SELECT parcel_id, ${displayAddress} AS address
+       FROM parcels
+       WHERE addr_num_normalized = $1
+         AND levenshtein(normalize_address(street_name_normalized), normalize_address($2))
+             <= (SELECT variable_value FROM logic_variables WHERE variable_key = 'enrich_heritage_address_levenshtein_threshold')
+       ORDER BY levenshtein(normalize_address(street_name_normalized), normalize_address($2)), address, parcel_id LIMIT 10`,
+      [num, streetName],
+    );
+    if (near.length > 0) {
+      return { match: null, candidates: near.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
     }
   }
   return { match: null, candidates, resolution: 'no_match', lotMap: null };
