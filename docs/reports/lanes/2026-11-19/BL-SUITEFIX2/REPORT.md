@@ -38,3 +38,15 @@ Commits of task-123 (1ee2c3964, ace93fc92, 3364b5636): all generator checks clea
 - Follow-up not done (scope): mounts[] is a hand list, so an unlisted mount escapes C-2 (r1 R6).
 
 STATUS: blocked (6 of 7 fixed and committed; C-9m waits on the operator)
+
+## ADDENDUM 2026-11-19 (evening): C-9m fixed under Option A (supersedes the C-9m "left red / blocked" lines above)
+Decision: orchestrator, under the six pre-approved criteria, MORNING-DECISIONS.md:1227 (NOT an operator ruling; the operator may overturn it, Option B stays open). Branch rebased onto wf2/board first (no-op); shas after the rebase: first fix b5286d4e5, report ba69539c3; this addendum's fix e5a54e622.
+What changed:
+- scripts/surfaces/_schema/bindings.json:73 touch_targets.mobile.Button = ["min-h-[44px]", "min-h-[48px]"], Input unchanged; dated note appended to the file's $comment (semi page, task-319, RR-0309 :1199, decision :1227).
+- src/tests/surfaces/surface-conformance.logic.test.ts: message "needs exactly one of <list>" (mobileTouchProblems, ~:879); C-9m title and real-tree case title name the list, with a dated comment; the RED fixture now has 8 nodes: still refuses no token, min-h-11, 44 with sm:min-h-8, 46 px, 40 px and a 48 px Input; accepts the listed 48 px Button. Rule unchanged: exactly one min-h- token, on the list, nothing under 44 listed.
+- mobile/__tests__/parcelScreens.golden.test.ts and reportScreens.golden.test.ts: message text only ("need exactly one of ..."; one expected string each). NOT RUN (jest, no-runner rule): UNVERIFIED.
+- No pixel of the semi page changed; no generated file moved (all --check rc=0, checks.out AFTER-2; typecheck by the hook).
+Proof (commit3.out, hook related run): "C-9m: 76 sized nodes", "✓ src/tests/surfaces/surface-conformance.logic.test.ts (44 tests)", "Test Files 1 passed (1) Tests 44 passed (44)" (C-2 and C-9m are both in that file; all 44 passed), then "GATE OK", "POLICY CHECKS OK (commit-msg)", "[wf1/inc1b-suitefix2 e5a54e622]". Task set BUILT, AC #1 checked in that commit.
+UNVERIFIED still: 48 px on a device; the two jest files; the full suite (station); no review round on option A.
+
+STATUS: ready (all seven cases pass in the pre-commit related run; C-9m rests on an orchestrator decision the operator may overturn)

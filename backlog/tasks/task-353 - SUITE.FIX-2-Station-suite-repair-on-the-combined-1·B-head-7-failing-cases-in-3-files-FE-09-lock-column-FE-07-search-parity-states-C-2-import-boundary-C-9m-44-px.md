@@ -8,7 +8,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SUITEFIX2'
 created_date: '2026-11-19T21:37:00Z'
-updated_date: '2026-11-19T21:53:00Z'
+updated_date: '2026-11-19T21:54:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -56,6 +56,8 @@ Scope now: make the push-station suite green on the board head without weakening
 2026-11-19 taken on the board at lane launch (lane BL-SUITEFIX2, worktree /Users/brettpreston_macmini/Buildo-wt-suitefix2, branch wf1/inc1b-suitefix2), RR-0240
 
 C-9m waits on the operator (RR-0309 48 px vs the exact 44 px pin); six of seven fixed in 44789da8c
+
+Report addendum: C-9m fixed in e5a54e622 under option A (MORNING-DECISIONS.md:1227)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
