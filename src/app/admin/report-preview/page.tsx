@@ -10,9 +10,11 @@
 // colour, with the synthetic banner and the target picker above it; the existing states are unchanged.
 import { ReportView } from '@/components/report/ReportView';
 import { ReportPage } from '@/components/report/ReportPage';
+import { pickFooterText } from '@/components/surfaces/web/footerNode';
 import { requireAdminPage } from '@/lib/auth/require-admin-page';
 import { pageViewOf, viewOf, type PageView, type ReportView as View } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
+import { SEARCH_CONTENT } from '@/lib/surfaces/maxbld-web';
 import { GOLDENS, PAGE_GOLDENS, STATES } from './goldens';
 
 export const dynamic = 'force-dynamic';
@@ -45,7 +47,7 @@ export default async function ReportPreviewPage({ searchParams }: { searchParams
           {pg.response_fixture.synthetic ? <p data-synthetic className="rounded border border-report-amber p-2">Synthetic golden fixture. Not this lot.</p> : null}
           <nav aria-label="Target" className="flex flex-wrap gap-2">{TARGETS.map((t) => <a key={t} href={link(t)} aria-current={t === target ? 'true' : undefined} className={t === target ? 'font-semibold underline' : ''}>{t}</a>)}<a href="/admin/report-preview">states</a></nav>
         </div>
-        <ReportPage view={pv} />
+        <ReportPage view={pv} footer={pickFooterText(SEARCH_CONTENT)} />
       </section>
     );
   }

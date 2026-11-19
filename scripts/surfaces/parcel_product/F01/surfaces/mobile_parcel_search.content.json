@@ -1,4 +1,8 @@
 {
+  "footer.copyright": "© MaxBLD",
+  "footer.help": "Help & Support",
+  "footer.privacy": "Privacy Policy",
+  "footer.terms": "Terms of Service",
   "list.badge": "{count} candidates",
   "list.rail": "Ambiguous address query",
   "list.refine": "More than 10 lots match. Add a house number to narrow it down.",

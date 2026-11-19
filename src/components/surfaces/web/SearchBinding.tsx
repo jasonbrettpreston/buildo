@@ -22,6 +22,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
+import { footerNode, type FooterLayout, type FooterSection } from './footerNode';
 import { diffCandidateAddress, parcelSearchPath, type AddressSegment, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
 
 export type Ref = { content: string } | { contract: string } | { derived: string };
@@ -58,7 +59,12 @@ export const WEB_SEARCH_LAYOUT = {
   pill: 'flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1',
   /** ph-no-capture: the analytics client never records the typed address (Spec 100 §2.8; MF-44 security S-7). */
   input: 'flex-1 ph-no-capture',
-  legal: 'mt-3 text-[13px] leading-[18px] font-normal text-zinc-400',
+  // MF-91 (RR-0270): the legal sentence is in the footer, once (v8 .wfoot: the sentence, the links, the copyright); the line under the input is gone on the web.
+  footer: 'mt-auto w-full gap-3 border-t border-zinc-800 px-4 py-6',
+  footerLinks: 'gap-2',
+  footerLink: 'rounded-xl text-zinc-300',
+  footerLegal: 'text-[13px] leading-[18px] font-normal text-zinc-400',
+  footerCopyright: 'text-[13px] leading-[18px] font-normal text-zinc-400',
   chipRow: 'mt-3 gap-2',
   chip: 'rounded-full font-mono text-xs font-normal',
   notice: 'mt-3 rounded-xl',
@@ -116,8 +122,20 @@ const pill = (s: WebSituation): WebNode =>
     ...(s.isFetching ? [node('Loader', { key: 'spinner', testID: 'parcel-search-spinner', size: 'sm', color: 'yellow', ariaLabel: content('search.searching') })] : []),
   ]);
 
-/** MF-58 (ruling 2026-11-10 items 16 and 5; queue N8 for the web page): the legal line under the address input, before any result block. */
-const legal = (): WebNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
+/** MF-91 (SRCH.FOOTER; operator "1. once  -approved"): the web footer, five items in the v8 order (search.txt:323): the legal sentence (MF-58's key, now once, here), Terms of
+ * Service, Privacy Policy, Help and Support, the copyright. Built by the one shared builder (footerNode.ts); the mobile page keeps its A.10 line under the input. */
+export const SEARCH_FOOTER: FooterSection = {
+  id: 'footer',
+  parts: [
+    { role: 'legal', content: 'search.legal' },
+    { role: 'link', content: 'footer.terms', href: '/terms' },
+    { role: 'link', content: 'footer.privacy', href: '/privacy' },
+    { role: 'link', content: 'footer.help', href: '/help' },
+    { role: 'copyright', content: 'footer.copyright' },
+  ],
+};
+const SEARCH_FOOTER_LAYOUT: FooterLayout = { footer: L.footer, links: L.footerLinks, link: L.footerLink, legal: L.footerLegal, line: L.footerLegal, copyright: L.footerCopyright };
+const footer = (): WebNode => footerNode(SEARCH_FOOTER, SEARCH_FOOTER_LAYOUT, 'parcel-search') as WebNode;
 
 const chips = (s: WebSituation): WebNode[] =>
   s.recent.length === 0
@@ -212,18 +230,18 @@ const tail = (s: WebSituation): WebNode[] => [
   ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [content('search.prompt')])] : []),
 ];
 
-/** The props tree of one render. Block order is the mobile binding's (MF-35 must-survive row 17; MF-58 legal line under the input). */
+/** The props tree of one render. Block order is the mobile binding's (MF-35 must-survive row 17) without the legal line, which is in the footer (last child, MF-91). */
 export function searchWebTree(s: WebSituation): WebNode {
   return node('Stack', { key: 'screen', testID: 'parcel-search-screen', className: L.screen }, [
     node('Stack', { key: 'column', testID: 'parcel-search-column', className: L.column }, [
       header(),
       pill(s),
-      legal(),
       ...chips(s),
       ...notices(s),
       ...addressList(s),
       ...tail(s),
     ]),
+    footer(),
   ]);
 }
 
@@ -319,7 +337,7 @@ function renderWebNode(n: WebNode, ctx: Ctx): ReactNode {
   const base = defined({ 'data-testid': p.testID, className: p.className });
   switch (n.component) {
     case 'Stack':
-      return <Stack key={k} {...base}>{kids}</Stack>;
+      return <Stack key={k} {...base} {...defined({ component: p.component })}>{kids}</Stack>;
     case 'Group':
       return <Group key={k} {...base}>{kids}</Group>;
     case 'Title':
@@ -343,6 +361,8 @@ function renderWebNode(n: WebNode, ctx: Ctx): ReactNode {
     case 'Alert':
       return <Alert key={k} {...base} {...defined({ color: p.color, variant: p.variant })}>{kids}</Alert>;
     case 'Button': {
+      // MF-91: a footer link is a real route (126 §0b item 11); it is not a control of the search form, so the live switch does not disable it.
+      if (typeof p.href === 'string') return <Button key={k} {...base} {...defined({ size: p.size, variant: p.variant, color: p.color })} component={Link} href={p.href}>{kids}</Button>;
       if (isObj(p.onClick) && p.onClick.action === 'open_help') {
         const href = `${HELP_PATH}#topic=${encodeURIComponent(String(p.onClick.topic))}&q=${encodeURIComponent(String(resolveWebValue(p.onClick.q, ctx)))}`;
         return <Button key={k} {...base} {...defined({ size: p.size, variant: p.variant, color: p.color })} component={Link} href={href}>{kids}</Button>;

@@ -105,19 +105,6 @@
             ]
           },
           {
-            "component": "Text",
-            "props": {
-              "key": "legal",
-              "testID": "parcel-search-legal",
-              "className": "mt-3 text-[13px] leading-[18px] font-normal text-zinc-400"
-            },
-            "children": [
-              {
-                "content": "search.legal"
-              }
-            ]
-          },
-          {
             "component": "Alert",
             "props": {
               "key": "error",
@@ -164,12 +151,109 @@
             ]
           }
         ]
+      },
+      {
+        "component": "Stack",
+        "props": {
+          "key": "footer",
+          "testID": "parcel-search-footer",
+          "component": "footer",
+          "className": "mt-auto w-full gap-3 border-t border-zinc-800 px-4 py-6"
+        },
+        "children": [
+          {
+            "component": "Text",
+            "props": {
+              "key": "footer-legal-0",
+              "testID": "parcel-search-legal",
+              "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+            },
+            "children": [
+              {
+                "content": "search.legal"
+              }
+            ]
+          },
+          {
+            "component": "Group",
+            "props": {
+              "key": "footer-links",
+              "className": "gap-2"
+            },
+            "children": [
+              {
+                "component": "Button",
+                "props": {
+                  "key": "footer-0",
+                  "testID": "parcel-search-link-/terms",
+                  "href": "/terms",
+                  "size": "lg",
+                  "variant": "subtle",
+                  "color": "gray",
+                  "className": "rounded-xl text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "footer.terms"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "footer-1",
+                  "testID": "parcel-search-link-/privacy",
+                  "href": "/privacy",
+                  "size": "lg",
+                  "variant": "subtle",
+                  "color": "gray",
+                  "className": "rounded-xl text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "footer.privacy"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "footer-2",
+                  "testID": "parcel-search-link-/help",
+                  "href": "/help",
+                  "size": "lg",
+                  "variant": "subtle",
+                  "color": "gray",
+                  "className": "rounded-xl text-zinc-300"
+                },
+                "children": [
+                  {
+                    "content": "footer.help"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "Text",
+            "props": {
+              "key": "footer-copyright-0",
+              "testID": "parcel-search-copyright",
+              "className": "text-[13px] leading-[18px] font-normal text-zinc-400"
+            },
+            "children": [
+              {
+                "content": "footer.copyright"
+              }
+            ]
+          }
+        ]
       }
     ]
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "c4d024b19bc6e0c6",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "c30390405a516189",
       "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "94299a5118def243"
     }
   }

@@ -11,6 +11,7 @@ import type { ReactElement } from 'react';
 import type { PagePart, PageSection, PageView, ViewImage } from '../../lib/surfaces/report/core';
 import { ReportPageToggles } from './ReportPageToggles';
 import { Picture } from './ReportView';
+import { footerNode, pickFooterText, type FooterLayout, type FooterNode, type FooterSection, type FooterText } from '../surfaces/web/footerNode';
 
 type Part = PagePart | undefined;
 // Important (trailing !): in Tailwind 4 the stylesheet order, not the class order, decides, so the slot's own type would otherwise win (design seat fold 1).
@@ -230,7 +231,43 @@ const Option = ({ s, open, image, sheet }: { s: PageSection; open: boolean; imag
 
 const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2" id={id} className="mb-[10px] mt-0 text-[20px]/[26px] font-bold" />;
 
-const Section = ({ s, open, images, sheet }: { s: PageSection; open: boolean; images: PageView['images']; sheet: boolean }): ReactElement | null => {
+// MF-91 (SRCH.FOOTER, task-332; operator "this is a shared component", MORNING-DECISIONS.md:1066): the web report footer is the ONE shared footer tree
+// (../surfaces/web/footerNode.ts) drawn with plain tags (the report renders without a Mantine provider). G2 sources (pending until GAP.4 task-127 binds its
+// value INSIDE this footer) and G3 the by-laws change line are the page parts' own texts; the three links (G5) and the copyright (G4) are the shared
+// strings the caller supplies. The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged.
+const REPORT_FOOTER_LAYOUT: FooterLayout = {
+  footer: 'grid gap-2 border-t border-report-line pt-4 text-[14px]/[20px] text-report-soft', links: 'flex flex-wrap gap-x-4 gap-y-1',
+  link: 'text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
+};
+const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElement => {
+  const kids = n.children.map((c) => ('content' in c ? text(c.content) : renderFooter(c, text)));
+  const p = n.props;
+  const key = String(p.key);
+  const cls = String(p.className);
+  switch (n.component) {
+    case 'Stack': return <footer key={key} data-section="footer" className={cls}>{kids}</footer>;
+    case 'Group': return <div key={key} className={cls}>{kids}</div>;
+    case 'Text': return <span key={key} data-pending={p.pending === true ? 'true' : undefined} className={p.pending === true ? `${cls} ${PENDING}` : cls}>{kids}</span>;
+    case 'Button': return <a key={key} href={String(p.href)} className={cls}>{kids}</a>;
+    default: throw new Error(`ReportPage footer: unmapped component "${n.component}"`);
+  }
+};
+const ReportFooter = ({ s, footer }: { s: PageSection; footer: FooterText }): ReactElement => {
+  const [g2, g3] = [one(s, 'sources'), one(s, 'change')];
+  const section: FooterSection = {
+    id: s.id,
+    parts: [
+      ...(g2 ? [{ role: 'line', content: 'sources', pending: pending(g2) }] : []),
+      ...(g3 ? [{ role: 'line', content: 'change', pending: pending(g3) }] : []),
+      { role: 'link', content: 'footer.terms', href: '/terms' }, { role: 'link', content: 'footer.privacy', href: '/privacy' }, { role: 'link', content: 'footer.help', href: '/help' },
+      { role: 'copyright', content: 'footer.copyright' },
+    ],
+  };
+  const texts: Record<string, string> = { ...footer, sources: g2?.text ?? '', change: g3?.text ?? '' };
+  return renderFooter(footerNode(section, REPORT_FOOTER_LAYOUT, 'report'), (k) => (Object.hasOwn(texts, k) ? (texts[k] as string) : (() => { throw new Error(`ReportPage footer: unknown text key "${k}"`); })()));
+};
+
+const Section = ({ s, open, images, sheet, footer }: { s: PageSection; open: boolean; images: PageView['images']; sheet: boolean; footer: FooterText }): ReactElement | null => {
   switch (s.kind) {
     case 'title':
       return <header data-section="title"><T p={one(s, 'title')} as="h1" className="m-0 text-[28px]/[34px] font-bold tracking-[-0.02em]" /></header>;
@@ -318,9 +355,7 @@ const Section = ({ s, open, images, sheet }: { s: PageSection; open: boolean; im
       return <div data-section="legal"><T p={one(s, 'line')} as="p" className="m-0 text-[14px]/[20px] text-report-muted" /></div>;
     case 'footer':
       return (
-        <footer data-section="footer" className="grid gap-2 border-t border-report-line pt-4 text-[14px]/[20px] text-report-soft">
-          <T p={one(s, 'sources')} /><T p={one(s, 'change')} /><T p={one(s, 'copyright')} />
-        </footer>
+        <ReportFooter s={s} footer={footer} />
       );
     case 'sheet':
       return (
@@ -366,13 +401,14 @@ const Section = ({ s, open, images, sheet }: { s: PageSection; open: boolean; im
   }
 };
 
-export function ReportPage({ view }: { view: PageView }): ReactElement {
+export function ReportPage({ view, footer }: { view: PageView; footer: FooterText }): ReactElement {
+  pickFooterText(footer); // a missing footer string throws, never a blank (FE-18)
   const open = view.layout.details === 'expanded';
   const sheet = view.layout.details_view === 'sheet' && !open; // MF-83 (FE-43): the layout row decides; an expanded row prints every panel open
   return (
     <ReportPageToggles>
       <div data-report-page data-target={view.target} data-details={view.layout.details} className="mx-auto grid max-w-[430px] gap-6 bg-report-page px-4 pb-14 pt-4 font-sans text-[16px]/[24px] text-report-ink">
-        {view.sections.map((s) => <Section key={s.id} s={s} open={open} images={view.images} sheet={sheet} />)}
+        {view.sections.map((s) => <Section key={s.id} s={s} open={open} images={view.images} sheet={sheet} footer={footer} />)}
       </div>
     </ReportPageToggles>
   );

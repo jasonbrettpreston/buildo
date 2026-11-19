@@ -13,15 +13,19 @@ import path from 'node:path';
 import { pageViewOf, type PageView, type ViewImage } from '../../lib/surfaces/report/core';
 import { reportCtx } from '../../lib/surfaces/report/data';
 import { ReportPage } from '../../components/report/ReportPage';
+import { pickFooterText } from '../../components/surfaces/web/footerNode';
+import { SEARCH_CONTENT as FOOTER_SOURCE } from '../../lib/surfaces/maxbld-web';
 import { PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
 import { TARGETS } from '../../../scripts/surfaces/report-checks.mjs';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON under test
 const tree = (t: string): Json => JSON.parse(fs.readFileSync(path.join(process.cwd(), PAGE_GOLDEN_DIR, `v21.${t}.json`), 'utf8')).rendered_tree;
 const view = (target: string): PageView => pageViewOf(tree(target), { target }, reportCtx) as PageView;
-const mount = (target: string) => render(<ReportPage view={view(target)} />);
+const mount = (target: string) => render(<ReportPage view={view(target)} footer={FOOTER} />);
 // MF-83 (FE-43): the in-place (inline) disclosure is the admin/pdf path and any row naming details_view: inline; mounted here with the row overridden (data, not a target name).
-const mountInline = (target: string) => render(<ReportPage view={{ ...view(target), layout: { ...(view(target).layout as Json), details_view: 'inline' } } as PageView} />);
+const mountInline = (target: string) => render(<ReportPage view={{ ...view(target), layout: { ...(view(target).layout as Json), details_view: 'inline' } } as PageView} footer={FOOTER} />);
+// MF-91: the web report footer takes its links and copyright from the shared footer (RR-0273); the caller supplies the four strings.
+const FOOTER = pickFooterText(FOOTER_SOURCE);
 const L = (reportCtx.layout as Json).targets as Json;
 // The parts that are toggle labels only (See details, Hide details, How?): drawn on collapsed rows, not on expanded rows.
 const TOGGLE_ROLES = ['size.button', 'cost.button', 'size.panel.hide', 'cost.panel.hide', 'bigger.how'];
@@ -35,6 +39,7 @@ describe('the v21 page, four layout rows', () => {
       expect(kinds).toEqual((view(target).sections as Json[]).map((s) => s.kind));
       const text = [container.textContent ?? '', ...[...container.querySelectorAll('[placeholder]')].map((e) => e.getAttribute('placeholder'))].join('\n');
       for (const s of view(target).sections as Json[]) for (const p of s.parts as Json[]) {
+        if (p.role === 'copyright') continue; // MF-91 (RR-0273): the web copyright is the shared footer's "© MaxBLD", not the G4 pending part (the mobile binding keeps it)
         if (p.role === 'size.count' && p.kind === 'pending') continue; // the notes chip is left out while its count is pending (plan fold F2; listed)
         if (L[target].details === 'expanded' && TOGGLE_ROLES.includes(p.role)) continue; // expanded rows draw every panel open, so no toggle labels
         expect(text.includes(p.text), `${s.id} ${p.role}`).toBe(true);
@@ -158,7 +163,7 @@ describe('MF-83 (FE-43) See details as a sheet with its own address', () => {
 
 describe('MF-83 group 2 (FE-42) the lot view on the page', () => {
   const lotTree = (state: string, t: string): Json => JSON.parse(fs.readFileSync(path.join(process.cwd(), PAGE_GOLDEN_DIR, `${state}.${t}.json`), 'utf8')).rendered_tree;
-  const mountState = (state: string, t: string) => render(<ReportPage view={pageViewOf(lotTree(state, t), { target: t }, reportCtx) as PageView} />);
+  const mountState = (state: string, t: string) => render(<ReportPage view={pageViewOf(lotTree(state, t), { target: t }, reportCtx) as PageView} footer={FOOTER} />);
   it('data absent (v21): no lot view anywhere', () => {
     for (const t of TARGETS as string[]) { const { container, unmount } = mount(t); expect(container.querySelector('[data-lotview]'), t).toBeNull(); unmount(); }
   });
@@ -233,7 +238,7 @@ describe('the 2026-11-11 rulings on the v21 page', () => {
   it('MF-38: an option image renders the reused ReportView figure inside that option picture box, caption from the image item', () => {
     const v = view('web');
     const sc = String((v.sections.find((s) => s.kind === 'option') as Json).scenario);
-    const { container } = render(<ReportPage view={{ ...v, images: { [sc]: IMAGE } }} />);
+    const { container } = render(<ReportPage view={{ ...v, images: { [sc]: IMAGE } }} footer={FOOTER} />);
     const figs = [...container.querySelectorAll('figure[data-block="image"]')] as HTMLElement[];
     expect(figs.length).toBe(1);
     const fig = figs[0] as HTMLElement;

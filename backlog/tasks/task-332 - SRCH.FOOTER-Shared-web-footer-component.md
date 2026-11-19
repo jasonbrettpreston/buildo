@@ -10,7 +10,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FOOTER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T20:00:00Z'
+updated_date: '2026-11-19T20:10:00Z'
 labels:
   - S
   - plan:SRCH.FOOTER
@@ -95,4 +95,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-332 · Backlog; o
 2026-11-19 dependency corrected: the footer does not wait on GAP.4 data; task-127 depends on this task (RR-0273)
 
 2026-11-19 taken on the board at lane launch (lane BL-FOOTER, worktree /Users/brettpreston_macmini/Buildo-wt-footer, branch wf1/inc1b-footer), RR-0240
+
+Build commit (lane BL-FOOTER): footerNode.ts is the one shared footer tree builder; static, web search and web report use it; web goldens by buildGoldens, mobile fingerprints by search-golden-capture.ts and emit-mobile-surfaces.mjs; S-sbind pin 414 -> 422.
 <!-- SECTION:NOTES:END -->

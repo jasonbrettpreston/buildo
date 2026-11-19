@@ -17,12 +17,14 @@ import path from 'node:path';
 import { pageViewOf, type PageView } from '../../lib/surfaces/report/core';
 import { reportCtx } from '../../lib/surfaces/report/data';
 import { ReportPage } from '../../components/report/ReportPage';
+import { pickFooterText } from '../../components/surfaces/web/footerNode';
+import { SEARCH_CONTENT as FOOTER_SOURCE } from '../../lib/surfaces/maxbld-web';
 import { PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
 
 const ROOT = process.cwd();
 // v21 web: the box and sheet are on (flags lot_size_entry_open) on a collapsed row.
 const view = (): PageView => pageViewOf(JSON.parse(fs.readFileSync(path.join(ROOT, PAGE_GOLDEN_DIR, 'v21.web.json'), 'utf8')).rendered_tree, { target: 'web' }, reportCtx) as PageView;
-const mount = () => render(<ReportPage view={view()} />);
+const mount = () => render(<ReportPage view={view()} footer={pickFooterText(FOOTER_SOURCE)} />);
 afterEach(cleanup);
 
 const parts = (c: HTMLElement) => {

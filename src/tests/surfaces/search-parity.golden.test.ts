@@ -40,15 +40,38 @@ export const testIdsOf = (n: Json): string[] => [
 ];
 const uniq = (xs: string[]): string[] => [...new Set(xs)].sort();
 
-/** The parity problems of one state's two goldens. */
+/** Every node of a props tree, in document order. */
+const nodesOf = (n: Json): Json[] => [n, ...((n.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap(nodesOf)];
+/** A copy of a props tree without the nodes `gone` names (and their subtrees). */
+const without = (n: Json, gone: (x: Json) => boolean): Json => ({
+  ...n,
+  children: ((n.children ?? []) as Json[]).filter((c) => !(c && typeof c === 'object' && 'component' in c && gone(c))).map((c) => (c && typeof c === 'object' && 'component' in c ? without(c, gone) : c)),
+});
+/** MF-91 (SRCH.FOOTER, task-332; operator, verbatim: "1. once  -approved"): the two RULED differences between the targets, named as data. The web page
+ * shows the legal sentence once, in its footer (the footer subtree, five refs); the mobile page keeps its A.10 legal line under the input and has no footer. */
+const WEB_FOOTER_REFS = ['content:footer.copyright', 'content:footer.help', 'content:footer.privacy', 'content:footer.terms', 'content:search.legal'];
+const isWebFooter = (n: Json): boolean => n.props?.component === 'footer';
+const isLegal = (n: Json): boolean => n.props?.testID === 'parcel-search-legal';
+
+/** The parity problems of one state's two goldens: the exact diff set is the footer and the legal line; everything else must be equal. */
 export const parityProblems = (state: string, web: Json, mobile: Json): string[] => {
   const out: string[] = [];
-  const [rw, rm] = [uniq(refsOf(web.props)), uniq(refsOf(mobile.props))];
+  const [wf, ml] = [nodesOf(web.props).filter(isWebFooter), nodesOf(mobile.props).filter(isLegal)];
+  if (wf.length !== 1) out.push(`${state}: web has ${wf.length} footer nodes, expected 1`);
+  else {
+    const fr = uniq(refsOf(wf[0] as Json));
+    if (JSON.stringify(fr) !== JSON.stringify(WEB_FOOTER_REFS)) out.push(`${state}: web footer refs are ${fr.join(',')}`);
+    if (web.props.children[web.props.children.length - 1] !== wf[0]) out.push(`${state}: the web footer is not last`);
+  }
+  if (ml.length !== 1) out.push(`${state}: mobile has ${ml.length} legal lines under the input, expected 1`);
+  const [wp, mp] = [without(web.props, isWebFooter), without(mobile.props, isLegal)];
+  if (nodesOf(wp).some(isLegal)) out.push(`${state}: the web legal line is not only in the footer`);
+  const [rw, rm] = [uniq(refsOf(wp)), uniq(refsOf(mp))];
   for (const r of rm) if (!rw.includes(r)) out.push(`${state}: web lacks ${r}`);
   for (const r of rw) if (!rm.includes(r)) out.push(`${state}: mobile lacks ${r}`);
-  const [aw, am] = [uniq(actionsOf(web.props)), uniq(actionsOf(mobile.props))];
+  const [aw, am] = [uniq(actionsOf(wp)), uniq(actionsOf(mp))];
   if (JSON.stringify(aw) !== JSON.stringify(am)) out.push(`${state}: actions differ: web ${aw.join(',')} / mobile ${am.join(',')}`);
-  const [tw, tm] = [testIdsOf(web.props), testIdsOf(mobile.props)];
+  const [tw, tm] = [testIdsOf(wp), testIdsOf(mp)];
   if (JSON.stringify(tw) !== JSON.stringify(tm)) out.push(`${state}: block order differs: web ${tw.join(',')} / mobile ${tm.join(',')}`);
   if (web.situation !== mobile.situation) out.push(`${state}: situation differs: ${String(web.situation)} / ${String(mobile.situation)}`);
   return out;
@@ -74,11 +97,13 @@ describe('FE-07 search parity: web vs mobile goldens of mobile_parcel_search', (
     const [w] = pair('ambiguous');
     expect(uniq(refsOf(w.props)).filter((r) => r.startsWith('contract:') || r.startsWith('derived:segments.')).length).toBeGreaterThan(3);
   });
-  it('the legal line sits under the input and before every result block on the web (queue N8; ruling 16)', () => {
+  it('the web legal line is in the footer, the last block, and nowhere else; the mobile legal line stays under the input (RR-0270)', () => {
     for (const s of STATES) {
-      const ids = testIdsOf(pair(s.golden)[0].props);
-      const legal = ids.indexOf('parcel-search-legal');
-      expect([s.golden, legal > ids.indexOf('parcel-search-input'), ids.slice(legal + 1).every((x) => !['parcel-search-input', 'parcel-search-account'].includes(x))]).toEqual([s.golden, true, true]);
+      const [w, m] = pair(s.golden);
+      const ids = testIdsOf(w.props);
+      expect([s.golden, ids.filter((x) => x === 'parcel-search-legal').length, ids.indexOf('parcel-search-footer') > ids.indexOf('parcel-search-input')]).toEqual([s.golden, 1, true]);
+      const mi = testIdsOf(m.props);
+      expect([s.golden, mi.indexOf('parcel-search-legal') > mi.indexOf('parcel-search-input'), mi.includes('parcel-search-footer')]).toEqual([s.golden, true, false]);
     }
   });
 });
@@ -86,10 +111,18 @@ describe('FE-07 search parity: web vs mobile goldens of mobile_parcel_search', (
 describe('FE-07 search parity RED: one planted change in one target is reported', () => {
   const [w, m] = pair('ambiguous');
   const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
-  it('a ref dropped from the web golden', () => {
+  it('the legal sentence dropped from the web footer, and put back under the web input', () => {
+    const lost = clone(w);
+    lost.props.children[lost.props.children.length - 1].children[0].children = [];
+    expect(parityProblems('ambiguous', lost, m)).toEqual(['ambiguous: web footer refs are content:footer.copyright,content:footer.help,content:footer.privacy,content:footer.terms']);
+    const back = clone(w);
+    back.props.children[0].children.splice(2, 0, { component: 'Text', props: { key: 'legal', testID: 'parcel-search-legal' }, children: [{ content: 'search.legal' }] });
+    expect(parityProblems('ambiguous', back, m).some((l) => l.startsWith('ambiguous: the web legal line is not only in the footer'))).toBe(true);
+  });
+  it('a third difference inside the footer is reported', () => {
     const bad = clone(w);
-    bad.props.children[0].children[2] = { component: 'Text', props: { key: 'legal', testID: 'parcel-search-legal' }, children: [] };
-    expect(parityProblems('ambiguous', bad, m)).toEqual(['ambiguous: web lacks content:search.legal']);
+    bad.props.children[bad.props.children.length - 1].children.push({ component: 'Text', props: { key: 'x' }, children: [{ content: 'search.miss' }] });
+    expect(parityProblems('ambiguous', bad, m)).toEqual(['ambiguous: web footer refs are content:footer.copyright,content:footer.help,content:footer.privacy,content:footer.terms,content:search.legal,content:search.miss']);
   });
   it('a renamed action, a swapped block and a different situation', () => {
     const bad = clone(w);
@@ -104,7 +137,7 @@ describe('FE-07 search parity RED: one planted change in one target is reported'
   });
   it('a ref only the web golden carries (the other direction)', () => {
     const bad = clone(w);
-    bad.props.children[0].children[2].children.push({ content: 'search.miss' });
+    bad.props.children[0].children[1].children.push({ content: 'search.miss' });
     expect(parityProblems('ambiguous', bad, m)).toEqual(['ambiguous: mobile lacks content:search.miss']);
   });
   it('control: the committed pair reports nothing', () => {

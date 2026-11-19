@@ -35,6 +35,8 @@ import type { Queryable as PaceQueryable } from '@/lib/parcels/report-check-pace
 import { buildTree, pageViewOf, viewOf, type PageView, type ReportView } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
 import { keepValued } from '@/lib/surfaces/maxbld-static';
+import { pickFooterText } from '@/components/surfaces/web/footerNode';
+import { SEARCH_CONTENT } from '@/lib/surfaces/maxbld-web';
 
 const TAG = '[maxbld-landing]';
 export const LANDING = 'web_landing';
@@ -142,7 +144,7 @@ export async function readLanding(db: Queryable): Promise<Landing> {
   const view = sampleView();
   // The step picture is the sample's first option picture; no image URL is issued yet (the signer is owed), so it is absent today.
   const picture = Object.values(view.images ?? {})[0];
-  const report: StaticReport = { sample: view, ...(demo ? { demo } : {}), ...(picture ? { picture } : {}) };
+  const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ...(demo ? { demo } : {}), ...(picture ? { picture } : {}) };
   const state = lines.length ? 'static' : 'degraded';
   return { state, page: landingPage(state, values, report), content, values, report };
 }

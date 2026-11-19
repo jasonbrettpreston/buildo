@@ -35,6 +35,7 @@ import Link from 'next/link';
 import { Button, Group, List, ListItem, Stack, Text, Title } from '@mantine/core';
 import { Picture, ReportView } from '@/components/report/ReportView';
 import { ReportPage } from '@/components/report/ReportPage';
+import { footerNode, type FooterLayout, type FooterText } from '@/components/surfaces/web/footerNode';
 import type { PageView, ReportView as LoadingView, ViewImage } from '@/lib/surfaces/report/core';
 import schema from '../../../../scripts/surfaces/_schema/static-page.schema.json';
 import presentation from '../../../../scripts/surfaces/_schema/report-presentation.json';
@@ -172,11 +173,9 @@ const proseNode = (s: StaticSection): StaticNode => {
   return node('Stack', { key: s.id, testID: `static-${s.id}`, component: 'section', className: L.prose }, kids);
 };
 
-const footerNode = (s: StaticSection): StaticNode => node('Stack', { key: s.id, testID: 'static-footer', component: 'footer', className: L.footer }, [
-  node('Group', { key: `${s.id}-links`, className: L.links }, s.parts.filter((p) => p.role === 'link').map((p, i) =>
-    node('Button', { key: `${s.id}-${i}`, testID: `static-link-${p.href}`, href: p.href, size: 'lg', variant: 'subtle', color: 'gray', className: L.link }, [txt(p)]))),
-  ...s.parts.filter((p) => p.role === 'legal').map((p, i) => node('Text', { key: `${s.id}-legal-${i}`, testID: 'static-legal', className: L.legal }, [txt(p)])),
-]);
+// MF-91 (SRCH.FOOTER, task-332): the footer tree is the one shared builder (footerNode.ts), moved from here unchanged; this table is the static pages' layout.
+const STATIC_FOOTER: FooterLayout = { footer: L.footer, links: L.links, link: L.link, legal: L.legal, line: L.legal, copyright: L.legal };
+const footerOf = (s: StaticSection): StaticNode => footerNode(s, STATIC_FOOTER, 'static');
 
 // ---- MF-76: the landing kinds ------------------------------------------------------------------------------------------------------------------
 
@@ -312,7 +311,7 @@ const plansNode = (s: StaticSection): StaticNode => {
   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'section', className: L.section }, [...head, boxes, ...foot]);
 };
 
-const KIND_NODES: Record<string, (s: StaticSection) => StaticNode> = { prose: proseNode, footer: footerNode, hero: heroNode, figures: figuresNode, items: itemsNode, plans: plansNode };
+const KIND_NODES: Record<string, (s: StaticSection) => StaticNode> = { prose: proseNode, footer: footerOf, hero: heroNode, figures: figuresNode, items: itemsNode, plans: plansNode };
 
 /** The props tree of one page. Sections in table order; every shown text a content ref or a server value ref. */
 export function staticWebTree(page: StaticPage): StaticNode {
@@ -337,7 +336,8 @@ export function staticWebTree(page: StaticPage): StaticNode {
 export type StaticActions = { retry: () => void };
 /** MF-76: the server's values (each a server-formatted string, FE-05) and the shared report views the landing embeds. */
 export type StaticValues = Record<string, string>;
-export type StaticReport = { demo?: LoadingView; sample?: PageView; picture?: ViewImage; scene?: ViewImage };
+// MF-91: `footer` is the four shared footer strings the sample report's footer shows (the server sends them with the views; the sample throws without them).
+export type StaticReport = { demo?: LoadingView; sample?: PageView; picture?: ViewImage; scene?: ViewImage; footer?: FooterText };
 type Ctx = { content: Record<string, string>; actions: Partial<StaticActions>; values: StaticValues; report: StaticReport };
 
 /** A server value by name; a missing value or one that is not a non-empty string throws (the server leaves out a part whose read failed). */
@@ -389,6 +389,8 @@ const reportOf = <K extends keyof StaticReport>(ref: unknown, name: K, report: S
   return v as NonNullable<StaticReport[K]>;
 };
 
+const footerOf2 = (report: StaticReport): FooterText => report.footer ?? fail('no footer text (the server leaves this part out)');
+
 /** One tree node -> its mapped Mantine part. Every element below is a listed library component (bindings.json mapping.web.STATIC) or, by exact
  * name and module, one of the shared REPORT renderers (MF-76; Spec 126 §11b.1, FE-07). */
 function renderStaticNode(n: StaticNode, ctx: Ctx): ReactNode {
@@ -432,7 +434,7 @@ function renderStaticNode(n: StaticNode, ctx: Ctx): ReactNode {
     case 'ReportView':
       return <ReportView key={k} view={reportOf(p.view, 'demo', ctx.report)} />;
     case 'ReportPage':
-      return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} />;
+      return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />;
     case 'Picture':
       return <Picture key={k} im={reportOf(p.image, (isObj(p.image) && p.image.derived === 'scene' ? 'scene' : 'picture'), ctx.report)} />;
     default:
