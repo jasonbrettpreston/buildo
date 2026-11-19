@@ -3,11 +3,11 @@ id: TASK-69
 title: >-
   1.4 Search parser: direction guard after the match and unit-token strip (join
   key...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-PARSER'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:10:00Z'
+updated_date: '2026-11-19T20:11:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -43,6 +43,7 @@ references:
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/fe-built/BUILT.md#L55
   - >-
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/avail-search/SEARCH-AVAILABILITY.md
+  - docs/reports/lanes/2026-11-19/BL-PARSER/REPORT.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: high
@@ -72,14 +73,14 @@ Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
-- [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
-- [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
-- [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
-- [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
-- [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- [x] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- [x] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- [x] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -111,3 +112,9 @@ Dated note 2026-11-18 (M-246, prior text kept; RR-0166 · task-69 · Backlog; op
 
 2026-11-19 taken on the board at lane launch (lane BL-PARSER, worktree /Users/brettpreston_macmini/Buildo-wt-parser, branch wf1/inc1b-parser), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+A.4 direction guard after the match and A.5 unit strip landed in src/lib/admin/parcel-lookup.ts; commits e8a3de62b and d8a99e254, hooks GATE OK, 43 guard tests plus parity test green; join key and normalizers unchanged; Spec 89 line 33 and Spec 100 dated notes. AC1-5 are the imported generic form: met by the r1 plan round (DeepSeek review, triaged) in place of the retired panel; AC8 not applicable (no surface path). Report docs/reports/lanes/2026-11-19/BL-PARSER/REPORT.md. Live DB behaviour UNVERIFIED.
+<!-- SECTION:FINAL_SUMMARY:END -->
