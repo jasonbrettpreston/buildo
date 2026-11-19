@@ -6,10 +6,11 @@ title: >-
   once, the under-input duplicate removed on the web page) and the web report
   page (lines G3-G5 bind to it; G2 sources-and-data-date stays GAP.4 task-127
   inside it)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-FOOTER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-19T15:48:00Z'
+updated_date: '2026-11-19T19:54:00Z'
 labels:
   - S
   - plan:SRCH.FOOTER
@@ -86,4 +87,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0270 · task-332 · Backlog; o
 Dated note 2026-11-19 (M-246, prior text kept; RR-0273 · task-332 · Backlog; operator, verbatim: "this is a shared component")
 
 2026-11-19 dependency corrected: the footer does not wait on GAP.4 data; task-127 depends on this task (RR-0273)
+
+2026-11-19 taken on the board at lane launch (lane BL-FOOTER, worktree /Users/brettpreston_macmini/Buildo-wt-footer, branch wf1/inc1b-footer), RR-0240
 <!-- SECTION:NOTES:END -->

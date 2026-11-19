@@ -1,10 +1,11 @@
 ---
 id: TASK-62
 title: '6.43 Push 6: the Part B commit, operator tty'
-status: WAITS
+status: DONE
 assignee:
   - '@operator'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-19T19:52:00Z'
 due_date: '2026-11-26'
 labels:
   - '6'
@@ -117,3 +118,9 @@ plan source tags: ROW:OPTA:push6 PUSH:6
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 closed on evidence: push 6 landed 2026-11-18T22:22:54Z (~/Buildo-scratch/push-station/push.log "push e9bd70288 -> wf1/mb-rulings rc=0"); the Part B commit 517df6c22, the records a8ce7ad79 and the scorecard refresh bd1f246cc are ancestors of origin/wf1/mb-rulings (git log --grep "Part B"); recorded at MORNING-DECISIONS.md:983. The board still showed WAITS from the import snapshot. Its still-open dependency rows (6.8 to 6.42) keep their own status until the m-7 relevancy pass (task-1 AC 7).
+<!-- SECTION:NOTES:END -->
