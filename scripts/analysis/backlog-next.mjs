@@ -4,6 +4,8 @@
 // dependencies (FLAGS.md findings 4 and 5), so this reads the files: LATER or WAITS, not a draft, every dependency DONE (a MERGED dependency
 // counts when its `merged-into: task-N` target is DONE; FROZEN and everything else blocks), every `when: <ids> DONE` id DONE. Due and overdue
 // tasks are listed in their own sections. Usage: node scripts/analysis/backlog-next.mjs [--root <dir>] [--today YYYY-MM-DD]
+// OPERATOR section (advisory, exit code unchanged): tasks in status OPERATOR with their milestone, marked `ok` or `MISSING Grounded:` / `MISSING Recommendation:`
+// (a line counts only at the start of a description line; Spec 137 rule 13 dated note 2026-11-19, RR-0232, RR-0233).
 // Rules: Spec 137 section 4 rule 7 (137_mcqueue.md:98) and rule 12 (:115); RR-0205, RR-0212.
 import path from 'node:path';
 import { args, asList, descriptionOf, planLabels, readItems, REPO, today } from './backlog-lib.mjs';
@@ -40,5 +42,10 @@ const overdue = open.filter((t) => t.fm.due_date && day(t.fm.due_date) < day(now
 const due = open.filter((t) => t.fm.due_date && day(t.fm.due_date) >= day(now) && day(t.fm.due_date) <= day(now) + 7 * 86400000);
 const byDue = (x, y) => day(x.fm.due_date) - day(y.fm.due_date) || x.id.localeCompare(y.id, 'en', { numeric: true });
 const rd = items.filter(ready);
+const byNum = (x, y) => x.id.localeCompare(y.id, 'en', { numeric: true });
 const out = [`READY: ${rd.length}`, ...rd.map(line), `OVERDUE: ${overdue.length}`, ...overdue.sort(byDue).map(line), `DUE: ${due.length}`, ...due.sort(byDue).map(line)];
+const operator = items.filter((t) => !t.draft && status(t) === 'OPERATOR').sort(byNum);
+const lacks = (t) => ['Grounded:', 'Recommendation:'].filter((w) => !new RegExp(`^${w}`, 'm').test((descriptionOf(t) || t.body).replace(/\r\n/g, '\n'))).map((w) => `MISSING ${w}`);
+const opLine = (t) => `  ${t.id}  ${String(t.fm.title)}  [${t.fm.milestone ?? 'no milestone'}]  ${lacks(t).join(' ') || 'ok'}`;
+out.push(`OPERATOR (waiting on the operator): ${operator.length}`, ...operator.map(opLine));
 process.stdout.write(`${out.join('\n')}\n`);

@@ -54,3 +54,11 @@ Operator 2026-11-19 (RR-0232): "recommendation approved - however the open decis
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8a in ~/Buildo-wt-r8a, branch wf2/r8a-open-decisions)
 <!-- SECTION:NOTES:END -->
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Review round r1 (plan) via scripts/deepseek-review.js, triage KEEP/REJECT, before any change (AC4).
+2. Red test src/tests/backlog/backlog-next-operator.logic.test.ts, then backlog-next.mjs OPERATOR section, then Spec 137 rule 13 dated note; commit 1 (AC3).
+3. Six held tasks task-131,293,296,297,298,303 to status OPERATOR with Grounded: and Recommendation: lines (AC1).
+4. Mirror MF-08, MF-22, MF-49 as OPERATOR queue-row tasks in their milestones with the two lines; commit 2 (AC2).
+<!-- SECTION:PLAN:END -->
