@@ -10,7 +10,7 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('react-native-css-interop/test');
 import * as React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 jest.mock('react-native-safe-area-context', () => {
   const { View } = jest.requireActual('react-native');
@@ -25,10 +25,14 @@ jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, replace: m
 type Hook = { data?: unknown; isFetching: boolean; isError?: boolean; error: unknown; refetch: jest.Mock };
 let mockHook: Hook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
 const mockCalls: Array<string | undefined> = [];
+const mockFetchLookup = jest.fn();
 jest.mock('@/hooks/useParcelLookup', () => {
   class ParcelLookupSchemaError extends Error {}
-  return { ParcelLookupSchemaError, useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; } };
+  return { ParcelLookupSchemaError, fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; } };
 });
+// SRCH.SEMI stage 2 (task-319): Continue stores the answered lookup in the report's cache entry.
+const mockSetQueryData = jest.fn();
+jest.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ setQueryData: (...a: unknown[]) => mockSetQueryData(...a) }) }));
 jest.mock('@/components/surfaces/ReportPageHost', () => {
   const { View } = jest.requireActual('react-native');
   const R = jest.requireActual('react');
@@ -46,6 +50,8 @@ const data = (lotForm?: unknown) => ({ match: { parcelId: 'PCL-S1', matchType: '
 beforeEach(() => {
   mockPush.mockClear(); mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true;
   mockCalls.length = 0;
+  mockFetchLookup.mockReset(); mockSetQueryData.mockReset();
+  mockFetchLookup.mockResolvedValue(data(form(true)));
   mockParams = { parcelId: 'PCL-S1' };
   mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
 });
@@ -69,14 +75,41 @@ describe('the question page (semi-question.tsx)', () => {
     ['yes', '/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=semi_half'],
     ['no', '/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=detached'],
     ['not_sure', '/(app)/parcel-tool/PCL-S1?semi=answered'],
-  ])('answer %s opens the report with the right param (not sure sends no override)', (answer, route) => {
+  ])('answer %s: Continue fetches the lookup with semi=answered, stores it in the report cache entry, then opens the report once', async (answer, route) => {
     mockHook = { ...mockHook, data: data(form(true)) };
     render(<Question />);
     fireEvent.press(screen.getByTestId(`parcel-semi-answer-${answer}`));
     expect(screen.getByTestId(`parcel-semi-answer-${answer}`).props.accessibilityState).toMatchObject({ checked: true });
     fireEvent.press(screen.getByTestId('parcel-semi-continue'));
-    expect(mockReplace.mock.calls).toEqual([[route]]);
+    await waitFor(() => expect(mockReplace.mock.calls).toEqual([[route]]));
+    expect(mockFetchLookup.mock.calls).toEqual([[{ parcelId: 'PCL-S1', semi: 'answered' }]]);
+    expect(mockSetQueryData.mock.calls).toEqual([[['parcel-lookup', 'PCL-S1'], data(form(true))]]);
     expect(mockPush).not.toHaveBeenCalled();
+  });
+  it('a double press while the fetch runs sends one fetch and one replace', async () => {
+    let done: (v: unknown) => void = () => undefined;
+    mockFetchLookup.mockReturnValue(new Promise((r) => { done = r; }));
+    mockHook = { ...mockHook, data: data(form(true)) };
+    render(<Question />);
+    fireEvent.press(screen.getByTestId('parcel-semi-answer-yes'));
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    await act(async () => { done(data(form(true))); });
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+    expect(mockFetchLookup).toHaveBeenCalledTimes(1);
+  });
+  it('a failed fetch at Continue shows the built error state, does not navigate, and Try again brings the question back with the answer still chosen', async () => {
+    mockFetchLookup.mockRejectedValue(new Error('boom'));
+    mockHook = { ...mockHook, data: data(form(true)) };
+    render(<Question />);
+    fireEvent.press(screen.getByTestId('parcel-semi-answer-no'));
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    await waitFor(() => expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy());
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockSetQueryData).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('parcel-semi-retry'));
+    expect(mockHook.refetch).not.toHaveBeenCalled();
+    expect(screen.getByTestId('parcel-semi-answer-no').props.accessibilityState).toMatchObject({ checked: true });
   });
   it('a lot that is not unsure goes straight to the report, once, on settled data only', () => {
     mockHook = { ...mockHook, data: data(form(false)), isFetching: true };

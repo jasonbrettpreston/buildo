@@ -22168,7 +22168,8 @@
         "lotForm",
         "detected",
         "basis",
-        "unsure"
+        "unsure",
+        "semi"
       ],
       "tables": [
         {

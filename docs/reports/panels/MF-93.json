@@ -1,0 +1,21 @@
+{
+  "task": "MF-93",
+  "item": "SRCH.SEMI stage 2 (task-319): the semi question page built to the operator-approved mock (radio dot, 18/24 heading spanning the cards, 48 px Continue, 56 px top bar with back chevron, info icon, secondary Try again, quiet loading line) and the meter call after the semi answer (lookup flag semi=answered). No string changes.",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-19",
+  "head": "prereg 1 (round 196)",
+  "cards": [
+    "Operator, verbatim (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1188): \"Mock looks good - just the questions \"Is this house one half of a semi\" should extend out as far as the boxes beneath - from a width perspective.\"",
+    "ORCHESTRATOR READING, NOT AN OPERATOR WORD: the mock draws Q1 (back chevron), Q2 (info icon) and Q4 (secondary Try again, quiet loading line), so \"Mock looks good\" is taken to answer those three as drawn; Q3 (curly apostrophes) is a copy change the mock does not draw and is NOT answered.",
+    "RR-0278 (MORNING-DECISIONS.md:1082): a report counts only when produced; RR-0264 (:1041-1043): page, mock and link only in 1·B."
+  ],
+  "plan": "PLAN reviewed by the repo review tool in review mode on docs/reports/reviews/task-319/context-2026-11-19.md (section \"Plan steps under review (lane BL-SEMI2)\": change table and meter design): round r1 (r1-plan.txt), 35 findings triaged KEEP or REJECT with opened lines in TRIAGE.md. Kept: the heading test asserts the shared column, the dot geometry is asserted, role and checked state asserted, double press, failed fetch with the answer retained, cache key, producer-null premise recorded. Tests first: red commit attempt (red.out): 15 tests failing in src/tests/semi-question-design.logic.test.ts and parcel-lookup-gate.infra.test.ts.",
+  "output": "OUTPUT review, one lens (the meter counts exactly once and only for a produced report), run after the build commit on its diff: r2-output.txt and its triage are in docs/reports/lanes/2026-11-19/BL-SEMI2/ (this record is committed with the build; the output review result is in the lane report).",
+  "checks": "surface-validate, emit-mobile-surfaces, generate-surface-registry, consumer-registry, generate-target-files --check clean; semi goldens regenerated (8) by semi-question-golden-capture --write and emit-mobile-surfaces --write; search (10) and lotmap (11) golden captures --check unchanged: no other page moved (checks.out BEFORE and AFTER).",
+  "unverified": [
+    "the mobile jest suites are not run by the commit hook and the auto-mode classifier refused a targeted jest run: the written mobile cases are UNVERIFIED",
+    "no device check and the mock was not rendered (heading width cause is read from the v8 CSS: h2 text-wrap balance)",
+    "a 403 report-limit at Continue reaches the existing entitlement notice (copy is a later task)"
+  ]
+}

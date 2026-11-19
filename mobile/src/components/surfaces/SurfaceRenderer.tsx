@@ -19,7 +19,7 @@ import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polygon } from 'react-native-maps';
 import Svg, { Line as SvgLine, Polygon as SvgPolygon } from 'react-native-svg';
-import { AlertTriangle, ArrowRight, Ban, Check, Lock, MapPin, RefreshCw, Search, User, X } from 'lucide-react-native';
+import { AlertTriangle, ArrowRight, Ban, Check, ChevronLeft, Info, Lock, MapPin, RefreshCw, Search, User, X } from 'lucide-react-native';
 import { Alert, AlertDescription } from '@/vendor/rnr/components/ui/alert';
 import { Button } from '@/vendor/rnr/components/ui/button';
 import { Icon } from '@/vendor/rnr/components/ui/icon';
@@ -28,7 +28,7 @@ import { Text } from '@/vendor/rnr/components/ui/text';
 
 export const COMPONENTS = { SafeAreaView, ScrollView, View, Text, Input, Button, Alert, AlertDescription, Icon, ActivityIndicator, MapView, Polygon, Marker, Svg, SvgPolygon, SvgLine };
 /** The closed icon table (plan v3 §2.2). */
-export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X };
+export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };
 
 type Json = Record<string, unknown>;
 export type SurfaceActions = {

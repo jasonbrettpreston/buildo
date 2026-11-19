@@ -41,10 +41,15 @@ export const ConsumerParcelLookupQuerySchema = z
   .object({
     q: z.string().trim().min(3, 'address must be at least 3 characters').max(120).optional(),
     parcelId: z.string().trim().min(1).max(32).optional(),
+    // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): the semi question page sets this on its Continue fetch, so an unsure lot counts like any lot once it is answered.
+    semi: z.literal('answered').optional(),
   })
   .superRefine((v, ctx) => {
     if (Boolean(v.q) === Boolean(v.parcelId)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'provide exactly one of q or parcelId' });
+    }
+    if (v.semi !== undefined && !v.parcelId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'semi belongs to a known lot: send it with parcelId' });
     }
   });
 export type ConsumerParcelLookupQuery = z.infer<typeof ConsumerParcelLookupQuerySchema>;

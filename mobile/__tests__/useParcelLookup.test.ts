@@ -101,6 +101,12 @@ describe('fetchParcelLookup — Zod boundary', () => {
     await fetchParcelLookup({ parcelId: 'PIN-777' });
     expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777');
   });
+
+  it('SRCH.SEMI (task-319): the optional semi flag is appended to the parcelId form only', async () => {
+    mockFetch.mockResolvedValue({ data: hitResponse });
+    await fetchParcelLookup({ parcelId: 'PIN-777', semi: 'answered' });
+    expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&semi=answered');
+  });
 });
 
 // MF-48 Stage B · T-B4 (Spec 100 §3.2 dated note 2026-11-12): the boundary takes the report page view the server built (MF-57 pageViewOf), page null

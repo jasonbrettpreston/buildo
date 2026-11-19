@@ -17,6 +17,44 @@
     },
     "children": [
       {
+        "component": "View",
+        "props": {
+          "key": "header",
+          "className": "min-h-[56px] w-full flex-row items-center border-b border-report-line bg-report-page px-4"
+        },
+        "children": [
+          {
+            "component": "Button",
+            "props": {
+              "key": "back",
+              "testID": "parcel-semi-back",
+              "variant": "ghost",
+              "size": "icon",
+              "className": "min-h-[44px] min-w-[44px] -ml-3 rounded-xl",
+              "accessibilityRole": "button",
+              "accessibilityLabel": {
+                "content": "back.label"
+              },
+              "onPress": {
+                "action": "back"
+              }
+            },
+            "children": [
+              {
+                "component": "Icon",
+                "props": {
+                  "key": "back-icon",
+                  "icon": "ChevronLeft",
+                  "size": 22,
+                  "color": "#4d4841"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
         "component": "ScrollView",
         "props": {
           "key": "scroll",
@@ -40,49 +78,11 @@
             },
             "children": [
               {
-                "component": "View",
-                "props": {
-                  "key": "header",
-                  "className": "mt-4 flex-row items-center justify-between"
-                },
-                "children": [
-                  {
-                    "component": "Button",
-                    "props": {
-                      "key": "back",
-                      "testID": "parcel-semi-back",
-                      "variant": "ghost",
-                      "size": "icon",
-                      "className": "min-h-[44px] min-w-[44px] rounded-full",
-                      "accessibilityRole": "button",
-                      "accessibilityLabel": {
-                        "content": "back.label"
-                      },
-                      "onPress": {
-                        "action": "back"
-                      }
-                    },
-                    "children": [
-                      {
-                        "component": "Icon",
-                        "props": {
-                          "key": "back-icon",
-                          "icon": "X",
-                          "size": 16,
-                          "color": "#4d4841"
-                        },
-                        "children": []
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
                 "component": "Alert",
                 "props": {
                   "key": "entitlement",
                   "testID": "parcel-semi-entitlement",
-                  "icon": "Lock",
+                  "icon": "Info",
                   "iconClassName": "text-report-muted",
                   "className": "mt-3 rounded-xl bg-report-card border-report-button-border"
                 },

@@ -7,7 +7,7 @@
 // to a props tree; that tree IS the golden. Every displayed value is a ref: {"content": k} a key of mobile_parcel_semi_question.content.json (through
 // the generated slice), {"contract": p} a 429 detail, {"derived": n} a value from the situation (the closed list SEMI_QUESTION_DERIVED_NAMES).
 // The three answers are radio cards (the lot-card idiom), nothing selected at open, Continue disabled until one is chosen. Classes, hexes and numbers
-// are the MF-53 layout table (mobile/src/constants/lotMap.ts), reused verbatim: no new constant.
+// are the MF-53 layout table (mobile/src/constants/lotMap.ts); SRCH.SEMI stage 2 (task-319, MF-93) draws the approved mock with the semi-prefixed keys of that table.
 import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
 import { LOT_MAP_BOTTOM_PADDING, LOT_MAP_HEX as H, LOT_MAP_LAYOUT as L, LOT_MAP_SIZES as Z } from '@/constants/lotMap';
 import { SEARCH_MAX_WIDTH } from '@/constants/parcelSearch';
@@ -27,17 +27,17 @@ const derived = (name: string): Ref => ({ derived: name });
 const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
 
 const header = (): PropsNode =>
-  node('View', { key: 'header', className: L.listHeader }, [
+  node('View', { key: 'header', className: L.semiTop }, [
     node('Button', {
       key: 'back',
       testID: 'parcel-semi-back',
       variant: 'ghost',
       size: 'icon',
-      className: L.clear,
+      className: L.semiBack,
       accessibilityRole: 'button',
       accessibilityLabel: content('back.label'),
       onPress: { action: 'back' },
-    }, [node('Icon', { key: 'back-icon', icon: 'X', size: Z.icon, color: H.icon })]),
+    }, [node('Icon', { key: 'back-icon', icon: 'ChevronLeft', size: Z.backIcon, color: H.icon })]),
   ]);
 
 const notice = (key: string, icon: string, iconClassName: string, children: Child[], className: string = L.notice): PropsNode =>
@@ -50,7 +50,7 @@ const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
     ])], L.noticeError)]
     : []),
   ...(s.errors.entitlement
-    ? [notice('entitlement', 'Lock', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
+    ? [notice('entitlement', 'Info', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
     : []),
   ...(s.errors.unexpected
     ? [notice('error', 'AlertTriangle', L.noticeIcon, [
@@ -58,8 +58,8 @@ const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
       ...(s.errors.schemaDrift ? [] : [node('Button', {
         key: 'retry',
         testID: 'parcel-semi-retry',
-        variant: 'default',
-        className: L.retry,
+        variant: 'outline',
+        className: L.semiRetry,
         accessibilityRole: 'button',
         accessibilityLabel: content('retry.label'),
         onPress: { action: 'retry' },
@@ -75,14 +75,14 @@ const cards = (s: SemiQuestionSituation): PropsNode[] =>
       key: `answer-${a}`,
       testID: `parcel-semi-answer-${a}`,
       variant: 'outline',
-      className: checked ? L.cardChecked : L.card,
+      className: checked ? L.semiCardChecked : L.semiCard,
       role: 'radio',
       accessibilityState: { checked },
       accessibilityLabel: content(`answer.${a}`),
       onPress: { action: 'select', parcelId: derived(`answer.${i}`) },
-    }, [node('View', { key: 'card-row', className: L.cardRow }, [
-      node('Text', { key: 'card-title', className: L.cardArea }, [content(`answer.${a}`)]),
-      ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
+    }, [node('View', { key: 'card-row', className: L.semiCardRow }, [
+      node('View', { key: 'card-dot', className: checked ? L.semiDotChecked : L.semiDot }),
+      node('Text', { key: 'card-title', className: L.semiCardText }, [content(`answer.${a}`)]),
     ])]);
   });
 
@@ -91,7 +91,7 @@ const continueButton = (s: SemiQuestionSituation): PropsNode =>
     key: 'continue',
     testID: 'parcel-semi-continue',
     variant: 'default',
-    className: L.select,
+    className: L.semiSelect,
     disabled: s.route === null,
     accessibilityRole: 'button',
     accessibilityState: { disabled: s.route === null },
@@ -102,15 +102,12 @@ const continueButton = (s: SemiQuestionSituation): PropsNode =>
 const body = (s: SemiQuestionSituation): PropsNode[] => {
   switch (s.state) {
     case 'loading':
-      return [node('View', { key: 'loading', className: L.loading }, [
-        node('ActivityIndicator', { key: 'spinner', testID: 'parcel-semi-spinner', size: 'small', color: H.primary, accessibilityLabel: content('state.loading') }),
-        node('Text', { key: 'loading-text', className: L.loadingText }, [content('state.loading')]),
-      ])];
+      return [node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])];
     case 'error':
       return errorNotices(s);
     case 'ask':
       return [
-        node('Text', { key: 'question', testID: 'parcel-semi-question', className: L.noticeHeading, role: 'header' }, [content('question.title')]),
+        node('Text', { key: 'question', testID: 'parcel-semi-question', className: L.semiHeading, role: 'header' }, [content('question.title')]),
         ...cards(s),
         continueButton(s),
       ];
@@ -122,13 +119,13 @@ const body = (s: SemiQuestionSituation): PropsNode[] => {
 /** The props tree of one render. The redirect state adds `navigate` (the mount's effect replaces the route with it). */
 export function semiQuestionProps(s: SemiQuestionSituation): PropsNode {
   return node('SafeAreaView', { className: L.screen, edges: { top: 'additive' }, testID: 'parcel-semi-screen', ...(s.navigate ? { navigate: s.navigate } : {}) }, [
+    header(),
     node('ScrollView', {
       key: 'scroll',
       className: L.scroll,
       contentContainerStyle: { paddingBottom: LOT_MAP_BOTTOM_PADDING, alignItems: 'center' },
       keyboardShouldPersistTaps: 'handled',
     }, [node('View', { key: 'column', testID: 'parcel-semi-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
-      header(),
       ...body(s),
     ])]),
   ]);

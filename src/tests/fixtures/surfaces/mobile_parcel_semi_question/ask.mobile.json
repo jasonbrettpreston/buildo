@@ -17,6 +17,44 @@
     },
     "children": [
       {
+        "component": "View",
+        "props": {
+          "key": "header",
+          "className": "min-h-[56px] w-full flex-row items-center border-b border-report-line bg-report-page px-4"
+        },
+        "children": [
+          {
+            "component": "Button",
+            "props": {
+              "key": "back",
+              "testID": "parcel-semi-back",
+              "variant": "ghost",
+              "size": "icon",
+              "className": "min-h-[44px] min-w-[44px] -ml-3 rounded-xl",
+              "accessibilityRole": "button",
+              "accessibilityLabel": {
+                "content": "back.label"
+              },
+              "onPress": {
+                "action": "back"
+              }
+            },
+            "children": [
+              {
+                "component": "Icon",
+                "props": {
+                  "key": "back-icon",
+                  "icon": "ChevronLeft",
+                  "size": 22,
+                  "color": "#4d4841"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
         "component": "ScrollView",
         "props": {
           "key": "scroll",
@@ -40,49 +78,11 @@
             },
             "children": [
               {
-                "component": "View",
-                "props": {
-                  "key": "header",
-                  "className": "mt-4 flex-row items-center justify-between"
-                },
-                "children": [
-                  {
-                    "component": "Button",
-                    "props": {
-                      "key": "back",
-                      "testID": "parcel-semi-back",
-                      "variant": "ghost",
-                      "size": "icon",
-                      "className": "min-h-[44px] min-w-[44px] rounded-full",
-                      "accessibilityRole": "button",
-                      "accessibilityLabel": {
-                        "content": "back.label"
-                      },
-                      "onPress": {
-                        "action": "back"
-                      }
-                    },
-                    "children": [
-                      {
-                        "component": "Icon",
-                        "props": {
-                          "key": "back-icon",
-                          "icon": "X",
-                          "size": 16,
-                          "color": "#4d4841"
-                        },
-                        "children": []
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
                 "component": "Text",
                 "props": {
                   "key": "question",
                   "testID": "parcel-semi-question",
-                  "className": "text-base font-semibold text-report-ink",
+                  "className": "mt-6 w-full text-lg font-bold leading-6 text-report-ink",
                   "role": "header"
                 },
                 "children": [
@@ -97,7 +97,7 @@
                   "key": "answer-yes",
                   "testID": "parcel-semi-answer-yes",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
+                  "className": "mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -117,14 +117,22 @@
                     "component": "View",
                     "props": {
                       "key": "card-row",
-                      "className": "w-full flex-row items-center justify-between gap-2"
+                      "className": "w-full flex-row items-center gap-[14px]"
                     },
                     "children": [
+                      {
+                        "component": "View",
+                        "props": {
+                          "key": "card-dot",
+                          "className": "h-[22px] w-[22px] rounded-full border-2 border-report-field bg-report-card"
+                        },
+                        "children": []
+                      },
                       {
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "mt-1 text-base font-semibold text-report-ink"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
@@ -142,7 +150,7 @@
                   "key": "answer-no",
                   "testID": "parcel-semi-answer-no",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
+                  "className": "mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -162,14 +170,22 @@
                     "component": "View",
                     "props": {
                       "key": "card-row",
-                      "className": "w-full flex-row items-center justify-between gap-2"
+                      "className": "w-full flex-row items-center gap-[14px]"
                     },
                     "children": [
+                      {
+                        "component": "View",
+                        "props": {
+                          "key": "card-dot",
+                          "className": "h-[22px] w-[22px] rounded-full border-2 border-report-field bg-report-card"
+                        },
+                        "children": []
+                      },
                       {
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "mt-1 text-base font-semibold text-report-ink"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
@@ -187,7 +203,7 @@
                   "key": "answer-not_sure",
                   "testID": "parcel-semi-answer-not_sure",
                   "variant": "outline",
-                  "className": "mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
+                  "className": "mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -207,14 +223,22 @@
                     "component": "View",
                     "props": {
                       "key": "card-row",
-                      "className": "w-full flex-row items-center justify-between gap-2"
+                      "className": "w-full flex-row items-center gap-[14px]"
                     },
                     "children": [
+                      {
+                        "component": "View",
+                        "props": {
+                          "key": "card-dot",
+                          "className": "h-[22px] w-[22px] rounded-full border-2 border-report-field bg-report-card"
+                        },
+                        "children": []
+                      },
                       {
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "mt-1 text-base font-semibold text-report-ink"
+                          "className": "flex-1 text-base font-normal text-report-ink"
                         },
                         "children": [
                           {
@@ -232,7 +256,7 @@
                   "key": "continue",
                   "testID": "parcel-semi-continue",
                   "variant": "default",
-                  "className": "mt-4 min-h-[44px] w-full rounded-xl",
+                  "className": "mt-6 min-h-[48px] w-full rounded-xl",
                   "disabled": true,
                   "accessibilityRole": "button",
                   "accessibilityState": {

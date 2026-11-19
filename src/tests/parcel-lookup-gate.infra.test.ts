@@ -340,6 +340,56 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I 
     expect(meterCalls()).toBe(0);
     expect(meterLog()).toMatchObject({ meter: 'semi_pending' });
   });
+  // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): the semi page's Continue fetches the same lookup with the one flag semi=answered; an unsure lot
+  // then counts like any lot, once, and only when its report is produced. Without the flag an unsure lot still counts nothing (cases above).
+  const unsure = () => vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
+  it('semi=answered on an unsure lot with a produced report counts once: one row keyed on the lot, log meter counted', async () => {
+    unsure();
+    const r = await call('parcelId=P-45&semi=answered');
+    expect(r.status).toBe(200);
+    expect(r.body.data?.page).not.toBeNull();
+    expect(inserts()).toHaveLength(1);
+    expect(inserts()[0]![1]).toEqual([UID, 'P-45', NOW]);
+    expect(meterLog()).toMatchObject({ meter: 'counted', lot_form_unsure: true, semi_answered: true });
+  });
+  it('semi=answered on an unsure lot with NO report produced counts nothing (not_produced)', async () => {
+    unsure();
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    const r = await call('parcelId=P-45&semi=answered');
+    expect(r.status).toBe(200);
+    expect(meterCalls()).toBe(0);
+    expect(meterLog()).toMatchObject({ meter: 'not_produced', semi_answered: true });
+  });
+  it('semi=answered a second time in the month counts nothing more (already_counted, no insert)', async () => {
+    unsure();
+    meter({ used: 1, already: true });
+    const r = await call('parcelId=P-45&semi=answered');
+    expect(r.status).toBe(200);
+    expect(inserts()).toHaveLength(0);
+    expect(meterLog()).toMatchObject({ meter: 'already_counted' });
+  });
+  it('an unsure lot WITHOUT the flag still counts nothing, and the log says the question is unanswered', async () => {
+    unsure();
+    const r = await call('parcelId=P-45');
+    expect(r.status).toBe(200);
+    expect(meterCalls()).toBe(0);
+    expect(meterLog()).toMatchObject({ meter: 'semi_pending', semi_answered: false });
+  });
+  it('semi=answered on a lot with no evaluated option counts nothing (not_evaluated stays first)', async () => {
+    unsure();
+    vi.mocked(assembleConsumerPayload).mockImplementation(realAssemble as never);
+    const r = await call('parcelId=P-45&semi=answered');
+    expect(r.status).toBe(200);
+    expect(meterCalls()).toBe(0);
+    expect(meterLog()).toMatchObject({ meter: 'not_evaluated' });
+  });
+  it('the flag is validated: any value but answered, and the flag with q, are 400 with nothing read or counted', async () => {
+    for (const qs of ['parcelId=P-45&semi=yes', 'parcelId=P-45&semi=', `q=${encodeURIComponent('5 elm st')}&semi=answered`]) {
+      const r = await call(qs);
+      expect([qs, r.status]).toEqual([qs, 400]);
+    }
+    expect(meterCalls()).toBe(0);
+  });
   it('a lot map response (multi_parcel) never asks the producer and never reaches the meter', async () => {
     vi.mocked(resolveAddress).mockResolvedValue({ match: null, candidates: [{ parcelId: 'A', address: '5 Elm St' }, { parcelId: 'B', address: '5 Elm St' }], truncated: false, resolution: 'multi_parcel', lotMap: { kind: 'multi_parcel', parcelIds: ['A', 'B'], num: '5', truncated: false } } as never);
     vi.mocked(resolveLotMap).mockResolvedValue({ address: null, pin: { lat: 43.6, lng: -79.4 }, truncated: false, lots: [], neighbours: [] });

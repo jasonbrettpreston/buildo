@@ -26,11 +26,13 @@ export class ParcelLookupSchemaError extends Error {
 }
 
 export async function fetchParcelLookup(
-  params: { q: string } | { parcelId: string },
+  // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): `semi: 'answered'` is the one optional flag the semi question page sends at Continue, so the
+  // server counts the lot once its report is produced (contract_parcels_lookup, route.ts). It belongs to the parcelId form only.
+  params: { q: string } | { parcelId: string; semi?: 'answered' },
 ): Promise<ConsumerParcelLookupResult> {
   const qs = 'q' in params
     ? `q=${encodeURIComponent(params.q)}`
-    : `parcelId=${encodeURIComponent(params.parcelId)}`;
+    : `parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}`;
   const raw = await fetchWithAuth<{ data: unknown }>(`/api/parcels/lookup?${qs}`);
   const parsed = ConsumerParcelLookupResultSchema.safeParse(raw.data);
   if (!parsed.success) {

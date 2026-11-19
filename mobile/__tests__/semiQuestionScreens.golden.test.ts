@@ -57,7 +57,7 @@ export function semiQuestionProblems(t: PropsNode, s: SemiQuestionSituation): st
     const at = String(n.props.key ?? n.props.testID ?? n.component);
     if (!allowed.includes(n.component)) out.push(`${at}: ${n.component} is not in mapping.mobile.LIST`);
     if (parent && n.props.key === undefined) out.push(`${at}: a child node without a key`);
-    if (n.component === 'Button' && !String(n.props.className ?? '').split(/\s+/).includes('min-h-[44px]')) out.push(`${at}: Button without min-h-[44px]`);
+    if (n.component === 'Button' && !String(n.props.className ?? '').split(/\s+/).some((c) => c === 'min-h-[44px]' || c === 'min-h-[48px]')) out.push(`${at}: Button without min-h-[44px] or min-h-[48px]`); // SRCH.SEMI stage 2: Continue and Try again are 48 px (the mock)
     for (const c of n.children) if (isNode(c)) walk(c, n);
   };
   walk(t, null);

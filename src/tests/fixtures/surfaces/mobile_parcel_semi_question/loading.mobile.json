@@ -17,6 +17,44 @@
     },
     "children": [
       {
+        "component": "View",
+        "props": {
+          "key": "header",
+          "className": "min-h-[56px] w-full flex-row items-center border-b border-report-line bg-report-page px-4"
+        },
+        "children": [
+          {
+            "component": "Button",
+            "props": {
+              "key": "back",
+              "testID": "parcel-semi-back",
+              "variant": "ghost",
+              "size": "icon",
+              "className": "min-h-[44px] min-w-[44px] -ml-3 rounded-xl",
+              "accessibilityRole": "button",
+              "accessibilityLabel": {
+                "content": "back.label"
+              },
+              "onPress": {
+                "action": "back"
+              }
+            },
+            "children": [
+              {
+                "component": "Icon",
+                "props": {
+                  "key": "back-icon",
+                  "icon": "ChevronLeft",
+                  "size": 22,
+                  "color": "#4d4841"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
         "component": "ScrollView",
         "props": {
           "key": "scroll",
@@ -40,74 +78,16 @@
             },
             "children": [
               {
-                "component": "View",
+                "component": "Text",
                 "props": {
-                  "key": "header",
-                  "className": "mt-4 flex-row items-center justify-between"
+                  "key": "loading-text",
+                  "testID": "parcel-semi-loading",
+                  "className": "mt-6 text-base font-normal text-report-muted",
+                  "role": "status"
                 },
                 "children": [
                   {
-                    "component": "Button",
-                    "props": {
-                      "key": "back",
-                      "testID": "parcel-semi-back",
-                      "variant": "ghost",
-                      "size": "icon",
-                      "className": "min-h-[44px] min-w-[44px] rounded-full",
-                      "accessibilityRole": "button",
-                      "accessibilityLabel": {
-                        "content": "back.label"
-                      },
-                      "onPress": {
-                        "action": "back"
-                      }
-                    },
-                    "children": [
-                      {
-                        "component": "Icon",
-                        "props": {
-                          "key": "back-icon",
-                          "icon": "X",
-                          "size": 16,
-                          "color": "#4d4841"
-                        },
-                        "children": []
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "component": "View",
-                "props": {
-                  "key": "loading",
-                  "className": "mt-10 items-center"
-                },
-                "children": [
-                  {
-                    "component": "ActivityIndicator",
-                    "props": {
-                      "key": "spinner",
-                      "testID": "parcel-semi-spinner",
-                      "size": "small",
-                      "color": "#f59e0b",
-                      "accessibilityLabel": {
-                        "content": "state.loading"
-                      }
-                    },
-                    "children": []
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "loading-text",
-                      "className": "mt-2 text-center text-sm font-normal text-report-muted"
-                    },
-                    "children": [
-                      {
-                        "content": "state.loading"
-                      }
-                    ]
+                    "content": "state.loading"
                   }
                 ]
               }

@@ -17,6 +17,44 @@
     },
     "children": [
       {
+        "component": "View",
+        "props": {
+          "key": "header",
+          "className": "min-h-[56px] w-full flex-row items-center border-b border-report-line bg-report-page px-4"
+        },
+        "children": [
+          {
+            "component": "Button",
+            "props": {
+              "key": "back",
+              "testID": "parcel-semi-back",
+              "variant": "ghost",
+              "size": "icon",
+              "className": "min-h-[44px] min-w-[44px] -ml-3 rounded-xl",
+              "accessibilityRole": "button",
+              "accessibilityLabel": {
+                "content": "back.label"
+              },
+              "onPress": {
+                "action": "back"
+              }
+            },
+            "children": [
+              {
+                "component": "Icon",
+                "props": {
+                  "key": "back-icon",
+                  "icon": "ChevronLeft",
+                  "size": 22,
+                  "color": "#4d4841"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
         "component": "ScrollView",
         "props": {
           "key": "scroll",
@@ -39,44 +77,6 @@
               }
             },
             "children": [
-              {
-                "component": "View",
-                "props": {
-                  "key": "header",
-                  "className": "mt-4 flex-row items-center justify-between"
-                },
-                "children": [
-                  {
-                    "component": "Button",
-                    "props": {
-                      "key": "back",
-                      "testID": "parcel-semi-back",
-                      "variant": "ghost",
-                      "size": "icon",
-                      "className": "min-h-[44px] min-w-[44px] rounded-full",
-                      "accessibilityRole": "button",
-                      "accessibilityLabel": {
-                        "content": "back.label"
-                      },
-                      "onPress": {
-                        "action": "back"
-                      }
-                    },
-                    "children": [
-                      {
-                        "component": "Icon",
-                        "props": {
-                          "key": "back-icon",
-                          "icon": "X",
-                          "size": 16,
-                          "color": "#4d4841"
-                        },
-                        "children": []
-                      }
-                    ]
-                  }
-                ]
-              },
               {
                 "component": "Alert",
                 "props": {
@@ -104,8 +104,8 @@
                     "props": {
                       "key": "retry",
                       "testID": "parcel-semi-retry",
-                      "variant": "default",
-                      "className": "mt-2 min-h-[44px] rounded-xl",
+                      "variant": "outline",
+                      "className": "mt-3 min-h-[48px] w-full rounded-xl bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border",
                       "accessibilityRole": "button",
                       "accessibilityLabel": {
                         "content": "retry.label"

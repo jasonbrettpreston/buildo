@@ -84,9 +84,10 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const parsed = ConsumerParcelLookupQuerySchema.safeParse({
     q: sp.get('q') ?? undefined,
     parcelId: sp.get('parcelId') ?? undefined,
+    semi: sp.get('semi') ?? undefined,
   });
   if (!parsed.success) return badRequestZod(parsed.error);
-  const { q, parcelId } = parsed.data;
+  const { q, parcelId, semi } = parsed.data;
 
   // 4. Rate limit — separate buckets so heavy searching cannot exhaust the detail budget.
   const rl = q
@@ -153,14 +154,14 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
-    // report shows; the route cannot see the answer: UNVERIFIED who counts the lot after it, the semi page task-319). Under the row lock the status is re-tested.
+    // report shows). SRCH.SEMI stage 2 (task-319, MF-93): the semi page's Continue fetches again with `semi=answered`, which lifts that hold, so the lot then counts like any lot, once, and only if its report is produced. Under the row lock the status is re-tested.
     // Operator 2026-11-12, verbatim "1 b 2 a" (item 1 (b); Spec 100 §3.2 dated note): a hit with no evaluated option is served and
     // NOT counted (meter not_evaluated), so a report whose sizes and costs read "Not yet evaluated" costs the user nothing.
     let meter: 'counted' | 'already_counted' | 'limit_reached' | 'not_entitled' | 'none' | 'unmetered' | 'not_evaluated' | 'semi_pending' | 'not_produced' =
       access === 'parcel_tool' ? 'none' : 'unmetered';
     let refusal: ReturnType<typeof reportLimitReached> | ReturnType<typeof forbiddenSubscription> | null = null;
     if (access === 'parcel_tool' && body.parcel && parcelRef !== null && !hasEvaluatedOption(body.parcel)) meter = 'not_evaluated';
-    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.lotForm?.unsure === true) meter = 'semi_pending';
+    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.lotForm?.unsure === true && semi !== 'answered') meter = 'semi_pending';
     else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.page === null) meter = 'not_produced';
     else if (access === 'parcel_tool' && body.parcel && parcelRef !== null) {
       const ref = parcelRef;
@@ -186,6 +187,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       meter,
       lot_form: response.lotForm?.detected ?? null, // SEMI-B: the detected form, never the address
       lot_form_unsure: response.lotForm?.unsure ?? null,
+      semi_answered: semi === 'answered', // SRCH.SEMI stage 2: the flag the semi page sends at Continue
       page: response.page !== null, // MF-48 Stage B: whether a report page was sent (never its content)
     });
     if (duration_ms > SLOW_QUERY_MS) {

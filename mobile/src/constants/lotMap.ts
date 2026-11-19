@@ -41,6 +41,22 @@ export const LOT_MAP_LAYOUT = {
   select: S.select,
   selectText: S.selectText,
   // SRCH.C12 (v8 choose-lot.html:279): the help link reuses the search page link classes; the prompt is small muted text beside it.
+  // SRCH.SEMI stage 2 (task-319, MF-93): the semi question page's own keys, drawn from the approved mock (small pages v8, choose-lot: .top, h2,
+  // .card[role=radio], .btn.p, .btn.s). Semi-only: the shared card, heading and select keys above stay as the lot map and search page read them.
+  semiTop: 'min-h-[56px] w-full flex-row items-center border-b border-report-line bg-report-page px-4',
+  semiBack: 'min-h-[44px] min-w-[44px] -ml-3 rounded-xl',
+  semiHeading: 'mt-6 w-full text-lg font-bold leading-6 text-report-ink',
+  semiCard:
+    'mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky',
+  semiCardChecked:
+    'mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky',
+  semiCardRow: 'w-full flex-row items-center gap-[14px]',
+  semiDot: 'h-[22px] w-[22px] rounded-full border-2 border-report-field bg-report-card',
+  semiDotChecked: 'h-[22px] w-[22px] rounded-full border-[7px] border-report-ink bg-report-card',
+  semiCardText: 'flex-1 text-base font-normal text-report-ink',
+  semiSelect: 'mt-6 min-h-[48px] w-full rounded-xl',
+  semiRetry: 'mt-3 min-h-[48px] w-full rounded-xl bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border',
+  semiLoadingText: 'mt-6 text-base font-normal text-report-muted',
   helpRow: 'mt-3 flex-row flex-wrap items-center justify-center gap-1',
   helpPrompt: 'text-xs font-normal text-report-soft',
   helpLink: S.report,
@@ -61,7 +77,7 @@ export const LOT_MAP_HEX = {
 } as const;
 
 /** Numbers (FE-05: none in the binding). */
-export const LOT_MAP_SIZES = { mapHeight: 280, lotStroke: 2, icon: 16, noticeIcon: 14 } as const;
+export const LOT_MAP_SIZES = { mapHeight: 280, lotStroke: 2, icon: 16, noticeIcon: 14, backIcon: 22 } as const;
 /** The initial region is the server's start view padded by this factor, so the outlines never touch the frame. */
 export const LOT_MAP_REGION_PAD = 1.4;
 /** The scroll content's bottom padding: the S-004 shelf plus 24, as the search page. */
