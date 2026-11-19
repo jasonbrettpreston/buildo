@@ -3,10 +3,10 @@ id: TASK-342
 title: >-
   PROOF.TOOL (task-68) waits on CHK.6 (task-67), which has no design-elements
   file: run the checks that exist?
-status: OPERATOR
+status: DONE
 assignee: []
 created_date: '2026-11-19T20:13:00Z'
-updated_date: '2026-11-19T20:42:00Z'
+updated_date: '2026-11-19T20:48:00Z'
 labels:
   - S
   - gap
@@ -57,4 +57,12 @@ Grounded: elements-by-inc.json: 257 rows, report side 192 rows / 117 unique ids,
 Recommendation: produce now, as one build task, task-345 (CHK.6a, m-0, LATER, depends on task-62; task-67 now depends on it): part A (generator and the 117 rows) is not blocked; part B (the 74 field matches and the 63 design references) needs your word because design is yours (RR-0233). If you read 0.5 to 1 day in one lane as small, RR-0303 applies and task-345 can be launched; PROOF.TOOL need not wait for it (the GAP row in the Recommendation above stays valid until it lands). Verified by review r1 of task-344 for the direction, the size measure and the task text (docs/reports/lanes/2026-11-19/BL-R14/TRIAGE.md); UNVERIFIED: that design-fit.mjs runs (never executed here), the day estimate (a GUESS), and which approved-design lines the 63 references should point to.
 
 2026-11-19 task-345 (CHK.6a) is held, not built, by the operator's words: "That's a large build." (MORNING-DECISIONS.md, last entry). Decision on this task owed.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-342 · Backlog; operator, verbatim: "I would agree")
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Decision-91 (RR-0306), 2026-11-19: operator, verbatim: "I would agree" (MORNING-DECISIONS.md:1178). PROOF.TOOL (task-68) runs the checks that exist and does not wait for CHK.6 (task-67) or its elements file (task-345); a missing field is seen on the page. Both stay LATER.
+<!-- SECTION:FINAL_SUMMARY:END -->

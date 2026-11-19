@@ -5,7 +5,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:13:00Z'
+updated_date: '2026-11-19T20:47:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -89,4 +89,6 @@ who (plan text): fresh lane (no builder context) with the page-proof tool; opera
 Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-268 · Backlog; operator, verbatim: "Those dependencies are not listed as operator tasks with incra 1b")
 
 2026-11-19 (R13, RR-0300, task-339): this task waits on the OPERATOR task task-342 (PROOF.TOOL and CHK.6; and, through task-267, task-341); recommendation there, verified by review r1 of task-339. Status and dependencies unchanged.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-268 · Backlog; operator, verbatim: "I would agree")
 <!-- SECTION:NOTES:END -->

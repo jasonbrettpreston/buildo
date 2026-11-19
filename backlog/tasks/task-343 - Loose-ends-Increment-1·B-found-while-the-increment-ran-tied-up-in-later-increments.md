@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T20:44:00Z'
+updated_date: '2026-11-19T20:48:00Z'
 labels:
   - S
   - loose-ends
@@ -102,4 +102,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0302 · task-343 · Backlog; o
 2026-11-19 taken on the board at lane launch (lane BL-LOOSE, worktree /Users/brettpreston_macmini/Buildo-wt-loose, branch wf2/inc1b-loose), RR-0240
 
 2026-11-19 BL-LOOSE: wiring check written into the description (WIRING.md, TRIAGE.md in docs/reports/lanes/2026-11-19/BL-LOOSE/); WAITS: open until every line is tied up.
+
+CHK.6 design-fit check and its elements file (task-67, task-345): not built; operator: a large build, a missing field is seen on the page (RR-0305, RR-0306). Severity: hidden. tied up by: task-345 when the operator schedules it.
 <!-- SECTION:NOTES:END -->

@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:36:00Z'
+updated_date: '2026-11-19T20:48:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -17,7 +17,6 @@ milestone: m-1
 dependencies:
   - TASK-62
   - TASK-66
-  - TASK-67
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#S/PROOF.TOOL
   - >-
@@ -94,4 +93,8 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0300 · task-68 · Backlog; op
 Dated note 2026-11-19 (M-246, prior text kept; RR-0303 · task-68 · Backlog; operator, verbatim: "if it needs to be produced at some point - we should do it now - if it isnt a big job")
 
 2026-11-19 (R14, task-344, RR-0303): PROOF.TOOL note: the design-elements file CHK.6 (task-67) needs now has a build task, task-345 (CHK.6a, m-0, LATER); task-67 depends on it. Until it lands the design-fit row is a GAP as task-342 says.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-68 · Backlog; operator, verbatim: "I would agree")
+
+Scope now: runs the group F checks that exist and prints the design-fit check as not built (RR-0306); it does not build or wait for CHK.6
 <!-- SECTION:NOTES:END -->

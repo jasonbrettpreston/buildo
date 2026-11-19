@@ -41,6 +41,12 @@ Scope now: record-only. Operator 2026-11-19 (RR-0306, ~/Buildo-scratch/queues-20
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Enter decision via backlog-decision.mjs (quote I would agree, cite MORNING-DECISIONS.md:1178) naming task-342,68,67,345,268 (AC1). 2. Close task-342 DONE with the decision as final summary. 3. Set task-68 deps to TASK-62,TASK-66 (drop TASK-67), append Scope now line, status unchanged. 4. Dated notes on task-67 and task-345; one line on task-343. 5. backlog doctor, one docs commit with Task: task-346, report, close BUILT (AC2).
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->

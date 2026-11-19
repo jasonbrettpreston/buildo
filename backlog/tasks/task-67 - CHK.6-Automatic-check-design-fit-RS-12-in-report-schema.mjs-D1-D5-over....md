@@ -5,7 +5,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:36:00Z'
+updated_date: '2026-11-19T20:48:00Z'
 due_date: '2026-11-26'
 labels:
   - F
@@ -80,4 +80,8 @@ who (plan text): lane
 2026-11-19 relevancy pass 2 (R9, after R8, RR-0219 and RR-0214; review r1 triaged in docs/reports/lanes/2026-11-19/BL-R9/TRIAGE.md): KEPT, waiting: RS-12 in scripts/analysis/report-schema.mjs per the plan text; no R8 deliverable builds it. Blocked on two things: push 6 (task-62), and the report-design-elements file, which must be filled from the designed report (description); no task in the eleven produces that file.
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0303 · task-67 · Backlog; operator, verbatim: "if it needs to be produced at some point - we should do it now - if it isnt a big job")
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-67 · Backlog; operator, verbatim: "I would agree")
+
+2026-11-19 (R15, task-346): stays LATER by RR-0305 and RR-0306 (decision-91); task-68 no longer depends on it; tied up from the Loose ends task (task-343).
 <!-- SECTION:NOTES:END -->

@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T20:36:00Z'
-updated_date: '2026-11-19T20:42:00Z'
+updated_date: '2026-11-19T20:48:00Z'
 labels:
   - F
   - plan:CHK.6
@@ -58,4 +58,8 @@ Scope now: produce the design-elements file CHK.6 (task-67) needs, and land RS-1
 2026-11-19 taken on the board at lane launch (lane BL-CHK6A, worktree /Users/brettpreston_macmini/Buildo-wt-chk6a, branch wf1/inc1b-chk6a), RR-0240
 
 2026-11-19 HELD: launched by the script, not built. Operator: "That's a large build." The RR-0303 condition ("if it isnt a big job") is not met in the operator's words; waits for the operator's decision on task-342.
+
+Dated note 2026-11-19 (M-246, prior text kept; RR-0306 · task-345 · Backlog; operator, verbatim: "I would agree")
+
+2026-11-19 (R15, task-346): stays LATER by RR-0305 and RR-0306 (decision-91); not needed by task-68; tied up from the Loose ends task (task-343).
 <!-- SECTION:NOTES:END -->
