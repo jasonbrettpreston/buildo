@@ -22,8 +22,11 @@ export type LotMapSeed =
 /**
  * The parcels columns the map read promotes to the consumer response, exactly the lot statement's projection (security M-1; Spec 100 §3.2
  * dated note 2026-11-11). Locked both ways by src/tests/consumer-parcel-lookup.infra.test.ts.
+ * SRCH.LOTCARD (RR-0284, task-336): + primary_frontage_street_name (parcels) and has_footprint (the massing join: a parcel_buildings row exists
+ * for the lot; the same join as src/app/api/permits/[id]/route.ts). One EXISTS per matched lot of ONE address (at most 10 lots), so it is cheap;
+ * revisit it if the map ever renders a whole street.
  */
-export const CONSUMER_MAP_COLS = ['parcel_id', 'lot_size_sqm', 'frontage_m', 'zoning_zn_string', 'centroid_lat', 'centroid_lng', 'geom'] as const;
+export const CONSUMER_MAP_COLS = ['parcel_id', 'lot_size_sqm', 'frontage_m', 'zoning_zn_string', 'centroid_lat', 'centroid_lng', 'geom', 'primary_frontage_street_name', 'has_footprint'] as const;
 
 export type LotRow = {
   parcel_id: string;
@@ -32,6 +35,8 @@ export type LotRow = {
   zoning_zn_string: string | null;
   centroid_lat: unknown;
   centroid_lng: unknown;
+  primary_frontage_street_name: string | null;
+  has_footprint: boolean | null;
   /** ST_AsGeoJSON(geom, 6) text, or null (no geometry, or over OUTLINE_MAX_BYTES). */
   outline: string | null;
 };
@@ -97,7 +102,7 @@ export async function resolveLotMap(seed: LotMapSeed): Promise<LotMapRows> {
   if (seed.kind === 'multi_parcel') {
     if (seed.truncated) return { address: null, pin: null, truncated: true, lots: [], neighbours: [] };
     const lots = await query<LotRow>(
-      `SELECT parcel_id, lot_size_sqm, frontage_m, zoning_zn_string, centroid_lat, centroid_lng, ST_AsGeoJSON(geom, 6) AS outline
+      `SELECT parcel_id, lot_size_sqm, frontage_m, zoning_zn_string, centroid_lat, centroid_lng, ST_AsGeoJSON(geom, 6) AS outline, primary_frontage_street_name, EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id) AS has_footprint
        FROM parcels
        WHERE parcel_id = ANY($1::text[])
        ORDER BY parcel_id`,

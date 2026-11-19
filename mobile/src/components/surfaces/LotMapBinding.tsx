@@ -109,8 +109,10 @@ const mapView = (s: LotMapSituation): PropsNode[] => {
   if (s.region === null) return [];
   const lotShapes = s.lots.flatMap((l, i) => l.polygons.map((_, j) => {
     const on = l.parcelId === s.selectedParcelId;
+    // C.5 (RR-0284): a lot whose massing join returned a footprint takes its own fill tier (presence only; the footprint geometry is a follow-up).
+    const plain = s.map?.lots[i]?.hasFootprint === true ? H.lotFillBuilt : H.lotFill;
     return polygon(`lot-${l.parcelId}-${j}`, `lots.${i}.polygons.${j}.coordinates`, `lots.${i}.polygons.${j}.holes`,
-      H.lotStroke, on ? H.lotFillChecked : H.lotFill, Z.lotStroke, `map.lots.${i}.parcelId`);
+      H.lotStroke, on ? H.lotFillChecked : plain, Z.lotStroke, `map.lots.${i}.parcelId`);
   }));
   const markers = s.lots.flatMap((l, i) => (l.marker === null ? [] : [node('Marker', {
     key: `marker-${l.parcelId}`,
@@ -146,6 +148,11 @@ const cards = (s: LotMapSituation): PropsNode[] =>
     const area = fact(lot.area, `map.lots.${i}.area`);
     const frontage = fact(lot.frontage, `map.lots.${i}.frontage`);
     const zoning = fact(lot.zoning, `map.lots.${i}.zoning`);
+    // C.7 (RR-0284, choose-lot.html:306): the street phrase whenever the street is populated; "has the house" only when a footprint is present;
+    // where massing returns none, nothing is said about the house.
+    const house = lot.hasFootprint === true;
+    const street = lot.frontageStreet != null;
+    const leadKey = house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house') : street ? 'lot.lead.faces' : 'lot.letter';
     return node('Button', {
       key: `card-${l.parcelId}`,
       testID: `parcel-lotmap-card-${l.parcelId}`,
@@ -157,7 +164,7 @@ const cards = (s: LotMapSituation): PropsNode[] =>
       onPress: { action: 'select', parcelId: contract(`map.lots.${i}.parcelId`) },
     }, [node('View', { key: 'card-row', className: L.cardRow }, [
       node('View', { key: 'card-text' }, [
-        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content('lot.letter'), vars: { letter: derived(`letter.${i}`) } }]),
+        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } }]),
         node('Text', { key: 'card-area', className: L.cardArea }, [area]),
       ]),
       ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),

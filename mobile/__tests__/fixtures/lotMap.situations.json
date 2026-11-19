@@ -108,7 +108,9 @@
                     ]
                   ]
                 ]
-              }
+              },
+              "frontageStreet": "Dunmore Lane",
+              "hasFootprint": true
             },
             {
               "parcelId": "PCL-B2",
@@ -145,7 +147,9 @@
                     ]
                   ]
                 ]
-              }
+              },
+              "frontageStreet": null,
+              "hasFootprint": false
             }
           ],
           "neighbours": []
@@ -209,7 +213,9 @@
                     ]
                   ]
                 ]
-              }
+              },
+              "frontageStreet": null,
+              "hasFootprint": true
             },
             {
               "parcelId": "PCL-B2",
@@ -272,7 +278,9 @@
                     ]
                   ]
                 ]
-              }
+              },
+              "frontageStreet": "Dunmore Lane",
+              "hasFootprint": false
             },
             {
               "parcelId": "PCL-C3",
@@ -331,7 +339,9 @@
                     ]
                   ]
                 ]
-              }
+              },
+              "frontageStreet": "Elm St",
+              "hasFootprint": true
             }
           ],
           "neighbours": []

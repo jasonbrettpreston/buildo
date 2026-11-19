@@ -380,6 +380,9 @@ export const ParcelMapLotSchema = z.object({
   zoning: z.string().nullable(),
   centroid: LatLngSchema.nullable(),
   outline: LotOutlineSchema.nullable(),
+  // SRCH.LOTCARD (RR-0284): optional so an older server still parses; absent reads as no footprint and no street.
+  frontageStreet: z.string().nullable().optional(),
+  hasFootprint: z.boolean().optional(),
 });
 export const ParcelLotMapSchema = z.object({
   address: z.string().nullable(),

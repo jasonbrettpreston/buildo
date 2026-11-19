@@ -103,12 +103,16 @@ describe('GAP.13: fingerprints follow the content files, and no field was added'
       expect([f, stale]).toEqual([f, []]);
     }
   });
-  it('the map field whitelist is unchanged: no footprint and no street-name field (C.5 and C.7 wait for a ruling)', () => {
+  it('SRCH.LOTCARD (RR-0284): the map field whitelist is the 14 entries plus exactly the two ruled fields (14 -> 16, both ways)', () => {
     const d = rj(`${SURF}/${MAP}.descriptor.json`);
     expect(d.inputs.field_whitelist).toEqual([
       'resolution', 'map.address', 'map.pin', 'map.fit', 'map.truncated', 'map.lots[].parcelId', 'map.lots[].area', 'map.lots[].frontage',
-      'map.lots[].zoning', 'map.lots[].centroid', 'map.lots[].outline', 'map.neighbours[].parcelId', 'map.neighbours[].outline', 'match.parcelId',
+      'map.lots[].zoning', 'map.lots[].centroid', 'map.lots[].outline', 'map.lots[].frontageStreet', 'map.lots[].hasFootprint',
+      'map.neighbours[].parcelId', 'map.neighbours[].outline', 'match.parcelId',
     ]);
+    const parcels = d.inputs.tables.find((t: Json) => t.table === 'parcels');
+    expect(parcels.columns).toEqual(['parcel_id', 'lot_size_sqm', 'frontage_m', 'zoning_zn_string', 'centroid_lat', 'centroid_lng', 'geom', 'primary_frontage_street_name']);
+    expect(d.inputs.tables.map((t: Json) => t.table)).toContain('parcel_buildings');
   });
 });
 
@@ -131,5 +135,65 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
     expect(r).toContain('plan.v4.md:72');
     expect(r).toContain(HEADING);
     expect(r).toContain('Dated note 2026-11-12 (M-246, prior text kept; MF-53');
+  });
+});
+
+describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+  const LEADS = {
+    'lot.letter': 'Lot {letter}',
+    'lot.lead.house': 'Lot {letter} · has the house',
+    'lot.lead.faces': 'Lot {letter} · faces {street}',
+    'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+  };
+  it('the four lead keys carry the v8 words in the content file and the slice; nothing says "no building"', () => {
+    for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+    expect(Object.values(mapContent).filter((v) => /no building|at the back/.test(v))).toEqual([]);
+  });
+  const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+    const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+    const card = byTestId(g.props, `parcel-lotmap-card-${['PCL-A1', 'PCL-B2', 'PCL-C3'][i]}`)!;
+    const refs = contentRefs(card).filter((k) => k.startsWith('lot.lead.') || k === 'lot.letter');
+    const text = JSON.stringify(card);
+    const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+    return { key: refs[0]!, street: street && JSON.parse(street) };
+  };
+  it('two lots: A has a footprint and a street (both phrases), B has neither (plain "Lot B": nothing about the house)', () => {
+    expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+    expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.letter', street: null });
+  });
+  it('three lots cover the other variants: house only, faces only, both', () => {
+    expect(leadKey('multi_parcel_3plus', 0).key).toBe('lot.lead.house');
+    expect(leadKey('multi_parcel_3plus', 1)).toEqual({ key: 'lot.lead.faces', street: { contract: 'contract_parcels_lookup.map.lots.1.frontageStreet' } });
+    expect(leadKey('multi_parcel_3plus', 2).key).toBe('lot.lead.house_faces');
+  });
+  it('the map draws a lot with a footprint in its own fill tier, never in the selected tier unless picked', () => {
+    const g = rj(`${GOLD}/${MAP}/multi_parcel_2.mobile.json`);
+    const fills: string[] = [];
+    const walk = (n: Json): void => { if (n.component === 'Polygon') fills.push(`${n.props.key}=${n.props.fillColor}`); for (const c of (n.children ?? []) as Json[]) if (c && typeof c === 'object' && 'component' in c) walk(c); };
+    walk(g.props);
+    expect(fills).toEqual(['lot-PCL-A1-0=rgba(245,158,11,0.24)', 'lot-PCL-B2-0=rgba(245,158,11,0.12)']);
+  });
+  it('the mobile mirror accepts both fields as optional and the server schema requires them', () => {
+    const mobile = fs.readFileSync(path.join(ROOT, 'mobile/src/lib/schemas.ts'), 'utf8');
+    expect(mobile).toMatch(/frontageStreet: z\.string\(\)\.nullable\(\)\.optional\(\)/);
+    expect(mobile).toMatch(/hasFootprint: z\.boolean\(\)\.optional\(\)/);
+    const server = fs.readFileSync(path.join(ROOT, 'src/app/api/parcels/lookup/types.ts'), 'utf8');
+    expect(server).toMatch(/frontageStreet: z\.string\(\)\.nullable\(\)/);
+    expect(server).toMatch(/hasFootprint: z\.boolean\(\)/);
+  });
+  it('the data-check script exists, is read-only, prints its SQL on --dry-run and names no connection by default', () => {
+    const src = fs.readFileSync(path.join(ROOT, 'scripts/analysis/lot-map-data-check.mjs'), 'utf8');
+    expect(src).toContain('--dry-run');
+    expect(src).toContain('BEGIN READ ONLY');
+    expect(src).toContain('55322');
+    expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+  });
+  it('MF-53 carries the 2026-11-19 SRCH.LOTCARD dated note with the ruling verbatim and keeps the earlier notes', () => {
+    const queue = fs.readFileSync(path.join(ROOT, '.cursor/MCFRONTEND-QUEUE.md'), 'utf8');
+    const start = queue.indexOf('\n**MF-53 ');
+    const r = queue.slice(start, queue.indexOf('\n**MF-', start + 1));
+    expect(r).toContain('lane BL-LOTCARD, task-336');
+    expect(r).toContain("if it a small change let's do it - we have the data - why not");
+    expect(r).toContain('Dated note 2026-11-19 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-GAP13');
   });
 });

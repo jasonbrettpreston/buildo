@@ -2606,7 +2606,7 @@
       "resolve_errors": 0,
       "fingerprints": [
         "325b25acaf51bfab",
-        "47d11032f483f9c3",
+        "8fa1bebef4f7fe4e",
         "a902283bc3527996",
         "b5a1b0d462a3ba3c"
       ],
@@ -2624,6 +2624,9 @@
           "address_point_id",
           "parcel_id"
         ],
+        "parcel_buildings": [
+          "parcel_id"
+        ],
         "parcels": [
           "centroid_lat",
           "centroid_lng",
@@ -2632,6 +2635,7 @@
           "id",
           "lot_size_sqm",
           "parcel_id",
+          "primary_frontage_street_name",
           "zoning_zn_string"
         ]
       },

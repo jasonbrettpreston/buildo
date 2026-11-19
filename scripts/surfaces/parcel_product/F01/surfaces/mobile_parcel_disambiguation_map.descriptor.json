@@ -87,6 +87,8 @@
       "map.lots[].zoning",
       "map.lots[].centroid",
       "map.lots[].outline",
+      "map.lots[].frontageStreet",
+      "map.lots[].hasFootprint",
       "map.neighbours[].parcelId",
       "map.neighbours[].outline",
       "match.parcelId"
@@ -101,7 +103,8 @@
           "zoning_zn_string",
           "centroid_lat",
           "centroid_lng",
-          "geom"
+          "geom",
+          "primary_frontage_street_name"
         ],
         "producing_steps": [
           "parcels"
@@ -109,7 +112,8 @@
         "chain_position": "sources[1]",
         "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
         "evidence": [
-          "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)"
+          "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)",
+          "src/lib/parcels/lot-map.ts — the lot statement also reads primary_frontage_street_name (SRCH.LOTCARD, RR-0284)"
         ]
       },
       {
@@ -148,6 +152,20 @@
         "owner_spec": "docs/specs/01-pipeline/56_link_parcel_addresses.md",
         "evidence": [
           "src/lib/parcels/lot-map.ts — the pin statement"
+        ]
+      },
+      {
+        "table": "parcel_buildings",
+        "columns": [
+          "parcel_id"
+        ],
+        "producing_steps": [
+          "link_massing"
+        ],
+        "chain_position": "sources[4]",
+        "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+        "evidence": [
+          "src/lib/parcels/lot-map.ts — the lot statement's has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry"
         ]
       }
     ]

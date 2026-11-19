@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LOTCARD'
 created_date: '2026-11-19T15:57:00Z'
-updated_date: '2026-11-19T15:58:00Z'
+updated_date: '2026-11-19T16:03:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -50,6 +50,12 @@ Operator 2026-11-19 (RR-0284, decision-84): "if it a small change lets do it - w
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Per context-2026-11-19.md 'Plan steps under review (lane BL-LOTCARD)': red tests (lock both ways, whitelist, content, goldens, data-check script), then two reads in the one lot SELECT, schemas, binding, content, goldens by scripts, data-check script; C.5 as footprint presence fill tier (geometry is a follow-up); C.7 lead without house wording where massing is missing.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

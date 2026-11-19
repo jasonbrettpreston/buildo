@@ -229,6 +229,9 @@ export function assembleLotMap(rows: LotMapRows): ConsumerLotMap {
       zoning: l.zoning_zn_string == null || l.zoning_zn_string === '' ? null : String(l.zoning_zn_string),
       centroid: lat !== null && lng !== null ? { lat, lng } : null,
       outline: parseOutline(l.outline, String(l.parcel_id)),
+      // SRCH.LOTCARD (RR-0284): an empty or blank street is null (never a blank "faces"); a missing or null footprint read is false (nothing is said about the house).
+      frontageStreet: typeof l.primary_frontage_street_name === 'string' && l.primary_frontage_street_name.trim() !== '' ? l.primary_frontage_street_name.trim() : null,
+      hasFootprint: l.has_footprint === true,
     };
   });
   // A neighbour is only an outline: one whose outline is missing, drifted or over the cap is dropped (it could not be drawn or tapped;

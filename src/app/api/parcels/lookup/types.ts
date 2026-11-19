@@ -108,6 +108,8 @@ export const ConsumerMapLotSchema = z
     zoning: z.string().nullable(), // parcels.zoning_zn_string, verbatim
     centroid: LatLngSchema.nullable(), // parcels.centroid_lat / centroid_lng (the letter marker)
     outline: LotOutlineSchema.nullable(), // parcels.geom
+    frontageStreet: z.string().nullable(), // parcels.primary_frontage_street_name (SRCH.LOTCARD, RR-0284): the card says which street the lot faces
+    hasFootprint: z.boolean(), // a parcel_buildings row exists for the lot (the massing join): the map draws it and the card says "has the house"
   })
   .strict();
 export const ConsumerMapNeighbourSchema = z.object({ parcelId: z.string(), outline: LotOutlineSchema.nullable() }).strict();

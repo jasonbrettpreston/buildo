@@ -47,6 +47,7 @@ export const LOT_MAP_HEX = {
   lotStroke: '#9a4a07', // report-amber-ink
   lotFill: 'rgba(245,158,11,0.12)', // report-amber at the v8 alpha
   lotFillChecked: 'rgba(245,158,11,0.40)',
+  lotFillBuilt: 'rgba(245,158,11,0.24)', // SRCH.LOTCARD C.5: a lot with a building footprint (presence only), between the plain and the picked tier
   pin: '#1d1b18', // report-ink (the v8 pin)
   icon: '#4d4841', // report-muted
   check: '#1d1b18', // report-ink
