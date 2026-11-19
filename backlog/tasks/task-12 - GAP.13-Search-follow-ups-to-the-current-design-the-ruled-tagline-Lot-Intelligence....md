@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GAP13'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T15:24:00Z'
+updated_date: '2026-11-19T15:34:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -91,10 +91,26 @@ element ids delivered: A.1, A.11, C.1, C.5, C.6, C.7, C.10
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC1) Pre-register the expected moves, committed alone: the Plan steps section below in the context file plus the task file Files line (commit 1, docs only).
+2. (AC2) Failing tests are written first into this plan (the binding table below names each) and reviewed at plan altitude by the repo review, one round, triaged in TRIAGE.md.
+3. (AC3) write_scope: ~/Buildo-wt-gap13 and ~/Buildo-scratch/lanes-20261119/inc1b/gap13 (claimed through lanes.mjs).
+4. (AC4) PLAN review: scripts/deepseek-review.js review mode on the context file with the plan template; every finding KEEP/REJECT with its opened line.
+5. (AC5) KEPT findings folded into this plan before any code.
+6. (AC6) Red: one new root test file src/tests/surfaces/search-follow-ups.logic.test.ts (content goldens, golden props, source locks) plus the two existing pins that name the old tagline, staged with the task file and context file; the pre-commit related run refuses (red.out). Green: content values, SearchBinding untouched except nothing, LotMapBinding multi_parcel heading, slice emitter, lotmap golden capture, search golden capture (new script, sibling of lotmap-golden-capture.ts and semi-question-golden-capture.ts, because no writer exists for the mobile search goldens and their fingerprints move with the content file), web goldens through the repo builder; real commit (commit.out); typecheck.
+7. (AC7) One output review (lens: design fidelity to v8 and field binding) on the diff, triaged; reports copied into docs/reports/lanes/2026-11-19/BL-GAP13/ and added as task refs.
+8. (AC8) Queue rows: no new MF id is claimed (the ID ledger is outside the write scope); the follow-up is recorded as dated notes (M-246) on MF-35 (tagline) and MF-53 (heading; amends plan.v4:72, the Layout guideline line), in .cursor/MCFRONTEND-QUEUE.md in the same commit.
+Scope result of grounding: BUILT = A.1, C.1. NO WORK = C.6 (RR-0172 map road labels), C.10 (already built and tested). OPERATOR = A.11 (web parity), C.5 and C.7 (data not served).
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): CHANGED (scope note, deps none, KEPT): the 2026-11-17 panel and adjudication settle the parts: GAP.13-a tagline and -b Clear (x) and -c heading build as ruled; -d footprint layer needs a data read (DATA CHECK owed by the build lane); -e street name needs no data read (RR-0172 'Map's road labels'); -f card line replaces ONLY the frontage and zoning line, the size line stays (search-1b-adj/REPORT.md section 4); -g map tap is already built, removed from the work; Q1 'faces the street' withdrawn (MORNING-DECISIONS.md:774 'why does this matter?'). Follow-up rows A (after MF-35, queue :133) and B (after MF-53, queue :394) are claimed by the build lane. Elements A.1 A.11 C.1 C.5 C.6 C.7 C.10. Panel and build pass ran 2026-11-17 (search-1b, search-1b-adj, search-1b-bp p1 and p2); records linked.
 
 2026-11-19 taken on the board at lane launch (lane BL-GAP13, worktree /Users/brettpreston_macmini/Buildo-wt-gap13, branch wf1/inc1b-gap13), RR-0240
+
+Files: src/tests/surfaces/search-follow-ups.logic.test.ts; mobile/__tests__/surfaceRenderer.smoke.test.tsx; src/tests/surfaces/parcel-legacy-oracle.logic.test.ts; scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json; scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json; mobile/src/components/surfaces/LotMapBinding.tsx; scripts/surfaces/search-golden-capture.ts; mobile/src/generated/surfaces/mobile_parcel_search.json; mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json; mobile/__tests__/fixtures/surfaces; src/tests/fixtures/surfaces/mobile_parcel_search; src/tests/fixtures/surfaces/mobile_parcel_disambiguation_map; .cursor/MCFRONTEND-QUEUE.md; docs/reports/reviews/task-12/context-2026-11-19.md
 <!-- SECTION:NOTES:END -->
