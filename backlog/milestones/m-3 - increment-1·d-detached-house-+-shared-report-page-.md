@@ -143,3 +143,8 @@ Increments 1-2: detached house
 - RDG: Every reading we made ourselves carries a confidence and an evidence pointer (M-481) (origin:docs/specs/01-pipeline/69a_mcbylaw_register.md:624)
 - ID: Claim every MF, FE, MB, migration, prereg round, D and M number in the ID ledger before use (MCINC-8) (origin:docs/specs/00-architecture/08_agents.md:496)
 - REN: Relay check: a claim that nothing covers it is checked by a grep of the full record and the search is quoted (~/Buildo-scratch/panel-tools/PROTOCOL.md:48)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-4 - Increment-1-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-4 - Increment-1-requirements.md#L34) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#1
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L109-L109 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#1

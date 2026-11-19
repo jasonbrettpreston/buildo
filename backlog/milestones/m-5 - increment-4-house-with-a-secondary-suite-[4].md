@@ -109,3 +109,8 @@ Note: [object Object]
 - FIT: Design-fit gate: every stored or built value maps to a designed McFrontend element or a named supporting function; every designed number bound, served, populated (~/Buildo-scratch/panel-tools/PROTOCOL.md:25)
 - MCP: McProof: scope and answer key first, hand-derived from the by-law text; disputed items walked one at a time (Spec 08 11.8 MCINC-1) (origin:docs/specs/00-architecture/08_agents.md:486)
 - DDV: Data-driven validation: test readings against permits, CoA and past research before asking the operator (operator 2026-10-31) (~/.claude/projects/-Users-brettpreston-macmini/memory/data-driven-bylaw-validation.md:3)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-6 - Increment-4-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-6 - Increment-4-requirements.md#L20) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#4
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L111-L111 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#4

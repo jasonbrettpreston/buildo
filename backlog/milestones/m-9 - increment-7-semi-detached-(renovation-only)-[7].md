@@ -126,3 +126,8 @@ Increment 7: semi-detached (renovation only)
 - MAP: McIncrement impact map measured on the current origin tip (MCINC-2) and one decision list (MCINC-3) (origin:docs/specs/00-architecture/08_agents.md:487)
 - NIGHT: At most one Layer 2 night per increment; close only when green in the loop (MCINC-5, MCINC-6) (origin:docs/specs/00-architecture/08_agents.md:491)
 - PUSH: Pushes are the operator only: own terminal y, one y and one suite per push; one push per landing set (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:83)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-10 - Increment-7-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-10 - Increment-7-requirements.md#L21) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#7
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L114-L114 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#7

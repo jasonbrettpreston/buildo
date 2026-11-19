@@ -124,3 +124,8 @@ Launch-shared (1-2): report page, search, public route parts
 - ID: Claim every MF, FE, MB, migration, prereg round, D and M number in the ID ledger before use (MCINC-8) (origin:docs/specs/00-architecture/08_agents.md:496)
 - AV3: McDonald's Airtight V3: the step standard (Spec 122/124/132 path); no exception paths; calcs as data, switches, tests first (origin:docs/specs/01-pipeline/124_step_standard_policy.md:250)
 - FIT: Design-fit gate: every stored or built value maps to a designed McFrontend element or a named supporting function; every designed number bound, served, populated (~/Buildo-scratch/panel-tools/PROTOCOL.md:25)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-3 - Increment-1-2-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-3 - Increment-1-2-requirements.md#L20) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#1-2
+- McStorage policy for this increment: none in the snapshot (2026-11-19): doc-16 section 5 has no row for group 1-2; docs/reports/plan-import/raw/2026-11-19/storage-by-group.json has no key 1-2: none in the snapshot (2026-11-19)

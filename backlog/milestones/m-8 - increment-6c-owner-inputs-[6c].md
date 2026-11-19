@@ -120,3 +120,8 @@ Increment 6c: owner inputs
 - RDG: Every reading we made ourselves carries a confidence and an evidence pointer (M-481) (origin:docs/specs/01-pipeline/69a_mcbylaw_register.md:624)
 - PUSH: Pushes are the operator only: own terminal y, one y and one suite per push; one push per landing set (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:83)
 - MAP: McIncrement impact map measured on the current origin tip (MCINC-2) and one decision list (MCINC-3) (origin:docs/specs/00-architecture/08_agents.md:487)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-9 - Increment-6c-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-9 - Increment-6c-requirements.md#L15) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#6c
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L113-L113 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#6c

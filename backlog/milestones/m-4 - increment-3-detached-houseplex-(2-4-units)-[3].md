@@ -115,3 +115,8 @@ Increment 3: detached houseplex (2-4 units)
 - STO: McStorage rulings ST-1..ST-8: headline record per (parcel, option); detail on demand; long form for bounded cohorts only (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
 - MCP: McProof: scope and answer key first, hand-derived from the by-law text; disputed items walked one at a time (Spec 08 11.8 MCINC-1) (origin:docs/specs/00-architecture/08_agents.md:486)
 - DDV: Data-driven validation: test readings against permits, CoA and past research before asking the operator (operator 2026-10-31) (~/.claude/projects/-Users-brettpreston-macmini/memory/data-driven-bylaw-validation.md:3)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-5 - Increment-3-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-5 - Increment-3-requirements.md#L21) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#3
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L110-L110 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#3

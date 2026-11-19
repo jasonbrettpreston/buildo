@@ -104,3 +104,8 @@ Increment 10: McProof proof set
 - GO: Operator-typed GO on dev, one DB job at a time (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:84)
 - PUSH: Pushes are the operator only: own terminal y, one y and one suite per push; one push per landing set (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:83)
 - MAP: McIncrement impact map measured on the current origin tip (MCINC-2) and one decision list (MCINC-3) (origin:docs/specs/00-architecture/08_agents.md:487)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-13 - Increment-10-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-13 - Increment-10-requirements.md#L12) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json has no key 10: none in the snapshot (2026-11-19)
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L117-L117 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#10

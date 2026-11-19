@@ -88,3 +88,8 @@ Note: [object Object]
 - FIT: Design-fit gate: every stored or built value maps to a designed McFrontend element or a named supporting function; every designed number bound, served, populated (~/Buildo-scratch/panel-tools/PROTOCOL.md:25)
 - PUSH: Pushes are the operator only: own terminal y, one y and one suite per push; one push per landing set (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:83)
 - MAP: McIncrement impact map measured on the current origin tip (MCINC-2) and one decision list (MCINC-3) (origin:docs/specs/00-architecture/08_agents.md:487)
+
+## Documents
+- Requirements: backlog/docs/increments/doc-15 - Increment-AL-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-15 - Increment-AL-requirements.md#L12) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json has no key AL: none in the snapshot (2026-11-19)
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L119-L119 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#AL

@@ -8,6 +8,11 @@ assignee:
   - '@lane-BL-R8b'
 created_date: '2026-11-19T12:52:00Z'
 updated_date: '2026-11-19T13:02:00Z'
+status: BUILT
+assignee:
+  - '@lane-BL-R8b'
+created_date: '2026-11-19T12:52:00Z'
+updated_date: '2026-11-19T12:59:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -27,8 +32,8 @@ Operator 2026-11-19 (RR-0232), proposal (b) approved. Grounded: yes - no milesto
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every milestone description (m-0 to m-14) ends with a Documents section linking its requirements doc (doc-N), the McStorage policy section for the increment (doc-16 section 5) and its McFrontend elements (the Elements section of the requirements doc); milestone files are edited directly because the CLI has no milestone edit command (the loader wrote them the same way)
-- [ ] #2 Repo review round r1 on the plan of this task, triaged, before any change
+- [x] #1 Every milestone description (m-0 to m-14) ends with a Documents section linking its requirements doc (doc-N), the McStorage policy section for the increment (doc-16 section 5) and its McFrontend elements (the Elements section of the requirements doc); milestone files are edited directly because the CLI has no milestone edit command (the loader wrote them the same way)
+- [x] #2 Repo review round r1 on the plan of this task, triaged, before any change
 <!-- AC:END -->
 
 ## Definition of Done
@@ -50,3 +55,17 @@ Operator 2026-11-19 (RR-0232), proposal (b) approved. Grounded: yes - no milesto
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board by the orchestrator at lane launch (lane BL-R8b in ~/Buildo-wt-r8b, branch wf2/r8b-milestone-docs; the lane has since reported BUILT on its branch, commit 819a739b2)
 <!-- SECTION:NOTES:END -->
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Build the map milestone -> requirements doc, Elements line, doc-16 section 5 row line, snapshot json keys (list gaps: F, 1-2, 9, 10, L, AL have no elements-by-inc key; F, 1-2 no storage-by-group key / doc-16 row).
+2. Append the same-form ## Documents section to the 15 files backlog/milestones/m-0..m-14 (long file names), after the last section, one blank line before; keep every existing line; write "none in the snapshot (2026-11-19)" where a doc or block does not exist.
+3. Verify: milestone list still 15 active, backlog doctor clean, git diff only adds lines.
+4. One docs commit through the real hooks with Task: task-307, 15 milestone files + context file + task file; no push, no DB.
+<!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Documents section appended to the 15 milestone files m-0..m-14 (5 added lines each, 0 removed: git diff --numstat). Links: requirements doc + Elements line, doc-16 section 5 row line (L108-L119), snapshot json keys. Gaps written as "none in the snapshot (2026-11-19)": m-0 F (no doc-16 row, no storage key, no elements key), m-2 1-2 (no doc-16 row, no storage key), m-11/m-12/m-13/m-14 (no elements-by-inc key; the docs state no elements of their own). Review r1 triaged: the plan tool reviewed .cursor/active_task.md, all findings rejected (TRIAGE.md). Docs-only: DoD 2 (tests red/green) does not apply. Commit sha in the lane REPORT.
+<!-- SECTION:FINAL_SUMMARY:END -->
