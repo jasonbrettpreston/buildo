@@ -3,11 +3,11 @@ id: TASK-355
 title: >-
   R18 Increment 1·B: the three A.6 answers entered (task-352); build tasks for
   the no-plan page and the search box wording, researched
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-R18'
 created_date: '2026-11-19T21:44:00Z'
-updated_date: '2026-11-19T22:03:00Z'
+updated_date: '2026-11-19T22:06:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -25,8 +25,8 @@ Scope now: record-only. Enter RR-0311, RR-0312, RR-0313 through G2; close task-3
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 the three decisions entered through backlog-decision.mjs with verbatim quotes and cites; task-352 DONE
-- [ ] #2 one researched build task per changing answer in m-1 with Scope now, declaration sites with file:line, the design source, runnable acceptance criteria, a Files line and the owning McFrontend row; backlog doctor clean
+- [x] #1 the three decisions entered through backlog-decision.mjs with verbatim quotes and cites; task-352 DONE
+- [x] #2 one researched build task per changing answer in m-1 with Scope now, declaration sites with file:line, the design source, runnable acceptance criteria, a Files line and the owning McFrontend row; backlog doctor clean
 <!-- AC:END -->
 
 ## Definition of Done
@@ -56,3 +56,9 @@ Scope now: record-only. Enter RR-0311, RR-0312, RR-0313 through G2; close task-3
 
 2026-11-19 taken on the board at lane launch (lane BL-R18, worktree /Users/brettpreston_macmini/Buildo-wt-r18, branch wf2/inc1b-r18), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Entered RR-0311 to RR-0314 (decision-96 to decision-99), task-352 DONE; researched build tasks task-356 (search box wording) and task-357 (no-plan page, waits stated) created LATER in m-1; four loose-end lines on task-343; one review round triaged (TRIAGE.md). Commit 9bfb85f43, hooks GATE OK, POLICY CHECKS OK (commit.out). The 'way to sign up' is NOT delivered: it waits on MF-86, the Stripe price ids and MF-70/MF-49.
+<!-- SECTION:FINAL_SUMMARY:END -->
