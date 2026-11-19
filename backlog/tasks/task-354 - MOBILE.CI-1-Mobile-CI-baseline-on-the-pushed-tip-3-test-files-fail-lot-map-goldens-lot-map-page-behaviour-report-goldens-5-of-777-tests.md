@@ -3,9 +3,11 @@ id: TASK-354
 title: >-
   MOBILE.CI-1 Mobile CI baseline on the pushed tip: 3 test files fail (lot map
   goldens, lot map page behaviour, report goldens), 5 of 777 tests
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-MOBILECI'
 created_date: '2026-11-19T21:37:00Z'
+updated_date: '2026-11-19T21:59:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -38,3 +40,9 @@ Scope now: find the cause of each failure and fix it. GitHub Mobile CI run 44619
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-19 taken on the board at lane launch (lane BL-MOBILECI, worktree /Users/brettpreston_macmini/Buildo-wt-mobileci, branch wf1/inc1b-mobileci), RR-0240
+<!-- SECTION:NOTES:END -->
