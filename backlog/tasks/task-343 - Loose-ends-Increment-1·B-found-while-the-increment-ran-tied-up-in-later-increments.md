@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T22:30:00Z'
+updated_date: '2026-11-19T22:43:00Z'
 labels:
   - S
   - loose-ends
@@ -139,4 +139,6 @@ task-351 (BL-RESET): built but unowned/unproven: (1) the limit wall resetsOn (sr
 2026-11-19 (task-359) loose end, UX-1 verified TRUE on the board head (error-mapping.ts:37, parcelSearchMatch.ts:295-300, ReportBinding.tsx:373-377): the limit wall and the 403 split are still unowned (see R17 and R18 lines above). Severity: visible once RC-1's gate is fixed (cannot fire today because nothing counts). tied up by: NONE; must have an owner before task-287 flips the live switch.
 
 2026-11-19 (task-359) loose ends, record only: (a) GR-2: the MF-48 queue note (.cursor/MCFRONTEND-QUEUE.md:371) files task-123 under MF-48 without saying it is an orchestrator reading (the MF-85 note :622 and task-121 :102 do say so); tied up by: NONE (a queue note for the orchestrator). (b) CR-3 mobile ParcelToolEntitlementSchema status is z.string() (schemas.ts:446) and reportsUsed and reportsLimitReached are unread; tied up by: NONE. (c) CR-5 web SearchBinding.tsx:144 casts footerNode(...) as WebNode; tied up by: NONE. (d) CR-6 read-stored.ts:48-53 four sequential reads with no snapshot; a torn read can only give out_of_date (a miss); tied up by: task-272. (e) The five 1·B fix tasks from the panel triage: task-360, task-361, task-362, task-363, task-364.
+
+2026-11-19 (orchestrator, relayed from lane BL-PROOF3, task-363, which could not write while this file's header was broken): three leftovers of the proof runner, tied up by: NONE: (1) an --out folder that exists but is read-only still exits 1 via writeFile (scripts/analysis/proof-slice.mjs); (2) timeoutMs on non-argv rows is not rejected; (3) an oversized timeoutMs is not capped. Also: the front matter of task-266 and task-343 was broken by a hand conflict resolution (lane BL-TRIAGE) and repaired in d0d930d65; backlog doctor did not detect it; task-307 and task-308 carry a duplicated updated_date key (not repaired).
 <!-- SECTION:NOTES:END -->
