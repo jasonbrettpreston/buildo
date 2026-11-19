@@ -4,7 +4,7 @@ title: Relevancy pass of Increment 1A tasks against the Backlog plan (R7)
 status: Draft
 assignee: []
 created_date: '2026-11-19T05:28:00Z'
-updated_date: '2026-11-19T12:10:00Z'
+updated_date: '2026-11-19T16:59:00Z'
 labels:
   - follow-up
 milestone: m-0
@@ -47,4 +47,6 @@ Operator RR-0214 (MORNING-DECISIONS.md:857): after the move every task on the bo
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 (BL-R7b): AC 1-3 done for m-0: 16 tasks marked (KEPT 9 incl. INFRA.4 already MERGED, CHANGED CHK.0 and CHK.7, MERGED INFRA.3, DROPPED INFRA.2 and CHK.4), QUEUE.PULL is not a task on the board. AC 4 (milestone by milestone, 1B first) stays open.
+
+2026-11-19: AC 4 progress: the m-1 (1·B) pass was run as task-316 R10 (R10 report docs/reports/lanes/2026-11-19/BL-R10/); next milestone passes m-2 (1·C) onward remain; m-0 pass 2 after R8 was task-315 R9.
 <!-- SECTION:NOTES:END -->
