@@ -163,6 +163,53 @@ function classifyRows(rows: { parcel_id: string; address: string }[], num: strin
 }
 
 /**
+ * task-69 A.5 (RR-0166, operator "ONE-12 a"): a unit typed after the address ("100 Queen St E Unit 4", "#4", "Apt 4") is dropped BEFORE the parse so the
+ * address still matches. Closed forms, one trailing token, applied only while a house number and a street remain ("5 Unit 4", "100" and a street
+ * named Unit are untouched; "4A" is a house number). The unit is not used to narrow the match (parcels are lots, not units; the ruled "add a unit
+ * number" text stays). Anchored, no nested quantifiers. The JOIN-key normalizers are not touched.
+ */
+const UNIT_TAIL = /\s+(?:UNIT\s*#?|APT\.?|APARTMENT|SUITE|STE\.?)\s*\d{1,5}[A-Z]?$|\s+#\s*\d{1,5}[A-Z]?$/i;
+function stripTrailingUnit(s: string): string {
+  const stripped = s.replace(UNIT_TAIL, '').trim();
+  if (stripped === s) return s;
+  const tokens = stripped.split(/\s+/);
+  return tokens.length >= 2 && /\d/.test(tokens[0]!) ? stripped : s;
+}
+
+export type Compass = 'N' | 'S' | 'E' | 'W';
+
+/** The trailing street direction of an address text as N/S/E/W (one mapper for the typed query and the returned rows), or null. */
+function trailingCompass(text: string): Compass | null {
+  const base = stripTrailingUnit(text.split(',')[0]!.trim()).toUpperCase();
+  const m = base.match(/^(.*\S)\s+(NORTH|SOUTH|EAST|WEST|[NSEW])$/);
+  return m ? (m[2]![0] as Compass) : null;
+}
+
+/**
+ * task-69 A.4 (RR-0166 "ONE-12 a"): the street direction the user typed (E, W, N, S, East ...), or null. It is a guard AFTER the match
+ * (guardByDirection), never part of the join key: parseLinearName still strips it (address.ts:59-62, Spec 89 line 33).
+ * Null when no street name remains once the direction is removed ("100 W").
+ */
+export function typedDirection(q: string): Compass | null {
+  const d = trailingCompass(q);
+  return d && parseFreeTextAddress(q).streetName ? d : null;
+}
+
+/**
+ * The direction guard on rows the existing match already returned (no new query). Acts only when a direction was typed AND every row carries an
+ * explicit direction (a row without one proves nothing: unchanged). Rows on the typed side only when any match; a ONE-row hit on another side is a
+ * proven conflict (label 1: unique becomes text_candidates, the lot still listed); otherwise unchanged. Never empties a non-empty set.
+ */
+function guardByDirection<T extends { address: string }>(rows: T[], typed: Compass | null): { rows: T[]; conflict: boolean } {
+  if (!typed || rows.length === 0) return { rows, conflict: false };
+  const dirs = rows.map((r) => trailingCompass(r.address));
+  if (dirs.some((d) => d === null)) return { rows, conflict: false };
+  const same = rows.filter((_, i) => dirs[i] === typed);
+  if (same.length > 0) return { rows: same, conflict: false };
+  return { rows, conflict: rows.length === 1 };
+}
+
+/**
  * Split "26 Hurlingham Cres" → { num: '26', streetName: 'HURLINGHAM' } via the shared rules.
  *
  * WF3 FIX (2026-07-20, Parcel Cost Model Tool symptom): a real operator types (or
@@ -176,12 +223,17 @@ function classifyRows(rows: { parcel_id: string; address: string }[], num: strin
  * feeds are comma-free), so truncating at the first comma is safe.
  */
 export function parseFreeTextAddress(q: string): { num: string; streetName: string } {
-  const withoutCitySuffix = q.split(',')[0]!.trim();
+  const withoutCitySuffix = stripTrailingUnit(q.split(',')[0]!.trim());
   const m = withoutCitySuffix.match(/^(\S+)\s+(.+)$/);
   if (m && /\d/.test(m[1]!)) {
     return { num: normalizeAddressNumber(m[1]), streetName: parseLinearName(m[2]!).street_name };
   }
   return { num: '', streetName: parseLinearName(withoutCitySuffix).street_name };
+}
+
+/** Label 1 (ONE-12 a): a one-lot hit whose printed direction differs from the typed one is answered as the address list (the lot still shown). */
+function conflictList(rows: { parcel_id: string; address: string }[]): Resolution {
+  return { match: null, candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
 }
 
 const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(linear_name_full, ''))`;
@@ -193,17 +245,22 @@ const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(lin
  */
 export async function resolveAddress(q: string, opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {}): Promise<Resolution> {
   const { num, streetName } = parseFreeTextAddress(q);
+  const typed = typedDirection(q);
   if (!streetName) return { match: null, candidates: [], resolution: 'no_match', lotMap: null };
 
   // 1) Exact match on the parcels normalized keys (idx_parcels_address).
   if (num) {
-    const exact = await query<{ parcel_id: string; address: string }>(
+    let exact = await query<{ parcel_id: string; address: string }>(
       `SELECT parcel_id, ${displayAddress} AS address
        FROM parcels
        WHERE addr_num_normalized = $1 AND street_name_normalized = $2
        ORDER BY parcel_id LIMIT 11`,
       [num, streetName],
     );
+    const exactTruncated = exact.length > 10; // LIMIT 11 → an 11th row means more exist (Gemini fold); read before the guard narrows
+    const exactG = guardByDirection(exact, typed);
+    if (exactG.conflict) return conflictList(exactG.rows);
+    exact = exactG.rows;
     if (exact.length === 1) {
       return {
         match: { parcelId: exact[0]!.parcel_id, matchType: 'exact', address: exact[0]!.address },
@@ -216,8 +273,8 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
       return {
         match: null,
         candidates: exact.slice(0, 10).map((r) => ({ parcelId: r.parcel_id, address: r.address })),
-        truncated: exact.length > 10, // LIMIT 11 → an 11th row means more exist (Gemini fold)
-        ...classifyRows(exact, num, exact.length > 10),
+        truncated: exactTruncated,
+        ...classifyRows(exact, num, exactTruncated),
       };
     }
   }
@@ -228,7 +285,7 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
   //    Fold 10 item 4 (registry-truth, 2026-10-03): soft-retired points (retired_at set) are excluded.
   // No SQL-fragment assembly (Gemini fold): a single static statement — the optional number is an
   // ($2 IS NULL OR …) bound parameter, so the query text never varies.
-  const typeahead = await query<{ parcel_id: string; address: string }>(
+  let typeahead = await query<{ parcel_id: string; address: string }>(
     `SELECT DISTINCT p.parcel_id, COALESCE(ap.address_full, ${displayAddress.replaceAll('address_number', 'p.address_number').replaceAll('linear_name_full', 'p.linear_name_full')}) AS address
      FROM address_points ap
      JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
@@ -241,6 +298,9 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
      ORDER BY address LIMIT 10`,
     [streetName + '%', num || null],
   );
+  const typeaheadG = guardByDirection(typeahead, typed);
+  if (typeaheadG.conflict) return conflictList(typeaheadG.rows);
+  typeahead = typeaheadG.rows;
   if (typeahead.length === 1) {
     return {
       match: { parcelId: typeahead[0]!.parcel_id, matchType: 'typeahead', address: typeahead[0]!.address },

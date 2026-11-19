@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PARSER'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:00:00Z'
+updated_date: '2026-11-19T20:01:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -93,6 +93,12 @@ element ids delivered: A.4, A.5
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Pre-register expected moves (context file + task file, committed with red tests) [AC1]. 2. Failing tests written into plan: direction guard cases and unit-strip cases (case table in context file), reviewed at plan altitude, one DeepSeek round triaged [AC2,AC4,AC5]. 3. Write_scope declared in brief [AC3]. 4. Red tests via pre-commit attempt (red.out), then unit strip and direction guard after the match, green real commit (commit.out) [AC6]. 5. Output review on diff, report and review record committed under docs/reports/lanes [AC7]. 6. AC8 not applicable: no surface path touched.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
