@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTOOLS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T21:55:00Z'
+updated_date: '2026-11-20T23:39:00Z'
 labels:
   - McFix
   - McFix A
@@ -107,4 +107,20 @@ B. Compliance documents on the task, marked:
 C. Still open in this task, as already specified in its notes: D10b timeout variable (needs the operator's DB GO and an id claim); D11b the security regex at rule-lists.mjs:128 misses admin and PII (README.md :104 and lens-security.md:48 say they fire it).
 NOT IN SCOPE: hunk-level split of one file's diff (the close recompute compares each chunk with the git diff of its paths: a new mechanism, needs the operator) and exempting generated golden before-images (a table row, own card, needs the operator); re-using unchanged chunks; dropping lists; a second pasted file or context stamp; a label; milestone_docs handling (verifyResolved already refuses an absent key); the V2L15 early-return change; any new script.
 ACCEPTANCE on real inputs (run the commands, paste the output on this task; no figure is taken from a lane report): 0. In a lane worktree run the new backlog-brief.mjs for task-381 (the committed context file on wf1/inc1b-hooks3 has no Implementation Notes heading). 1. deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of "(no pasted context provided)", at least 1 hit of "yes to all", the five heading lines present, prompt under 120000 characters. 2. rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste the call counts (expected about 17, none refused), and the same for the contexts of task-410 and task-267. 3. Planted refusals: placeholder context; context without the Description; committed context edited after the review; compliance entries differing from the resolved lists; a missing report reference. 4. backlog task view task-381 --plain shows one compliance: entry per resolved list on the References line. 5. check-tasks prints the edit command for one stale open task. 6. The dollar-sequence and placeholder-once tests (AC #4) stay green. Each source file change in its own commit (protected paths); no task status move in them. Do not mark the task complete until 1 to 5 are on the task.
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0333 · task-375 · Backlog; operator, verbatim: "don't makr the task complete until it actually works")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0334 · task-375 · Backlog; operator, verbatim: "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0335 · task-375 · Backlog; operator, verbatim: "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close.")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0336 · task-375 · Backlog; operator, verbatim: "approved")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0337 · task-375 · Backlog; operator, verbatim: "Can we add these to the three tasks remaining taks for the four steps.  run the full panel on them?")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0338 · task-375 · Backlog; operator, verbatim: "the findings that are deemed low priorities are filed in a review pile for later")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0339 · task-375 · Backlog; operator, verbatim: "yes hardening rounds.  Today's were warranted, but not endless.")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-375 · Backlog; operator, verbatim: "can we address these in the plan? Let's get this right - add the the existing tasks and do a second pass on the recommendations")
 <!-- SECTION:NOTES:END -->
