@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:59:00Z'
-updated_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-20T17:36:00Z'
 labels:
   - McFix
   - McFix D
@@ -36,3 +36,9 @@ Gap found 2026-11-20: .claude/review-templates holds five lens templates (compli
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): DROP: not authorised by operator words (MD:1440, :1445 mark it a reading), not required by a written rule; Spec 08:171-172 gives regression and reality-check to tool-having Claude seats (regression-guardian, pipeline-reality-check exist), and a DeepSeek template for them is the tool-less facade Spec 08:387 records. Status not changed by hand: the move to DROPPED goes by the ruling record.
+<!-- SECTION:NOTES:END -->

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PAGETABLE'
 created_date: '2026-11-20T15:24:00Z'
-updated_date: '2026-11-20T15:26:00Z'
+updated_date: '2026-11-20T17:36:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -40,4 +40,6 @@ Built once: the section kinds the pilot needs (bar, notice, choices, button, sta
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-PAGETABLE, worktree /Users/brettpreston_macmini/Buildo-wt-pagetable, branch wf1/inc1b-pagetable), RR-0240
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): the 8 CONFLICT findings: (a) the builder cases B1 to B6 move to mobile/__tests__ as a jest-node test (Spec 98:76-77; Spec 100:164), row and schema assertions stay in the root suite; red/green then comes from Mobile CI: say so. (b) the field targets is renamed platforms, values web and mobile (Spec 126:238-248), dated note in the schema $comment. (c) flagsOf is declared as a deviations[] row on binding_mobile_list with the closed flag list (Spec 128:55), adjudicator the grounder verdict, dated; no code.
 <!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: PAGE.MAP The lot map page drawn from table rows
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:24:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T17:36:00Z'
 labels:
   - McFix
   - McFix G
@@ -33,3 +33,9 @@ WAITS on the PAGE.TABLE pilot passing. mobile_parcel_disambiguation_map (11 gold
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): convert as the operator ruled ("Convert the other three pages only after the pilot passes", approved, MD:1421-1422; Spec 126:74 "no page code"), in order 391 map, 392 phone search, 393 web search, then 394; none starts until the pilot grounder re-pass says PASS and the pilot is folded. A block kind the card does not name is a halt and a question (Spec 124a:988). No web builder file without the operator word (MD:1439). The page-table field is named platforms (values web, mobile), not targets (Spec 126:238-248; surface.schema.json identity.platforms).
+<!-- SECTION:NOTES:END -->

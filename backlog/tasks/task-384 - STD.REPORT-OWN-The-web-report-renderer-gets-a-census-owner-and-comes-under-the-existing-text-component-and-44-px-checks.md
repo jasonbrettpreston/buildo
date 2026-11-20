@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-REPORTOWN'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T16:09:00Z'
+updated_date: '2026-11-20T17:36:00Z'
 labels:
   - McFix
   - McFix B
@@ -71,4 +71,6 @@ Rules served: Spec 126 section 0a principle 1 and 11b.2; 128 R-13; standardized,
 2026-11-20 taken on the board at lane launch (lane BL-REPORTOWN, worktree /Users/brettpreston_macmini/Buildo-wt-reportown, branch wf1/inc1b-reportown), RR-0240
 
 2026-11-20 grounder follow-up (BL-REPORTOWN): binding_web_report limitations/deviations/a11y corrected to say the three files are outside C-2b, C-8, C-9 (UNRESEARCHED where unmeasured); measure output saved in the lane report; trailer MF-57.
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): option 2 with the strings fixed: add src/components/report/** to the frontend list of mcbylaws/protected-paths.json (dated note quoting the approved item 3 "Leave the reports as components, and bring them under the existing checks" at MD:1421-1422; the note may not say the operator ruled an exemption; the push gate still asks the operator y), list the three files (they are in src/components/report/, not surfaces/) in bindings.json, move the 3 display strings (ReportView.tsx:19 and :121) to content per FE-31, pin only the structural C-2b and C-8 findings per file and kind as a shrink-only two-direction baseline, state outside C-9 in the census entry. No policy-ledger row is involved. Rejected: option 1 leaves the files outside the checks; option 3 breaks Spec 126:924 "REPORT keeps the landed renderer".
 <!-- SECTION:NOTES:END -->

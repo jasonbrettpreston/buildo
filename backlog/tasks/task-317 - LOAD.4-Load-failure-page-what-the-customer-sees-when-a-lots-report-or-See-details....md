@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T15:37:00Z'
+updated_date: '2026-11-20T17:36:00Z'
 labels:
   - S
   - plan:LOAD.4
@@ -109,4 +109,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-317 · Backlog; o
 2026-11-19 (BL-LOAD4, stage 1, McIncrement 08_agents.md 11.8): stage 1 plan done; stage 2 build waits on the orchestrator. Measured on head 0bc76d829: today a failed or timed-out report shows a centred line with an outline Try again (ReportBinding.tsx:369-379), no address, no time bound, no refusal split; a miss shows the bare line and Back; the design draws one failure frame (small-pages-v8 build.mjs:803, 814-817). Delta list, contract, impact and decision drafts LD-1 (words), LD-2 (time-out figure), LD-3 (early failure vs animation), LD-5 (the miss), LD-6 (conditional still) in docs/reports/lanes/2026-11-19/BL-LOAD4/PLAN.md; D-1 and D-4 named, unruled, not decided. Smallest missing piece: task-267 stage 2 (the address source and the animation seam). Web: not buildable until the web report render (task-285 and task-287 chain).
 
 HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot result"): build as rows of the page table once the PAGE.TABLE pilot passes, not by extending lifecycleProps.
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): these are lifecycle states of the report screen: rows in the existing report lifecycle data (report-presentation.json) drawn by the existing ReportBinding; no new builder function and no move into the page-table builder (approved item 3 "Leave the reports as components"). Still required for 1·B (RR-0176 MD:785; RR-0179 MD:789). After the pilot folds; 317 after 267 stage 2 and LD-1, 2, 3, 5.
 <!-- SECTION:NOTES:END -->

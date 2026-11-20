@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-RULESACC'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T16:45:00Z'
+updated_date: '2026-11-20T17:36:00Z'
 labels:
   - McFix
   - McFix E
@@ -104,4 +104,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0332 · task-387 · Backlog; o
 2026-11-20 lane BL-RULESACC: ready, grounder owed; commits 893528a4b and the ruling-records commit; report docs/reports/lanes/2026-11-20/BL-RULESACC/REPORT.md
 
 2026-11-20 fold round after GROUNDER.md (verdict: fold after named fixes): handbook regenerated, test cut to 5 cases, notes re-attributed, reading records relabelled; lens set not rerun.
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): follow-ups: (a) delete the C1 sentence at Spec 100:125 (the card allows dated notes only after his words; C1 stays in BL-VERIFYC VERIFY.md and the lock stays owed on task-377). (b) task-370 stays DROPPED (the row he answered at MD:1426 says "dropping it from this increment"; Spec 137:84). (c) decisions 110, 111, 114, 115 get source: reading in their headers (RR-0190), UNVERIFIED whether a status check rejects that value: check first; backlog-decision.mjs:69 hard-codes source: operator and needs a reading kind.
 <!-- SECTION:NOTES:END -->
