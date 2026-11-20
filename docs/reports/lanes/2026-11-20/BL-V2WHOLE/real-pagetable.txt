@@ -1,0 +1,13 @@
+## pagetable: diff 135940 chars, 19 changed paths, largest files: scripts/surfaces/_schema/bindings.json 22220; scripts/surfaces/_schema/static-page.schema.json 19929; backlog/tasks/task-390 - PAGE.TABLE-Page-table-extended-for-interactive-pages-pilot-the-semi-question-page-drawn-from-table-rows.md 13342
+compliance agents-s5-1to3: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 115490 bytes
+compliance agents-s7-s11: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 113469 bytes
+compliance queue-137: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 114549 bytes
+compliance eng-all: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 112817 bytes
+compliance orchestrator-doc17: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 110336 bytes
+compliance five-words: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 113503 bytes
+compliance plan-protocol: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 114716 bytes
+compliance inc-S: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 106877 bytes
+compliance ms-S: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 113228 bytes
+lens code-review: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 110512 bytes
+lens error-paths: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 110512 bytes
+CALLS out phase (review-tool runs, the lists above plus the lenses above): 23
