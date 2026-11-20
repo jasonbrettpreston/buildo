@@ -1,19 +1,21 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.145Z file_sha256=bdbe39dac8458630d9b98722a8c578bfcc448bce1e0ae94bec5dadaa9f8f3894 prompt_sha256=cce13e2f3a650fd167f39316b7595d1348d17cc0ca4535fc0aed4f378e2b16c7
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.595Z file_sha256=9e0c31ac170ce4e5b23af65bd5079ba698f8c46e699dc52c3eb317d9d1a004fb prompt_sha256=6d36322e75588370538bcc98f474d26f25c3a3f6464d7641040f53199993abb5
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — grounder resolution quoted in the material, "1. Move the lookup flow (resolve through meter and log) into a new src/lib/parcels flow file" — backlog/tasks/task-383 "Build narrowed to keep it: the meter decision, openReport call, refusal mapping and log line stay in route.ts" — the built change keeps the meter and the log in the route and the notes say "This departs from the resolution's words", so the governing resolution is admittedly unmet and unresolved on the record — record the grounder/operator ruling on RR-0331 in the task before merge, or move the meter per the resolution
-DEFER severity=LOW — §6 ASK-15 "Membership is measured (the tables reached by a `public` route), never listed by hand." — src/lib/parcels/lookup-flow.ts:22 "import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';" — every table read of the lookup route now sits behind a new lib module while no descriptor or RLS class is touched, so a hand-listed membership would drift unseen — confirm at descriptor time that the tables reached through lookup-flow.ts are measured, not listed
-DEFER severity=LOW — §6 ASK-12 "`reapStaleRunningRows` + `src/tests/db/admin-stats-reaper.db.test.ts` are RETAINED and locked as present for this JOB to call." — src/tests/consumer-parcel-lookup.infra.test.ts:23 "const FLOW = path.resolve(__dirname, '../lib/parcels/lookup-flow.ts');" — the change rewrites six existing lock-test files and no pasted clause names that edit; the retained reaper lock is the same class of file — confirm the merge leaves `src/tests/db/admin-stats-reaper.db.test.ts` and `reap-stale-runs.ts` byte-identical
-REJECT — §6 ASK-13 "each route needs an explicit ruling, never a silent deletion" — accused of rewriting `/api/parcels/lookup` and `/api/parcels/lot-size` with no operator ruling in the pasted context — not a real issue: both routes are kept, only their internals move, and ASK-13 is scoped to uncalled `/api/admin/*` routes
-REJECT — §6 ASK-24 "no other class is added; an unknown class still fails" — accused of introducing a new error surface through the new null arm of the gate — not a real issue: src/app/api/parcels/lookup/route.ts:73 "if (access === null) return forbiddenSubscription();" maps to the existing 403, no `errors.classes[].class` value is added or moved
-MET — §8 Out-of-Scope "migrations/**  — this spec records rulings about schema, never schema." — task file Files line "+src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/parcel-tool-gate.logic.test.ts" — no migrations, no `step.schema.json`, no Spec 124 file appears in any diff header
-MET — §8 Target Files "`docs/specs/02-web-admin/128_surface_standard_policy.md` — this spec" — diff header "diff --git a/src/app/api/parcels/lookup/route.ts b/src/app/api/parcels/lookup/route.ts" — the spec and its mirror generator are untouched, so no §2/§4 mirror divergence is introduced
-MET — §6 ASK-12 "a dashboard GET must not write" — src/lib/parcels/tool-gate.ts:13 "const parcelTool = await getEntitlementStatus(db, ctx.uid, 'parcel_tool');" — the new helper and the flow add reads only, no write path enters either file
+```
+DEFER severity=LOW — operator ruling RR-0331 "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — contract_parcels_lookup.descriptor.json "verbatim at :1432 \"2. y 1 a\"" (and the question itself quoted as "leave the meter where it is?" here vs "leaving it where it is" in the task plan) — the adjudicating operator line is transcribed two different ways in the same commit, so the deviation's authority cannot be verified from the record — re-quote one verbatim string, identically, in the task plan, the descriptor and the census mirror
+MET — R-01 "The parcel tool is its own metered product, product key **`parcel_tool`**" — src/lib/parcels/tool-gate.ts "if (parcelTool && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) return 'parcel_tool';" — the product key, the one Spec 96 §10 status set and the metered arm are unchanged, only relocated
+MET — R-04 "`parcel_ref` = `parcels.parcel_id` `VARCHAR(20)` (municipal)" — src/lib/parcels/lookup-flow.ts "parcelRef = String(row.parcel_id);" — the meter's subject key is still the matched municipal id, never request text, and the flow returns it to the route that meters
+MET — R-23 "a **`metering` ⇒ ledger-row check**" — src/app/api/parcels/lookup/route.ts "the meter and the log stay here (RR-0331)" — the meter decision and the `withTransaction(openReport)` call remain in the route, so the contract↔ledger join the check holds is untouched
+MET — R-13 "every page STATES THE COMPONENTS IT OWNS" / no descriptor-shape change — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json — only `deviations[]` is edited, no ownership, archetype or profile field is added
+MET — §8 "`migrations/**` — this spec records rulings about schema, never schema" — diff file list — no migration file is added or edited by this change
+REJECT — R-29 "`cost_ms` is retired as a spelling" — accused of introducing a cost spelling — `computeMs` is the pre-existing LOAD.1 log field for the compute duration, carried across unchanged, not a declared check's `duration_ms` audit row
+REJECT — "No response, meter, log key or golden changes" — accused of adding the `requireQ` throw as new behaviour — the query schema guarantees exactly one of q | parcelId, and the previous `q!` path had no defined outcome for a missing q, so no reachable response, meter or golden changes
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 24   Unmet: 0
+Clauses checked: 18   Unmet: 0
+```
 
 ---
-⏱  46194ms (46.2s)
-📊 Tokens — total: 25680, input: 16923, output: 8757, reasoning: 7880
+⏱  63448ms (63.4s)
+📊 Tokens — total: 42717, input: 29351, output: 13366, reasoning: 12683

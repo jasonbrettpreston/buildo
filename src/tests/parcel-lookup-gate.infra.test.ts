@@ -158,6 +158,18 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
     expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
     expect(meterCalls()).toBe(0);
   });
+  it('a thrown gate read (entitlements read fails) -> 500, no payload, nothing read or metered', async () => {
+    ctx('active');
+    poolQuery.mockImplementation(async (text: string) => {
+      if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) throw new Error('db down');
+      throw new Error(`unexpected pool query: ${text}`);
+    });
+    const r = await call();
+    expect(r.status).toBe(500);
+    expect(r.body.data).toBeNull();
+    expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
+    expect(meterCalls()).toBe(0);
+  });
   it.each(['trial', 'active', 'past_due', 'admin_managed'])('lead_gen %s, no parcel_tool -> 200 on the transitional path, NO usage write', async (s) => {
     ctx(s); parcelTool(null);
     const r = await call();

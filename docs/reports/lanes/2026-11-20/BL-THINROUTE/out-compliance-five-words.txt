@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:13:48.738Z file_sha256=2c3b036c2087c9dc474cdcad454fea1914158c6e08f8d5b59f2b92a2d31d035f prompt_sha256=ef2b3902349f76d23880c83b1b1fcdbdca8c0c8fbdee9dc7f2e8ff3f66053105
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Glossary SCORECARD-G0…SCORECARD-G9 "Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases." — src/tests/parcel-tool-gate.logic.test.ts:24 "it.each(['trial', 'active', 'past_due', 'admin_managed'])('G1 parcel_tool %s -> parcel_tool'" and :3 "// G1..G4: the arms; G5 a failed read is never ... G7 RED plant." — the new gate-helper tests label themselves G1..G7, so under the glossary's lock definition they name scorecard rule ids G1..G7 while asserting none of those gates (G7 is test adequacy, not a RED plant) — relabel them with a declared non-scorecard id (for example STD.ROUTE-1..STD.ROUTE-7) and leave G0..G9 to the scorecard.
+
+DEFER severity=MED — Glossary five words "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — backlog task-383 "Principles: standardized, understandable, simple. Nothing added that the card did not name." — the plan asserts two of the five words in lowercase plus "simple", which is not one of the five, and cites no gate V mapping, so the five-word claim is not in the vocabulary form — either drop the line or state all five words with their gate V result.
+
+DEFER severity=MED — operator ruling 2026-11-20 at MORNING-DECISIONS.md:1432 (not pasted in this context, cannot see) "operator verbatim 2026-11-20 '2. y' (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" against "verbatim at :1432 '2. y 1 a'" — the same source line is quoted two different ways inside one diff, so the adjudication the two deviation records rest on cannot be reproduced, and any "1 a" half is unaddressed — restore the exact verbatim in one place and cite it from the other, and act on the second half if it is real.
+
+DEFER severity=MED — Glossary lock "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it." — src/tests/consumer-parcel-lookup.infra.test.ts:23 "// STD.ROUTE (task-383, Standard 10.3): the flow lives in src/lib/parcels/lookup-flow.ts and the one gate in tool-gate.ts" — every new lock names the task id STD.ROUTE/task-383; no rule map is pasted, so cannot see whether STD.ROUTE is a declared alias, and if it is not these are not locks by the glossary — cite the declared rule id or alias per lock, or add STD.ROUTE to the rule map.
+
+DEFER severity=LOW — Glossary † "An id or code pointer that lands with another branch (rule-map `meta.pending_integration`)." — task-383 plan step 5 "Owed to ALLOWED_REACHERS when both branches are on the board (the gates branch file, not edited here)" — a code pointer that lands with wf1/inc1b-gates is deferred without the † marker and no meta.pending_integration row is added in the diff — mark it † and record the pending_integration row (file, since, reason already drafted), or state who carries the row.
+
+REJECT — Glossary phase, compute hook, seam — accused of moving compute out of its owning phase — these terms name the runner functions in table 1a and pipeline compute modules, and the lookup route is not a step, so there is nothing to comply with; the ENRICHER write seam (ctx.exec / ctx.joinUpdate) is untouched by this diff.
+
+REJECT — docs/specs/00_engineering_standards.md §10.3 (quoted inside the plan, not in the pasted context) — accused of a thin-route deviation — the clause is not pasted as a governing clause here and is not mine to judge; the deviation is at least recorded in both the descriptor and scripts/surfaces/_schema/census/contracts.json.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 2
+
+---
+⏱  60843ms (60.8s)
+📊 Tokens — total: 32759, input: 19870, output: 12889, reasoning: 11895

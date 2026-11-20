@@ -29,12 +29,18 @@ export interface LookupFlowResult {
   computeMs: number | null;
 }
 
+/** The query schema (ConsumerParcelLookupQuerySchema) guarantees exactly one of q | parcelId, so q is set whenever parcelId is not; this narrows the type without a non-null assertion. */
+function requireQ(q: string | undefined): string {
+  if (q === undefined) throw new Error('lookup-flow: neither q nor parcelId (the query schema guarantees one)');
+  return q;
+}
+
 export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined }): Promise<LookupFlowResult> {
   const { q, parcelId, semi } = input;
   // Resolution: direct id (candidate click) bypasses address parsing.
   const resolved = parcelId
     ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
-    : await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });
+    : await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true });
 
   // The map read runs only on the resolver's own seed (never on the parcelId path).
   const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;

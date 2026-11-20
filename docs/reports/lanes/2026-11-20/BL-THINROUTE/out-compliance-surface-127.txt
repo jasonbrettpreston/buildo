@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:13:48.740Z file_sha256=32ecaa32e1e7a81cfca92a7e1682e30d51eaa28eebe62e25b64e04e7e39397bb prompt_sha256=81f7e548effacea8ae2bdece57caf969ff6ee6e87786acc84cccc044d90fcd31
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 127 §4.3 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers, so any of those changing forces a recapture" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "+      \"adjudicated_by\": \"operator 2026-11-20, RR-0331 (backlog/decisions/decision-116)...\" (new deviation appended to the contract descriptor; same hunk repeated in scripts/surfaces/_schema/census/contracts.json) — the contract descriptor is a declared fingerprint input, so this edit forces a recapture and the diff carries no golden restamp, leaving the §5 invariant "every golden's `source_fingerprint` matches the current fingerprint files" and the GOLDEN/SV-SCREEN arm "fresh fingerprints" failing — fix: in this same commit restamp every golden whose `fingerprint_files[]` names contract_parcels_lookup.descriptor.json as a fingerprint-only change (rendered trees unchanged, the MF-20 precedent) and paste the `surface-validate.mjs --check` GOLDEN arm output into the report.
+
+DEFER severity=MED — Spec 127 §4.1 "The adjudicator is named and dated in the report" — the same MORNING-DECISIONS.md:1432 line is quoted two ways in one change set: descriptor "...verbatim at :1432 \"2. y 1 a\"" against task file "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — the deviation's sole justification is the operator's words and the artifact of record misquotes or is misquoted — fix: quote :1432 once, identically, in the descriptor, the census twin and the task Notes/Plan.
+
+DEFER severity=LOW — Spec 127 §8.4 "Every row is AJV-validated against that schema on every generator run; a row that does not validate refuses the build" — census/contracts.json "+        \"from\": \"docs/specs/00_engineering_standards.md §10.3: API routes must be thin...\"" — both the shard and the emitted descriptor are hand-edited with no `generate-surface-registry.mjs --check` / AJV result in the change set, so the both-directions drift lock is asserted rather than shown — rationale: cheap to prove, and this change edits the two representations §8.4 compares.
+
+MET — Spec 127 §4.1 "A different party adjudicates than the one that discovered." — contract_parcels_lookup.descriptor.json deviation entry — the lane discovered, the operator adjudicated, named (RR-0331, decision-116) and dated 2026-11-20.
+
+MET — Spec 127 §8.4 "`--check` fails on registry drift **and** on descriptor drift, in **both** directions" — census/contracts.json and contract_parcels_lookup.descriptor.json carry the identical new deviation text — the shard and the emitted descriptor are kept equal at the moment of the change.
+
+MET — Spec 127 §8.5 "the conversion commit updates the census row for the surface it converts" — census deviation "why" now reads "(src/lib/parcels/tool-gate.ts, the lead_gen_transitional arm... STD.ROUTE task-383 moved the gate there from route.ts:66-68)" — the row's measured file reference was swept rather than left pointing at the old route line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  60203ms (60.2s)
+📊 Tokens — total: 44041, input: 31853, output: 12188, reasoning: 11375

@@ -1,26 +1,33 @@
 diff --git a/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md b/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md
-index aec9ea304..15a152af7 100644
+index aec9ea304..bc7ac7216 100644
 --- a/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md	
 +++ b/backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md	
-@@ -7,7 +7,7 @@ status: RUNNING
+@@ -7,12 +7,14 @@ status: RUNNING
  assignee:
    - '@lane-BL-THINROUTE'
  created_date: '2026-11-20T15:08:00Z'
 -updated_date: '2026-11-20T18:37:00Z'
-+updated_date: '2026-11-20T18:45:00Z'
++updated_date: '2026-11-20T19:10:00Z'
  labels:
    - McFix
    - McFix B
-@@ -20,7 +20,7 @@ ordinal: 83012
+ milestone: m-1
+ dependencies: []
++references:
++  - docs/reports/lanes/2026-11-20/BL-THINROUTE/REPORT.md
+ type: build
+ ordinal: 83012
+ ---
+@@ -20,7 +22,7 @@ ordinal: 83012
  ## Description
  
  <!-- SECTION:DESCRIPTION:BEGIN -->
 -Plan section B3; after the section A fixes settle on these files. Engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229): API routes must be thin. Measurement: lookup/route.ts carries about 70 lines of flow (resolve, hold, stored read, compute, meter decision); the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58). Lines moved, not new behaviour: no response, meter or golden may change. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts
-+Plan section B3; after the section A fixes settle on these files. Engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229): API routes must be thin. Measurement: lookup/route.ts carries about 70 lines of flow (resolve, hold, stored read, compute, meter decision); the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58). Lines moved, not new behaviour: no response, meter or golden may change. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts, src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/customer-report-compute.logic.test.ts, src/tests/customer-report-read.logic.test.ts, src/tests/parcels-lookup-page.logic.test.ts, src/tests/parcel-lot-form.logic.test.ts, src/tests/parcel-tool-gate.logic.test.ts
++Plan section B3; after the section A fixes settle on these files. Engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229): API routes must be thin. Measurement: lookup/route.ts carries about 70 lines of flow (resolve, hold, stored read, compute, meter decision); the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58). Lines moved, not new behaviour: no response, meter or golden may change. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts, src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/customer-report-compute.logic.test.ts, src/tests/customer-report-read.logic.test.ts, src/tests/parcels-lookup-page.logic.test.ts, src/tests/parcel-lot-form.logic.test.ts, src/tests/parcel-tool-gate.logic.test.ts, src/tests/parcel-lookup-gate.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/customer-report-compute.logic.test.ts, src/tests/customer-report-read.logic.test.ts, src/tests/parcels-lookup-page.logic.test.ts, src/tests/parcel-lot-form.logic.test.ts, src/tests/parcel-tool-gate.logic.test.ts
  <!-- SECTION:DESCRIPTION:END -->
  
  ## Definition of Done
-@@ -37,10 +37,27 @@ Plan section B3; after the section A fixes settle on these files. Engineering st
+@@ -37,10 +39,29 @@ Plan section B3; after the section A fixes settle on these files. Engineering st
  - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
  <!-- DOD:END -->
  
@@ -32,10 +39,10 @@ index aec9ea304..15a152af7 100644
 +Facts opened and found true: eng standards 10.3 at :228-229; lookup route holds the whole flow; the gate is written twice (lookup route, lot-size route); the six locks named by the grounder read route.ts as text (consumer-parcel-lookup.infra:36-41,66-90; customer-report-read.logic:344,397; customer-report-compute.logic:245-246; parcel-tool-meter.logic:215-223; parcels-lookup-page.logic:187; parcel-lot-form.logic:165-166); a lapsed-account behavioural test exists (parcel-lookup-gate.infra.test.ts:153). compute-reach.mjs has no ALLOWED_REACHERS on this base (it is only on branch wf1/inc1b-gates); src-sql-ledger.mjs is at scripts/analysis/.
 +Build:
 +1. src/lib/parcels/tool-gate.ts: parcelToolAccess(pool, ctx) returns 'parcel_tool' | 'lead_gen_transitional' | null; it holds the ACTIVE_SUBSCRIPTION_STATUSES test. Lookup route calls it right after auth and answers forbiddenSubscription() on null before any DB work; lot-size route calls it after the settings switch (same order as today) and answers forbiddenSubscription() on null.
-+2. src/lib/parcels/lookup-flow.ts: runParcelLookup({ctx uid, access, q, parcelId, semi}) holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line; it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription. Auth, query parse, the two rate buckets and the catch to internalError stay in the route.
++2. src/lib/parcels/lookup-flow.ts: runLookupFlow({q, parcelId, semi}) holds resolve, map, the lot row, the lot form, the held/stored/computed page, the response and the boundary parse, and returns {response, body, parcelRef, pageSource, computeMs}. The meter decision, the openReport call, the refusal mapping (reportLimitReached / forbiddenSubscription), the log line, auth, the query parse, the two rate buckets and the catch to internalError STAY in route.ts: RR-0331 (decision-116), operator verbatim 2026-11-20 "2. y" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432) to "leaving it where it is" (the lookup route). The earlier resolution words "resolve through meter and log" are superseded on that point. What remains in the route is a declared deviation from engineering standards 10.3 (descriptor deviations of contract_parcels_lookup).
 +3. No response, meter, log key or golden changes.
-+4. Tests: the six locks are re-pointed to the flow file in the same commit, same strength, each with a red-then-green plant; the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so; the gate-before-DB pin becomes "route calls the helper before the flow call; the helper holds the status set"; a new test file for the helper (three arms).
-+5. Engine reach: the flow file is a new transitive caller of the compute core; ALLOWED_REACHERS is not on this base, so the owed list edit is stated in the report.
++4. Tests: re-pointed to the flow file with a plant through the real walk/filter: sole importer of report-compute, report-page importer list, dangling-id miss pin, resolver import pin (route imports no resolver), readLotForm( once-in-flow, gate-before-flow; new locks: the flow imports no logger, entitlement or meter code, the flow holds no non-null assertion; a route test for a thrown gate read (500, nothing metered); a new test file for the helper. NOT re-pointed because they still hold on the route: openReport sole importer, body.page === null guard, log hygiene, lot_form_unsure. parcels-lookup-page:187 import-line pin re-pointed to the flow file; the readLotForm( route token pin replaced by the once-in-flow pin.
++5. Engine reach: compute-reach.mjs exists only on branch wf1/inc1b-gates. Owed to ALLOWED_REACHERS when both branches are on the board (the gates branch file, not edited here): file src/lib/parcels/lookup-flow.ts, since 2026-11-20, reason "STD.ROUTE (task-383): the lookup flow calls report-compute.ts (one hop)"; the src/app/api/parcels/lookup/route.ts entry reworded to two hops (route -> lookup-flow -> report-compute). Whichever branch lands second carries it.
 +Principles: standardized, understandable, simple. Nothing added that the card did not name.
 +<!-- SECTION:PLAN:END -->
 +
@@ -47,7 +54,51 @@ index aec9ea304..15a152af7 100644
  Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by a separate grounder 2026-11-20 (the lane verifies each fact first): BUILD as carded, narrowed. Rule: engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229) "API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers." 1. Move the lookup flow (resolve through meter and log) into a new src/lib/parcels flow file; auth, query parse and the two rate buckets stay in the route; one gate helper returning parcel_tool, lead_gen_transitional or null: lookup answers 403 before any DB work, lot-size calls it after the settings switch. No response, meter, log or golden changes. 2. Re-point each REAL lock to the flow file in the same commit, same strength, each with a red-then-green plant (Spec 128 section 4.4): sole importer of report-compute (customer-report-compute.logic.test.ts:245-246), sole importer of openReport (parcel-tool-meter.logic.test.ts:215-223, keep the :214 comment), the report-page.ts importer list (customer-report-read.logic.test.ts T10), the meter guard body.page === null (customer-report-read.logic.test.ts:344), the log-hygiene pins (no q, no answer text), the lot-form log pin. 3. The gate-before-DB pin becomes: the route calls the helper before the flow call and the helper holds the status set; add a behavioural lapsed-account test if none exists. Drop only the exact import-line and token-order text pins (parcels-lookup-page.logic.test.ts:187; the readLotForm( token in parcel-lot-form.logic.test.ts) and say so. 4. Engine reach: the flow file is a new transitive caller: add it to ALLOWED_REACHERS in scripts/analysis/gates/compute-reach.mjs with a dated reason if that file is on the base; if it is only on branch wf1/inc1b-gates, state the owed list edit in the report; check scripts/analysis/gates/src-sql-ledger.mjs. The earlier brief sentence "every existing route test stays green unchanged" was orchestrator text, not a rule, and is withdrawn.
 +
 +2026-11-20 lane BL-THINROUTE: plan lens round raised RR-0331 (decision-116, operator "2. y", MORNING-DECISIONS.md:1432: the report meter stays in the lookup route). Build narrowed to keep it: the meter decision, openReport call, refusal mapping and log line stay in route.ts; the flow file holds resolve through the boundary parse; the gate helper is shared. This departs from the resolution's words "resolve through meter and log"; grounder to rule. Locks on the route (openReport importer, body.page === null guard, log pins) are not re-pointed because they still hold. parcels-lookup-page:187 import-line pin re-pointed to the flow file (not dropped); readLotForm( route token pin replaced by a once-in-flow pin. Files line extended for the two new lib files and the test files.
++
++2026-11-20 fix round 1 (grounder GROUNDER.md): engine reach owed, written exactly. When wf1/inc1b-gates and wf1/inc1b-thinroute are both on the board, scripts/analysis/gates/compute-reach.mjs ALLOWED_REACHERS must carry: file src/lib/parcels/lookup-flow.ts, since 2026-11-20, reason "STD.ROUTE (task-383): the lookup flow calls report-compute.ts (one hop)"; and the src/app/api/parcels/lookup/route.ts entry reworded to two hops (route -> lookup-flow -> report-compute). Not edited here (the file is on the gates branch only). Declared deviation from engineering standards 10.3 for what remains in the route recorded in the descriptor deviations of contract_parcels_lookup (adjudicated_by the operator "2. y", RR-0331, MORNING-DECISIONS.md:1432).
  <!-- SECTION:NOTES:END -->
+diff --git a/scripts/surfaces/_schema/census/contracts.json b/scripts/surfaces/_schema/census/contracts.json
+index 5159c8dfb..02f434ef2 100644
+--- a/scripts/surfaces/_schema/census/contracts.json
++++ b/scripts/surfaces/_schema/census/contracts.json
+@@ -22816,9 +22816,15 @@
+     "deviations": [
+       {
+         "from": "Spec 126 R-01 / R-23: a parcel_tool lookup is metered and writes a ledger row",
+-        "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/app/api/parcels/lookup/route.ts:66-68; meter \"unmetered\" in the log line). Removed by MF-50.",
++        "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/lib/parcels/tool-gate.ts, the lead_gen_transitional arm; meter \"unmetered\" in the route log line; STD.ROUTE task-383 moved the gate there from route.ts:66-68). Removed by MF-50.",
+         "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
+         "date": "2026-11-11"
++      },
++      {
++        "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin (validate input, call a lib function, return the result)",
++        "why": "src/app/api/parcels/lookup/route.ts still holds the report meter decision (the 9-state chain and the withTransaction(openReport) call), the refusal mapping, the log line and the two rate buckets; the flow (resolve through the boundary parse) is in src/lib/parcels/lookup-flow.ts and the gate in src/lib/parcels/tool-gate.ts (STD.ROUTE, task-383). The operator ruled where the meter counts: it stays in the lookup route (decision-116, RR-0331).",
++        "adjudicated_by": "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116), asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"",
++        "date": "2026-11-20"
+       }
+     ],
+     "limitations": [
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index 6422165a1..dfdc7a4be 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -819,9 +819,15 @@
+   "deviations": [
+     {
+       "from": "Spec 126 R-01 / R-23: a parcel_tool lookup is metered and writes a ledger row",
+-      "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/app/api/parcels/lookup/route.ts:66-68; meter \"unmetered\" in the log line). Removed by MF-50.",
++      "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/lib/parcels/tool-gate.ts, the lead_gen_transitional arm; meter \"unmetered\" in the route log line; STD.ROUTE task-383 moved the gate there from route.ts:66-68). Removed by MF-50.",
+       "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
+       "date": "2026-11-11"
++    },
++    {
++      "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin (validate input, call a lib function, return the result)",
++      "why": "src/app/api/parcels/lookup/route.ts still holds the report meter decision (the 9-state chain and the withTransaction(openReport) call), the refusal mapping, the log line and the two rate buckets; the flow (resolve through the boundary parse) is in src/lib/parcels/lookup-flow.ts and the gate in src/lib/parcels/tool-gate.ts (STD.ROUTE, task-383). The operator ruled where the meter counts: it stays in the lookup route (decision-116, RR-0331).",
++      "adjudicated_by": "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116), asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"",
++      "date": "2026-11-20"
+     }
+   ],
+   "limitations": [
 diff --git a/src/app/api/parcels/lookup/route.ts b/src/app/api/parcels/lookup/route.ts
 index 732b5e1dd..0c0cb9dd0 100644
 --- a/src/app/api/parcels/lookup/route.ts
@@ -195,10 +246,10 @@ index fd45214b4..f69a97d84 100644
      }
 diff --git a/src/lib/parcels/lookup-flow.ts b/src/lib/parcels/lookup-flow.ts
 new file mode 100644
-index 000000000..7d60ff14d
+index 000000000..3ca39b1a0
 --- /dev/null
 +++ b/src/lib/parcels/lookup-flow.ts
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,106 @@
 +// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3 (API), §2.6 (a miss is a valid 200), §3.2 (the whitelist, the nullable `page`)
 +// SPEC LINK: docs/specs/00_engineering_standards.md §10.3 (API routes are thin: business logic belongs in src/lib)
 +//
@@ -230,12 +281,18 @@ index 000000000..7d60ff14d
 +  computeMs: number | null;
 +}
 +
++/** The query schema (ConsumerParcelLookupQuerySchema) guarantees exactly one of q | parcelId, so q is set whenever parcelId is not; this narrows the type without a non-null assertion. */
++function requireQ(q: string | undefined): string {
++  if (q === undefined) throw new Error('lookup-flow: neither q nor parcelId (the query schema guarantees one)');
++  return q;
++}
++
 +export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined }): Promise<LookupFlowResult> {
 +  const { q, parcelId, semi } = input;
 +  // Resolution: direct id (candidate click) bypasses address parsing.
 +  const resolved = parcelId
 +    ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
-+    : await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });
++    : await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true });
 +
 +  // The map read runs only on the resolver's own seed (never on the parcelId path).
 +  const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;
@@ -323,10 +380,10 @@ index 000000000..34ce117cf
 +  return null;
 +}
 diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
-index 9a75fffa7..331a5c7f6 100644
+index 9a75fffa7..5df8e0b6f 100644
 --- a/src/tests/consumer-parcel-lookup.infra.test.ts
 +++ b/src/tests/consumer-parcel-lookup.infra.test.ts
-@@ -20,6 +20,19 @@ import { T3_GROUPS } from '@/lib/admin/parcel-lookup';
+@@ -20,6 +20,26 @@ import { T3_GROUPS } from '@/lib/admin/parcel-lookup';
  const ROUTE = path.resolve(__dirname, '../app/api/parcels/lookup/route.ts');
  const LIB = path.resolve(__dirname, '../lib/parcels/consumer-lookup.ts');
  const route = () => fs.readFileSync(ROUTE, 'utf8');
@@ -342,11 +399,18 @@ index 9a75fffa7..331a5c7f6 100644
 +  return g > -1 && f > -1 && g < f && /parcelToolAccess\([^)]*\);?\s*\n\s*if \(access === null\) return forbiddenSubscription\(\)/.test(src);
 +};
 +/** The miss lock: the dangling-id miss (match null, parcel null, resolution no_match) is built in the flow. */
++/** The no-resolver lock: the route imports nothing from the admin resolver module. */
++const importsResolver = (src: string): boolean => src.includes("from '@/lib/admin/parcel-lookup'");
++/** The flow-purity lock: the flow file imports no logger, no entitlement, no meter or usage code (the meter and the log stay in the route, RR-0331). */
++const flowImports = (src: string): string[] => [...src.matchAll(/from '([^']+)'/g)].map((m) => m[1] as string);
++const flowIsPure = (src: string): boolean => flowImports(src).every((m) => !/(^|\/)(logger|entitlements|usage)(\/|$|-)|openReport|meter/.test(m)) && !/\bopenReport\b|\blogInfo\b|\blogWarn\b|\blogError\b/.test(src.replace(/^\s*\/\/.*$/gm, ''));
++/** Eng standards 2.3: the flow holds no non-null assertion (the input is narrowed, not asserted). */
++const hasNonNullAssertion = (src: string): boolean => /[A-Za-z0-9_)\]]!(?=[,.);\]\s])/.test(src.replace(/^\s*\/\/.*$/gm, '').replace(/\/\/.*$/gm, ''));
 +const flowHoldsMiss = (src: string): boolean => /match:\s*null[\s\S]*parcel:\s*null[\s\S]*resolution:\s*'no_match'/.test(src);
  const lib = () => fs.readFileSync(LIB, 'utf8');
  
  describe('route source-shape locks (Spec 100 §3)', () => {
-@@ -35,9 +48,15 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+@@ -35,9 +55,15 @@ describe('route source-shape locks (Spec 100 §3)', () => {
    it('server-side subscription gate — 403 branch present before DB work (Spec 100 §5)', () => {
      const src = route();
      expect(src).toContain('forbiddenSubscription');
@@ -365,7 +429,7 @@ index 9a75fffa7..331a5c7f6 100644
    });
    it('wrapped in withApiEnvelope + uses the envelope helpers', () => {
      const src = route();
-@@ -57,7 +76,12 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+@@ -57,7 +83,34 @@ describe('route source-shape locks (Spec 100 §3)', () => {
    it('unknown parcelId is a 200 miss, never a 404 (Spec 100 §2.6)', () => {
      // The route reserves 404 for nothing — it maps a dangling id to match:null.
      expect(route()).not.toMatch(/notFound\(/);
@@ -373,13 +437,35 @@ index 9a75fffa7..331a5c7f6 100644
 +    expect(flow()).not.toMatch(/notFound\(/);
 +    expect(flowHoldsMiss(flow())).toBe(true);
 +  });
++  it('the flow file holds no non-null assertion (q is narrowed, never q!)', () => {
++    expect(hasNonNullAssertion(flow())).toBe(false);
++  });
++  it('RED plant: a non-null assertion is caught; the control passes', () => {
++    expect(hasNonNullAssertion('await resolveAddress(q!, { a: 1 });')).toBe(true);
++    expect(hasNonNullAssertion('const x = row!.id;')).toBe(true);
++    expect(hasNonNullAssertion('await resolveAddress(requireQ(q), { a: 1 }); if (a !== b && c != d) {}')).toBe(false);
++  });
++  it('the flow file imports no logger, no entitlement and no meter code', () => {
++    expect(flowIsPure(flow())).toBe(true);
++  });
++  it('RED plant: a flow that imports the logger, entitlements or openReport is caught; the control passes', () => {
++    expect(flowIsPure("import { resolveLotMap } from '@/lib/parcels/lot-map';")).toBe(true);
++    expect(flowIsPure("import { logInfo } from '@/lib/logger';")).toBe(false);
++    expect(flowIsPure("import { openReport } from '@/lib/entitlements';")).toBe(false);
++    expect(flowIsPure("import { x } from '@/lib/entitlements';")).toBe(false);
++    expect(flowIsPure("import { a } from '@/lib/parcels/lot-map';\nlogInfo('t', 'm', {});")).toBe(false);
++  });
++  it('RED plant: a route that imports the admin resolver again is caught; the control passes', () => {
++    expect(importsResolver("import { resolveAddress } from '@/lib/admin/parcel-lookup';")).toBe(true);
++    expect(importsResolver("import { runLookupFlow } from '@/lib/parcels/lookup-flow';")).toBe(false);
++  });
 +  it('RED plant: a flow with no dangling-id miss is caught', () => {
 +    expect(flowHoldsMiss("response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match' };")).toBe(true);
 +    expect(flowHoldsMiss("response = { match: resolved.match, parcel: payload, resolution: 'unique' };")).toBe(false);
    });
  });
  
-@@ -81,11 +105,13 @@ describe('consumer lib is read-only + reuses the admin resolver (no fork)', () =
+@@ -81,11 +134,13 @@ describe('consumer lib is read-only + reuses the admin resolver (no fork)', () =
      expect(lib()).not.toMatch(/\b(INSERT INTO|UPDATE\s+\w+\s+SET|DELETE FROM)\b/);
    });
    it('reuses the admin resolver internals — never forks the normalizers', () => {
@@ -390,56 +476,148 @@ index 9a75fffa7..331a5c7f6 100644
      // MF-53: the map read is its own import line (src/lib/parcels/lot-map.ts, the one SQL home of the map), never the admin resolver's.
      expect(src).toContain("import { resolveLotMap } from '@/lib/parcels/lot-map';");
 +    // The route imports no resolver at all: it calls the flow (Standard 10.3).
-+    expect(route()).not.toContain("from '@/lib/admin/parcel-lookup'");
++    expect(importsResolver(route())).toBe(false);
      // No SQL / normalizer parsing lives in the consumer lib (assembly only).
      expect(lib()).not.toMatch(/SELECT\s/i);
      expect(lib()).not.toContain('normalizeAddressNumber');
 diff --git a/src/tests/customer-report-compute.logic.test.ts b/src/tests/customer-report-compute.logic.test.ts
-index 30128632b..362d74c9b 100644
+index 30128632b..9f4d8937d 100644
 --- a/src/tests/customer-report-compute.logic.test.ts
 +++ b/src/tests/customer-report-compute.logic.test.ts
-@@ -243,7 +243,13 @@ describe('C6 the fence: pool, projection, switch, the miss rule; lazy core and c
-   it('the route is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
-     const walk = (d: string): string[] => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : []));
-     const importers = walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(read(f)));
+@@ -15,6 +15,7 @@
+ //   C8 types      the rows of the page's own building types are equal when the compute is cut to those types (measurement pinned; the entry runs all types)
+ //   C9 current    a computed ungated lot has freshness verdict `current` and a non-null page
+ import fs from 'node:fs';
++import os from 'node:os';
+ import path from 'node:path';
+ import { createRequire } from 'node:module';
+ import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+@@ -240,10 +241,28 @@ describe('C6 the fence: pool, projection, switch, the miss rule; lazy core and c
+     expect(BAD_IMPORT.test('@/lib/admin/report-preview-live/stored-page')).toBe(true);
+     expect(BAD_IMPORT.test('@/lib/db/client')).toBe(false);
+   });
+-  it('the route is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
+-    const walk = (d: string): string[] => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : []));
+-    const importers = walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(read(f)));
 -    expect(importers).toEqual(['src/app/api/parcels/lookup/route.ts']);
-+    expect(importers).toEqual(['src/lib/parcels/lookup-flow.ts']); // STD.ROUTE (task-383): the flow file moved out of the route; the route imports the flow
++  // The real walk and filter, parameterised by the tree root so the plant runs the same code on a planted tree (Spec 128 section 4.4).
++  const importersOf = (root: string): string[] => {
++    const walk = (d: string): string[] => (fs.existsSync(path.join(root, d)) ? fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
++    return walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(fs.readFileSync(path.join(root, f), 'utf8')));
++  };
++  const FLOW_ONLY = ['src/lib/parcels/lookup-flow.ts'];
++  it('the flow file is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
++    expect(importersOf(ROOT)).toEqual(FLOW_ONLY); // STD.ROUTE (task-383): the flow file moved out of the route; the route imports the flow
 +  });
-+  it('RED plant: an importer outside the flow file is caught', () => {
-+    const IMPORTS = (s: string): boolean => /from '[^']*lib\/parcels\/report-compute'/.test(s);
-+    expect(IMPORTS("import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';")).toBe(true);
-+    expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(false);
-+    expect(['src/lib/parcels/lookup-flow.ts', 'src/app/api/parcels/other/route.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts']);
++  it('RED plant: a planted second importer fails the lock; the control tree passes it (same walk and filter)', () => {
++    const mk = (extra: boolean): string => {
++      const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'std-route-'));
++      const put = (rel: string, text: string): void => { fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true }); fs.writeFileSync(path.join(tmp, rel), text); };
++      put('src/lib/parcels/lookup-flow.ts', "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';\n");
++      put('src/lib/parcels/report-compute.ts', "export const x = 1;\n");
++      if (extra) put('src/app/api/parcels/other/route.ts', "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';\n");
++      return tmp;
++    };
++    const control = mk(false); const planted = mk(true);
++    expect(importersOf(control)).toEqual(FLOW_ONLY);
++    expect(importersOf(planted)).not.toEqual(FLOW_ONLY);
++    fs.rmSync(control, { recursive: true, force: true }); fs.rmSync(planted, { recursive: true, force: true });
    });
  });
  
 diff --git a/src/tests/customer-report-read.logic.test.ts b/src/tests/customer-report-read.logic.test.ts
-index 116d667fa..b1c65f172 100644
+index 116d667fa..de1244aa5 100644
 --- a/src/tests/customer-report-read.logic.test.ts
 +++ b/src/tests/customer-report-read.logic.test.ts
-@@ -394,7 +394,10 @@ describe('T10 importers: report-page.ts is server code, imported by the lookup r
-   it('no component, mobile source or other lib file imports it; the non-test importers are the route and the compute entry', () => {
-     const files = [...walk('src'), ...walk('mobile/src'), ...walk('mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
-     expect(files.length).toBeGreaterThan(500);
+@@ -15,6 +15,7 @@
+ //   T9 parity      for the same scripted lot, W's page equals the admin preview's page (one resolver)
+ //   T10 importers  only the lookup route and the LOAD.1 compute entry import report-page.ts
+ import fs from 'node:fs';
++import os from 'node:os';
+ import path from 'node:path';
+ import { describe, it, expect, beforeEach, vi } from 'vitest';
+ import type { NextRequest } from 'next/server';
+@@ -388,13 +389,32 @@ describe('T9 parity: one resolver for the admin preview and the customer read',
+   });
+ });
+ 
+-describe('T10 importers: report-page.ts is server code, imported by the lookup route and the LOAD.1 compute entry only', () => {
+-  const walk = (d: string): string[] => (fs.existsSync(path.join(ROOT, d)) ? fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
++describe('T10 importers: report-page.ts is server code, imported by the lookup flow file and the LOAD.1 compute entry only', () => {
++  const walkIn = (root: string, d: string): string[] => (fs.existsSync(path.join(root, d)) ? fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walkIn(root, path.join(d, e.name))) : /\.(ts|tsx|js|mjs)$/.test(e.name) ? [path.join(d, e.name)] : [])) : []);
+   const IMPORTS = (src: string): boolean => /from '[^']*lib\/parcels\/report-page'/.test(src);
+-  it('no component, mobile source or other lib file imports it; the non-test importers are the route and the compute entry', () => {
+-    const files = [...walk('src'), ...walk('mobile/src'), ...walk('mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
+-    expect(files.length).toBeGreaterThan(500);
 -    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/report-compute.ts']); // LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
-+    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']); // STD.ROUTE (task-383): the lookup flow file, not the route, reads the page // LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
++  /** The real walk and filter over a tree root (the plant runs it on a planted tree). */
++  const pageImporters = (root: string): { n: number; list: string[] } => {
++    const files = [...walkIn(root, 'src'), ...walkIn(root, 'mobile/src'), ...walkIn(root, 'mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
++    return { n: files.length, list: files.filter((f) => IMPORTS(fs.readFileSync(path.join(root, f), 'utf8'))) };
++  };
++  const EXPECTED = ['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']; // STD.ROUTE (task-383): the lookup flow file, not the route, reads the page; LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
++  it('no component, mobile source or other lib file imports it; the non-test importers are the flow file and the compute entry', () => {
++    const r = pageImporters(ROOT);
++    expect(r.n).toBeGreaterThan(500);
++    expect(r.list).toEqual(EXPECTED);
 +  });
-+  it('RED plant: the route importing report-page again is caught (the list names the flow file, not the route)', () => {
-+    expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']);
++  it('RED plant: a planted route importing report-page fails the lock; the control tree passes it (same walk and filter)', () => {
++    const mk = (extra: boolean): string => {
++      const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'std-route-'));
++      const put = (rel: string, text: string): void => { fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true }); fs.writeFileSync(path.join(tmp, rel), text); };
++      for (const f of EXPECTED) put(f, "import { readCustomerPageResponse } from '@/lib/parcels/report-page';\n");
++      if (extra) put('src/app/api/parcels/lookup/route.ts', "import { readCustomerPageResponse } from '@/lib/parcels/report-page';\n");
++      return tmp;
++    };
++    const control = mk(false); const planted = mk(true);
++    expect(pageImporters(control).list).toEqual(EXPECTED);
++    expect(pageImporters(planted).list).not.toEqual(EXPECTED);
++    fs.rmSync(control, { recursive: true, force: true }); fs.rmSync(planted, { recursive: true, force: true });
    });
    it('the fence is not vacuous', () => {
      expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(true);
+diff --git a/src/tests/parcel-lookup-gate.infra.test.ts b/src/tests/parcel-lookup-gate.infra.test.ts
+index 4436aeb0a..a7352dce0 100644
+--- a/src/tests/parcel-lookup-gate.infra.test.ts
++++ b/src/tests/parcel-lookup-gate.infra.test.ts
+@@ -158,6 +158,18 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
+     expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
+     expect(meterCalls()).toBe(0);
+   });
++  it('a thrown gate read (entitlements read fails) -> 500, no payload, nothing read or metered', async () => {
++    ctx('active');
++    poolQuery.mockImplementation(async (text: string) => {
++      if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) throw new Error('db down');
++      throw new Error(`unexpected pool query: ${text}`);
++    });
++    const r = await call();
++    expect(r.status).toBe(500);
++    expect(r.body.data).toBeNull();
++    expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
++    expect(meterCalls()).toBe(0);
++  });
+   it.each(['trial', 'active', 'past_due', 'admin_managed'])('lead_gen %s, no parcel_tool -> 200 on the transitional path, NO usage write', async (s) => {
+     ctx(s); parcelTool(null);
+     const r = await call();
 diff --git a/src/tests/parcel-lot-form.logic.test.ts b/src/tests/parcel-lot-form.logic.test.ts
-index 6a169ec38..53c042e9a 100644
+index 6a169ec38..4901422b5 100644
 --- a/src/tests/parcel-lot-form.logic.test.ts
 +++ b/src/tests/parcel-lot-form.logic.test.ts
-@@ -162,7 +162,8 @@ describe('the lookup payload', () => {
+@@ -161,8 +161,16 @@ describe('the lookup payload', () => {
+     });
      expect(r.success).toBe(false);
    });
++  // The once-per-hit lock counts the call sites in the flow file; the plant shows zero and two calls are both seen.
++  const readLotFormCalls = (src: string): number => (src.replace(/^\s*\/\/.*$/gm, '').match(/\breadLotForm\(/g) ?? []).length;
++  it('RED plant: the once-in-flow lock sees no call and a doubled call; the control sees one', () => {
++    expect(readLotFormCalls('const lotForm = await readLotForm(ref);')).toBe(1);
++    expect(readLotFormCalls('const a = 1;')).toBe(0);
++    expect(readLotFormCalls('await readLotForm(a); await readLotForm(b);')).toBe(2);
++  });
    it('the route reads the view once per hit and logs the outcome, never the answer text', () => {
 -    expect(ROUTE).toContain('readLotForm(');
 +    // STD.ROUTE (task-383): the readLotForm( token pin on the route is dropped (the read moved to the flow file, which keeps it once per hit); the log pin stays on the route.
-+    expect(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8').match(/readLotForm\(/g)).toHaveLength(1);
++    expect(readLotFormCalls(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8'))).toBe(1);
      expect(ROUTE).toMatch(/lot_form_unsure/);
    });
  });

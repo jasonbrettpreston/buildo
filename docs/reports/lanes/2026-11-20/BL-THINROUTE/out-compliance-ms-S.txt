@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:13:48.735Z file_sha256=9c37ca650b31673e36f7c431bf931522c2b7562882bde8151fdbc6078e19216a prompt_sha256=f9472db52ea086dc63b3ff5f88cef841648bed6fca9c3051333ab78ecf3108a7
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — increment objective "the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc ...)" — task-383 md (PLAN:BEGIN step 2) "The meter decision, the openReport call, the refusal mapping (reportLimitReached / forbiddenSubscription), the log line, auth, the query parse, the two rate buckets and the catch to internalError STAY in route.ts" versus task-383 md (Implementation Notes, grounder resolution) "Move the lookup flow (resolve through meter and log) into a new src/lib/parcels flow file" — the one order the ruling fixes (meter in the route) is contradicted by the resolution text carried in the same file, so the pasted "one plan" is not one plan — fix: get the grounder ruling on the record, delete the superseded "resolve through meter and log" sentence, and re-issue the card with a single instruction set.
+
+DEFER severity=MED — project objective "A task that serves neither a designed element nor a supporting function is most likely not relevant or feeds old code" — task-383 md (Description) "Lines moved, not new behaviour: no response, meter or golden may change" — the diff moves lines and changes no designed search element A-G, and the only stated reason (engineering standards 10.3) is not among the pasted clauses, so relevance rests on an unnamed "supporting function" — fix: name in the plan the supporting function (or the designed element) the refactor serves, or sequence it behind the search page.
+
+DEFER severity=LOW — project objective "keep it simple; no scope creep" — src/lib/parcels/lookup-flow.ts "if (q === undefined) throw new Error('lookup-flow: neither q nor parcelId (the query schema guarantees one)')" — a new throw path (500) replaces the previous pass-through of q into resolveAddress, behaviour no pasted clause names — fix: pass q through as the route already narrowed it via ConsumerParcelLookupQuerySchema.parse, or keep the assertion the card started from.
+
+DEFER severity=LOW — project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — task-383 md (Description, Files) "src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/consumer-parcel-lookup.infra.test.ts, ... src/lib/parcels/lookup-flow.ts, src/lib/parcels/tool-gate.ts, src/tests/consumer-parcel-lookup.infra.test.ts" — the Files list names the two new lib files and five test files twice, so the card's own scope list is ambiguous — fix: de-duplicate the Files list.
+
+NIT severity=NIT — project objective "we need one plan - we can only execute one plan" — scripts/surfaces/_schema/census/contracts.json "+        \"from\": \"docs/specs/00_engineering_standards.md §10.3: API routes must be thin" versus task-383 md "declared deviation from engineering standards 10.3 for what remains in the route recorded in the descriptor deviations of contract_parcels_lookup" — the plan names only the descriptor while the diff also edits the census mirror, so a second artifact is written with no plan step — fix: add the census mirror to the plan step, or regenerate it from the descriptor.
+
+DEFER severity=MED — operator ruling cited as binding "adjudicated_by": "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116), asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431" — cannot see: neither decision-116 nor MORNING-DECISIONS.md:1431-1432 is in the pasted rulings — the deviation's whole licence to leave the meter in the route rests on a ruling I cannot check — fix: paste decision-116 and the :1431 to :1432 verbatim into the governing context so the deviation is adjudicated against a pasted ruling.
+
+MET — increment objective "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" — src/lib/parcels/lookup-flow.ts "await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true })" and "const page = pageResponse === null ? null : mobilePageView(pageResponse)" — candidates, mistyped match and the report page are carried over unchanged.
+
+MET — increment objective "the semi calculation stays in Increment 7 (7.25)" — src/lib/parcels/lookup-flow.ts "const held = lotForm?.unsure === true && semi !== 'answered';" — only the hold is preserved, no semi number is computed here.
+
+MET — project objective "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — src/app/api/parcels/lot-size/route.ts "if ((await parcelToolAccess(pool, ctx)) === null) {" — both the lookup (search page) and lot-size (details) routes still gate and serve through the same status set.
+
+MET — project objective "our objective is to finish a completed project ie a database that works and is ready" — src/lib/parcels/tool-gate.ts "if (ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '')) return 'lead_gen_transitional';" — the gate expression is the same one the routes held, so no access outcome changes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  46544ms (46.5s)
+📊 Tokens — total: 28482, input: 19080, output: 9402, reasoning: 8127

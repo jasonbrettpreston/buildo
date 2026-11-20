@@ -1,24 +1,19 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.076Z file_sha256=e31eb3d63bbf58a82d9eea92586fda9cbcf52ed972adf563e1189c42fff4d55c prompt_sha256=ff856e3a42ca464b2c45d10c4b5c98f9d7ef1d3395ddf3c10a2bfd64ce648da2
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.600Z file_sha256=11f6426ca0ece5f3172e2ad52c27dad596b89d2acc237340bee0075169d2b05a prompt_sha256=4f63524fb21a71caa943c5cdbc8e327f49f35d4f098fdf292bedbdee85c18cb8
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-step-132.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — x-rulings.4 (R-GY) "each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`" — backlog/tasks/task-383 Implementation Plan "Operator 2026-11-20 (MORNING-DECISIONS.md:1476)" — the authorisation this change rests on is cited as a raw queue file and line, not a committed decision-log entry, and neither that log nor the engineering-standard text (10.3) was pasted into this review, so compliance with the ruling itself is "cannot see" — paste `docs/specs/00_engineering_standards.md:228-229` and the 2026-11-20 decision entries (or their decision-log stems) into the context so the review is decidable.
-
-DEFER severity=LOW — core.14 "Declared equals witnessed." — backlog/tasks/task-383 Implementation Plan item 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — src/tests/parcels-lookup-page.logic.test.ts "the exact import-line pin on the route is dropped (the import moved to src/lib/parcels/lookup-flow.ts)" — the plan shipped in this same change says both pins are removed, while the tests re-point both to the flow file (and the NOTES say "re-pointed to the flow file (not dropped)"), so item 4 does not describe what shipped — amend Implementation Plan item 4 to "re-pointed", matching the NOTES and the tests.
-
-DEFER severity=NIT — task-383 Implementation Plan item 2 "runParcelLookup({ctx uid, access, q, parcelId, semi})" — src/lib/parcels/lookup-flow.ts:34 "export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined })" — the declared function name and input shape (ctx uid, access) are not what shipped — update plan item 2 or state the narrowing there as the NOTES do.
-
-DEFER severity=NIT — task-383 Description "Lines moved, not new behaviour: no response, meter or golden may change." — src/lib/parcels/tool-gate.ts:13 "if (parcelTool && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) return 'parcel_tool';" (lot-size previously read "parcelTool !== null &&") — on an `undefined` entitlement answer the lot-size gate now falls through to the lead_gen arm and 403s, where the old form dereferenced `.status` and threw; a response change only if `getEntitlementStatus` can return undefined, which cannot see — keep the `!== null` form in the helper or record the undefined case in the plan.
-
-REJECT — core.1 "A step is three files: a descriptor (data only), a compute module and a thin shell that exports `pipeline.step(descriptor, compute)`" — that the new `src/lib/parcels/*.ts` files ship no descriptor/compute/shell triple — this change touches no pipeline step artifact (only `src/app/api/parcels/*`, `src/lib/parcels/*`, `src/tests/*`), and the pasted handbook governs step descriptors, archetypes, logic variables and captures, none of which appear in the diff.
-
-MET — task-383 NOTES RR-0331 "the report meter stays in the lookup route" — src/lib/parcels/lookup-flow.ts:7 "This module imports no meter, entitlement or usage code" — the flow holds reads only, so the meter decision and its openReport call remain in route.ts.
-
-MET — task-383 Description "the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58)" — src/lib/parcels/tool-gate.ts:11 "export async function parcelToolAccess(db: Queryable, ctx: { uid: string; subscription_status?: string | null })" — one helper now serves both routes, and both route hunks call it.
+REJECT — core.1 (a step is three files, descriptor plus compute plus thin shell) — accused of moving flow code without declaring a descriptor or compute module — the diff touches only src/app/api/parcels/*, src/lib/parcels/*, src/tests/* and surface-contract JSON, no pipeline step under scripts/steps/ exists in it, so the step contract has no subject here.
+REJECT — core.4 (#25 census agrees with descriptor) — accused of hand-editing a census file "scripts/surfaces/_schema/census/contracts.json" — the pasted clause names "step-archetype-census.json" for steps; the file edited here is the surfaces contract census of a surface descriptor, which no pasted clause governs.
+REJECT — core.8 (every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero) — accused of new undeclared literals — the moved body introduces no new constant (only "Date.now()" calls and the existing 500 ms route constant, which the diff does not add), and the clause is scoped to step, gate, admin-surface and tool numbers, none of which the diff adds.
+REJECT — x-captures.1 / R-AC (every capture has a recapture.json entry) — accused of a change with no golden capture — no step, no capture and no POST/PRE artifact is touched by the diff; the capture regime is step-scoped and this change is an API route refactor.
+REJECT — x-rulings.4 (each ruling committed verbatim as docs/reports/decisions/<date>-<slug>.json, each approved decision becomes a register row citing <log stem>#<decision id>) — accused of citing an unresolvable ruling "RR-0331 (backlog/decisions/decision-116)" — the citation is of the form the clause describes and its resolution is a Ground-truth question for the tree, not for this lens; I cannot see backlog/decisions/decision-116 in the pasted material and will not guess.
+REJECT — x-verify.1 / R-EZ (a fresh lane verifies every landing lane's claims read-only, report at docs/reports/verification/<branch>.md) — accused of no independent verification report — the clause binds an integrate-N branch, the diff is a single lane's work with "branch wf1/inc1b-thinroute" and no integrate commit is in the material.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 0
+Clauses checked: 0   Unmet: 0
+
+Note on scope (not a finding): the pasted context block says "(no pasted context provided)" and the RULE LIST pasted above is Spec 132 step standard, whose every clause is scoped to a pipeline step, a step descriptor, a capture or a chain run. The material under review is task-383 STD.ROUTE (thin API routes plus a shared tool-gate helper), which contains no step, descriptor, capture or chain run, so no pasted clause binds it. The governing text for this change (docs/specs/00_engineering_standards.md §10.3 and operator ruling RR-0331 / decision-116) is cited inside the material but is not pasted in the context, so it is not mine to judge.
 
 ---
-⏱  59628ms (59.6s)
-📊 Tokens — total: 38637, input: 27826, output: 10811, reasoning: 9859
+⏱  17870ms (17.9s)
+📊 Tokens — total: 36082, input: 32800, output: 3282, reasoning: 2567

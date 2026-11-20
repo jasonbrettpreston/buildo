@@ -819,9 +819,15 @@
   "deviations": [
     {
       "from": "Spec 126 R-01 / R-23: a parcel_tool lookup is metered and writes a ledger row",
-      "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/app/api/parcels/lookup/route.ts:66-68; meter \"unmetered\" in the log line). Removed by MF-50.",
+      "why": "Unmetered on the transitional lead_gen arm: a user without an allowed parcel_tool entitlement whose lead_gen status is allowed is served with no usage_events row and no allowance (src/lib/parcels/tool-gate.ts, the lead_gen_transitional arm; meter \"unmetered\" in the route log line; STD.ROUTE task-383 moved the gate there from route.ts:66-68). Removed by MF-50.",
       "adjudicated_by": "operator 2026-11-11, MF-45 D-4 (a) (\"all five a\"; record ~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md); queue row MF-45 (the transitional OR, removed by MF-50)",
       "date": "2026-11-11"
+    },
+    {
+      "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin (validate input, call a lib function, return the result)",
+      "why": "src/app/api/parcels/lookup/route.ts still holds the report meter decision (the 9-state chain and the withTransaction(openReport) call), the refusal mapping, the log line and the two rate buckets; the flow (resolve through the boundary parse) is in src/lib/parcels/lookup-flow.ts and the gate in src/lib/parcels/tool-gate.ts (STD.ROUTE, task-383). The operator ruled where the meter counts: it stays in the lookup route (decision-116, RR-0331).",
+      "adjudicated_by": "operator 2026-11-20, RR-0331 (backlog/decisions/decision-116), asked at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431 \"leave the meter where it is?\"; verbatim at :1432 \"2. y 1 a\"",
+      "date": "2026-11-20"
     }
   ],
   "limitations": [

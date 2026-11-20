@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:13:48.748Z file_sha256=97e16715a4aeebeb06589be780aef472a0f33a75e1a9b0a5d5008f3763700d7b prompt_sha256=502674924f3adc104fe096b8aace7229262225fa5e53f8efef855ea6fb0e0a72
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.38 "Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. ... Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts" — src/lib/parcels/lookup-flow.ts:12 "import { assembleConsumerPayload, assembleLotMap } from '@/lib/parcels/consumer-lookup';" — the legacy-withholding assembly moved out of route.ts, and the lock fe.38 names is neither re-pointed nor listed among the route-text locks the plan enumerates ("consumer-parcel-lookup.infra:36-41,66-90; customer-report-read.logic:344,397; customer-report-compute.logic:245-246; parcel-tool-meter.logic:215-223; parcels-lookup-page.logic:187; parcel-lot-form.logic:165-166"), so if that lock reads route.ts as text it breaks silently with this diff — fix: state in the plan whether consumer-parcel-lookup-legacy-hide.logic.test.ts reads route.ts as text and re-point it in the same commit with a red-then-green plant, or record that it is behavioural and unchanged.
+
+DEFER severity=MED — fe.25 "The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step." (Status: OWED) — src/lib/parcels/lookup-flow.ts:75 "let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);" — the page read and the compute entry moved into a new module while the clause's lock is still OWED, so the plan line "3. No response, meter, log key or golden changes." is an assertion with no lock behind it for the moved path — fix: name the test that proves the page bytes are identical before and after the move, or make the report say the answer-key lock is owed and the move is text-identical.
+
+REJECT — engineering standards 10.3 — the route is accused of still holding the meter decision, the refusal mapping, the log line and the two rate buckets, recorded as a declared descriptor deviation — that clause text appears only inside the material under review and is not in the pasted context, so compliance with it is not mine to judge here.
+
+REJECT — fe.09 — the adjudicating ruling RR-0331 is cited as "backlog/decisions/decision-116" and MORNING-DECISIONS.md rather than the 135 register — fe.09 governs the surfaces decisions register, not an engineering route decision, so this record's home is outside that clause.
+
+MET — fe.27 — src/lib/parcels/lookup-flow.ts:65 "const { payload, warnings } = assembleConsumerPayload(row, coaProjects);" — the parcels column read path and the whitelist payload assembly are moved verbatim, no new column or path is introduced.
+
+MET — fe.32 — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "++      { "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin" — only the deviations array is extended; the descriptor's response projection and its members are untouched, so the binding source set is unchanged.
+
+MET — fe.18 — src/app/api/parcels/lookup/route.ts "const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });" — no displayed field or binding is added; the same response shape crosses the boundary parse.
+
+MET — fe.05 — src/lib/parcels/lookup-flow.ts:79 "pageResponse = await computeCustomerPageResponse(parcelRef);" — the move adds no derivation in the UI layer; the numbers still come from the server compute entry, called from the lib.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 44   Unmet: 0
+
+---
+⏱  45618ms (45.6s)
+📊 Tokens — total: 31725, input: 22317, output: 9408, reasoning: 8507

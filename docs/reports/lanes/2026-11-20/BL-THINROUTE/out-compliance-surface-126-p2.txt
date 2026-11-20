@@ -1,36 +1,24 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.076Z file_sha256=d5200a7313e0ad4b44b18464e283bf3507d3db2b43ec03f16f0b3fd6412bf4fa prompt_sha256=1d186cab64348b87b6ed426690a2327a4e2f3a05c198f7f2b135ae570937b994
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.582Z file_sha256=037ca9961810c7c22e153fea328adab43f59535f5992836572c885fbbc5d0485 prompt_sha256=3433f997bfd31a385686eea07e6f7c6c4ab700aab38d24ddc699674505d901cb
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — Build step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line; it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription" — src/lib/parcels/lookup-flow.ts "+  return { response, body, parcelRef, pageSource, computeMs };" — the built flow carries no `access`, no meter decision, no log line and no refusal return, so the plan of record in this same diff and the code disagree — amend Build step 2 to the narrowed shape, or move the meter and log line as written.
+DEFER severity=MED — Spec 126 §5.6 "Spec 100 has no sub-section literally numbered §2.6" and "cited by item, not by a section number that does not exist." — src/lib/parcels/lookup-flow.ts:1 "// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §3 (API), §2.6 (a miss is a valid 200), §3.2 (the whitelist, the nullable `page`)" and src/lib/parcels/lookup-flow.ts:73 "(§2.6)" — the new file, written by this change, cites a section number the governing spec rules does not exist, so the clause is unmet exactly where the comment was rewritten — cite §2 item 6 (the miss contract) as §5.6 does, and carry the same fix into the reworded body comment.
 
-BUG severity=HIGH — RR-0331 as pasted "plan lens round raised RR-0331 (decision-116, operator \"2. y\", MORNING-DECISIONS.md:1432: the report meter stays in the lookup route)" — backlog/tasks/task-383 "This departs from the resolution's words \"resolve through meter and log\"; grounder to rule." — the departure rests on a bare operator "y" plus a lane gloss, the ruling is still owed, and the operator words name only the meter while the log line and lot_form_unsure pin also stay on the route — paste the verbatim operator answer and the grounder's ruling, or move the log line.
+DEFER severity=MED — Spec 126 §4 deviations "`{from, why, adjudicated_by, date}`" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "verbatim at :1432 \"2. y 1 a\"" against this same diff's card "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — one ruling at one cited line is quoted two ways, so `adjudicated_by` cannot name the adjudication truthfully in both files — settle one verbatim against MORNING-DECISIONS.md:1432 and copy it byte-identically into the descriptor, the shard and the card.
 
-DEFER severity=MED — Build step 4 "each with a red-then-green plant" — src/tests/customer-report-read.logic.test.ts "expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts'])" — a literal-versus-literal comparison exercises no detector, as does the third expect in customer-report-compute's plant, so these two plants cannot go red for the stated reason — drive the plant through the same walk/IMPORTS helper the lock uses.
+DEFER severity=MED — Spec 126 §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does." — src/tests/consumer-parcel-lookup.infra.test.ts "const flowIsPure = (src: string): boolean => flowImports(src).every((m) => !/(^|\/)(logger|entitlements|usage)(\/|$|-)|openReport|meter/.test(m))" — the flow's import graph, the gate-before-flow order and the once-in-flow count are asserted by test-local regexes whose RED plants feed string literals, so the plants prove the regex, not the repo's real files or module graph — route these through the same real-file walk this commit already uses in importersOf and pageImporters, or one shared module both the check and the plant import.
 
-DEFER severity=LOW — Build step 5 "ALLOWED_REACHERS is not on this base, so the owed list edit is stated in the report" — NONE in the material — no owed `compute-reach.mjs` list edit is stated anywhere in this diff, only the intention to state it — record the owed edit in the notes or the report the same commit relies on.
+DEFER severity=MED — Spec 126 §5.6 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers." — NONE (the diff touches no golden) — the change edits contract_parcels_lookup.descriptor.json while its own card states "No response, meter, log key or golden may change", so if that descriptor file is inside `fingerprint_files[]` every golden pair for this contract is stale, and I cannot see the fingerprint list to rule it out — name the fingerprint inputs for this contract and, if the descriptor is one, recapture the pair in the same commit or state why deviations are excluded.
 
-DEFER severity=LOW — Build step 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — src/tests/parcels-lookup-page.logic.test.ts "expect(read('src/lib/parcels/lookup-flow.ts')).toContain(\"import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';\")" — the pin is re-pointed, not dropped, and the Implementation Plan text in this same diff still says dropped — correct Build step 4 to "re-pointed", matching the notes.
+MET — Spec 126 §4 deviations — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:822-828 — the added entry carries exactly `from`, `why`, `adjudicated_by`, `date`, the unchanged shape.
+MET — Spec 126 §5.0 consequence 3 "The shards are temporary." — scripts/surfaces/_schema/census/contracts.json:22816-22827 — the identical deviation block is added to the shard and to the emitted descriptor, so the both-directions equality the swap proof rests on still holds.
+MET — Spec 126 §3.1 "a second copy of a profile is a second thing to keep in sync, which is the defect this whole spec exists to retire." — src/lib/parcels/tool-gate.ts:10-16 — the gate written twice (lookup route, lot-size route) is now one helper both routes call, and `usesSharedGate` forbids a route re-declaring `ACTIVE_SUBSCRIPTION_STATUSES`.
 
-MET — Build step 1, the one shared gate helper — src/lib/parcels/tool-gate.ts "export async function parcelToolAccess(db: Queryable, ctx: { uid: string; subscription_status?: string | null }): Promise<ParcelToolAccess | null>" — both routes call it and hold no status set of their own.
-
-MET — card ruling "Lines moved, not new behaviour: no response, meter or golden may change" — src/lib/parcels/lookup-flow.ts "An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6)." — the moved body is the removed route lines verbatim, boundary parse still before the route's meter.
-
-MET — Files line scope — every touched path (both routes, lookup-flow.ts, tool-gate.ts, the six named tests, the task file) appears on the Files list.
-
-MET — Build step 4 "the six locks are re-pointed to the flow file in the same commit" — src/tests/customer-report-compute.logic.test.ts "expect(importers).toEqual(['src/lib/parcels/lookup-flow.ts']); // STD.ROUTE (task-383)".
-
-MET — gate-before-DB lock strength preserved — src/tests/consumer-parcel-lookup.infra.test.ts "expect(gateBeforeFlow(src)).toBe(true);" with "g < f" ordering plus the RED plant for flow-before-gate.
-
-MET — §9 Core Logic 4 "Assemble the projection server-side" — the assembly now sits in a server lib invoked by the route; no client-side logic or second declaration is added.
-
-REJECT — §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does" — accused of re-implementing rules in tests via gateBeforeFlow/flowHoldsMiss/usesSharedGate — §5.0 governs the descriptor and schema fan-out, and no generating module emits route thinness or the miss shape, so there is nothing to import.
-
-REJECT — §5.2 "Use the logic-variable-groups form (§5.0), not the docs/specs/_contracts.json grep-assertion form" — accused of adding more grep asserts to the parcel estate — this diff declares no contract and adds no second declaration of the parcel cost contract.
+REJECT — Spec 126 §5.0 ONE-SOURCE rule "nothing in it is a *second declaration*" — accused: writing the same deviations block into both the census shard and the emitted descriptor is a second declaration — not a real issue: consequence 3 makes the shard the parallel-research copy and the emitted descriptor the source, with the generator's both-directions `--check` as the proof they are equal, so both must carry the block.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 2
+Clauses checked: 12   Unmet: 3
 
 ---
-⏱  62873ms (62.9s)
-📊 Tokens — total: 41527, input: 29353, output: 12174, reasoning: 10970
+⏱  93414ms (93.4s)
+📊 Tokens — total: 50324, input: 30351, output: 19973, reasoning: 18920

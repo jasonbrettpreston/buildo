@@ -1,26 +1,28 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.153Z file_sha256=e9a3505b368283f104c548839e2391ec91f655dcc949ba2be9c9c8a6cfe65fae prompt_sha256=10b1223db695860b0846082a520002009c032c3a8a5f80a31048467de959a9b8
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:11:16.594Z file_sha256=a015fa09ecdc6a515292fd6515f47e51942b1cbfeca44a4e31608b021fabd9af prompt_sha256=e9df265162348d35c459d7878f867ffd09eb560184a4a792bd053dc27e061bc8
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — Spec 126 §13 "a RED canary per lock, on the logic-variable-groups.infra.test.ts tampered-file model, proving each check fires" — src/tests/customer-report-read.logic.test.ts:398 "expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts'])" — this "RED plant" is a tautology over two literal arrays, it reads no file and never runs the T10 IMPORTS/filter, so it cannot prove the re-pointed importer lock fires, the clause is satisfied only by the test name — replace it with a tampered-file case fed through the same IMPORTS/filter used by the lock, asserting the locked-list condition fails.
+DEFER severity=MED — Spec 126 §11b.2 Descriptor row "by one Spec 128 §4 escalation; the validator, types and registry regenerate" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "from": "docs/specs/00_engineering_standards.md §10.3: API routes must be thin (validate input, call a lib function, return the result)" — a CONTRACT descriptor gains a deviations entry whose `from` is a rule outside this spec and outside the pasted context, and I cannot see that the descriptor schema or SV-DESC accepts a non-Spec-126 `from` — either take the new kind through the Spec 128 §4 route or keep the departure in the task and plan only, not in the descriptor.
 
-BUG severity=MED — Spec 126 §13 "a RED canary per lock ... proving each check fires" — src/tests/customer-report-compute.logic.test.ts:250 "expect(['src/lib/parcels/lookup-flow.ts', 'src/app/api/parcels/other/route.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts'])" — the plant asserts a second tautology and the preceding lines test a private copy of the regex rather than the lock's walk plus filter, so drift in the real lock is invisible — drive the plant through the lock's own walk/filter with a planted importer path.
+DEFER severity=MED — operator ruling RR-0331 as quoted in this change ":1432 \"2. y 1 a\"" — backlog/tasks/task-383 "operator verbatim 2026-11-20 \"2. y\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432)" — the same record line 1432 is quoted with two different verbatims, so the exact words that authorise "the meter stays in the route" are not settled — re-read MORNING-DECISIONS.md:1431-1433 and use one verbatim in the plan, the notes and both deviation copies.
 
-DEFER severity=MED — Spec 126 §13 "a RED canary per lock ... proving each check fires" — src/tests/consumer-parcel-lookup.infra.test.ts:116 "expect(route()).not.toContain(\"from '@/lib/admin/parcel-lookup'\");" — this newly added lock assertion has no RED plant at all, so per §13 it is unproven — add a tampered-route string case that makes this assertion fail.
+DEFER severity=LOW — Spec 126 §11b.2 Locks row "generated-only incl. the vendored manifest (FE-02)" — scripts/surfaces/_schema/census/contracts.json "+        \"date\": \"2026-11-20\"" — the census copy of the same deviation is hand-edited in the same commit and I cannot see whether the census is generated from the descriptors — regenerate the census with its script and commit only generated output, or state in the notes that the census is hand-maintained.
 
-DEFER severity=MED — Spec 126 §13 "a RED canary per lock ... proving each check fires" — src/tests/parcel-lot-form.logic.test.ts:165 "expect(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8').match(/readLotForm\\(/g)).toHaveLength(1);" — the re-pointed once-in-flow lock has no plant showing the assertion can fail — add a fixture string with two readLotForm( calls and assert length 2.
+MET — Spec 126 §11b.2 Goldens row "REPORT goldens are unchanged" — backlog/tasks/task-383 "3. No response, meter, log key or golden changes." — no golden, fixture or snapshot file appears in the diff, so no REPORT golden is restated.
 
-MET — Spec 126 §14 "no linkage to LeadDetail, the flight board, or the lead feed" — src/lib/parcels/lookup-flow.ts:9 "import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';" — the moved flow adds no LeadDetail, flight-board or lead-feed module and reads no lead_parcels, the resolver dependency was already the route's.
+MET — Spec 126 §11b.2 Gate row "the REPORT arms and the success line are unchanged" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json — only the deviations array is edited; no arm, report or success-line text changes.
 
-MET — Spec 126 §13 "Logic: *.logic.test.ts" — src/tests/parcel-tool-gate.logic.test.ts:2 "STD.ROUTE (task-383, Increment 1·B) · the one parcel-tool gate helper" — the new helper test uses the mandated logic suffix and exercises the entitlement arms G1 through G5 plus the share lock G6 through G7.
+MET — Spec 126 §11b.4 "Web and admin | Mantine 9" — src/lib/parcels/lookup-flow.ts "import { resolveLotMap } from '@/lib/parcels/lot-map';" — the two new lib files import only existing in-repo modules, no package or library entry is added.
 
-MET — Spec 126 §13 "Infra: *.infra.test.ts" — src/tests/consumer-parcel-lookup.infra.test.ts:108 "const src = flow();" — the re-pointed route and flow locks stay in the infra suite with the mandated suffix.
+MET — Spec 126 §11b.3 pages table (mobile_parcel_detail, MF-44 and MF-48) — src/app/api/parcels/lookup/route.ts "const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });" — no surface page, route under src/app/(maxbld) or archetype binding is touched, so the page table and its queue rows stand.
 
-REJECT — Spec 126 §14 "Target Files ... src/surfaces/_schema/surface.schema.json" — the change is accused of editing no listed Spec 126 target file — not a real issue: §14 names the files this spec authors, and a task-383 thin-route change is outside Spec 126 authoring while touching no file on the out-of-scope list.
+MET — Spec 126 §11b.5 "The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its frontend path globs; nothing else" — src/tests/parcel-tool-gate.logic.test.ts "G7 RED plant: a route that writes its own status test again is caught" — no archetype first use is added; the new plants are route source-shape locks, not surface locks.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 1
+REJECT — Spec 126 §11b.2 pipeline "descriptor → content → generator → standard library component" — the change is accused of hand-writing flow logic outside the pipeline — the pipeline governs MaxBLD surfaces; this is an API route whose governing rule (engineering standards 10.3) is not in the pasted context, so it is not mine to rule.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
 
 ---
-⏱  130217ms (130.2s)
-📊 Tokens — total: 43367, input: 16726, output: 26641, reasoning: 25726
+⏱  58631ms (58.6s)
+📊 Tokens — total: 41436, input: 29045, output: 12391, reasoning: 11440
