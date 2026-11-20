@@ -4365,7 +4365,7 @@
         {
           "component": "Text",
           "props": {
-            "key": "sheet-input-label",
+            "key": "sheet-width-label",
             "className": "text-[14px] leading-[20px] font-semibold text-report-ink"
           },
           "children": [
@@ -4375,91 +4375,138 @@
           ]
         },
         {
-          "component": "View",
+          "component": "Input",
           "props": {
-            "key": "sheet-input-row",
-            "className": "flex-row gap-[8px]"
+            "key": "sheet-width-input",
+            "testID": "report-sheet-width",
+            "className": "min-h-[44px] flex-1 rounded-[12px] border border-report-field bg-report-tile px-[14px] text-[18px] font-semibold text-report-ink",
+            "editable": false,
+            "inputMode": "decimal",
+            "accessibilityState": {
+              "disabled": true
+            },
+            "placeholder": {
+              "part": "sheet.5.input.placeholder"
+            }
+          },
+          "children": []
+        },
+        {
+          "component": "Text",
+          "props": {
+            "key": "sheet-depth-label",
+            "className": "text-[14px] leading-[20px] font-semibold text-report-ink"
           },
           "children": [
             {
-              "component": "Input",
+              "part": "sheet.6.input.label"
+            }
+          ]
+        },
+        {
+          "component": "Input",
+          "props": {
+            "key": "sheet-depth-input",
+            "testID": "report-sheet-depth",
+            "className": "min-h-[44px] flex-1 rounded-[12px] border border-report-field bg-report-tile px-[14px] text-[18px] font-semibold text-report-ink",
+            "editable": false,
+            "inputMode": "decimal",
+            "accessibilityState": {
+              "disabled": true
+            },
+            "placeholder": {
+              "part": "sheet.7.input.placeholder"
+            }
+          },
+          "children": []
+        },
+        {
+          "component": "View",
+          "props": {
+            "key": "sheet-units",
+            "className": "flex-row overflow-hidden rounded-[12px] border border-report-field"
+          },
+          "children": [
+            {
+              "component": "Button",
               "props": {
-                "key": "sheet-input",
-                "testID": "report-sheet-input",
-                "className": "min-h-[44px] flex-1 rounded-[12px] border border-report-field bg-report-tile px-[14px] text-[18px] font-semibold text-report-ink",
-                "editable": false,
-                "inputMode": "decimal",
+                "key": "sheet-ft",
+                "testID": "report-sheet-ft",
+                "className": "min-h-[44px] min-w-[56px] bg-report-button h-auto shadow-none opacity-100 active:bg-report-button",
+                "accessibilityRole": "radio",
                 "accessibilityState": {
+                  "checked": true,
                   "disabled": true
                 },
-                "placeholder": {
-                  "part": "sheet.5.input.placeholder"
-                }
-              },
-              "children": []
-            },
-            {
-              "component": "View",
-              "props": {
-                "key": "sheet-units",
-                "className": "flex-row overflow-hidden rounded-[12px] border border-report-field"
+                "disabled": true
               },
               "children": [
                 {
-                  "component": "Button",
+                  "component": "Text",
                   "props": {
-                    "key": "sheet-sqft",
-                    "testID": "report-sheet-sqft",
-                    "className": "min-h-[44px] min-w-[56px] bg-report-button h-auto shadow-none opacity-100 active:bg-report-button",
-                    "accessibilityRole": "radio",
-                    "accessibilityState": {
-                      "checked": true,
-                      "disabled": true
-                    },
-                    "disabled": true
+                    "key": "sheet-ft-label",
+                    "className": "text-[14px] leading-[20px] font-semibold text-report-ink"
                   },
                   "children": [
                     {
-                      "component": "Text",
-                      "props": {
-                        "key": "sheet-sqft-label",
-                        "className": "text-[14px] leading-[20px] font-semibold text-report-ink"
-                      },
-                      "children": [
-                        {
-                          "part": "sheet.6.unit.sqft"
-                        }
-                      ]
+                      "part": "sheet.8.unit.ft"
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "component": "Button",
+              "props": {
+                "key": "sheet-m",
+                "testID": "report-sheet-m",
+                "className": "min-h-[44px] min-w-[56px] bg-transparent h-auto shadow-none opacity-100 active:bg-transparent",
+                "accessibilityRole": "radio",
+                "accessibilityState": {
+                  "checked": false,
+                  "disabled": true
                 },
+                "disabled": true
+              },
+              "children": [
                 {
-                  "component": "Button",
+                  "component": "Text",
                   "props": {
-                    "key": "sheet-m2",
-                    "testID": "report-sheet-m2",
-                    "className": "min-h-[44px] min-w-[56px] bg-transparent h-auto shadow-none opacity-100 active:bg-transparent",
-                    "accessibilityRole": "radio",
-                    "accessibilityState": {
-                      "checked": false,
-                      "disabled": true
-                    },
-                    "disabled": true
+                    "key": "sheet-m-label",
+                    "className": "text-[14px] leading-[20px] font-semibold text-report-dim"
                   },
                   "children": [
                     {
-                      "component": "Text",
-                      "props": {
-                        "key": "sheet-m2-label",
-                        "className": "text-[14px] leading-[20px] font-semibold text-report-dim"
-                      },
-                      "children": [
-                        {
-                          "part": "sheet.7.unit.m2"
-                        }
-                      ]
+                      "part": "sheet.9.unit.m"
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "component": "Button",
+          "props": {
+            "key": "sheet-link",
+            "testID": "report-sheet-link",
+            "className": "min-h-[44px] rounded-[12px] bg-transparent h-auto shadow-none opacity-100 active:bg-transparent",
+            "accessibilityRole": "link",
+            "accessibilityState": {
+              "disabled": true
+            },
+            "disabled": true
+          },
+          "children": [
+            {
+              "component": "Text",
+              "props": {
+                "key": "sheet-link-label",
+                "className": "text-[15px] leading-[20px] font-semibold text-report-dim"
+              },
+              "children": [
+                {
+                  "part": "sheet.11.link"
                 }
               ]
             }
@@ -4473,7 +4520,7 @@
           },
           "children": [
             {
-              "part": "sheet.9.note"
+              "part": "sheet.12.note"
             }
           ]
         },
@@ -4498,7 +4545,7 @@
               },
               "children": [
                 {
-                  "part": "sheet.10.submit"
+                  "part": "sheet.13.submit"
                 }
               ]
             }
@@ -4524,7 +4571,7 @@
               },
               "children": [
                 {
-                  "part": "sheet.11.cancel"
+                  "part": "sheet.14.cancel"
                 }
               ]
             }

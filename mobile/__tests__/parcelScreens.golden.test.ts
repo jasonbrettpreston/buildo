@@ -87,8 +87,10 @@ export function vendorDarkChains(): { outline: string[]; input: string[] } {
 
 describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
   const names = Object.keys(goldens);
-  it('10 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly', () => {
-    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'schema_drift', 'static', 'unauthorized']);
+  // Dated 2026-11-20 (task-354, MOBILE.CI-1; Mobile CI run 44741125636): the committed set is 11 since ace05ccee (2026-11-19, SRCH.A6, the reports_left
+  // golden of the reports-left line); the pin said 10 and was never run. The check is unchanged: the exact set of names, then each golden equals searchProps.
+  it('11 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly', () => {
+    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'unauthorized']);
     for (const n of names) {
       const g = goldens[n] as { situation: string; props: PropsNode; target: string; surface: string };
       expect([n, g.surface, g.target, g.situation in situations]).toEqual([n, 'mobile_parcel_search', 'mobile', true]);
@@ -104,8 +106,20 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
     const used = [...names.map((n) => goldens[n]!.situation as string), ...NAMED_CASES].flatMap((k) => refs(searchProps(situations[k] as SearchSituation), 'derived'));
     expect(DERIVED_NAMES.filter((re) => !used.some((u) => re.test(u))).map(String)).toEqual([]);
   });
-  it('every content key is used by a committed golden, and every content ref names a key (CR3-2)', () => {
-    const used = new Set(Object.values(goldens).flatMap((g) => refs(g.props, 'content')));
+  // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): the content file serves BOTH targets of this surface. d2cd0d5a2 (2026-11-19, SRCH.FOOTER, MF-91)
+  // added the four footer.* keys for the WEB search page only (RR-0270: the mobile page keeps its A.10 line under the box and draws no footer). A key is
+  // used when a committed golden of either target of the surface names it: the mobile goldens above, or the web goldens committed beside them
+  // (src/tests/fixtures/surfaces/mobile_parcel_search/<state>.web.json, the same files SV-SBIND counts). A key no golden of any target uses still fails.
+  const WEB_GOLDEN_DIR = path.join(REPO, 'src/tests/fixtures/surfaces/mobile_parcel_search');
+  const webGoldenFiles = (): string[] => fs.readdirSync(WEB_GOLDEN_DIR).filter((f) => f.endsWith('.web.json')).sort();
+  it('every content key is used by a committed golden of either target, and every content ref names a key (CR3-2)', () => {
+    // Review r1 fold (task-354): read inside the test, and one web golden per mobile golden state (fe.31: one golden per reachable state per target).
+    expect(webGoldenFiles().map((f) => f.slice(0, -'.web.json'.length))).toEqual(Object.keys(goldens).sort());
+    const webGoldenProps = webGoldenFiles().map((f) => rj(path.join(WEB_GOLDEN_DIR, f)).props);
+    const used = new Set([...Object.values(goldens).map((g) => g.props), ...webGoldenProps].flatMap((p) => refs(p, 'content')));
+    // Review r1 fold (task-354): the keys no MOBILE golden uses are exactly the four web-only footer keys (RR-0270), so a mobile-only key dropping out of the mobile goldens still fails.
+    const usedByMobile = new Set(Object.values(goldens).flatMap((g) => refs(g.props, 'content')));
+    expect(Object.keys(SEARCH_SLICE.content).filter((k) => !usedByMobile.has(k))).toEqual(['footer.copyright', 'footer.help', 'footer.privacy', 'footer.terms']);
     expect(Object.keys(SEARCH_SLICE.content).filter((k) => !used.has(k))).toEqual([]);
     expect([...used].filter((k) => !(k in SEARCH_SLICE.content))).toEqual([]);
   });
@@ -127,7 +141,8 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
     expect(p).toEqual(expect.arrayContaining([
       '100102: no dark:active:bg- twin',
       '100102: a checked card without border-report-ink dark:border-report-ink',
-      '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly one of min-h-[44px])',
+      // Dated 2026-11-20 (task-354): the message names the whole list since 8a5387194 (2026-11-19, SUITE.FIX-2: touch_targets.mobile.Button lists 44 and 48 px).
+      '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly one of min-h-[44px]|min-h-[48px])',
       'Card: Card is not in mapping.mobile.SEARCH',
       'Card: a child node without a key',
       'derived name other is not declared',
@@ -229,7 +244,13 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
     for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {
       const t = searchProps(situations[k] as SearchSituation);
       const ks = keys(t);
-      expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'legal']);
+      // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): where the reports-left line is drawn (SRCH.A6, ace05ccee; small-pages-v8 search.html:267-269)
+      // it sits between the address input and the legal line; the legal line is still the next block after it, before any result block. Where it is not
+      // drawn the legal line is the column child right after the input, as before.
+      const after = ks.slice(ks.indexOf('pill') + 1);
+      const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];
+      expect([k, after.slice(0, owed.length)]).toEqual([k, owed]);
+      expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement (review r1 fold: the expectation does not follow the tree)
       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
     }

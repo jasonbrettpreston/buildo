@@ -99,18 +99,22 @@ describe('the question page (semi-question.tsx)', () => {
     expect(mockFetchLookup).toHaveBeenCalledTimes(1);
   });
   // SRCH.SEMI-3 (task-361; findings UX-4, CR-1, LX-R2, LX-E1 of BL-TRIAGE/VERDICTS.md).
+  // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): "idle" is read as busy === undefined, not as "no busy key". React Native's Pressable always builds
+  // accessibilityState with the keys busy, checked, disabled, expanded and selected (node_modules/react-native/Libraries/Components/Pressable/Pressable.js:221,
+  // `busy: ariaBusy ?? accessibilityState?.busy`), so an idle Continue carries `busy: undefined` and toHaveProperty('busy') is true for it. The binding itself
+  // sends no busy key when idle (SemiQuestionBinding.tsx:99; pinned in semiQuestionScreens.golden.test.ts:151).
   it('semi-question.html:130 `.btn.p[aria-busy="true"]`: while Continue is pending the Continue node is busy; it is idle again after the report opens', async () => {
     let done: (v: unknown) => void = () => undefined;
     mockFetchLookup.mockReturnValue(new Promise((r) => { done = r; }));
     mockHook = { ...mockHook, data: data(form(true)) };
     render(<Question />);
     fireEvent.press(screen.getByTestId('parcel-semi-answer-yes'));
-    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).not.toHaveProperty('busy');
+    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();
     fireEvent.press(screen.getByTestId('parcel-semi-continue'));
     expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).toMatchObject({ busy: true });
     await act(async () => { done(data(form(true))); });
     await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
-    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).not.toHaveProperty('busy');
+    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();
   });
   it('a screen whose effects ran cleanup and then again (Fast Refresh, StrictMode) still opens the report after the lookup resolves', async () => {
     mockHook = { ...mockHook, data: data(form(true)) };
@@ -156,7 +160,7 @@ describe('the question page (semi-question.tsx)', () => {
       expect(mockReplace).not.toHaveBeenCalled();
       fireEvent.press(screen.getByTestId('parcel-semi-retry'));
       expect(screen.getByTestId('parcel-semi-answer-yes').props.accessibilityState).toMatchObject({ checked: true });
-      expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).not.toHaveProperty('busy');
+      expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();
       fireEvent.press(screen.getByTestId('parcel-semi-continue'));
       await waitFor(() => expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=semi_half']]));
       expect(mockFetchLookup).toHaveBeenCalledTimes(2);

@@ -131,8 +131,12 @@ describe('the page rules (named cases)', () => {
     for (const k of ['multi_parcel_2', 'multi_parcel_3plus_none', 'unlinked', 'lot_facts_null']) {
       const s = situation(k);
       expect([k, s.selectedParcelId, s.route]).toEqual([k, null, null]);
-      const cont = byTestID(lotMapProps(s), 'parcel-lotmap-continue')!;
-      expect(cont.children[0]).toMatchObject({ children: [{ content: 'select.none' }] });
+      const cont = byTestID(lotMapProps(s), 'parcel-lotmap-continue');
+      // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): the unlinked state draws no Continue since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT: B.8 removed,
+      // small-pages-v8 choose-lot.html draws none; the named case "unlinked" below pins it). The loop said every state; the check is now per state: a
+      // state that draws Continue shows "Choose a lot", and the unlinked state draws none.
+      if (k === 'unlinked') expect([k, cont]).toEqual([k, undefined]);
+      else expect([k, cont!.children[0]]).toMatchObject([k, { children: [{ content: 'select.none' }] }]);
     }
   });
   it('task-362 AC2, AC6 (choose-lot.html:278 `<button type="button" class="btn p" disabled aria-describedby="pick-hint">Choose a lot</button><p class="small" id="pick-hint">Pick a lot on the map or in the list.</p>`): the hint is the content key select.hint, drawn only while Choose a lot is disabled in the choose-a-lot state, and the button points at it', () => {

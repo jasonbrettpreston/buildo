@@ -52,7 +52,9 @@ const Page = require('../app/(app)/parcel-tool/disambiguate').default as React.C
 type Input = { query: string; data?: unknown; error?: string; isFetching?: boolean; selectedParcelId?: string | null };
 const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/lotMap.situations.json'), 'utf8')) as { goldens: Record<string, { situation: string }>; inputs: Record<string, Input> };
 const input = (k: string): Input => fixture.inputs[k]!;
-const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn() });
+// Dated 2026-11-20 (task-354; Mobile CI run 44741125636): + open_help. Since d20ddec5e (2026-11-19, SRCH.C12) the help link of the lot map is the action
+// open_help, and SurfaceRenderer throws on an action the host does not list (SurfaceRenderer.tsx:113); the real mount lists it (disambiguate.tsx:51).
+const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn(), open_help: jest.fn() });
 const parts = (name: string) => screen.UNSAFE_root.findAll((n: { props: Record<string, unknown>; type: unknown }) => n.props.rnmPart === name && typeof n.type !== 'string');
 
 beforeEach(() => {
@@ -70,20 +72,25 @@ describe('render smoke (FE-33 mobile LIST case): every golden situation renders 
     expect(screen.getByTestId('parcel-lotmap-screen')).toBeTruthy();
     expect(screen.getByTestId('parcel-lotmap-query').props.children).toEqual([i.query]);
   });
-  it('2 lots: two polygons, two letter markers and the pin; the map is hidden from screen readers with dark props and no camera control', () => {
+  // Dated 2026-11-20 (task-354): the title said "dark props". The map is light since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT: userInterfaceStyle 'light', LotMapBinding.tsx);
+  // the same commit removed the card facts line (C.9), so the frontage and zoning facts reach the screen through the card's accessibility label, and the card title
+  // is the lead line the card reads since 56e96eed5 (SRCH.LOTCARD, RR-0289: "Lot A · has the house · faces Dunmore Lane", "Lot B · no building").
+  it('2 lots: two polygons, two letter markers and the pin; the map is hidden from screen readers with light props and no camera control', () => {
     const s = buildLotMapSituation({ query: '5 Elm St', data: input('multi_parcel_2').data as never, error: null, isFetching: false, schemaDrift: false, selectedParcelId: null });
     render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
     expect(parts('Polygon')).toHaveLength(2);
     expect(parts('Marker')).toHaveLength(3);
     const map = parts('MapView')[0]!;
-    expect([map.props.userInterfaceStyle, Array.isArray(map.props.customMapStyle), map.props.rotateEnabled, map.props.pitchEnabled, 'region' in map.props]).toEqual(['dark', true, false, false, false]);
+    expect([map.props.userInterfaceStyle, Array.isArray(map.props.customMapStyle), map.props.rotateEnabled, map.props.pitchEnabled, 'region' in map.props]).toEqual(['light', true, false, false, false]);
     expect(map.props.initialRegion).toEqual(s.region);
     expect(screen.queryByTestId('parcel-lotmap-map')).toBeNull(); // hidden from the accessibility tree (RNTL's default query)
     const frame = screen.getByTestId('parcel-lotmap-map', { includeHiddenElements: true });
     expect([frame.props.importantForAccessibility, frame.props.accessibilityElementsHidden]).toEqual(['no-hide-descendants', true]);
-    expect(screen.getByText('Lot A')).toBeTruthy();
+    expect(screen.getByText('Lot A · has the house · faces Dunmore Lane')).toBeTruthy();
+    expect(screen.getByText('Lot B · no building')).toBeTruthy();
     expect(screen.getByText('3,052 sq ft · 284 m²')).toBeTruthy();
-    expect(screen.getByText('6.1 m • —')).toBeTruthy(); // a null zoning shows the null value
+    expect(screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel).toBe('Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)');
+    expect(screen.getByTestId('parcel-lotmap-card-PCL-B2').props.accessibilityLabel).toBe('Lot B, 2,153 sq ft · 200 m², frontage 6.1 m, zoning —'); // a null zoning shows the null value
     expect(screen.getByText('Choose a lot')).toBeTruthy();
   });
   it('the polygon and the card both call select with the lot id; the clear button calls back', () => {
@@ -126,7 +133,10 @@ describe('the real mount (disambiguate.tsx)', () => {
     render(<Page />);
     expect(screen.getByText('No lot linked yet')).toBeTruthy();
     expect(screen.getByText("We found 12 Laneway Rear, but the City's data doesn't link it to a lot yet. Try a nearby address.")).toBeTruthy();
-    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityState).toMatchObject({ disabled: true });
+    // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): the unlinked state draws no Continue since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT, B.8 removed); nothing
+    // is picked and there is nothing to press. The Help link is drawn (SRCH.C12).
+    expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();
+    expect(screen.getByTestId('parcel-lotmap-help')).toBeTruthy();
   });
   it('a non-map outcome replaces the route once on settled data, never while fetching', () => {
     mockParams = { q: '5 Elm St' };

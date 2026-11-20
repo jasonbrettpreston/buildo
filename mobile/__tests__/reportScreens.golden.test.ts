@@ -201,7 +201,8 @@ describe('MF-48 mobile REPORT props goldens', () => {
     btn.props.className = String(btn.props.className).replace('min-h-[44px]', 'min-h-11');
     expect(reportLayoutProblems(t)).toEqual([
       'address-address: Text without a report colour',
-      'o1-size-open: Button min-h tokens ["min-h-11"] (need exactly one of min-h-[44px])',
+      // Dated 2026-11-20 (task-354): the message names the whole list since 8a5387194 (2026-11-19, SUITE.FIX-2: touch_targets.mobile.Button lists 44 and 48 px).
+      'o1-size-open: Button min-h tokens ["min-h-11"] (need exactly one of min-h-[44px]|min-h-[48px])',
       'legal-line: Text without a size',
       'Card: Card is not in mapping.mobile.REPORT',
       'Card: a child node without a key',

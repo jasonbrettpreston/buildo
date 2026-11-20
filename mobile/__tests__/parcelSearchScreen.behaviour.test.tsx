@@ -14,7 +14,15 @@ const mockPush = jest.fn();
 // task-362 (AC5): the search page's "Report incorrect address match" reaches the in-app browser sheet, not Linking.
 const mockOpenBrowser = jest.fn();
 jest.mock('expo-web-browser', () => ({ openBrowserAsync: (u: string) => mockOpenBrowser(u) }));
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+// Dated 2026-11-20 (task-354, MOBILE.CI-1; Mobile CI run 44741125636): since ace05ccee (2026-11-19, SRCH.A6) the screen calls useFocusEffect (index.tsx:56, the
+// reports-left re-read on focus), reads useAuthStore (index.tsx:54, whose import chain loads @react-native-async-storage, a native module that is null under jest:
+// "Test suite failed to run") and reads useParcelEntitlement (index.tsx:55). The mocks below supply the three, the signed-out shape (no token, so no re-read and no line);
+// the reports-left line itself is pinned by the search goldens (reports_left) and the entitlement hook by its own tests, not here.
+jest.mock('expo-router', () => {
+  const R = jest.requireActual('react');
+  return { useRouter: () => ({ push: mockPush }), useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb]) };
+});
+jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));
 jest.mock('react-native-safe-area-context', () => {
   const { View } = jest.requireActual('react-native');
   return { SafeAreaView: View };
@@ -25,7 +33,11 @@ let mockHook: Hook = { data: undefined, isFetching: false, error: null, refetch:
 const mockCalls: string[] = [];
 jest.mock('@/hooks/useParcelLookup', () => {
   class ParcelLookupSchemaError extends Error {}
-  return { ParcelLookupSchemaError, useParcelSearch: (q: string) => { mockCalls.push(q); return mockHook; } };
+  return {
+    ParcelLookupSchemaError,
+    useParcelSearch: (q: string) => { mockCalls.push(q); return mockHook; },
+    useParcelEntitlement: () => ({ data: undefined, isError: false, refetch: jest.fn() }),
+  };
 });
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

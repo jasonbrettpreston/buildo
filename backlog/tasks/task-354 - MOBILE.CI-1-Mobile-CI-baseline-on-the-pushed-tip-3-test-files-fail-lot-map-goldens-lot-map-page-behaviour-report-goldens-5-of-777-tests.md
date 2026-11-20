@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MOBILECI'
 created_date: '2026-11-19T21:37:00Z'
-updated_date: '2026-11-20T13:11:00Z'
+updated_date: '2026-11-20T13:27:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -23,7 +23,7 @@ Scope now: find the cause of each failure and fix it. GitHub Mobile CI run 44619
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 each of the 5 failing tests has a stated cause with file:line and the commit that introduced it
+- [x] #1 each of the 5 failing tests has a stated cause with file:line and the commit that introduced it
 - [ ] #2 the fix is committed; Mobile CI green on the pushed branch is the proof (run id recorded)
 <!-- AC:END -->
 
@@ -41,10 +41,18 @@ Scope now: find the cause of each failure and fix it. GitHub Mobile CI run 44619
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Cause per failing case with file:line and commit (causes.md; 18 cases, none a code defect). 2. Fix the stale pins and wrong tests without weakening a check; regenerate the five report golden props members with the binding's own output; dated comments. 3. Review round r1 (plan and diff), TRIAGE.md. 4. Commit; checks before and after; grounder owed; AC2 waits for the Mobile CI run after the next push.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 taken on the board at lane launch (lane BL-MOBILECI, worktree /Users/brettpreston_macmini/Buildo-wt-mobileci, branch wf1/inc1b-mobileci), RR-0240
 
 2026-11-20 taken on the board at lane launch (lane BL-MOBILECI, worktree /Users/brettpreston_macmini/Buildo-wt-mobileci, branch wf1/inc1b-mobileci), RR-0240
+
+2026-11-20 lane BL-MOBILECI: Mobile CI run 44741125636 (3a36e8b26): 6 files, 18 of 786 tests. Every case classified, cause with file:line and commit in docs/reports/lanes/2026-11-20/BL-MOBILECI/causes.md; none is a code defect (stale pins and wrong tests; 5 report golden props members regenerated with the binding's own output). No test deleted, skipped or loosened. AC2 waits for the Mobile CI run after the next push. Grounder owed.
 <!-- SECTION:NOTES:END -->
