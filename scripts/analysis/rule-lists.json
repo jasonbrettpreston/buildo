@@ -129,6 +129,24 @@
       "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings)"
     },
     {
+      "id": "specs-docs",
+      "globs": ["docs/specs/**"],
+      "lists": ["eng-s5-s9-s14", "agents-s7-s11", "queue-137"],
+      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**)"
+    },
+    {
+      "id": "specs-mobile",
+      "globs": ["docs/specs/03-mobile/**"],
+      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136"],
+      "why": "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+    },
+    {
+      "id": "specs-web-admin",
+      "globs": ["docs/specs/02-web-admin/**"],
+      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],
+      "why": "ADDED by COMPLY.2: editing a web-admin (McFrontend surface) spec is also governed by the surface lists (the same lists as the surfaces row)"
+    },
+    {
       "id": "tests",
       "globs": ["src/tests/**"],
       "lists": ["eng-s5"],

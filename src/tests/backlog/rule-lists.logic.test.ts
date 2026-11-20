@@ -52,6 +52,17 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
     expect(ids(imp)).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
     console.log(`ATTACK 12: RESOLVES: src/components, src/app, src/middleware.ts, package.json, .github ; importer lists ${ids(imp).join(',')}`);
   });
+  it('task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets that surface\'s own lists', () => {
+    const lists = (files: string) => { const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', '1']); expect(r.status, r.stderr).toBe(0); return ids(JSON.parse(r.stdout) as Res); };
+    const mobile = lists('docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json');
+    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-90', 'surface-136']) expect(mobile).toContain(l);
+    const web = lists('docs/specs/02-web-admin/128_surface_standard_policy.md');
+    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).toContain(l);
+    const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
+    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137']) expect(pipe).toContain(l);
+    expect(pipe).not.toContain('mobile-100');
+    expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).toContain('queue-137');
+  });
   it('an unmatched path is refused and named (exit 3)', () => {
     const r = script(CLI, ['resolve', '--files', 'zzz-unknown/dir/file.txt', '--type', 'build', '--letter', 'S']);
     expect(r.status).toBe(3);

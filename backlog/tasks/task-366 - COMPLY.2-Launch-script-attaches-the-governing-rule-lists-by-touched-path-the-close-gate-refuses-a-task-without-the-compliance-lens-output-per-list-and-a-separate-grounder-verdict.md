@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-COMPLY2'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T14:26:00Z'
+updated_date: '2026-11-20T15:12:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -77,4 +77,6 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 2026-11-20 BL-COMPLY2: table rows may exclude paths (not): scripts/deepseek-review.js and scripts/gemini-review.js are lane tools, not step shells (red5.out, then green). Task stays RUNNING: grounder owed.
 
 2026-11-20 BL-COMPLY2 round 3 report in the repo (docs/reports/lanes/2026-11-20/BL-COMPLY2/): attack table, 178 findings by id, round-3 lens outputs with REVIEW headers and committed inputs, TASK file. Dogfood: only GROUNDER.md missing. Task stays RUNNING: grounder owed.
+
+2026-11-20 BL-COMPLY2: three rows (specs-docs, specs-mobile, specs-web-admin) so a task that edits spec files resolves (task-376); red6.out then green.
 <!-- SECTION:NOTES:END -->
