@@ -3,11 +3,11 @@ id: TASK-410
 title: >-
   V2.WHOLE The compliance review covers the whole change and the close check
   proves it
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T22:39:00Z'
+updated_date: '2026-11-20T22:51:00Z'
 labels:
   - McFix
   - McFix V2
@@ -131,3 +131,9 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 
 2026-11-20 round 7 landed: 4de8fb86f (check-lane-close.mjs H10), bb08d47b5 (brief two-commit sentence), 4d105c3f6 (fourth correcting dated note, omission guard), 67fef6b93 (forgery routes on task-401 and task-402). Lens set re-run on the final range. Task stays RUNNING, grounder owed; the closing commit follows the grounder's ruling.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Rounds 7, findings 190, CONFIRMED 48 (grounder file docs/reports/lanes/2026-11-20/BL-V2WHOLE/GROUNDER.md, sha256 05d57a49caf71db5df8a2b8406eafaffb8fb024d5be7c72b104b60cd56c279d2). The close check is an omission guard: it refuses a skipped review, rule list, changed file, stale input or a close without a separate grounder's file; forgery routes are owned by task-401 and task-402.
+<!-- SECTION:FINAL_SUMMARY:END -->
