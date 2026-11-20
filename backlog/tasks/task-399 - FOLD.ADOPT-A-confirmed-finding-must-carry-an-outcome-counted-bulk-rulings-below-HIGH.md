@@ -6,13 +6,21 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T23:39:00Z'
+updated_date: '2026-11-20T23:53:00Z'
 labels:
   - McFix
   - McFix Z
   - McFix V2
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-399/GROUNDER-PANEL2.md
+  - docs/reports/reviews/task-399/FILED-LOW.md
+  - docs/reports/reviews/task-399/seat-integration-2.md
+  - docs/reports/reviews/task-399/seat-reality-check-2.md
+  - docs/reports/reviews/task-399/seat-ground-truth-2.md
+  - docs/reports/reviews/task-399/FOLD-VALIDATION.md
+  - docs/reports/reviews/task-399/CROSS-READ.md
 type: build
 ordinal: 99012
 ---
@@ -74,7 +82,7 @@ This task launches BEFORE task-375's gate, so its plan check is this panel: the 
  4. backlog task edit task-399 --ac "<acceptance (a)>" --ac "<(b)>" --ac "<(c)>" --ac "<(d)>" (the task has none: they number 1 to 4).
  5. Record each verbatim ruling of section 0 as a backlog decision (backlog-decision.mjs), then add each RR number to the task text with --append-notes (the reviewer's Decisions section holds only decisions the body names). Open the cards of section 9 (this task records and opens; task-375 does not repeat them).
  6. Copy the panel records into docs/reports/reviews/task-399/: GROUNDER-PLANS.md as GROUNDER-PANEL2.md, FILED-LOW.md, seat-integration-2.md, seat-reality-check-2.md, seat-ground-truth-2.md, FOLD-VALIDATION.md, CROSS-READ.md and the plan-*.txt outputs. They keep the panel names and are not re-keyed (there is no gate yet).
- 7. Re-run the plan compliance lens for agents-s5-1to3 and queue-137 on the v3 text (their files changed in the task-410 fold after the panel ran; the fold validator measured those two as the stale ones, 7 of 9 pass), with rule-lists.mjs lens-input and the review tool; the grounder rules the new findings in GROUNDER-PANEL2.md.
+ 7. Re-run the plan compliance lens for agents-s5-1to3 and queue-137 on the v3 text (their files changed in the task-410 fold after the panel ran; the fold validator measured those two as the stale ones, 7 of 9 pass), with rule-lists.mjs lens-input and the review tool; the grounder rules the new findings in GROUNDER-PANEL2.md. The grounder's round-3 rulings (GROUNDER-R2.md) are appended to the GROUNDER-PANEL2.md copy and their sentence corrections applied word for word, then read back against the plan by the same grounder (Spec 08 11.2); this is the last panel round (his :1585): a CONFIRMED finding after it is folded by its own sentence or filed in FILED-LOW.md and opens no further panel.
  8. Post the review on the task, one --add-ref per repo path: backlog task edit task-399 --add-ref docs/reports/reviews/task-399/GROUNDER-PANEL2.md --add-ref docs/reports/reviews/task-399/FILED-LOW.md and the same for seat-integration-2.md, seat-reality-check-2.md, seat-ground-truth-2.md, FOLD-VALIDATION.md, CROSS-READ.md (measured: a 600-character path and 47 references are accepted; a comma splits one argument into two). Then append the plan round block under the plan field: backlog task edit task-399 --append-plan "Plan review round 1: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder docs/reports/reviews/task-399/GROUNDER-PANEL2.md" followed by one line "<id> <SEV> folded <first 20 characters of the quote>" per CONFIRMED HIGH or MED finding of the 399 plan outputs (computed from the ruled file; about 6 KB for both tasks).
  9. Commit the folder by hand on wf2/board through the normal hooks: git add docs/reports/reviews/task-399, then git commit with a docs(08_agents): message (no Task trailer: docs commits are exempt).
  10. Launch: node scripts/analysis/backlog-lane.mjs --task task-399 --lane <new name> --dry-run, then without --dry-run.
@@ -151,6 +159,83 @@ P3 Is the Integration seat required on every build or fix plan (task-375's launc
 P4 May the orchestrator send a further Agent call to the owning lane's worktree for a fix round, write TRIAGE.md, record decisions and make the closing commit from the lane worktree? Recommend yes. Ground: Spec 08 rule 9 note (08_agents.md:354, "the orchestrator does short mechanical steps itself; ... a multi-step build goes to the owning lane", his "E2a"), which settles the fix round to the owning lane; no recorded word of his covers the closing commit by the orchestrator. If no: each fix round and the close is a release and relaunch through the launch script with fresh plan evidence.
 P5 Accept hand steps before each build launch (panel, evidence commit, references, round block, one launch command), with a card to script them? Recommend yes for now. Ground: the panel is agent work and the commit is one command; his words :954 "let me understand you now need to manually change the board or add a task - every single time - that's seems like alot of work and inefficient - wasnt the point of this to avoid just that". If no: task-375's gate cannot ship as D1 describes (it needs the evidence on the board).
 Dropped as settled: the fix round going to the owning lane (rule 9 note :354, his "E2a").
+
+Plan review round 1: 75 folded, 0 task, 0 ruling, 0 wontfix, 45 pile; grounder docs/reports/reviews/task-399/GROUNDER-PANEL2.md
+plan-compliance-399-agents-s5-1to3#2 MED folded There is no bulk for
+plan-compliance-399-agents-s7-s11#2 MED folded (c) On task-381's re
+plan-compliance-399-agents-s7-s11#4 MED folded Each code commit car
+plan-compliance-399-agents-s7-s11#6 MED folded READING (orchestrato
+plan-compliance-399-airtight-124a#1 MED folded each spawned-CLI tes
+plan-compliance-399-eng-all#3 MED folded One commit holds the
+plan-compliance-399-ms-S#1 MED folded OPERATOR ITEMS: P1 t
+plan-compliance-399-queue-137#3 MED folded Each code commit car
+plan-compliance-399-step-132#2 MED folded Record each verbatim
+plan-compliance-399-step-132#3 MED folded There is NO exemptio
+plan-compliance-399-step-132#4 MED folded each spawned-CLI tes
+plan-error-paths-399#2 MED folded a lane with zero CON
+plan-error-paths-399#4 MED folded There is no bulk for
+plan-error-paths-399#5 MED folded A sha that a rebase
+plan-error-paths-399#6 MED folded A callback that thro
+plan-error-paths-399#7 MED folded Effective severity =
+plan-plan-review-deepseek-399#2 MED folded scripts/analysis/bac
+plan-plan-review-deepseek-399#3 MED folded A sha that a rebase
+plan-plan-review-deepseek-399#4 MED folded A last line that sta
+plan-plan-review-deepseek-399#11 MED folded Effective severity =
+plan-plan-review-deepseek-399#12 MED folded There is no bulk for
+plan-plan-review-deepseek-399#13 MED folded There is no bulk for
+plan-plan-review-deepseek-399#14 MED folded its text contains th
+plan-plan-review-deepseek-399#15 MED folded The signature is out
+plan-plan-review-deepseek-399#16 MED folded (d) The one command
+plan-plan-review-deepseek-399#17 MED folded (c) On task-381's re
+plan-plan-review-deepseek-399#22 MED folded a malformed line (fo
+int2#3 HIGH folded mode plan (launch ga
+int2#5 HIGH folded Running lanes (35 RU
+int2#10 MED folded Commit the folder by
+int2#11 MED folded Existing tests that
+int2#12 MED folded sha (7+ hex, resolve
+int2#18 MED folded Post the review on t
+rc2#1 HIGH folded ONLY THE LAST LINE F
+rc2#2 HIGH folded The four audited tas
+rc2#3 MED folded Effective severity =
+rc2#4 MED folded There is no bulk for
+rc2#5 MED folded quotes optional; pat
+rc2#6 MED folded A CONFLICT id takes
+rc2#8 MED folded folded:"<20+ charact
+gt2#4 MED folded file:line are at c15
+gt2#5 MED folded Interim state (the r
+gt2#6 MED folded after the :138 note
+gt2#7 MED folded There is NO exemptio
+gt2#8 MED folded Effective severity L
+gt2#9 MED folded (b) On the real task
+gt2#10 MED folded red first through th
+gt2#11 MED folded the whole table abov
+gt2#13 MED folded Cards to open (hand
+gt2#19 MED folded filed in the review
+fv#3 MED folded Post the review on t
+fv#4 MED folded one finding per line
+fv#5 MED folded A sha that a rebase
+fv#8 MED folded 4. SCOPE (the check
+fv#9 MED folded Re-run the plan comp
+xr#1 HIGH folded this plan (PLAN-399-
+xr#2 HIGH folded MODE TABLE (one plac
+xr#3 HIGH folded The exit-0 half is N
+xr#4 MED folded where the generated
+xr#5 MED folded LOW and NIT close by
+xr#9 MED folded A refusal in the boa
+xr#10 MED folded runs the lane's OWN
+xr#11 MED folded OPERATOR ITEMS (yes
+xr#12 MED folded (not his own wording
+xr#13 MED folded append the plan roun
+xr#15 MED folded Record each verbatim
+xr#16 MED folded N = 1 + the number o
+xr#17 MED folded WHO DOES WHAT AFTER
+xr#18 MED folded Post the review on t
+xr#20 MED folded Seat files are read
+xr#21 MED folded A plan change after
+xr#22 MED folded this task records an
+plan-compliance-399-agents-s7-s11-r2#1 MED folded The grounder's round
+plan-compliance-399-agents-s7-s11-r2#2 MED folded READING (orchestrato
+plan-compliance-399-agents-s7-s11-r2#3 MED folded LOW and NIT close by
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -192,4 +277,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0339 · task-399 · Backlog; o
 Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-399 · Backlog; operator, verbatim: "can we address these in the plan? Let's get this right - add the the existing tasks and do a second pass on the recommendations")
 
 2026-11-20 PLAN-399-v3 GOVERNS (appended, prior text kept, M-246). On the operator orders recorded as RR-0337, RR-0338, RR-0339 and RR-0340 the approved FINAL BUILD NOTE above (NOTE-399.md, RR-0336) went through the Spec 08 plan panel (DeepSeek lens set, Integration, Reality-Check and Ground-truth seats), a separate grounder, a fold, a second pass (fold validation and cross-read) and one correction round. The result is the Implementation Plan field of this task (PLAN-399-v3, sha256 b23cbc4e06c040a33e3b3cfd59b396584da0e082ea08ea7a6e664a9f20c79e74). Where it differs from the approved note, the plan governs. Approved sentences it replaces: "Files line (unchanged)" two files becomes five files plus backlog-brief.mjs and its test; "Bulk form for MED, LOW and NIT" is deleted; wontfix "60+ characters" becomes the existing 30-character literal and stays LOW and NIT only; "refused naming every id with no line or with two lines" becomes the last line per id wins; "A CONFLICT id takes only task: or ruling:" becomes ruling or fixed; the ending "; not reviewed (exempt): <k> paths" is deleted; acceptance "35 CONFIRMED" is 36. New, from RR-0338 and RR-0340: a pile: form for LOW and NIT; outcome lines for CRITICAL, HIGH and MED on the task page; seat findings ruled in the grounder file and covered by the same check. Open operator items P1 to P5 are listed at the end of the plan; the plan is written on the recommended answers and names what is reverted on a no. Panel records: docs/reports/reviews/task-399/.
+
+2026-11-20 plan text corrected by one sentence (C1 of the round-3 grounder, docs/reports/reviews/task-399/GROUNDER-PANEL2.md): hand step 7 now states how the last round's fold is checked and that it is the last panel round. Plan sha256 now 60e3c08c3b85.
 <!-- SECTION:NOTES:END -->
