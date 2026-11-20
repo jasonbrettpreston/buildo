@@ -311,7 +311,7 @@ Every field has exactly one source `<kind>:<member>` in the closed binding set (
 
 | Label | Path | Type | Unit | Status | Render | Source | Note |
 |---|---|---|---|---|---|---|---|
-| Units toggle | `ui.format.area_unit` | text |  | proposed | rendered | `content:formats.area_unit` | today the screen mixes formatSqm (lot) and formatSqft (GFA) — [parcelId].tsx:128-130 |
+| Units toggle | `ui.format.area_unit` | text |  | proposed | rendered | `content:formats.area_unit` | today the screen mixes formatSqm (lot, square metres in) and formatServedSqft (GFA, served square feet in) — [parcelId].tsx:128-130 |
 | Formatter: area | `ui.format.area` | text |  | proposed | rendered | `content:formats.area` | parcelCostFormat.ts (§6.6 rule 6 "formats unchanged") |
 | Formatter: length | `ui.format.length` | text |  | proposed | rendered | `content:formats.length` |  |
 | Formatter: fsi | `ui.format.fsi` | text |  | proposed | rendered | `content:formats.fsi` |  |

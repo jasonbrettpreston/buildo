@@ -43,3 +43,10 @@ Note: extending the Files line (descriptor, census, registry, Spec 91, maestro) 
 - src/components/.../CoaClassificationPanel.tsx:280 (client-side area conversion, to be located by the grounder; not opened in this lane: UNVERIFIED).
 - permits route feet_per_metre (src/app/api/permits route.ts:267) served for client maths.
 - the fe.44 pre-formatted-string half (the phone still picks the unit word): operator question, not mine.
+
+## Addendum C (fix round 3, fingerprint restamp)
+- Correction: formatServedSqft has no app caller. [lead].tsx:81 calls leadDetailFormat.formatSqft (cost.modeled_gfa_sqft). formatServedSqft is exported only because the registry names it (formats.area.alt_formatter, RS-4); its only users are its own test and the web parity test. The earlier addendum lines that implied a caller are wrong.
+- The rename changed scripts/surfaces/_schema/report-presentation.json, a golden fingerprint input, so 72 report goldens went stale (goldenProblems printed 72 SV-GOLDEN "fingerprint stale: report-presentation.json"; the commit hooks do not run that check). This round states the input unit on the registry entry (formats.area.alt_formatter_input), corrects the stale notes naming formatSqft (seed-report-v2.mjs, schema-v2-proposal.json, then seed-report-v2.mjs --write and report-schema.mjs --write regenerated report-presentation.json, report-v2.decl.json and docs/reference/maxbld-report-v2-schema.md; nothing generated hand-edited), and restamps the goldens with the repo's own tools (npx tsx scripts/surfaces/report-capture.ts, then report-page-capture.ts; no DB, no server). The page goldens (33, including the landing sample) went stale for the same reason and are restamped too.
+- Proof: docs/reports/red-evidence/task-411/restamp-fingerprint-only.txt: golden files changed 105 (72 report + 33 page); fingerprint-only 105; other changes: 0.
+- Spec 91 section 4.3 and the response-shape line now say: served in square feet, computed by the API, null when the area is null, optional for an older or cached response (section omitted).
+- Lenses not re-run this round, by instruction; the output outputs and FINDINGS.md describe the round-2 diff.
