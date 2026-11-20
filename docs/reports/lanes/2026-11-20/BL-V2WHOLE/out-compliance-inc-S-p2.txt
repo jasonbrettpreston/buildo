@@ -1,16 +1,18 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.431Z file_sha256=deda8297f5d11eeeafb917c3eceae4a3ca7a64aea56649ba0d40c0c683c0abf4 prompt_sha256=81c62f48c8a511b7c27a6f9f4a605ceee67bd1d2dbdc68d4f49b6939a2fe3fe7
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.429Z file_sha256=84aa56e8af044df1b8589e626baacbcd4aec837e98f29a611aa4f6dd91dc20ad prompt_sha256=9404560b6588f7d51734b957a973456bc6224753293da53f9b03554c5ed4874e
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — doc-2 (whole file) "title: Increment S requirements" — src/tests/backlog/check-lane-close.logic.test.ts:1 "import { describe, expect, it } from 'vitest';" — no clause in the pasted Increment S spec (built state, A.1 to G.6, both status tables) names the two changed test files or the V2.WHOLE lane-close/chunk behaviour they exercise, so this chunk satisfies no clause and leaves none unmet — confirm the spec that governs the review-tooling change is in context, it is not pasted here and cannot be judged.
+BUG/DEFER inspection of the pasted rule list (Increment S requirements, whole file) against chunk 2 of 2 of the material, which the stamp limits to `"paths": ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]`.
 
-DEFER severity=LOW — doc-2 "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}"" — src/tests/backlog/rule-lists.logic.test.ts:494 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries" — the change adds chunk-splitting and whole-change proof behaviour no pasted clause or ruling authorises, but doc-2 is a search-page built-state spec and does not speak to review tooling, so this is out of scope rather than a violated clause — if a task-410 card or operator ruling governs V2.WHOLE, paste it so the chunking rules (file boundaries, one-file-over-room refusal, stamp fields) can be judged.
-
-REJECT — doc-2 "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map" — accused of not implementing these NOT BUILT elements — the line is a built-state description, not an instruction to build, and chunk 2 of 2 is test files only (chunk 1 is not pasted).
+DEFER severity=LOW — task-410 card (not pasted, cannot see) — "V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — src/tests/backlog/check-lane-close.logic.test.ts:366 "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — the behaviour this chunk adds (whole-change proof, chunk stamps, prompt_sha256 recompute) is named by no clause of the pasted Increment S requirements, and the task-410 card that would name it is not pasted, so authorization cannot be checked — paste task-410's card so the added close-check rules can be matched clause by clause
+DEFER severity=LOW — operator ruling "1-5 y", item 3 (not pasted, cannot see) — "operator "1-5 y", item 3" — src/tests/backlog/check-lane-close.logic.test.ts:489 "ITEM 3 (operator "1-5 y", item 3): a golden the existing golden check validates" — the test asserts an operator ruling that is not in the pasted context, so its fidelity to the ruling cannot be judged — paste the verbatim item 3 text from the "1-5 y" ruling
+DEFER severity=LOW — grounder review 2026-11-20, attacks e, f, g binary, h, k (not pasted, cannot see) — "grounder 2026-11-20, attacks e, f, g binary, h, k" — src/tests/backlog/check-lane-close.logic.test.ts:424 "// V2.WHOLE fix round (grounder 2026-11-20, attacks e, f, g binary, h, k)" — the fix round is keyed to grounder attacks that are not pasted, so whether each attack is actually closed by its planted-defect test cannot be checked — paste the grounder attack list e, f, g, h, k with its per-attack verdicts
+REJECT — Increment S element table A.4 to G.5, the NOT BUILT and NOT TRACED rows, and the Built state counts — that the change leaves the clear button, reports-left line, candidate locality line, intersection map, web choose-your-parcel, web footer, footprints and street names unbuilt — those rows govern the search page app code and the loader surface, while this chunk touches only "src/tests/backlog/check-lane-close.logic.test.ts" and "src/tests/backlog/rule-lists.logic.test.ts", so no element clause reaches it and no product state changes
+MET — Increment S requirements, Built state and element table (whole file) — src/tests/backlog/rule-lists.logic.test.ts:143 "expect(matchesAny(t.exempt, real), real).toBe(true);" — the only clause-adjacent assertion in the chunk reads the real table and the shipped golden fixtures, which the spec neither names nor forbids, so nothing in the pasted file is contradicted
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 0   Unmet: 0
+Clauses checked: 1   Unmet: 0
 
 ---
-⏱  15710ms (15.7s)
-📊 Tokens — total: 19583, input: 16789, output: 2794, reasoning: 2364
+⏱  28491ms (28.5s)
+📊 Tokens — total: 24437, input: 19044, output: 5393, reasoning: 4615

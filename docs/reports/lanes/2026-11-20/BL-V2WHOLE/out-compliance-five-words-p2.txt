@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.332Z file_sha256=6b2e8fa6dd93c996c4fd56b16a19acc0fb834e27bbc3b2862cfa26064880d6c9 prompt_sha256=645c7e32e031061afcdf2c72ea78ed12eca843e23b97c29afec3cd2986ae2b7c
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — five words "five words: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — src/tests/backlog/rule-lists.logic.test.ts:505 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — the added suite asserts lens-input chunking, chunk stamps, size refusal, DIFF_ARGS and a golden exemption; no pasted Glossary clause names any of those behaviours, so this is behaviour added with no pasted clause to bind it — paste the V2.WHOLE card and the operator rulings verbatim into the context, or hold these tests out of this list's change
+
+BUG severity=HIGH — lock "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/rule-lists.logic.test.ts:494 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries" — `V2.WHOLE` is not a rule id or declared alias in the pasted Glossary (which names five words, G0–G9, #NN, Gate A…K/V, V3, PURITY-G0…G13, SPEC121-M1…M14, W4A-Rn), so these tests do not satisfy the lock condition they claim — name the declared rule id or alias under test, or register `V2.WHOLE` in the rule map in a reviewed change
+
+DEFER severity=MED — the same suite's authority is a comment only, and the ruling itself is not pasted — src/tests/backlog/rule-lists.logic.test.ts:622 "// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one." — the exemption behaviour rests on an operator ruling whose text is nowhere in the pasted context, so compliance with it cannot be judged; a clause carried by a comment is UNMET — paste operator item 3 verbatim with the exact exempt glob it authorises
+
+DEFER severity=LOW — lock "run by `npm test`" — "diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts" — whether the backlog folder is inside the `npm test` glob cannot be seen from this chunk, so the lock clause's run condition is unverified here — confirm the glob in chunk 1 or in `package.json`
+
+REJECT — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — accused of citing F2, F5, F6, F13 which do not exist in step-validate — those are review finding codes, not `#NN` invariants, so the clause does not reach them
+
+MET — RE-FREEZE "#N: A field is added or deleted only by one." — src/tests/backlog/rule-lists.logic.test.ts:496 "const dfile = (p: string, n: number) =>" — the chunk adds tests only, no descriptor or frozen-vocabulary field, so no re-freeze is owed
+
+MET — lock "a `check` is a `step-validate` invariant or gate token" — src/tests/backlog/rule-lists.logic.test.ts:505 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — no step-validate invariant or gate token is added or renamed by this chunk, so no gate list is left stale
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 2
+
+---
+⏱  34476ms (34.5s)
+📊 Tokens — total: 13143, input: 6189, output: 6954, reasoning: 6073

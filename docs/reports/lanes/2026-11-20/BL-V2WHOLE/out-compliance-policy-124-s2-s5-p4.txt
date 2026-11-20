@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.069Z file_sha256=6f5e7621278859e7103aad45e427c462b775f0ea28083528e41d196702d1143c prompt_sha256=0a7e2ff9495caf4ac6a0fb7be198d6f5a4e7f0c7a19e41016905ca3c83675afb
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-policy-124-s2-s5-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row" and M20 "New rows are still added to Spec 124 §5." — src/tests/backlog/check-lane-close.logic.test.ts:497 "ITEM 3 (operator \"1-5 y\", item 3)" — the change rests on an operator approval cited only as free text in a test title, and the reviewed paths ("scripts/hooks/check-lane-close.mjs", the two test files) carry no decision log under "docs/reports/decisions/" and no register row for V2.WHOLE, so R-HK's coverage lock as visible here has nothing to resolve, cannot see chunk 1 or 3 to confirm the row landed — commit the "1-5 y" batch as "docs/reports/decisions/<date>-<slug>.json" and cite the routed V2.WHOLE row as `<log stem>#<id>` in the hook header comment; if chunk 1 or 3 already carries it, this closes, but the citation form in the test stays wrong and should name the decision id.
+
+MET — R-GW "Every spec carries one role banner" — LIST header paths "[\"scripts/hooks/check-lane-close.mjs\",\"src/tests/backlog/backlog-lane.logic.test.ts\",\"src/tests/backlog/check-lane-close.logic.test.ts\"]" — the change touches no "docs/specs" path, so no banner or rule id obligation under R-GW/R-GX arises from it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 0
+
+---
+⏱  58636ms (58.6s)
+📊 Tokens — total: 48842, input: 36425, output: 12417, reasoning: 12014

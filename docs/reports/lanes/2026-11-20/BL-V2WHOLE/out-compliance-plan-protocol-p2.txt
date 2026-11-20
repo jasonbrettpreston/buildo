@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.378Z file_sha256=e8659fe7fb67da6a0dbd94807a4c6a8ccdaeff52de802efca04f7107649c213d prompt_sha256=0b029aaee719a76b13ad9412ad18c924e631cdc405ae9fce92651fd6c8a57ac0
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+BUG severity=<none found> — none
+
+MET — plan-protocol §0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch." — docs/specs/00-architecture/08_agents.md:230 "+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B" — the spec change appends a dated note above the kept prior text, no plan file is created or rewritten, and no sequence.json path appears anywhere in the change.
+MET — plan-protocol §0 "Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario ... only the missing slice parts are added as tasks." — LIST plan-protocol … paths: ["docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/…"] — no backlog/tasks file and no sequence.json is in the change, so no increment is re-opened, reordered or given a task by this diff.
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added." — the same path list holds no backlog/tasks path — the change adds no task at all; the notes it does add cite a task id and the operator file (08_agents.md:230 "task-410 V2.WHOLE, lane BL-V2WHOLE … `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`").
+MET — plan-protocol §1 "An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key) … (9) measured check on the page." — scripts/hooks/check-lane-close.mjs:73 "export function chunkErrors({ label, items, expected, diffOf = () => null, optional = [] }) {" — the change only tightens what a lane close must prove about its review; it marks no increment done and claims none of the nine slice items.
+DEFER severity=LOW — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — docs/specs/00-architecture/08_agents.md:230 "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items …": "1-5 y", item 4 as put to him" — the ruling that authorises the whole-change chunking (rule-lists.mjs:33 "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];") exists only as a quote inside the diff and is not in the pasted context, so its words cannot be judged here — paste the MORNING-DECISIONS entry so the operator ruling is reviewed instead of its paraphrase.
+REJECT — plan-protocol §1 "Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check." — accused of not building any slice part — this diff is review-tooling only (lens-input chunking, close-check proof) and claims no slice, so the clause does not bind it.
+REJECT — plan-protocol §0 "Nothing is re-written from scratch." — accused of rewriting the two specs — both notes are additive ("prior text kept") and the prior text in 137_mcqueue.md:134 and 08_agents.md:230 is left untouched in the same commit.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  30520ms (30.5s)
+📊 Tokens — total: 42201, input: 35948, output: 6253, reasoning: 5273

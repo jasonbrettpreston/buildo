@@ -1,0 +1,176 @@
+LIST agents-s5-1to3 sha256:dc0159eda625f26a63b1af021e5fbd7c84a57ac35aa9f995af707971fb155d2e material sha256:09b0f45f6eb65f501c992c1db434d2d7563e5e67ff9df3c3ff3785d69ed594cd part 1 of 1 chunk 2 of 2
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts"]
+
+### 5.1 Compliance (spec → code)
+**Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
+**Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
+**Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
+**HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
+
+### 5.2 Ground-truth (reality → spec)
+**Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
+**Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
+**Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
+**Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
+
+### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
+Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+
+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
+
+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the whole change goes to the reviewer and the close check proves it. (1) `scripts/analysis/rule-lists.mjs lens-input` cuts a diff that leaves no room (counting the rendered stamp, head and path list) into chunks at FILE boundaries, the tool and never by hand; each chunk goes against every list part and is stamped chunk c of m with its path list; one file alone over the room is refused naming it. With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security (the split the operator kept). (2) `scripts/hooks/check-lane-close.mjs` takes the task's launch commit L (the first board commit on the base ref, first-parent, that holds the lane assignee on the task file; refused when none or not an ancestor of HEAD) and requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it. The rule-list table (lists, rows, every_task, exempt, protected paths, base_ref), the lens templates and the task type are read from the range base or the launch copy, so an earlier commit of the lane cannot trim or widen them; a lane that changes exempt or base_ref is refused; a task whose Files line names the table is judged by its branch table with every field that decides what is reviewed still taken from the base. Each committed input is regenerated from its stamp and compared; each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375); an unsplit lens output's file hash must be that of the recomputed whole diff; a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records. Known limits, not built here: a clause spanning two files is judged in two chunk runs; a hand-written output whose author computed the public hashes passes; moving the board ref by a forbidden command is refused by the lane guard, not by this check; plan-phase compliance outputs for a build task (task-404) and the reviewer context (task-375).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index d4adce25156542d3a34f04204c9619c7f0217406..afe90a098d44933e7d9b4613999438a588f29921 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -491,3 +491,146 @@ describe('V2.LIST round 2: the milestone guard', () => {
+     expect(verifyResolved(t, good, undefined, 'record')).toEqual([]);
+   });
+ });
++
++// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand), each chunk against every list part,
++// each input stamped "chunk c of m" with its path list; one file alone over the room is refused naming the file and its size. No --list (a non-compliance lens template) writes the same chunks.
++const dfile = (p: string, n: number) => `diff --git a/${p} b/${p}\nindex 1111111..2222222 100644\n--- a/${p}\n+++ b/${p}\n@@ -1 +1 @@\n-old\n${'+line of new text\n'.repeat(n)}`;
++const FILES = ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts', 'src/e.ts'];
++const BIGDIFF = FILES.map((p) => dfile(p, 50)).join('');
++const stampOf = (t: string) => {
++  const m = /^LIST (\S+) sha256:[0-9a-f]{64} material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(t);
++  const pm = / paths: (\[.*\])\n/.exec(t.split('\n').slice(0, 3).join('\n') + '\n');
++  return { id: m?.[1], matSha: m?.[2], part: Number(m?.[3]), parts: Number(m?.[4]), chunk: m?.[5] === undefined ? undefined : Number(m[5]), chunks: m?.[6] === undefined ? undefined : Number(m[6]), paths: pm ? (JSON.parse(pm[1] as string) as string[]) : undefined };
++};
++const materialOf = (t: string) => t.slice(t.indexOf('=== MATERIAL UNDER REVIEW (everything below this line) ===\n') + '=== MATERIAL UNDER REVIEW (everything below this line) ===\n'.length).replace(/\n$/, '');
++describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {
++  it('a diff too large for one input becomes chunks: every changed path in exactly one chunk, chunk texts joined are the diff, every input within the bound, each stamped chunk c of m with its paths', () => {
++    const f = fixture();
++    const max = 12000;
++    const l = lens(f, 'first', BIGDIFF, max);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    const st = l.text.map(stampOf);
++    const m = st[0]!.chunks;
++    expect(m, 'chunk stamp present').toBeGreaterThan(1);
++    expect(l.files.length).toBe((m as number) * st[0]!.parts);
++    for (const t of l.text) expect(t.length).toBeLessThanOrEqual(max);
++    const seen = st.flatMap((s) => s.paths ?? []);
++    expect([...seen].sort()).toEqual([...FILES].sort());
++    expect(new Set(seen).size).toBe(seen.length);
++    const byChunk = new Map<number, string>();
++    l.text.forEach((t, i) => byChunk.set(st[i]!.chunk as number, materialOf(t)));
++    expect([...byChunk.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]).join('')).toBe(BIGDIFF);
++    expect(l.files.map((x) => path.basename(x))).toEqual(l.files.map((_, i) => `o-p${i + 1}.txt`));
++    for (const t of l.text) expect(t).toContain('first text');
++  });
++  it('a chunk is never cut inside a file: each chunk text starts at a diff header and holds whole files', () => {
++    const f = fixture();
++    const l = lens(f, 'first', BIGDIFF, 12000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    for (const t of l.text) {
++      const mat = materialOf(t);
++      expect(mat.startsWith('diff --git ')).toBe(true);
++      for (const p of stampOf(t).paths ?? []) expect(mat).toContain(dfile(p, 50).trimEnd());
++    }
++  });
++  it('a list block that cannot be split still gets every chunk: the list part is whole in each input', () => {
++    const f = fixture();
++    const d = FILES.map((p) => dfile(p, 30)).join('');
++    const l = lens(f, 'big', d, 12000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(stampOf(l.text[0]!).chunks).toBeGreaterThan(1);
++    for (const t of l.text) expect(t).toContain('rule line');
++  });
++  it('one file alone over the room is refused with a line naming the file and its size', () => {
++    const f = fixture();
++    const d = dfile('src/a.ts', 5) + dfile('src/huge.ts', 400) + dfile('src/z.ts', 5);
++    const l = lens(f, 'first', d, 12000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('src/huge.ts');
++    expect(l.r.stderr).toMatch(/src\/huge\.ts[^\n]*\b\d{4,}\b/);
++    expect(l.files).toEqual([]);
++  });
++  it('a material that is not a diff and does not fit is still refused, never trimmed (control)', () => {
++    const f = fixture();
++    const r = lens(f, 'first', 'plain text '.repeat(3000), 12000);
++    expect(r.r.status).toBe(1);
++    expect(r.r.stderr).toMatch(/material/);
++  });
++  it('a diff that fits is one input stamped chunk 1 of 1 with its paths (control: no split)', () => {
++    const f = fixture();
++    const l = lens(f, 'first', dfile('src/a.ts', 3) + dfile('src/b.ts', 3), 20000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(l.files).toHaveLength(1);
++    const s = stampOf(l.text[0]!);
++    expect([s.chunk, s.chunks, s.paths]).toEqual([1, 1, ['src/a.ts', 'src/b.ts']]);
++  });
++  it('no --list with a lens template (code-review, error-paths, ux, security) writes the same chunk inputs with an empty list part', () => {
++    const f = fixture();
++    const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
++    expect(r.status, r.stderr).toBe(0);
++    const files = r.stdout.split('\n').filter(Boolean);
++    const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
++    expect(st[0]!.id).toBe('none');
++    expect(st[0]!.chunks).toBeGreaterThan(1);
++    expect(files.length).toBe(st[0]!.chunks);
++    expect([...st.flatMap((s) => s.paths ?? [])].sort()).toEqual([...FILES].sort());
++  });
++});
++
++// V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes.
++describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {
++  it('F2: the shared diff flags include --text and --full-index (a .gitattributes -diff line cannot turn code into "Binary files differ")', async () => {
++    const m = (await import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs'))) as { DIFF_ARGS: string[] };
++    expect(m.DIFF_ARGS).toContain('--text');
++    expect(m.DIFF_ARGS).toContain('--full-index');
++  });
++  it('F5: a long path list in the chunk head is counted in the room: 300 files with no --list, every input inside the bound (the fixed 800 reserve refused this)', () => {
++    const f = fixture();
++    const names = Array.from({ length: 300 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
++    const d = names.map((p) => dfile(p, 1)).join('');
++    const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
++    expect(r.status, r.stderr).toBe(0);
++    const files = r.stdout.split('\n').filter(Boolean);
++    const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
++    for (const t of texts) expect(2 * t.length + 80).toBeLessThanOrEqual(40000); // TPL puts the input twice
++    expect([...texts.flatMap((t) => stampOf(t).paths ?? [])].sort()).toEqual([...names].sort());
++  });
++  it('F6: a name git quotes is refused with the header line and the remedy (core.quotepath, the brief command)', () => {
++    const f = fixture();
++    const d = 'diff --git "a/caf\\303\\251.ts" "b/caf\\303\\251.ts"\nindex 1..2 100644\n--- "a/caf\\303\\251.ts"\n+++ "b/caf\\303\\251.ts"\n@@ -1 +1 @@\n-a\n+b\n';
++    const l = lens(f, 'first', d, 20000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('caf\\303\\251.ts');
++    expect(l.r.stderr).toContain('core.quotepath=false');
++  });
++  it('F13: a diff that passes the room estimate but whose rendered head (141 long paths) pushes the final prompt over the bound is chunked, not refused', () => {
++    const f = fixture();
++    const names = Array.from({ length: 141 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
++    const d = names.map((p) => dfile(p, 1)).join('');
++    const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const max = 2 * (d.length + 900) + 300;
++    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
++    expect(r.status, r.stderr).toBe(0);
++    const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
++    expect(texts.length).toBeGreaterThan(1);
++    for (const x of texts) expect(2 * x.length + 80).toBeLessThanOrEqual(max);
++    expect([...texts.flatMap((x) => stampOf(x).paths ?? [])].sort()).toEqual([...names].sort());
++  });
++});
++
++// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one.
++describe('V2.WHOLE: the real table exempts golden snapshots by their file shape only', () => {
++  it('a real golden is exempt; a code file in the golden folder, a stray runner and a nested golden are not', async () => {
++    const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[] };
++    const { matchesAny } = (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/paths.mjs'))) as { matchesAny: (g: string[], p: string) => boolean };
++    const real = run('git', ['ls-files', 'src/tests/fixtures/surfaces/*/*.mobile.json'], { cwd: ROOT }).stdout.split('\n').filter(Boolean)[0] as string;
++    expect(real).toBeTruthy();
++    expect(matchesAny(t.exempt, real), real).toBe(true);
++    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/lib/a.ts']) expect(matchesAny(t.exempt, p), p).toBe(false);
++  });
++});
+

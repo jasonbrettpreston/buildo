@@ -1,22 +1,18 @@
 ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.311Z file_sha256=ed9f970c5fe4609ff50d5dea4fdf8be191e2b32c16f12769a2243f641c1676e3 prompt_sha256=fcc309bb83dd32120737fedbe0f3149894cd6949dd7f51f51e7cf7bc87a9f14a
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.288Z file_sha256=4e33afc9eeed50c5c0357272d503f87d3e8a2669fcdf2daf01e2344f62f168f3 prompt_sha256=6d02f44722ffc3ea41c6df247d9537a8320979b1dfd32417e30c472886c26626
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — doc-17 lead "The operator's rulings are the decisions." — src/tests/backlog/check-lane-close.logic.test.ts:361 "+// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — the whole new behaviour (chunk-union refusal, chunk-text recompute, stamp checks, exempt read from the range base, golden exemption) is named by no pasted clause or ruling; the pasted doc holds only readings and register entries, which it itself says never feed a review as a ruling, so the close check ships unauthorised against the pasted context — paste the operator ruling that names task-410/V2.WHOLE, or take this work out of the merge until it is pasted.
+MET — doc-17 preamble "Readings and register entries of the rulings register ... never feed a review as a ruling" — src/tests/backlog/check-lane-close.logic.test.ts:363 "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change" — no RR id or doc-17 reading is cited anywhere in either file as authority, the tests cite the task card and grounder attacks only, so the readings are not feeding this review as rulings.
 
-DEFER severity=MED — doc-17 lead "The operator's rulings are the decisions." — src/tests/backlog/check-lane-close.logic.test.ts:414 "+// V2.WHOLE fix round (grounder 2026-11-20, attacks e, f, g binary, h, k): each planted defect has a passing control (the default scenario)." — the fix round's authority is a grounder report, which is neither the operator nor a ruling, and no pasted ruling carries attacks e, f, g, h, k — cite the operator ruling behind the grounder attacks, or mark this round as unruled.
+DEFER severity=LOW — doc-17 preamble "The operator's rulings are the decisions." — src/tests/backlog/rule-lists.logic.test.ts:632 "// V2.WHOLE round 3, operator item 3 ("1-5 y")" — the operator words this test says it encodes are not in the pasted context, so whether the golden exemption matches item 3 cannot be seen — paste the operator's item 3 verbatim before accepting the golden exemption tests.
 
-DEFER severity=MED — doc-17 lead "The operator's rulings are the decisions." — src/tests/backlog/check-lane-close.logic.test.ts:464 "const gold = (x: Record<string, unknown>) => { (x.exempt as string[]).push('src/golden/**/*.web.json');" — the golden exemption changes the exempt set the close check compares against on the strength of operator words '1-5 y' item 3 that are not in the pasted context, so I cannot see whether that is a decision or a reading — paste the ruling text for item 3 beside the test, or drop the exemption.
+DEFER severity=LOW — doc-17 preamble "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling" — src/tests/backlog/check-lane-close.logic.test.ts:365 "// V2.WHOLE fix round (grounder 2026-11-20, attacks e, f, g binary, h, k)" — the task-410 card text and the grounder attack list are not pasted, so the refusal requirements (whole-range path set, chunk stamp recompute, template read from range base, exempt read from range base) are tied to no visible clause — paste the task-410 card and the grounder items into the context.
 
-REJECT — doc-17 readings RR-0002, RR-0135 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — accused of ignoring lane-tooling-first and the panel-ordering wishes on those lines — they are a reading and a register entry, and the governing doc itself forbids using them as a ruling, so they cannot bind this diff.
+REJECT — doc-17 preamble "never feed a review as a ruling" — accused of adding behaviour no pasted clause or ruling names — the only pasted material is a readings document whose own text says it binds nothing in a review, so the absence of a naming clause is a gap in the context, not a defect of the diff.
 
-MET — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — src/tests/backlog/rule-lists.logic.test.ts:494 — the change cites no RR identifier anywhere as authority, so it does not feed a reading into a review as a ruling.
-
-MET — doc-17 register entries "operator words as logged, kind entry" — src/tests/backlog/check-lane-close.logic.test.ts:444 — the new prompt_sha256 refusal does not cite entry RR-0189 (the 'cite rulings' complaint) as its authority, so no register entry has been promoted to a ruling by this diff.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 2   Unmet: 1
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 0
 
 ---
-⏱  55318ms (55.3s)
-📊 Tokens — total: 32934, input: 21542, output: 11392, reasoning: 10691
+⏱  19596ms (19.6s)
+📊 Tokens — total: 27552, input: 23797, output: 3755, reasoning: 3296

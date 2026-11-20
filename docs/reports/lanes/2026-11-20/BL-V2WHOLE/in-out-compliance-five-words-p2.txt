@@ -1,0 +1,187 @@
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:09b0f45f6eb65f501c992c1db434d2d7563e5e67ff9df3c3ff3785d69ed594cd part 1 of 1 chunk 2 of 2
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts"]
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index d4adce25156542d3a34f04204c9619c7f0217406..afe90a098d44933e7d9b4613999438a588f29921 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -491,3 +491,146 @@ describe('V2.LIST round 2: the milestone guard', () => {
+     expect(verifyResolved(t, good, undefined, 'record')).toEqual([]);
+   });
+ });
++
++// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand), each chunk against every list part,
++// each input stamped "chunk c of m" with its path list; one file alone over the room is refused naming the file and its size. No --list (a non-compliance lens template) writes the same chunks.
++const dfile = (p: string, n: number) => `diff --git a/${p} b/${p}\nindex 1111111..2222222 100644\n--- a/${p}\n+++ b/${p}\n@@ -1 +1 @@\n-old\n${'+line of new text\n'.repeat(n)}`;
++const FILES = ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts', 'src/e.ts'];
++const BIGDIFF = FILES.map((p) => dfile(p, 50)).join('');
++const stampOf = (t: string) => {
++  const m = /^LIST (\S+) sha256:[0-9a-f]{64} material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(t);
++  const pm = / paths: (\[.*\])\n/.exec(t.split('\n').slice(0, 3).join('\n') + '\n');
++  return { id: m?.[1], matSha: m?.[2], part: Number(m?.[3]), parts: Number(m?.[4]), chunk: m?.[5] === undefined ? undefined : Number(m[5]), chunks: m?.[6] === undefined ? undefined : Number(m[6]), paths: pm ? (JSON.parse(pm[1] as string) as string[]) : undefined };
++};
++const materialOf = (t: string) => t.slice(t.indexOf('=== MATERIAL UNDER REVIEW (everything below this line) ===\n') + '=== MATERIAL UNDER REVIEW (everything below this line) ===\n'.length).replace(/\n$/, '');
++describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {
++  it('a diff too large for one input becomes chunks: every changed path in exactly one chunk, chunk texts joined are the diff, every input within the bound, each stamped chunk c of m with its paths', () => {
++    const f = fixture();
++    const max = 12000;
++    const l = lens(f, 'first', BIGDIFF, max);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    const st = l.text.map(stampOf);
++    const m = st[0]!.chunks;
++    expect(m, 'chunk stamp present').toBeGreaterThan(1);
++    expect(l.files.length).toBe((m as number) * st[0]!.parts);
++    for (const t of l.text) expect(t.length).toBeLessThanOrEqual(max);
++    const seen = st.flatMap((s) => s.paths ?? []);
++    expect([...seen].sort()).toEqual([...FILES].sort());
++    expect(new Set(seen).size).toBe(seen.length);
++    const byChunk = new Map<number, string>();
++    l.text.forEach((t, i) => byChunk.set(st[i]!.chunk as number, materialOf(t)));
++    expect([...byChunk.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]).join('')).toBe(BIGDIFF);
++    expect(l.files.map((x) => path.basename(x))).toEqual(l.files.map((_, i) => `o-p${i + 1}.txt`));
++    for (const t of l.text) expect(t).toContain('first text');
++  });
++  it('a chunk is never cut inside a file: each chunk text starts at a diff header and holds whole files', () => {
++    const f = fixture();
++    const l = lens(f, 'first', BIGDIFF, 12000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    for (const t of l.text) {
++      const mat = materialOf(t);
++      expect(mat.startsWith('diff --git ')).toBe(true);
++      for (const p of stampOf(t).paths ?? []) expect(mat).toContain(dfile(p, 50).trimEnd());
++    }
++  });
++  it('a list block that cannot be split still gets every chunk: the list part is whole in each input', () => {
++    const f = fixture();
++    const d = FILES.map((p) => dfile(p, 30)).join('');
++    const l = lens(f, 'big', d, 12000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(stampOf(l.text[0]!).chunks).toBeGreaterThan(1);
++    for (const t of l.text) expect(t).toContain('rule line');
++  });
++  it('one file alone over the room is refused with a line naming the file and its size', () => {
++    const f = fixture();
++    const d = dfile('src/a.ts', 5) + dfile('src/huge.ts', 400) + dfile('src/z.ts', 5);
++    const l = lens(f, 'first', d, 12000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('src/huge.ts');
++    expect(l.r.stderr).toMatch(/src\/huge\.ts[^\n]*\b\d{4,}\b/);
++    expect(l.files).toEqual([]);
++  });
++  it('a material that is not a diff and does not fit is still refused, never trimmed (control)', () => {
++    const f = fixture();
++    const r = lens(f, 'first', 'plain text '.repeat(3000), 12000);
++    expect(r.r.status).toBe(1);
++    expect(r.r.stderr).toMatch(/material/);
++  });
++  it('a diff that fits is one input stamped chunk 1 of 1 with its paths (control: no split)', () => {
++    const f = fixture();
++    const l = lens(f, 'first', dfile('src/a.ts', 3) + dfile('src/b.ts', 3), 20000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(l.files).toHaveLength(1);
++    const s = stampOf(l.text[0]!);
++    expect([s.chunk, s.chunks, s.paths]).toEqual([1, 1, ['src/a.ts', 'src/b.ts']]);
++  });
++  it('no --list with a lens template (code-review, error-paths, ux, security) writes the same chunk inputs with an empty list part', () => {
++    const f = fixture();
++    const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
++    expect(r.status, r.stderr).toBe(0);
++    const files = r.stdout.split('\n').filter(Boolean);
++    const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
++    expect(st[0]!.id).toBe('none');
++    expect(st[0]!.chunks).toBeGreaterThan(1);
++    expect(files.length).toBe(st[0]!.chunks);
++    expect([...st.flatMap((s) => s.paths ?? [])].sort()).toEqual([...FILES].sort());
++  });
++});
++
++// V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes.
++describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {
++  it('F2: the shared diff flags include --text and --full-index (a .gitattributes -diff line cannot turn code into "Binary files differ")', async () => {
++    const m = (await import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs'))) as { DIFF_ARGS: string[] };
++    expect(m.DIFF_ARGS).toContain('--text');
++    expect(m.DIFF_ARGS).toContain('--full-index');
++  });
++  it('F5: a long path list in the chunk head is counted in the room: 300 files with no --list, every input inside the bound (the fixed 800 reserve refused this)', () => {
++    const f = fixture();
++    const names = Array.from({ length: 300 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
++    const d = names.map((p) => dfile(p, 1)).join('');
++    const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
++    expect(r.status, r.stderr).toBe(0);
++    const files = r.stdout.split('\n').filter(Boolean);
++    const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
++    for (const t of texts) expect(2 * t.length + 80).toBeLessThanOrEqual(40000); // TPL puts the input twice
++    expect([...texts.flatMap((t) => stampOf(t).paths ?? [])].sort()).toEqual([...names].sort());
++  });
++  it('F6: a name git quotes is refused with the header line and the remedy (core.quotepath, the brief command)', () => {
++    const f = fixture();
++    const d = 'diff --git "a/caf\\303\\251.ts" "b/caf\\303\\251.ts"\nindex 1..2 100644\n--- "a/caf\\303\\251.ts"\n+++ "b/caf\\303\\251.ts"\n@@ -1 +1 @@\n-a\n+b\n';
++    const l = lens(f, 'first', d, 20000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('caf\\303\\251.ts');
++    expect(l.r.stderr).toContain('core.quotepath=false');
++  });
++  it('F13: a diff that passes the room estimate but whose rendered head (141 long paths) pushes the final prompt over the bound is chunked, not refused', () => {
++    const f = fixture();
++    const names = Array.from({ length: 141 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
++    const d = names.map((p) => dfile(p, 1)).join('');
++    const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const max = 2 * (d.length + 900) + 300;
++    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
++    expect(r.status, r.stderr).toBe(0);
++    const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
++    expect(texts.length).toBeGreaterThan(1);
++    for (const x of texts) expect(2 * x.length + 80).toBeLessThanOrEqual(max);
++    expect([...texts.flatMap((x) => stampOf(x).paths ?? [])].sort()).toEqual([...names].sort());
++  });
++});
++
++// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one.
++describe('V2.WHOLE: the real table exempts golden snapshots by their file shape only', () => {
++  it('a real golden is exempt; a code file in the golden folder, a stray runner and a nested golden are not', async () => {
++    const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[] };
++    const { matchesAny } = (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/paths.mjs'))) as { matchesAny: (g: string[], p: string) => boolean };
++    const real = run('git', ['ls-files', 'src/tests/fixtures/surfaces/*/*.mobile.json'], { cwd: ROOT }).stdout.split('\n').filter(Boolean)[0] as string;
++    expect(real).toBeTruthy();
++    expect(matchesAny(t.exempt, real), real).toBe(true);
++    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/lib/a.ts']) expect(matchesAny(t.exempt, p), p).toBe(false);
++  });
++});
+

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.070Z file_sha256=f4c7094a3eb1997f9627880f2b7f5e42222e4125901fd91744c93c54e420b2e7 prompt_sha256=3d05729667adfec74b6678796ea13913a0df9ace4f68151e4fc1eb9102398b56
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-policy-124-s2-s5-p6.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — R-HK "Each set of rulings is committed verbatim as `docs/reports/decisions/<date>-<slug>.json` ... Operator decisions are transferred mechanically (decision log + generator + coverage lock), never hand-copied" — src/tests/backlog/rule-lists.logic.test.ts "+// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one." — the operator batch behind the new exempt behaviour is hand-copied into a test comment with no `<log stem>#<decision id>` cited, and the decision log / raw record cannot see — cite the decision log stem and id in the comment, or drop the paraphrase and rely on the register row R-HK requires
+DEFER severity=LOW — R-GR "A `docs/reports/defect-ledger.md` row whose status names a declared deviation reads `CLOSED · declared deviation (<rule id>[, …])` ... or `OPEN · **PIN** <pin> ... Any third form is RED" — src/tests/backlog/rule-lists.logic.test.ts "+// V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes." — four grounder defects (F2, F5, F6, F13) are recorded as closed in comments naming no rule id and no PIN; the ledger itself cannot see — if these are ledger rows, set each status to `CLOSED · declared deviation (<rule id>)` or `OPEN · **PIN** <pin>`, and name the id in the comment
+MET — R-Z "never a restart at `R-A` under a new sub-scheme, and never a silent renumbering" — src/tests/backlog/rule-lists.logic.test.ts "+const FILES = ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts', 'src/e.ts'];" — the diff adds no §5 register row and mints no `R-x` id, so no id is reused or renumbered
+MET — R-GW / R-GX "a spec has no banner and is not on `role_banner_pending`; a pending spec has a banner (it leaves the list; the list only shrinks)" — no `docs/specs/**` path and no `122_split_manifest.json` edit in the diff — no banner, pending-list or `historical_rule_ids` obligation is triggered
+MET — R-DT as amended by R-EY "`step-validate` prints `standard=V3` only per R-DT as amended by R-EY (`standardFor`, `compute-literals.mjs`): all nine R-EY conditions, fail closed" — no step descriptor, `converted[]` or `pending[]` entry in the diff — no standard print is claimed for any step
+REJECT — V3 "V3 - McDonald's Airtight V3 (FINAL, R-DF; every future step)" — accused of labelling new tests V2.WHOLE after V3 is final — the label is the backlog suite's describe prefix for the review-tool family; the pasted table scopes `standard: V2|V3` to the print `step-validate` emits for steps, and this diff adds no step descriptor
+REJECT — R-GQ "Writing needs an explicit `--write`; no flag or an unknown flag exits 2 with usage (verify-12)" — accused of using exit 1 for the over-size refusal — R-GQ's exit-code clause is scoped to `generate-last-measured.mjs` writing, not to lens-input's material refusal
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 31   Unmet: 0
+```
+
+Note on coverage: the run header names sections 2 and 5, but the pasted part carries only §5 register rows, the standard-versions table, the move notices and the id-allocation history; the §2 rules that would name the lens-input chunking and refusal behaviour are not pasted, so that behaviour is "cannot see", not judged.
+
+---
+⏱  53509ms (53.5s)
+📊 Tokens — total: 32823, input: 22449, output: 10374, reasoning: 9441
