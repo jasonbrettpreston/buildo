@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTUNE'
 created_date: '2026-11-20T14:00:00Z'
-updated_date: '2026-11-20T15:41:00Z'
+updated_date: '2026-11-20T15:58:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -21,7 +21,7 @@ ordinal: 78012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY-2.md (task-368 second job, on the second handbook pass). Scope now: D14 mobile/src/lib/semiQuestion.ts:16-17 SEMI_CONTINUE_WAIT_MS = 60_000 and mobile/src/hooks/useParcelLookup.ts:137 staleTime: 0 are typed in code against Spec 126:189 P4 ("All tunables are data; zero thresholds in src/") and Spec 128:30 Rule 3 ("every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture"): declare both in the surface config the way mobile SearchBinding.tsx:36 reads SEARCH_SLICE.config.debounce_ms; values unchanged (60 s, 0 s); the 60 s VALUE is an open operator timeframe and is not decided here. D15 scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:175 lists "semi" in the response field_whitelist though it is a request parameter (src/app/api/parcels/lookup/types.ts:44-45); contract_parcels_entitlement.descriptor.json:326-331 cites useParcelLookup.ts:96 where the entitlement hook is :134: correct both. Also the retry count in useParcelLookup.ts (failureCount < 3): confirm on the head whether Rule 3 binds it and include or list it. Files: mobile/src/lib/semiQuestion.ts, mobile/src/hooks/useParcelLookup.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY-2.md (task-368 second job, on the second handbook pass). Scope now: D14 mobile/src/lib/semiQuestion.ts:16-17 SEMI_CONTINUE_WAIT_MS = 60_000 and mobile/src/hooks/useParcelLookup.ts:137 staleTime: 0 are typed in code against Spec 126:189 P4 ("All tunables are data; zero thresholds in src/") and Spec 128:30 Rule 3 ("every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture"): declare both in the surface config the way mobile SearchBinding.tsx:36 reads SEARCH_SLICE.config.debounce_ms; values unchanged (60 s, 0 s); the 60 s VALUE is an open operator timeframe and is not decided here. D15 scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:175 lists "semi" in the response field_whitelist though it is a request parameter (src/app/api/parcels/lookup/types.ts:44-45); contract_parcels_entitlement.descriptor.json:326-331 cites useParcelLookup.ts:96 where the entitlement hook is :134: correct both. Also the retry count in useParcelLookup.ts (failureCount < 3): confirm on the head whether Rule 3 binds it and include or list it. Files: mobile/src/lib/semiQuestion.ts, mobile/src/hooks/useParcelLookup.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, docs/reports/generated/127-surface-registry.md, mobile/__tests__/, mobile/src/generated/surfaces/, mobile/src/lib/sliceConfig.ts, scripts/surfaces/_schema/, scripts/surfaces/emit-mobile-surfaces.mjs, scripts/surfaces/parcel_product/F01/surfaces/, src/app/api/permits/[id]/route.ts, src/components/permits/BuildingMassing.tsx, src/lib/massing/, src/lib/parcels/geometry.ts, src/lib/surfaces/generated/, src/tests/
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -59,4 +59,6 @@ FIX.TUNE plan. D14: add optional config keys continue_wait_ms (semi surface, 600
 2026-11-20 taken on the board at lane launch (lane BL-FIXTUNE, worktree /Users/brettpreston_macmini/Buildo-wt-fixtune, branch wf1/inc1b-fixtune), RR-0240
 
 2026-11-20 BL-FIXTUNE: D14, D15 and the length factor fixed red-first; findings untriaged in docs/reports/lanes/2026-11-20/BL-FIXTUNE/FINDINGS.md, grounder owed. Left listed: phone area-factor copies, retry count, two staleTime 60_000, Rule 3 bounds for the new keys, DB mirror migration (ID ledger, operator typed GO). Phone-test green unproven until Mobile CI.
+
+2026-11-20 fold round (coordinator grounder A to E): retry and both stale times in the search surface config, one slice reader, massing formatter takes the factor, cites :161; phone area-factor copies stopped (schema refuses a non-integer config value); new lens findings untriaged in FINDINGS.md.
 <!-- SECTION:NOTES:END -->

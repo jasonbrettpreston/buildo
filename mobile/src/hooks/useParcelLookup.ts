@@ -17,6 +17,7 @@ import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
 import { useAuthStore } from '@/store/authStore';
 import { boundedWait, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
 import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
+import { sliceNumber } from '@/lib/sliceConfig';
 import {
   ConsumerParcelLookupResultSchema,
   ParcelToolEntitlementSchema,
@@ -50,6 +51,11 @@ export async function fetchParcelLookup(
   return parsed.data;
 }
 
+// FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): the retry count and the stale times are the search surface's declared config, read from its generated slice.
+const LOOKUP_RETRY_MAX = sliceNumber(searchSlice.config, 'lookup_retry_max');
+const LOOKUP_STALE_MS = sliceNumber(searchSlice.config, 'lookup_stale_ms');
+const ENTITLEMENT_STALE_MS = sliceNumber(searchSlice.config, 'entitlement_stale_ms');
+
 // Skip retries for deterministic states: 400 (bad params), 403 (no subscription / deleted),
 // 429 (burning retries against the rate-limit compounds the throttle), schema-drift.
 export function shouldRetryParcelLookup(failureCount: number, err: unknown): boolean {
@@ -58,7 +64,7 @@ export function shouldRetryParcelLookup(failureCount: number, err: unknown): boo
     !(err instanceof RateLimitError) &&
     !(err instanceof ApiError && (err.status === 400 || err.status === 403)) &&
     !(err instanceof ParcelLookupSchemaError) &&
-    failureCount < 3
+    failureCount < LOOKUP_RETRY_MAX
   );
 }
 
@@ -73,7 +79,7 @@ export function useParcelSearch(q: string) {
     queryKey: ['parcel-search', trimmed],
     queryFn: () => fetchParcelLookup({ q: trimmed }),
     enabled: trimmed.length >= 3 && !!accessToken,
-    staleTime: 60_000,
+    staleTime: LOOKUP_STALE_MS,
     retry: shouldRetryParcelLookup,
   });
 }
@@ -97,7 +103,7 @@ export function useParcelLookup(parcelId: string | undefined, semi?: string) {
     queryKey: ['parcel-lookup', parcelId],
     queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi)),
     enabled: !!parcelId && !!accessToken,
-    staleTime: 60_000,
+    staleTime: LOOKUP_STALE_MS,
     retry: shouldRetryParcelLookup,
   });
 }
@@ -158,7 +164,7 @@ export function useParcelEntitlement() {
     queryKey: ['parcel-entitlement'],
     queryFn: fetchParcelEntitlement,
     enabled: !!accessToken,
-    staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here
+    staleTime: ENTITLEMENT_STALE_MS,
     retry: shouldRetryParcelLookup,
   });
 }

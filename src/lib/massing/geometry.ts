@@ -1,5 +1,3 @@
-import seed from '../../../scripts/seeds/logic_variables.json';
-import { pinnedSetting } from '@/lib/report-projection/pinned-settings';
 import type { StructureType } from './types';
 
 // ---------------------------------------------------------------------------
@@ -30,9 +28,6 @@ export const SHED_THRESHOLD_SQM = 20;
 
 /** 20–60 sqm accessory is classified as garage. */
 export const GARAGE_MAX_SQM = 60;
-
-/** Feet per metre: the pinned logic variable parcels_m_to_ft (fe.44, core.8; FIX.TUNE task-378). */
-const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');
 
 // ---------------------------------------------------------------------------
 // Core functions
@@ -145,10 +140,12 @@ export function computeFootprintArea(ring: [number, number][]): number | null {
 
 /**
  * Format a height value as "X.X m (Y.Y ft)" or "N/A" if null.
+ * FIX.TUNE (task-378; fe.44, core.8): the factor is passed in, the registered pinned variable parcels_m_to_ft the permits route serves (the formatter reads no seed, so
+ * the client bundle that imports it carries none; the task-372 formatPageRule pattern).
  */
-export function formatHeight(meters: number | null | undefined): string {
+export function formatHeight(meters: number | null | undefined, feetPerMetre: number): string {
   if (meters == null) return 'N/A';
-  const ft = meters * M_TO_FT;
+  const ft = meters * feetPerMetre;
   return `${meters.toFixed(1)} m (${ft.toFixed(1)} ft)`;
 }
 

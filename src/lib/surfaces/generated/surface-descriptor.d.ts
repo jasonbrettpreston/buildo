@@ -340,6 +340,10 @@ export type SurfaceDescriptor = {
   continue_wait_ms?: "UNRESEARCHED" | number;
   /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the reports-left entitlement read stays fresh, in milliseconds (0 = re-read on every focus). */
   entitlement_stale_ms?: "UNRESEARCHED" | number;
+  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how many times the phone re-sends a failed lookup or entitlement read (the count, not a status class; deterministic failures are never retried). */
+  lookup_retry_max?: "UNRESEARCHED" | number;
+  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long a lookup read (typeahead search or detail by parcel) stays fresh, in milliseconds. */
+  lookup_stale_ms?: "UNRESEARCHED" | number;
 };
   sharing: {
   answer: "UNRESEARCHED" | "sole" | "shared" | "none";

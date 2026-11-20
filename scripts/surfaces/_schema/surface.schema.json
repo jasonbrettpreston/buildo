@@ -2655,6 +2655,34 @@
               "minimum": 0
             }
           ]
+        },
+        "lookup_retry_max": {
+          "x-draft-optional": true,
+          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how many times the phone re-sends a failed lookup or entitlement read (the count, not a status class; deterministic failures are never retried).",
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        },
+        "lookup_stale_ms": {
+          "x-draft-optional": true,
+          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long a lookup read (typeahead search or detail by parcel) stays fresh, in milliseconds.",
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
         }
       }
     },

@@ -9,12 +9,13 @@
 // It reads the SAME lookup entry the report reads (['parcel-lookup', parcelId]), so no extra request. The chosen answer opens the report through
 // reportRouteAfterAnswer (lotForm.ts): the answer is lot_form_user_override, carried as a route param (O-12: no server store).
 import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
+import { sliceNumber } from '@/lib/sliceConfig';
 import type { ConsumerParcelLookupResult } from '@/lib/schemas';
 import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
 import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
 
 /** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. */
-export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;
+export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice.config, 'continue_wait_ms');
 
 class SemiContinueTimeoutError extends Error {
   constructor() {

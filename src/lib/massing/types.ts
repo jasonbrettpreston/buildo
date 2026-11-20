@@ -38,4 +38,6 @@ export interface BuildingMassingInfo {
     footprint_area_sqft: number | null;
   }[];
   building_coverage_pct: number | null;
+  /** Feet per metre, the pinned logic variable parcels_m_to_ft, served so the display formats height without a factor of its own (FIX.TUNE task-378). */
+  feet_per_metre: number;
 }

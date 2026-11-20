@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T15:54:31.782Z file_sha256=a16b17bfe70bf7777fdf80bfd3343036d5c447153e0ae73d21a080b9848a0b49 prompt_sha256=80eda7a996620e810d59766cb8d3b400b875b1a018b18825493f3726aec6c483
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/fold-material.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10732 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22478 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33956 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42733 chars, answer 2490 chars, 60s
+BUG severity=MED — `src/lib/massing/types.ts:42` "feet_per_metre: number;" — a required field is added to the shared response interface but only one producer is updated in this diff (`src/app/api/permits/[id]/route.ts:267` "feet_per_metre: M_TO_FT"), so any other constructor/fixture of `BuildingMassingInfo` fails type-check and any client-side validator that strips unknown keys leaves it undefined at runtime, where `src/components/permits/BuildingMassing.tsx:43` "formatHeight(massing.primary.max_height_m, massing.feet_per_metre)" will print "(NaN ft)"; I cannot see the other producers or the client parse — add `feet_per_metre` to every producer and to the client schema, or make `formatHeight` return N/A for a non-finite factor.
+
+DEFER severity=MED — `src/tests/fix-tune.logic.test.ts:47` "expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts'), key).toContain(`${key}?:`);" — this test requires `lookup_retry_max`/`lookup_stale_ms` in `scripts/surfaces/_schema/surface.schema.json`, the generated `.d.ts` and the F01 descriptor, none of which appear in this diff while the fixture hash did move (`"c89c405a30cc0f2e"`), so the diff looks incomplete and these assertions would fail — include the schema, generated-type and descriptor edits, or the grounder confirms they landed earlier.
+
+DEFER severity=LOW — `mobile/src/lib/sliceConfig.ts:10` "export function sliceNumber(config: Readonly<Record<string, unknown>>, key: string): number {" — `key: string` means a mistyped key (the exact failure the reader exists to name) compiles clean and only throws at runtime; make it generic so the key is checked, e.g. `sliceNumber<T extends Record<string, unknown>>(config: T, key: keyof T & string)`.
+
+DEFER severity=LOW — `src/lib/massing/geometry.ts:150` "const ft = meters * feetPerMetre;" — the new required factor has no finite guard, so a NaN/undefined factor (schema drift between route and client) silently formats as "(NaN ft)" instead of the existing "N/A" path; add `if (!Number.isFinite(feetPerMetre)) return 'N/A';` beside the null check.
+
+DEFER severity=NIT — `src/tests/fix-tune.logic.test.ts:92` "it('parcels_m_to_ft is pinned in the seed at 3.28084 and both geometry modules read it, typing no factor', () => {" — the title is now false: only `src/lib/parcels/geometry.ts` is asserted to read `parcels_m_to_ft`, massing/geometry no longer does; retitle to what the body asserts so the next reader is not misled.
+
+REJECT — `mobile/src/hooks/useParcelLookup.ts:55` "const LOOKUP_RETRY_MAX = sliceNumber(searchSlice.config, 'lookup_retry_max');" — a top-level throw at module load looks like a boot-crash risk — that is intended: the generated slice carries the key (`mobile/src/generated/surfaces/mobile_parcel_search.json` "lookup_retry_max": 3) and a missing key is an emit defect the throw surfaces at once by name, exactly as the reader's doc comment states.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- n/a
+
+---
+⏱  60494ms (60.5s)
+📊 Tokens — total: 45825, input: 33919, output: 11906, reasoning: 11105

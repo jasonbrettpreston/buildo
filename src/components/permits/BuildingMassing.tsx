@@ -40,7 +40,7 @@ export default function BuildingMassing({ massing }: BuildingMassingProps) {
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Est. Height</p>
-              <p className="text-sm text-gray-900 mt-0.5">{formatHeight(massing.primary.max_height_m)}</p>
+              <p className="text-sm text-gray-900 mt-0.5">{formatHeight(massing.primary.max_height_m, massing.feet_per_metre)}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Building Coverage</p>

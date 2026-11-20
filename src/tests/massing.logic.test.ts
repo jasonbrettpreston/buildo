@@ -2,6 +2,7 @@
 // SPEC LINK: docs/specs/31_building_massing.md
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
+import { M_TO_FT } from '@/lib/parcels/geometry';
 import path from 'path';
 import {
   estimateStories,
@@ -162,19 +163,19 @@ describe('computeFootprintArea', () => {
 
 describe('formatHeight', () => {
   it('formats height with metric and imperial', () => {
-    expect(formatHeight(9.5)).toBe('9.5 m (31.2 ft)');
+    expect(formatHeight(9.5, M_TO_FT)).toBe('9.5 m (31.2 ft)');
   });
 
   it('formats zero-point height', () => {
-    expect(formatHeight(3.0)).toBe('3.0 m (9.8 ft)');
+    expect(formatHeight(3.0, M_TO_FT)).toBe('3.0 m (9.8 ft)');
   });
 
   it('returns N/A for null', () => {
-    expect(formatHeight(null)).toBe('N/A');
+    expect(formatHeight(null, M_TO_FT)).toBe('N/A');
   });
 
   it('returns N/A for undefined', () => {
-    expect(formatHeight(undefined)).toBe('N/A');
+    expect(formatHeight(undefined, M_TO_FT)).toBe('N/A');
   });
 });
 

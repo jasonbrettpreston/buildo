@@ -3,6 +3,7 @@ import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { classifyScope, classifyUseType, extractBasePermitNum } from '@/lib/classification/scope';
 import { resolveStories, inferMassingUseType } from '@/lib/massing/geometry';
+import { M_TO_FT } from '@/lib/parcels/geometry';
 import type { MassingUseType } from '@/lib/massing/geometry';
 import { getCoaByPermit } from '@/lib/coa/repository';
 import { mapCoaToPermitDto } from '@/lib/coa/pre-permits';
@@ -263,6 +264,7 @@ export const GET = withApiEnvelope(async function GET(
               footprint_area_sqft: b.footprint_area_sqft != null ? parseFloat(String(b.footprint_area_sqft)) : null,
             })),
             building_coverage_pct: coveragePct,
+            feet_per_metre: M_TO_FT,
           };
         }
       }
