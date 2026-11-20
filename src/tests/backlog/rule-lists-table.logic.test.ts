@@ -40,6 +40,11 @@ describe('V2.LIST round 2: the table rows', () => {
     const row = table().rows.find((r) => r.globs?.includes('docs/reports/policy/**'))!;
     expect(row.why).toContain('nearest lists, no governing spec: operator ruling owed');
   });
+  it('docs/reference (generated reference files) resolves to the nearest lists and says: no governing spec found: operator ruling owed', () => {
+    expect(lists('docs/reference/logic-variables-registry.md')).toEqual(expect.arrayContaining(['queue-137', 'eng-all']));
+    const row = table().rows.find((r) => r.globs?.includes('docs/reference/**'))!;
+    expect(row.why).toContain('no governing spec found: operator ruling owed');
+  });
   it('the Spec 124 list block carries Rule 13 and the role banner rule R-GW', () => {
     const r = script(CLI, ['lens-input', '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
     expect(r.status, r.stderr).toBe(0);

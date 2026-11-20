@@ -163,6 +163,12 @@
       "why": "V2.LIST (task-406, round 2): docs/reports/policy has nearest lists, no governing spec: operator ruling owed (no spec names the ledger; scripts/analysis/policy-checks.mjs cites an operator ruling at MORNING-DECISIONS.md:725, not a spec). The lane-tools lists are attached as the nearest and are NOT presented as governing"
     },
     {
+      "id": "reference-docs",
+      "globs": ["docs/reference/**"],
+      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+      "why": "V2.LIST (task-406, round 3): docs/reference holds generated reference files (the logic-variable registry, the report field inventory, the by-law provisions): nearest lists, no governing spec found: operator ruling owed. Found because task-406 itself regenerates two of them (a Files path that matched no row); the lane-tools lists are attached as the nearest and are NOT presented as governing"
+    },
+    {
       "id": "panel-records",
       "globs": ["docs/reports/panels/**"],
       "lists": ["surface-128", "surface-126", "agents-s7-s11", "queue-137"],
